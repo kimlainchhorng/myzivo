@@ -44,6 +44,8 @@ interface FeedItem {
   shared_from_post_id?: string | null;
   shared_from_user_id?: string | null;
   shared_from_user_name?: string | null;
+  shared_from_user_avatar?: string | null;
+  shared_from_caption?: string | null;
   // Interaction controls from profile
   comment_control?: "everyone" | "friends" | "off";
   hide_like_counts?: boolean;
@@ -197,9 +199,11 @@ export default function ReelsFeedPage() {
             const normalizedMediaType = normalizeUserPostMediaType(post.media_type);
 
             let sharedFromUserName: string | null = null;
+            let sharedFromUserAvatar: string | null = null;
             if (post.shared_from_user_id) {
               const sharedProfile = profileMap.get(post.shared_from_user_id);
               sharedFromUserName = sharedProfile?.full_name?.trim() || "Someone";
+              sharedFromUserAvatar = sharedProfile?.avatar_url || null;
             }
 
             allItems.push({
@@ -218,6 +222,8 @@ export default function ReelsFeedPage() {
               shared_from_post_id: post.shared_from_post_id || null,
               shared_from_user_id: post.shared_from_user_id || null,
               shared_from_user_name: sharedFromUserName,
+              shared_from_user_avatar: sharedFromUserAvatar,
+              shared_from_caption: null,
               comment_control: profile?.comment_control || "everyone",
               hide_like_counts: profile?.hide_like_counts || false,
               allow_sharing: profile?.allow_sharing !== false,
@@ -1359,112 +1365,247 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
 
   return (
     <div className="bg-card">
-      {/* Shared indicator — Facebook style */}
-      {isSharedPost && (
-        <div className="flex items-center gap-2 px-3 pt-2.5 pb-0.5">
-          <Share2 className="h-3.5 w-3.5 text-muted-foreground" />
-          <p className="text-[12px] text-muted-foreground">
-            <span className="font-semibold text-foreground">{item.author_name}</span>
-            {" shared "}
-            {item.shared_from_user_name ? (
-              <><span className="font-semibold text-foreground">{item.shared_from_user_name}</span>'s post</>
-            ) : (
-              "a post"
-            )}
-          </p>
-        </div>
-      )}
-      {/* Author header */}
-      <div className="flex items-center">
-      <button
-        type="button"
-        onClick={() => {
-          if (item.source === "store" && item.store_slug) {
-            navigate(`/grocery/shop/${item.store_slug}`);
-          } else if (item.author_id) {
-            navigate(`/user/${item.author_id}`);
-          }
-        }}
-        className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0 active:opacity-70"
-      >
-        <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
-          {item.author_avatar ? (
-            <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-xs font-bold">
-              {item.author_name[0]}
+      {isSharedPost ? (
+        /* ── Facebook-style shared post layout ────────────────── */
+        <>
+          {/* Sharer header */}
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={() => item.author_id && navigate(`/user/${item.author_id}`)}
+              className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0 active:opacity-70"
+            >
+              <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
+                {item.author_avatar ? (
+                  <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-xs font-bold">
+                    {item.author_name[0]}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
+                  <span className="text-[10px] text-muted-foreground">·</span>
+                  <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
+              className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
+            >
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Sharer's caption if any */}
+          {item.caption && (
+            <div className="px-3 pb-2">
+              <p className="text-[13px] text-foreground">{item.caption}</p>
             </div>
           )}
-        </div>
-        <div className="flex-1 min-w-0 text-left">
-          <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
-          <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
-        </div>
-      </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
-          className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
-        >
-          <MoreHorizontal className="h-5 w-5" />
-        </button>
-      </div>
 
-      {/* Media */}
-      <div ref={containerRef} className={cn("relative w-full", hasMedia ? "aspect-square bg-black" : "")}>
-        {hasMedia ? (
-          item.media_type === "video" ? (
-            <>
-              <video
-                ref={videoRef}
-                src={mediaUrl}
-                muted={muted}
-                loop
-                playsInline
-                preload="metadata"
-                onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
-                className="h-full w-full object-cover cursor-pointer"
-              />
-              {!isPlaying && (
-                <button onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
-                  <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
-                </button>
+          {/* Embedded original post card */}
+          <div className="mx-3 mb-2 border border-border/60 rounded-xl overflow-hidden bg-muted/20">
+            {/* Original author header */}
+            <button
+              type="button"
+              onClick={() => item.shared_from_user_id && navigate(`/user/${item.shared_from_user_id}`)}
+              className="flex items-center gap-2.5 px-3 py-2 w-full active:opacity-70"
+            >
+              <div className="h-8 w-8 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
+                {item.shared_from_user_avatar ? (
+                  <img src={item.shared_from_user_avatar} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-[10px] font-bold">
+                    {(item.shared_from_user_name || "?")[0]}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-[12px] font-semibold text-foreground truncate">
+                  {item.shared_from_user_name || "Unknown"}
+                </p>
+                <div className="flex items-center gap-1">
+                  <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                </div>
+              </div>
+            </button>
+
+            {/* Original post caption */}
+            {item.shared_from_caption && (
+              <div className="px-3 pb-2">
+                <p className="text-[12px] text-foreground">{item.shared_from_caption}</p>
+              </div>
+            )}
+
+            {/* Original post media */}
+            <div ref={containerRef} className={cn("relative w-full", hasMedia ? "aspect-square bg-black" : "")}>
+              {hasMedia ? (
+                item.media_type === "video" ? (
+                  <>
+                    <video
+                      ref={videoRef}
+                      src={mediaUrl}
+                      muted={muted}
+                      loop
+                      playsInline
+                      preload="metadata"
+                      onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
+                      className="h-full w-full object-cover cursor-pointer"
+                    />
+                    {!isPlaying && (
+                      <button onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
+                        <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
+                      className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
+                    >
+                      {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
+                    </button>
+                  </>
+                ) : (
+                  <img
+                    src={mediaUrl}
+                    alt={item.caption || "Shared post"}
+                    className="h-full w-full object-cover cursor-pointer"
+                    loading="lazy"
+                    onClick={() => onOpenFullscreen?.()}
+                  />
+                )
+              ) : null}
+
+              {/* Multi-image indicator */}
+              {hasMedia && item.media_urls.length > 1 && (
+                <>
+                  <div className="absolute top-3 right-3 bg-black/50 px-2 py-0.5 rounded-full text-[10px] text-white font-medium">
+                    {currentMedia + 1}/{item.media_urls.length}
+                  </div>
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
+                    {item.media_urls.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentMedia(i)}
+                        className={cn("h-1.5 rounded-full transition-all", i === currentMedia ? "w-4 bg-primary" : "w-1.5 bg-white/60")}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
-              <button
-                onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
-                className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
-              >
-                {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
-              </button>
-            </>
-          ) : (
-            <img
-              src={mediaUrl}
-              alt={item.caption || "Shared post"}
-              className="h-full w-full object-cover cursor-pointer"
-              loading="lazy"
-              onClick={() => onOpenFullscreen?.()}
-            />
-          )
-        ) : null}
+            </div>
+          </div>
+        </>
+      ) : (
+        /* ── Normal post layout ────────────────────────────────── */
+        <>
+          {/* Author header */}
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={() => {
+                if (item.source === "store" && item.store_slug) {
+                  navigate(`/grocery/shop/${item.store_slug}`);
+                } else if (item.author_id) {
+                  navigate(`/user/${item.author_id}`);
+                }
+              }}
+              className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0 active:opacity-70"
+            >
+              <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
+                {item.author_avatar ? (
+                  <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-xs font-bold">
+                    {item.author_name[0]}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
+                <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
+              </div>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
+              className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
+            >
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+          </div>
 
-        {/* Multi-image indicator */}
-        {hasMedia && item.media_urls.length > 1 && (
-          <>
-            <div className="absolute top-3 right-3 bg-black/50 px-2 py-0.5 rounded-full text-[10px] text-white font-medium">
-              {currentMedia + 1}/{item.media_urls.length}
+          {/* Caption before media for normal posts */}
+          {item.caption && (
+            <div className="px-3 pb-2">
+              <p className="text-[13px] text-foreground">
+                <span className="font-semibold mr-1">{item.author_name}</span>
+                {item.caption}
+              </p>
             </div>
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
-              {item.media_urls.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentMedia(i)}
-                  className={cn("h-1.5 rounded-full transition-all", i === currentMedia ? "w-4 bg-primary" : "w-1.5 bg-white/60")}
+          )}
+
+          {/* Media */}
+          <div ref={containerRef} className={cn("relative w-full", hasMedia ? "aspect-square bg-black" : "")}>
+            {hasMedia ? (
+              item.media_type === "video" ? (
+                <>
+                  <video
+                    ref={videoRef}
+                    src={mediaUrl}
+                    muted={muted}
+                    loop
+                    playsInline
+                    preload="metadata"
+                    onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
+                    className="h-full w-full object-cover cursor-pointer"
+                  />
+                  {!isPlaying && (
+                    <button onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
+                      <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
+                    className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
+                  >
+                    {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
+                  </button>
+                </>
+              ) : (
+                <img
+                  src={mediaUrl}
+                  alt={item.caption || "Post"}
+                  className="h-full w-full object-cover cursor-pointer"
+                  loading="lazy"
+                  onClick={() => onOpenFullscreen?.()}
                 />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+              )
+            ) : null}
+
+            {/* Multi-image indicator */}
+            {hasMedia && item.media_urls.length > 1 && (
+              <>
+                <div className="absolute top-3 right-3 bg-black/50 px-2 py-0.5 rounded-full text-[10px] text-white font-medium">
+                  {currentMedia + 1}/{item.media_urls.length}
+                </div>
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
+                  {item.media_urls.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentMedia(i)}
+                      className={cn("h-1.5 rounded-full transition-all", i === currentMedia ? "w-4 bg-primary" : "w-1.5 bg-white/60")}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Action buttons */}
       <div className="flex items-center px-3 py-2">
@@ -1497,15 +1638,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
         </div>
       )}
 
-      {/* Caption */}
-      {item.caption && (
-        <div className="px-3 pb-2">
-          <p className="text-[13px] text-foreground">
-            <span className="font-semibold mr-1">{item.author_name}</span>
-            {item.caption}
-          </p>
-        </div>
-      )}
+      {/* Caption for normal posts already shown above media; skip duplicate */}
 
       {/* Comments count or off indicator */}
       {commentSetting === "off" ? (
