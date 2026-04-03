@@ -708,12 +708,36 @@ function LinkPreviewCard({ url, isMe, hasText }: { url: string; isMe: boolean; h
 
   const hasMedia = !!preview.mediaUrl;
 
+  // Check if this is an internal ZIVO link
+  const isInternalLink = (() => {
+    try {
+      const u = new URL(url);
+      return u.hostname.includes("lovable") || u.hostname.includes("hizovo") || u.hostname === window.location.hostname;
+    } catch { return false; }
+  })();
+
+  // Extract the in-app path from the URL
+  const getInAppPath = () => {
+    try {
+      const u = new URL(url);
+      return u.pathname + u.search + u.hash;
+    } catch { return "/"; }
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isInternalLink) {
+      navigate(getInAppPath());
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
+
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`block mx-1.5 mb-1.5 ${!hasText ? "mt-1.5" : "mt-0.5"} rounded-2xl overflow-hidden ${
+    <div
+      onClick={handleClick}
+      className={`block mx-1.5 mb-1.5 ${!hasText ? "mt-1.5" : "mt-0.5"} rounded-2xl overflow-hidden cursor-pointer ${
         isMe ? "bg-primary-foreground/[0.08]" : "bg-background/70"
       } active:scale-[0.97] transition-transform`}
     >
@@ -739,7 +763,7 @@ function LinkPreviewCard({ url, isMe, hasText }: { url: string; isMe: boolean; h
             <img src={preview.mediaUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
           )}
           {/* ZIVO badge on media */}
-          <div className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase bg-black/40 text-white backdrop-blur-sm`}>
+          <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase bg-black/40 text-white backdrop-blur-sm">
             ZIVO
           </div>
         </div>
@@ -760,7 +784,6 @@ function LinkPreviewCard({ url, isMe, hasText }: { url: string; isMe: boolean; h
 
       {/* Info section */}
       <div className="px-3 py-2 flex items-center gap-2.5">
-        {/* Author avatar if available */}
         {preview.authorAvatar && (
           <img src={preview.authorAvatar} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
         )}
@@ -778,6 +801,6 @@ function LinkPreviewCard({ url, isMe, hasText }: { url: string; isMe: boolean; h
           <ChevronRight className={`w-4 h-4 ${isMe ? "text-primary-foreground/60" : "text-primary"}`} />
         </div>
       </div>
-    </a>
+    </div>
   );
 }
