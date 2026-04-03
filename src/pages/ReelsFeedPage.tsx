@@ -2003,6 +2003,13 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                   <EyeOff className="h-5 w-5 text-foreground" />
                   <span className="text-sm font-medium text-foreground">Not interested</span>
                 </button>
+                <button
+                  onClick={() => { setShowPostMenu(false); setShowShareSheet(true); }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                >
+                  <Share2 className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Share</span>
+                </button>
 
                 {/* Owner-only: Comment settings */}
                 {isOwner && (
