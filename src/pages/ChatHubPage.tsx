@@ -497,7 +497,21 @@ export default function ChatHubPage() {
         </div>
       </div>
 
-      {/* Stories Row */}
+      {/* Share Mode Banner */}
+      {sharePayload && (
+        <div className="mx-5 mb-3 p-3 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-primary">Share to chat</p>
+            <p className="text-[11px] text-muted-foreground truncate">{sharePayload.shareText || sharePayload.shareUrl}</p>
+          </div>
+          <button
+            onClick={() => setSharePayload(null)}
+            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0"
+          >
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+      )}
       <ChatStories />
 
       {/* Chat List */}
