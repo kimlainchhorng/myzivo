@@ -383,6 +383,13 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   </p>
                 </div>
               )}
+              {/* Shared post indicator */}
+              {item.isShared && (
+                <div className="absolute top-1.5 left-1.5 z-10 bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-0.5 flex items-center gap-0.5">
+                  <Share2 className="w-2.5 h-2.5 text-white" />
+                  <span className="text-[9px] text-white font-bold">Shared</span>
+                </div>
+              )}
               {item.type === "reel" && hasMedia && (
                 <div className="absolute top-1.5 right-1.5 z-10">
                   <Play className="w-4 h-4 text-white fill-white drop-shadow-lg" />
