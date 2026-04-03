@@ -1585,9 +1585,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
             shareText={item.caption || `Check out this post by ${item.author_name}`}
             shareMediaUrl={item.media_urls[0] || undefined}
             shareMediaType={item.media_type === "video" ? "video" : "image"}
-            sharePostId={item.id.replace(/^u-/, "")}
-            sharePostAuthorId={item.author_id}
-            sharePostAuthorName={item.author_name}
+            sharePostId={item.shared_from_post_id ? item.shared_from_post_id : item.id.replace(/^u-/, "")}
+            sharePostAuthorId={item.shared_from_user_id || item.author_id}
+            sharePostAuthorName={item.shared_from_user_name || item.author_name}
             onClose={() => setShowShareSheet(false)}
             zIndex={70}
           />
