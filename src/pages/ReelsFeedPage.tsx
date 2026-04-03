@@ -2176,7 +2176,17 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                   <span className="text-sm font-medium text-foreground">Share</span>
                 </button>
 
-                {/* Owner-only: Comment settings */}
+                {/* Tip creator */}
+                {!isOwner && item.author_id && (
+                  <button
+                    onClick={() => { setShowPostMenu(false); setTipTarget({ id: item.author_id!, name: item.author_name }); }}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                  >
+                    <Heart className="h-5 w-5 text-amber-500" />
+                    <span className="text-sm font-medium text-foreground">Send Tip</span>
+                  </button>
+                )}
+
                 {isOwner && (
                   <button
                     onClick={() => { setShowPostMenu(false); setShowCommentSettings(true); }}
