@@ -514,17 +514,20 @@ export default function ChatStories() {
             />
 
             {/* Right-side TikTok-style action buttons */}
-            <div className="absolute right-4 bottom-[140px] flex flex-col items-center gap-5 z-20">
+            <div className="absolute right-4 bottom-[160px] flex flex-col items-center gap-4 z-20">
               <button
                 onClick={() => setLiked((l) => !l)}
                 className="flex flex-col items-center gap-1"
               >
-                <div className={cn(
-                  "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm transition-all",
-                  liked ? "bg-destructive/80" : "bg-white/10"
-                )}>
+                <motion.div
+                  animate={liked ? { scale: [1, 1.3, 1] } : {}}
+                  className={cn(
+                    "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm transition-all",
+                    liked ? "bg-destructive/80" : "bg-white/10"
+                  )}
+                >
                   <Heart className={cn("w-5 h-5 transition-all", liked ? "text-white fill-white" : "text-white")} />
-                </div>
+                </motion.div>
                 <span className="text-white/80 text-[10px] font-medium">Like</span>
               </button>
 
