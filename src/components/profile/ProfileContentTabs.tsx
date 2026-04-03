@@ -183,6 +183,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                 name: displayName,
                 avatar: prof?.avatar_url || "",
               },
+              isShared: Boolean(row.shared_from_post_id || row.shared_from_user_id),
             };
           })
           .filter((item) => Boolean(item.url) || Boolean(item.caption.trim()));
