@@ -1469,102 +1469,12 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
       {/* Share Sheet */}
       <AnimatePresence>
         {showShareSheet && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] bg-black/50 flex items-end justify-center"
-            onClick={(e) => { if (e.target === e.currentTarget) setShowShareSheet(false); }}
-          >
-            <motion.div
-              initial={{ y: 300 }}
-              animate={{ y: 0 }}
-              exit={{ y: 300 }}
-              className="w-full max-w-lg bg-card rounded-t-2xl pb-8"
-            >
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
-                <h3 className="text-sm font-bold text-foreground">Share to</h3>
-                <button onClick={() => setShowShareSheet(false)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-                  <XIcon className="h-5 w-5 text-muted-foreground" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-4 gap-4 px-6 py-5">
-                {shareOptions.map((opt) => (
-                  <button
-                    key={opt.label}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setShowShareSheet(false);
-                      import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(opt.url));
-                    }}
-                    className="flex flex-col items-center gap-2 min-h-[48px]"
-                  >
-                    <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: `${opt.color}15` }}>
-                      <svg viewBox="0 0 24 24" className="h-6 w-6" fill={opt.color}><path d={opt.svg} /></svg>
-                    </div>
-                    <span className="text-[10px] font-medium text-foreground">{opt.label}</span>
-                  </button>
-                ))}
-                {/* Copy Link */}
-                <button
-                  onClick={handleCopyLink}
-                  className="flex flex-col items-center gap-2 min-h-[48px]"
-                >
-                  <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center">
-                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" /></svg>
-                  </div>
-                  <span className="text-[10px] font-medium text-foreground">Copy link</span>
-                </button>
-                {/* More toggle */}
-                <button
-                  onClick={() => setShowMoreOptions(!showMoreOptions)}
-                  className="flex flex-col items-center gap-2 min-h-[48px]"
-                >
-                  <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center">
-                    <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <span className="text-[10px] font-medium text-foreground">{showMoreOptions ? "Less" : "More"}</span>
-                </button>
-              </div>
-
-              {/* Expanded more options */}
-              <AnimatePresence>
-                {showMoreOptions && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="grid grid-cols-4 gap-4 px-6 py-4 border-t border-border/20">
-                      {moreShareOptions.map((opt) => (
-                        <button
-                          key={opt.label}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setShowShareSheet(false);
-                            if (opt.url === "__copy__") {
-                              handleCopyLink();
-                              toast.success((opt as any).copyMessage || "Link copied!");
-                            } else {
-                              import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(opt.url));
-                            }
-                          }}
-                          className="flex flex-col items-center gap-2 min-h-[48px]"
-                        >
-                          <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: `${opt.color}15` }}>
-                            <svg viewBox="0 0 24 24" className="h-6 w-6" fill={opt.color}><path d={opt.svg} /></svg>
-                          </div>
-                          <span className="text-[10px] font-medium text-foreground">{opt.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </motion.div>
+          <UnifiedShareSheet
+            shareUrl={shareUrl}
+            shareText={item.caption || `Check out this post by ${item.author_name}`}
+            onClose={() => setShowShareSheet(false)}
+            zIndex={70}
+          />
         )}
       </AnimatePresence>
 
