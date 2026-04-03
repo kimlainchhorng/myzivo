@@ -428,6 +428,9 @@ export default function ReelsFeedPage() {
       {/* Story Rings */}
       <FeedStoryRing />
 
+      {/* Suggested Users */}
+      <SuggestedUsersCarousel />
+
       {/* Trending hashtags */}
       <div className="px-3 py-2 flex gap-2 overflow-x-auto no-scrollbar border-b border-border/10">
         {["#travel", "#food", "#zivo", "#deals", "#explore", "#ootd", "#sunset"].map((tag) => (
