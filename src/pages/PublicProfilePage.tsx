@@ -22,14 +22,9 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
+import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolveSharedOrigins";
 
 type PostTab = "all" | "photos" | "videos";
-
-type SharedOrigin = {
-  name: string;
-  avatar: string;
-  caption: string;
-};
 
 export default function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -87,77 +82,22 @@ export default function PublicProfilePage() {
         .order("created_at", { ascending: false });
       if (!data) return [];
 
-      // Resolve shared post origins
       const sharedPostIds = data
-        .filter((p: any) => p.shared_from_post_id)
-        .map((p: any) => p.shared_from_post_id);
+        .map((post: any) => post.shared_from_post_id)
+        .filter(Boolean) as string[];
+      const sharedUserIds = data
+        .map((post: any) => post.shared_from_user_id)
+        .filter(Boolean) as string[];
 
-      let originMap: Record<string, SharedOrigin> = {};
-
-      if (sharedPostIds.length > 0) {
-        // Try store_posts first
-        try {
-          const { data: storePosts } = await (supabase as any)
-            .from("store_posts")
-            .select("id, caption, store_id")
-            .in("id", sharedPostIds);
-
-          if (storePosts && storePosts.length > 0) {
-            const storeIds = [...new Set(storePosts.map((sp: any) => sp.store_id))] as string[];
-            const { data: storeProfiles } = await supabase
-              .from("store_profiles")
-              .select("id, name, logo_url")
-              .in("id", storeIds);
-
-            const storeMap: Record<string, any> = {};
-            (storeProfiles || []).forEach((s: any) => { storeMap[s.id] = s; });
-
-            storePosts.forEach((sp: any) => {
-              const store = storeMap[sp.store_id];
-              originMap[sp.id] = {
-                name: store?.name || "Store",
-                avatar: store?.logo_url || "",
-                caption: sp.caption || "",
-              };
-            });
-          }
-        } catch {}
-
-        // Also try user_posts for user-to-user shares
-        const unresolvedIds = sharedPostIds.filter((id: string) => !originMap[id]);
-        if (unresolvedIds.length > 0) {
-          try {
-            const { data: userPosts } = await (supabase as any)
-              .from("user_posts")
-              .select("id, caption, user_id")
-              .in("id", unresolvedIds);
-
-            if (userPosts && userPosts.length > 0) {
-              const uids = [...new Set(userPosts.map((up: any) => up.user_id))] as string[];
-              const { data: profiles } = await supabase
-                .from("profiles")
-                .select("id, full_name, avatar_url")
-                .in("id", uids);
-
-              const profileMap: Record<string, any> = {};
-              (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
-
-              userPosts.forEach((up: any) => {
-                const prof = profileMap[up.user_id];
-                originMap[up.id] = {
-                  name: prof?.full_name || "User",
-                  avatar: prof?.avatar_url || "",
-                  caption: up.caption || "",
-                };
-              });
-            }
-          } catch {}
-        }
-      }
+      const { originByPostId, originByUserId } = await resolveSharedOrigins({
+        sharedPostIds,
+        sharedUserIds,
+      });
 
       return data.map((post: any) => ({
         ...post,
-        sharedOrigin: post.shared_from_post_id ? originMap[post.shared_from_post_id] || null : null,
+        sharedOrigin: (post.shared_from_post_id ? originByPostId[post.shared_from_post_id] || null : null) ||
+          (post.shared_from_user_id ? originByUserId[post.shared_from_user_id] || null : null) as SharedOriginInfo | null,
       }));
     },
     enabled: !!userId && !isLocked,
