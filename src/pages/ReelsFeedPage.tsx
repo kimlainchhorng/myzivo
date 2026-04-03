@@ -87,7 +87,7 @@ export default function ReelsFeedPage() {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail && userId) {
-        setShareForPost({ shareUrl: detail.shareUrl || "", shareText: detail.shareText || "", shareMediaUrl: detail.shareMediaUrl, shareMediaType: detail.shareMediaType });
+        setShareForPost({ shareUrl: detail.shareUrl || "", shareText: detail.shareText || "", shareMediaUrl: detail.shareMediaUrl, shareMediaType: detail.shareMediaType, sharePostId: detail.sharePostId, sharePostAuthorId: detail.sharePostAuthorId, sharePostAuthorName: detail.sharePostAuthorName });
         setShowCreate(true);
       }
     };
