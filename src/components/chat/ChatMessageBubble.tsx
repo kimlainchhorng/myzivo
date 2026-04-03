@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
-import { Trash2, Reply, Check, CheckCheck, Copy, Forward, Pin, Timer, Play, X, Volume2, VolumeX, Heart, MessageCircle, Share2, Pause, ChevronRight } from "lucide-react";
+import { Trash2, Reply, Check, CheckCheck, Copy, Forward, Pin, Timer, Play, X, Volume2, VolumeX, Heart, MessageCircle, Share2, Pause, ChevronRight, Lock, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +23,7 @@ interface ChatMessageBubbleProps {
   videoUrl?: string | null;
   isPinned?: boolean;
   expiresAt?: string | null;
+  messageType?: string;
   onReply: (id: string, message: string, isMe: boolean) => void;
   onDelete: (id: string) => void;
   onForward?: (id: string, message: string) => void;
@@ -30,7 +31,7 @@ interface ChatMessageBubbleProps {
 }
 
 export default function ChatMessageBubble({
-  id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt,
+  id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt, messageType,
   onReply, onDelete, onForward, onPin,
 }: ChatMessageBubbleProps) {
   const { user } = useAuth();
@@ -38,6 +39,7 @@ export default function ChatMessageBubble({
   const [showReactions, setShowReactions] = useState(false);
   const [showDeleteSub, setShowDeleteSub] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [isLocked, setIsLocked] = useState(messageType === "locked_image" && !isMe);
   const [reactions, setReactions] = useState<{ emoji: string; count: number; hasMyReaction: boolean }[]>([]);
   const [openDown, setOpenDown] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -222,10 +224,43 @@ export default function ChatMessageBubble({
           </div>
         )}
 
-        {/* Image */}
+        {/* Image — normal or locked */}
         {imageUrl && !videoUrl && (
-          <div className={`rounded-2xl overflow-hidden mb-1 shadow-sm ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
-            <img src={imageUrl} alt="" className="max-w-full max-h-60 object-cover rounded-2xl" loading="lazy" />
+          <div className={`rounded-2xl overflow-hidden mb-1 shadow-sm relative ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
+            <img
+              src={imageUrl}
+              alt=""
+              className={`max-w-full max-h-60 object-cover rounded-2xl transition-all duration-300 ${isLocked ? "blur-xl scale-105" : ""}`}
+              loading="lazy"
+            />
+            {/* Locked overlay */}
+            {isLocked && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 rounded-2xl">
+                <div className="h-14 w-14 rounded-full bg-background/90 flex items-center justify-center shadow-lg mb-2">
+                  <Lock className="h-6 w-6 text-foreground" />
+                </div>
+                <p className="text-white text-xs font-semibold mb-2 drop-shadow">Locked Photo</p>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Unlock — in a real app this would trigger payment
+                    toast.success("Photo unlocked! 🔓");
+                    setIsLocked(false);
+                  }}
+                  className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-1.5"
+                >
+                  <DollarSign className="h-3.5 w-3.5" />
+                  Unlock · $0.99
+                </button>
+              </div>
+            )}
+            {/* Lock badge for sender */}
+            {messageType === "locked_image" && isMe && (
+              <div className="absolute top-2 right-2 bg-black/50 rounded-full px-2 py-0.5 flex items-center gap-1">
+                <Lock className="h-3 w-3 text-white" />
+                <span className="text-[10px] text-white font-medium">Locked</span>
+              </div>
+            )}
           </div>
         )}
 

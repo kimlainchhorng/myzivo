@@ -118,6 +118,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const lockedImageInputRef = useRef<HTMLInputElement>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const { isTyping: recipientTyping, isOnline: recipientOnline, lastSeen: recipientLastSeen, setTyping } = useChatPresence(user?.id, recipientId);
@@ -362,7 +363,52 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (videoInputRef.current) videoInputRef.current.value = "";
   };
 
-  // Location sharing
+  // Locked image upload
+  const handleLockedImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
+    setUploadingMedia(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${user.id}/locked_${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("chat-media-files").upload(path, file, { contentType: file.type });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
+      // Send as locked image — uses message_type "locked_image"
+      const text = input.trim();
+      setInput("");
+      clearDraft();
+      setSending(true);
+      const optimisticId = `opt-${Date.now()}`;
+      const optimisticMsg: Message = {
+        id: optimisticId, sender_id: user.id, receiver_id: recipientId,
+        message: text || "🔒 Locked Photo", image_url: urlData.publicUrl,
+        video_url: null, voice_url: null, message_type: "locked_image",
+        reply_to_id: null, location_lat: null, location_lng: null, location_label: null,
+        is_pinned: false, expires_at: null, created_at: new Date().toISOString(), is_read: false,
+      };
+      setMessages((prev) => [...prev, optimisticMsg]);
+      scrollToBottom();
+
+      const { data, error: insertErr } = await (supabase as any)
+        .from("direct_messages")
+        .insert({
+          sender_id: user.id, receiver_id: recipientId,
+          message: text || "🔒 Locked Photo",
+          image_url: urlData.publicUrl,
+          message_type: "locked_image",
+        })
+        .select().single();
+      if (insertErr) throw insertErr;
+      setMessages((prev) => prev.map((m) => m.id === optimisticId ? data : m));
+    } catch { toast.error("Failed to upload locked image"); }
+    setUploadingMedia(false);
+    setSending(false);
+    if (lockedImageInputRef.current) lockedImageInputRef.current.value = "";
+  };
+
+
   const handleLocationShare = () => {
     if (!navigator.geolocation) { toast.error("Location not supported"); return; }
     toast.loading("Getting location...", { id: "loc" });
@@ -677,6 +723,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       videoUrl={msg.video_url}
                       isPinned={msg.is_pinned}
                       expiresAt={msg.expires_at}
+                      messageType={msg.message_type}
                       onReply={handleReply}
                       onDelete={handleDelete}
                       onForward={handleForward}
@@ -803,11 +850,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   toast.success(disappearingMode ? "Disappearing messages OFF" : "Disappearing messages ON — messages auto-delete after 24h");
                 }}
                 disappearingEnabled={disappearingMode}
+                onLockedImageSelect={() => lockedImageInputRef.current?.click()}
               />
             </div>
 
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
             <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
+            <input ref={lockedImageInputRef} type="file" accept="image/*" className="hidden" onChange={handleLockedImageSelect} />
 
             {/* Document upload */}
             <ChatMediaUploader
