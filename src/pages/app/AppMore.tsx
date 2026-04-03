@@ -63,17 +63,14 @@ const AppMore = () => {
             animate={{ opacity: 1, y: 0 }}
             className="mb-5 p-4 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 flex items-center gap-3"
           >
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/25 to-primary/10 flex items-center justify-center shadow-inner overflow-hidden">
-              {user.user_metadata?.avatar_url ? (
-                <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover rounded-full" />
-              ) : (
-                <span className="text-primary font-bold text-lg">
-                  {(user.email?.[0] || "Z").toUpperCase()}
-                </span>
-              )}
-            </div>
+            <Avatar className="w-12 h-12 border-2 border-primary/20">
+              <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || undefined} />
+              <AvatarFallback className="bg-gradient-to-br from-primary/25 to-primary/10 text-primary font-bold text-lg">
+                {(profile?.full_name?.[0] || user.email?.[0] || "Z").toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm truncate">{user.user_metadata?.full_name || user.email?.split("@")[0]}</p>
+              <p className="font-bold text-sm truncate">{profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0]}</p>
               <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
             </div>
             <button
