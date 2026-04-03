@@ -48,7 +48,7 @@ const ZivoMobileNav = () => {
     if (path.startsWith("/feed")) return "reel";
     if (path.startsWith("/store-map") || path.startsWith("/map")) return "map";
     if (path.startsWith("/chat")) return "chat";
-    if (path.startsWith("/account") || path.startsWith("/profile")) return "account";
+    if (path.startsWith("/account") || path.startsWith("/profile") || path.startsWith("/more")) return "account";
     return "home";
   };
 
