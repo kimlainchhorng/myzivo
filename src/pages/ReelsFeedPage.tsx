@@ -395,9 +395,9 @@ export default function ReelsFeedPage() {
       {userId && (
         <button
           onClick={() => setShowCreate(true)}
-          className="w-full flex items-center gap-3 px-4 py-3 border-b border-border/20 bg-card hover:bg-muted/30 transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-border/10 bg-card hover:bg-muted/20 transition-colors"
         >
-          <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
+          <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border-2 border-primary/20 shrink-0">
             {userProfile?.avatar ? (
               <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -406,13 +406,16 @@ export default function ReelsFeedPage() {
               </div>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">Share a moment...</p>
-          <div className="ml-auto flex gap-2">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <ImageIcon className="h-4 w-4 text-primary" />
+          <p className="text-sm text-muted-foreground flex-1 text-left">What's on your mind?</p>
+          <div className="flex gap-1.5">
+            <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+              <ImageIcon className="h-3.5 w-3.5 text-emerald-600" />
             </div>
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <Camera className="h-4 w-4 text-primary" />
+            <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+              <Film className="h-3.5 w-3.5 text-blue-600" />
+            </div>
+            <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+              <Camera className="h-3.5 w-3.5 text-orange-600" />
             </div>
           </div>
         </button>
@@ -428,10 +431,18 @@ export default function ReelsFeedPage() {
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-60 text-muted-foreground/60">
-          <ImageIcon className="h-10 w-10 mb-2" />
-          <p className="text-sm">No posts yet</p>
-          <p className="text-xs mt-1">Be the first to share something!</p>
+        <div className="flex flex-col items-center justify-center h-60 text-center px-6">
+          <div className="text-5xl mb-3">📸</div>
+          <p className="text-base font-bold text-foreground mb-1">No posts yet</p>
+          <p className="text-sm text-muted-foreground mb-4">Be the first to share something amazing!</p>
+          {userId && (
+            <button
+              onClick={() => setShowCreate(true)}
+              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold active:scale-95 transition-transform shadow-lg shadow-primary/20"
+            >
+              Create Post
+            </button>
+          )}
         </div>
       ) : (
         <div className="divide-y divide-border/20">
@@ -1467,8 +1478,12 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   const [commentSetting, setCommentSetting] = useState<"everyone" | "friends" | "off">(item.comment_control || "everyone");
   const [showCommentSettings, setShowCommentSettings] = useState(false);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
+  const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastTapRef = useRef(0);
 
   const isOwner = currentUserId && item.author_id === currentUserId;
 
@@ -1534,6 +1549,25 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
         await supabase.from("store_post_likes").delete().eq("post_id", item.id).eq("user_id", currentUserId);
       }
     }
+  };
+
+  // Double-tap to like
+  const handleDoubleTap = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      if (!liked) handleLike();
+      setShowDoubleTapHeart(true);
+      setTimeout(() => setShowDoubleTapHeart(false), 800);
+    }
+    lastTapRef.current = now;
+  };
+
+  // Emoji reactions
+  const REACTIONS = ["❤️", "😂", "😮", "😢", "🔥", "👏"];
+  const handleReaction = (emoji: string) => {
+    setSelectedReaction(selectedReaction === emoji ? null : emoji);
+    setShowReactionPicker(false);
+    toast.success(`Reacted with ${emoji}`);
   };
 
   const handleShare = () => {
@@ -1814,7 +1848,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
           )}
 
           {/* Media */}
-          <div ref={containerRef} className={cn("relative w-full", hasMedia ? "aspect-square bg-black" : "")}>
+          <div ref={containerRef} onClick={handleDoubleTap} className={cn("relative w-full", hasMedia ? "aspect-square bg-black" : "")}>
             {hasMedia ? (
               item.media_type === "video" ? (
                 <>
@@ -1867,44 +1901,95 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                   ))}
                 </div>
               </>
-            )}
+             )}
+
+            {/* Double-tap heart animation */}
+            <AnimatePresence>
+              {showDoubleTapHeart && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 1.5, opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
+                >
+                  <Heart className="h-20 w-20 text-white fill-white drop-shadow-2xl" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </>
       )}
 
-      {/* Action buttons */}
-      <div className="flex items-center px-3 py-2">
-        <div className="flex items-center gap-3 flex-1">
-          <button onClick={handleLike} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <Heart className={cn("h-6 w-6 transition-all", liked ? "text-red-500 fill-red-500 scale-110" : "text-foreground active:scale-125")} />
+      {/* Emoji reaction bar (long-press activated) */}
+      <AnimatePresence>
+        {showReactionPicker && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.9 }}
+            className="flex items-center gap-1 px-3 py-2 mx-3 mt-1 bg-card rounded-full shadow-lg border border-border/30 w-fit"
+          >
+            {REACTIONS.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => handleReaction(emoji)}
+                className={cn(
+                  "text-xl p-1.5 rounded-full transition-all active:scale-125 hover:bg-muted",
+                  selectedReaction === emoji && "bg-primary/10 ring-2 ring-primary/30"
+                )}
+              >
+                {emoji}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Action buttons — enhanced with counts */}
+      <div className="flex items-center px-3 py-1.5">
+        <div className="flex items-center gap-1 flex-1">
+          <button
+            onClick={handleLike}
+            onContextMenu={(e) => { e.preventDefault(); setShowReactionPicker(!showReactionPicker); }}
+            className="min-h-[44px] min-w-[40px] flex items-center justify-center gap-1 group"
+          >
+            {selectedReaction ? (
+              <span className="text-lg">{selectedReaction}</span>
+            ) : (
+              <Heart className={cn("h-[22px] w-[22px] transition-all", liked ? "text-destructive fill-destructive scale-110" : "text-foreground group-active:scale-125")} />
+            )}
+            {localLikes > 0 && !item.hide_like_counts && (
+              <span className={cn("text-[12px] font-semibold", liked || selectedReaction ? "text-destructive" : "text-muted-foreground")}>
+                {localLikes > 999 ? `${(localLikes/1000).toFixed(1)}k` : localLikes}
+              </span>
+            )}
           </button>
           {commentSetting !== "off" && (
-            <button onClick={handleComment} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground">
-              <MessageCircle className="h-6 w-6" />
+            <button onClick={handleComment} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
+              <MessageCircle className="h-[22px] w-[22px]" />
+              {item.comments_count > 0 && (
+                <span className="text-[12px] text-muted-foreground font-semibold">
+                  {item.comments_count > 999 ? `${(item.comments_count/1000).toFixed(1)}k` : item.comments_count}
+                </span>
+              )}
             </button>
           )}
           {item.allow_sharing !== false && (
-            <button onClick={handleShare} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground gap-1">
-              <Share2 className="h-6 w-6" />
+            <button onClick={handleShare} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
+              <Share2 className="h-[22px] w-[22px]" />
               {item.shares_count > 0 && (
-                <span className="text-[12px] text-muted-foreground">{item.shares_count}</span>
+                <span className="text-[12px] text-muted-foreground font-semibold">
+                  {item.shares_count > 999 ? `${(item.shares_count/1000).toFixed(1)}k` : item.shares_count}
+                </span>
               )}
             </button>
           )}
         </div>
         <button onClick={handleSave} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-          <Bookmark className={cn("h-6 w-6 transition-all", saved ? "text-foreground fill-foreground" : "text-foreground")} />
+          <Bookmark className={cn("h-[22px] w-[22px] transition-all", saved ? "text-primary fill-primary" : "text-foreground")} />
         </button>
       </div>
-
-      {/* Likes */}
-      {localLikes > 0 && !item.hide_like_counts && (
-        <div className="px-3 pb-1">
-          <p className="text-[13px] font-semibold text-foreground">
-            {localLikes.toLocaleString()} likes
-          </p>
-        </div>
-      )}
 
       {/* Caption for normal posts already shown above media; skip duplicate */}
 
