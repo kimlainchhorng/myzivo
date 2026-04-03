@@ -38,9 +38,11 @@ export default function ChatMessageBubble({
   const [showDeleteSub, setShowDeleteSub] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [reactions, setReactions] = useState<{ emoji: string; count: number; hasMyReaction: boolean }[]>([]);
+  const [openDown, setOpenDown] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPress = useRef(false);
   const hasMoved = useRef(false);
+  const bubbleRef = useRef<HTMLDivElement>(null);
 
   // Load reactions
   useEffect(() => {
@@ -92,6 +94,11 @@ export default function ChatMessageBubble({
     hasMoved.current = false;
     longPressTimer.current = setTimeout(() => {
       didLongPress.current = true;
+      // Check if bubble is in top half of viewport → open menu downward
+      if (bubbleRef.current) {
+        const rect = bubbleRef.current.getBoundingClientRect();
+        setOpenDown(rect.top < 320);
+      }
       setShowActions(true);
       setShowReactions(true);
       if (navigator.vibrate) navigator.vibrate(30);
@@ -144,7 +151,7 @@ export default function ChatMessageBubble({
   const isDisappearing = !!expiresAt;
 
   return (
-    <div className={`flex ${isMe ? "justify-end" : "justify-start"} relative px-1`}>
+    <div ref={bubbleRef} className={`flex ${isMe ? "justify-end" : "justify-start"} relative px-1`}>
       <motion.div
         drag="x"
         dragConstraints={{ left: isMe ? -80 : 0, right: isMe ? 0 : 80 }}
@@ -278,11 +285,11 @@ export default function ChatMessageBubble({
               onClick={() => { setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 6 }}
+              initial={{ opacity: 0, scale: 0.92, y: openDown ? -6 : 6 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 6 }}
+              exit={{ opacity: 0, scale: 0.92, y: openDown ? -6 : 6 }}
               transition={{ type: "spring", damping: 26, stiffness: 420 }}
-              className={`absolute z-50 bottom-full mb-3 flex flex-col gap-2 ${isMe ? "right-0 items-end" : "left-0 items-start"}`}
+              className={`absolute z-50 ${openDown ? "top-full mt-3 flex-col-reverse" : "bottom-full mb-3 flex-col"} flex gap-2 ${isMe ? "right-0 items-end" : "left-0 items-start"}`}
             >
               {/* Emoji reactions row */}
               {showReactions && (

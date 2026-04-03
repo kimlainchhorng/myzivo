@@ -46,8 +46,10 @@ export default function CallEventBubble({
 }: CallEventBubbleProps) {
   const [showActions, setShowActions] = useState(false);
   const [deleteStep, setDeleteStep] = useState<"menu" | "confirm">("menu");
+  const [openDown, setOpenDown] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPress = useRef(false);
+  const bubbleRef = useRef<HTMLDivElement>(null);
 
   const isMissed = status === "missed" || status === "no_answer" || status === "declined";
   const isVideo = callType === "video";
@@ -61,6 +63,10 @@ export default function CallEventBubble({
     longPressTimer.current = setTimeout(() => {
       didLongPress.current = true;
       setDeleteStep("menu");
+      if (bubbleRef.current) {
+        const rect = bubbleRef.current.getBoundingClientRect();
+        setOpenDown(rect.top < 280);
+      }
       setShowActions(true);
       if (navigator.vibrate) navigator.vibrate(30);
     }, 400);
@@ -86,7 +92,7 @@ export default function CallEventBubble({
   };
 
   return (
-    <div className="flex justify-end my-1 relative">
+    <div ref={bubbleRef} className="flex justify-end my-1 relative">
       <div
         onClick={handleClick}
         onPointerDown={handlePointerDown}
@@ -146,11 +152,11 @@ export default function CallEventBubble({
               onClick={closeMenu}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 6 }}
+              initial={{ opacity: 0, scale: 0.92, y: openDown ? -6 : 6 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 6 }}
+              exit={{ opacity: 0, scale: 0.92, y: openDown ? -6 : 6 }}
               transition={{ type: "spring", damping: 26, stiffness: 420 }}
-              className="absolute z-50 bottom-full mb-2 right-0"
+              className={`absolute z-50 ${openDown ? "top-full mt-2" : "bottom-full mb-2"} right-0`}
             >
               <div className="bg-background shadow-lg shadow-black/10 border border-border/30 rounded-xl overflow-hidden min-w-[190px]">
                 <AnimatePresence mode="wait">
