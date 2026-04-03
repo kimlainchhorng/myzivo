@@ -85,7 +85,7 @@ export default function SocialListModal({ open, onClose, initialTab = "friends",
         if (data) {
           const otherIds = data.map((r: any) => r.user_id === user.id ? r.friend_id : r.user_id);
           const [{ data: profiles }, { data: followData }] = await Promise.all([
-            supabase.from("profiles").select("id, full_name, avatar_url").in("id", otherIds),
+            supabase.from("public_profiles" as any).select("id, full_name, avatar_url").in("id", otherIds),
             (supabase as any).from("followers").select("id, following_id").eq("follower_id", user.id).in("following_id", otherIds),
           ]);
           const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
