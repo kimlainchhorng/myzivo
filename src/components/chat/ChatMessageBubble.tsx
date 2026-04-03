@@ -311,7 +311,7 @@ export default function ChatMessageBubble({
                     setUnlockLoading(true);
                     try {
                       const { data, error } = await supabase.functions.invoke("unlock-media-checkout", {
-                        body: { message_id: id, seller_id: senderId || "" },
+                        body: { message_id: id, seller_id: senderId || "", amount_cents: unlockPrice },
                       });
                       if (error) throw error;
                       if (data?.url) {
