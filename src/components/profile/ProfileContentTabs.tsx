@@ -370,16 +370,13 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   />
                 )
               ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-muted/80 via-card to-muted/40 p-3 flex flex-col justify-between">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-                    <Link2 className="w-4 h-4 text-primary" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-card to-muted/30 p-2.5 flex flex-col">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 border border-primary/15 flex items-center justify-center mb-auto">
+                    <Share2 className="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <div className="space-y-1.5">
-                    <p className="text-[11px] font-semibold text-foreground line-clamp-5 whitespace-pre-wrap break-words">
-                      {item.caption || "Shared post"}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">Shared post</p>
-                  </div>
+                  <p className="text-[10px] font-medium text-foreground/80 line-clamp-4 whitespace-pre-wrap break-words leading-tight mt-auto">
+                    {item.caption || "Shared post"}
+                  </p>
                 </div>
               )}
               {item.type === "reel" && hasMedia && (
