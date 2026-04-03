@@ -188,7 +188,7 @@ function ParticipantTile({ participant, isVideo }: { participant: Participant; i
 
   return (
     <div className={`relative rounded-xl overflow-hidden border-2 ${
-      participant.isSpeaking ? "border-green-500/50" : "border-border/20"
+      participant.isSpeaking ? "border-primary/50" : "border-border/20"
     } bg-muted/30`}>
       {isVideo && !participant.isCameraOff && participant.stream ? (
         <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
