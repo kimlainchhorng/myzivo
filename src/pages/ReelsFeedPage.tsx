@@ -1647,62 +1647,23 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
           <MessageSquareOff className="h-3.5 w-3.5 text-muted-foreground/60" />
           <p className="text-[12px] text-muted-foreground/60">Comments are turned off</p>
         </div>
-      ) : (item.comments_count > 0 || comments.length > 0) ? (
+      ) : item.comments_count > 0 ? (
         <button onClick={handleComment} className="px-3 pb-2">
           <p className="text-[12px] text-muted-foreground">
-            View all {item.comments_count + comments.length} comments
+            View all {item.comments_count} comments
           </p>
         </button>
       ) : null}
 
-      {/* Comments section */}
-      <AnimatePresence>
-        {showComments && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            {/* Existing local comments */}
-            {comments.length > 0 && (
-              <div className="px-3 pb-2 space-y-2">
-                {comments.map((c) => (
-                  <div key={c.id} className="flex items-start gap-2">
-                    <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground shrink-0 mt-0.5">
-                      {c.author[0]}
-                    </div>
-                    <div>
-                      <p className="text-[12px] text-foreground">
-                        <span className="font-semibold mr-1">{c.author}</span>
-                        {c.text}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">{c.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Comment input */}
-            <div className="flex items-center gap-2 px-3 py-2 border-t border-border/20">
-              <input
-                type="text"
-                placeholder="Add a comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && submitComment()}
-                className="flex-1 text-[13px] bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-h-[44px]"
-              />
-              {commentText.trim() && (
-                <button onClick={submitComment} className="text-primary font-semibold text-[13px] min-h-[44px] min-w-[44px] flex items-center justify-center">
-                  <Send className="h-5 w-5" />
-                </button>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Comments Sheet */}
+      <CommentsSheet
+        open={showComments}
+        onClose={() => setShowComments(false)}
+        postId={item.id}
+        postSource={item.source}
+        currentUserId={currentUserId}
+        commentsCount={item.comments_count}
+      />
 
       {/* Views */}
       {item.media_type === "video" && item.views_count > 0 && (
