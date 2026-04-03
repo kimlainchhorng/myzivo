@@ -301,8 +301,14 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         onClick={() => setShowComposer(true)}
         className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-border/10 bg-card hover:bg-muted/20 transition-colors rounded-2xl"
       >
-        <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border-2 border-primary/20 shrink-0 flex items-center justify-center text-muted-foreground/50">
-          <Camera className="h-4 w-4" />
+        <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border-2 border-primary/20 shrink-0">
+          {profileAvatar ? (
+            <img src={profileAvatar} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-muted-foreground/50">
+              <Camera className="h-4 w-4" />
+            </div>
+          )}
         </div>
         <p className="text-sm text-muted-foreground flex-1 text-left">What's on your mind?</p>
         <div className="flex gap-1.5">
