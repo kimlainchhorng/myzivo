@@ -1539,19 +1539,19 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 </div>
 
                 {/* Shared content preview */}
-                {isSharedPost && item.shared_from_author_name && (
+                {isSharedPost && item.shared_from_user_name && (
                   <div className="rounded-xl border border-border/50 p-2.5 mb-2 bg-muted/20">
                     <div className="flex items-center gap-2">
                       <div className="h-7 w-7 rounded-full overflow-hidden bg-muted shrink-0">
-                        {item.shared_from_author_avatar ? (
-                          <img src={item.shared_from_author_avatar} alt="" className="h-full w-full object-cover" />
+                        {item.shared_from_user_avatar ? (
+                          <img src={item.shared_from_user_avatar} alt="" className="h-full w-full object-cover" />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-muted-foreground/40">
-                            {item.shared_from_author_name?.[0]}
+                            {item.shared_from_user_name?.[0]}
                           </div>
                         )}
                       </div>
-                      <p className="text-xs font-semibold text-foreground">{item.shared_from_author_name}</p>
+                      <p className="text-xs font-semibold text-foreground">{item.shared_from_user_name}</p>
                     </div>
                     {item.shared_from_caption && (
                       <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{item.shared_from_caption}</p>
@@ -1562,7 +1562,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 {/* Media thumbnail */}
                 {mediaUrl && (
                   <div className="rounded-xl overflow-hidden max-h-48 mb-1">
-                    {item.type === "reel" ? (
+                    {item.media_type === "video" ? (
                       <video src={mediaUrl} className="w-full h-full object-cover max-h-48" muted />
                     ) : (
                       <img src={mediaUrl} alt="" className="w-full h-full object-cover max-h-48" />
