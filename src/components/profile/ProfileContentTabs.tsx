@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import UnifiedShareSheet from "@/components/shared/ShareSheet";
+import CreatePostModal from "@/components/social/CreatePostModal";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
