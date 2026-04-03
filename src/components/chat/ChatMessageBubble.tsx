@@ -35,6 +35,7 @@ export default function ChatMessageBubble({
   const { user } = useAuth();
   const [showActions, setShowActions] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
+  const [showDeleteSub, setShowDeleteSub] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [reactions, setReactions] = useState<{ emoji: string; count: number; hasMyReaction: boolean }[]>([]);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -274,7 +275,7 @@ export default function ChatMessageBubble({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]"
-              onClick={() => { setShowActions(false); setShowReactions(false); }}
+              onClick={() => { setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.85, y: 10 }}
@@ -313,12 +314,29 @@ export default function ChatMessageBubble({
                 transition={{ delay: 0.08 }}
                 className="bg-background shadow-xl shadow-black/8 border border-border/20 rounded-2xl overflow-hidden min-w-[180px]"
               >
-                <ActionBtn icon={Reply} label="Reply" onClick={() => { onReply(id, message, isMe); setShowActions(false); setShowReactions(false); }} />
-                <ActionBtn icon={Copy} label="Copy" onClick={handleCopy} />
-                <ActionBtn icon={Forward} label="Forward" onClick={handleForward} />
-                <ActionBtn icon={Pin} label={isPinned ? "Unpin" : "Pin"} onClick={handlePin} active={isPinned} />
-                {isMe && (
-                  <ActionBtn icon={Trash2} label="Delete" onClick={() => { onDelete(id); setShowActions(false); setShowReactions(false); }} destructive />
+                {!showDeleteSub ? (
+                  <>
+                    <ActionBtn icon={Reply} label="Reply" onClick={() => { onReply(id, message, isMe); setShowActions(false); setShowReactions(false); }} />
+                    <ActionBtn icon={Copy} label="Copy" onClick={handleCopy} />
+                    <ActionBtn icon={Forward} label="Forward" onClick={handleForward} />
+                    <ActionBtn icon={Pin} label={isPinned ? "Unpin" : "Pin"} onClick={handlePin} active={isPinned} />
+                    <ActionBtn icon={Trash2} label="Delete" onClick={() => setShowDeleteSub(true)} destructive />
+                  </>
+                ) : (
+                  <>
+                    <div className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground border-b border-border/30">Delete message</div>
+                    {isMe && (
+                      <ActionBtn icon={Trash2} label="Delete for everyone" onClick={() => { onDelete(id); setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }} destructive />
+                    )}
+                    <ActionBtn icon={Trash2} label="Delete for me" onClick={() => { onDelete(id); setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }} destructive />
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowDeleteSub(false); }}
+                      className="flex items-center gap-3 w-full px-4 py-3 text-left transition-colors hover:bg-muted/40 text-muted-foreground active:scale-[0.98]"
+                    >
+                      <Reply className="h-[18px] w-[18px] shrink-0 opacity-70 rotate-180" />
+                      <span className="text-[13px] font-medium">Back</span>
+                    </button>
+                  </>
                 )}
               </motion.div>
             </motion.div>
