@@ -75,6 +75,8 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
   const [showComposer, setShowComposer] = useState(false);
   const [composerType, setComposerType] = useState<"photo" | "reel" | null>(null);
+  const [showCreatePost, setShowCreatePost] = useState(false);
+  const [profileName, setProfileName] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<FeedItem | null>(null);
   const [showPostMenu, setShowPostMenu] = useState(false);
   const [editingCaption, setEditingCaption] = useState(false);
