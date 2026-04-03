@@ -443,13 +443,15 @@ function CreatePostModal({
   userProfile,
   onClose,
   onCreated,
+  initialCaption,
 }: {
   userId: string;
   userProfile: { name: string; avatar: string | null } | null;
   onClose: () => void;
   onCreated: () => void;
+  initialCaption?: string;
 }) {
-  const [caption, setCaption] = useState("");
+  const [caption, setCaption] = useState(initialCaption || "");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<"image" | "video">("image");
