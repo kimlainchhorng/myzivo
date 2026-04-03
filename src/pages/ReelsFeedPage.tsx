@@ -180,7 +180,7 @@ export default function ReelsFeedPage() {
       try {
         const { data: userPosts } = await (supabase as any)
           .from("user_posts")
-          .select("id, media_url, media_type, caption, likes_count, comments_count, views_count, created_at, user_id")
+          .select("id, media_url, media_type, caption, likes_count, comments_count, views_count, created_at, user_id, shared_from_post_id, shared_from_user_id")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
           .limit(50);
