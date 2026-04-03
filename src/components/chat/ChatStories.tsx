@@ -598,6 +598,23 @@ export default function ChatStories() {
                 </div>
               )}
 
+              {/* Quick emoji reactions */}
+              {!isOwner && (
+                <div className="px-4 pb-2">
+                  <div className="flex items-center justify-center gap-3">
+                    {["❤️", "😂", "😮", "🔥", "😢", "👏"].map((emoji) => (
+                      <button
+                        key={emoji}
+                        onClick={() => { toast.success(`Reacted with ${emoji}`); }}
+                        className="text-2xl active:scale-150 transition-transform"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Comment input bar */}
               {!isOwner && (
                 <div className="px-4 pb-3">
