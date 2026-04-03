@@ -121,6 +121,9 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
           if (alive && profileData?.avatar_url) {
             setProfileAvatar(profileData.avatar_url);
           }
+          if (alive && profileData?.full_name) {
+            setProfileName(profileData.full_name);
+          }
         } catch {}
       }
 
