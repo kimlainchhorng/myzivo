@@ -1944,6 +1944,98 @@ export type Database = {
           },
         ]
       }
+      ama_questions: {
+        Row: {
+          ama_id: string
+          answer: string | null
+          answered_at: string | null
+          created_at: string | null
+          id: string
+          is_anonymous: boolean | null
+          is_answered: boolean | null
+          question: string
+          upvotes: number | null
+          user_id: string
+        }
+        Insert: {
+          ama_id: string
+          answer?: string | null
+          answered_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          is_answered?: boolean | null
+          question: string
+          upvotes?: number | null
+          user_id: string
+        }
+        Update: {
+          ama_id?: string
+          answer?: string | null
+          answered_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          is_answered?: boolean | null
+          question?: string
+          upvotes?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ama_questions_ama_id_fkey"
+            columns: ["ama_id"]
+            isOneToOne: false
+            referencedRelation: "ama_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ama_sessions: {
+        Row: {
+          cover_url: string | null
+          created_at: string | null
+          description: string | null
+          ends_at: string | null
+          host_id: string
+          id: string
+          question_count: number | null
+          starts_at: string | null
+          status: string | null
+          title: string
+          topic: string | null
+          viewer_count: number | null
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          host_id: string
+          id?: string
+          question_count?: number | null
+          starts_at?: string | null
+          status?: string | null
+          title: string
+          topic?: string | null
+          viewer_count?: number | null
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          host_id?: string
+          id?: string
+          question_count?: number | null
+          starts_at?: string | null
+          status?: string | null
+          title?: string
+          topic?: string | null
+          viewer_count?: number | null
+        }
+        Relationships: []
+      }
       analytics_aggregations: {
         Row: {
           avg_value: number | null
@@ -6733,6 +6825,151 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      challenge_participants: {
+        Row: {
+          challenge_id: string
+          id: string
+          joined_at: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          id?: string
+          joined_at?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          id?: string
+          joined_at?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenge_submissions: {
+        Row: {
+          caption: string | null
+          challenge_id: string
+          content_id: string | null
+          content_type: string | null
+          content_url: string | null
+          created_at: string | null
+          id: string
+          is_winner: boolean | null
+          rank: number | null
+          user_id: string
+          votes_count: number | null
+        }
+        Insert: {
+          caption?: string | null
+          challenge_id: string
+          content_id?: string | null
+          content_type?: string | null
+          content_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_winner?: boolean | null
+          rank?: number | null
+          user_id: string
+          votes_count?: number | null
+        }
+        Update: {
+          caption?: string | null
+          challenge_id?: string
+          content_id?: string | null
+          content_type?: string | null
+          content_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_winner?: boolean | null
+          rank?: number | null
+          user_id?: string
+          votes_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_submissions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          challenge_type: string | null
+          cover_url: string | null
+          created_at: string | null
+          creator_id: string
+          description: string | null
+          ends_at: string | null
+          hashtag: string | null
+          id: string
+          is_featured: boolean | null
+          max_participants: number | null
+          participant_count: number | null
+          prize_description: string | null
+          prize_value_cents: number | null
+          rules: string | null
+          starts_at: string | null
+          status: string | null
+          submission_count: number | null
+          title: string
+        }
+        Insert: {
+          challenge_type?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          creator_id: string
+          description?: string | null
+          ends_at?: string | null
+          hashtag?: string | null
+          id?: string
+          is_featured?: boolean | null
+          max_participants?: number | null
+          participant_count?: number | null
+          prize_description?: string | null
+          prize_value_cents?: number | null
+          rules?: string | null
+          starts_at?: string | null
+          status?: string | null
+          submission_count?: number | null
+          title: string
+        }
+        Update: {
+          challenge_type?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          creator_id?: string
+          description?: string | null
+          ends_at?: string | null
+          hashtag?: string | null
+          id?: string
+          is_featured?: boolean | null
+          max_participants?: number | null
+          participant_count?: number | null
+          prize_description?: string | null
+          prize_value_cents?: number | null
+          rules?: string | null
+          starts_at?: string | null
+          status?: string | null
+          submission_count?: number | null
+          title?: string
+        }
+        Relationships: []
       }
       chat_drafts: {
         Row: {
@@ -20199,6 +20436,33 @@ export type Database = {
         }
         Relationships: []
       }
+      gif_favorites: {
+        Row: {
+          created_at: string | null
+          gif_id: string | null
+          gif_url: string
+          id: string
+          source: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          gif_id?: string | null
+          gif_url: string
+          id?: string
+          source?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          gif_id?: string | null
+          gif_url?: string
+          id?: string
+          source?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       gift_card_redemptions: {
         Row: {
           amount: number | null
@@ -33546,6 +33810,45 @@ export type Database = {
           },
         ]
       }
+      reaction_packs: {
+        Row: {
+          created_at: string | null
+          creator_id: string | null
+          download_count: number | null
+          id: string
+          is_active: boolean | null
+          is_premium: boolean | null
+          name: string
+          preview_url: string | null
+          price_cents: number | null
+          reactions: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          creator_id?: string | null
+          download_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_premium?: boolean | null
+          name: string
+          preview_url?: string | null
+          price_cents?: number | null
+          reactions?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          creator_id?: string | null
+          download_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_premium?: boolean | null
+          name?: string
+          preview_url?: string | null
+          price_cents?: number | null
+          reactions?: Json | null
+        }
+        Relationships: []
+      }
       reassignment_logs: {
         Row: {
           created_at: string | null
@@ -39749,6 +40052,77 @@ export type Database = {
         }
         Relationships: []
       }
+      social_poll_votes: {
+        Row: {
+          created_at: string | null
+          id: string
+          option_index: number
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          option_index: number
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          option_index?: number
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "social_polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_polls: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_anonymous: boolean | null
+          options: Json
+          poll_type: string | null
+          question: string
+          show_results: string | null
+          total_votes: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          options?: Json
+          poll_type?: string | null
+          question: string
+          show_results?: string | null
+          total_votes?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          options?: Json
+          poll_type?: string | null
+          question?: string
+          show_results?: string | null
+          total_votes?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       sos_alerts: {
         Row: {
           cancelled_at: string | null
@@ -40661,6 +41035,86 @@ export type Database = {
           state_code?: string
           state_name?: string
           timezone_default?: string | null
+        }
+        Relationships: []
+      }
+      sticker_items: {
+        Row: {
+          created_at: string | null
+          emoji_shortcode: string | null
+          id: string
+          image_url: string
+          name: string | null
+          pack_id: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          emoji_shortcode?: string | null
+          id?: string
+          image_url: string
+          name?: string | null
+          pack_id: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          emoji_shortcode?: string | null
+          id?: string
+          image_url?: string
+          name?: string | null
+          pack_id?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sticker_items_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "sticker_packs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sticker_packs: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          creator_id: string | null
+          download_count: number | null
+          id: string
+          is_active: boolean | null
+          is_premium: boolean | null
+          name: string
+          preview_url: string | null
+          price_cents: number | null
+          sticker_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          creator_id?: string | null
+          download_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_premium?: boolean | null
+          name: string
+          preview_url?: string | null
+          price_cents?: number | null
+          sticker_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          creator_id?: string | null
+          download_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_premium?: boolean | null
+          name?: string
+          preview_url?: string | null
+          price_cents?: number | null
+          sticker_count?: number | null
         }
         Relationships: []
       }
@@ -46971,6 +47425,39 @@ export type Database = {
           media_url?: string
           user_id?: string
           views_count?: number
+        }
+        Relationships: []
+      }
+      user_streaks: {
+        Row: {
+          current_streak: number | null
+          id: string
+          last_activity_date: string | null
+          longest_streak: number | null
+          started_at: string | null
+          streak_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number | null
+          started_at?: string | null
+          streak_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number | null
+          started_at?: string | null
+          streak_type?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
