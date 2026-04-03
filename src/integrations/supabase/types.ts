@@ -11904,6 +11904,7 @@ export type Database = {
           location_label: string | null
           location_lat: number | null
           location_lng: number | null
+          locked_price_cents: number | null
           message: string
           message_type: string
           receiver_id: string
@@ -11923,6 +11924,7 @@ export type Database = {
           location_label?: string | null
           location_lat?: number | null
           location_lng?: number | null
+          locked_price_cents?: number | null
           message: string
           message_type?: string
           receiver_id: string
@@ -11942,6 +11944,7 @@ export type Database = {
           location_label?: string | null
           location_lat?: number | null
           location_lng?: number | null
+          locked_price_cents?: number | null
           message?: string
           message_type?: string
           receiver_id?: string
