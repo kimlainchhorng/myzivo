@@ -2351,6 +2351,55 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
         )}
       </AnimatePresence>
 
+      {/* Edit Caption Sheet */}
+      <AnimatePresence>
+        {showEditCaption && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[230] flex items-end justify-center bg-black/40"
+            onClick={() => setShowEditCaption(false)}
+          >
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-background rounded-t-2xl pb-8 overflow-hidden"
+            >
+              <div className="flex justify-center py-3">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+              </div>
+              <div className="px-4">
+                <h3 className="text-base font-bold text-foreground mb-3">Edit Caption</h3>
+                <textarea
+                  value={editCaptionText}
+                  onChange={(e) => setEditCaptionText(e.target.value)}
+                  rows={4}
+                  maxLength={2200}
+                  className="w-full p-3 rounded-xl bg-muted/50 border border-border/40 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  placeholder="Write a caption..."
+                />
+                <p className="text-[10px] text-muted-foreground mt-1 mb-3">{editCaptionText.length}/2,200</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowEditCaption(false)}
+                    className="flex-1 py-2.5 rounded-xl bg-muted text-foreground text-sm font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleEditPost}
+                    disabled={editSaving}
+                    className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
+                  >
+                    {editSaving ? "Saving..." : "Save"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
