@@ -426,6 +426,41 @@ export default function ReelsFeedPage() {
       {/* Story Rings */}
       <FeedStoryRing />
 
+      {/* Trending hashtags */}
+      <div className="px-3 py-2 flex gap-2 overflow-x-auto no-scrollbar border-b border-border/10">
+        {["#travel", "#food", "#zivo", "#deals", "#explore", "#ootd", "#sunset"].map((tag) => (
+          <button
+            key={tag}
+            onClick={() => toast.info(`Showing posts with ${tag}`)}
+            className="px-3 py-1.5 rounded-full bg-primary/8 text-primary text-xs font-semibold whitespace-nowrap hover:bg-primary/15 active:scale-95 transition-all"
+          >
+            {tag}
+          </button>
+        ))}
+      </div>
+
+      {/* Feed filter tabs */}
+      <div className="px-3 py-2 flex gap-2 border-b border-border/10">
+        {([
+          { value: "all" as const, label: "All" },
+          { value: "photos" as const, label: "📷 Photos" },
+          { value: "videos" as const, label: "🎬 Videos" },
+          { value: "text" as const, label: "✍️ Text" },
+        ]).map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => setFeedFilter(tab.value)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+              feedFilter === tab.value
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted/60 text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Posts */}
       {isLoading ? (
         <div className="flex items-center justify-center h-60">
@@ -445,9 +480,18 @@ export default function ReelsFeedPage() {
             </button>
           )}
         </div>
-      ) : (
+      ) : (() => {
+        const filteredItems = feedFilter === "all" ? items
+          : feedFilter === "photos" ? items.filter(i => i.media_type === "image" && i.media_urls.length > 0)
+          : feedFilter === "videos" ? items.filter(i => i.media_type === "video")
+          : items.filter(i => !i.media_urls.length || !i.media_urls[0]);
+        return filteredItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
+            <p className="text-sm">No {feedFilter} posts found</p>
+          </div>
+        ) : (
         <div className="divide-y divide-border/20">
-          {items.map((item, idx) => (
+          {filteredItems.map((item, idx) => (
             <FeedCard key={item.id} item={item} currentUserId={userId} onOpenFullscreen={() => {
               if (item.media_type === 'video') {
                 setReelsStartIndex(idx);
