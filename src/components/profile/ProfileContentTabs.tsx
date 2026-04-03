@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import UnifiedShareSheet from "@/components/shared/ShareSheet";
 import CreatePostModal from "@/components/social/CreatePostModal";
+import CommentsSheet from "@/components/social/CommentsSheet";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -16,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolveSharedOrigins";
+import { isLocalDraftPostId, toUserPostInteractionId } from "@/lib/social/postInteraction";
 
 type FeedItem = {
   id: string;
@@ -91,6 +93,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [feed, setFeed] = useState<FeedItem[]>(demoFeed);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [sharePostId, setSharePostId] = useState<string | null>(null);
+  const [commentPost, setCommentPost] = useState<FeedItem | null>(null);
   const [showProfileMoreShare, setShowProfileMoreShare] = useState(false);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
@@ -231,6 +234,43 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
     };
   }, [profileOwnerId]);
 
+  useEffect(() => {
+    let alive = true;
+
+    const loadBookmarkedPosts = async () => {
+      if (!user?.id) {
+        if (alive) setBookmarkedPosts(new Set());
+        return;
+      }
+
+      const interactionIds = feed
+        .map((item) => item.id)
+        .filter((postId) => !isLocalDraftPostId(postId))
+        .map(toUserPostInteractionId);
+
+      if (!interactionIds.length) {
+        if (alive) setBookmarkedPosts(new Set());
+        return;
+      }
+
+      const { data } = await (supabase as any)
+        .from("bookmarks")
+        .select("item_id")
+        .eq("user_id", user.id)
+        .eq("item_type", "post")
+        .in("item_id", interactionIds);
+
+      if (!alive) return;
+      setBookmarkedPosts(new Set((data ?? []).map((row: any) => row.item_id)));
+    };
+
+    void loadBookmarkedPosts();
+
+    return () => {
+      alive = false;
+    };
+  }, [feed, user?.id]);
+
   const uploadMediaToSupabase = useCallback(async (file?: File | null) => {
     if (!file) return null;
     const extension = file.name.split(".").pop() || (file.type.startsWith("video/") ? "webm" : "jpg");
@@ -324,6 +364,70 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
     }
     toast.success("Caption updated");
   }, [user?.id]);
+
+  const openComments = useCallback((item: FeedItem) => {
+    if (isLocalDraftPostId(item.id)) {
+      toast.info("This post is still syncing. Refresh in a moment to comment.");
+      return;
+    }
+
+    setCommentPost(item);
+  }, []);
+
+  const handleBookmarkToggle = useCallback(async (item: FeedItem) => {
+    if (!user?.id) {
+      toast.error("Please sign in to bookmark posts");
+      return;
+    }
+
+    if (isLocalDraftPostId(item.id)) {
+      toast.info("This post is still syncing. Refresh in a moment to save it.");
+      return;
+    }
+
+    const interactionId = toUserPostInteractionId(item.id);
+    const wasBookmarked = bookmarkedPosts.has(interactionId);
+
+    setBookmarkedPosts((prev) => {
+      const next = new Set(prev);
+      if (wasBookmarked) next.delete(interactionId);
+      else next.add(interactionId);
+      return next;
+    });
+
+    try {
+      if (wasBookmarked) {
+        const { error } = await (supabase as any)
+          .from("bookmarks")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("item_type", "post")
+          .eq("item_id", interactionId);
+
+        if (error) throw error;
+        toast.success("Removed from bookmarks");
+      } else {
+        const { error } = await (supabase as any).from("bookmarks").insert({
+          user_id: user.id,
+          item_id: interactionId,
+          item_type: "post",
+          title: item.caption || `Post by ${item.user.name}`,
+          collection_name: "Posts",
+        });
+
+        if (error) throw error;
+        toast.success("Saved to bookmarks");
+      }
+    } catch (error: any) {
+      setBookmarkedPosts((prev) => {
+        const next = new Set(prev);
+        if (wasBookmarked) next.add(interactionId);
+        else next.delete(interactionId);
+        return next;
+      });
+      toast.error(error?.message || "Bookmark failed");
+    }
+  }, [bookmarkedPosts, user?.id]);
 
 
   return (
@@ -524,17 +628,15 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   }} className="touch-manipulation active:scale-90 transition-transform">
                     <Heart className={`h-[22px] w-[22px] ${likedPosts.has(item.id) ? "fill-red-500 text-red-500" : "text-foreground"}`} strokeWidth={1.5} />
                   </button>
-                  <button className="touch-manipulation active:scale-90 transition-transform">
+                  <button onClick={() => openComments(item)} className="touch-manipulation active:scale-90 transition-transform">
                     <MessageCircle className="h-[22px] w-[22px] text-foreground" strokeWidth={1.5} />
                   </button>
                   <button onClick={() => setSharePostId(item.id)} className="touch-manipulation active:scale-90 transition-transform">
                     <Share2 className="h-[22px] w-[22px] text-foreground" strokeWidth={1.5} />
                   </button>
                 </div>
-                <button onClick={() => {
-                  setBookmarkedPosts((prev) => { const next = new Set(prev); if (next.has(item.id)) { next.delete(item.id); toast.success("Removed"); } else { next.add(item.id); toast.success("Saved"); } return next; });
-                }} className="touch-manipulation active:scale-90 transition-transform">
-                  <Bookmark className={`h-[22px] w-[22px] ${bookmarkedPosts.has(item.id) ? "fill-foreground text-foreground" : "text-foreground"}`} strokeWidth={1.5} />
+                <button onClick={() => void handleBookmarkToggle(item)} className="touch-manipulation active:scale-90 transition-transform">
+                  <Bookmark className={`h-[22px] w-[22px] ${bookmarkedPosts.has(toUserPostInteractionId(item.id)) ? "fill-foreground text-foreground" : "text-foreground"}`} strokeWidth={1.5} />
                 </button>
               </div>
 
@@ -762,7 +864,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     <Heart className={cn("w-6 h-6", likedPosts.has(selectedPost.id) ? "fill-red-500 text-red-500" : "text-white/70 hover:text-white")} />
                     <span className="text-sm font-medium text-white/90">{selectedPost.likes}</span>
                   </button>
-                  <button className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors">
+                  <button onClick={() => openComments(selectedPost)} className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors">
                     <MessageCircle className="w-6 h-6" />
                     <span className="text-sm font-medium">{selectedPost.comments}</span>
                   </button>
@@ -816,6 +918,15 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       )}
 
       {/* Share Sheet */}
+      <CommentsSheet
+        open={!!commentPost}
+        onClose={() => setCommentPost(null)}
+        postId={commentPost ? toUserPostInteractionId(commentPost.id) : ""}
+        postSource="user"
+        currentUserId={user?.id ?? null}
+        commentsCount={commentPost?.comments ?? 0}
+      />
+
       {createPortal(
         <AnimatePresence>
           {sharePostId && (
