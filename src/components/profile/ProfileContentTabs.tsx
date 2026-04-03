@@ -903,8 +903,56 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                 transition={{ type: "spring", damping: 28, stiffness: 300 }}
                 className="fixed bottom-0 left-0 right-0 z-[9999] bg-card rounded-t-2xl shadow-2xl max-h-[80vh] overflow-y-auto safe-area-bottom"
               >
+                {/* Post preview header */}
+                <div className="px-4 pt-4 pb-2">
+                  {/* Author row */}
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={selectedPost.user.avatar} />
+                      <AvatarFallback className="text-xs bg-muted">{selectedPost.user.name?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground leading-tight">{selectedPost.user.name}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {selectedPost.createdAt
+                          ? formatDistanceToNow(new Date(selectedPost.createdAt), { addSuffix: false }) + " ago"
+                          : selectedPost.time}
+                        {" · "}
+                        <Globe className="inline w-3 h-3 -mt-0.5" />
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Shared content preview if repost */}
+                  {selectedPost.isShared && selectedPost.sharedOrigin && (
+                    <div className="rounded-xl border border-border/50 p-2.5 mb-2 bg-muted/20">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-7 w-7">
+                          <AvatarImage src={selectedPost.sharedOrigin.avatar || ""} />
+                          <AvatarFallback className="text-[10px] bg-muted">{selectedPost.sharedOrigin.name?.[0]}</AvatarFallback>
+                        </Avatar>
+                        <p className="text-xs font-semibold text-foreground">{selectedPost.sharedOrigin.name}</p>
+                      </div>
+                      {selectedPost.caption && (
+                        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{selectedPost.caption}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Media thumbnail */}
+                  {selectedPost.url && (
+                    <div className="rounded-xl overflow-hidden max-h-48 mb-1">
+                      {selectedPost.type === "reel" ? (
+                        <video src={selectedPost.url} className="w-full h-full object-cover max-h-48" muted />
+                      ) : (
+                        <img src={selectedPost.url} alt="" className="w-full h-full object-cover max-h-48" style={selectedPost.filterCss ? { filter: selectedPost.filterCss } : undefined} />
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {/* Drag handle */}
-                <div className="flex justify-center pt-3 pb-1">
+                <div className="flex justify-center pb-1">
                   <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
                 </div>
 
