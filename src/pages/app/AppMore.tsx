@@ -60,10 +60,10 @@ const AppMore = () => {
                   <link.icon className={cn("w-5 h-5", link.iconColor)} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm leading-tight truncate">{link.label}</p>
-                  <p className="text-[10px] text-muted-foreground truncate mt-0.5">{link.description}</p>
+                  <p className="font-semibold text-[13px] leading-tight">{link.label}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{link.description}</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0 ml-auto" />
               </motion.div>
             );
 
