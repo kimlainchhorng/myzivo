@@ -169,7 +169,7 @@ const Profile = () => {
   const uploadAvatar = useUploadAvatar();
   const langTriggerRef = useRef<HTMLButtonElement>(null);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
-  const [showQuickAccess, setShowQuickAccess] = useState(false);
+  
   const [showLangPicker, setShowLangPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const profileCardRef = useRef<HTMLDivElement>(null);
@@ -361,25 +361,8 @@ const Profile = () => {
     toast.success("Cover position saved!");
   };
 
-  const quickLinks = [
-    { icon: Settings, label: "Settings", href: "/account/settings", description: "App settings & preferences", color: "from-gray-500/15 to-gray-600/10", iconColor: "text-muted-foreground" },
-    { icon: ShoppingBag, label: t("profile.my_orders"), href: "/grocery/orders", description: t("profile.orders_desc"), color: "from-blue-500/15 to-blue-600/10", iconColor: "text-blue-500" },
-    { icon: Wallet, label: t("profile.wallet"), href: "/wallet", description: t("profile.wallet_desc"), color: "from-emerald-500/15 to-emerald-600/10", iconColor: "text-emerald-500" },
-    { icon: Sparkles, label: t("profile.loyalty"), href: "/account/loyalty", description: t("profile.loyalty_desc"), color: "from-amber-500/15 to-amber-600/10", iconColor: "text-amber-500" },
-    { icon: MapPin, label: t("profile.saved_addresses"), href: "/account/addresses", description: t("profile.addresses_desc"), color: "from-rose-500/15 to-rose-600/10", iconColor: "text-rose-500" },
-    { icon: Handshake, label: "Become Partner", href: "#partner", description: "Join ZIVO as partner", color: "from-violet-500/15 to-violet-600/10", iconColor: "text-violet-500" },
-  ];
 
-  const [showPartnerSheet, setShowPartnerSheet] = useState(false);
 
-  const partnerOptions = [
-    { icon: Car, label: "Become a Driver", description: "Earn money driving with ZIVO", href: "/partner-with-zivo?type=driver", color: "from-blue-500 to-blue-600" },
-    { icon: UtensilsCrossed, label: "Become a Restaurant Partner", description: "List your restaurant on ZIVO", href: "/partner-with-zivo?type=restaurant", color: "from-orange-500 to-amber-500" },
-    { icon: Store, label: "Become a Shop Partner", description: "Sell products through ZIVO", href: "/partner-with-zivo?type=store", color: "from-emerald-500 to-green-500" },
-    { icon: Wrench, label: "Become an Auto Repair Partner", description: "Offer repair services on ZIVO", href: "/partner-with-zivo?type=auto-repair", color: "from-slate-500 to-slate-600" },
-    { icon: Building2, label: "Become a Hotel Partner", description: "List your property on ZIVO", href: "/partner-with-zivo?type=hotel", color: "from-purple-500 to-purple-600" },
-    { icon: Truck, label: "Become a Delivery Partner", description: "Deliver food & packages", href: "/partner-with-zivo?type=delivery", color: "from-rose-500 to-pink-500" },
-  ];
 
   const currentLang = LANGS.find(l => l.code === currentLanguage) || LANGS[0];
 
@@ -905,58 +888,8 @@ const Profile = () => {
         document.body
       )}
 
-      {/* ── Become Partner Bottom Sheet ── */}
-      <AnimatePresence>
-        {showPartnerSheet && createPortal(
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
-              onClick={() => setShowPartnerSheet(false)}
-            />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-[61] bg-background rounded-t-3xl max-h-[85vh] overflow-y-auto"
-            >
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
-              </div>
-              <div className="px-5 pb-2">
-                <h2 className="text-lg font-bold">Become a ZIVO Partner</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Choose how you'd like to partner with us</p>
-              </div>
-              <div className="px-4 pb-8 space-y-2">
-                {partnerOptions.map((opt) => (
-                  <motion.button
-                    key={opt.label}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => {
-                      setShowPartnerSheet(false);
-                      navigate(opt.href);
-                    }}
-                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/40 hover:bg-accent/50 transition-colors text-left"
-                  >
-                    <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${opt.color} flex items-center justify-center shrink-0 shadow-lg`}>
-                      <opt.icon className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-[13px]">{opt.label}</p>
-                      <p className="text-[10px] text-muted-foreground">{opt.description}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          </>,
-          document.body
-        )}
-      </AnimatePresence>
+
+
       <SocialListModal
         open={socialModal.open}
         onClose={() => setSocialModal({ ...socialModal, open: false })}
