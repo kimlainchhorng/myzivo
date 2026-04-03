@@ -28,6 +28,7 @@ import ChatSecurity from "./ChatSecurity";
 import CallHistoryPage from "./CallHistoryPage";
 import { ChatMediaUploader } from "./ChatMediaUploader";
 import CallEventBubble from "./CallEventBubble";
+import LockedMediaPricePicker from "./LockedMediaPricePicker";
 import ChatContactInfo from "./ChatContactInfo";
 import MessageScheduler from "./MessageScheduler";
 import PinnedMessagesPanel from "./PinnedMessagesPanel";
@@ -61,6 +62,7 @@ interface Message {
   expires_at?: string | null;
   created_at: string;
   is_read: boolean;
+  locked_price_cents?: number | null;
 }
 
 interface CallEvent {
@@ -112,6 +114,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showContactInfo, setShowContactInfo] = useState(false);
   const [showScheduler, setShowScheduler] = useState(false);
   const [showPinnedPanel, setShowPinnedPanel] = useState(false);
+  const [showLockedPricePicker, setShowLockedPricePicker] = useState(false);
+  const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -386,13 +390,25 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (videoInputRef.current) videoInputRef.current.value = "";
   };
 
-  // Locked media upload (photo or video)
+  // Locked media: first show price picker
   const handleLockedMediaSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
     const isVideo = file.type.startsWith("video");
     const maxSize = isVideo ? 25 * 1024 * 1024 : 5 * 1024 * 1024;
     if (file.size > maxSize) { toast.error(`File must be under ${isVideo ? "25MB" : "5MB"}`); return; }
+    setPendingLockedFile(file);
+    setShowLockedPricePicker(true);
+    if (lockedImageInputRef.current) lockedImageInputRef.current.value = "";
+  };
+
+  // Locked media: upload after price confirmed
+  const handleLockedMediaConfirm = async (priceCents: number) => {
+    setShowLockedPricePicker(false);
+    const file = pendingLockedFile;
+    setPendingLockedFile(null);
+    if (!file || !user?.id) return;
+    const isVideo = file.type.startsWith("video");
     setUploadingMedia(true);
     try {
       const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
@@ -401,7 +417,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       if (error) throw error;
       const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
       const messageType = isVideo ? "locked_video" : "locked_image";
-      const label = isVideo ? "🔒 Locked Video" : "🔒 Locked Photo";
+      const priceLabel = `$${(priceCents / 100).toFixed(2)}`;
+      const label = isVideo ? `🔒 Locked Video · ${priceLabel}` : `🔒 Locked Photo · ${priceLabel}`;
       const text = input.trim();
       setInput("");
       clearDraft();
@@ -415,6 +432,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         voice_url: null, message_type: messageType,
         reply_to_id: null, location_lat: null, location_lng: null, location_label: null,
         is_pinned: false, expires_at: null, created_at: new Date().toISOString(), is_read: false,
+        locked_price_cents: priceCents,
       };
       setMessages((prev) => [...prev, optimisticMsg]);
       scrollToBottom();
@@ -427,6 +445,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           image_url: isVideo ? null : urlData.publicUrl,
           video_url: isVideo ? urlData.publicUrl : null,
           message_type: messageType,
+          locked_price_cents: priceCents,
         })
         .select().single();
       if (insertErr) throw insertErr;
@@ -434,7 +453,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     } catch { toast.error("Failed to upload locked media"); }
     setUploadingMedia(false);
     setSending(false);
-    if (lockedImageInputRef.current) lockedImageInputRef.current.value = "";
   };
 
 
@@ -763,6 +781,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       expiresAt={msg.expires_at}
                       messageType={msg.message_type}
                       senderId={msg.sender_id}
+                      lockedPriceCents={msg.locked_price_cents}
                       onReply={handleReply}
                       onDelete={handleDelete}
                       onForward={handleForward}
@@ -897,6 +916,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
             <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
             <input ref={lockedImageInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleLockedMediaSelect} />
+
+            {/* Locked media price picker */}
+            <LockedMediaPricePicker
+              open={showLockedPricePicker}
+              onClose={() => { setShowLockedPricePicker(false); setPendingLockedFile(null); }}
+              onConfirm={handleLockedMediaConfirm}
+            />
 
             {/* Document upload */}
             <ChatMediaUploader

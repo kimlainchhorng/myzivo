@@ -25,6 +25,7 @@ interface ChatMessageBubbleProps {
   expiresAt?: string | null;
   messageType?: string;
   senderId?: string;
+  lockedPriceCents?: number | null;
   onReply: (id: string, message: string, isMe: boolean) => void;
   onDelete: (id: string) => void;
   onForward?: (id: string, message: string) => void;
@@ -32,7 +33,7 @@ interface ChatMessageBubbleProps {
 }
 
 export default function ChatMessageBubble({
-  id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt, messageType, senderId,
+  id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt, messageType, senderId, lockedPriceCents,
   onReply, onDelete, onForward, onPin,
 }: ChatMessageBubbleProps) {
   const { user } = useAuth();
@@ -43,6 +44,8 @@ export default function ChatMessageBubble({
   const isLockedType = messageType === "locked_image" || messageType === "locked_video";
   const [isLocked, setIsLocked] = useState(isLockedType && !isMe);
   const [unlockLoading, setUnlockLoading] = useState(false);
+  const unlockPrice = lockedPriceCents && lockedPriceCents > 0 ? lockedPriceCents : 99;
+  const unlockPriceLabel = `$${(unlockPrice / 100).toFixed(2)}`;
   const [reactions, setReactions] = useState<{ emoji: string; count: number; hasMyReaction: boolean }[]>([]);
   const [openDown, setOpenDown] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -231,7 +234,7 @@ export default function ChatMessageBubble({
                       setUnlockLoading(true);
                       try {
                         const { data, error } = await supabase.functions.invoke("unlock-media-checkout", {
-                          body: { message_id: id, seller_id: senderId || "" },
+                         body: { message_id: id, seller_id: senderId || "", amount_cents: unlockPrice },
                         });
                         if (error) throw error;
                         if (data?.url) {
@@ -249,7 +252,7 @@ export default function ChatMessageBubble({
                     ) : (
                       <DollarSign className="h-3.5 w-3.5" />
                     )}
-                    Unlock · $0.99
+                    Unlock · {unlockPriceLabel}
                   </button>
                 </div>
               )}
@@ -278,7 +281,7 @@ export default function ChatMessageBubble({
               {isLockedType && isMe && (
                 <div className="absolute top-2 right-2 bg-black/50 rounded-full px-2 py-0.5 flex items-center gap-1">
                   <Lock className="h-3 w-3 text-white" />
-                  <span className="text-[10px] text-white font-medium">Locked</span>
+                 <span className="text-[10px] text-white font-medium">Locked · {unlockPriceLabel}</span>
                 </div>
               )}
             </div>
@@ -308,7 +311,7 @@ export default function ChatMessageBubble({
                     setUnlockLoading(true);
                     try {
                       const { data, error } = await supabase.functions.invoke("unlock-media-checkout", {
-                        body: { message_id: id, seller_id: senderId || "" },
+                        body: { message_id: id, seller_id: senderId || "", amount_cents: unlockPrice },
                       });
                       if (error) throw error;
                       if (data?.url) {
@@ -326,7 +329,7 @@ export default function ChatMessageBubble({
                   ) : (
                     <DollarSign className="h-3.5 w-3.5" />
                   )}
-                  Unlock · $0.99
+                  Unlock · {unlockPriceLabel}
                 </button>
               </div>
             )}
@@ -334,7 +337,7 @@ export default function ChatMessageBubble({
             {isLockedType && isMe && (
               <div className="absolute top-2 right-2 bg-black/50 rounded-full px-2 py-0.5 flex items-center gap-1">
                 <Lock className="h-3 w-3 text-white" />
-                <span className="text-[10px] text-white font-medium">Locked</span>
+                <span className="text-[10px] text-white font-medium">Locked · {unlockPriceLabel}</span>
               </div>
             )}
           </div>
