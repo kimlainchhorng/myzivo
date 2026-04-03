@@ -72,8 +72,9 @@ serve(async (req) => {
 
     // ZIVO+ product IDs
     const PLUS_MONTHLY_PRODUCT = "prod_Twd0bbN76Y6chu";
+    const PLUS_CHAT_PRODUCT = "prod_UGpAC1qAhDttlE";
     const PLUS_ANNUAL_PRODUCT = "prod_Twd004sz9HeIVX";
-    const PLUS_PRODUCTS = new Set([PLUS_MONTHLY_PRODUCT, PLUS_ANNUAL_PRODUCT]);
+    const PLUS_PRODUCTS = new Set([PLUS_MONTHLY_PRODUCT, PLUS_CHAT_PRODUCT, PLUS_ANNUAL_PRODUCT]);
 
     let plusSubscription = null;
     for (const sub of subscriptions.data) {
