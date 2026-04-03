@@ -963,6 +963,45 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           />
         )}
       </AnimatePresence>
+
+      {/* Message Scheduler */}
+      <MessageScheduler
+        open={showScheduler}
+        onClose={() => setShowScheduler(false)}
+        message={input}
+        onSchedule={async (scheduledAt) => {
+          if (!user?.id || !input.trim()) return;
+          try {
+            await (supabase as any).from("scheduled_messages").insert({
+              sender_id: user.id,
+              receiver_id: recipientId,
+              message: input.trim(),
+              scheduled_at: scheduledAt.toISOString(),
+            });
+            setInput("");
+            clearDraft();
+            setShowScheduler(false);
+            toast.success(`Message scheduled for ${format(scheduledAt, "MMM d, h:mm a")}`);
+          } catch {
+            toast.error("Failed to schedule message");
+          }
+        }}
+      />
+
+      {/* Pinned Messages Panel */}
+      <PinnedMessagesPanel
+        open={showPinnedPanel}
+        onClose={() => setShowPinnedPanel(false)}
+        messages={pinnedMessages.map(m => ({
+          id: m.id,
+          message: m.message,
+          sender_name: m.sender_id === user?.id ? "You" : recipientName,
+          time: formatMsgTime(m.created_at),
+          isMe: m.sender_id === user?.id,
+        }))}
+        onJumpToMessage={scrollToMessage}
+        onUnpin={(id) => handlePin(id, false)}
+      />
     </motion.div>
   );
 }
