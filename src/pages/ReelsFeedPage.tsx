@@ -501,7 +501,8 @@ export default function ReelsFeedPage() {
             }} />
           ))}
         </div>
-      )}
+        );
+      })()}
 
       {/* Create Post Modal */}
       <AnimatePresence>
