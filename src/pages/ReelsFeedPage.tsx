@@ -142,7 +142,7 @@ export default function ReelsFeedPage() {
       // Fetch store posts
       const { data: storePosts } = await supabase
         .from("store_posts")
-        .select("id, media_urls, media_type, caption, likes_count, comments_count, view_count, created_at, store_id")
+        .select("id, media_urls, media_type, caption, likes_count, comments_count, shares_count, view_count, created_at, store_id")
         .eq("is_published", true)
         .order("created_at", { ascending: false })
         .limit(50);
