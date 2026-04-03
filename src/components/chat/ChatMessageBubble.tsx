@@ -281,7 +281,7 @@ export default function ChatMessageBubble({
               {isLockedType && isMe && (
                 <div className="absolute top-2 right-2 bg-black/50 rounded-full px-2 py-0.5 flex items-center gap-1">
                   <Lock className="h-3 w-3 text-white" />
-                  <span className="text-[10px] text-white font-medium">Locked</span>
+                 <span className="text-[10px] text-white font-medium">Locked · {unlockPriceLabel}</span>
                 </div>
               )}
             </div>
