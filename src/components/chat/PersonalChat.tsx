@@ -723,6 +723,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       videoUrl={msg.video_url}
                       isPinned={msg.is_pinned}
                       expiresAt={msg.expires_at}
+                      messageType={msg.message_type}
                       onReply={handleReply}
                       onDelete={handleDelete}
                       onForward={handleForward}
