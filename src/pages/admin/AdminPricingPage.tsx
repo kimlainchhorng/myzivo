@@ -301,11 +301,19 @@ export default function AdminPricingPage() {
                         onChange={(e) => setForm({ ...form, city: e.target.value })}
                       >
                         {(activeFilter.cities as string[]).map((c) => (
-                          <option key={c} value={c}>{c}</option>
+                          <option key={c} value={c}>
+                            {c}{isCambodia && c === "Phnom Penh" ? " ★ Master" : ""}
+                          </option>
                         ))}
                       </select>
                     ) : (
                       <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="default" />
+                    )}
+                    {isCambodia && form.city === "Phnom Penh" && (
+                      <p className="text-xs text-amber-600 mt-1">⚡ Changes will auto-sync to all 25 other Cambodia cities</p>
+                    )}
+                    {isCambodia && form.city !== "Phnom Penh" && (
+                      <p className="text-xs text-muted-foreground mt-1">Pricing follows Phnom Penh. Edit Phnom Penh to change all.</p>
                     )}
                   </div>
                   <div>
