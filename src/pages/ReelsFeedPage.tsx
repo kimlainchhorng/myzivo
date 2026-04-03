@@ -1530,6 +1530,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   const [showEditCaption, setShowEditCaption] = useState(false);
   const [editCaptionText, setEditCaptionText] = useState(item.caption || "");
   const [editSaving, setEditSaving] = useState(false);
+  const [tipTarget, setTipTarget] = useState<{ id: string; name: string } | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef(0);
