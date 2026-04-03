@@ -544,7 +544,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       </AnimatePresence>
 
       {/* Messages */}
-      <div ref={scrollRef} className={`flex-1 overflow-y-auto px-4 py-3 space-y-2 ${getWallpaperClass(chatStyle.wallpaper)}`}>
+      <div ref={scrollRef} className={`flex-1 overflow-y-auto px-4 py-3 space-y-2 ${getWallpaperClass(chatStyle.wallpaper)}`} style={getWallpaperStyle(chatStyle.wallpaper)}>
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
