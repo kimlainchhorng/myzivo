@@ -466,6 +466,10 @@ const App = () => (
                 <Route path="/chat" element={<ChatHubPage />} />
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
+                <Route path="/creator-dashboard" element={<ProtectedRoute><CreatorDashboardPage /></ProtectedRoute>} />
+                <Route path="/events" element={<EventsPage />} />
+                <Route path="/communities" element={<CommunitiesPage />} />
+                <Route path="/marketplace" element={<MarketplacePage />} />
                 <Route path="/account/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
                 <Route path="/drafts" element={<ProtectedRoute><DraftsPage /></ProtectedRoute>} />
                 <Route path="/account/analytics" element={<ProtectedRoute><AccountAnalyticsPage /></ProtectedRoute>} />
