@@ -214,7 +214,7 @@ const NotificationsPage = () => {
   }, [notifications, activeTab]);
 
   const categoryCounts = useMemo(() => {
-    const counts = { all: 0, social: friendRequests.length, orders: 0, promos: 0, support: 0, delays: 0 };
+    const counts = { all: 0, social: friendRequests.length + socialUnread, orders: 0, promos: 0, support: 0, delays: 0 };
     notifications.forEach(n => {
       if (!n.is_read) {
         counts.all++;
@@ -224,9 +224,9 @@ const NotificationsPage = () => {
         if (n.template?.toLowerCase().includes('delay') || n.title?.toLowerCase().includes('delay')) counts.delays++;
       }
     });
-    counts.all += friendRequests.length;
+    counts.all += friendRequests.length + socialUnread;
     return counts;
-  }, [notifications, friendRequests]);
+  }, [notifications, friendRequests, socialUnread]);
 
   const handleNotificationClick = (notification: any) => {
     if (!notification.is_read) markAsRead([notification.id]);
