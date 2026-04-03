@@ -1042,8 +1042,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center"
         >
           <MessageCircle className="h-7 w-7 text-white drop-shadow-lg" />
-          {(item.comments_count + comments.length) > 0 && (
-            <span className="text-white text-[11px] font-semibold drop-shadow">{item.comments_count + comments.length}</span>
+          {item.comments_count > 0 && (
+            <span className="text-white text-[11px] font-semibold drop-shadow">{item.comments_count}</span>
           )}
         </button>
 
