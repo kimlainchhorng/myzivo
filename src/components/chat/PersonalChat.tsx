@@ -113,6 +113,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showContactInfo, setShowContactInfo] = useState(false);
   const [showScheduler, setShowScheduler] = useState(false);
   const [showPinnedPanel, setShowPinnedPanel] = useState(false);
+  const [showLockedPricePicker, setShowLockedPricePicker] = useState(false);
+  const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
