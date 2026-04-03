@@ -875,10 +875,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   const [isFollowing, setIsFollowing] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
-  const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
-  const commentInputRef = useRef<HTMLInputElement>(null);
+   const [showComments, setShowComments] = useState(false);
 
   const mediaUrl = item.media_urls[0];
 
