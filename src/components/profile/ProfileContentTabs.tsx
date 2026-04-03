@@ -23,6 +23,7 @@ type FeedItem = {
   filterCss?: string;
   views?: number;
   user: { name: string; avatar: string };
+  isShared?: boolean;
 };
 
 type NewPostPayload = {
@@ -49,6 +50,8 @@ type UserPostRow = {
   views_count: number | null;
   created_at: string;
   is_published: boolean;
+  shared_from_post_id: string | null;
+  shared_from_user_id: string | null;
 };
 
 const normalizeFeedItemType = (mediaType: string | null | undefined): "photo" | "reel" =>
@@ -131,7 +134,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       try {
         const query = (supabase as any)
           .from("user_posts")
-          .select("id, user_id, media_type, media_url, caption, filter_css, likes_count, comments_count, views_count, created_at, is_published")
+          .select("id, user_id, media_type, media_url, caption, filter_css, likes_count, comments_count, views_count, created_at, is_published, shared_from_post_id, shared_from_user_id")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
           .limit(50);
@@ -180,6 +183,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                 name: displayName,
                 avatar: prof?.avatar_url || "",
               },
+              isShared: Boolean(row.shared_from_post_id || row.shared_from_user_id),
             };
           })
           .filter((item) => Boolean(item.url) || Boolean(item.caption.trim()));
@@ -353,7 +357,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               {hasMedia ? (
                 item.type === "reel" ? (
                   <video
-                    src={item.url || undefined}
+                    src={item.url ? `${item.url}#t=0.1` : undefined}
                     className="absolute inset-0 w-full h-full object-cover"
                     style={{ filter: item.filterCss || "none" }}
                     muted
@@ -377,6 +381,13 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   <p className="text-[10px] font-medium text-foreground/80 line-clamp-4 whitespace-pre-wrap break-words leading-tight mt-auto">
                     {item.caption || "Shared post"}
                   </p>
+                </div>
+              )}
+              {/* Shared post indicator */}
+              {item.isShared && (
+                <div className="absolute top-1.5 left-1.5 z-10 bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-0.5 flex items-center gap-0.5">
+                  <Share2 className="w-2.5 h-2.5 text-white" />
+                  <span className="text-[9px] text-white font-bold">Shared</span>
                 </div>
               )}
               {item.type === "reel" && hasMedia && (
