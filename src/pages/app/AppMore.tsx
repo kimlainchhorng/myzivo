@@ -6,7 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ChevronRight, Settings, ShoppingBag, Wallet, MapPin, Handshake,
-  Sparkles, Car, UtensilsCrossed, Store, Wrench, Building2, Truck,
+  Sparkles, Car, UtensilsCrossed, Store, Wrench, Building2, Truck, Shield,
 } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
