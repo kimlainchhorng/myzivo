@@ -237,21 +237,21 @@ export default function ChatMessageBubble({
           const textWithoutUrl = hasLink ? message.replace(urlRegex, "").trim() : message;
 
           // Try to extract a readable label from the URL
-          const getLinkLabel = (url: string) => {
+          const getLinkInfo = (url: string): { label: string; description: string; icon: string; color: string } => {
             try {
               const u = new URL(url);
-              // Check for post/feed links
-              if (u.pathname.includes("/feed")) return "View Post";
-              if (u.pathname.includes("/reels")) return "View Reel";
-              if (u.pathname.includes("/profile")) return "View Profile";
-              if (u.pathname.includes("/store")) return "View Store";
-              return u.hostname.replace("www.", "");
-            } catch { return "Open Link"; }
+              const p = u.pathname + u.search;
+              if (p.includes("/feed") || p.includes("post=")) return { label: "Shared Post", description: "Tap to view this post on ZIVO", icon: "📸", color: "from-pink-500/20 to-purple-500/20" };
+              if (p.includes("/reels")) return { label: "Shared Reel", description: "Tap to watch this reel on ZIVO", icon: "🎬", color: "from-orange-500/20 to-red-500/20" };
+              if (p.includes("/profile") || p.includes("/user")) return { label: "Profile", description: "Tap to view profile on ZIVO", icon: "👤", color: "from-blue-500/20 to-cyan-500/20" };
+              if (p.includes("/store") || p.includes("/shop")) return { label: "Store", description: "Tap to view store on ZIVO", icon: "🛍️", color: "from-green-500/20 to-emerald-500/20" };
+              if (p.includes("/ride")) return { label: "Ride", description: "Tap to view ride details", icon: "🚗", color: "from-yellow-500/20 to-amber-500/20" };
+              if (u.hostname.includes("lovable")) return { label: "ZIVO Link", description: "Tap to open on ZIVO", icon: "🔗", color: "from-primary/20 to-primary/10" };
+              return { label: u.hostname.replace("www.", ""), description: "Tap to open link", icon: "🌐", color: "from-slate-500/20 to-gray-500/20" };
+            } catch { return { label: "Link", description: "Tap to open", icon: "🔗", color: "from-slate-500/20 to-gray-500/20" }; }
           };
 
-          const getLinkDomain = (url: string) => {
-            try { return new URL(url).hostname.replace("www.", ""); } catch { return ""; }
-          };
+          const linkInfo = linkUrl ? getLinkInfo(linkUrl) : null;
 
           return (
             <div
@@ -263,38 +263,43 @@ export default function ChatMessageBubble({
             >
               {/* Text portion */}
               {textWithoutUrl && (
-                <p className="whitespace-pre-wrap break-words px-3.5 pt-2 pb-1">{textWithoutUrl}</p>
+                <p className="whitespace-pre-wrap break-words px-3.5 pt-2.5 pb-1">{textWithoutUrl}</p>
               )}
 
               {/* Rich link preview card */}
-              {linkUrl && (
+              {linkUrl && linkInfo && (
                 <a
                   href={linkUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`block mx-1.5 mb-1.5 ${!textWithoutUrl ? "mt-1.5" : ""} rounded-xl overflow-hidden border ${
-                    isMe ? "border-primary-foreground/15 bg-primary-foreground/10" : "border-border/40 bg-background/60"
-                  } active:scale-[0.98] transition-transform`}
+                  className={`block mx-1.5 mb-1.5 ${!textWithoutUrl ? "mt-1.5" : "mt-0.5"} rounded-2xl overflow-hidden ${
+                    isMe ? "bg-primary-foreground/[0.08]" : "bg-background/70"
+                  } active:scale-[0.97] transition-transform`}
                 >
-                  {/* Preview header bar */}
-                  <div className={`px-3 py-2.5 flex items-center gap-2.5`}>
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  {/* Gradient banner */}
+                  <div className={`h-16 bg-gradient-to-br ${linkInfo.color} flex items-center justify-center relative`}>
+                    <span className="text-3xl">{linkInfo.icon}</span>
+                    <div className={`absolute bottom-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase ${
+                      isMe ? "bg-primary-foreground/20 text-primary-foreground/70" : "bg-foreground/10 text-foreground/50"
+                    }`}>
+                      ZIVO
+                    </div>
+                  </div>
+                  {/* Info section */}
+                  <div className="px-3 py-2.5 flex items-center gap-2.5">
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-[13px] font-bold truncate ${isMe ? "text-primary-foreground" : "text-foreground"}`}>
+                        {linkInfo.label}
+                      </p>
+                      <p className={`text-[11px] mt-0.5 ${isMe ? "text-primary-foreground/50" : "text-muted-foreground"}`}>
+                        {linkInfo.description}
+                      </p>
+                    </div>
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
                       isMe ? "bg-primary-foreground/15" : "bg-primary/10"
                     }`}>
-                      <svg viewBox="0 0 24 24" className={`w-4.5 h-4.5 ${isMe ? "text-primary-foreground/70" : "text-primary"}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
-                        <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
-                      </svg>
+                      <ChevronRight className={`w-4 h-4 ${isMe ? "text-primary-foreground/60" : "text-primary"}`} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-[13px] font-semibold truncate ${isMe ? "text-primary-foreground" : "text-foreground"}`}>
-                        {getLinkLabel(linkUrl)}
-                      </p>
-                      <p className={`text-[11px] truncate ${isMe ? "text-primary-foreground/50" : "text-muted-foreground"}`}>
-                        {getLinkDomain(linkUrl)}
-                      </p>
-                    </div>
-                    <ChevronRight className={`w-4 h-4 flex-shrink-0 ${isMe ? "text-primary-foreground/30" : "text-muted-foreground/40"}`} />
                   </div>
                 </a>
               )}
