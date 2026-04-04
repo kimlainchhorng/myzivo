@@ -7,7 +7,9 @@ import { motion } from "framer-motion";
 import {
   ChevronRight, Settings, ShoppingBag, Wallet, MapPin, Handshake,
   Sparkles, Car, UtensilsCrossed, Store, Wrench, Building2, Truck, Shield,
+  Copy, Share2, QrCode, Check,
 } from "lucide-react";
+import { toast } from "sonner";
 import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +42,29 @@ const AppMore = () => {
   const { user, signOut, isAdmin } = useAuth();
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const profileUrl = user ? `${window.location.origin}/profile/${user.id}` : "";
+
+  const copyProfileLink = () => {
+    navigator.clipboard.writeText(profileUrl);
+    setCopied(true);
+    toast.success("Profile link copied!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const shareProfile = async () => {
+    const name = profile?.full_name || user?.email?.split("@")[0] || "User";
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${name} on ZIVO`, text: `Check out ${name}'s profile on ZIVO`, url: profileUrl });
+      } catch (err: any) {
+        if (err.name !== "AbortError") copyProfileLink();
+      }
+    } else {
+      copyProfileLink();
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -78,6 +103,37 @@ const AppMore = () => {
               className="px-3.5 py-1.5 rounded-xl bg-primary/10 text-primary text-xs font-bold touch-manipulation active:scale-95 transition-transform"
             >
               Edit
+            </button>
+          </motion.div>
+        )}
+
+        {/* Profile Share Actions */}
+        {user && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            className="mb-5 flex gap-2"
+          >
+            <button
+              onClick={copyProfileLink}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl border border-border/40 bg-card text-sm font-semibold touch-manipulation active:scale-[0.97] transition-all shadow-sm"
+            >
+              {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+              {copied ? "Copied!" : "Copy Link"}
+            </button>
+            <button
+              onClick={shareProfile}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl border border-border/40 bg-card text-sm font-semibold touch-manipulation active:scale-[0.97] transition-all shadow-sm"
+            >
+              <Share2 className="w-4 h-4 text-muted-foreground" />
+              Share
+            </button>
+            <button
+              onClick={() => navigate("/qr-profile")}
+              className="w-11 flex items-center justify-center rounded-2xl border border-border/40 bg-card touch-manipulation active:scale-[0.97] transition-all shadow-sm"
+            >
+              <QrCode className="w-4 h-4 text-muted-foreground" />
             </button>
           </motion.div>
         )}
