@@ -1,5 +1,5 @@
 const PUBLIC_ORIGIN = "https://hizivo.com";
-const PROFILE_SHARE_ORIGIN = "https://myzivo.lovable.app";
+const PROFILE_SHARE_ORIGIN = "https://myzivo.com";
 
 /**
  * Returns the public-facing origin for shareable URLs.

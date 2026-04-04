@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const SHARE_ORIGIN = "https://myzivo.lovable.app";
+const SHARE_ORIGIN = "https://myzivo.com";
 const APP_ORIGIN = "https://hizivo.com";
 
 const corsHeaders = {
