@@ -14,7 +14,7 @@ import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
