@@ -47,6 +47,7 @@ const Index = lazy(() => lazyRetry(() => import("./pages/Index")));
 const AppHome = lazy(() => lazyRetry(() => import("./pages/app/AppHome")));
 const AppTravel = lazy(() => import("./pages/app/AppTravel"));
 const AppMore = lazy(() => import("./pages/app/AppMore"));
+const PersonalDashboard = lazy(() => import("./pages/app/PersonalDashboard"));
 const ServicesPage = lazy(() => import("./pages/app/ServicesPage"));
 const UnifiedDashboard = lazy(() => import("./pages/app/UnifiedDashboard"));
 const MyTripsPage = lazy(() => import("./pages/app/MyTripsPage"));
@@ -461,6 +462,7 @@ const App = () => (
                 <Route path="/support" element={<ProtectedRoute><SupportCenterPage /></ProtectedRoute>} />
                 <Route path="/travel" element={<ProtectedRoute><AppTravel /></ProtectedRoute>} />
                 <Route path="/more" element={<ProtectedRoute><AppMore /></ProtectedRoute>} />
+                <Route path="/personal-dashboard" element={<ProtectedRoute><PersonalDashboard /></ProtectedRoute>} />
                 <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
 
                 {/* Legacy redirects */}
