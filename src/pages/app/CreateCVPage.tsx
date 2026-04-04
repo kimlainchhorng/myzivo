@@ -700,13 +700,34 @@ const CreateCVPage = () => {
           </p>
         </div>
 
+        {/* Template Selector */}
+        <div className="mb-4">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Palette className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[11px] font-bold text-foreground">CV Template</span>
+          </div>
+          <div className="flex gap-2">
+            {CV_TEMPLATES.map(t => (
+              <button key={t.id} onClick={() => setSelectedTemplate(t.id)}
+                className={cn("flex-1 py-2 px-2 rounded-xl border-2 text-center touch-manipulation active:scale-95 transition-all",
+                  selectedTemplate === t.id ? "border-primary bg-primary/5" : "border-border/30 bg-card")}>
+                <span className={cn("text-[11px] font-bold block", selectedTemplate === t.id ? "text-primary" : "text-foreground")}>{t.name}</span>
+                <span className="text-[9px] text-muted-foreground">{t.desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Progress Tips */}
+        <ProgressTips data={previewData} />
+
         {/* ── PERSONAL INFO ── */}
         <SectionHeader icon={User} title="Personal Information" sectionKey="personal" expanded={expandedSections.personal} onToggle={toggle} />
         <AnimatePresence>
           {expandedSections.personal && (
             <CollapseWrap>
               <div className="space-y-2.5">
-                <PhotoUpload photo={photo} onPhotoChange={setPhoto} />
+                <PhotoUpload photo={photo} onPhotoChange={setPhoto} userId={user?.id} />
                 <div>
                   <label className={lblCls}>Full Name *</label>
                   <input className={inputCls} placeholder="John Doe" value={fullName} onChange={e => setFullName(e.target.value)} />
