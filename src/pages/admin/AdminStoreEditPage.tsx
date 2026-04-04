@@ -2868,27 +2868,15 @@ export default function AdminStoreEditPage() {
           </TabsContent>
 
           <TabsContent value="payroll">
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mb-4"><DollarSign className="w-7 h-7 text-emerald-500" /></div>
-              <h2 className="font-semibold text-lg mb-1">Payroll</h2>
-              <p className="text-sm text-muted-foreground max-w-sm">Manage wages, pay runs, and compensation for your employees.</p>
-            </div>
+            <StorePayrollSection storeId={storeId!} />
           </TabsContent>
 
           <TabsContent value="employee-schedule">
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-purple-500/10 flex items-center justify-center mb-4"><CalendarIcon className="w-7 h-7 text-purple-500" /></div>
-              <h2 className="font-semibold text-lg mb-1">Employee Schedule</h2>
-              <p className="text-sm text-muted-foreground max-w-sm">Create and manage employee work schedules and shifts.</p>
-            </div>
+            <StoreScheduleSection storeId={storeId!} />
           </TabsContent>
 
           <TabsContent value="time-clock">
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mb-4"><Clock className="w-7 h-7 text-amber-500" /></div>
-              <h2 className="font-semibold text-lg mb-1">Time Clock</h2>
-              <p className="text-sm text-muted-foreground max-w-sm">Track employee clock-in/out times, attendance, and work hours.</p>
-            </div>
+            <StoreTimeClockSection storeId={storeId!} />
           </TabsContent>
 
           <TabsContent value="employee-rules">
@@ -2900,11 +2888,7 @@ export default function AdminStoreEditPage() {
           </TabsContent>
 
           <TabsContent value="attendance">
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-teal-500/10 flex items-center justify-center mb-4"><CalendarIcon className="w-7 h-7 text-teal-500" /></div>
-              <h2 className="font-semibold text-lg mb-1">Attendance & Leave</h2>
-              <p className="text-sm text-muted-foreground max-w-sm">Track attendance, manage sick days, and handle vacation requests for your team.</p>
-            </div>
+            <StoreAttendanceSection storeId={storeId!} />
           </TabsContent>
 
           <TabsContent value="training">
