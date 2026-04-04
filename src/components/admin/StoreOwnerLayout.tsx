@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   LogOut, ChevronLeft, Menu, Home, Store,
   Package, CreditCard, MessageCircle, Users, Megaphone, ClipboardList, Settings,
-  Wallet, Calendar, Clock, Shield
+  Wallet, Calendar, Clock, Shield, CalendarCheck, GraduationCap, Star, FolderOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -47,6 +47,10 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     { id: "payroll", label: "Payroll", icon: Wallet },
     { id: "employee-schedule", label: "Schedule", icon: Calendar },
     { id: "time-clock", label: "Time Clock", icon: Clock },
+    { id: "attendance", label: "Attendance & Leave", icon: CalendarCheck },
+    { id: "training", label: "Training & Onboarding", icon: GraduationCap },
+    { id: "performance", label: "Performance Reviews", icon: Star },
+    { id: "documents", label: "Documents & Files", icon: FolderOpen },
     { id: "employee-rules", label: "Employee Rules", icon: Shield },
   ];
 
