@@ -3,6 +3,7 @@
  */
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 
 interface ShareOptions {
   title: string;
@@ -40,7 +41,7 @@ export function useShareContent() {
     return share({
       title: caption || "Check out this post on ZIVO",
       text: caption || "See this on ZIVO",
-      url: `${window.location.origin}/reels?post=${postId}`,
+      url: `${getPublicOrigin()}/reels?post=${postId}`,
     });
   }, [share]);
 
@@ -48,7 +49,7 @@ export function useShareContent() {
     return share({
       title: `${name || "User"} on ZIVO`,
       text: `Check out ${name || "this user"}'s profile on ZIVO`,
-      url: `${window.location.origin}/profile/${userId}`,
+      url: `${getPublicOrigin()}/profile/${userId}`,
     });
   }, [share]);
 
@@ -56,7 +57,7 @@ export function useShareContent() {
     return share({
       title: `Flight from ${origin} to ${destination}`,
       text: `Check out this flight deal on ZIVO`,
-      url: `${window.location.origin}/flights/${origin}-to-${destination}`,
+      url: `${getPublicOrigin()}/flights/${origin}-to-${destination}`,
     });
   }, [share]);
 

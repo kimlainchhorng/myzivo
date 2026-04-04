@@ -14,6 +14,7 @@ import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
@@ -44,7 +45,7 @@ const AppMore = () => {
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const profileUrl = user ? `${window.location.origin}/profile/${user.id}` : "";
+  const profileUrl = user ? `${getPublicOrigin()}/profile/${user.id}` : "";
 
   const copyProfileLink = () => {
     navigator.clipboard.writeText(profileUrl);

@@ -12,6 +12,7 @@ import {
   Plus, MapPin, Calendar, DollarSign, Trash2, Plane, Share2, MoreHorizontal, Ticket, Clock, CheckCircle, AlertCircle, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import { useTripItineraries, useCreateTrip, useDeleteTrip, TripItinerary } from "@/hooks/useTripItineraries";
 import { useFlightBookings, getTicketingStatusInfo } from "@/hooks/useFlightBooking";
 import PullToRefresh from "@/components/shared/PullToRefresh";
@@ -306,7 +307,7 @@ function TripCard({
               className="h-9 text-xs min-h-[44px] touch-manipulation"
               onClick={(e) => {
                 e.stopPropagation();
-                navigator.clipboard.writeText(`${window.location.origin}/trip/${trip.id}`);
+                navigator.clipboard.writeText(`${getPublicOrigin()}/trip/${trip.id}`);
               }}
             >
               <Share2 className="w-3.5 h-3.5 mr-1" /> Share

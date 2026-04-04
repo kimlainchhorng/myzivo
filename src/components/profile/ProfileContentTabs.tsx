@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -834,7 +835,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   </button>
                   <button
                     onClick={() => {
-                      const url = `${window.location.origin}/profile?post=${selectedPost.id}`;
+                      const url = `${getPublicOrigin()}/profile?post=${selectedPost.id}`;
                       navigator.clipboard.writeText(url).then(() => toast.success("Link copied!")).catch(() => toast.info("Could not copy link"));
                       setShowPostMenu(false);
                     }}
@@ -911,7 +912,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         <AnimatePresence>
           {sharePostId && (
             <UnifiedShareSheet
-              shareUrl={`${window.location.origin}/profile?post=${sharePostId}`}
+              shareUrl={`${getPublicOrigin()}/profile?post=${sharePostId}`}
               shareText={feed.find((p) => p.id === sharePostId)?.caption || "Check out this post!"}
               shareMediaUrl={feed.find((p) => p.id === sharePostId)?.url || undefined}
               shareMediaType={feed.find((p) => p.id === sharePostId)?.type === "reel" ? "video" : "image"}
