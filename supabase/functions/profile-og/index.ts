@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const PUBLIC_ORIGIN = "https://hizivo.com";
+const SHARE_ORIGIN = "https://myzivo.lovable.app";
+const APP_ORIGIN = "https://hizivo.com";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,9 +44,9 @@ Deno.serve(async (req) => {
     }
 
     const name = profile.full_name || "ZIVO User";
-    const shareUrl = `${PUBLIC_ORIGIN}/p/${profile.share_code}`;
-    const appProfileUrl = `${PUBLIC_ORIGIN}/user/${profile.id}`;
-    const avatar = profile.avatar_url || `${PUBLIC_ORIGIN}/og-image.png`;
+    const shareUrl = `${SHARE_ORIGIN}/p/${profile.share_code}`;
+    const appProfileUrl = `${APP_ORIGIN}/user/${profile.id}`;
+    const avatar = profile.avatar_url || `${APP_ORIGIN}/og-image.png`;
     const cover = profile.cover_url || avatar;
     const ogImage = cover;
     const description = `${name} — View my profile on ZIVO. One app for every journey.`;
