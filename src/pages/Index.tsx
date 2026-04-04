@@ -95,7 +95,8 @@ const Index = () => {
     const error = params.get("error") || hashParams.get("error");
     const errorDesc = params.get("error_description") || hashParams.get("error_description");
 
-    if (shareCode && /^[a-z0-9]{6,32}$/i.test(shareCode)) {
+    // Support legacy shared links that may include URL-safe token chars.
+    if (shareCode && /^[a-z0-9_-]{4,64}$/i.test(shareCode)) {
       navigate(`/p/${shareCode}`, { replace: true });
       return;
     }

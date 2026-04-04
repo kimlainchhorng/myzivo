@@ -26,7 +26,9 @@ export default function QRProfilePage() {
       .then(({ data }) => { if (data) setProfile(data as any); });
   }, [user]);
 
-  const profileUrl = profile?.share_code ? getProfileShareUrl(profile.share_code) : `${getPublicOrigin()}/profile`;
+  const profileUrl = profile?.share_code
+    ? getProfileShareUrl(profile.share_code)
+    : `${getPublicOrigin()}/user/${user?.id ?? ""}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(profileUrl);

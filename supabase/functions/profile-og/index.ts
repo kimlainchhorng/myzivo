@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     }
 
     const name = profile.full_name || "ZIVO User";
-    const shareLandingUrl = `${APP_ORIGIN}/?p=${encodeURIComponent(profile.share_code || code)}`;
+    const shareLandingUrl = `${APP_ORIGIN}/p/${encodeURIComponent(profile.share_code || code)}`;
     const avatar = profile.avatar_url || `${APP_ORIGIN}/og-image.png`;
     const cover = profile.cover_url || avatar;
     const ogImage = cover;
