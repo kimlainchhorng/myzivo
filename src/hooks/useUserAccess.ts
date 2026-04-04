@@ -72,11 +72,13 @@ export const useUserAccess = (userId: string | undefined) => {
         isRestaurantOwner: !!restaurant.data,
         isCarRentalOwner: (carRentals.data?.length ?? 0) > 0,
         isHotelOwner: !!hotel.data,
-        isFlightManager: !!adminRole.data, // For now, only admins can manage flights
+        isFlightManager: !!adminRole.data,
+        isStoreOwner: !!storeProfile.data,
         driverId: driver.data?.id,
         restaurantId: restaurant.data?.id,
         carRentalIds: carRentals.data?.map(c => c.id),
         hotelId: hotel.data?.id,
+        storeId: storeProfile.data?.id,
       };
     },
     enabled: !!userId,
