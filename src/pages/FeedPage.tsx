@@ -1030,7 +1030,7 @@ export default function FeedPage() {
       {/* Share sheet */}
       {sharePostId && (
         <UnifiedShareSheet
-          shareUrl={`${window.location.origin}/feed?post=${sharePostId}`}
+          shareUrl={`${getPublicOrigin()}/feed?post=${sharePostId}`}
           shareText={posts.find((p) => p.id === sharePostId)?.caption || "Check out this post!"}
           onClose={() => setSharePostId(null)}
         />

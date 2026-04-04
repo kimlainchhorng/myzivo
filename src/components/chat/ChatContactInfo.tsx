@@ -187,7 +187,7 @@ export default function ChatContactInfo({
   };
 
   const handleCopyProfile = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/user/${recipientId}`);
+    navigator.clipboard.writeText(`${getPublicOrigin()}/user/${recipientId}`);
     toast.success("Profile link copied");
   };
 

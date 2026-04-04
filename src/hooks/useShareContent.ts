@@ -56,7 +56,7 @@ export function useShareContent() {
     return share({
       title: `Flight from ${origin} to ${destination}`,
       text: `Check out this flight deal on ZIVO`,
-      url: `${window.location.origin}/flights/${origin}-to-${destination}`,
+      url: `${getPublicOrigin()}/flights/${origin}-to-${destination}`,
     });
   }, [share]);
 
