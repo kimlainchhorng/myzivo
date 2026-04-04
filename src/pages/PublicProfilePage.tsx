@@ -198,7 +198,7 @@ export default function PublicProfilePage() {
   }, [queryClient, userId]);
 
   const handleShare = async () => {
-    const url = `${getPublicOrigin()}/user/${userId}`;
+    const url = getProfileShareUrl(userId!);
     if (navigator.share) {
       try { await navigator.share({ title: `${profile?.full_name || "User"} on ZIVO`, url }); } catch {}
     } else {
