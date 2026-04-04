@@ -307,7 +307,7 @@ function TripCard({
               className="h-9 text-xs min-h-[44px] touch-manipulation"
               onClick={(e) => {
                 e.stopPropagation();
-                navigator.clipboard.writeText(`${window.location.origin}/trip/${trip.id}`);
+                navigator.clipboard.writeText(`${getPublicOrigin()}/trip/${trip.id}`);
               }}
             >
               <Share2 className="w-3.5 h-3.5 mr-1" /> Share
