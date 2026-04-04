@@ -777,12 +777,12 @@ const CreateCVPage = () => {
                       <DateRoller label="Start" value={exp.startDate} onChange={v => updateExp(exp.id, "startDate", v)} />
                       <DateRoller label="End" value={exp.current ? "" : exp.endDate} onChange={v => updateExp(exp.id, "endDate", v)} disabled={exp.current} />
                     </div>
-                    <label className="flex items-center gap-2 text-[11px] text-muted-foreground cursor-pointer py-1">
+                    <button type="button" onClick={() => updateExp(exp.id, "current", !exp.current)} className="flex items-center gap-2 text-[11px] text-muted-foreground cursor-pointer py-1 touch-manipulation">
                       <div className={cn("w-4 h-4 rounded border-2 flex items-center justify-center transition-colors", exp.current ? "bg-primary border-primary" : "border-border/60")}>
                         {exp.current && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
                       </div>
                       Currently working here
-                    </label>
+                    </button>
                     <div><label className={lblCls}>Description</label><textarea className={cn(inputCls, "min-h-[50px] resize-none")} placeholder="Key achievements & responsibilities..." value={exp.description} onChange={e => updateExp(exp.id, "description", e.target.value)} /></div>
                   </div>
                 ))}
