@@ -17,15 +17,16 @@ export default function QRProfilePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("my-code");
-  const profileUrl = user ? getProfileShareUrl(user.id) : `${getPublicOrigin()}/profile`;
   const [copied, setCopied] = useState(false);
-  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; share_code: string | null } | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("full_name, avatar_url").eq("id", user.id).maybeSingle()
+    supabase.from("profiles").select("full_name, avatar_url, share_code").eq("id", user.id).maybeSingle()
       .then(({ data }) => { if (data) setProfile(data as any); });
   }, [user]);
+
+  const profileUrl = profile?.share_code ? getProfileShareUrl(profile.share_code) : `${getPublicOrigin()}/profile`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(profileUrl);

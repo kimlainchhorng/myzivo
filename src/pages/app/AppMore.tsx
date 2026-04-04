@@ -42,10 +42,10 @@ const AppMore = () => {
   const navigate = useNavigate();
   const { user, signOut, isAdmin } = useAuth();
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
-  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; share_code: string | null } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const profileUrl = user ? getProfileShareUrl(user.id) : "";
+  const profileUrl = profile?.share_code ? getProfileShareUrl(profile.share_code) : "";
 
   const copyProfileLink = () => {
     navigator.clipboard.writeText(profileUrl);
@@ -71,7 +71,7 @@ const AppMore = () => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("full_name, avatar_url")
+      .select("full_name, avatar_url, share_code")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => {

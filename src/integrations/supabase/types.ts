@@ -33676,6 +33676,7 @@ export type Database = {
           selected_city_id: string | null
           selected_city_name: string | null
           setup_complete: boolean | null
+          share_code: string | null
           sms_consent: boolean
           sms_opted_out: boolean
           sms_opted_out_at: string | null
@@ -33733,6 +33734,7 @@ export type Database = {
           selected_city_id?: string | null
           selected_city_name?: string | null
           setup_complete?: boolean | null
+          share_code?: string | null
           sms_consent?: boolean
           sms_opted_out?: boolean
           sms_opted_out_at?: string | null
@@ -33790,6 +33792,7 @@ export type Database = {
           selected_city_id?: string | null
           selected_city_name?: string | null
           setup_complete?: boolean | null
+          share_code?: string | null
           sms_consent?: boolean
           sms_opted_out?: boolean
           sms_opted_out_at?: string | null

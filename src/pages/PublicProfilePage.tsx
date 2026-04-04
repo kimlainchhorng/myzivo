@@ -50,7 +50,7 @@ export default function PublicProfilePage() {
       if (!userId) return null;
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, cover_url, cover_position, profile_visibility, is_verified")
+        .select("id, full_name, avatar_url, cover_url, cover_position, profile_visibility, is_verified, share_code")
         .eq("id", userId)
         .single();
       return data;
@@ -198,7 +198,8 @@ export default function PublicProfilePage() {
   }, [queryClient, userId]);
 
   const handleShare = async () => {
-    const url = getProfileShareUrl(userId!);
+    const shareCode = profile?.share_code || "";
+    const url = shareCode ? getProfileShareUrl(shareCode) : `${getPublicOrigin()}/user/${userId}`;
     if (navigator.share) {
       try { await navigator.share({ title: `${profile?.full_name || "User"} on ZIVO`, url }); } catch {}
     } else {

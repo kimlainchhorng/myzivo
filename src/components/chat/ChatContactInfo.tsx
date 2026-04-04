@@ -187,8 +187,10 @@ export default function ChatContactInfo({
     });
   };
 
-  const handleCopyProfile = () => {
-    navigator.clipboard.writeText(getProfileShareUrl(recipientId));
+  const handleCopyProfile = async () => {
+    const { data } = await supabase.from("profiles").select("share_code").eq("id", recipientId).maybeSingle();
+    const url = data?.share_code ? getProfileShareUrl(data.share_code) : `${getPublicOrigin()}/user/${recipientId}`;
+    navigator.clipboard.writeText(url);
     toast.success("Profile link copied");
   };
 
