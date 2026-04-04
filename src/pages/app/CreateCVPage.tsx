@@ -506,6 +506,9 @@ const CreateCVPage = () => {
         if (Array.isArray(data.certifications) && data.certifications.length) setCertifications(data.certifications as any);
         if (Array.isArray((data as any).references_list) && (data as any).references_list.length) setReferences((data as any).references_list as any);
         setHobbies((data as any).hobbies || "");
+        setShareCode((data as any).share_code || null);
+        setPhoto((data as any).photo_url || null);
+        if ((data as any).template) setSelectedTemplate((data as any).template as TemplateId);
         setLastSaved(new Date(data.updated_at));
       }
       setLoading(false);
