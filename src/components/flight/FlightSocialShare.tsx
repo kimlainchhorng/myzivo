@@ -19,7 +19,7 @@ const FlightSocialShare = () => {
 
   const handleShare = (platform: string) => {
     if (platform === "copy") {
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(`${getPublicOrigin()}${window.location.pathname}${window.location.search}`);
       setCopied(true);
       toast.success("Link copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);

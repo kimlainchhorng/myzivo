@@ -162,7 +162,7 @@ export default function RideSocialHub() {
                   </Button>
                 </div>
 
-                <Button className="w-full h-11 rounded-xl text-sm font-bold gap-2" onClick={() => { navigator.clipboard.writeText(referralLink); toast.success("Referral link copied!"); }}>
+                <Button className="w-full h-11 rounded-xl text-sm font-bold gap-2" onClick={() => { navigator.clipboard.writeText(`${getPublicOrigin()}/signup?ref=${referralCode}`); toast.success("Referral link copied!"); }}>
                   <Link2 className="w-4 h-4" /> Copy Referral Link
                 </Button>
 

@@ -411,7 +411,7 @@ export default function DeliveryPage() {
 
   const handleShareTracking = () => {
     if (navigator.share) {
-      navigator.share({ title: "ZIVO Delivery", text: `Track my package: ${trackingId}`, url: window.location.href });
+      navigator.share({ title: "ZIVO Delivery", text: `Track my package: ${trackingId}`, url: `${getPublicOrigin()}/delivery/track/${trackingId}` });
     } else {
       handleCopyTracking();
     }
