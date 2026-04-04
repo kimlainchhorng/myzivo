@@ -1,7 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const SHARE_ORIGIN = "https://hizivo.com";
-const APP_ORIGIN = "https://hizivo.com";
+const APP_ORIGIN = "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,21 +43,20 @@ Deno.serve(async (req) => {
     }
 
     const name = profile.full_name || "ZIVO User";
-    const shareUrl = `${SHARE_ORIGIN}/p/${profile.share_code}`;
+    const shareUrl = `${url.origin}${url.pathname}?code=${encodeURIComponent(profile.share_code)}`;
     const appProfileUrl = `${APP_ORIGIN}/user/${profile.id}`;
     const avatar = profile.avatar_url || `${APP_ORIGIN}/og-image.png`;
     const cover = profile.cover_url || avatar;
     const ogImage = cover;
     const description = `${name} — View my profile on ZIVO. One app for every journey.`;
 
-    // Always serve HTML with OG tags — crawlers need them, and real users get redirected via JS
+    // Serve crawlable HTML for social previews; real users are redirected with JS only.
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>${escapeHtml(name)} on ZIVO</title>
   <meta name="description" content="${escapeHtml(description)}" />
-  <meta http-equiv="refresh" content="0;url=${escapeHtml(appProfileUrl)}" />
   <meta property="og:type" content="profile" />
   <meta property="og:title" content="${escapeHtml(name)}" />
   <meta property="og:description" content="${escapeHtml(description)}" />
@@ -81,7 +79,7 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
-    return new Response(new Blob([html], { type: "text/html; charset=utf-8" }), {
+    return new Response(html, {
       status: 200,
       headers: new Headers({
         ...corsHeaders,
