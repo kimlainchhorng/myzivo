@@ -643,7 +643,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     }
   })();
 
-  const shareUrl = `${getPublicOrigin()}/reels?post=${item.id}`;
+  const shareUrl = getPostShareUrl(item.id);
   const shareText = encodeURIComponent(item.caption || `Check out this post by ${item.author_name}`);
   const shareEncodedUrl = encodeURIComponent(shareUrl);
 
