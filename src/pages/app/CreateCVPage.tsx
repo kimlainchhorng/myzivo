@@ -198,9 +198,9 @@ const CreateCVPage = () => {
 
         {/* Education */}
         <Section icon={GraduationCap} title="Education" index={2}>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {educations.map((edu) => (
-              <div key={edu.id} className="relative rounded-xl border border-border/30 bg-muted/20 p-3 space-y-2.5">
+              <div key={edu.id} className="relative rounded-lg border border-border/30 bg-muted/20 p-2.5 space-y-2">
                 {educations.length > 1 && (
                   <button onClick={() => removeEducation(edu.id)} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-destructive/10 flex items-center justify-center touch-manipulation">
                     <Trash2 className="w-3 h-3 text-destructive" />
