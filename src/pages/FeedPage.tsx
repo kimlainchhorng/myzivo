@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import { repairVideoBlob } from "@/utils/videoRepair";
 
 interface FeedPost {
