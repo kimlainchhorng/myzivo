@@ -32,6 +32,14 @@ const ShopDashboard = () => {
     { icon: Settings, label: "Shop Settings", description: "Store profile & config", color: "from-slate-500 to-slate-600", onClick: () => navigate("/shop-dashboard/settings") },
   ];
 
+  const employeeActions = [
+    { icon: Users, label: "Employees", description: "Manage staff members", color: "text-blue-500", bg: "bg-blue-500/10", onClick: () => navigate("/shop-dashboard/employees") },
+    { icon: Wallet, label: "Payroll", description: "Wages & pay runs", color: "text-emerald-500", bg: "bg-emerald-500/10", onClick: () => navigate("/shop-dashboard/payroll") },
+    { icon: Calendar, label: "Schedule", description: "Shift planning", color: "text-purple-500", bg: "bg-purple-500/10", onClick: () => navigate("/shop-dashboard/employee-schedule") },
+    { icon: Clock, label: "Time Clock", description: "Clock in & out records", color: "text-amber-500", bg: "bg-amber-500/10", onClick: () => navigate("/shop-dashboard/time-clock") },
+    { icon: Shield, label: "Employee Rules", description: "Policies & permissions", color: "text-rose-500", bg: "bg-rose-500/10", onClick: () => navigate("/shop-dashboard/employee-rules") },
+  ];
+
   return (
     <AppLayout title="Shop Dashboard" hideHeader>
       <div className="flex flex-col px-5 py-6 pb-28">
