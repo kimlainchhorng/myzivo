@@ -28,6 +28,7 @@ export const useUserAccess = (userId: string | undefined) => {
           isCarRentalOwner: false,
           isHotelOwner: false,
           isFlightManager: false,
+          isStoreOwner: false,
         };
       }
 
