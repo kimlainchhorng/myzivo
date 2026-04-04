@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Clock, Users, LogIn, LogOut, Calendar, Timer,
-  CheckCircle2, ChevronRight, FileText, Bell, HelpCircle, Settings,
+  CheckCircle2, ChevronRight, FileText, Bell, HelpCircle, Settings, Briefcase,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
