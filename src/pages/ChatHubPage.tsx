@@ -87,9 +87,36 @@ export default function ChatHubPage() {
   const [openGroupChat, setOpenGroupChat] = useState<{ id: string; name: string; avatar?: string | null } | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Share mode state
   const [sharePayload, setSharePayload] = useState<{ shareUrl: string; shareText: string } | null>(null);
+
+  // Handle post-payment unlock redirect: /chat?unlocked=MESSAGE_ID
+  useEffect(() => {
+    const unlockedMsgId = searchParams.get("unlocked");
+    if (!unlockedMsgId || !user) return;
+    // Remove param from URL immediately
+    searchParams.delete("unlocked");
+    setSearchParams(searchParams, { replace: true });
+    // Auto-verify the unlock with Stripe
+    const verify = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("verify-media-unlock", {
+          body: { message_id: unlockedMsgId },
+        });
+        if (error) throw error;
+        if (data?.unlocked) {
+          toast.success("Media unlocked! 🔓");
+        } else {
+          toast.info("Payment is still processing. The media will unlock shortly.");
+        }
+      } catch {
+        toast.error("Failed to verify unlock");
+      }
+    };
+    verify();
+  }, [searchParams, user]);
 
   // Handle deep-link from profile page chat button OR share-to-chat
   useEffect(() => {
