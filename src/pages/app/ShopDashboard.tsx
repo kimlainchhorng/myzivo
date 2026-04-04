@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft, Package, ShoppingBag, BarChart3, Settings, Tag, Truck,
   Plus, TrendingUp, DollarSign, Box, Users, Calendar, Clock, Wallet, Shield, ChevronRight,
+  CalendarCheck, GraduationCap, Star, FolderOpen,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/app/AppLayout";
