@@ -27,7 +27,7 @@ export default function RideSocialHub() {
   ]);
   const [inviteInput, setInviteInput] = useState("");
   const referralCode = "ZIVO-RIDE50";
-  const referralLink = `https://hizovo.com/r/${referralCode}`;
+  const referralLink = `${getPublicOrigin()}/r/${referralCode}`;
 
   const sections = [
     { id: "share" as const, label: "Share Trip", icon: Share2 },
