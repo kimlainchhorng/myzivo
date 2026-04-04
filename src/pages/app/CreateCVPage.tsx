@@ -167,7 +167,7 @@ function ProgressTips({ data }: { data: any }) {
 }
 
 /* ── CV Preview Modal — Two-column professional layout ── */
-function CVPreviewModal({ open, onClose, data }: { open: boolean; onClose: () => void; data: any }) {
+const CVPreviewModal = forwardRef<HTMLDivElement, { open: boolean; onClose: () => void; data: any }>(({ open, onClose, data }, ref) => {
   if (!open) return null;
 
   const hasExperience = data.experiences?.some((e: any) => e.position);
