@@ -31,7 +31,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send, Users, Shield } from "lucide-react";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import StorePaymentSection from "@/components/admin/StorePaymentSection";
 import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
@@ -1752,7 +1752,8 @@ export default function AdminStoreEditPage() {
     }
   };
 
-  const storeOwnerTitle = activeTab === "orders" ? "Orders" : activeTab === "products" ? "Products" : activeTab === "payment" ? (form.category === "car-dealership" ? t("admin.store.booking_appointment") : t("admin.store.payment")) : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`;
+  const employeeTitles: Record<string, string> = { employees: "Employees", payroll: "Payroll", "employee-schedule": "Employee Schedule", "time-clock": "Time Clock", "employee-rules": "Employee Rules" };
+  const storeOwnerTitle = employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? "Products" : activeTab === "payment" ? (form.category === "car-dealership" ? t("admin.store.booking_appointment") : t("admin.store.payment")) : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
   const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
     <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
   );
@@ -2855,6 +2856,46 @@ export default function AdminStoreEditPage() {
           {/* Marketing Tab */}
           <TabsContent value="marketing">
             <StoreMarketingSection storeId={storeId!} />
+          </TabsContent>
+
+          <TabsContent value="employees">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center mb-4"><Users className="w-7 h-7 text-blue-500" /></div>
+              <h2 className="font-semibold text-lg mb-1">Employees</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">Add, remove, and manage your store employees and their roles.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="payroll">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mb-4"><DollarSign className="w-7 h-7 text-emerald-500" /></div>
+              <h2 className="font-semibold text-lg mb-1">Payroll</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">Manage wages, pay runs, and compensation for your employees.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="employee-schedule">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-purple-500/10 flex items-center justify-center mb-4"><CalendarIcon className="w-7 h-7 text-purple-500" /></div>
+              <h2 className="font-semibold text-lg mb-1">Employee Schedule</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">Create and manage employee work schedules and shifts.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="time-clock">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mb-4"><Clock className="w-7 h-7 text-amber-500" /></div>
+              <h2 className="font-semibold text-lg mb-1">Time Clock</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">Track employee clock-in/out times, attendance, and work hours.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="employee-rules">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-rose-500/10 flex items-center justify-center mb-4"><Shield className="w-7 h-7 text-rose-500" /></div>
+              <h2 className="font-semibold text-lg mb-1">Employee Rules</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">Set employee rules, access levels, and workplace policies.</p>
+            </div>
           </TabsContent>
 
 
