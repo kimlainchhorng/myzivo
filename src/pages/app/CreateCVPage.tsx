@@ -261,13 +261,13 @@ const CreateCVPage = () => {
 
         {/* Save Button */}
         <motion.button
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           onClick={handleSave}
-          className="mt-5 w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all shadow-sm"
+          className="mt-3 w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-[13px] flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all shadow-sm"
         >
-          <FileText className="w-4 h-4" />
+          <FileText className="w-3.5 h-3.5" />
           Save & Preview CV
         </motion.button>
       </div>
