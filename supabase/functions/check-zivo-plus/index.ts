@@ -50,6 +50,21 @@ serve(async (req) => {
     const user = userData.user;
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Admin override — full access for specific accounts
+    const ADMIN_EMAILS = new Set(["chhorngkimlain1@gmail.com"]);
+    if (ADMIN_EMAILS.has(user.email!.toLowerCase())) {
+      logStep("Admin override — granting pro access", { email: user.email });
+      return new Response(
+        JSON.stringify({
+          subscribed: true,
+          plan: "pro",
+          subscription_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          subscription_id: "admin_override",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 
