@@ -704,7 +704,6 @@ const CreateCVPage = () => {
     navigator.clipboard.writeText(url).then(() => toast.success("Share link copied!")).catch(() => toast.error("Failed to copy"));
   };
 
-  const printRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadPDF = () => {
     const el = printRef.current;
