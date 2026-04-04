@@ -47,6 +47,7 @@ const Index = lazy(() => lazyRetry(() => import("./pages/Index")));
 const AppHome = lazy(() => lazyRetry(() => import("./pages/app/AppHome")));
 const AppTravel = lazy(() => import("./pages/app/AppTravel"));
 const AppMore = lazy(() => import("./pages/app/AppMore"));
+const PersonalDashboard = lazy(() => import("./pages/app/PersonalDashboard"));
 const ServicesPage = lazy(() => import("./pages/app/ServicesPage"));
 const UnifiedDashboard = lazy(() => import("./pages/app/UnifiedDashboard"));
 const MyTripsPage = lazy(() => import("./pages/app/MyTripsPage"));
