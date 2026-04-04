@@ -412,7 +412,7 @@ function SplitFareTab() {
       {splitLink && (
         <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/20 border border-border/30">
           <span className="text-[10px] text-muted-foreground flex-1 font-mono truncate">{splitLink}</span>
-          <button onClick={() => { navigator.clipboard.writeText(`https://${splitLink}`); toast.success("Copied!"); }}>
+          <button onClick={() => { navigator.clipboard.writeText(splitLink); toast.success("Copied!"); }}>
             <Copy className="w-3.5 h-3.5 text-primary" />
           </button>
         </div>
