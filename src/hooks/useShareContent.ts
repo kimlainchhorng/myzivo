@@ -48,7 +48,7 @@ export function useShareContent() {
     return share({
       title: `${name || "User"} on ZIVO`,
       text: `Check out ${name || "this user"}'s profile on ZIVO`,
-      url: `${window.location.origin}/profile/${userId}`,
+      url: `${getPublicOrigin()}/profile/${userId}`,
     });
   }, [share]);
 
