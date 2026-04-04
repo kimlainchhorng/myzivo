@@ -555,6 +555,8 @@ const CreateCVPage = () => {
       references_list: references as any,
       hobbies: hobbies.trim(),
       is_primary: true,
+      template: selectedTemplate,
+      photo_url: photo || null,
     };
     let error;
     if (cvId) {
