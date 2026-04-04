@@ -38,6 +38,10 @@ const ShopDashboard = () => {
     { icon: Wallet, label: "Payroll", description: "Wages & pay runs", color: "text-emerald-500", bg: "bg-emerald-500/10", onClick: () => navigate("/shop-dashboard/payroll") },
     { icon: Calendar, label: "Schedule", description: "Shift planning", color: "text-purple-500", bg: "bg-purple-500/10", onClick: () => navigate("/shop-dashboard/employee-schedule") },
     { icon: Clock, label: "Time Clock", description: "Clock in & out records", color: "text-amber-500", bg: "bg-amber-500/10", onClick: () => navigate("/shop-dashboard/time-clock") },
+    { icon: CalendarCheck, label: "Attendance & Leave", description: "Track attendance & vacation", color: "text-teal-500", bg: "bg-teal-500/10", onClick: () => navigate("/shop-dashboard/attendance") },
+    { icon: GraduationCap, label: "Training", description: "Onboarding & training", color: "text-indigo-500", bg: "bg-indigo-500/10", onClick: () => navigate("/shop-dashboard/training") },
+    { icon: Star, label: "Performance", description: "Reviews & evaluations", color: "text-yellow-500", bg: "bg-yellow-500/10", onClick: () => navigate("/shop-dashboard/performance") },
+    { icon: FolderOpen, label: "Documents", description: "Contracts & files", color: "text-sky-500", bg: "bg-sky-500/10", onClick: () => navigate("/shop-dashboard/documents") },
     { icon: Shield, label: "Employee Rules", description: "Policies & permissions", color: "text-rose-500", bg: "bg-rose-500/10", onClick: () => navigate("/shop-dashboard/employee-rules") },
   ];
 
