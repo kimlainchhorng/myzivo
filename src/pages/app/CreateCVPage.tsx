@@ -840,6 +840,39 @@ const CreateCVPage = () => {
             Preview
           </motion.button>
         </div>
+
+        {/* Delete CV */}
+        {cvId && (
+          <div className="mt-6 pt-4 border-t border-border/20">
+            {!showDeleteConfirm ? (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full h-10 rounded-xl border border-destructive/20 text-destructive/70 text-xs font-medium flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.98] transition-all"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete CV
+              </button>
+            ) : (
+              <div className="bg-destructive/5 rounded-xl p-3 border border-destructive/20 space-y-2">
+                <p className="text-[12px] font-semibold text-destructive text-center">Delete this CV permanently?</p>
+                <p className="text-[10px] text-muted-foreground text-center">This action cannot be undone.</p>
+                <div className="flex gap-2">
+                  <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 h-9 rounded-lg bg-muted/60 text-xs font-medium touch-manipulation active:scale-95 transition-transform">
+                    Cancel
+                  </button>
+                  <button onClick={handleDelete} className="flex-1 h-9 rounded-lg bg-destructive text-destructive-foreground text-xs font-bold touch-manipulation active:scale-95 transition-transform">
+                    Yes, Delete
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Auto-save info */}
+        <p className="text-[9px] text-muted-foreground/40 text-center mt-4">
+          Your CV auto-saves 3 seconds after each change
+        </p>
       </div>
 
       {/* Preview Modal */}
