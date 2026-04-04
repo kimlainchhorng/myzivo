@@ -926,28 +926,24 @@ const CreateCVPage = () => {
         </AnimatePresence>
 
         {/* Bottom Action Buttons */}
-        <div className="flex gap-2.5 mt-5">
-          <motion.button
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            onClick={handleSave}
-            disabled={saving}
-            className="flex-1 h-12 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all shadow-md disabled:opacity-60"
-          >
+        <div className="grid grid-cols-2 gap-2.5 mt-5">
+          <button onClick={handleSave} disabled={saving}
+            className="h-12 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all shadow-md disabled:opacity-60">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {saving ? "Saving…" : "Save CV"}
-          </motion.button>
-          <motion.button
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            onClick={() => setShowPreview(true)}
-            className="flex-1 h-12 rounded-xl border-2 border-primary/30 text-primary font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all"
-          >
-            <Eye className="w-4 h-4" />
-            Preview
-          </motion.button>
+          </button>
+          <button onClick={() => setShowPreview(true)}
+            className="h-12 rounded-xl border-2 border-primary/30 text-primary font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all">
+            <Eye className="w-4 h-4" /> Preview
+          </button>
+          <button onClick={handleDownloadPDF}
+            className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all">
+            <Download className="w-3.5 h-3.5" /> Download PDF
+          </button>
+          <button onClick={handleShare}
+            className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all">
+            <Share2 className="w-3.5 h-3.5" /> Share Link
+          </button>
         </div>
 
         {/* Delete CV */}
