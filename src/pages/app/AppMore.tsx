@@ -71,7 +71,7 @@ const AppMore = () => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("full_name, avatar_url")
+      .select("full_name, avatar_url, share_code")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => {
