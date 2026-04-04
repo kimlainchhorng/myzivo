@@ -3,7 +3,7 @@
  * Shows cover photo, avatar, name, posts/videos/reels, follow/friend/share actions
  * Respects profile_visibility privacy settings
  */
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,6 +31,8 @@ type PostTab = "all" | "photos" | "videos";
 
 export default function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
+  const [searchParams] = useSearchParams();
+  const shareCodeFromUrl = searchParams.get("sc") || "";
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -40,8 +42,6 @@ export default function PublicProfilePage() {
   const [commentPost, setCommentPost] = useState<any>(null);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
-
-  const isOwnProfile = user?.id === userId;
 
   // Fetch profile with cover photo
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -58,16 +58,68 @@ export default function PublicProfilePage() {
     enabled: !!userId,
   });
 
-  const { data: friendshipStatus = "none" } = useQuery({
-    queryKey: ["friendship-status", userId],
+  // Fallback: resolve minimal profile via public view or edge function using share code.
+  const { data: fallbackProfile, isLoading: fallbackProfileLoading } = useQuery({
+    queryKey: ["public-profile-fallback", userId, shareCodeFromUrl],
     queryFn: async () => {
-      const { data } = await supabase.rpc("get_friendship_status", { target_user_id: userId! });
-      return (data as string) || "none";
+      if (!userId) return null;
+
+      const { data: pub } = await (supabase as any)
+        .from("public_profiles")
+        .select("id, user_id, full_name, avatar_url")
+        .or(`id.eq.${userId},user_id.eq.${userId}`)
+        .maybeSingle();
+
+      if (pub) {
+        return {
+          ...pub,
+          cover_url: null,
+          cover_position: null,
+          profile_visibility: "public",
+          is_verified: false,
+          share_code: shareCodeFromUrl || null,
+        };
+      }
+
+      if (!shareCodeFromUrl) return null;
+
+      try {
+        const res = await fetch(`https://slirphzzwcogdbkeicff.supabase.co/functions/v1/profile-og?resolve=1&code=${encodeURIComponent(shareCodeFromUrl)}`);
+        if (!res.ok) return null;
+        const contentType = res.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) return null;
+
+        const json = await res.json();
+        const fp = json?.profile;
+        if (!fp) return null;
+
+        return {
+          ...fp,
+          cover_position: null,
+          profile_visibility: "public",
+          is_verified: false,
+        };
+      } catch {
+        return null;
+      }
     },
-    enabled: !!userId && !!user && !isOwnProfile,
+    enabled: !!userId && !profile,
   });
 
-  const visibility = profile?.profile_visibility || "public";
+  const resolvedProfile: any = profile || fallbackProfile;
+  const targetUserId = resolvedProfile?.user_id || resolvedProfile?.id || userId || "";
+  const isOwnProfile = !!user?.id && !!targetUserId && user.id === targetUserId;
+
+  const { data: friendshipStatus = "none" } = useQuery({
+    queryKey: ["friendship-status", targetUserId],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_friendship_status", { target_user_id: targetUserId });
+      return (data as string) || "none";
+    },
+    enabled: !!targetUserId && !!user && !isOwnProfile,
+  });
+
+  const visibility = resolvedProfile?.profile_visibility || "public";
   const isFriend = friendshipStatus === "friends";
   const isLocked = !isOwnProfile && (
     visibility === "private" || (visibility === "friends" && !isFriend)
@@ -75,13 +127,13 @@ export default function PublicProfilePage() {
 
   // Fetch user posts with shared origin info
   const { data: posts = [], isLoading: postsLoading } = useQuery({
-    queryKey: ["public-profile-posts", userId],
+    queryKey: ["public-profile-posts", targetUserId],
     queryFn: async () => {
-      if (!userId) return [];
+      if (!targetUserId) return [];
       const { data } = await (supabase as any)
         .from("user_posts")
         .select("id, media_url, media_type, caption, likes_count, comments_count, views_count, shares_count, created_at, shared_from_post_id, shared_from_user_id")
-        .eq("user_id", userId)
+        .eq("user_id", targetUserId)
         .eq("is_published", true)
         .order("created_at", { ascending: false });
       if (!data) return [];
@@ -104,44 +156,44 @@ export default function PublicProfilePage() {
           (post.shared_from_user_id ? originByUserId[post.shared_from_user_id] || null : null) as SharedOriginInfo | null,
       }));
     },
-    enabled: !!userId && !isLocked,
+    enabled: !!targetUserId && !isLocked,
   });
 
   // Counts
   const { data: followerCount = 0 } = useQuery({
-    queryKey: ["follower-count", userId],
-    queryFn: async () => { const { data } = await supabase.rpc("get_follower_count", { target_user_id: userId! }); return data || 0; },
-    enabled: !!userId,
+    queryKey: ["follower-count", targetUserId],
+    queryFn: async () => { const { data } = await supabase.rpc("get_follower_count", { target_user_id: targetUserId }); return data || 0; },
+    enabled: !!targetUserId,
   });
   const { data: followingCount = 0 } = useQuery({
-    queryKey: ["following-count", userId],
-    queryFn: async () => { const { data } = await supabase.rpc("get_following_count", { target_user_id: userId! }); return data || 0; },
-    enabled: !!userId,
+    queryKey: ["following-count", targetUserId],
+    queryFn: async () => { const { data } = await supabase.rpc("get_following_count", { target_user_id: targetUserId }); return data || 0; },
+    enabled: !!targetUserId,
   });
   const { data: friendCount = 0 } = useQuery({
-    queryKey: ["friend-count", userId],
-    queryFn: async () => { const { data } = await supabase.rpc("get_friend_count", { target_user_id: userId! }); return data || 0; },
-    enabled: !!userId,
+    queryKey: ["friend-count", targetUserId],
+    queryFn: async () => { const { data } = await supabase.rpc("get_friend_count", { target_user_id: targetUserId }); return data || 0; },
+    enabled: !!targetUserId,
   });
   const { data: isFollowing = false } = useQuery({
-    queryKey: ["is-following", userId],
-    queryFn: async () => { const { data } = await supabase.rpc("is_following", { target_user_id: userId! }); return data || false; },
-    enabled: !!userId && !!user && !isOwnProfile,
+    queryKey: ["is-following", targetUserId],
+    queryFn: async () => { const { data } = await supabase.rpc("is_following", { target_user_id: targetUserId }); return data || false; },
+    enabled: !!targetUserId && !!user && !isOwnProfile,
   });
 
   // Follow mutation
   const followMutation = useMutation({
     mutationFn: async () => {
-      if (!user || !userId || user.id === userId) throw new Error("Invalid");
+      if (!user || !targetUserId || user.id === targetUserId) throw new Error("Invalid");
       if (isFollowing) {
-        await supabase.from("followers").delete().eq("follower_id", user.id).eq("following_id", userId).throwOnError();
+        await supabase.from("followers").delete().eq("follower_id", user.id).eq("following_id", targetUserId).throwOnError();
       } else {
-        await supabase.from("followers").insert({ follower_id: user.id, following_id: userId }).throwOnError();
+        await supabase.from("followers").insert({ follower_id: user.id, following_id: targetUserId }).throwOnError();
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["is-following", userId] });
-      queryClient.invalidateQueries({ queryKey: ["follower-count", userId] });
+      queryClient.invalidateQueries({ queryKey: ["is-following", targetUserId] });
+      queryClient.invalidateQueries({ queryKey: ["follower-count", targetUserId] });
       toast.success(isFollowing ? "Unfollowed" : "Following!");
     },
     onError: (err: any) => toast.error(err?.message || "Something went wrong"),
@@ -150,35 +202,35 @@ export default function PublicProfilePage() {
   // Friend mutation
   const friendMutation = useMutation({
     mutationFn: async (action: "add" | "cancel" | "accept" | "unfriend") => {
-      if (!user || !userId || user.id === userId) throw new Error("Invalid");
+      if (!user || !targetUserId || user.id === targetUserId) throw new Error("Invalid");
       if (action === "add") {
-        if (!isFollowing) await supabase.from("followers").insert({ follower_id: user.id, following_id: userId }).throwOnError();
-        await supabase.from("friendships").insert({ user_id: user.id, friend_id: userId, status: "pending" }).throwOnError();
+        if (!isFollowing) await supabase.from("followers").insert({ follower_id: user.id, following_id: targetUserId }).throwOnError();
+        await supabase.from("friendships").insert({ user_id: user.id, friend_id: targetUserId, status: "pending" }).throwOnError();
         try {
           const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).single();
           await supabase.functions.invoke("send-push-notification", {
-            body: { user_id: userId, notification_type: "friend_request_received", title: `${sp?.full_name || "Someone"} · Following`, body: `${sp?.full_name || "Someone"} sent you a friend request`, data: { type: "friend_request", sender_id: user.id, avatar_url: sp?.avatar_url, action_url: `/user/${user.id}` } },
+            body: { user_id: targetUserId, notification_type: "friend_request_received", title: `${sp?.full_name || "Someone"} · Following`, body: `${sp?.full_name || "Someone"} sent you a friend request`, data: { type: "friend_request", sender_id: user.id, avatar_url: sp?.avatar_url, action_url: `/user/${user.id}` } },
           });
         } catch {}
       } else if (action === "cancel" || action === "unfriend") {
-        await supabase.from("friendships").delete().or(`and(user_id.eq.${user.id},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${user.id})`).throwOnError();
+        await supabase.from("friendships").delete().or(`and(user_id.eq.${user.id},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${user.id})`).throwOnError();
       } else if (action === "accept") {
-        if (!isFollowing) await supabase.from("followers").insert({ follower_id: user.id, following_id: userId }).throwOnError();
-        await supabase.from("friendships").update({ status: "accepted", accepted_at: new Date().toISOString() }).eq("user_id", userId).eq("friend_id", user.id).throwOnError();
+        if (!isFollowing) await supabase.from("followers").insert({ follower_id: user.id, following_id: targetUserId }).throwOnError();
+        await supabase.from("friendships").update({ status: "accepted", accepted_at: new Date().toISOString() }).eq("user_id", targetUserId).eq("friend_id", user.id).throwOnError();
       }
     },
     onSuccess: (_, action) => {
-      queryClient.invalidateQueries({ queryKey: ["friendship-status", userId] });
-      queryClient.invalidateQueries({ queryKey: ["friend-count", userId] });
-      queryClient.invalidateQueries({ queryKey: ["is-following", userId] });
-      queryClient.invalidateQueries({ queryKey: ["follower-count", userId] });
+      queryClient.invalidateQueries({ queryKey: ["friendship-status", targetUserId] });
+      queryClient.invalidateQueries({ queryKey: ["friend-count", targetUserId] });
+      queryClient.invalidateQueries({ queryKey: ["is-following", targetUserId] });
+      queryClient.invalidateQueries({ queryKey: ["follower-count", targetUserId] });
       toast.success({ add: "Friend request sent!", cancel: "Request cancelled", accept: "Friend added!", unfriend: "Unfriended" }[action]);
     },
     onError: (err: any) => toast.error(err?.message || "Something went wrong"),
   });
 
-  const isLoading = profileLoading || (!isLocked && postsLoading);
-  const initials = (profile?.full_name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+  const isLoading = profileLoading || fallbackProfileLoading || (!isLocked && postsLoading);
+  const initials = (resolvedProfile?.full_name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
 
   const getFriendButton = () => {
     switch (friendshipStatus) {
@@ -193,15 +245,15 @@ export default function PublicProfilePage() {
   const handlePullRefresh = useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["public-profile", userId] }),
-      queryClient.invalidateQueries({ queryKey: ["public-profile-posts", userId] }),
+      queryClient.invalidateQueries({ queryKey: ["public-profile-posts", targetUserId] }),
     ]);
-  }, [queryClient, userId]);
+  }, [queryClient, targetUserId, userId]);
 
   const handleShare = async () => {
-    const shareCode = profile?.share_code || "";
-    const url = shareCode ? getProfileShareUrl(shareCode) : `${getPublicOrigin()}/user/${userId}`;
+    const shareCode = resolvedProfile?.share_code || shareCodeFromUrl || "";
+    const url = shareCode ? getProfileShareUrl(shareCode) : `${getPublicOrigin()}/user/${targetUserId || userId}`;
     if (navigator.share) {
-      try { await navigator.share({ title: `${profile?.full_name || "User"} on ZIVO`, url }); } catch {}
+      try { await navigator.share({ title: `${resolvedProfile?.full_name || "User"} on ZIVO`, url }); } catch {}
     } else {
       await navigator.clipboard.writeText(url);
       toast.success("Profile link copied!");
@@ -281,7 +333,7 @@ export default function PublicProfilePage() {
           user_id: user.id,
           item_id: interactionId,
           item_type: "post",
-          title: post.caption || `Post by ${profile?.full_name || "User"}`,
+          title: post.caption || `Post by ${resolvedProfile?.full_name || "User"}`,
           collection_name: "Posts",
         });
 
@@ -310,7 +362,7 @@ export default function PublicProfilePage() {
 
   const getPrivacyInfo = () => {
     if (visibility === "private") return { icon: Lock, title: "This Account is Private", description: "This user has set their profile to private.", showAddFriend: false };
-    return { icon: Users, title: "Friends Only", description: `Only friends can see ${profile?.full_name || "this user"}'s posts.`, showAddFriend: friendshipStatus === "none" || friendshipStatus === "request_received" };
+    return { icon: Users, title: "Friends Only", description: `Only friends can see ${resolvedProfile?.full_name || "this user"}'s posts.`, showAddFriend: friendshipStatus === "none" || friendshipStatus === "request_received" };
   };
 
   const formatTime = (dateStr: string) => {
@@ -325,7 +377,7 @@ export default function PublicProfilePage() {
           <button onClick={() => navigate(-1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
-          <h1 className="text-lg font-bold text-foreground truncate flex-1">{profile?.full_name || "Profile"}</h1>
+          <h1 className="text-lg font-bold text-foreground truncate flex-1">{resolvedProfile?.full_name || "Profile"}</h1>
           <button onClick={handleShare} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
             <Share2 className="h-5 w-5 text-foreground" />
           </button>
@@ -334,24 +386,24 @@ export default function PublicProfilePage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center h-60"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-      ) : !profile ? (
+      ) : !resolvedProfile ? (
         <div className="flex flex-col items-center justify-center h-60 text-muted-foreground"><User className="h-10 w-10 mb-2" /><p className="text-sm">Profile not found</p></div>
       ) : (
         <>
           {/* Cover + Avatar */}
           <div className="relative">
             <div className="w-full h-36 bg-gradient-to-br from-primary/20 via-primary/10 to-muted overflow-hidden">
-              {profile.cover_url && (
-                <img src={profile.cover_url} alt="Cover" className="w-full h-full object-cover" style={{ objectPosition: `center ${profile.cover_position ?? 50}%` }} />
+              {resolvedProfile.cover_url && (
+                <img src={resolvedProfile.cover_url} alt="Cover" className="w-full h-full object-cover" style={{ objectPosition: `center ${resolvedProfile.cover_position ?? 50}%` }} />
               )}
             </div>
             <div className="absolute left-1/2 -translate-x-1/2 -bottom-14">
               <div className="relative">
                 <Avatar className="h-28 w-28 border-4 border-background shadow-lg">
-                  <AvatarImage src={profile.avatar_url || undefined} />
+                  <AvatarImage src={resolvedProfile.avatar_url || undefined} />
                   <AvatarFallback className="text-3xl font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
                 </Avatar>
-                {profile.is_verified && (
+                {resolvedProfile.is_verified && (
                   <div className="absolute bottom-1 right-1 h-6 w-6 rounded-full bg-background flex items-center justify-center">
                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="hsl(var(--primary))" /><path d="M8 12.5L10.5 15L16 9.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   </div>
@@ -362,7 +414,7 @@ export default function PublicProfilePage() {
 
           {/* Profile Info */}
           <div className="flex flex-col items-center pt-16 pb-4 px-4">
-            <h2 className="text-xl font-bold text-foreground">{profile.full_name}</h2>
+            <h2 className="text-xl font-bold text-foreground">{resolvedProfile.full_name}</h2>
 
             {!isLocked ? (
               <div className="flex gap-6 mt-4">
@@ -472,11 +524,11 @@ export default function PublicProfilePage() {
                           {/* Sharer header */}
                           <div className="flex items-center gap-2.5 px-3 py-2.5">
                             <Avatar className="h-9 w-9">
-                              <AvatarImage src={profile.avatar_url || undefined} />
+                              <AvatarImage src={resolvedProfile.avatar_url || undefined} />
                               <AvatarFallback className="text-xs font-bold">{initials}</AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[13px] font-semibold text-foreground truncate">{profile.full_name}</p>
+                              <p className="text-[13px] font-semibold text-foreground truncate">{resolvedProfile.full_name}</p>
                               <div className="flex items-center gap-1">
                                 <p className="text-[10px] text-muted-foreground">{formatTime(post.created_at)}</p>
                                 <span className="text-[10px] text-muted-foreground">·</span>
@@ -542,11 +594,11 @@ export default function PublicProfilePage() {
                           {/* Post header */}
                           <div className="flex items-center gap-2.5 px-3 py-2.5">
                             <Avatar className="h-9 w-9">
-                              <AvatarImage src={profile.avatar_url || undefined} />
+                              <AvatarImage src={resolvedProfile.avatar_url || undefined} />
                               <AvatarFallback className="text-xs font-bold">{initials}</AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[13px] font-semibold text-foreground truncate">{profile.full_name}</p>
+                              <p className="text-[13px] font-semibold text-foreground truncate">{resolvedProfile.full_name}</p>
                               <div className="flex items-center gap-1">
                                 <p className="text-[10px] text-muted-foreground">{formatTime(post.created_at)}</p>
                                 <span className="text-[10px] text-muted-foreground">·</span>
@@ -559,7 +611,7 @@ export default function PublicProfilePage() {
                           {post.caption && (
                             <div className="px-3 pb-2">
                               <p className="text-[13px] text-foreground">
-                                <span className="font-semibold mr-1">{profile.full_name}</span>
+                                <span className="font-semibold mr-1">{resolvedProfile.full_name}</span>
                                 {post.caption}
                               </p>
                             </div>
@@ -648,11 +700,11 @@ export default function PublicProfilePage() {
                         <ArrowLeft className="h-5 w-5 text-foreground" />
                       </button>
                       <Avatar className="h-9 w-9 ring-2 ring-primary/20">
-                        <AvatarImage src={profile.avatar_url || undefined} />
+                        <AvatarImage src={resolvedProfile.avatar_url || undefined} />
                         <AvatarFallback className="text-xs bg-muted">{initials}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-foreground truncate">{profile.full_name}</p>
+                        <p className="text-sm font-bold text-foreground truncate">{resolvedProfile.full_name}</p>
                         <p className="text-[11px] text-muted-foreground">{formatTime(selectedPost.created_at)}</p>
                       </div>
                       <button onClick={(e) => { e.stopPropagation(); handleShare(); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
@@ -713,7 +765,7 @@ export default function PublicProfilePage() {
                     {selectedPost.caption && (
                       <div className="px-4 py-3">
                         <p className="text-sm text-foreground leading-relaxed">
-                          <span className="font-bold mr-1.5">{profile.full_name}</span>
+                          <span className="font-bold mr-1.5">{resolvedProfile.full_name}</span>
                           {selectedPost.caption}
                         </p>
                       </div>
