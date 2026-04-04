@@ -11,9 +11,15 @@ export function getPublicOrigin(): string {
 }
 
 /**
+ * Returns a share URL for a feed/reel post.
+ * Uses root + query param to avoid deep-link 404s on custom domains.
+ */
+export function getPostShareUrl(postId: string): string {
+  return `${PUBLIC_ORIGIN}/reels?post=${encodeURIComponent(postId)}`;
+}
+
+/**
  * Returns the profile share URL for social networks.
- * Crawlers read OG tags from the edge function, and real users are redirected
- * to the app profile route.
  */
 export function getProfileShareUrl(shareCode: string): string {
   return `${PROFILE_OG_FUNCTION}?code=${encodeURIComponent(shareCode)}`;

@@ -3,7 +3,7 @@
  */
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
+import { getPublicOrigin, getProfileShareUrl, getPostShareUrl } from "@/lib/getPublicOrigin";
 
 interface ShareOptions {
   title: string;
@@ -39,7 +39,7 @@ export function useShareContent() {
     return share({
       title: caption || "Check out this post on ZIVO",
       text: caption || "See this on ZIVO",
-      url: `${getPublicOrigin()}/reels?post=${postId}`,
+      url: getPostShareUrl(postId),
     });
   }, [share]);
 
