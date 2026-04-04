@@ -41,6 +41,10 @@ import StorePayrollSection from "@/components/admin/store/StorePayrollSection";
 import StoreScheduleSection from "@/components/admin/store/StoreScheduleSection";
 import StoreTimeClockSection from "@/components/admin/store/StoreTimeClockSection";
 import StoreAttendanceSection from "@/components/admin/store/StoreAttendanceSection";
+import StoreTrainingSection from "@/components/admin/store/StoreTrainingSection";
+import StorePerformanceSection from "@/components/admin/store/StorePerformanceSection";
+import StoreDocumentsSection from "@/components/admin/store/StoreDocumentsSection";
+import StoreEmployeeRulesSection from "@/components/admin/store/StoreEmployeeRulesSection";
 import StoreOrdersSection from "@/components/admin/StoreOrdersSection";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
@@ -2880,11 +2884,7 @@ export default function AdminStoreEditPage() {
           </TabsContent>
 
           <TabsContent value="employee-rules">
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-rose-500/10 flex items-center justify-center mb-4"><Shield className="w-7 h-7 text-rose-500" /></div>
-              <h2 className="font-semibold text-lg mb-1">Employee Rules</h2>
-              <p className="text-sm text-muted-foreground max-w-sm">Set employee rules, access levels, and workplace policies.</p>
-            </div>
+            <StoreEmployeeRulesSection storeId={storeId!} />
           </TabsContent>
 
           <TabsContent value="attendance">
@@ -2892,27 +2892,15 @@ export default function AdminStoreEditPage() {
           </TabsContent>
 
           <TabsContent value="training">
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-indigo-500/10 flex items-center justify-center mb-4"><Package className="w-7 h-7 text-indigo-500" /></div>
-              <h2 className="font-semibold text-lg mb-1">Training & Onboarding</h2>
-              <p className="text-sm text-muted-foreground max-w-sm">Manage training programs, onboarding checklists, and skill development for employees.</p>
-            </div>
+            <StoreTrainingSection storeId={storeId!} />
           </TabsContent>
 
           <TabsContent value="performance">
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-yellow-500/10 flex items-center justify-center mb-4"><Eye className="w-7 h-7 text-yellow-500" /></div>
-              <h2 className="font-semibold text-lg mb-1">Performance Reviews</h2>
-              <p className="text-sm text-muted-foreground max-w-sm">Conduct employee evaluations, set goals, and track performance feedback.</p>
-            </div>
+            <StorePerformanceSection storeId={storeId!} />
           </TabsContent>
 
           <TabsContent value="documents">
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-sky-500/10 flex items-center justify-center mb-4"><Upload className="w-7 h-7 text-sky-500" /></div>
-              <h2 className="font-semibold text-lg mb-1">Documents & Files</h2>
-              <p className="text-sm text-muted-foreground max-w-sm">Store and manage employee contracts, IDs, certifications, and other important documents.</p>
-            </div>
+            <StoreDocumentsSection storeId={storeId!} />
           </TabsContent>
 
 
