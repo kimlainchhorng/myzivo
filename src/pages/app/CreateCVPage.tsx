@@ -547,6 +547,7 @@ const CreateCVPage = () => {
   const [completionPct, setCompletionPct] = useState(0);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialLoadDone = useRef(false);
+  const printRef = useRef<HTMLDivElement>(null);
 
   /* ── Load existing CV ────────────────────────────── */
   useEffect(() => {
@@ -703,9 +704,16 @@ const CreateCVPage = () => {
     navigator.clipboard.writeText(url).then(() => toast.success("Share link copied!")).catch(() => toast.error("Failed to copy"));
   };
 
+
   const handleDownloadPDF = () => {
-    setShowPreview(true);
-    setTimeout(() => { window.print(); }, 500);
+    const el = printRef.current;
+    if (!el) return;
+    // Show the hidden print container, print, then hide
+    el.style.display = "block";
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => { el.style.display = "none"; }, 500);
+    }, 200);
   };
 
   return (
@@ -1055,6 +1063,15 @@ const CreateCVPage = () => {
       <AnimatePresence>
         {showPreview && <CVPreviewModal open={showPreview} onClose={() => setShowPreview(false)} data={previewData} template={selectedTemplate} />}
       </AnimatePresence>
+
+      {/* Hidden A4 print container */}
+      <div ref={printRef} id="cv-print-area" className="hidden print:block" style={{ display: "none" }}>
+        <div className="w-[210mm] min-h-[297mm] bg-white mx-auto" style={{ fontFamily: "system-ui, sans-serif", color: "#1a1a1a" }}>
+          {selectedTemplate === "modern" ? <ModernLayout data={previewData} /> :
+           selectedTemplate === "minimal" ? <MinimalLayout data={previewData} /> :
+           <ClassicLayout data={previewData} />}
+        </div>
+      </div>
     </AppLayout>
   );
 };

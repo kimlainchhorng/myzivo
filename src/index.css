@@ -1858,3 +1858,16 @@ html[lang="km"] textarea {
     animation: none !important;
   }
 }
+/* ── CV Print Styles ─────────────────────────────── */
+@media print {
+  body > *:not(#cv-print-area) { display: none !important; }
+  #cv-print-area {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+  }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}
