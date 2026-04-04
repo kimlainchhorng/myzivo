@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 
 type SafetyTab = "sos" | "share" | "pin" | "report";
 
@@ -28,7 +29,7 @@ export default function RideSafetyCenter() {
   const [sosCountdown, setSosCountdown] = useState<number | null>(null);
   const [ridePin] = useState(Math.floor(1000 + Math.random() * 9000).toString());
   const [pinVerified, setPinVerified] = useState(false);
-  const [shareLink] = useState("hizovo.com/track/zv-" + Math.random().toString(36).slice(2, 8));
+  const [shareLink] = useState(`${getPublicOrigin()}/track/zv-` + Math.random().toString(36).slice(2, 8));
   const [shareSent, setShareSent] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<string | null>(null);
   const [incidentNotes, setIncidentNotes] = useState("");
