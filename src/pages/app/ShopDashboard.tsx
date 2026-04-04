@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Package, ShoppingBag, BarChart3, Settings, Tag, Truck,
-  Plus, TrendingUp, DollarSign, Box,
+  Plus, TrendingUp, DollarSign, Box, Users, Calendar, Clock, Wallet, Shield, ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/app/AppLayout";
@@ -30,6 +30,14 @@ const ShopDashboard = () => {
     { icon: Truck, label: "Delivery", description: "Shipping settings", color: "from-emerald-500 to-green-500", onClick: () => navigate("/shop-dashboard/delivery") },
     { icon: BarChart3, label: "Analytics", description: "Sales & performance", color: "from-purple-500 to-purple-600", onClick: () => navigate("/shop-dashboard/analytics") },
     { icon: Settings, label: "Shop Settings", description: "Store profile & config", color: "from-slate-500 to-slate-600", onClick: () => navigate("/shop-dashboard/settings") },
+  ];
+
+  const employeeActions = [
+    { icon: Users, label: "Employees", description: "Manage staff members", color: "text-blue-500", bg: "bg-blue-500/10", onClick: () => navigate("/shop-dashboard/employees") },
+    { icon: Wallet, label: "Payroll", description: "Wages & pay runs", color: "text-emerald-500", bg: "bg-emerald-500/10", onClick: () => navigate("/shop-dashboard/payroll") },
+    { icon: Calendar, label: "Schedule", description: "Shift planning", color: "text-purple-500", bg: "bg-purple-500/10", onClick: () => navigate("/shop-dashboard/employee-schedule") },
+    { icon: Clock, label: "Time Clock", description: "Clock in & out records", color: "text-amber-500", bg: "bg-amber-500/10", onClick: () => navigate("/shop-dashboard/time-clock") },
+    { icon: Shield, label: "Employee Rules", description: "Policies & permissions", color: "text-rose-500", bg: "bg-rose-500/10", onClick: () => navigate("/shop-dashboard/employee-rules") },
   ];
 
   return (
@@ -99,6 +107,30 @@ const ShopDashboard = () => {
                 <p className="font-semibold text-sm">{action.label}</p>
                 <p className="text-xs text-muted-foreground">{action.description}</p>
               </div>
+            </motion.button>
+          ))}
+        </div>
+
+        {/* Employee Management */}
+        <h2 className="font-bold text-lg mb-3 mt-6">Employee Management</h2>
+        <div className="rounded-xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
+          {employeeActions.map((item, i) => (
+            <motion.button
+              key={item.label}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 + i * 0.04 }}
+              onClick={item.onClick}
+              className="w-full flex items-center gap-3 px-3.5 py-3 hover:bg-muted/30 transition-colors touch-manipulation active:bg-muted/50 text-left"
+            >
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0", item.bg)}>
+                <item.icon className={cn("w-4 h-4", item.color)} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-[13px] leading-tight">{item.label}</p>
+                <p className="text-[11px] text-muted-foreground leading-tight">{item.description}</p>
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
             </motion.button>
           ))}
         </div>

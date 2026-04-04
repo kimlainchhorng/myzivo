@@ -49,6 +49,11 @@ const AppTravel = lazy(() => import("./pages/app/AppTravel"));
 const AppMore = lazy(() => import("./pages/app/AppMore"));
 const PersonalDashboard = lazy(() => import("./pages/app/PersonalDashboard"));
 const ShopDashboard = lazy(() => import("./pages/app/ShopDashboard"));
+const ShopEmployeesPage = lazy(() => import("./pages/app/shop/ShopEmployeesPage"));
+const ShopPayrollPage = lazy(() => import("./pages/app/shop/ShopPayrollPage"));
+const ShopEmployeeSchedulePage = lazy(() => import("./pages/app/shop/ShopEmployeeSchedulePage"));
+const ShopTimeClockPage = lazy(() => import("./pages/app/shop/ShopTimeClockPage"));
+const ShopEmployeeRulesPage = lazy(() => import("./pages/app/shop/ShopEmployeeRulesPage"));
 const CreateCVPage = lazy(() => import("./pages/app/CreateCVPage"));
 const PersonalEmployeesPage = lazy(() => import("./pages/app/personal/PersonalEmployeesPage"));
 const PersonalSchedulePage = lazy(() => import("./pages/app/personal/PersonalSchedulePage"));
@@ -480,6 +485,11 @@ const App = () => (
                 <Route path="/personal/notifications" element={<ProtectedRoute><PersonalNotificationsPage /></ProtectedRoute>} />
                 <Route path="/personal/help" element={<ProtectedRoute><PersonalHelpPage /></ProtectedRoute>} />
                 <Route path="/personal/settings" element={<ProtectedRoute><PersonalSettingsPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/employees" element={<ProtectedRoute><ShopEmployeesPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/payroll" element={<ProtectedRoute><ShopPayrollPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/employee-schedule" element={<ProtectedRoute><ShopEmployeeSchedulePage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/time-clock" element={<ProtectedRoute><ShopTimeClockPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/employee-rules" element={<ProtectedRoute><ShopEmployeeRulesPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard" element={<ProtectedRoute><ShopDashboard /></ProtectedRoute>} />
                 <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
 
