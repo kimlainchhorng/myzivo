@@ -626,6 +626,7 @@ const App = () => (
                 <Route path="/more" element={<ProtectedRoute><MorePage /></ProtectedRoute>} />
                 <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
                 <Route path="/user/:userId" element={<PublicProfilePage />} />
+                <Route path="/p/:code" element={<ShareProfileRedirect />} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
                 <Route path="/saved-searches" element={<ProtectedRoute><SavedSearchesPage /></ProtectedRoute>} />
