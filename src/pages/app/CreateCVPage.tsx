@@ -282,11 +282,11 @@ function Section({ icon: Icon, title, index, children }: { icon: typeof User; ti
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.05 + index * 0.04 }}
-      className="mb-4"
+      className="mb-3"
     >
-      <div className="flex items-center gap-2 mb-2.5">
-        <Icon className="w-4 h-4 text-primary" />
-        <h2 className="font-bold text-[14px]">{title}</h2>
+      <div className="flex items-center gap-1.5 mb-2">
+        <Icon className="w-3.5 h-3.5 text-primary" />
+        <h2 className="font-bold text-[13px]">{title}</h2>
       </div>
       {children}
     </motion.div>
