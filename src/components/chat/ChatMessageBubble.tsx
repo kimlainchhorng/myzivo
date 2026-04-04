@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
 
 const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "🎉", "😍"];
 
@@ -66,6 +67,51 @@ export default function ChatMessageBubble({
     };
     checkUnlock();
   }, [id, isLockedType, isMe]);
+
+  // Unlock payment handler — uses in-app browser on native, redirect on web
+  const handleUnlockPayment = useCallback(async () => {
+    if (unlockLoading) return;
+    setUnlockLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("unlock-media-checkout", {
+        body: { message_id: id, seller_id: senderId || "", amount_cents: unlockPrice },
+      });
+      if (error) throw error;
+      if (!data?.url) throw new Error("No checkout URL");
+
+      if (Capacitor.isNativePlatform()) {
+        // Native: open in-app browser, then verify on close
+        const { Browser } = await import("@capacitor/browser");
+        const verifyOnClose = async () => {
+          // Small delay to let Stripe process
+          await new Promise((r) => setTimeout(r, 1500));
+          try {
+            const { data: vData } = await supabase.functions.invoke("verify-media-unlock", {
+              body: { message_id: id },
+            });
+            if (vData?.unlocked) {
+              setIsLocked(false);
+              toast.success("Media unlocked! 🔓");
+            } else {
+              toast.info("Payment processing — media will unlock shortly");
+            }
+          } catch {}
+          setUnlockLoading(false);
+        };
+        await Browser.addListener("browserFinished", () => {
+          verifyOnClose();
+          Browser.removeAllListeners();
+        });
+        await Browser.open({ url: data.url });
+      } else {
+        // Web: redirect in same tab — auto-verify happens on /chat?unlocked= redirect
+        window.location.href = data.url;
+      }
+    } catch {
+      toast.error("Payment failed to start");
+      setUnlockLoading(false);
+    }
+  }, [id, senderId, unlockPrice, unlockLoading]);
 
   // Load reactions
   useEffect(() => {
@@ -229,21 +275,9 @@ export default function ChatMessageBubble({
                   <p className="text-white text-xs font-semibold mb-2 drop-shadow">Locked Video</p>
                   <button
                     disabled={unlockLoading}
-                    onClick={async (e) => {
+                    onClick={(e) => {
                       e.stopPropagation();
-                      setUnlockLoading(true);
-                      try {
-                        const { data, error } = await supabase.functions.invoke("unlock-media-checkout", {
-                         body: { message_id: id, seller_id: senderId || "", amount_cents: unlockPrice },
-                        });
-                        if (error) throw error;
-                        if (data?.url) {
-                          window.location.href = data.url;
-                        }
-                      } catch {
-                        toast.error("Payment failed to start");
-                        setUnlockLoading(false);
-                      }
+                      handleUnlockPayment();
                     }}
                     className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-1.5"
                   >
@@ -306,21 +340,9 @@ export default function ChatMessageBubble({
                 <p className="text-white text-xs font-semibold mb-2 drop-shadow">Locked Photo</p>
                 <button
                   disabled={unlockLoading}
-                  onClick={async (e) => {
+                  onClick={(e) => {
                     e.stopPropagation();
-                    setUnlockLoading(true);
-                    try {
-                      const { data, error } = await supabase.functions.invoke("unlock-media-checkout", {
-                        body: { message_id: id, seller_id: senderId || "", amount_cents: unlockPrice },
-                      });
-                      if (error) throw error;
-                      if (data?.url) {
-                        window.location.href = data.url;
-                      }
-                    } catch {
-                      toast.error("Payment failed to start");
-                      setUnlockLoading(false);
-                    }
+                    handleUnlockPayment();
                   }}
                   className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-1.5"
                 >
