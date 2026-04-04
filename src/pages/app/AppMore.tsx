@@ -45,7 +45,7 @@ const AppMore = () => {
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const profileUrl = user ? `${getPublicOrigin()}/user/${user.id}` : "";
+  const profileUrl = user ? getProfileShareUrl(user.id) : "";
 
   const copyProfileLink = () => {
     navigator.clipboard.writeText(profileUrl);
