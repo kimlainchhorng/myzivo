@@ -547,6 +547,7 @@ const CreateCVPage = () => {
   const [completionPct, setCompletionPct] = useState(0);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialLoadDone = useRef(false);
+  const printRef = useRef<HTMLDivElement>(null);
 
   /* ── Load existing CV ────────────────────────────── */
   useEffect(() => {
