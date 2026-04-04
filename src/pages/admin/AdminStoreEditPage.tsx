@@ -2860,11 +2860,7 @@ export default function AdminStoreEditPage() {
           </TabsContent>
 
           <TabsContent value="employees">
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center mb-4"><Users className="w-7 h-7 text-blue-500" /></div>
-              <h2 className="font-semibold text-lg mb-1">Employees</h2>
-              <p className="text-sm text-muted-foreground max-w-sm">Add, remove, and manage your store employees and their roles.</p>
-            </div>
+            <StoreEmployeesSection storeId={storeId!} />
           </TabsContent>
 
           <TabsContent value="payroll">
