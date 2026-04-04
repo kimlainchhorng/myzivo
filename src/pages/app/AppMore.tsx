@@ -48,12 +48,14 @@ const AppMore = () => {
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; share_code: string | null } | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const ADMIN_EMAIL = "chhorngkimlain1@gmail.com";
+  const isDesignatedAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL;
+
   // Build role options dynamically
   const roleOptions = (() => {
     const options: { icon: typeof Shield; label: string; description: string; href: string; color: string }[] = [];
-    // Always show "Personal" (user profile)
     options.push({ icon: User, label: "Personal", description: "Your personal account", href: "/profile", color: "from-primary to-primary/80" });
-    if (access?.isAdmin) {
+    if (isDesignatedAdmin) {
       options.push({ icon: Shield, label: "Admin Dashboard", description: "Manage the platform", href: "/admin", color: "from-red-500 to-red-600" });
     }
     if (access?.isDriver) {
@@ -68,7 +70,7 @@ const AppMore = () => {
     if (access?.isHotelOwner) {
       options.push({ icon: Hotel, label: "Hotel Dashboard", description: "Manage your hotel", href: "/hotel-dashboard", color: "from-purple-500 to-purple-600" });
     }
-    if (access?.isFlightManager) {
+    if (isDesignatedAdmin) {
       options.push({ icon: Plane, label: "Flight Manager", description: "Manage flights", href: "/admin/flights", color: "from-sky-500 to-sky-600" });
     }
     return options;
