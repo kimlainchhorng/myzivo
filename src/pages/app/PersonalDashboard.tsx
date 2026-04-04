@@ -1,18 +1,18 @@
 /**
- * PersonalDashboard — Employee hub with Clock In/Out and team management.
+ * PersonalDashboard — Employee hub (Facebook-style compact layout).
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Clock, Users, LogIn, LogOut, Calendar, Timer,
-  CheckCircle2, AlertCircle,
+  CheckCircle2, ChevronRight, FileText, Bell, HelpCircle, Settings,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/components/app/AppLayout";
 
-type ClockStatus = "clocked-out" | "clocked-in" | "on-break";
+type ClockStatus = "clocked-out" | "clocked-in";
 
 const PersonalDashboard = () => {
   const navigate = useNavigate();
@@ -44,160 +44,117 @@ const PersonalDashboard = () => {
     return `${h}:${m}:${s}`;
   };
 
-  // Live timer
   const [, setTick] = useState(0);
   if (clockStatus === "clocked-in") {
     setTimeout(() => setTick((t) => t + 1), 1000);
   }
 
-  const quickActions = [
-    {
-      icon: Users,
-      label: "Employees",
-      description: "Manage team members",
-      color: "from-blue-500 to-blue-600",
-      onClick: () => navigate("/personal/employees"),
-    },
-    {
-      icon: Calendar,
-      label: "Schedule",
-      description: "View work schedule",
-      color: "from-purple-500 to-purple-600",
-      onClick: () => navigate("/personal/schedule"),
-    },
-    {
-      icon: Timer,
-      label: "Timesheet",
-      description: "View hours history",
-      color: "from-amber-500 to-amber-600",
-      onClick: () => navigate("/personal/timesheet"),
-    },
+  const menuItems = [
+    { icon: Users, label: "Employees", description: "Manage team members", onClick: () => navigate("/personal/employees"), color: "text-blue-500", bg: "bg-blue-500/10" },
+    { icon: Calendar, label: "Schedule", description: "View work schedule", onClick: () => navigate("/personal/schedule"), color: "text-purple-500", bg: "bg-purple-500/10" },
+    { icon: Timer, label: "Timesheet", description: "View hours history", onClick: () => navigate("/personal/timesheet"), color: "text-amber-500", bg: "bg-amber-500/10" },
+    { icon: FileText, label: "Pay Stubs", description: "Earnings & deductions", onClick: () => navigate("/personal/pay-stubs"), color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { icon: Bell, label: "Notifications", description: "Alerts & reminders", onClick: () => navigate("/personal/notifications"), color: "text-rose-500", bg: "bg-rose-500/10" },
+    { icon: HelpCircle, label: "Help & Support", description: "FAQs & contact", onClick: () => navigate("/personal/help"), color: "text-sky-500", bg: "bg-sky-500/10" },
+    { icon: Settings, label: "Settings", description: "Account preferences", onClick: () => navigate("/personal/settings"), color: "text-muted-foreground", bg: "bg-muted/60" },
   ];
 
   return (
     <AppLayout title="Personal" hideHeader>
-      <div className="flex flex-col px-5 py-6 pb-28">
+      <div className="flex flex-col px-4 pt-3 pb-24">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-2.5 mb-4">
           <button
             onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center touch-manipulation active:scale-90 transition-transform"
+            className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center touch-manipulation active:scale-90 transition-transform"
           >
-            <ArrowLeft className="w-4.5 h-4.5" />
+            <ArrowLeft className="w-4 h-4" />
           </button>
-          <h1 className="font-bold text-xl">Personal Account</h1>
+          <h1 className="font-bold text-[17px]">Personal Account</h1>
         </div>
 
-        {/* Clock Status Card */}
+        {/* Clock Card — compact */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           className={cn(
-            "rounded-2xl p-5 mb-5 border shadow-sm",
+            "rounded-xl p-3.5 mb-3 border",
             clockStatus === "clocked-in"
               ? "bg-emerald-500/5 border-emerald-500/20"
               : "bg-card border-border/40"
           )}
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div
-              className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center",
-                clockStatus === "clocked-in"
-                  ? "bg-emerald-500/15"
-                  : "bg-muted/60"
-              )}
-            >
-              <Clock
-                className={cn(
-                  "w-5 h-5",
-                  clockStatus === "clocked-in"
-                    ? "text-emerald-500"
-                    : "text-muted-foreground"
-                )}
-              />
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", clockStatus === "clocked-in" ? "bg-emerald-500/15" : "bg-muted/60")}>
+              <Clock className={cn("w-4 h-4", clockStatus === "clocked-in" ? "text-emerald-500" : "text-muted-foreground")} />
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm">
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-[13px] leading-tight">
                 {clockStatus === "clocked-in" ? "Currently Working" : "Not Clocked In"}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground">
                 {clockStatus === "clocked-in"
                   ? `Since ${clockInTime?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
                   : "Tap Clock In to start"}
               </p>
             </div>
-            {clockStatus === "clocked-in" ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-            ) : (
-              <AlertCircle className="w-5 h-5 text-muted-foreground/40" />
-            )}
+            {clockStatus === "clocked-in" && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
           </div>
 
-          {/* Timer display */}
-          <div className="text-center mb-5">
-            <p className="text-4xl font-mono font-bold tracking-wider">
-              {formatElapsed()}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Today: {totalHoursToday.toFixed(1)}h logged
-            </p>
+          <div className="text-center mb-3">
+            <p className="text-2xl font-mono font-bold tracking-wider">{formatElapsed()}</p>
+            <p className="text-[11px] text-muted-foreground">Today: {totalHoursToday.toFixed(1)}h logged</p>
           </div>
 
-          {/* Clock In / Out Buttons */}
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={handleClockIn}
               disabled={clockStatus === "clocked-in"}
               className={cn(
-                "flex-1 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all shadow-sm",
+                "flex-1 py-2.5 rounded-xl font-semibold text-[13px] flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all",
                 clockStatus === "clocked-in"
                   ? "bg-muted/40 text-muted-foreground cursor-not-allowed"
-                  : "bg-emerald-500 text-white hover:bg-emerald-600"
+                  : "bg-emerald-500 text-white"
               )}
             >
-              <LogIn className="w-4 h-4" />
+              <LogIn className="w-3.5 h-3.5" />
               Clock In
             </button>
             <button
               onClick={handleClockOut}
               disabled={clockStatus !== "clocked-in"}
               className={cn(
-                "flex-1 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all shadow-sm",
+                "flex-1 py-2.5 rounded-xl font-semibold text-[13px] flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all",
                 clockStatus !== "clocked-in"
                   ? "bg-muted/40 text-muted-foreground cursor-not-allowed"
-                  : "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  : "bg-destructive text-destructive-foreground"
               )}
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
               Clock Out
             </button>
           </div>
         </motion.div>
 
-        {/* Quick Actions */}
-        <h2 className="font-bold text-lg mb-3">Quick Actions</h2>
-        <div className="space-y-2">
-          {quickActions.map((action, i) => (
+        {/* Menu List — Facebook-style compact rows */}
+        <div className="rounded-xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
+          {menuItems.map((item, i) => (
             <motion.button
-              key={action.label}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + i * 0.05 }}
-              onClick={action.onClick}
-              className="w-full flex items-center gap-3 p-3.5 rounded-2xl border border-border/30 bg-card/60 hover:bg-card/90 transition-colors touch-manipulation active:scale-[0.98] text-left"
+              key={item.label}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.05 + i * 0.03 }}
+              onClick={item.onClick}
+              className="w-full flex items-center gap-3 px-3.5 py-3 hover:bg-muted/30 transition-colors touch-manipulation active:bg-muted/50 text-left"
             >
-              <div
-                className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center shadow-lg`}
-              >
-                <action.icon className="w-4.5 h-4.5 text-white" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0", item.bg)}>
+                <item.icon className={cn("w-4 h-4", item.color)} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm">{action.label}</p>
-                <p className="text-xs text-muted-foreground">
-                  {action.description}
-                </p>
+                <p className="font-medium text-[13px] leading-tight">{item.label}</p>
+                <p className="text-[11px] text-muted-foreground leading-tight">{item.description}</p>
               </div>
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
             </motion.button>
           ))}
         </div>
