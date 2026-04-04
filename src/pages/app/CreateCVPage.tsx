@@ -232,7 +232,7 @@ const CreateCVPage = () => {
                 </div>
               </div>
             ))}
-            <button onClick={addEducation} className="w-full py-2 rounded-xl border border-dashed border-primary/30 text-primary text-[13px] font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.98]">
+            <button onClick={addEducation} className="w-full py-1.5 rounded-lg border border-dashed border-primary/30 text-primary text-[12px] font-semibold flex items-center justify-center gap-1 touch-manipulation active:scale-[0.98]">
               <Plus className="w-3.5 h-3.5" /> Add Education
             </button>
           </div>
