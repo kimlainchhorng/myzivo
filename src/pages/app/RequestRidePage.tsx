@@ -15,6 +15,7 @@ import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-
 import { getStripe } from "@/lib/stripe";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { cn } from "@/lib/utils";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import RideMap from "@/components/maps/RideMap";
 
 const stripePromise = getStripe();
