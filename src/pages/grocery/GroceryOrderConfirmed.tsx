@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import {
   CheckCircle, ShoppingCart, ArrowLeft, Clock, Truck, CreditCard,
   Package, MapPin, Sparkles, ShoppingBag, ChevronRight, Shield,
@@ -78,7 +79,7 @@ export default function GroceryOrderConfirmed() {
         await navigator.share({
           title: "ZIVO Grocery Order",
           text: `My grocery order from ${order?.store || "ZIVO"} is on its way!`,
-          url: window.location.href,
+          url: `${getPublicOrigin()}/grocery/orders`,
         });
       } catch {}
     } else {

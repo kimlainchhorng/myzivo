@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 
 const shareOptions = [
   { id: "copy", icon: Link, label: "Copy Link", color: "text-muted-foreground" },
@@ -18,7 +19,7 @@ const FlightSocialShare = () => {
 
   const handleShare = (platform: string) => {
     if (platform === "copy") {
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(`${getPublicOrigin()}${window.location.pathname}${window.location.search}`);
       setCopied(true);
       toast.success("Link copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
@@ -108,7 +109,7 @@ const FlightSocialShare = () => {
                 <div className="flex-1">
                   <p className="font-medium text-sm">ZIVO Flight Trip</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {window.location.href}
+                    {`${getPublicOrigin()}${window.location.pathname}`}
                   </p>
                 </div>
               </div>

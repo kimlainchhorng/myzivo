@@ -15,6 +15,7 @@ import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-
 import { getStripe } from "@/lib/stripe";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { cn } from "@/lib/utils";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import RideMap from "@/components/maps/RideMap";
 
 const stripePromise = getStripe();
@@ -680,9 +681,10 @@ export default function RequestRidePage() {
 
   const handleShareTrip = () => {
     if (navigator.share) {
-      navigator.share({ title: "My ZIVO Trip", text: `I'm on my way! Track my ride from ${pickupAddress} to ${dropoffAddress}.`, url: window.location.href });
+      const tripUrl = `${getPublicOrigin()}/rides`;
+      navigator.share({ title: "My ZIVO Trip", text: `I'm on my way! Track my ride from ${pickupAddress} to ${dropoffAddress}.`, url: tripUrl });
     } else {
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(`${getPublicOrigin()}/rides`);
       toast.success("Trip link copied to clipboard!");
     }
   };

@@ -22,6 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -642,7 +643,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     }
   })();
 
-  const shareUrl = window.location.href;
+  const shareUrl = `${getPublicOrigin()}/reels?post=${item.id}`;
   const shareText = encodeURIComponent(item.caption || `Check out this post by ${item.author_name}`);
   const shareEncodedUrl = encodeURIComponent(shareUrl);
 
@@ -1005,7 +1006,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
     setShowShareSheet(true);
   };
 
-  const shareUrl = window.location.href;
+  const shareUrl = `${getPublicOrigin()}/reels?post=${item.id}`;
   const shareText = encodeURIComponent(item.caption || `Check out this post by ${item.author_name}`);
   const shareEncodedUrl = encodeURIComponent(shareUrl);
 

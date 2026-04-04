@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 
 interface SplitContact {
   id: string;
@@ -60,7 +61,7 @@ export default function RideSocialHub() {
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { icon: MessageSquare, label: "Message", action: () => toast.success("Share link sent via message") },
-                    { icon: Copy, label: "Copy Link", action: () => { navigator.clipboard.writeText("https://hizovo.com/track/abc123"); toast.success("Tracking link copied!"); } },
+                    { icon: Copy, label: "Copy Link", action: () => { navigator.clipboard.writeText(`${getPublicOrigin()}/track/abc123`); toast.success("Tracking link copied!"); } },
                     { icon: Mail, label: "Email", action: () => toast.success("Tracking link emailed") },
                     { icon: Smartphone, label: "WhatsApp", action: () => toast.success("Opening WhatsApp...") },
                   ].map(opt => (
@@ -161,7 +162,7 @@ export default function RideSocialHub() {
                   </Button>
                 </div>
 
-                <Button className="w-full h-11 rounded-xl text-sm font-bold gap-2" onClick={() => { navigator.clipboard.writeText(referralLink); toast.success("Referral link copied!"); }}>
+                <Button className="w-full h-11 rounded-xl text-sm font-bold gap-2" onClick={() => { navigator.clipboard.writeText(`${getPublicOrigin()}/signup?ref=${referralCode}`); toast.success("Referral link copied!"); }}>
                   <Link2 className="w-4 h-4" /> Copy Referral Link
                 </Button>
 
