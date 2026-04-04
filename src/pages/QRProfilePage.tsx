@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 
 export default function QRProfilePage() {
   const navigate = useNavigate();
