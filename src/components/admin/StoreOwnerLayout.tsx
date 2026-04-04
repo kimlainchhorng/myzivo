@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   LogOut, ChevronLeft, Menu, Home, Store,
   Package, CreditCard, MessageCircle, Users, Megaphone, ClipboardList, Settings,
-  Wallet, Calendar, Clock, Shield
+  Wallet, Calendar, Clock, Shield, CalendarCheck, GraduationCap, Star, FolderOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
