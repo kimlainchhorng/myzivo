@@ -54,7 +54,7 @@ const AppMore = () => {
   // Build role options dynamically
   const roleOptions = (() => {
     const options: { icon: typeof Shield; label: string; description: string; href: string; color: string }[] = [];
-    options.push({ icon: User, label: "Personal", description: "Your personal account", href: "/profile", color: "from-primary to-primary/80" });
+    options.push({ icon: User, label: "Personal", description: "Employees, Clock In & Out", href: "/personal-dashboard", color: "from-primary to-primary/80" });
     if (isDesignatedAdmin) {
       options.push({ icon: Shield, label: "Admin Dashboard", description: "Manage the platform", href: "/admin", color: "from-red-500 to-red-600" });
     }
@@ -62,7 +62,7 @@ const AppMore = () => {
       options.push({ icon: Car, label: "Driver Dashboard", description: "Manage your rides", href: "/driver", color: "from-blue-500 to-blue-600" });
     }
     if (access?.isRestaurantOwner) {
-      options.push({ icon: UtensilsCrossed, label: "Restaurant Dashboard", description: "Manage your restaurant", href: "/restaurant-dashboard", color: "from-orange-500 to-amber-500" });
+      options.push({ icon: UtensilsCrossed, label: "Restaurant Dashboard", description: "Manage your restaurant", href: "/eats/restaurant-dashboard", color: "from-orange-500 to-amber-500" });
     }
     if (access?.isCarRentalOwner) {
       options.push({ icon: Car, label: "Car Rental Dashboard", description: "Manage your rentals", href: "/car-rental-dashboard", color: "from-emerald-500 to-green-500" });
@@ -70,9 +70,8 @@ const AppMore = () => {
     if (access?.isHotelOwner) {
       options.push({ icon: Hotel, label: "Hotel Dashboard", description: "Manage your hotel", href: "/hotel-dashboard", color: "from-purple-500 to-purple-600" });
     }
-    if (isDesignatedAdmin) {
-      options.push({ icon: Plane, label: "Flight Manager", description: "Manage flights", href: "/admin/flights", color: "from-sky-500 to-sky-600" });
-    }
+    // Shop Dashboard — visible to anyone (or shop owners when that role exists)
+    options.push({ icon: Store, label: "Shop Dashboard", description: "Manage your shop", href: "/grocery/orders", color: "from-emerald-500 to-green-500" });
     return options;
   })();
 
