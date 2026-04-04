@@ -1,4 +1,4 @@
-const PUBLIC_ORIGIN = "https://hizivo.com";
+const DEFAULT_PUBLIC_ORIGIN = "https://endearing-tiramisu-95e81d.netlify.app";
 
 // Edge function URL that serves profile OG tags and redirects humans.
 const PROFILE_OG_FUNCTION = "https://slirphzzwcogdbkeicff.supabase.co/functions/v1/profile-og";
@@ -7,7 +7,12 @@ const PROFILE_OG_FUNCTION = "https://slirphzzwcogdbkeicff.supabase.co/functions/
  * Returns the public-facing origin for shareable URLs.
  */
 export function getPublicOrigin(): string {
-  return PUBLIC_ORIGIN;
+  const configuredOrigin = import.meta.env.VITE_PUBLIC_ORIGIN?.trim();
+  if (configuredOrigin) {
+    return configuredOrigin;
+  }
+
+  return DEFAULT_PUBLIC_ORIGIN;
 }
 
 /**
@@ -15,7 +20,7 @@ export function getPublicOrigin(): string {
  * Uses root + query param to avoid deep-link 404s on custom domains.
  */
 export function getPostShareUrl(postId: string): string {
-  return `${PUBLIC_ORIGIN}/reels?post=${encodeURIComponent(postId)}`;
+  return `${getPublicOrigin()}/reels?post=${encodeURIComponent(postId)}`;
 }
 
 /**
