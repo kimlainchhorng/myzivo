@@ -275,21 +275,9 @@ export default function ChatMessageBubble({
                   <p className="text-white text-xs font-semibold mb-2 drop-shadow">Locked Video</p>
                   <button
                     disabled={unlockLoading}
-                    onClick={async (e) => {
+                    onClick={(e) => {
                       e.stopPropagation();
-                      setUnlockLoading(true);
-                      try {
-                        const { data, error } = await supabase.functions.invoke("unlock-media-checkout", {
-                         body: { message_id: id, seller_id: senderId || "", amount_cents: unlockPrice },
-                        });
-                        if (error) throw error;
-                        if (data?.url) {
-                          window.location.href = data.url;
-                        }
-                      } catch {
-                        toast.error("Payment failed to start");
-                        setUnlockLoading(false);
-                      }
+                      handleUnlockPayment();
                     }}
                     className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-1.5"
                   >
