@@ -463,6 +463,8 @@ const CreateCVPage = () => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [cvId, setCvId] = useState<string | null>(null);
+  const [shareCode, setShareCode] = useState<string | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>("classic");
   const [showPreview, setShowPreview] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
