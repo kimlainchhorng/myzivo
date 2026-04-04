@@ -42,33 +42,33 @@ Deno.serve(async (req) => {
 
     const name = profile.full_name || "ZIVO User";
     const profileUrl = `https://hizivo.com/user/${userId}`;
-    const avatar = profile.avatar_url || "https://hizovo.com/og-image.png";
+    const avatar = profile.avatar_url || "https://hizivo.com/og-image.png";
     const cover = profile.cover_url || avatar;
-    const description = `Check out ${name}'s profile on ZIVO — One app for every journey.`;
+    const ogImage = avatar; // Use avatar as primary OG image for profile recognition
+    const description = `${name} — View my profile on ZIVO. One app for every journey.`;
 
     // Check if request is from a social media crawler
     const userAgent = req.headers.get("user-agent") || "";
     const isCrawler = /facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|Slackbot|TelegramBot|Pinterest|Discordbot/i.test(userAgent);
 
     if (isCrawler) {
-      // Serve HTML with OG meta tags for crawlers
       const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>${escapeHtml(name)} on ZIVO</title>
   <meta property="og:type" content="profile" />
-  <meta property="og:title" content="${escapeHtml(name)} on ZIVO" />
+  <meta property="og:title" content="${escapeHtml(name)}" />
   <meta property="og:description" content="${escapeHtml(description)}" />
-  <meta property="og:image" content="${escapeHtml(cover)}" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <meta property="og:image" content="${escapeHtml(ogImage)}" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
   <meta property="og:url" content="${escapeHtml(profileUrl)}" />
   <meta property="og:site_name" content="ZIVO" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${escapeHtml(name)} on ZIVO" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="${escapeHtml(name)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
-  <meta name="twitter:image" content="${escapeHtml(cover)}" />
+  <meta name="twitter:image" content="${escapeHtml(ogImage)}" />
   <link rel="canonical" href="${escapeHtml(profileUrl)}" />
 </head>
 <body>
@@ -83,19 +83,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // For regular requests, return JSON
-    return new Response(JSON.stringify({
-      name,
-      avatar_url: avatar,
-      cover_url: cover,
-      profile_url: profileUrl,
-      og: {
-        title: `${name} on ZIVO`,
-        description,
-        image: cover,
-      }
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Non-crawler: redirect to profile
+    return new Response(null, {
+      status: 302,
+      headers: { ...corsHeaders, "Location": profileUrl },
     });
 
   } catch (err) {
