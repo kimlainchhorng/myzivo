@@ -150,6 +150,7 @@ const Profile = lazy(() => lazyRetry(() => import("./pages/Profile")));
 const MorePage = lazy(() => import("./pages/MorePage"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
+const ShareProfileRedirect = lazy(() => import("./pages/ShareProfileRedirect"));
 
 // Customer Loyalty
 const LoyaltyPage = lazy(() => import("./pages/account/LoyaltyPage"));
