@@ -1,8 +1,8 @@
 /**
  * useShareContent — Native share sheet via Web Share API / Capacitor
  */
-import { useCallback } from "react";
 import { toast } from "sonner";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 
 interface ShareOptions {
   title: string;
