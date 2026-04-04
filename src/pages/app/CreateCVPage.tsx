@@ -128,97 +128,224 @@ function PhotoUpload({ photo, onPhotoChange }: { photo: string | null; onPhotoCh
 /* ── CV Preview Modal ─────────────────────────────── */
 function CVPreviewModal({ open, onClose, data }: { open: boolean; onClose: () => void; data: any }) {
   if (!open) return null;
+
+  const hasExperience = data.experiences?.some((e: any) => e.position);
+  const hasEducation = data.educations?.some((e: any) => e.school);
+  const hasSkills = data.skills?.some((s: any) => s.name);
+  const hasLanguages = data.languages?.some((l: any) => l.name);
+  const hasCerts = data.certifications?.some((c: any) => c.name);
+  const hasRefs = data.references?.some((r: any) => r.name);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/60 flex items-end justify-center"
+      className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3"
       onClick={onClose}
     >
       <motion.div
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
         onClick={e => e.stopPropagation()}
-        className="w-full max-w-md bg-card rounded-t-2xl max-h-[85dvh] overflow-y-auto"
+        className="w-full max-w-md bg-white rounded-2xl max-h-[90dvh] overflow-hidden flex flex-col shadow-2xl"
       >
-        <div className="sticky top-0 bg-card border-b border-border/30 px-4 py-3 flex items-center justify-between z-10">
-          <h2 className="font-bold text-sm">CV Preview</h2>
-          <button onClick={onClose} className="text-xs text-muted-foreground px-2 py-1 rounded-md bg-muted/40">Close</button>
+        {/* Sticky header */}
+        <div className="bg-white border-b border-border/20 px-5 py-3.5 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-primary" />
+            <h2 className="font-bold text-sm text-foreground">CV Preview</h2>
+          </div>
+          <button onClick={onClose} className="text-[11px] font-semibold text-primary px-3 py-1.5 rounded-lg bg-primary/10 active:scale-95 transition-transform">
+            Close
+          </button>
         </div>
-        <div className="p-4 space-y-4">
-          {/* Header */}
-          <div className="text-center space-y-1">
-            {data.photo && (
-              <img src={data.photo} alt="" className="w-16 h-16 rounded-full object-cover mx-auto border-2 border-primary/20" />
-            )}
-            <h1 className="text-lg font-bold">{data.fullName || "Your Name"}</h1>
-            {data.jobTitle && <p className="text-xs text-primary font-semibold">{data.jobTitle}</p>}
-            <div className="flex flex-wrap justify-center gap-2 text-[10px] text-muted-foreground">
-              {data.email && <span className="flex items-center gap-0.5"><Mail className="w-2.5 h-2.5" />{data.email}</span>}
-              {data.phone && <span className="flex items-center gap-0.5"><Phone className="w-2.5 h-2.5" />{data.phone}</span>}
-              {data.location && <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{data.location}</span>}
+
+        {/* CV Document */}
+        <div className="overflow-y-auto flex-1">
+          <div className="bg-white">
+            {/* Hero header with gradient */}
+            <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 px-5 py-6 text-center">
+              {data.photo && (
+                <div className="mb-3">
+                  <img src={data.photo} alt="" className="w-20 h-20 rounded-full object-cover mx-auto border-3 border-white shadow-lg" />
+                </div>
+              )}
+              <h1 className="text-xl font-bold text-foreground tracking-tight">{data.fullName || "Your Name"}</h1>
+              {data.jobTitle && (
+                <p className="text-[13px] text-primary font-semibold mt-0.5">{data.jobTitle}</p>
+              )}
+              <div className="flex flex-wrap justify-center gap-3 mt-3 text-[11px] text-muted-foreground">
+                {data.email && (
+                  <span className="flex items-center gap-1">
+                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center"><Mail className="w-2.5 h-2.5 text-primary" /></div>
+                    {data.email}
+                  </span>
+                )}
+                {data.phone && (
+                  <span className="flex items-center gap-1">
+                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center"><Phone className="w-2.5 h-2.5 text-primary" /></div>
+                    {data.phone}
+                  </span>
+                )}
+                {data.location && (
+                  <span className="flex items-center gap-1">
+                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center"><MapPin className="w-2.5 h-2.5 text-primary" /></div>
+                    {data.location}
+                  </span>
+                )}
+              </div>
+              {(data.linkedin || data.website || data.portfolio) && (
+                <div className="flex flex-wrap justify-center gap-3 mt-2 text-[10px] text-muted-foreground/70">
+                  {data.linkedin && <span className="flex items-center gap-1"><Linkedin className="w-2.5 h-2.5" />{data.linkedin}</span>}
+                  {data.website && <span className="flex items-center gap-1"><Globe className="w-2.5 h-2.5" />{data.website}</span>}
+                  {data.portfolio && <span className="flex items-center gap-1"><Link2 className="w-2.5 h-2.5" />{data.portfolio}</span>}
+                </div>
+              )}
+            </div>
+
+            <div className="px-5 py-4 space-y-5">
+              {/* Summary */}
+              {data.summary && (
+                <CVSection icon={User} title="Professional Summary">
+                  <p className="text-[12px] text-muted-foreground leading-relaxed">{data.summary}</p>
+                </CVSection>
+              )}
+
+              {/* Experience */}
+              {hasExperience && (
+                <CVSection icon={Briefcase} title="Work Experience">
+                  <div className="space-y-3">
+                    {data.experiences.filter((e: any) => e.position).map((e: any, i: number) => (
+                      <div key={i} className="relative pl-4 border-l-2 border-primary/20">
+                        <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-primary" />
+                        <p className="text-[13px] font-bold text-foreground">{e.position}</p>
+                        <p className="text-[11px] font-medium text-primary/80">{e.company}</p>
+                        {e.startDate && (
+                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                            {formatDate(e.startDate)} — {e.current ? "Present" : formatDate(e.endDate)}
+                          </p>
+                        )}
+                        {e.description && <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">{e.description}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </CVSection>
+              )}
+
+              {/* Education */}
+              {hasEducation && (
+                <CVSection icon={GraduationCap} title="Education">
+                  <div className="space-y-3">
+                    {data.educations.filter((e: any) => e.school).map((e: any, i: number) => (
+                      <div key={i} className="relative pl-4 border-l-2 border-primary/20">
+                        <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-primary" />
+                        <p className="text-[13px] font-bold text-foreground">{e.degree}{e.field ? ` in ${e.field}` : ""}</p>
+                        <p className="text-[11px] font-medium text-primary/80">{e.school}</p>
+                        {e.startDate && (
+                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                            {formatDate(e.startDate)} — {formatDate(e.endDate)}
+                            {e.gpa ? ` • GPA: ${e.gpa}` : ""}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CVSection>
+              )}
+
+              {/* Skills */}
+              {hasSkills && (
+                <CVSection icon={Wrench} title="Skills">
+                  <div className="flex flex-wrap gap-1.5">
+                    {data.skills.filter((s: any) => s.name).map((s: any, i: number) => (
+                      <div key={i} className="px-2.5 py-1 rounded-lg bg-primary/8 border border-primary/15">
+                        <span className="text-[11px] font-semibold text-foreground">{s.name}</span>
+                        <span className="text-[9px] text-muted-foreground ml-1">• {s.level}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CVSection>
+              )}
+
+              {/* Languages */}
+              {hasLanguages && (
+                <CVSection icon={Globe} title="Languages">
+                  <div className="grid grid-cols-2 gap-2">
+                    {data.languages.filter((l: any) => l.name).map((l: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-muted/30 border border-border/20">
+                        <span className="text-[11px] font-semibold text-foreground">{l.name}</span>
+                        <span className="text-[9px] text-primary font-medium">{l.proficiency}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CVSection>
+              )}
+
+              {/* Certifications */}
+              {hasCerts && (
+                <CVSection icon={Award} title="Certifications">
+                  <div className="space-y-2">
+                    {data.certifications.filter((c: any) => c.name).map((c: any, i: number) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <Award className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-[12px] font-bold text-foreground">{c.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{c.issuer}{c.date ? ` • ${formatDate(c.date)}` : ""}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CVSection>
+              )}
+
+              {/* References */}
+              {hasRefs && (
+                <CVSection icon={Users} title="References">
+                  <div className="grid grid-cols-2 gap-2">
+                    {data.references.filter((r: any) => r.name).map((r: any, i: number) => (
+                      <div key={i} className="p-2 rounded-lg bg-muted/20 border border-border/15">
+                        <p className="text-[11px] font-bold text-foreground">{r.name}</p>
+                        <p className="text-[9px] text-muted-foreground">{r.position}{r.company ? `, ${r.company}` : ""}</p>
+                        {r.phone && <p className="text-[9px] text-muted-foreground/70 mt-0.5">{r.phone}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </CVSection>
+              )}
+
+              {/* Hobbies */}
+              {data.hobbies && (
+                <CVSection icon={Heart} title="Interests">
+                  <p className="text-[11px] text-muted-foreground">{data.hobbies}</p>
+                </CVSection>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-3 border-t border-border/10 text-center">
+              <p className="text-[8px] text-muted-foreground/40 uppercase tracking-widest">Generated with ZIVO</p>
             </div>
           </div>
-
-          {data.summary && (
-            <div>
-              <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1 border-b border-primary/20 pb-0.5">Summary</h3>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">{data.summary}</p>
-            </div>
-          )}
-
-          {data.experiences?.some((e: any) => e.position) && (
-            <div>
-              <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5 border-b border-primary/20 pb-0.5">Experience</h3>
-              {data.experiences.filter((e: any) => e.position).map((e: any, i: number) => (
-                <div key={i} className="mb-2">
-                  <p className="text-[12px] font-bold">{e.position}</p>
-                  <p className="text-[10px] text-muted-foreground">{e.company} {e.startDate && `• ${formatDate(e.startDate)} – ${e.current ? "Present" : formatDate(e.endDate)}`}</p>
-                  {e.description && <p className="text-[10px] text-muted-foreground/80 mt-0.5">{e.description}</p>}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {data.educations?.some((e: any) => e.school) && (
-            <div>
-              <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5 border-b border-primary/20 pb-0.5">Education</h3>
-              {data.educations.filter((e: any) => e.school).map((e: any, i: number) => (
-                <div key={i} className="mb-2">
-                  <p className="text-[12px] font-bold">{e.degree} {e.field && `in ${e.field}`}</p>
-                  <p className="text-[10px] text-muted-foreground">{e.school} {e.startDate && `• ${formatDate(e.startDate)} – ${formatDate(e.endDate)}`}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {data.skills?.some((s: any) => s.name) && (
-            <div>
-              <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5 border-b border-primary/20 pb-0.5">Skills</h3>
-              <div className="flex flex-wrap gap-1">
-                {data.skills.filter((s: any) => s.name).map((s: any, i: number) => (
-                  <span key={i} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">{s.name} • {s.level}</span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {data.languages?.some((l: any) => l.name) && (
-            <div>
-              <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider mb-1.5 border-b border-primary/20 pb-0.5">Languages</h3>
-              <div className="flex flex-wrap gap-1">
-                {data.languages.filter((l: any) => l.name).map((l: any, i: number) => (
-                  <span key={i} className="px-2 py-0.5 rounded-full bg-accent/30 text-foreground text-[10px] font-medium">{l.name} ({l.proficiency})</span>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </motion.div>
     </motion.div>
+  );
+}
+
+function CVSection({ icon: Icon, title, children }: { icon: typeof User; title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 mb-2">
+        <Icon className="w-3.5 h-3.5 text-primary" />
+        <h3 className="text-[12px] font-bold text-primary uppercase tracking-wider">{title}</h3>
+      </div>
+      <div className="border-t border-primary/15 pt-2">
+        {children}
+      </div>
+    </div>
   );
 }
 
