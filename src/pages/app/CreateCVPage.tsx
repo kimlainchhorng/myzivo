@@ -96,24 +96,24 @@ const CreateCVPage = () => {
 
   return (
     <AppLayout title="Create CV" hideHeader>
-      <div className="flex flex-col px-4 pt-3 pb-28">
+      <div className="flex flex-col px-3.5 pt-2.5 pb-24">
         {/* Header */}
-        <div className="flex items-center gap-2.5 mb-4">
+        <div className="flex items-center gap-2 mb-3">
           <button
             onClick={() => navigate(-1)}
-            className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center touch-manipulation active:scale-90 transition-transform"
+            className="w-7 h-7 rounded-full bg-muted/60 flex items-center justify-center touch-manipulation active:scale-90 transition-transform"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
           </button>
           <div className="flex-1">
-            <h1 className="font-bold text-[17px]">Create CV</h1>
-            <p className="text-[11px] text-muted-foreground">Build your resume to apply for jobs</p>
+            <h1 className="font-bold text-[15px]">Create CV</h1>
+            <p className="text-[10px] text-muted-foreground">Build your resume to apply for jobs</p>
           </div>
           <button
             onClick={handleSave}
-            className="px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold touch-manipulation active:scale-95 transition-transform flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-bold touch-manipulation active:scale-95 transition-transform flex items-center gap-1"
           >
-            <Save className="w-3.5 h-3.5" />
+            <Save className="w-3 h-3" />
             Save
           </button>
         </div>
