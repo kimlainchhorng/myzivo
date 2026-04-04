@@ -2857,6 +2857,46 @@ export default function AdminStoreEditPage() {
             <StoreMarketingSection storeId={storeId!} />
           </TabsContent>
 
+          <TabsContent value="employees">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center mb-4"><Users className="w-7 h-7 text-blue-500" /></div>
+              <h2 className="font-semibold text-lg mb-1">Employees</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">Add, remove, and manage your store employees and their roles.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="payroll">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mb-4"><DollarSign className="w-7 h-7 text-emerald-500" /></div>
+              <h2 className="font-semibold text-lg mb-1">Payroll</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">Manage wages, pay runs, and compensation for your employees.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="employee-schedule">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-purple-500/10 flex items-center justify-center mb-4"><Calendar className="w-7 h-7 text-purple-500" /></div>
+              <h2 className="font-semibold text-lg mb-1">Employee Schedule</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">Create and manage employee work schedules and shifts.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="time-clock">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mb-4"><Clock className="w-7 h-7 text-amber-500" /></div>
+              <h2 className="font-semibold text-lg mb-1">Time Clock</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">Track employee clock-in/out times, attendance, and work hours.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="employee-rules">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-rose-500/10 flex items-center justify-center mb-4"><Shield className="w-7 h-7 text-rose-500" /></div>
+              <h2 className="font-semibold text-lg mb-1">Employee Rules</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">Set employee rules, access levels, and workplace policies.</p>
+            </div>
+          </TabsContent>
+
 
         </Tabs>
       </div>
