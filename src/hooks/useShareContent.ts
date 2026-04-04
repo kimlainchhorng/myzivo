@@ -40,7 +40,7 @@ export function useShareContent() {
     return share({
       title: caption || "Check out this post on ZIVO",
       text: caption || "See this on ZIVO",
-      url: `${window.location.origin}/reels?post=${postId}`,
+      url: `${getPublicOrigin()}/reels?post=${postId}`,
     });
   }, [share]);
 
