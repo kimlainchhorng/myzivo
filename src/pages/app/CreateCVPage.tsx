@@ -148,8 +148,8 @@ const CreateCVPage = () => {
       linkedin: linkedin.trim(),
       portfolio: portfolio.trim(),
       summary: summary.trim(),
-      experiences, educations, skills, languages, certifications,
-      references_list: references,
+      experiences: experiences as any, educations: educations as any, skills: skills as any, languages: languages as any, certifications: certifications as any,
+      references_list: references as any,
       hobbies: hobbies.trim(),
       is_primary: true,
     };
