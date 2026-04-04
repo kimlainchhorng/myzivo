@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import { useLocalPaymentMethods, formatCardNumber, formatExpiry, parseExpiry, detectCardBrand, validateCardNumber, validateExpiry, validateCVV, type CardInput } from "@/hooks/useLocalPaymentMethods";
 import { useCustomerWallet } from "@/hooks/useCustomerWallet";
 
