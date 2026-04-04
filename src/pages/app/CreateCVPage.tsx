@@ -1,6 +1,6 @@
 /**
  * CreateCVPage — Professional CV/Resume builder with Supabase persistence.
- * Features: Photo upload preview, month/year date rollers, polished mobile UI.
+ * Features: Photo cloud upload, templates, PDF download, share link, auto-save, progress tips.
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -10,12 +10,20 @@ import {
   Wrench, Globe, Award, Save, FileText, Link2, Linkedin,
   Heart, Users, ChevronDown, ChevronUp, Loader2, Check,
   Star, MapPin, Mail, Phone, Eye, Camera, Image as ImageIcon,
+  Download, Share2, Copy, Lightbulb, Palette,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/components/app/AppLayout";
 import { toast } from "sonner";
+
+const CV_TEMPLATES = [
+  { id: "classic", name: "Classic", desc: "Two-column professional" },
+  { id: "modern", name: "Modern", desc: "Bold header design" },
+  { id: "minimal", name: "Minimal", desc: "Clean & simple" },
+] as const;
+type TemplateId = typeof CV_TEMPLATES[number]["id"];
 
 /* ── Types ────────────────────────────────────────── */
 interface WorkExperience {
@@ -82,28 +90,38 @@ function DateRoller({ value, onChange, label, disabled }: {
   );
 }
 
-/* ── Photo Preview Component ──────────────────────── */
-function PhotoUpload({ photo, onPhotoChange }: { photo: string | null; onPhotoChange: (url: string) => void }) {
+/* ── Photo Upload to Supabase Storage ─────────────── */
+function PhotoUpload({ photo, onPhotoChange, userId }: { photo: string | null; onPhotoChange: (url: string) => void; userId?: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) { toast.error("Photo must be under 5MB"); return; }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      if (ev.target?.result) onPhotoChange(ev.target.result as string);
-    };
-    reader.readAsDataURL(file);
+    if (!userId) {
+      // Fallback to local preview if no userId
+      const reader = new FileReader();
+      reader.onload = (ev) => { if (ev.target?.result) onPhotoChange(ev.target.result as string); };
+      reader.readAsDataURL(file);
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${userId}/cv-photo.${ext}`;
+    const { error } = await supabase.storage.from("cv-photos").upload(path, file, { upsert: true });
+    if (error) { toast.error("Upload failed"); setUploading(false); return; }
+    const { data: urlData } = supabase.storage.from("cv-photos").getPublicUrl(path);
+    onPhotoChange(urlData.publicUrl + "?t=" + Date.now());
+    setUploading(false);
+    toast.success("Photo uploaded!");
   };
 
   return (
     <div className="flex flex-col items-center gap-2 mb-3">
-      <button
-        onClick={() => fileRef.current?.click()}
-        className="relative w-20 h-20 rounded-full border-2 border-dashed border-primary/30 bg-muted/20 flex items-center justify-center overflow-hidden touch-manipulation active:scale-95 transition-transform group"
-      >
-        {photo ? (
+      <button onClick={() => fileRef.current?.click()} disabled={uploading}
+        className="relative w-20 h-20 rounded-full border-2 border-dashed border-primary/30 bg-muted/20 flex items-center justify-center overflow-hidden touch-manipulation active:scale-95 transition-transform group">
+        {uploading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : photo ? (
           <img src={photo} alt="Profile" className="w-full h-full object-cover rounded-full" />
         ) : (
           <div className="flex flex-col items-center gap-0.5">
@@ -116,11 +134,34 @@ function PhotoUpload({ photo, onPhotoChange }: { photo: string | null; onPhotoCh
         </div>
       </button>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-      {photo && (
-        <button onClick={() => onPhotoChange("")} className="text-[10px] text-destructive/70 font-medium">
-          Remove photo
-        </button>
-      )}
+      {photo && !uploading && <button onClick={() => onPhotoChange("")} className="text-[10px] text-destructive/70 font-medium">Remove photo</button>}
+    </div>
+  );
+}
+
+/* ── Progress Tips ────────────────────────────────── */
+function ProgressTips({ data }: { data: any }) {
+  const tips: string[] = [];
+  if (!data.photo) tips.push("Add a professional photo to stand out");
+  if (!data.jobTitle?.trim()) tips.push("Add a job title/headline");
+  if (!data.summary?.trim()) tips.push("Write a professional summary (2-3 sentences)");
+  if (!data.experiences?.some((e: any) => e.description?.trim())) tips.push("Add descriptions to your work experience");
+  if ((data.skills?.filter((s: any) => s.name?.trim())?.length || 0) < 3) tips.push("Add at least 3 skills to strengthen your CV");
+  if (!data.linkedin?.trim()) tips.push("Add your LinkedIn profile link");
+  if (tips.length === 0) return null;
+  return (
+    <div className="bg-primary/5 rounded-xl p-3 border border-primary/10 mb-4">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Lightbulb className="w-3.5 h-3.5 text-primary" />
+        <span className="text-[11px] font-bold text-primary">Tips to improve your CV</span>
+      </div>
+      <ul className="space-y-1">
+        {tips.slice(0, 3).map((tip, i) => (
+          <li key={i} className="text-[10px] text-muted-foreground flex items-start gap-1.5">
+            <span className="w-1 h-1 rounded-full bg-primary/50 mt-1.5 shrink-0" />{tip}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -422,6 +463,8 @@ const CreateCVPage = () => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [cvId, setCvId] = useState<string | null>(null);
+  const [shareCode, setShareCode] = useState<string | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>("classic");
   const [showPreview, setShowPreview] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -463,6 +506,9 @@ const CreateCVPage = () => {
         if (Array.isArray(data.certifications) && data.certifications.length) setCertifications(data.certifications as any);
         if (Array.isArray((data as any).references_list) && (data as any).references_list.length) setReferences((data as any).references_list as any);
         setHobbies((data as any).hobbies || "");
+        setShareCode((data as any).share_code || null);
+        setPhoto((data as any).photo_url || null);
+        if ((data as any).template) setSelectedTemplate((data as any).template as TemplateId);
         setLastSaved(new Date(data.updated_at));
       }
       setLoading(false);
@@ -509,6 +555,8 @@ const CreateCVPage = () => {
       references_list: references as any,
       hobbies: hobbies.trim(),
       is_primary: true,
+      template: selectedTemplate,
+      photo_url: photo || null,
     };
     let error;
     if (cvId) {
@@ -576,7 +624,18 @@ const CreateCVPage = () => {
     );
   }
 
-  const previewData = { photo, fullName, jobTitle, email, phone, location, summary, experiences, educations, skills, languages, certifications, references };
+  const previewData = { photo, fullName, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies };
+
+  const handleShare = () => {
+    if (!shareCode) { toast.error("Save your CV first to get a share link"); return; }
+    const url = `${window.location.origin}/cv/${shareCode}`;
+    navigator.clipboard.writeText(url).then(() => toast.success("Share link copied!")).catch(() => toast.error("Failed to copy"));
+  };
+
+  const handleDownloadPDF = () => {
+    setShowPreview(true);
+    setTimeout(() => { window.print(); }, 500);
+  };
 
   return (
     <AppLayout title="Create CV" hideHeader>
@@ -641,13 +700,34 @@ const CreateCVPage = () => {
           </p>
         </div>
 
+        {/* Template Selector */}
+        <div className="mb-4">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Palette className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[11px] font-bold text-foreground">CV Template</span>
+          </div>
+          <div className="flex gap-2">
+            {CV_TEMPLATES.map(t => (
+              <button key={t.id} onClick={() => setSelectedTemplate(t.id)}
+                className={cn("flex-1 py-2 px-2 rounded-xl border-2 text-center touch-manipulation active:scale-95 transition-all",
+                  selectedTemplate === t.id ? "border-primary bg-primary/5" : "border-border/30 bg-card")}>
+                <span className={cn("text-[11px] font-bold block", selectedTemplate === t.id ? "text-primary" : "text-foreground")}>{t.name}</span>
+                <span className="text-[9px] text-muted-foreground">{t.desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Progress Tips */}
+        <ProgressTips data={previewData} />
+
         {/* ── PERSONAL INFO ── */}
         <SectionHeader icon={User} title="Personal Information" sectionKey="personal" expanded={expandedSections.personal} onToggle={toggle} />
         <AnimatePresence>
           {expandedSections.personal && (
             <CollapseWrap>
               <div className="space-y-2.5">
-                <PhotoUpload photo={photo} onPhotoChange={setPhoto} />
+                <PhotoUpload photo={photo} onPhotoChange={setPhoto} userId={user?.id} />
                 <div>
                   <label className={lblCls}>Full Name *</label>
                   <input className={inputCls} placeholder="John Doe" value={fullName} onChange={e => setFullName(e.target.value)} />
@@ -846,28 +926,24 @@ const CreateCVPage = () => {
         </AnimatePresence>
 
         {/* Bottom Action Buttons */}
-        <div className="flex gap-2.5 mt-5">
-          <motion.button
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            onClick={handleSave}
-            disabled={saving}
-            className="flex-1 h-12 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all shadow-md disabled:opacity-60"
-          >
+        <div className="grid grid-cols-2 gap-2.5 mt-5">
+          <button onClick={handleSave} disabled={saving}
+            className="h-12 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all shadow-md disabled:opacity-60">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {saving ? "Saving…" : "Save CV"}
-          </motion.button>
-          <motion.button
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            onClick={() => setShowPreview(true)}
-            className="flex-1 h-12 rounded-xl border-2 border-primary/30 text-primary font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all"
-          >
-            <Eye className="w-4 h-4" />
-            Preview
-          </motion.button>
+          </button>
+          <button onClick={() => setShowPreview(true)}
+            className="h-12 rounded-xl border-2 border-primary/30 text-primary font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all">
+            <Eye className="w-4 h-4" /> Preview
+          </button>
+          <button onClick={handleDownloadPDF}
+            className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all">
+            <Download className="w-3.5 h-3.5" /> Download PDF
+          </button>
+          <button onClick={handleShare}
+            className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all">
+            <Share2 className="w-3.5 h-3.5" /> Share Link
+          </button>
         </div>
 
         {/* Delete CV */}
