@@ -90,9 +90,9 @@ const CreateCVPage = () => {
   };
 
   const inputClass =
-    "w-full px-3 py-2.5 rounded-xl border border-border/50 bg-background text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all";
+    "w-full px-2.5 py-2 rounded-lg border border-border/50 bg-background text-[13px] placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all";
 
-  const labelClass = "text-[12px] font-medium text-muted-foreground mb-1 block";
+  const labelClass = "text-[11px] font-medium text-muted-foreground mb-0.5 block";
 
   return (
     <AppLayout title="Create CV" hideHeader>
