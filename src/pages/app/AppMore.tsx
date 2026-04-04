@@ -119,7 +119,7 @@ const AppMore = () => {
               onClick={() => navigate("/profile")}
               className="px-3.5 py-1.5 rounded-xl bg-primary/10 text-primary text-xs font-bold touch-manipulation active:scale-95 transition-transform"
             >
-              Edit
+              Switch Account
             </button>
           </motion.div>
         )}
