@@ -53,7 +53,29 @@ export default function PublicProfilePage() {
         .select("id, user_id, full_name, avatar_url, cover_url, cover_position, profile_visibility, is_verified, share_code")
         .or(`id.eq.${userId},user_id.eq.${userId}`)
         .maybeSingle();
-      return data;
+
+      if (data) return data;
+
+      // Fallback for logged-out viewers when profiles table is protected by RLS.
+      const { data: publicProfile } = await (supabase as any)
+        .from("public_profiles")
+        .select("id, user_id, full_name, avatar_url")
+        .or(`id.eq.${userId},user_id.eq.${userId}`)
+        .maybeSingle();
+
+      if (!publicProfile) return null;
+
+      return {
+        id: publicProfile.id,
+        user_id: publicProfile.user_id || publicProfile.id,
+        full_name: publicProfile.full_name,
+        avatar_url: publicProfile.avatar_url,
+        cover_url: null,
+        cover_position: null,
+        profile_visibility: "public",
+        is_verified: false,
+        share_code: null,
+      };
     },
     enabled: !!userId,
   });
@@ -251,7 +273,12 @@ export default function PublicProfilePage() {
 
   const handleShare = async () => {
     const shareCode = resolvedProfile?.share_code || shareCodeFromUrl || "";
-    const url = shareCode ? getProfileShareUrl(shareCode) : `${getPublicOrigin()}/user/${targetUserId || userId}`;
+    const fallbackProfileId = targetUserId || userId;
+    const url = shareCode
+      ? getProfileShareUrl(shareCode)
+      : fallbackProfileId
+        ? `${getPublicOrigin()}/user/${fallbackProfileId}`
+        : getPublicOrigin();
     if (navigator.share) {
       try { await navigator.share({ title: `${resolvedProfile?.full_name || "User"} on ZIVO`, url }); } catch {}
     } else {
@@ -444,7 +471,7 @@ export default function PublicProfilePage() {
                 <motion.button whileTap={{ scale: 0.95 }}
                   onClick={() => {
                     if (friendBtn.action === "cancel") setConfirmAction({ action: "cancel", label: "Cancel this friend request?" });
-                    else if (friendBtn.action === "unfriend") setConfirmAction({ action: "unfriend", label: `Unfriend ${profile?.full_name}?` });
+                    else if (friendBtn.action === "unfriend") setConfirmAction({ action: "unfriend", label: `Unfriend ${resolvedProfile?.full_name}?` });
                     else friendMutation.mutate(friendBtn.action);
                   }}
                   disabled={friendMutation.isPending}
@@ -457,7 +484,21 @@ export default function PublicProfilePage() {
                   <friendBtn.icon className="h-4 w-4" />{friendBtn.label}
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.95 }}
-                  onClick={() => { if (friendshipStatus === "friends") navigate(`/chat`, { state: { openChat: { recipientId: userId, recipientName: profile?.full_name || "User", recipientAvatar: profile?.avatar_url } } }); else toast("Add as friend to chat"); }}
+                  onClick={() => {
+                    if (friendshipStatus === "friends") {
+                      navigate(`/chat`, {
+                        state: {
+                          openChat: {
+                            recipientId: targetUserId,
+                            recipientName: resolvedProfile?.full_name || "User",
+                            recipientAvatar: resolvedProfile?.avatar_url,
+                          },
+                        },
+                      });
+                    } else {
+                      toast("Add as friend to chat");
+                    }
+                  }}
                   className={`h-11 w-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${friendshipStatus === "friends" ? "bg-primary text-primary-foreground" : "bg-muted border border-border text-muted-foreground opacity-60"}`}>
                   <MessageCircle className="h-4 w-4" />
                 </motion.button>

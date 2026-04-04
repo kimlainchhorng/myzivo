@@ -188,8 +188,20 @@ export default function ChatContactInfo({
   };
 
   const handleCopyProfile = async () => {
-    const { data } = await supabase.from("profiles").select("share_code").eq("id", recipientId).maybeSingle();
-    const url = data?.share_code ? getProfileShareUrl(data.share_code) : `${getPublicOrigin()}/user/${recipientId}`;
+    const { data: byProfileId } = await supabase
+      .from("profiles")
+      .select("id, share_code")
+      .eq("id", recipientId)
+      .maybeSingle();
+
+    const data = byProfileId ?? (await supabase
+      .from("profiles")
+      .select("id, share_code")
+      .eq("user_id", recipientId)
+      .maybeSingle()).data;
+
+    const targetId = data?.id || recipientId;
+    const url = data?.share_code ? getProfileShareUrl(data.share_code) : `${getPublicOrigin()}/user/${targetId}`;
     navigator.clipboard.writeText(url);
     toast.success("Profile link copied");
   };

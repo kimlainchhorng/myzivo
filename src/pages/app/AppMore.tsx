@@ -71,14 +71,28 @@ const AppMore = () => {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("profiles")
-      .select("full_name, avatar_url, share_code")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setProfile(data as any);
-      });
+    const loadProfile = async () => {
+      const { data: byId } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url, share_code")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (byId) {
+        setProfile(byId as any);
+        return;
+      }
+
+      const { data: byUserId } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url, share_code")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (byUserId) setProfile(byUserId as any);
+    };
+
+    void loadProfile();
   }, [user]);
 
   return (
