@@ -8,10 +8,12 @@ export interface UserAccess {
   isCarRentalOwner: boolean;
   isHotelOwner: boolean;
   isFlightManager: boolean;
+  isStoreOwner: boolean;
   driverId?: string;
   restaurantId?: string;
   carRentalIds?: string[];
   hotelId?: string;
+  storeId?: string;
 }
 
 export const useUserAccess = (userId: string | undefined) => {
