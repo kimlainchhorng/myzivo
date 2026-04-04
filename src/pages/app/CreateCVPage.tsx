@@ -182,7 +182,7 @@ const CreateCVPage = () => {
                 <div>
                   <label className={labelClass}>Description</label>
                   <textarea
-                    className={cn(inputClass, "min-h-[60px] resize-none")}
+                    className={cn(inputClass, "min-h-[50px] resize-none")}
                     placeholder="Key responsibilities and achievements..."
                     value={exp.description}
                     onChange={(e) => updateExperience(exp.id, "description", e.target.value)}
