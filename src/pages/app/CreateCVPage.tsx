@@ -894,14 +894,6 @@ const CreateCVPage = () => {
                   <input className={inputCls} placeholder="Phnom Penh, Cambodia" value={location} onChange={e => setLocation(e.target.value)} />
                 </div>
                 <div>
-                  <label className={lblCls}>LinkedIn</label>
-                  <input className={inputCls} placeholder="linkedin.com/in/yourname" value={linkedin} onChange={e => setLinkedin(e.target.value)} />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><label className={lblCls}>Website</label><input className={inputCls} placeholder="yoursite.com" value={website} onChange={e => setWebsite(e.target.value)} /></div>
-                  <div><label className={lblCls}>Portfolio</label><input className={inputCls} placeholder="portfolio.com" value={portfolio} onChange={e => setPortfolio(e.target.value)} /></div>
-                </div>
-                <div>
                   <label className={lblCls}>Professional Summary</label>
                   <textarea className={cn(inputCls, "min-h-[70px] resize-none")} placeholder="Experienced professional with expertise in..." value={summary} onChange={e => setSummary(e.target.value)} />
                 </div>
