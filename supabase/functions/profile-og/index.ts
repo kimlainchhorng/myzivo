@@ -42,9 +42,10 @@ Deno.serve(async (req) => {
 
     const name = profile.full_name || "ZIVO User";
     const profileUrl = `https://hizivo.com/user/${userId}`;
-    const avatar = profile.avatar_url || "https://hizovo.com/og-image.png";
+    const avatar = profile.avatar_url || "https://hizivo.com/og-image.png";
     const cover = profile.cover_url || avatar;
-    const description = `Check out ${name}'s profile on ZIVO — One app for every journey.`;
+    const ogImage = avatar; // Use avatar as primary OG image for profile recognition
+    const description = `${name} — View my profile on ZIVO. One app for every journey.`;
 
     // Check if request is from a social media crawler
     const userAgent = req.headers.get("user-agent") || "";
