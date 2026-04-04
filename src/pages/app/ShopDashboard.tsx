@@ -110,6 +110,30 @@ const ShopDashboard = () => {
             </motion.button>
           ))}
         </div>
+
+        {/* Employee Management */}
+        <h2 className="font-bold text-lg mb-3 mt-6">Employee Management</h2>
+        <div className="rounded-xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
+          {employeeActions.map((item, i) => (
+            <motion.button
+              key={item.label}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 + i * 0.04 }}
+              onClick={item.onClick}
+              className="w-full flex items-center gap-3 px-3.5 py-3 hover:bg-muted/30 transition-colors touch-manipulation active:bg-muted/50 text-left"
+            >
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0", item.bg)}>
+                <item.icon className={cn("w-4 h-4", item.color)} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-[13px] leading-tight">{item.label}</p>
+                <p className="text-[11px] text-muted-foreground leading-tight">{item.description}</p>
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
+            </motion.button>
+          ))}
+        </div>
       </div>
     </AppLayout>
   );
