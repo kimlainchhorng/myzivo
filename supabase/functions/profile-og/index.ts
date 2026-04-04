@@ -18,6 +18,7 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
+    const postId = url.searchParams.get("post");
     const resolveOnly = url.searchParams.get("resolve") === "1";
     const userAgent = req.headers.get("user-agent") ?? "";
 
@@ -47,8 +48,10 @@ Deno.serve(async (req) => {
     }
 
     const name = profile.full_name || "ZIVO User";
-    // Preserve share code in URL so the profile page can fallback-resolve when direct reads are blocked.
-    const shareLandingUrl = `${APP_ORIGIN}/user/${encodeURIComponent(profile.id)}?sc=${encodeURIComponent(profile.share_code || code)}`;
+    // Preserve share code (and optional post id) so the profile page can fallback-resolve and deep-link media.
+    const shareParams = new URLSearchParams({ sc: profile.share_code || code });
+    if (postId) shareParams.set("post", postId);
+    const shareLandingUrl = `${APP_ORIGIN}/user/${encodeURIComponent(profile.id)}?${shareParams.toString()}`;
     const avatar = profile.avatar_url || `${APP_ORIGIN}/og-image.png`;
     const cover = profile.cover_url || avatar;
     const ogImage = cover;

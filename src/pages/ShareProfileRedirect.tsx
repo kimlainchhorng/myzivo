@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
 export default function ShareProfileRedirect() {
   const { code } = useParams<{ code: string }>();
+  const [searchParams] = useSearchParams();
+  const postId = searchParams.get("post") || "";
   const navigate = useNavigate();
   const [notFound, setNotFound] = useState(false);
 
@@ -17,12 +19,14 @@ export default function ShareProfileRedirect() {
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          navigate(`/user/${data.id}?sc=${encodeURIComponent(code)}`, { replace: true });
+          const redirectParams = new URLSearchParams({ sc: code });
+          if (postId) redirectParams.set("post", postId);
+          navigate(`/user/${data.id}?${redirectParams.toString()}`, { replace: true });
         } else {
           setNotFound(true);
         }
       });
-  }, [code, navigate]);
+  }, [code, navigate, postId]);
 
   if (notFound) {
     return (

@@ -33,6 +33,7 @@ export default function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
   const [searchParams] = useSearchParams();
   const shareCodeFromUrl = searchParams.get("sc") || "";
+  const postIdFromUrl = searchParams.get("post") || "";
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -271,19 +272,45 @@ export default function PublicProfilePage() {
     ]);
   }, [queryClient, targetUserId, userId]);
 
-  const handleShare = async () => {
+  const buildShareUrl = useCallback((postId?: string) => {
     const shareCode = resolvedProfile?.share_code || shareCodeFromUrl || "";
     const fallbackProfileId = targetUserId || userId;
-    const url = shareCode
-      ? getProfileShareUrl(shareCode)
-      : fallbackProfileId
-        ? `${getPublicOrigin()}/user/${fallbackProfileId}`
-        : getPublicOrigin();
+    if (shareCode) {
+      return postId
+        ? `${getProfileShareUrl(shareCode)}&post=${encodeURIComponent(postId)}`
+        : getProfileShareUrl(shareCode);
+    }
+    if (fallbackProfileId) {
+      return postId
+        ? `${getPublicOrigin()}/user/${fallbackProfileId}?post=${encodeURIComponent(postId)}`
+        : `${getPublicOrigin()}/user/${fallbackProfileId}`;
+    }
+    return getPublicOrigin();
+  }, [resolvedProfile?.share_code, shareCodeFromUrl, targetUserId, userId]);
+
+  const handleShare = async () => {
+    const url = buildShareUrl();
     if (navigator.share) {
       try { await navigator.share({ title: `${resolvedProfile?.full_name || "User"} on ZIVO`, url }); } catch {}
     } else {
       await navigator.clipboard.writeText(url);
       toast.success("Profile link copied!");
+    }
+  };
+
+  const handleSharePost = async (post: any) => {
+    const url = buildShareUrl(post?.id);
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${resolvedProfile?.full_name || "User"} on ZIVO`,
+          text: post?.caption || "Check out this post on ZIVO",
+          url,
+        });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success("Post link copied!");
     }
   };
 
@@ -327,6 +354,14 @@ export default function PublicProfilePage() {
       alive = false;
     };
   }, [posts, user?.id]);
+
+  useEffect(() => {
+    if (!postIdFromUrl || !posts.length) return;
+    const matchedPost = posts.find((post: any) => post.id === postIdFromUrl);
+    if (matchedPost) {
+      setSelectedPost(matchedPost);
+    }
+  }, [postIdFromUrl, posts]);
 
   const handleBookmark = async (post: any) => {
     if (!user?.id) {
@@ -687,7 +722,7 @@ export default function PublicProfilePage() {
                           <button onClick={() => setCommentPost(post)} className="touch-manipulation active:scale-90 transition-transform">
                             <MessageCircle className="h-[22px] w-[22px] text-foreground" strokeWidth={1.5} />
                           </button>
-                          <button onClick={handleShare} className="touch-manipulation active:scale-90 transition-transform">
+                          <button onClick={() => void handleSharePost(post)} className="touch-manipulation active:scale-90 transition-transform">
                             <Share2 className="h-[22px] w-[22px] text-foreground" strokeWidth={1.5} />
                           </button>
                         </div>
@@ -748,7 +783,7 @@ export default function PublicProfilePage() {
                         <p className="text-sm font-bold text-foreground truncate">{resolvedProfile.full_name}</p>
                         <p className="text-[11px] text-muted-foreground">{formatTime(selectedPost.created_at)}</p>
                       </div>
-                      <button onClick={(e) => { e.stopPropagation(); handleShare(); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                      <button onClick={(e) => { e.stopPropagation(); void handleSharePost(selectedPost); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
                         <Share2 className="h-5 w-5 text-foreground" />
                       </button>
                     </div>
@@ -797,7 +832,7 @@ export default function PublicProfilePage() {
                         <span className="text-sm text-muted-foreground">{selectedPost.views_count || 0}</span>
                       </div>
                       <div className="flex-1" />
-                      <button onClick={(e) => { e.stopPropagation(); handleShare(); }}>
+                      <button onClick={(e) => { e.stopPropagation(); void handleSharePost(selectedPost); }}>
                         <Share2 className="h-5 w-5 text-foreground" />
                       </button>
                     </div>
