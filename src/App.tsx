@@ -473,6 +473,13 @@ const App = () => (
                 <Route path="/more" element={<ProtectedRoute><AppMore /></ProtectedRoute>} />
                 <Route path="/personal-dashboard" element={<ProtectedRoute><PersonalDashboard /></ProtectedRoute>} />
                 <Route path="/personal/create-cv" element={<ProtectedRoute><CreateCVPage /></ProtectedRoute>} />
+                <Route path="/personal/employees" element={<ProtectedRoute><PersonalEmployeesPage /></ProtectedRoute>} />
+                <Route path="/personal/schedule" element={<ProtectedRoute><PersonalSchedulePage /></ProtectedRoute>} />
+                <Route path="/personal/timesheet" element={<ProtectedRoute><PersonalTimesheetPage /></ProtectedRoute>} />
+                <Route path="/personal/pay-stubs" element={<ProtectedRoute><PersonalPayStubsPage /></ProtectedRoute>} />
+                <Route path="/personal/notifications" element={<ProtectedRoute><PersonalNotificationsPage /></ProtectedRoute>} />
+                <Route path="/personal/help" element={<ProtectedRoute><PersonalHelpPage /></ProtectedRoute>} />
+                <Route path="/personal/settings" element={<ProtectedRoute><PersonalSettingsPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard" element={<ProtectedRoute><ShopDashboard /></ProtectedRoute>} />
                 <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
 
