@@ -2876,7 +2876,7 @@ export default function AdminStoreEditPage() {
 
           <TabsContent value="employee-schedule">
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-purple-500/10 flex items-center justify-center mb-4"><Calendar className="w-7 h-7 text-purple-500" /></div>
+              <div className="w-14 h-14 rounded-full bg-purple-500/10 flex items-center justify-center mb-4"><CalendarIcon className="w-7 h-7 text-purple-500" /></div>
               <h2 className="font-semibold text-lg mb-1">Employee Schedule</h2>
               <p className="text-sm text-muted-foreground max-w-sm">Create and manage employee work schedules and shifts.</p>
             </div>
