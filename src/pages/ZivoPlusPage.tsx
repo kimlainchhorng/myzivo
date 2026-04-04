@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft, Crown, Zap, Shield, Star,
   Check, Loader2, Settings, Sparkles, X, Lock, MessageCircle,
+  Car, Headphones, Percent, Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,15 +23,19 @@ const BENEFITS = [
   { icon: Zap, title: "Priority Delivery", desc: "Your orders are matched with drivers first for faster fulfillment." },
   { icon: Shield, title: "Extended Guarantee", desc: "48-hour freshness guarantee (vs. 24h for standard)." },
   { icon: Star, title: "Exclusive Deals", desc: "Members-only discounts and early access to seasonal promotions." },
-  { icon: Lock, title: "Lock & Unlock Media", desc: "Send locked photos & videos in chat — set your own price and earn when others unlock." },
+  { icon: Lock, title: "Lock & Unlock Media", desc: "Send locked photos & videos in chat — set your own price and earn when others unlock.", plan: "chat" },
+  { icon: Car, title: "Ride Discounts", desc: "10% off all ZIVO rides with priority pickup matching.", plan: "pro" },
+  { icon: Headphones, title: "VIP Support", desc: "24/7 dedicated support line with priority response times.", plan: "pro" },
+  { icon: Gift, title: "Monthly Perks", desc: "Free delivery credits, surprise rewards, and early feature access.", plan: "pro" },
 ];
 
-type PlanId = "monthly" | "chat" | "annual";
+type PlanId = "monthly" | "chat" | "pro" | "annual";
 
-const PLANS: { id: PlanId; name: string; price: string; period: string; savings: string | null; badge: string | null; highlight?: string }[] = [
-  { id: "monthly", name: "Monthly", price: "$9.99", period: "/month", savings: null, badge: null },
-  { id: "chat", name: "Chat+", price: "$15.99", period: "/month", savings: null, badge: "New", highlight: "Lock & Unlock media in chat" },
-  { id: "annual", name: "Annual", price: "$79.99", period: "/year", savings: "Save 33%", badge: "Best Value" },
+const PLANS: { id: PlanId; name: string; price: string; period: string; savings: string | null; badge: string | null; highlight?: string; desc?: string }[] = [
+  { id: "monthly", name: "Basic", price: "$9.99", period: "/mo", savings: null, badge: null, desc: "Essential perks" },
+  { id: "chat", name: "Chat+", price: "$15.99", period: "/mo", savings: null, badge: "Popular", highlight: "Lock & Unlock", desc: "Creator tools" },
+  { id: "pro", name: "Pro", price: "$29.99", period: "/mo", savings: null, badge: "Best", highlight: "All perks", desc: "Everything included" },
+  { id: "annual", name: "Annual", price: "$79.99", period: "/yr", savings: "Save 33%", badge: null, desc: "Basic plan, yearly" },
 ];
 
 /* ── Inline Legal Content ── */
@@ -199,7 +204,7 @@ export default function ZivoPlusPage() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { isPlus, plan, subscriptionEnd, isLoading, refresh } = useZivoPlus();
-  const [selectedPlan, setSelectedPlan] = useState<PlanId>("annual");
+  const [selectedPlan, setSelectedPlan] = useState<PlanId>("chat");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isManaging, setIsManaging] = useState(false);
   const [legalSheet, setLegalSheet] = useState<"terms" | "privacy" | null>(null);
@@ -333,8 +338,15 @@ export default function ZivoPlusPage() {
               <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
                 <b.icon className="h-5 w-5 text-amber-500" />
               </div>
-              <div>
-                <p className="text-[13px] font-bold text-foreground">{b.title}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-[13px] font-bold text-foreground">{b.title}</p>
+                  {(b as any).plan && (
+                    <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 uppercase">
+                      {(b as any).plan === "chat" ? "Chat+" : "Pro"}
+                    </span>
+                  )}
+                </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">{b.desc}</p>
               </div>
             </motion.div>
@@ -345,36 +357,41 @@ export default function ZivoPlusPage() {
         {!isPlus && (
           <div className="space-y-3">
             <h3 className="text-[14px] font-bold text-foreground px-1">Choose Your Plan</h3>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               {PLANS.map((p) => (
                 <motion.button
                   key={p.id}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setSelectedPlan(p.id)}
-                  className={`relative p-3 rounded-2xl border-2 text-left transition-all duration-200 ${
+                  className={`relative p-3.5 rounded-2xl border-2 text-left transition-all duration-200 ${
                     selectedPlan === p.id
                       ? "border-amber-500/50 bg-amber-500/5 shadow-md shadow-amber-500/10"
                       : "border-border/20 bg-card hover:border-border/40"
                   }`}
                 >
                   {p.badge && (
-                    <span className="absolute -top-2.5 right-2 text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500 text-white shadow-sm">
+                    <span className={`absolute -top-2.5 right-2.5 text-[8px] font-bold px-2 py-0.5 rounded-full shadow-sm text-white ${
+                      p.badge === "Best" ? "bg-gradient-to-r from-violet-500 to-purple-600" : "bg-amber-500"
+                    }`}>
                       {p.badge}
                     </span>
                   )}
                   {selectedPlan === p.id && (
                     <motion.div
                       layoutId="plan-check"
-                      className="absolute top-2.5 left-2.5 h-4 w-4 rounded-full bg-amber-500 flex items-center justify-center"
+                      className="absolute top-2.5 left-2.5 h-4.5 w-4.5 rounded-full bg-amber-500 flex items-center justify-center"
                     >
                       <Check className="h-2.5 w-2.5 text-white" />
                     </motion.div>
                   )}
-                  <p className="text-[10px] font-bold text-muted-foreground mb-1">{p.name}</p>
+                  <p className="text-[11px] font-bold text-amber-600 mb-0.5">{p.name}</p>
                   <div className="flex items-baseline gap-0.5">
-                    <span className="text-[18px] font-extrabold text-foreground">{p.price}</span>
+                    <span className="text-[20px] font-extrabold text-foreground">{p.price}</span>
                     <span className="text-[9px] text-muted-foreground">{p.period}</span>
                   </div>
+                  {p.desc && (
+                    <p className="text-[9px] text-muted-foreground mt-0.5">{p.desc}</p>
+                  )}
                   {p.savings && (
                     <p className="text-[9px] font-bold text-emerald-600 mt-1">{p.savings}</p>
                   )}
@@ -419,25 +436,29 @@ export default function ZivoPlusPage() {
 
         {/* Comparison */}
         <div className="space-y-2">
-          <h3 className="text-[14px] font-bold text-foreground px-1">Free vs. ZIVO+</h3>
+          <h3 className="text-[14px] font-bold text-foreground px-1">Plan Comparison</h3>
           <div className="rounded-2xl border border-border/20 overflow-hidden">
-            <div className="grid grid-cols-3 bg-muted/20 px-4 py-2.5 border-b border-border/10">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase">Feature</span>
-              <span className="text-[10px] font-bold text-muted-foreground uppercase text-center">Free</span>
-              <span className="text-[10px] font-bold text-amber-600 uppercase text-center">ZIVO+</span>
+            <div className="grid grid-cols-[1fr_50px_50px_50px] bg-muted/20 px-3 py-2.5 border-b border-border/10">
+              <span className="text-[9px] font-bold text-muted-foreground uppercase">Feature</span>
+              <span className="text-[9px] font-bold text-muted-foreground uppercase text-center">Basic</span>
+              <span className="text-[9px] font-bold text-amber-600 uppercase text-center">Chat+</span>
+              <span className="text-[9px] font-bold text-purple-600 uppercase text-center">Pro</span>
             </div>
             {[
-              { feat: "Service Fee", free: "5%", plus: "Free" },
-              { feat: "Delivery Priority", free: "Standard", plus: "Priority" },
-              { feat: "Freshness Guarantee", free: "24 hours", plus: "48 hours" },
-              { feat: "Lock & Unlock Chat", free: "—", plus: "✓" },
-              { feat: "Member Deals", free: "—", plus: "✓" },
-              { feat: "Support", free: "Standard", plus: "Priority" },
+              { feat: "Service Fee", basic: "Free", chat: "Free", pro: "Free" },
+              { feat: "Priority Delivery", basic: "✓", chat: "✓", pro: "✓" },
+              { feat: "48h Guarantee", basic: "✓", chat: "✓", pro: "✓" },
+              { feat: "Member Deals", basic: "✓", chat: "✓", pro: "✓" },
+              { feat: "Lock & Unlock", basic: "—", chat: "✓", pro: "✓" },
+              { feat: "Ride Discounts", basic: "—", chat: "—", pro: "10%" },
+              { feat: "VIP Support", basic: "—", chat: "—", pro: "✓" },
+              { feat: "Monthly Perks", basic: "—", chat: "—", pro: "✓" },
             ].map((row, i) => (
-              <div key={row.feat} className={`grid grid-cols-3 px-4 py-2.5 ${i < 5 ? "border-b border-border/10" : ""}`}>
-                <span className="text-[11px] text-foreground/90 font-medium">{row.feat}</span>
-                <span className="text-[11px] text-muted-foreground text-center">{row.free}</span>
-                <span className="text-[11px] text-amber-600 font-bold text-center">{row.plus}</span>
+              <div key={row.feat} className={`grid grid-cols-[1fr_50px_50px_50px] px-3 py-2.5 ${i < 7 ? "border-b border-border/10" : ""}`}>
+                <span className="text-[10px] text-foreground/90 font-medium">{row.feat}</span>
+                <span className="text-[10px] text-muted-foreground text-center">{row.basic}</span>
+                <span className="text-[10px] text-amber-600 font-bold text-center">{row.chat}</span>
+                <span className="text-[10px] text-purple-600 font-bold text-center">{row.pro}</span>
               </div>
             ))}
           </div>
