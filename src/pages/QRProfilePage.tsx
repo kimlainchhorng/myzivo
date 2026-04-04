@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
