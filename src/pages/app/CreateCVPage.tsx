@@ -553,7 +553,7 @@ const CreateCVPage = () => {
     <AppLayout title="Create CV" hideHeader>
       <div className="flex flex-col px-4 pt-3 pb-28">
         {/* Header */}
-        <div className="flex items-center gap-2.5 mb-3">
+        <div className="flex items-center gap-2.5 mb-1">
           <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center touch-manipulation active:scale-90 transition-transform">
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -569,6 +569,25 @@ const CreateCVPage = () => {
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             {saving ? "Saving…" : "Save"}
           </button>
+        </div>
+
+        {/* Auto-save indicator */}
+        <div className="flex items-center justify-end gap-1.5 mb-3 px-1">
+          {autoSaveStatus === "saving" && (
+            <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
+              <Loader2 className="w-2.5 h-2.5 animate-spin" /> Auto-saving…
+            </span>
+          )}
+          {autoSaveStatus === "saved" && (
+            <span className="flex items-center gap-1 text-[9px] text-primary">
+              <Check className="w-2.5 h-2.5" /> Auto-saved
+            </span>
+          )}
+          {autoSaveStatus === "idle" && lastSaved && (
+            <span className="text-[9px] text-muted-foreground/50">
+              Last saved {lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
         </div>
 
         {/* Completion bar */}
