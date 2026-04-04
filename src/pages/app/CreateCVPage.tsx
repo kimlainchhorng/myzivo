@@ -125,7 +125,7 @@ const CreateCVPage = () => {
               <label className={labelClass}>Full Name *</label>
               <input className={inputClass} placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className={labelClass}>Email</label>
                 <input className={inputClass} placeholder="email@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
