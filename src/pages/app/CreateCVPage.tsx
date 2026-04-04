@@ -1,6 +1,6 @@
 /**
  * CreateCVPage — Professional CV/Resume builder with Supabase persistence.
- * Features: Photo upload preview, month/year date rollers, polished mobile UI.
+ * Features: Photo cloud upload, templates, PDF download, share link, auto-save, progress tips.
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -10,12 +10,20 @@ import {
   Wrench, Globe, Award, Save, FileText, Link2, Linkedin,
   Heart, Users, ChevronDown, ChevronUp, Loader2, Check,
   Star, MapPin, Mail, Phone, Eye, Camera, Image as ImageIcon,
+  Download, Share2, Copy, Lightbulb, Palette,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/components/app/AppLayout";
 import { toast } from "sonner";
+
+const CV_TEMPLATES = [
+  { id: "classic", name: "Classic", desc: "Two-column professional" },
+  { id: "modern", name: "Modern", desc: "Bold header design" },
+  { id: "minimal", name: "Minimal", desc: "Clean & simple" },
+] as const;
+type TemplateId = typeof CV_TEMPLATES[number]["id"];
 
 /* ── Types ────────────────────────────────────────── */
 interface WorkExperience {
