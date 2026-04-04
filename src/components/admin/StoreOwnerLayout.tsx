@@ -47,6 +47,10 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     { id: "payroll", label: "Payroll", icon: Wallet },
     { id: "employee-schedule", label: "Schedule", icon: Calendar },
     { id: "time-clock", label: "Time Clock", icon: Clock },
+    { id: "attendance", label: "Attendance & Leave", icon: CalendarCheck },
+    { id: "training", label: "Training & Onboarding", icon: GraduationCap },
+    { id: "performance", label: "Performance Reviews", icon: Star },
+    { id: "documents", label: "Documents & Files", icon: FolderOpen },
     { id: "employee-rules", label: "Employee Rules", icon: Shield },
   ];
 
