@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,12 +9,24 @@ import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function QRProfilePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("my-code");
-  const profileUrl = `${window.location.origin}/profile`;
   const [copied, setCopied] = useState(false);
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; share_code: string | null } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("full_name, avatar_url, share_code").eq("id", user.id).maybeSingle()
+      .then(({ data }) => { if (data) setProfile(data as any); });
+  }, [user]);
+
+  const profileUrl = profile?.share_code ? getProfileShareUrl(profile.share_code) : `${getPublicOrigin()}/profile`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(profileUrl);
@@ -46,7 +58,7 @@ export default function QRProfilePage() {
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-5 w-5" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/more")}><ArrowLeft className="h-5 w-5" /></Button>
           <QrCode className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-bold text-foreground">QR Profile</h1>
         </div>
@@ -81,7 +93,8 @@ export default function QRProfilePage() {
                   <Download className="h-4 w-4" /> Save QR
                 </Button>
                 <Button variant="outline" className="flex-1 gap-2" onClick={() => {
-                  if (navigator.share) navigator.share({ title: "My Profile", url: profileUrl });
+                  const name = profile?.full_name || user?.email?.split("@")[0] || "User";
+                  if (navigator.share) navigator.share({ title: `${name} on ZIVO`, text: `Check out ${name}'s profile on ZIVO`, url: profileUrl });
                   else copyLink();
                 }}>
                   <Share2 className="h-4 w-4" /> Share

@@ -7,6 +7,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import {
   ArrowLeft, Loader2, User, ImageIcon, Film, Grid3X3, UserPlus, UserCheck, UserX,
@@ -49,7 +50,7 @@ export default function PublicProfilePage() {
       if (!userId) return null;
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, cover_url, cover_position, profile_visibility, is_verified")
+        .select("id, full_name, avatar_url, cover_url, cover_position, profile_visibility, is_verified, share_code")
         .eq("id", userId)
         .single();
       return data;
@@ -197,7 +198,8 @@ export default function PublicProfilePage() {
   }, [queryClient, userId]);
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/user/${userId}`;
+    const shareCode = profile?.share_code || "";
+    const url = shareCode ? getProfileShareUrl(shareCode) : `${getPublicOrigin()}/user/${userId}`;
     if (navigator.share) {
       try { await navigator.share({ title: `${profile?.full_name || "User"} on ZIVO`, url }); } catch {}
     } else {

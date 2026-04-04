@@ -91,8 +91,14 @@ const Index = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const shareCode = params.get("p");
     const error = params.get("error") || hashParams.get("error");
     const errorDesc = params.get("error_description") || hashParams.get("error_description");
+
+    if (shareCode && /^[a-z0-9]{6,32}$/i.test(shareCode)) {
+      navigate(`/p/${shareCode}`, { replace: true });
+      return;
+    }
 
     if (error) {
       let message = "Authentication failed. Please try again.";
@@ -106,7 +112,7 @@ const Index = () => {
       toast({ title: "Sign-up blocked", description: message, variant: "destructive" });
       window.history.replaceState({}, "", window.location.pathname);
     }
-  }, []);
+  }, [navigate]);
 
   if (isMobile) {
     if (user) {

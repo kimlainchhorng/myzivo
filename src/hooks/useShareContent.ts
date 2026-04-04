@@ -3,6 +3,7 @@
  */
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 
 interface ShareOptions {
   title: string;
@@ -12,7 +13,6 @@ interface ShareOptions {
 
 export function useShareContent() {
   const share = useCallback(async ({ title, text, url }: ShareOptions) => {
-    // Try native share first
     if (navigator.share) {
       try {
         await navigator.share({ title, text, url });
@@ -25,7 +25,6 @@ export function useShareContent() {
       }
     }
 
-    // Fallback: copy to clipboard
     try {
       await navigator.clipboard.writeText(url);
       toast.success("Link copied to clipboard");
@@ -40,15 +39,15 @@ export function useShareContent() {
     return share({
       title: caption || "Check out this post on ZIVO",
       text: caption || "See this on ZIVO",
-      url: `${window.location.origin}/reels?post=${postId}`,
+      url: `${getPublicOrigin()}/reels?post=${postId}`,
     });
   }, [share]);
 
-  const shareProfile = useCallback((userId: string, name?: string) => {
+  const shareProfile = useCallback((shareCode: string, name?: string) => {
     return share({
       title: `${name || "User"} on ZIVO`,
       text: `Check out ${name || "this user"}'s profile on ZIVO`,
-      url: `${window.location.origin}/profile/${userId}`,
+      url: getProfileShareUrl(shareCode),
     });
   }, [share]);
 
@@ -56,7 +55,7 @@ export function useShareContent() {
     return share({
       title: `Flight from ${origin} to ${destination}`,
       text: `Check out this flight deal on ZIVO`,
-      url: `${window.location.origin}/flights/${origin}-to-${destination}`,
+      url: `${getPublicOrigin()}/flights/${origin}-to-${destination}`,
     });
   }, [share]);
 
