@@ -50,6 +50,13 @@ const AppMore = lazy(() => import("./pages/app/AppMore"));
 const PersonalDashboard = lazy(() => import("./pages/app/PersonalDashboard"));
 const ShopDashboard = lazy(() => import("./pages/app/ShopDashboard"));
 const CreateCVPage = lazy(() => import("./pages/app/CreateCVPage"));
+const PersonalEmployeesPage = lazy(() => import("./pages/app/personal/PersonalEmployeesPage"));
+const PersonalSchedulePage = lazy(() => import("./pages/app/personal/PersonalSchedulePage"));
+const PersonalTimesheetPage = lazy(() => import("./pages/app/personal/PersonalTimesheetPage"));
+const PersonalPayStubsPage = lazy(() => import("./pages/app/personal/PersonalPayStubsPage"));
+const PersonalNotificationsPage = lazy(() => import("./pages/app/personal/PersonalNotificationsPage"));
+const PersonalHelpPage = lazy(() => import("./pages/app/personal/PersonalHelpPage"));
+const PersonalSettingsPage = lazy(() => import("./pages/app/personal/PersonalSettingsPage"));
 const ServicesPage = lazy(() => import("./pages/app/ServicesPage"));
 const UnifiedDashboard = lazy(() => import("./pages/app/UnifiedDashboard"));
 const MyTripsPage = lazy(() => import("./pages/app/MyTripsPage"));
@@ -466,6 +473,13 @@ const App = () => (
                 <Route path="/more" element={<ProtectedRoute><AppMore /></ProtectedRoute>} />
                 <Route path="/personal-dashboard" element={<ProtectedRoute><PersonalDashboard /></ProtectedRoute>} />
                 <Route path="/personal/create-cv" element={<ProtectedRoute><CreateCVPage /></ProtectedRoute>} />
+                <Route path="/personal/employees" element={<ProtectedRoute><PersonalEmployeesPage /></ProtectedRoute>} />
+                <Route path="/personal/schedule" element={<ProtectedRoute><PersonalSchedulePage /></ProtectedRoute>} />
+                <Route path="/personal/timesheet" element={<ProtectedRoute><PersonalTimesheetPage /></ProtectedRoute>} />
+                <Route path="/personal/pay-stubs" element={<ProtectedRoute><PersonalPayStubsPage /></ProtectedRoute>} />
+                <Route path="/personal/notifications" element={<ProtectedRoute><PersonalNotificationsPage /></ProtectedRoute>} />
+                <Route path="/personal/help" element={<ProtectedRoute><PersonalHelpPage /></ProtectedRoute>} />
+                <Route path="/personal/settings" element={<ProtectedRoute><PersonalSettingsPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard" element={<ProtectedRoute><ShopDashboard /></ProtectedRoute>} />
                 <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
 
