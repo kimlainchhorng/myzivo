@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,6 +88,8 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [composerType, setComposerType] = useState<"photo" | "reel" | null>(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [profileName, setProfileName] = useState<string | null>(null);
+  const [profileShareCode, setProfileShareCode] = useState<string | null>(null);
+  const [profilePublicId, setProfilePublicId] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<FeedItem | null>(null);
   const [showPostMenu, setShowPostMenu] = useState(false);
   const [editingCaption, setEditingCaption] = useState(false);
@@ -127,7 +129,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         try {
           const { data: profileData } = await supabase
             .from("profiles")
-            .select("avatar_url, full_name")
+            .select("id, user_id, avatar_url, full_name, share_code")
             .eq("user_id", profileOwnerId)
             .maybeSingle();
           if (alive && profileData?.avatar_url) {
@@ -135,6 +137,10 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
           }
           if (alive && profileData?.full_name) {
             setProfileName(profileData.full_name);
+          }
+          if (alive) {
+            setProfileShareCode((profileData as any)?.share_code || null);
+            setProfilePublicId((profileData as any)?.id || profileOwnerId || null);
           }
         } catch {}
       }
@@ -236,6 +242,17 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       alive = false;
     };
   }, [profileOwnerId]);
+
+  const buildPublicPostShareUrl = useCallback((postId: string) => {
+    if (profileShareCode) {
+      return `${getProfileShareUrl(profileShareCode)}&post=${encodeURIComponent(postId)}`;
+    }
+
+    const publicId = profilePublicId || profileOwnerId || user?.id || "";
+    if (!publicId) return getPublicOrigin();
+
+    return `${getPublicOrigin()}/user/${encodeURIComponent(publicId)}?post=${encodeURIComponent(postId)}`;
+  }, [profileOwnerId, profilePublicId, profileShareCode, user?.id]);
 
   useEffect(() => {
     let alive = true;
@@ -835,7 +852,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   </button>
                   <button
                     onClick={() => {
-                      const url = `${getPublicOrigin()}/profile?post=${selectedPost.id}`;
+                      const url = buildPublicPostShareUrl(selectedPost.id);
                       navigator.clipboard.writeText(url).then(() => toast.success("Link copied!")).catch(() => toast.info("Could not copy link"));
                       setShowPostMenu(false);
                     }}
@@ -912,7 +929,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         <AnimatePresence>
           {sharePostId && (
             <UnifiedShareSheet
-              shareUrl={`${getPublicOrigin()}/profile?post=${sharePostId}`}
+              shareUrl={buildPublicPostShareUrl(sharePostId)}
               shareText={feed.find((p) => p.id === sharePostId)?.caption || "Check out this post!"}
               shareMediaUrl={feed.find((p) => p.id === sharePostId)?.url || undefined}
               shareMediaType={feed.find((p) => p.id === sharePostId)?.type === "reel" ? "video" : "image"}
