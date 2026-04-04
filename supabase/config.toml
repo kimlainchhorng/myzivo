@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.profile-og]
 verify_jwt = false
+
+[functions.post-og]
+verify_jwt = false
