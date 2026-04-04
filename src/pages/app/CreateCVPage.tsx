@@ -210,7 +210,7 @@ const CreateCVPage = () => {
                   <label className={labelClass}>School / University</label>
                   <input className={inputClass} placeholder="University Name" value={edu.school} onChange={(e) => updateEducation(edu.id, "school", e.target.value)} />
                 </div>
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className={labelClass}>Degree</label>
                     <input className={inputClass} placeholder="Bachelor's" value={edu.degree} onChange={(e) => updateEducation(edu.id, "degree", e.target.value)} />
