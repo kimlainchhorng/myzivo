@@ -631,24 +631,91 @@ export default function PublicProfilePage() {
                 </div>
               )}
 
-              {/* Post detail overlay */}
+              {/* Post detail overlay — Instagram-style */}
               <AnimatePresence>
                 {selectedPost && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/95 flex flex-col" onClick={() => setSelectedPost(null)}>
-                    <div className="flex items-center gap-3 px-4 py-3 safe-area-top" onClick={(e) => e.stopPropagation()}>
-                      <button onClick={() => setSelectedPost(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center"><ArrowLeft className="h-5 w-5 text-white" /></button>
-                      <Avatar className="h-8 w-8"><AvatarImage src={profile.avatar_url || undefined} /><AvatarFallback className="text-xs">{initials}</AvatarFallback></Avatar>
-                      <div className="flex-1"><p className="text-sm font-semibold text-white">{profile.full_name}</p><p className="text-[10px] text-white/60">{formatTime(selectedPost.created_at)}</p></div>
-                      <button onClick={(e) => { e.stopPropagation(); handleShare(); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center"><Share2 className="h-5 w-5 text-white" /></button>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 bg-background flex flex-col overflow-y-auto"
+                  >
+                    {/* Header bar */}
+                    <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-2 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top">
+                      <button onClick={() => setSelectedPost(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2">
+                        <ArrowLeft className="h-5 w-5 text-foreground" />
+                      </button>
+                      <Avatar className="h-9 w-9 ring-2 ring-primary/20">
+                        <AvatarImage src={profile.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs bg-muted">{initials}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground truncate">{profile.full_name}</p>
+                        <p className="text-[11px] text-muted-foreground">{formatTime(selectedPost.created_at)}</p>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); handleShare(); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                        <Share2 className="h-5 w-5 text-foreground" />
+                      </button>
                     </div>
-                    <div className="flex-1 flex items-center justify-center px-2" onClick={(e) => e.stopPropagation()}>
+
+                    {/* Media — fills width, auto height */}
+                    <div className="w-full bg-black">
                       {selectedPost.media_type === "video" ? (
-                        <video src={selectedPost.media_url} controls autoPlay className="max-h-[70vh] w-full object-contain rounded-lg" />
+                        <video
+                          src={selectedPost.media_url}
+                          controls
+                          autoPlay
+                          playsInline
+                          className="w-full max-h-[75vh] object-contain"
+                        />
                       ) : (
-                        <img src={selectedPost.media_url} alt="" className="max-h-[70vh] w-full object-contain rounded-lg" />
+                        <img
+                          src={selectedPost.media_url}
+                          alt=""
+                          className="w-full max-h-[75vh] object-contain"
+                        />
                       )}
                     </div>
-                    {selectedPost.caption && <p className="px-4 py-3 text-white text-sm" onClick={(e) => e.stopPropagation()}>{selectedPost.caption}</p>}
+
+                    {/* Action bar */}
+                    <div className="flex items-center gap-5 px-4 py-3 border-b border-border">
+                      <button
+                        onClick={() => {
+                          const isLiked = likedPosts.has(selectedPost.id);
+                          setLikedPosts(prev => {
+                            const next = new Set(prev);
+                            isLiked ? next.delete(selectedPost.id) : next.add(selectedPost.id);
+                            return next;
+                          });
+                        }}
+                        className="flex items-center gap-1.5"
+                      >
+                        <Heart className={`h-6 w-6 transition-colors ${likedPosts.has(selectedPost.id) ? "fill-red-500 text-red-500" : "text-foreground"}`} />
+                        <span className="text-sm font-medium text-foreground">{(selectedPost.likes_count || 0) + (likedPosts.has(selectedPost.id) ? 1 : 0)}</span>
+                      </button>
+                      <button onClick={() => setCommentPost(selectedPost)} className="flex items-center gap-1.5">
+                        <MessageCircle className="h-6 w-6 text-foreground" />
+                        <span className="text-sm font-medium text-foreground">{selectedPost.comments_count || 0}</span>
+                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <Eye className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">{selectedPost.views_count || 0}</span>
+                      </div>
+                      <div className="flex-1" />
+                      <button onClick={(e) => { e.stopPropagation(); handleShare(); }}>
+                        <Share2 className="h-5 w-5 text-foreground" />
+                      </button>
+                    </div>
+
+                    {/* Caption */}
+                    {selectedPost.caption && (
+                      <div className="px-4 py-3">
+                        <p className="text-sm text-foreground leading-relaxed">
+                          <span className="font-bold mr-1.5">{profile.full_name}</span>
+                          {selectedPost.caption}
+                        </p>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
