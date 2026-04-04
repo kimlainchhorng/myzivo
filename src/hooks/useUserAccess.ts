@@ -33,7 +33,7 @@ export const useUserAccess = (userId: string | undefined) => {
       }
 
       // Check all access in parallel
-      const [adminRole, driver, restaurant, carRentals, hotel] = await Promise.all([
+      const [adminRole, driver, restaurant, carRentals, hotel, storeProfile] = await Promise.all([
         supabase
           .from("user_roles")
           .select("role")
@@ -56,6 +56,11 @@ export const useUserAccess = (userId: string | undefined) => {
           .eq("owner_id", userId),
         supabase
           .from("hotels")
+          .select("id")
+          .eq("owner_id", userId)
+          .maybeSingle(),
+        supabase
+          .from("store_profiles")
           .select("id")
           .eq("owner_id", userId)
           .maybeSingle(),
