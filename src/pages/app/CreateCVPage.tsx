@@ -125,7 +125,7 @@ function PhotoUpload({ photo, onPhotoChange }: { photo: string | null; onPhotoCh
   );
 }
 
-/* ── CV Preview Modal ─────────────────────────────── */
+/* ── CV Preview Modal — Two-column professional layout ── */
 function CVPreviewModal({ open, onClose, data }: { open: boolean; onClose: () => void; data: any }) {
   if (!open) return null;
 
@@ -141,7 +141,7 @@ function CVPreviewModal({ open, onClose, data }: { open: boolean; onClose: () =>
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3"
+      className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-2"
       onClick={onClose}
     >
       <motion.div
@@ -150,202 +150,231 @@ function CVPreviewModal({ open, onClose, data }: { open: boolean; onClose: () =>
         exit={{ scale: 0.9, opacity: 0 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
         onClick={e => e.stopPropagation()}
-        className="w-full max-w-md bg-white rounded-2xl max-h-[90dvh] overflow-hidden flex flex-col shadow-2xl"
+        className="w-full max-w-md bg-white rounded-2xl max-h-[92dvh] overflow-hidden flex flex-col shadow-2xl"
       >
-        {/* Sticky header */}
-        <div className="bg-white border-b border-border/20 px-5 py-3.5 flex items-center justify-between shrink-0">
+        {/* Sticky close bar */}
+        <div className="bg-white/95 backdrop-blur-sm border-b border-border/20 px-4 py-2.5 flex items-center justify-between shrink-0 z-10">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-primary" />
-            <h2 className="font-bold text-sm text-foreground">CV Preview</h2>
+            <h2 className="font-bold text-[13px] text-foreground">CV Preview</h2>
           </div>
           <button onClick={onClose} className="text-[11px] font-semibold text-primary px-3 py-1.5 rounded-lg bg-primary/10 active:scale-95 transition-transform">
             Close
           </button>
         </div>
 
-        {/* CV Document */}
+        {/* CV Document — Two-column layout */}
         <div className="overflow-y-auto flex-1">
-          <div className="bg-white">
-            {/* Hero header with gradient */}
-            <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 px-5 py-6 text-center">
-              {data.photo && (
-                <div className="mb-3">
-                  <img src={data.photo} alt="" className="w-20 h-20 rounded-full object-cover mx-auto border-3 border-white shadow-lg" />
-                </div>
-              )}
-              <h1 className="text-xl font-bold text-foreground tracking-tight">{data.fullName || "Your Name"}</h1>
-              {data.jobTitle && (
-                <p className="text-[13px] text-primary font-semibold mt-0.5">{data.jobTitle}</p>
-              )}
-              <div className="flex flex-wrap justify-center gap-3 mt-3 text-[11px] text-muted-foreground">
-                {data.email && (
-                  <span className="flex items-center gap-1">
-                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center"><Mail className="w-2.5 h-2.5 text-primary" /></div>
-                    {data.email}
-                  </span>
-                )}
-                {data.phone && (
-                  <span className="flex items-center gap-1">
-                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center"><Phone className="w-2.5 h-2.5 text-primary" /></div>
-                    {data.phone}
-                  </span>
-                )}
-                {data.location && (
-                  <span className="flex items-center gap-1">
-                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center"><MapPin className="w-2.5 h-2.5 text-primary" /></div>
-                    {data.location}
-                  </span>
+          <div className="flex min-h-full">
+            {/* ── LEFT SIDEBAR ── */}
+            <div className="w-[38%] shrink-0 bg-[hsl(var(--accent)/0.15)] p-4 space-y-5">
+              {/* Photo */}
+              <div className="flex justify-center">
+                {data.photo ? (
+                  <img src={data.photo} alt="" className="w-24 h-24 rounded-full object-cover border-[3px] border-white shadow-md" />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-muted/40 border-[3px] border-white shadow-md flex items-center justify-center">
+                    <User className="w-10 h-10 text-muted-foreground/30" />
+                  </div>
                 )}
               </div>
-              {(data.linkedin || data.website || data.portfolio) && (
-                <div className="flex flex-wrap justify-center gap-3 mt-2 text-[10px] text-muted-foreground/70">
-                  {data.linkedin && <span className="flex items-center gap-1"><Linkedin className="w-2.5 h-2.5" />{data.linkedin}</span>}
-                  {data.website && <span className="flex items-center gap-1"><Globe className="w-2.5 h-2.5" />{data.website}</span>}
-                  {data.portfolio && <span className="flex items-center gap-1"><Link2 className="w-2.5 h-2.5" />{data.portfolio}</span>}
-                </div>
-              )}
-            </div>
 
-            <div className="px-5 py-4 space-y-5">
-              {/* Summary */}
-              {data.summary && (
-                <CVSection icon={User} title="Professional Summary">
-                  <p className="text-[12px] text-muted-foreground leading-relaxed">{data.summary}</p>
-                </CVSection>
-              )}
-
-              {/* Experience */}
-              {hasExperience && (
-                <CVSection icon={Briefcase} title="Work Experience">
-                  <div className="space-y-3">
-                    {data.experiences.filter((e: any) => e.position).map((e: any, i: number) => (
-                      <div key={i} className="relative pl-4 border-l-2 border-primary/20">
-                        <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-primary" />
-                        <p className="text-[13px] font-bold text-foreground">{e.position}</p>
-                        <p className="text-[11px] font-medium text-primary/80">{e.company}</p>
-                        {e.startDate && (
-                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                            {formatDate(e.startDate)} — {e.current ? "Present" : formatDate(e.endDate)}
-                          </p>
-                        )}
-                        {e.description && <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">{e.description}</p>}
-                      </div>
-                    ))}
+              {/* Contact */}
+              <div className="space-y-2.5">
+                {data.phone && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center shrink-0">
+                      <Phone className="w-2.5 h-2.5 text-foreground/70" />
+                    </div>
+                    <span className="text-[10px] text-foreground/80 leading-tight break-all">{data.phone}</span>
                   </div>
-                </CVSection>
-              )}
-
-              {/* Education */}
-              {hasEducation && (
-                <CVSection icon={GraduationCap} title="Education">
-                  <div className="space-y-3">
-                    {data.educations.filter((e: any) => e.school).map((e: any, i: number) => (
-                      <div key={i} className="relative pl-4 border-l-2 border-primary/20">
-                        <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-primary" />
-                        <p className="text-[13px] font-bold text-foreground">{e.degree}{e.field ? ` in ${e.field}` : ""}</p>
-                        <p className="text-[11px] font-medium text-primary/80">{e.school}</p>
-                        {e.startDate && (
-                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                            {formatDate(e.startDate)} — {formatDate(e.endDate)}
-                            {e.gpa ? ` • GPA: ${e.gpa}` : ""}
-                          </p>
-                        )}
-                      </div>
-                    ))}
+                )}
+                {data.email && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center shrink-0">
+                      <Mail className="w-2.5 h-2.5 text-foreground/70" />
+                    </div>
+                    <span className="text-[10px] text-foreground/80 leading-tight break-all">{data.email}</span>
                   </div>
-                </CVSection>
-              )}
+                )}
+                {data.website && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center shrink-0">
+                      <Globe className="w-2.5 h-2.5 text-foreground/70" />
+                    </div>
+                    <span className="text-[10px] text-foreground/80 leading-tight break-all">{data.website}</span>
+                  </div>
+                )}
+                {data.location && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center shrink-0">
+                      <MapPin className="w-2.5 h-2.5 text-foreground/70" />
+                    </div>
+                    <span className="text-[10px] text-foreground/80 leading-tight">{data.location}</span>
+                  </div>
+                )}
+                {data.linkedin && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center shrink-0">
+                      <Linkedin className="w-2.5 h-2.5 text-foreground/70" />
+                    </div>
+                    <span className="text-[10px] text-foreground/80 leading-tight break-all">{data.linkedin}</span>
+                  </div>
+                )}
+              </div>
 
               {/* Skills */}
               {hasSkills && (
-                <CVSection icon={Wrench} title="Skills">
-                  <div className="flex flex-wrap gap-1.5">
+                <div>
+                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider mb-1.5">Skills</h3>
+                  <div className="w-8 h-[2px] bg-foreground/30 mb-2" />
+                  <ul className="space-y-1.5">
                     {data.skills.filter((s: any) => s.name).map((s: any, i: number) => (
-                      <div key={i} className="px-2.5 py-1 rounded-lg bg-primary/8 border border-primary/15">
-                        <span className="text-[11px] font-semibold text-foreground">{s.name}</span>
-                        <span className="text-[9px] text-muted-foreground ml-1">• {s.level}</span>
-                      </div>
+                      <li key={i} className="flex items-start gap-1.5">
+                        <span className="w-1 h-1 rounded-full bg-foreground/50 mt-1.5 shrink-0" />
+                        <span className="text-[10px] text-foreground/80">{s.name}</span>
+                      </li>
                     ))}
-                  </div>
-                </CVSection>
+                  </ul>
+                </div>
               )}
 
               {/* Languages */}
               {hasLanguages && (
-                <CVSection icon={Globe} title="Languages">
-                  <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider mb-1.5">Languages</h3>
+                  <div className="w-8 h-[2px] bg-foreground/30 mb-2" />
+                  <ul className="space-y-1.5">
                     {data.languages.filter((l: any) => l.name).map((l: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-muted/30 border border-border/20">
-                        <span className="text-[11px] font-semibold text-foreground">{l.name}</span>
-                        <span className="text-[9px] text-primary font-medium">{l.proficiency}</span>
-                      </div>
+                      <li key={i} className="flex items-start gap-1.5">
+                        <span className="w-1 h-1 rounded-full bg-foreground/50 mt-1.5 shrink-0" />
+                        <span className="text-[10px] text-foreground/80">{l.name}</span>
+                      </li>
                     ))}
-                  </div>
-                </CVSection>
+                  </ul>
+                </div>
               )}
 
-              {/* Certifications */}
+              {/* Certifications in sidebar */}
               {hasCerts && (
-                <CVSection icon={Award} title="Certifications">
-                  <div className="space-y-2">
+                <div>
+                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider mb-1.5">Certifications</h3>
+                  <div className="w-8 h-[2px] bg-foreground/30 mb-2" />
+                  <ul className="space-y-1.5">
                     {data.certifications.filter((c: any) => c.name).map((c: any, i: number) => (
-                      <div key={i} className="flex items-start gap-2">
-                        <Award className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                        <div>
-                          <p className="text-[12px] font-bold text-foreground">{c.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{c.issuer}{c.date ? ` • ${formatDate(c.date)}` : ""}</p>
-                        </div>
+                      <li key={i} className="text-[10px] text-foreground/80">
+                        <p className="font-semibold">{c.name}</p>
+                        {c.issuer && <p className="text-foreground/50">{c.issuer}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* ── RIGHT MAIN CONTENT ── */}
+            <div className="flex-1 p-4 space-y-4">
+              {/* Name & Title */}
+              <div>
+                <h1 className="text-[22px] font-extrabold text-foreground tracking-tight leading-tight uppercase">
+                  {data.fullName || "Your Name"}
+                </h1>
+                {data.jobTitle && (
+                  <p className="text-[11px] font-semibold text-foreground/60 uppercase tracking-widest mt-0.5">{data.jobTitle}</p>
+                )}
+              </div>
+
+              {/* Professional Summary */}
+              {data.summary && (
+                <div>
+                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider">Professional Experience</h3>
+                  <div className="w-full h-[2px] bg-foreground/20 mt-1 mb-2" />
+                  <p className="text-[10px] text-foreground/70 leading-relaxed text-justify">{data.summary}</p>
+                </div>
+              )}
+
+              {/* Work Experience */}
+              {hasExperience && (
+                <div>
+                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider">Work Experience</h3>
+                  <div className="w-full h-[2px] bg-foreground/20 mt-1 mb-2" />
+                  <div className="space-y-3">
+                    {data.experiences.filter((e: any) => e.position).map((e: any, i: number) => (
+                      <div key={i}>
+                        <p className="text-[11px] font-bold text-foreground">
+                          {e.company}{e.position ? ` | ${e.position}` : ""}
+                        </p>
+                        {e.startDate && (
+                          <p className="text-[10px] font-semibold text-foreground/50 italic">
+                            {formatDate(e.startDate)} – {e.current ? "Present" : formatDate(e.endDate)}
+                          </p>
+                        )}
+                        {e.description && (
+                          <ul className="mt-1 space-y-0.5">
+                            {e.description.split("\n").filter(Boolean).map((line: string, li: number) => (
+                              <li key={li} className="flex items-start gap-1.5">
+                                <span className="w-1 h-1 rounded-full bg-foreground/40 mt-1.5 shrink-0" />
+                                <span className="text-[10px] text-foreground/70 leading-relaxed">{line}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
                     ))}
                   </div>
-                </CVSection>
+                </div>
+              )}
+
+              {/* Education */}
+              {hasEducation && (
+                <div>
+                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider">Education</h3>
+                  <div className="w-full h-[2px] bg-foreground/20 mt-1 mb-2" />
+                  <div className="space-y-2">
+                    {data.educations.filter((e: any) => e.school).map((e: any, i: number) => (
+                      <div key={i}>
+                        <p className="text-[11px] font-bold text-foreground">
+                          {e.school}{e.startDate ? `, ${formatDate(e.startDate)}–${formatDate(e.endDate)}` : ""}
+                        </p>
+                        <p className="text-[10px] text-foreground/60">
+                          {e.degree}{e.field ? ` in ${e.field}` : ""}
+                          {e.gpa ? ` • GPA: ${e.gpa}` : ""}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {/* References */}
               {hasRefs && (
-                <CVSection icon={Users} title="References">
-                  <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider">References</h3>
+                  <div className="w-full h-[2px] bg-foreground/20 mt-1 mb-2" />
+                  <div className="space-y-1.5">
                     {data.references.filter((r: any) => r.name).map((r: any, i: number) => (
-                      <div key={i} className="p-2 rounded-lg bg-muted/20 border border-border/15">
-                        <p className="text-[11px] font-bold text-foreground">{r.name}</p>
-                        <p className="text-[9px] text-muted-foreground">{r.position}{r.company ? `, ${r.company}` : ""}</p>
-                        {r.phone && <p className="text-[9px] text-muted-foreground/70 mt-0.5">{r.phone}</p>}
+                      <div key={i}>
+                        <p className="text-[10px] font-bold text-foreground">{r.name}</p>
+                        <p className="text-[9px] text-foreground/50">{r.position}{r.company ? `, ${r.company}` : ""}{r.phone ? ` • ${r.phone}` : ""}</p>
                       </div>
                     ))}
                   </div>
-                </CVSection>
+                </div>
               )}
 
               {/* Hobbies */}
               {data.hobbies && (
-                <CVSection icon={Heart} title="Interests">
-                  <p className="text-[11px] text-muted-foreground">{data.hobbies}</p>
-                </CVSection>
+                <div>
+                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider">Interests</h3>
+                  <div className="w-full h-[2px] bg-foreground/20 mt-1 mb-2" />
+                  <p className="text-[10px] text-foreground/70">{data.hobbies}</p>
+                </div>
               )}
-            </div>
-
-            {/* Footer */}
-            <div className="px-5 py-3 border-t border-border/10 text-center">
-              <p className="text-[8px] text-muted-foreground/40 uppercase tracking-widest">Generated with ZIVO</p>
             </div>
           </div>
         </div>
       </motion.div>
     </motion.div>
-  );
-}
-
-function CVSection({ icon: Icon, title, children }: { icon: typeof User; title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="flex items-center gap-1.5 mb-2">
-        <Icon className="w-3.5 h-3.5 text-primary" />
-        <h3 className="text-[12px] font-bold text-primary uppercase tracking-wider">{title}</h3>
-      </div>
-      <div className="border-t border-primary/15 pt-2">
-        {children}
-      </div>
-    </div>
   );
 }
 
