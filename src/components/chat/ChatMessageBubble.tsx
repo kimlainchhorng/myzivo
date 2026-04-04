@@ -4,11 +4,12 @@
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
-import { Trash2, Reply, Check, CheckCheck, Copy, Forward, Pin, Timer, Play, X, Volume2, VolumeX, Heart, MessageCircle, Share2, Pause, ChevronRight } from "lucide-react";
+import { Trash2, Reply, Check, CheckCheck, Copy, Forward, Pin, Timer, Play, X, Volume2, VolumeX, Heart, MessageCircle, Share2, Pause, ChevronRight, Lock, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
 
 const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "🎉", "😍"];
 
@@ -23,6 +24,9 @@ interface ChatMessageBubbleProps {
   videoUrl?: string | null;
   isPinned?: boolean;
   expiresAt?: string | null;
+  messageType?: string;
+  senderId?: string;
+  lockedPriceCents?: number | null;
   onReply: (id: string, message: string, isMe: boolean) => void;
   onDelete: (id: string) => void;
   onForward?: (id: string, message: string) => void;
@@ -30,7 +34,7 @@ interface ChatMessageBubbleProps {
 }
 
 export default function ChatMessageBubble({
-  id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt,
+  id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt, messageType, senderId, lockedPriceCents,
   onReply, onDelete, onForward, onPin,
 }: ChatMessageBubbleProps) {
   const { user } = useAuth();
@@ -38,12 +42,76 @@ export default function ChatMessageBubble({
   const [showReactions, setShowReactions] = useState(false);
   const [showDeleteSub, setShowDeleteSub] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const isLockedType = messageType === "locked_image" || messageType === "locked_video";
+  const [isLocked, setIsLocked] = useState(isLockedType && !isMe);
+  const [unlockLoading, setUnlockLoading] = useState(false);
+  const unlockPrice = lockedPriceCents && lockedPriceCents > 0 ? lockedPriceCents : 99;
+  const unlockPriceLabel = `$${(unlockPrice / 100).toFixed(2)}`;
   const [reactions, setReactions] = useState<{ emoji: string; count: number; hasMyReaction: boolean }[]>([]);
   const [openDown, setOpenDown] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPress = useRef(false);
   const hasMoved = useRef(false);
   const bubbleRef = useRef<HTMLDivElement>(null);
+
+  // Check if already unlocked
+  useEffect(() => {
+    if (!isLockedType || isMe || !id || id.startsWith("opt-")) return;
+    const checkUnlock = async () => {
+      try {
+        const { data } = await supabase.functions.invoke("verify-media-unlock", {
+          body: { message_id: id },
+        });
+        if (data?.unlocked) setIsLocked(false);
+      } catch {}
+    };
+    checkUnlock();
+  }, [id, isLockedType, isMe]);
+
+  // Unlock payment handler — uses in-app browser on native, redirect on web
+  const handleUnlockPayment = useCallback(async () => {
+    if (unlockLoading) return;
+    setUnlockLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("unlock-media-checkout", {
+        body: { message_id: id, seller_id: senderId || "", amount_cents: unlockPrice },
+      });
+      if (error) throw error;
+      if (!data?.url) throw new Error("No checkout URL");
+
+      if (Capacitor.isNativePlatform()) {
+        // Native: open in-app browser, then verify on close
+        const { Browser } = await import("@capacitor/browser");
+        const verifyOnClose = async () => {
+          // Small delay to let Stripe process
+          await new Promise((r) => setTimeout(r, 1500));
+          try {
+            const { data: vData } = await supabase.functions.invoke("verify-media-unlock", {
+              body: { message_id: id },
+            });
+            if (vData?.unlocked) {
+              setIsLocked(false);
+              toast.success("Media unlocked! 🔓");
+            } else {
+              toast.info("Payment processing — media will unlock shortly");
+            }
+          } catch {}
+          setUnlockLoading(false);
+        };
+        await Browser.addListener("browserFinished", () => {
+          verifyOnClose();
+          Browser.removeAllListeners();
+        });
+        await Browser.open({ url: data.url });
+      } else {
+        // Web: redirect in same tab — auto-verify happens on /chat?unlocked= redirect
+        window.location.href = data.url;
+      }
+    } catch {
+      toast.error("Payment failed to start");
+      setUnlockLoading(false);
+    }
+  }, [id, senderId, unlockPrice, unlockLoading]);
 
   // Load reactions
   useEffect(() => {
@@ -175,57 +243,125 @@ export default function ChatMessageBubble({
           </div>
         )}
 
-        {/* Video — compact reel-style thumbnail */}
+        {/* Video — compact reel-style thumbnail (normal or locked) */}
         {videoUrl && (
           <div
-            onClick={(e) => { e.stopPropagation(); if (!didLongPress.current) setShowVideoPlayer(true); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!didLongPress.current && !isLocked) setShowVideoPlayer(true);
+            }}
             className={`overflow-hidden mb-1 relative cursor-pointer w-[180px] ${isMe ? "ml-auto" : ""}`}
           >
             <div className={`rounded-2xl overflow-hidden relative bg-muted ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
-              {/* Use video with #t=0.1 to force first frame thumbnail */}
               <video
                 src={`${videoUrl}#t=0.1`}
-                className="w-full aspect-[4/5] object-cover"
+                className={`w-full aspect-[4/5] object-cover transition-all duration-300 ${isLocked ? "blur-xl scale-105" : ""}`}
                 playsInline
                 preload="auto"
                 muted
                 crossOrigin="anonymous"
                 style={{ pointerEvents: "none" }}
                 onLoadedData={(e) => {
-                  // Seek to 0.1s to ensure a frame is rendered as thumbnail
                   const v = e.currentTarget;
                   if (v.readyState >= 2) v.currentTime = 0.1;
                 }}
               />
-              {/* Subtle gradient overlay for text readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-              
-              {/* Centered play icon */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-10 w-10 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-                  <Play className="h-4.5 w-4.5 text-foreground ml-0.5" fill="currentColor" />
+              {/* Locked overlay for video */}
+              {isLocked && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-2xl">
+                  <div className="h-14 w-14 rounded-full bg-background/90 flex items-center justify-center shadow-lg mb-2">
+                    <Lock className="h-6 w-6 text-foreground" />
+                  </div>
+                  <p className="text-white text-xs font-semibold mb-2 drop-shadow">Locked Video</p>
+                  <button
+                    disabled={unlockLoading}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleUnlockPayment();
+                    }}
+                    className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-1.5"
+                  >
+                    {unlockLoading ? (
+                      <span className="animate-spin h-3.5 w-3.5 border-2 border-primary-foreground border-t-transparent rounded-full" />
+                    ) : (
+                      <DollarSign className="h-3.5 w-3.5" />
+                    )}
+                    Unlock · {unlockPriceLabel}
+                  </button>
                 </div>
-              </div>
-
-              {/* Bottom info bar */}
-              <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2 flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <svg viewBox="0 0 10 10" className="w-2 h-2"><circle cx="5" cy="5" r="4" fill="#ef4444" /></svg>
-                  <span className="text-[10px] font-bold text-white tracking-wide">Video</span>
+              )}
+              {/* Normal video overlay */}
+              {!isLocked && (
+                <>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                      <Play className="h-4.5 w-4.5 text-foreground ml-0.5" fill="currentColor" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <svg viewBox="0 0 10 10" className="w-2 h-2"><circle cx="5" cy="5" r="4" fill="#ef4444" /></svg>
+                      <span className="text-[10px] font-bold text-white tracking-wide">Video</span>
+                    </div>
+                    <div className="flex items-center gap-1 bg-white/15 rounded-full px-2 py-0.5">
+                      <Play className="h-2.5 w-2.5 text-white" fill="white" />
+                      <span className="text-[9px] font-semibold text-white">Play</span>
+                    </div>
+                  </div>
+                </>
+              )}
+              {/* Lock badge for sender */}
+              {isLockedType && isMe && (
+                <div className="absolute top-2 right-2 bg-black/50 rounded-full px-2 py-0.5 flex items-center gap-1">
+                  <Lock className="h-3 w-3 text-white" />
+                 <span className="text-[10px] text-white font-medium">Locked · {unlockPriceLabel}</span>
                 </div>
-                <div className="flex items-center gap-1 bg-white/15 rounded-full px-2 py-0.5">
-                  <Play className="h-2.5 w-2.5 text-white" fill="white" />
-                  <span className="text-[9px] font-semibold text-white">Play</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* Image */}
+        {/* Image — normal or locked */}
         {imageUrl && !videoUrl && (
-          <div className={`rounded-2xl overflow-hidden mb-1 shadow-sm ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
-            <img src={imageUrl} alt="" className="max-w-full max-h-60 object-cover rounded-2xl" loading="lazy" />
+          <div className={`rounded-2xl overflow-hidden mb-1 shadow-sm relative ${isMe ? "rounded-br-[6px]" : "rounded-bl-[6px]"}`}>
+            <img
+              src={imageUrl}
+              alt=""
+              className={`max-w-full max-h-60 object-cover rounded-2xl transition-all duration-300 ${isLocked ? "blur-xl scale-105" : ""}`}
+              loading="lazy"
+            />
+            {/* Locked overlay */}
+            {isLocked && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 rounded-2xl">
+                <div className="h-14 w-14 rounded-full bg-background/90 flex items-center justify-center shadow-lg mb-2">
+                  <Lock className="h-6 w-6 text-foreground" />
+                </div>
+                <p className="text-white text-xs font-semibold mb-2 drop-shadow">Locked Photo</p>
+                <button
+                  disabled={unlockLoading}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleUnlockPayment();
+                  }}
+                  className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-1.5"
+                >
+                  {unlockLoading ? (
+                    <span className="animate-spin h-3.5 w-3.5 border-2 border-primary-foreground border-t-transparent rounded-full" />
+                  ) : (
+                    <DollarSign className="h-3.5 w-3.5" />
+                  )}
+                  Unlock · {unlockPriceLabel}
+                </button>
+              </div>
+            )}
+            {/* Lock badge for sender */}
+            {isLockedType && isMe && (
+              <div className="absolute top-2 right-2 bg-black/50 rounded-full px-2 py-0.5 flex items-center gap-1">
+                <Lock className="h-3 w-3 text-white" />
+                <span className="text-[10px] text-white font-medium">Locked · {unlockPriceLabel}</span>
+              </div>
+            )}
           </div>
         )}
 

@@ -8,6 +8,7 @@ import UnifiedShareSheet from "@/components/shared/ShareSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import TipSheet from "@/components/social/TipSheet";
 import {
   Loader2, Heart, MessageCircle, Share2, Eye, Bookmark,
   MoreHorizontal, Play, Volume2, VolumeX, Image as ImageIcon,
@@ -15,7 +16,7 @@ import {
   Globe, Users, Lock, FolderPlus, MapPin, Hash, ChevronDown,
   Flag, Bell, BellOff, Link2, EyeOff, AlertTriangle, ShieldAlert,
   UserX, Ban, Skull, HelpCircle, ChevronLeft, MessageSquareOff,
-  MessageSquare, UserCheck, Settings2, Search,
+  MessageSquare, UserCheck, Settings2, Search, Trash2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -25,6 +26,10 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
+import CommentsSheet from "@/components/social/CommentsSheet";
+import FeedStoryRing from "@/components/social/FeedStoryRing";
+import SuggestedUsersCarousel from "@/components/social/SuggestedUsersCarousel";
+import CreatePostModal from "@/components/social/CreatePostModal";
 
 interface FeedItem {
   id: string;
@@ -34,6 +39,7 @@ interface FeedItem {
   caption: string | null;
   likes_count: number;
   comments_count: number;
+  shares_count: number;
   views_count: number;
   author_name: string;
   author_avatar: string | null;
@@ -44,6 +50,10 @@ interface FeedItem {
   shared_from_post_id?: string | null;
   shared_from_user_id?: string | null;
   shared_from_user_name?: string | null;
+  shared_from_user_avatar?: string | null;
+  shared_from_caption?: string | null;
+  shared_from_source?: "user" | "store" | null;
+  shared_from_store_slug?: string | null;
   // Interaction controls from profile
   comment_control?: "everyone" | "friends" | "off";
   hide_like_counts?: boolean;
@@ -68,32 +78,32 @@ export default function ReelsFeedPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [feedFilter, setFeedFilter] = useState<"all" | "photos" | "videos" | "text">("all");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
 
   // Handle share-to-profile deep link
   useEffect(() => {
-    const state = location.state as { shareToProfile?: boolean; shareUrl?: string; shareText?: string; shareMediaUrl?: string; shareMediaType?: "image" | "video"; sharePostId?: string; sharePostAuthorId?: string; sharePostAuthorName?: string } | null;
+    const state = location.state as { shareToProfile?: boolean; openCreate?: boolean; shareUrl?: string; shareText?: string; shareMediaUrl?: string; shareMediaType?: "image" | "video"; sharePostId?: string; sharePostAuthorId?: string; sharePostAuthorName?: string } | null;
     if (state?.shareToProfile && userId) {
       setShareForPost({ shareUrl: state.shareUrl || "", shareText: state.shareText || "", shareMediaUrl: state.shareMediaUrl, shareMediaType: state.shareMediaType, sharePostId: state.sharePostId, sharePostAuthorId: state.sharePostAuthorId, sharePostAuthorName: state.sharePostAuthorName });
+      setShowCreate(true);
+      window.history.replaceState({}, document.title);
+    } else if (state?.openCreate && userId) {
       setShowCreate(true);
       window.history.replaceState({}, document.title);
     }
   }, [location.state, userId]);
 
-  // Listen for share-to-profile custom event (when already on /reels)
   useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail && userId) {
-        setShareForPost({ shareUrl: detail.shareUrl || "", shareText: detail.shareText || "", shareMediaUrl: detail.shareMediaUrl, shareMediaType: detail.shareMediaType, sharePostId: detail.sharePostId, sharePostAuthorId: detail.sharePostAuthorId, sharePostAuthorName: detail.sharePostAuthorName });
-        setShowCreate(true);
-      }
+    const refreshFeed = () => {
+      queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
     };
-    window.addEventListener("zivo-share-to-profile", handler);
-    return () => window.removeEventListener("zivo-share-to-profile", handler);
-  }, [userId]);
+
+    window.addEventListener("zivo-feed-refresh", refreshFeed);
+    return () => window.removeEventListener("zivo-feed-refresh", refreshFeed);
+  }, [queryClient]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -120,7 +130,7 @@ export default function ReelsFeedPage() {
     searchTimerRef.current = setTimeout(async () => {
       try {
         const words = q.trim().toLowerCase().split(/\s+/);
-        let query = supabase.from("profiles").select("id, full_name, avatar_url").limit(20);
+        let query = supabase.from("public_profiles" as any).select("id, full_name, avatar_url").limit(20);
         words.forEach((w) => { query = query.ilike("full_name", `%${w}%`); });
         const { data } = await query;
         setSearchResults(data || []);
@@ -141,7 +151,7 @@ export default function ReelsFeedPage() {
       // Fetch store posts
       const { data: storePosts } = await supabase
         .from("store_posts")
-        .select("id, media_urls, media_type, caption, likes_count, comments_count, view_count, created_at, store_id")
+        .select("id, media_urls, media_type, caption, likes_count, comments_count, shares_count, view_count, created_at, store_id")
         .eq("is_published", true)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -167,6 +177,7 @@ export default function ReelsFeedPage() {
             caption: post.caption,
             likes_count: post.likes_count || 0,
             comments_count: post.comments_count || 0,
+            shares_count: post.shares_count || 0,
             views_count: post.view_count || 0,
             author_name: store?.name || "Store",
             author_avatar: store?.logo_url || null,
@@ -180,7 +191,7 @@ export default function ReelsFeedPage() {
       try {
         const { data: userPosts } = await (supabase as any)
           .from("user_posts")
-          .select("id, media_url, media_type, caption, likes_count, comments_count, views_count, created_at, user_id, shared_from_post_id, shared_from_user_id")
+          .select("id, media_url, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, user_id, shared_from_post_id, shared_from_user_id")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
           .limit(50);
@@ -188,23 +199,77 @@ export default function ReelsFeedPage() {
         if (userPosts?.length) {
           const userIds = [...new Set(userPosts.map((p: any) => p.user_id))] as string[];
           const sharedFromUserIds = [...new Set(userPosts.filter((p: any) => p.shared_from_user_id).map((p: any) => p.shared_from_user_id))] as string[];
-          const allProfileIds = [...new Set([...userIds, ...sharedFromUserIds])];
+          const sharedFromPostIds = [...new Set(userPosts.filter((p: any) => p.shared_from_post_id).map((p: any) => p.shared_from_post_id))] as string[];
+
+          let originalUserPosts: Array<{ id: string; user_id: string; caption: string | null }> = [];
+          let originalStorePosts: Array<{ id: string; store_id: string; caption: string | null }> = [];
+
+          if (sharedFromPostIds.length) {
+            const [{ data: sourceUserPosts }, { data: sourceStorePosts }] = await Promise.all([
+              (supabase as any).from("user_posts").select("id, user_id, caption").in("id", sharedFromPostIds),
+              supabase.from("store_posts").select("id, store_id, caption").in("id", sharedFromPostIds),
+            ]);
+
+            originalUserPosts = (sourceUserPosts ?? []) as Array<{ id: string; user_id: string; caption: string | null }>;
+            originalStorePosts = (sourceStorePosts ?? []) as Array<{ id: string; store_id: string; caption: string | null }>;
+          }
+
+          const originalUserIds = [...new Set(originalUserPosts.map((p) => p.user_id))] as string[];
+          const allProfileIds = [...new Set([...userIds, ...sharedFromUserIds, ...originalUserIds])];
           const { data: profiles } = await supabase
             .from("profiles")
-            .select("id, first_name, last_name, avatar_url, comment_control, hide_like_counts, allow_sharing, allow_mentions")
-            .in("id", allProfileIds);
-          const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+            .select("user_id, full_name, avatar_url, comment_control, hide_like_counts, allow_sharing, allow_mentions")
+            .in("user_id", allProfileIds);
+
+          let sharedStores: Array<{ id: string; name: string; logo_url: string | null; slug: string }> = [];
+          const sharedStoreIds = [...new Set(originalStorePosts.map((p) => p.store_id))] as string[];
+          if (sharedStoreIds.length) {
+            const { data } = await supabase
+              .from("store_profiles")
+              .select("id, name, logo_url, slug")
+              .in("id", sharedStoreIds);
+            sharedStores = (data ?? []) as Array<{ id: string; name: string; logo_url: string | null; slug: string }>;
+          }
+
+          const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+          const originalUserPostMap = new Map(originalUserPosts.map((post) => [post.id, post]));
+          const originalStorePostMap = new Map(originalStorePosts.map((post) => [post.id, post]));
+          const sharedStoreMap = new Map(sharedStores.map((store) => [store.id, store]));
 
           for (const post of userPosts as any[]) {
             const profile = profileMap.get(post.user_id);
             if (!post.media_url && !post.caption?.trim()) continue;
             const normalizedMediaType = normalizeUserPostMediaType(post.media_type);
-            
-            // Resolve shared-from user name
+
+            const originalUserPost = post.shared_from_post_id ? originalUserPostMap.get(post.shared_from_post_id) : null;
+            const originalStorePost = post.shared_from_post_id ? originalStorePostMap.get(post.shared_from_post_id) : null;
+
+            let sharedFromSource: "user" | "store" | null = null;
+            let sharedFromUserId: string | null = post.shared_from_user_id || null;
             let sharedFromUserName: string | null = null;
-            if (post.shared_from_user_id) {
+            let sharedFromUserAvatar: string | null = null;
+            let sharedFromCaption: string | null = null;
+            let sharedFromStoreSlug: string | null = null;
+
+            if (originalStorePost) {
+              const sharedStore = sharedStoreMap.get(originalStorePost.store_id);
+              sharedFromSource = "store";
+              sharedFromUserName = sharedStore?.name?.trim() || "Store";
+              sharedFromUserAvatar = sharedStore?.logo_url || null;
+              sharedFromCaption = originalStorePost.caption || null;
+              sharedFromStoreSlug = sharedStore?.slug || null;
+            } else if (originalUserPost) {
+              const sharedProfile = profileMap.get(originalUserPost.user_id);
+              sharedFromSource = "user";
+              sharedFromUserId = originalUserPost.user_id;
+              sharedFromUserName = sharedProfile?.full_name?.trim() || "Someone";
+              sharedFromUserAvatar = sharedProfile?.avatar_url || null;
+              sharedFromCaption = originalUserPost.caption || null;
+            } else if (post.shared_from_user_id) {
               const sharedProfile = profileMap.get(post.shared_from_user_id);
-              sharedFromUserName = sharedProfile ? `${sharedProfile.first_name || ""} ${sharedProfile.last_name || ""}`.trim() || "Someone" : "Someone";
+              sharedFromSource = "user";
+              sharedFromUserName = sharedProfile?.full_name?.trim() || "Someone";
+              sharedFromUserAvatar = sharedProfile?.avatar_url || null;
             }
 
             allItems.push({
@@ -215,14 +280,19 @@ export default function ReelsFeedPage() {
               caption: post.caption,
               likes_count: post.likes_count || 0,
               comments_count: post.comments_count || 0,
+              shares_count: post.shares_count || 0,
               views_count: post.views_count || 0,
-              author_name: profile ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "User" : "User",
+              author_name: profile?.full_name?.trim() || "User",
               author_avatar: profile?.avatar_url || null,
               author_id: post.user_id,
               created_at: post.created_at,
               shared_from_post_id: post.shared_from_post_id || null,
-              shared_from_user_id: post.shared_from_user_id || null,
+              shared_from_user_id: sharedFromUserId,
               shared_from_user_name: sharedFromUserName,
+              shared_from_user_avatar: sharedFromUserAvatar,
+              shared_from_caption: sharedFromCaption,
+              shared_from_source: sharedFromSource,
+              shared_from_store_slug: sharedFromStoreSlug,
               comment_control: profile?.comment_control || "everyone",
               hide_like_counts: profile?.hide_like_counts || false,
               allow_sharing: profile?.allow_sharing !== false,
@@ -254,15 +324,6 @@ export default function ReelsFeedPage() {
           >
             <Search className="h-4.5 w-4.5 text-foreground" />
           </button>
-          {userId && (
-            <button
-              onClick={() => setShowCreate(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Post
-            </button>
-          )}
         </div>
       </div>
 
@@ -337,13 +398,14 @@ export default function ReelsFeedPage() {
         )}
       </AnimatePresence>
 
+
       {/* Create post prompt (logged in) */}
       {userId && (
         <button
           onClick={() => setShowCreate(true)}
-          className="w-full flex items-center gap-3 px-4 py-3 border-b border-border/20 bg-card hover:bg-muted/30 transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-border/10 bg-card hover:bg-muted/20 transition-colors"
         >
-          <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
+          <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border-2 border-primary/20 shrink-0">
             {userProfile?.avatar ? (
               <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -352,17 +414,28 @@ export default function ReelsFeedPage() {
               </div>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">Share a moment...</p>
-          <div className="ml-auto flex gap-2">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <ImageIcon className="h-4 w-4 text-primary" />
+          <p className="text-sm text-muted-foreground flex-1 text-left">What's on your mind?</p>
+          <div className="flex gap-1.5">
+            <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+              <ImageIcon className="h-3.5 w-3.5 text-emerald-600" />
             </div>
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <Camera className="h-4 w-4 text-primary" />
+            <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+              <Film className="h-3.5 w-3.5 text-blue-600" />
+            </div>
+            <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+              <Camera className="h-3.5 w-3.5 text-orange-600" />
             </div>
           </div>
         </button>
       )}
+
+
+      {/* Story Rings */}
+      <FeedStoryRing />
+
+      {/* Suggested Users */}
+      <SuggestedUsersCarousel />
+
 
       {/* Posts */}
       {isLoading ? (
@@ -370,14 +443,31 @@ export default function ReelsFeedPage() {
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-60 text-muted-foreground/60">
-          <ImageIcon className="h-10 w-10 mb-2" />
-          <p className="text-sm">No posts yet</p>
-          <p className="text-xs mt-1">Be the first to share something!</p>
+        <div className="flex flex-col items-center justify-center h-60 text-center px-6">
+          <div className="text-5xl mb-3">📸</div>
+          <p className="text-base font-bold text-foreground mb-1">No posts yet</p>
+          <p className="text-sm text-muted-foreground mb-4">Be the first to share something amazing!</p>
+          {userId && (
+            <button
+              onClick={() => setShowCreate(true)}
+              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold active:scale-95 transition-transform shadow-lg shadow-primary/20"
+            >
+              Create Post
+            </button>
+          )}
         </div>
-      ) : (
+      ) : (() => {
+        const filteredItems = feedFilter === "all" ? items
+          : feedFilter === "photos" ? items.filter(i => i.media_type === "image" && i.media_urls.length > 0)
+          : feedFilter === "videos" ? items.filter(i => i.media_type === "video")
+          : items.filter(i => !i.media_urls.length || !i.media_urls[0]);
+        return filteredItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
+            <p className="text-sm">No {feedFilter} posts found</p>
+          </div>
+        ) : (
         <div className="divide-y divide-border/20">
-          {items.map((item, idx) => (
+          {filteredItems.map((item, idx) => (
             <FeedCard key={item.id} item={item} currentUserId={userId} onOpenFullscreen={() => {
               if (item.media_type === 'video') {
                 setReelsStartIndex(idx);
@@ -387,7 +477,8 @@ export default function ReelsFeedPage() {
             }} />
           ))}
         </div>
-      )}
+        );
+      })()}
 
       {/* Create Post Modal */}
       <AnimatePresence>
@@ -474,330 +565,7 @@ export default function ReelsFeedPage() {
   );
 }
 
-/* ── Create Post Modal ──────────────────────────────────────────── */
-
-function CreatePostModal({
-  userId,
-  userProfile,
-  onClose,
-  onCreated,
-  initialCaption,
-  sharedMediaUrl,
-  sharedMediaType,
-  sharedPostId,
-  sharedPostAuthorId,
-  sharedPostAuthorName,
-}: {
-  userId: string;
-  userProfile: { name: string; avatar: string | null } | null;
-  onClose: () => void;
-  onCreated: () => void;
-  initialCaption?: string;
-  sharedMediaUrl?: string;
-  sharedMediaType?: "image" | "video";
-  sharedPostId?: string;
-  sharedPostAuthorId?: string;
-  sharedPostAuthorName?: string;
-}) {
-  const [caption, setCaption] = useState(initialCaption || "");
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(sharedMediaUrl || null);
-  const [mediaType, setMediaType] = useState<"image" | "video">(sharedMediaType || "image");
-  const [selectedType, setSelectedType] = useState<"Photo" | "Video" | "Reel" | "Live" | null>(null);
-  const [visibility, setVisibility] = useState<"everyone" | "friends" | "onlyme">("everyone");
-  const [showVisibilityMenu, setShowVisibilityMenu] = useState(false);
-  const [album, setAlbum] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setFile(f);
-    setMediaType(f.type.startsWith("video") ? "video" : "image");
-    const url = URL.createObjectURL(f);
-    setPreview(url);
-  };
-
-  const hasSharedLink = !!initialCaption || !!sharedMediaUrl;
-
-  const handlePost = async () => {
-    if (!file && !hasSharedLink) {
-      toast.error("Please select a photo or video");
-      return;
-    }
-    if (!file && !caption.trim()) {
-      toast.error("Please write something to share");
-      return;
-    }
-    setUploading(true);
-    try {
-      let mediaUrl: string | null = null;
-      let finalMediaType = mediaType;
-
-      if (file) {
-        // Upload to user-posts bucket
-        const ext = file.name.split(".").pop() || "jpg";
-        const path = `${userId}/${Date.now()}.${ext}`;
-        const { error: uploadErr } = await supabase.storage
-          .from("user-posts")
-          .upload(path, file, { contentType: file.type });
-        if (uploadErr) throw uploadErr;
-
-        const { data: urlData } = supabase.storage.from("user-posts").getPublicUrl(path);
-        mediaUrl = urlData.publicUrl;
-      } else if (sharedMediaUrl) {
-        // Re-use the original media from the shared post
-        mediaUrl = sharedMediaUrl;
-        finalMediaType = sharedMediaType || "image";
-      } else {
-        // Text-only post (shared link) - use image type with no media
-        finalMediaType = "image";
-      }
-
-      // Insert into user_posts
-      const insertData: any = {
-        user_id: userId,
-        media_type: finalMediaType,
-        media_url: mediaUrl,
-        caption: caption.trim() || null,
-        is_published: true,
-      };
-      if (sharedPostId) insertData.shared_from_post_id = sharedPostId;
-      if (sharedPostAuthorId) insertData.shared_from_user_id = sharedPostAuthorId;
-
-      const { error: insertErr } = await (supabase as any).from("user_posts").insert(insertData);
-      if (insertErr) throw insertErr;
-
-      toast.success("Post shared! 🎉");
-      onCreated();
-    } catch (err: any) {
-      console.error("[CreatePost]", err);
-      toast.error(err.message || "Failed to create post");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] bg-black/50 flex items-end sm:items-center justify-center"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <motion.div
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        exit={{ y: 100 }}
-        className="w-full max-w-lg bg-card rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-auto pb-20 z-[60]"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
-          <button onClick={onClose} className="text-muted-foreground">
-            <XIcon className="h-5 w-5" />
-          </button>
-          <h2 className="text-sm font-bold text-foreground">Create Post</h2>
-           <button
-            onClick={handlePost}
-            disabled={(!file && !hasSharedLink && !caption.trim()) || uploading}
-            className={cn(
-              "px-4 py-1.5 rounded-full text-xs font-bold transition-all",
-              (file || (hasSharedLink && caption.trim())) && !uploading
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground"
-            )}
-          >
-            {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Share"}
-          </button>
-        </div>
-
-        {/* Author */}
-        <div className="flex items-center gap-3 px-4 py-3">
-          <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border border-border/30">
-            {userProfile?.avatar ? (
-              <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-sm font-bold">
-                {userProfile?.name?.[0] || "?"}
-              </div>
-            )}
-          </div>
-          <p className="text-sm font-semibold text-foreground">{userProfile?.name || "You"}</p>
-        </div>
-
-        {/* Privacy & extras row */}
-        <div className="px-4 pb-2 flex items-center gap-2 flex-wrap">
-          {/* Visibility dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setShowVisibilityMenu(!showVisibilityMenu)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border/30 text-xs font-medium text-foreground min-h-[36px]"
-            >
-              {visibility === "everyone" && <Globe className="h-3.5 w-3.5 text-primary" />}
-              {visibility === "friends" && <Users className="h-3.5 w-3.5 text-primary" />}
-              {visibility === "onlyme" && <Lock className="h-3.5 w-3.5 text-primary" />}
-              <span>{visibility === "everyone" ? "Everyone" : visibility === "friends" ? "Friends" : "Only me"}</span>
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
-            </button>
-            <AnimatePresence>
-              {showVisibilityMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  className="absolute top-full left-0 mt-1 w-40 bg-card border border-border/40 rounded-xl shadow-lg z-10 overflow-hidden"
-                >
-                  {([
-                    { value: "everyone" as const, label: "Everyone", icon: Globe },
-                    { value: "friends" as const, label: "Friends", icon: Users },
-                    { value: "onlyme" as const, label: "Only me", icon: Lock },
-                  ]).map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => { setVisibility(opt.value); setShowVisibilityMenu(false); }}
-                      className={cn(
-                        "w-full flex items-center gap-2 px-3 py-2.5 text-xs font-medium transition-colors",
-                        visibility === opt.value ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/40"
-                      )}
-                    >
-                      <opt.icon className="h-4 w-4" />
-                      {opt.label}
-                      {visibility === opt.value && <span className="ml-auto text-primary">✓</span>}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Album button */}
-          <button
-            onClick={() => {
-              const name = prompt("Album name:");
-              if (name?.trim()) setAlbum(name.trim());
-            }}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
-              album
-                ? "bg-primary/10 text-primary border-primary/30"
-                : "bg-muted/40 text-muted-foreground border-border/30 hover:bg-muted/50"
-            )}
-          >
-            <FolderPlus className="h-3.5 w-3.5" />
-            {album || "Album"}
-          </button>
-
-          {/* Location tag */}
-          <button
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border/30 text-xs font-medium text-muted-foreground min-h-[36px] hover:bg-muted/50"
-            onClick={() => toast.info("Location tagging coming soon!")}
-          >
-            <MapPin className="h-3.5 w-3.5" />
-            Location
-          </button>
-
-          {/* Tag people */}
-          <button
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border/30 text-xs font-medium text-muted-foreground min-h-[36px] hover:bg-muted/50"
-            onClick={() => toast.info("Tag people coming soon!")}
-          >
-            <Hash className="h-3.5 w-3.5" />
-            Tag
-          </button>
-        </div>
-
-        {/* Caption */}
-        <div className="px-4">
-          <textarea
-            placeholder="Write a caption..."
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-            maxLength={2200}
-            rows={3}
-            className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
-          />
-        </div>
-
-        {/* Media preview */}
-        {preview ? (
-          <div className="relative mx-4 mb-3 rounded-xl overflow-hidden bg-black aspect-square">
-            {mediaType === "video" ? (
-              <video src={preview} className="h-full w-full object-cover" controls muted />
-            ) : (
-              <img src={preview} alt="" className="h-full w-full object-cover" />
-            )}
-            {/* Only show remove button for user-picked files, not for shared media */}
-            {file && (
-              <button
-                onClick={() => { setFile(null); setPreview(null); }}
-                className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center"
-              >
-                <XIcon className="h-4 w-4 text-white" />
-              </button>
-            )}
-            {sharedMediaUrl && !file && (
-              <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white uppercase tracking-wider flex items-center gap-1">
-                <Share2 className="h-3 w-3" /> Shared
-              </div>
-            )}
-            {selectedType && (
-              <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white uppercase tracking-wider">
-                {selectedType}
-              </div>
-            )}
-          </div>
-        ) : null}
-
-        {/* Media type selector — bottom toolbar */}
-        <div className="px-4 py-3 border-t border-border/30 flex items-center gap-3">
-          {[
-            { label: "Photo", icon: ImageIcon, accept: "image/*" },
-            { label: "Video", icon: Play, accept: "video/*" },
-            { label: "Reel", icon: Film, accept: "video/*" },
-            { label: "Live", icon: Radio, accept: "" },
-          ].map((opt) => (
-            <button
-              key={opt.label}
-              onClick={() => {
-                if (opt.label === "Live") {
-                  toast.info("Live is coming soon!");
-                  return;
-                }
-                setSelectedType(opt.label as any);
-                if (fileRef.current) {
-                  fileRef.current.accept = opt.accept;
-                  fileRef.current.click();
-                }
-              }}
-              className="flex flex-col items-center gap-1 min-w-[48px] min-h-[48px] justify-center"
-            >
-              <opt.icon className={cn(
-                "h-5 w-5 transition-colors",
-                selectedType === opt.label ? "text-primary" : "text-muted-foreground"
-              )} />
-              <span className={cn(
-                "text-[10px] font-medium transition-colors",
-                selectedType === opt.label ? "text-primary" : "text-muted-foreground"
-              )}>
-                {opt.label}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*,video/*"
-          className="hidden"
-          onChange={handleFile}
-        />
-      </motion.div>
-    </motion.div>
-  );
-}
+/* CreatePostModal is now imported from @/components/social/CreatePostModal */
 
 /* ── Reel Slide (TikTok-style fullscreen video) ─────────────────── */
 
@@ -813,10 +581,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   const [isFollowing, setIsFollowing] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
-  const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
-  const commentInputRef = useRef<HTMLInputElement>(null);
+   const [showComments, setShowComments] = useState(false);
 
   const mediaUrl = item.media_urls[0];
 
@@ -867,15 +632,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     }
   };
 
-  const submitComment = () => {
-    if (!commentText.trim()) return;
-    setComments((prev) => [
-      ...prev,
-      { id: Date.now().toString(), text: commentText.trim(), author: "You", time: "just now" },
-    ]);
-    setCommentText("");
-    toast.success("Comment added!");
-  };
+  // Comments are now handled by CommentsSheet
 
   const timeAgo = (() => {
     try {
@@ -991,8 +748,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center"
         >
           <MessageCircle className="h-7 w-7 text-white drop-shadow-lg" />
-          {(item.comments_count + comments.length) > 0 && (
-            <span className="text-white text-[11px] font-semibold drop-shadow">{item.comments_count + comments.length}</span>
+          {item.comments_count > 0 && (
+            <span className="text-white text-[11px] font-semibold drop-shadow">{item.comments_count}</span>
           )}
         </button>
 
@@ -1099,77 +856,15 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       </div>
 
       {/* Comments Bottom Sheet */}
-      <AnimatePresence>
-        {showComments && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[80] flex items-end"
-            onClick={() => setShowComments(false)}
-          >
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full bg-background rounded-t-2xl max-h-[60vh] flex flex-col"
-            >
-              <div className="flex justify-center py-3">
-                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
-              </div>
-              <div className="flex items-center justify-between px-4 pb-2">
-                <h3 className="text-sm font-bold text-foreground">Comments</h3>
-                <button onClick={() => setShowComments(false)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-                  <XIcon className="h-5 w-5 text-muted-foreground" />
-                </button>
-              </div>
-
-              {/* Comments list */}
-              <div className="flex-1 overflow-y-auto px-4 pb-2 space-y-3">
-                {comments.length === 0 && item.comments_count === 0 && (
-                  <p className="text-center text-sm text-muted-foreground py-8">No comments yet. Be the first!</p>
-                )}
-                {comments.map((c) => (
-                  <div key={c.id} className="flex items-start gap-2.5">
-                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground shrink-0 mt-0.5">
-                      {c.author[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] text-foreground">
-                        <span className="font-semibold mr-1.5">{c.author}</span>
-                        {c.text}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{c.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Comment input */}
-              <div className="flex items-center gap-2 px-4 py-3 border-t border-border/30"
-                style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 0.75rem), 0.75rem)' }}
-              >
-                <input
-                  ref={commentInputRef}
-                  type="text"
-                  placeholder="Add a comment..."
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && submitComment()}
-                  className="flex-1 text-[13px] bg-muted/50 text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-h-[44px] rounded-full px-4"
-                />
-                {commentText.trim() && (
-                  <button onClick={submitComment} className="text-primary font-semibold min-h-[44px] min-w-[44px] flex items-center justify-center">
-                    <Send className="h-5 w-5" />
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <CommentsSheet
+        open={showComments}
+        onClose={() => setShowComments(false)}
+        postId={item.id}
+        postSource={item.source}
+        currentUserId={currentUserId}
+        commentsCount={item.comments_count}
+        dark
+      />
 
       {/* Share Sheet */}
       <AnimatePresence>
@@ -1193,6 +888,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
 function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void; autoPlayVideo?: boolean }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [muted, setMuted] = useState(true);
@@ -1208,11 +904,17 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   const [notificationsOn, setNotificationsOn] = useState(false);
   const [commentSetting, setCommentSetting] = useState<"everyone" | "friends" | "off">(item.comment_control || "everyone");
   const [showCommentSettings, setShowCommentSettings] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState<{ id: string; text: string; author: string; time: string }[]>([]);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
+  const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
+  const [showEditCaption, setShowEditCaption] = useState(false);
+  const [editCaptionText, setEditCaptionText] = useState(item.caption || "");
+  const [editSaving, setEditSaving] = useState(false);
+  const [tipTarget, setTipTarget] = useState<{ id: string; name: string } | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastTapRef = useRef(0);
 
   const isOwner = currentUserId && item.author_id === currentUserId;
 
@@ -1280,6 +982,25 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
     }
   };
 
+  // Double-tap to like
+  const handleDoubleTap = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      if (!liked) handleLike();
+      setShowDoubleTapHeart(true);
+      setTimeout(() => setShowDoubleTapHeart(false), 800);
+    }
+    lastTapRef.current = now;
+  };
+
+  // Emoji reactions
+  const REACTIONS = ["❤️", "😂", "😮", "😢", "🔥", "👏"];
+  const handleReaction = (emoji: string) => {
+    setSelectedReaction(selectedReaction === emoji ? null : emoji);
+    setShowReactionPicker(false);
+    toast.success(`Reacted with ${emoji}`);
+  };
+
   const handleShare = () => {
     setShowShareSheet(true);
   };
@@ -1306,7 +1027,6 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
     { label: "Reddit", color: "#FF4500", svg: "M12 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 01-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 01.042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 014.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 01.14-.197.35.35 0 01.238-.042l2.906.617a1.214 1.214 0 011.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 00-.231.094.33.33 0 000 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 000-.462.342.342 0 00-.462 0c-.545.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 00-.205-.095z", url: `https://reddit.com/submit?url=${shareEncodedUrl}&title=${shareText}` },
   ];
 
-  
 
   const handleCopyLink = () => {
     try {
@@ -1325,13 +1045,44 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
     setShowShareSheet(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!currentUserId) {
       toast.error("Please sign in to bookmark posts");
       return;
     }
-    setSaved(!saved);
-    toast.success(saved ? "Removed from saved" : "Saved!");
+    const newSaved = !saved;
+    setSaved(newSaved);
+    if (newSaved) {
+      await (supabase as any).from("bookmarks").insert({
+        user_id: currentUserId,
+        item_id: item.id,
+        item_type: "post",
+        title: item.caption || `Post by ${item.author_name}`,
+        collection_name: "Posts",
+      });
+      toast.success("Saved to bookmarks");
+    } else {
+      await (supabase as any).from("bookmarks").delete().eq("user_id", currentUserId).eq("item_id", item.id);
+      toast.success("Removed from bookmarks");
+    }
+  };
+
+  const handleEditPost = async () => {
+    if (!currentUserId || !isOwner) return;
+    setEditSaving(true);
+    try {
+      const realId = item.id.replace(/^u-/, "");
+      const table = item.source === "store" ? "store_posts" : "user_posts";
+      const { error } = await (supabase as any).from(table).update({ caption: editCaptionText }).eq("id", realId);
+      if (error) throw error;
+      item.caption = editCaptionText;
+      setShowEditCaption(false);
+      toast.success("Post updated!");
+      queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+    } catch {
+      toast.error("Failed to update post");
+    }
+    setEditSaving(false);
   };
 
   const handleComment = () => {
@@ -1346,15 +1097,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
     setShowComments(!showComments);
   };
 
-  const submitComment = () => {
-    if (!commentText.trim()) return;
-    setComments((prev) => [
-      ...prev,
-      { id: Date.now().toString(), text: commentText.trim(), author: "You", time: "just now" },
-    ]);
-    setCommentText("");
-    toast.success("Comment added!");
-  };
+  // Comments are now handled by CommentsSheet
 
   const mediaUrl = item.media_urls[currentMedia] || item.media_urls[0];
   const hasMedia = Boolean(mediaUrl);
@@ -1363,153 +1106,354 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
 
   return (
     <div className="bg-card">
-      {/* Shared indicator — Facebook style */}
-      {isSharedPost && (
-        <div className="flex items-center gap-2 px-3 pt-2.5 pb-0.5">
-          <Share2 className="h-3.5 w-3.5 text-muted-foreground" />
-          <p className="text-[12px] text-muted-foreground">
-            <span className="font-semibold text-foreground">{item.author_name}</span>
-            {" shared "}
-            {item.shared_from_user_name ? (
-              <><span className="font-semibold text-foreground">{item.shared_from_user_name}</span>'s post</>
-            ) : (
-              "a post"
-            )}
-          </p>
-        </div>
-      )}
-      {/* Author header */}
-      <div className="flex items-center">
-      <button
-        type="button"
-        onClick={() => {
-          if (item.source === "store" && item.store_slug) {
-            navigate(`/grocery/shop/${item.store_slug}`);
-          } else if (item.author_id) {
-            navigate(`/user/${item.author_id}`);
-          }
-        }}
-        className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0 active:opacity-70"
-      >
-        <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
-          {item.author_avatar ? (
-            <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-xs font-bold">
-              {item.author_name[0]}
+      {isSharedPost ? (
+        /* ── Facebook-style shared post layout ────────────────── */
+        <>
+          {/* Sharer header */}
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={() => item.author_id && navigate(`/user/${item.author_id}`)}
+              className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0 active:opacity-70"
+            >
+              <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
+                {item.author_avatar ? (
+                  <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-xs font-bold">
+                    {item.author_name[0]}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
+                  <span className="text-[10px] text-muted-foreground">·</span>
+                  <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
+              className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
+            >
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Sharer's own caption (not the original post's caption) */}
+          {item.caption && item.caption !== item.shared_from_caption && (
+            <div className="px-3 pb-2">
+              <p className="text-[13px] text-foreground">{item.caption}</p>
             </div>
           )}
-        </div>
-        <div className="flex-1 min-w-0 text-left">
-          <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
-          <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
-        </div>
-      </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
-          className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
-        >
-          <MoreHorizontal className="h-5 w-5" />
-        </button>
-      </div>
 
-      {/* Media */}
-      <div ref={containerRef} className={cn("relative w-full", hasMedia ? "aspect-square bg-black" : "")}>
-        {hasMedia ? (
-          item.media_type === "video" ? (
-            <>
-              <video
-                ref={videoRef}
-                src={mediaUrl}
-                muted={muted}
-                loop
-                playsInline
-                preload="metadata"
-                onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
-                className="h-full w-full object-cover cursor-pointer"
-              />
-              {!isPlaying && (
-                <button onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
-                  <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
+          {/* Embedded original post card */}
+          <div className="mx-3 mb-2 border border-border/50 rounded-2xl overflow-hidden bg-card shadow-sm">
+            {/* Original author header */}
+            <div className="flex items-center px-3 py-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  if (item.shared_from_source === "store" && item.shared_from_store_slug) {
+                    navigate(`/grocery/shop/${item.shared_from_store_slug}`);
+                  } else if (item.shared_from_user_id) {
+                    navigate(`/user/${item.shared_from_user_id}`);
+                  }
+                }}
+                className="flex items-center gap-2.5 flex-1 min-w-0 active:opacity-70"
+              >
+                <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
+                  {item.shared_from_user_avatar ? (
+                    <img src={item.shared_from_user_avatar} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-xs font-bold">
+                      {(item.shared_from_user_name || (item.shared_from_source === "store" ? "S" : "?"))[0]}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-[13px] font-semibold text-foreground truncate">
+                    {item.shared_from_user_name || (item.shared_from_source === "store" ? "Store" : "Someone")}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                  </div>
+                </div>
+              </button>
+              {/* Follow button */}
+              {item.shared_from_user_id && item.shared_from_user_id !== currentUserId && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toast.success(`Following ${item.shared_from_user_name || "user"}`);
+                  }}
+                  className="text-[12px] font-semibold text-primary px-2 py-1 active:opacity-70"
+                >
+                  Follow
                 </button>
               )}
-              <button
-                onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
-                className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
-              >
-                {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
-              </button>
-            </>
-          ) : (
-            <img
-              src={mediaUrl}
-              alt={item.caption || "Shared post"}
-              className="h-full w-full object-cover cursor-pointer"
-              loading="lazy"
-              onClick={() => onOpenFullscreen?.()}
-            />
-          )
-        ) : null}
-
-        {/* Multi-image indicator */}
-        {hasMedia && item.media_urls.length > 1 && (
-          <>
-            <div className="absolute top-3 right-3 bg-black/50 px-2 py-0.5 rounded-full text-[10px] text-white font-medium">
-              {currentMedia + 1}/{item.media_urls.length}
             </div>
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
-              {item.media_urls.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentMedia(i)}
-                  className={cn("h-1.5 rounded-full transition-all", i === currentMedia ? "w-4 bg-primary" : "w-1.5 bg-white/60")}
+
+            {/* Original post caption */}
+            {item.shared_from_caption && (
+              <div className="px-3 pb-2">
+                <p className="text-[13px] text-foreground">{item.shared_from_caption}</p>
+              </div>
+            )}
+
+            {/* Original post media */}
+            <div ref={containerRef} className={cn("relative w-full", hasMedia ? "aspect-square bg-black" : "")}>
+              {hasMedia ? (
+                item.media_type === "video" ? (
+                  <>
+                    <video
+                      ref={videoRef}
+                      src={mediaUrl}
+                      muted={muted}
+                      loop
+                      playsInline
+                      preload="metadata"
+                      onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
+                      className="h-full w-full object-cover cursor-pointer"
+                    />
+                    {!isPlaying && (
+                      <button onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
+                        <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
+                      className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
+                    >
+                      {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
+                    </button>
+                  </>
+                ) : (
+                  <img
+                    src={mediaUrl}
+                    alt={item.caption || "Shared post"}
+                    className="h-full w-full object-cover cursor-pointer"
+                    loading="lazy"
+                    onClick={() => onOpenFullscreen?.()}
+                  />
+                )
+              ) : null}
+
+              {/* Multi-image indicator */}
+              {hasMedia && item.media_urls.length > 1 && (
+                <>
+                  <div className="absolute top-3 right-3 bg-black/50 px-2 py-0.5 rounded-full text-[10px] text-white font-medium">
+                    {currentMedia + 1}/{item.media_urls.length}
+                  </div>
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
+                    {item.media_urls.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentMedia(i)}
+                        className={cn("h-1.5 rounded-full transition-all", i === currentMedia ? "w-4 bg-primary" : "w-1.5 bg-white/60")}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
+        /* ── Normal post layout ────────────────────────────────── */
+        <>
+          {/* Author header */}
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={() => {
+                if (item.source === "store" && item.store_slug) {
+                  navigate(`/grocery/shop/${item.store_slug}`);
+                } else if (item.author_id) {
+                  navigate(`/user/${item.author_id}`);
+                }
+              }}
+              className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0 active:opacity-70"
+            >
+              <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
+                {item.author_avatar ? (
+                  <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-xs font-bold">
+                    {item.author_name[0]}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
+                <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
+              </div>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
+              className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
+            >
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Caption before media for normal posts */}
+          {item.caption && (
+            <div className="px-3 pb-2">
+              <p className="text-[13px] text-foreground">
+                <span className="font-semibold mr-1">{item.author_name}</span>
+                {item.caption}
+              </p>
+            </div>
+          )}
+
+          {/* Media */}
+          <div ref={containerRef} onClick={handleDoubleTap} className={cn("relative w-full", hasMedia ? "aspect-square bg-black" : "")}>
+            {hasMedia ? (
+              item.media_type === "video" ? (
+                <>
+                  <video
+                    ref={videoRef}
+                    src={mediaUrl}
+                    muted={muted}
+                    loop
+                    playsInline
+                    preload="metadata"
+                    onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
+                    className="h-full w-full object-cover cursor-pointer"
+                  />
+                  {!isPlaying && (
+                    <button onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
+                      <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
+                    className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
+                  >
+                    {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
+                  </button>
+                </>
+              ) : (
+                <img
+                  src={mediaUrl}
+                  alt={item.caption || "Post"}
+                  className="h-full w-full object-cover cursor-pointer"
+                  loading="lazy"
+                  onClick={() => onOpenFullscreen?.()}
                 />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+              )
+            ) : null}
 
-      {/* Action buttons */}
-      <div className="flex items-center px-3 py-2">
-        <div className="flex items-center gap-3 flex-1">
-          <button onClick={handleLike} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <Heart className={cn("h-6 w-6 transition-all", liked ? "text-red-500 fill-red-500 scale-110" : "text-foreground active:scale-125")} />
+            {/* Multi-image indicator */}
+            {hasMedia && item.media_urls.length > 1 && (
+              <>
+                <div className="absolute top-3 right-3 bg-black/50 px-2 py-0.5 rounded-full text-[10px] text-white font-medium">
+                  {currentMedia + 1}/{item.media_urls.length}
+                </div>
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
+                  {item.media_urls.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentMedia(i)}
+                      className={cn("h-1.5 rounded-full transition-all", i === currentMedia ? "w-4 bg-primary" : "w-1.5 bg-white/60")}
+                    />
+                  ))}
+                </div>
+              </>
+             )}
+
+            {/* Double-tap heart animation */}
+            <AnimatePresence>
+              {showDoubleTapHeart && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 1.5, opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
+                >
+                  <Heart className="h-20 w-20 text-white fill-white drop-shadow-2xl" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </>
+      )}
+
+      {/* Emoji reaction bar (long-press activated) */}
+      <AnimatePresence>
+        {showReactionPicker && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.9 }}
+            className="flex items-center gap-1 px-3 py-2 mx-3 mt-1 bg-card rounded-full shadow-lg border border-border/30 w-fit"
+          >
+            {REACTIONS.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => handleReaction(emoji)}
+                className={cn(
+                  "text-xl p-1.5 rounded-full transition-all active:scale-125 hover:bg-muted",
+                  selectedReaction === emoji && "bg-primary/10 ring-2 ring-primary/30"
+                )}
+              >
+                {emoji}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Action buttons — enhanced with counts */}
+      <div className="flex items-center px-3 py-1.5">
+        <div className="flex items-center gap-1 flex-1">
+          <button
+            onClick={handleLike}
+            onContextMenu={(e) => { e.preventDefault(); setShowReactionPicker(!showReactionPicker); }}
+            className="min-h-[44px] min-w-[40px] flex items-center justify-center gap-1 group"
+          >
+            {selectedReaction ? (
+              <span className="text-lg">{selectedReaction}</span>
+            ) : (
+              <Heart className={cn("h-[22px] w-[22px] transition-all", liked ? "text-destructive fill-destructive scale-110" : "text-foreground group-active:scale-125")} />
+            )}
+            {localLikes > 0 && !item.hide_like_counts && (
+              <span className={cn("text-[12px] font-semibold", liked || selectedReaction ? "text-destructive" : "text-muted-foreground")}>
+                {localLikes > 999 ? `${(localLikes/1000).toFixed(1)}k` : localLikes}
+              </span>
+            )}
           </button>
           {commentSetting !== "off" && (
-            <button onClick={handleComment} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground">
-              <MessageCircle className="h-6 w-6" />
+            <button onClick={handleComment} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
+              <MessageCircle className="h-[22px] w-[22px]" />
+              {item.comments_count > 0 && (
+                <span className="text-[12px] text-muted-foreground font-semibold">
+                  {item.comments_count > 999 ? `${(item.comments_count/1000).toFixed(1)}k` : item.comments_count}
+                </span>
+              )}
             </button>
           )}
           {item.allow_sharing !== false && (
-            <button onClick={handleShare} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground">
-              <Share2 className="h-6 w-6" />
+            <button onClick={handleShare} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
+              <Share2 className="h-[22px] w-[22px]" />
+              {item.shares_count > 0 && (
+                <span className="text-[12px] text-muted-foreground font-semibold">
+                  {item.shares_count > 999 ? `${(item.shares_count/1000).toFixed(1)}k` : item.shares_count}
+                </span>
+              )}
             </button>
           )}
         </div>
         <button onClick={handleSave} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-          <Bookmark className={cn("h-6 w-6 transition-all", saved ? "text-foreground fill-foreground" : "text-foreground")} />
+          <Bookmark className={cn("h-[22px] w-[22px] transition-all", saved ? "text-primary fill-primary" : "text-foreground")} />
         </button>
       </div>
 
-      {/* Likes */}
-      {localLikes > 0 && !item.hide_like_counts && (
-        <div className="px-3 pb-1">
-          <p className="text-[13px] font-semibold text-foreground">
-            {localLikes.toLocaleString()} likes
-          </p>
-        </div>
-      )}
-
-      {/* Caption */}
-      {item.caption && (
-        <div className="px-3 pb-2">
-          <p className="text-[13px] text-foreground">
-            <span className="font-semibold mr-1">{item.author_name}</span>
-            {item.caption}
-          </p>
-        </div>
-      )}
+      {/* Caption for normal posts already shown above media; skip duplicate */}
 
       {/* Comments count or off indicator */}
       {commentSetting === "off" ? (
@@ -1517,62 +1461,23 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
           <MessageSquareOff className="h-3.5 w-3.5 text-muted-foreground/60" />
           <p className="text-[12px] text-muted-foreground/60">Comments are turned off</p>
         </div>
-      ) : (item.comments_count > 0 || comments.length > 0) ? (
+      ) : item.comments_count > 0 ? (
         <button onClick={handleComment} className="px-3 pb-2">
           <p className="text-[12px] text-muted-foreground">
-            View all {item.comments_count + comments.length} comments
+            View all {item.comments_count} comments
           </p>
         </button>
       ) : null}
 
-      {/* Comments section */}
-      <AnimatePresence>
-        {showComments && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
-            {/* Existing local comments */}
-            {comments.length > 0 && (
-              <div className="px-3 pb-2 space-y-2">
-                {comments.map((c) => (
-                  <div key={c.id} className="flex items-start gap-2">
-                    <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground shrink-0 mt-0.5">
-                      {c.author[0]}
-                    </div>
-                    <div>
-                      <p className="text-[12px] text-foreground">
-                        <span className="font-semibold mr-1">{c.author}</span>
-                        {c.text}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">{c.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Comment input */}
-            <div className="flex items-center gap-2 px-3 py-2 border-t border-border/20">
-              <input
-                type="text"
-                placeholder="Add a comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && submitComment()}
-                className="flex-1 text-[13px] bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-h-[44px]"
-              />
-              {commentText.trim() && (
-                <button onClick={submitComment} className="text-primary font-semibold text-[13px] min-h-[44px] min-w-[44px] flex items-center justify-center">
-                  <Send className="h-5 w-5" />
-                </button>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Comments Sheet */}
+      <CommentsSheet
+        open={showComments}
+        onClose={() => setShowComments(false)}
+        postId={item.id}
+        postSource={item.source}
+        currentUserId={currentUserId}
+        commentsCount={item.comments_count}
+      />
 
       {/* Views */}
       {item.media_type === "video" && item.views_count > 0 && (
@@ -1590,9 +1495,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
             shareText={item.caption || `Check out this post by ${item.author_name}`}
             shareMediaUrl={item.media_urls[0] || undefined}
             shareMediaType={item.media_type === "video" ? "video" : "image"}
-            sharePostId={item.id}
-            sharePostAuthorId={item.author_id}
-            sharePostAuthorName={item.author_name}
+            sharePostId={item.shared_from_post_id ? item.shared_from_post_id : item.id.replace(/^u-/, "")}
+            sharePostAuthorId={item.shared_from_user_id || item.author_id}
+            sharePostAuthorName={item.shared_from_user_name || item.author_name}
             onClose={() => setShowShareSheet(false)}
             zIndex={70}
           />
@@ -1645,8 +1550,25 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                   <EyeOff className="h-5 w-5 text-foreground" />
                   <span className="text-sm font-medium text-foreground">Not interested</span>
                 </button>
+                <button
+                  onClick={() => { setShowPostMenu(false); setShowShareSheet(true); }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                >
+                  <Share2 className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Share</span>
+                </button>
 
-                {/* Owner-only: Comment settings */}
+                {/* Tip creator */}
+                {!isOwner && item.author_id && (
+                  <button
+                    onClick={() => { setShowPostMenu(false); setTipTarget({ id: item.author_id!, name: item.author_name }); }}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                  >
+                    <Heart className="h-5 w-5 text-amber-500" />
+                    <span className="text-sm font-medium text-foreground">Send Tip</span>
+                  </button>
+                )}
+
                 {isOwner && (
                   <button
                     onClick={() => { setShowPostMenu(false); setShowCommentSettings(true); }}
@@ -1654,6 +1576,38 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                   >
                     <Settings2 className="h-5 w-5 text-foreground" />
                     <span className="text-sm font-medium text-foreground">Comment settings</span>
+                  </button>
+                )}
+
+                {/* Owner-only: Delete post */}
+                {isOwner && (
+                  <button
+                    onClick={() => { setShowPostMenu(false); setEditCaptionText(item.caption || ""); setShowEditCaption(true); }}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                  >
+                    <Settings2 className="h-5 w-5 text-foreground" />
+                    <span className="text-sm font-medium text-foreground">Edit caption</span>
+                  </button>
+                )}
+
+                {/* Owner-only: Delete post */}
+                {isOwner && (
+                  <button
+                    onClick={async () => {
+                      setShowPostMenu(false);
+                      const realId = item.id.replace(/^u-/, "");
+                      const { error } = await supabase.from("user_posts").delete().eq("id", realId).eq("user_id", currentUserId);
+                      if (error) {
+                        toast.error("Failed to delete post");
+                      } else {
+                        toast.success("Post deleted");
+                        queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+                      }
+                    }}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+                  >
+                    <Trash2 className="h-5 w-5 text-destructive" />
+                    <span className="text-sm font-medium text-destructive">Delete post</span>
                   </button>
                 )}
               </div>
@@ -1834,6 +1788,62 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Edit Caption Sheet */}
+      <AnimatePresence>
+        {showEditCaption && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[230] flex items-end justify-center bg-black/40"
+            onClick={() => setShowEditCaption(false)}
+          >
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-background rounded-t-2xl pb-8 overflow-hidden"
+            >
+              <div className="flex justify-center py-3">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+              </div>
+              <div className="px-4">
+                <h3 className="text-base font-bold text-foreground mb-3">Edit Caption</h3>
+                <textarea
+                  value={editCaptionText}
+                  onChange={(e) => setEditCaptionText(e.target.value)}
+                  rows={4}
+                  maxLength={2200}
+                  className="w-full p-3 rounded-xl bg-muted/50 border border-border/40 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  placeholder="Write a caption..."
+                />
+                <p className="text-[10px] text-muted-foreground mt-1 mb-3">{editCaptionText.length}/2,200</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowEditCaption(false)}
+                    className="flex-1 py-2.5 rounded-xl bg-muted text-foreground text-sm font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleEditPost}
+                    disabled={editSaving}
+                    className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
+                  >
+                    {editSaving ? "Saving..." : "Save"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Tip Sheet */}
+      <TipSheet
+        open={!!tipTarget}
+        onClose={() => setTipTarget(null)}
+        creatorId={tipTarget?.id || ""}
+        creatorName={tipTarget?.name || ""}
+      />
 
     </div>
   );

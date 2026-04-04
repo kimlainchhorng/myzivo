@@ -22,6 +22,7 @@ import { RouteErrorBoundary } from "./components/shared/RouteErrorBoundary";
 import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import LiveChatWidget from "./components/shared/LiveChatWidget";
+
 import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
 import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
 import { ScrollToTopButton } from "./components/shared/ScrollToTopButton";
@@ -40,10 +41,10 @@ import { lazyRetry } from "@/lib/lazyRetry";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
-const Index = lazy(() => import("./pages/Index"));
+const Index = lazy(() => lazyRetry(() => import("./pages/Index")));
 
 // App (mobile-first) pages
-const AppHome = lazy(() => import("./pages/app/AppHome"));
+const AppHome = lazy(() => lazyRetry(() => import("./pages/app/AppHome")));
 const AppTravel = lazy(() => import("./pages/app/AppTravel"));
 const AppMore = lazy(() => import("./pages/app/AppMore"));
 const ServicesPage = lazy(() => import("./pages/app/ServicesPage"));
@@ -63,6 +64,39 @@ const GroceryMarketplace = lazy(() => import("./pages/GroceryMarketplace"));
 const FeedPage = lazy(() => import("./pages/FeedPage"));
 const ReelsFeedPage = lazy(() => import("./pages/ReelsFeedPage"));
 const ChatHubPage = lazy(() => import("./pages/ChatHubPage"));
+const ExplorePage = lazy(() => import("./pages/ExplorePage"));
+const BookmarksPage = lazy(() => import("./pages/BookmarksPage"));
+const PrivacySettingsPage = lazy(() => import("./pages/account/PrivacySettingsPage"));
+const CreatorDashboardPage = lazy(() => import("./pages/CreatorDashboardPage"));
+const EventsPage = lazy(() => import("./pages/EventsPage"));
+const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
+const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
+const ContentAnalyticsPage = lazy(() => import("./pages/ContentAnalyticsPage"));
+const MarketplaceOrdersPage = lazy(() => import("./pages/MarketplaceOrdersPage"));
+const DatingPage = lazy(() => import("./pages/DatingPage"));
+const DraftsPage = lazy(() => import("./pages/DraftsPage"));
+const AudioSpacesPage = lazy(() => import("./pages/AudioSpacesPage"));
+const SmartSearchPage = lazy(() => import("./pages/SmartSearchPage"));
+const NotificationCenterPage = lazy(() => import("./pages/NotificationCenterPage"));
+const ActivityFeedPage = lazy(() => import("./pages/ActivityFeedPage"));
+const AdminModerationPage = lazy(() => import("./pages/AdminModerationPage"));
+const ContentSchedulerPage = lazy(() => import("./pages/ContentSchedulerPage"));
+const StoryPollsPage = lazy(() => import("./pages/StoryPollsPage"));
+const WalletDashboardPage = lazy(() => import("./pages/WalletDashboardPage"));
+const BadgesPage = lazy(() => import("./pages/BadgesPage"));
+const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
+const AppSettingsPage = lazy(() => import("./pages/AppSettingsPage"));
+const WatchPartyPage = lazy(() => import("./pages/WatchPartyPage"));
+const WhiteboardPage = lazy(() => import("./pages/WhiteboardPage"));
+const QRProfilePage = lazy(() => import("./pages/QRProfilePage"));
+const LinkHubPage = lazy(() => import("./pages/LinkHubPage"));
+const NearbyPage = lazy(() => import("./pages/NearbyPage"));
+const CheckInPage = lazy(() => import("./pages/CheckInPage"));
+const SafetyCenterPage = lazy(() => import("./pages/SafetyCenterPage"));
+const AccountAnalyticsPage = lazy(() => import("./pages/account/AccountAnalyticsPage"));
+const VerificationRequestPage = lazy(() => import("./pages/account/VerificationRequestPage"));
+const ActivityLogPage = lazy(() => import("./pages/account/ActivityLogPage"));
+const AccountExportPage = lazy(() => import("./pages/account/AccountExportPage"));
 const GroceryStorePage = lazy(() => import("./pages/GroceryStorePage"));
 const StoreProfilePage = lazy(() => import("./pages/StoreProfilePage"));
 const StoreMapPage = lazy(() => import("./pages/StoreMapPage"));
@@ -112,7 +146,8 @@ const Setup = lazy(() => lazyRetry(() => import("./pages/Setup")));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const Profile = lazy(() => import("./pages/Profile"));
+const Profile = lazy(() => lazyRetry(() => import("./pages/Profile")));
+const MorePage = lazy(() => import("./pages/MorePage"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
 
@@ -452,6 +487,39 @@ const App = () => (
                 <Route path="/feed" element={<FeedPage />} />
                 <Route path="/reels" element={<ReelsFeedPage />} />
                 <Route path="/chat" element={<ChatHubPage />} />
+                <Route path="/explore" element={<ExplorePage />} />
+                <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
+                <Route path="/creator-dashboard" element={<ProtectedRoute><CreatorDashboardPage /></ProtectedRoute>} />
+                <Route path="/events" element={<EventsPage />} />
+                <Route path="/communities" element={<CommunitiesPage />} />
+                <Route path="/marketplace" element={<MarketplacePage />} />
+                <Route path="/marketplace/orders" element={<ProtectedRoute><MarketplaceOrdersPage /></ProtectedRoute>} />
+                <Route path="/content-analytics" element={<ProtectedRoute><ContentAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/dating" element={<ProtectedRoute><DatingPage /></ProtectedRoute>} />
+                <Route path="/spaces" element={<AudioSpacesPage />} />
+                <Route path="/smart-search" element={<SmartSearchPage />} />
+                <Route path="/notification-center" element={<ProtectedRoute><NotificationCenterPage /></ProtectedRoute>} />
+                <Route path="/activity" element={<ProtectedRoute><ActivityFeedPage /></ProtectedRoute>} />
+                <Route path="/admin/moderation" element={<ProtectedRoute><AdminModerationPage /></ProtectedRoute>} />
+                <Route path="/content-scheduler" element={<ProtectedRoute><ContentSchedulerPage /></ProtectedRoute>} />
+                <Route path="/story-polls" element={<ProtectedRoute><StoryPollsPage /></ProtectedRoute>} />
+                <Route path="/wallet-dashboard" element={<ProtectedRoute><WalletDashboardPage /></ProtectedRoute>} />
+                <Route path="/badges" element={<BadgesPage />} />
+                <Route path="/leaderboard" element={<LeaderboardPage />} />
+                <Route path="/settings" element={<ProtectedRoute><AppSettingsPage /></ProtectedRoute>} />
+                <Route path="/account/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
+                <Route path="/watch-party" element={<WatchPartyPage />} />
+                <Route path="/whiteboard" element={<WhiteboardPage />} />
+                <Route path="/qr-profile" element={<ProtectedRoute><QRProfilePage /></ProtectedRoute>} />
+                <Route path="/link-hub" element={<ProtectedRoute><LinkHubPage /></ProtectedRoute>} />
+                <Route path="/nearby" element={<NearbyPage />} />
+                <Route path="/check-in" element={<ProtectedRoute><CheckInPage /></ProtectedRoute>} />
+                <Route path="/safety" element={<ProtectedRoute><SafetyCenterPage /></ProtectedRoute>} />
+                <Route path="/drafts" element={<ProtectedRoute><DraftsPage /></ProtectedRoute>} />
+                <Route path="/account/analytics" element={<ProtectedRoute><AccountAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/account/verification" element={<ProtectedRoute><VerificationRequestPage /></ProtectedRoute>} />
+                <Route path="/account/activity-log" element={<ProtectedRoute><ActivityLogPage /></ProtectedRoute>} />
+                <Route path="/account/export" element={<ProtectedRoute><AccountExportPage /></ProtectedRoute>} />
                 <Route path="/store-map" element={<StoreMapPage />} />
                 <Route path="/grocery/store/:slug" element={<GroceryStorePage />} />
                 <Route path="/grocery/shop/:slug" element={<StoreProfilePage />} />
@@ -555,6 +623,7 @@ const App = () => (
                 <Route path="/setup" element={<Setup />} />
                 
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/more" element={<ProtectedRoute><MorePage /></ProtectedRoute>} />
                 <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
                 <Route path="/user/:userId" element={<PublicProfilePage />} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
@@ -741,6 +810,7 @@ const App = () => (
           {/* ScrollToTopButton removed */}
           {/* LiveChatWidget removed */}
           <SpatialCursor />
+          
           <BrandThemeApplicator />
           <IncomingCallListener />
         </ZivoPlusProvider>

@@ -1,16 +1,25 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import ProfileFeedCard from "./ProfileFeedCard";
 import UnifiedShareSheet from "@/components/shared/ShareSheet";
+import CreatePostModal from "@/components/social/CreatePostModal";
+import CommentsSheet from "@/components/social/CommentsSheet";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Heart, MessageCircle, Eye, X, SwitchCamera, Mic, MicOff, Sparkles,
   Share2, Play, Radio, ChevronDown, Globe, Users, Lock, Link2, MoreHorizontal,
-  MapPin, Image, Film, Grid3X3, Clapperboard, Camera, Trash2, Pencil, MoreVertical,
+  MapPin, Image, Film, Grid3X3, Clapperboard, Camera, Trash2, Pencil, MoreVertical, Bookmark,
+  Flag, Bell, EyeOff, Settings2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { formatDistanceToNow } from "date-fns";
+import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolveSharedOrigins";
+import { isLocalDraftPostId, toUserPostInteractionId } from "@/lib/social/postInteraction";
 
 type FeedItem = {
   id: string;
@@ -24,6 +33,8 @@ type FeedItem = {
   views?: number;
   user: { name: string; avatar: string };
   isShared?: boolean;
+  sharedOrigin?: SharedOriginInfo | null;
+  createdAt?: string;
 };
 
 type NewPostPayload = {
@@ -69,10 +80,13 @@ const TABS: { id: TabFilter; label: string; icon: typeof Grid3X3 }[] = [
 
 export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const profileOwnerId = userId || user?.id;
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
   const [showComposer, setShowComposer] = useState(false);
   const [composerType, setComposerType] = useState<"photo" | "reel" | null>(null);
+  const [showCreatePost, setShowCreatePost] = useState(false);
+  const [profileName, setProfileName] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<FeedItem | null>(null);
   const [showPostMenu, setShowPostMenu] = useState(false);
   const [editingCaption, setEditingCaption] = useState(false);
@@ -81,8 +95,10 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [feed, setFeed] = useState<FeedItem[]>(demoFeed);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [sharePostId, setSharePostId] = useState<string | null>(null);
+  const [commentPost, setCommentPost] = useState<FeedItem | null>(null);
   const [showProfileMoreShare, setShowProfileMoreShare] = useState(false);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
 
   const filtered = activeTab === "all" ? feed : feed.filter((i) => i.type === activeTab);
 
@@ -115,6 +131,9 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
             .maybeSingle();
           if (alive && profileData?.avatar_url) {
             setProfileAvatar(profileData.avatar_url);
+          }
+          if (alive && profileData?.full_name) {
+            setProfileName(profileData.full_name);
           }
         } catch {}
       }
@@ -164,11 +183,27 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
           } catch {}
         }
 
+        const sharedPostIds = (data as UserPostRow[])
+          .map((row) => row.shared_from_post_id)
+          .filter(Boolean) as string[];
+        const sharedUserIds = (data as UserPostRow[])
+          .map((row) => row.shared_from_user_id)
+          .filter(Boolean) as string[];
+
+        const { originByPostId, originByUserId } = await resolveSharedOrigins({
+          sharedPostIds,
+          sharedUserIds,
+        });
+
         const remotePosts: FeedItem[] = (data as UserPostRow[])
           .map((row) => {
             const normalizedType = normalizeFeedItemType(row.media_type);
             const prof = avatarMap[row.user_id];
             const displayName = prof?.full_name || (row.user_id === user?.id ? (user?.email?.split("@")[0] || "You") : "Zivo User");
+            const sharedOrigin =
+              (row.shared_from_post_id ? originByPostId[row.shared_from_post_id] || null : null) ||
+              (row.shared_from_user_id ? originByUserId[row.shared_from_user_id] || null : null);
+
             return {
               id: row.id,
               type: normalizedType,
@@ -184,6 +219,8 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                 avatar: prof?.avatar_url || "",
               },
               isShared: Boolean(row.shared_from_post_id || row.shared_from_user_id),
+              sharedOrigin,
+              createdAt: row.created_at,
             };
           })
           .filter((item) => Boolean(item.url) || Boolean(item.caption.trim()));
@@ -197,7 +234,44 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [profileOwnerId]);
+
+  useEffect(() => {
+    let alive = true;
+
+    const loadBookmarkedPosts = async () => {
+      if (!user?.id) {
+        if (alive) setBookmarkedPosts(new Set());
+        return;
+      }
+
+      const interactionIds = feed
+        .map((item) => item.id)
+        .filter((postId) => !isLocalDraftPostId(postId))
+        .map(toUserPostInteractionId);
+
+      if (!interactionIds.length) {
+        if (alive) setBookmarkedPosts(new Set());
+        return;
+      }
+
+      const { data } = await (supabase as any)
+        .from("bookmarks")
+        .select("item_id")
+        .eq("user_id", user.id)
+        .eq("item_type", "post")
+        .in("item_id", interactionIds);
+
+      if (!alive) return;
+      setBookmarkedPosts(new Set((data ?? []).map((row: any) => row.item_id)));
+    };
+
+    void loadBookmarkedPosts();
+
+    return () => {
+      alive = false;
+    };
+  }, [feed, user?.id]);
 
   const uploadMediaToSupabase = useCallback(async (file?: File | null) => {
     if (!file) return null;
@@ -293,25 +367,100 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
     toast.success("Caption updated");
   }, [user?.id]);
 
+  const openComments = useCallback((item: FeedItem) => {
+    if (isLocalDraftPostId(item.id)) {
+      toast.info("This post is still syncing. Refresh in a moment to comment.");
+      return;
+    }
+
+    setCommentPost(item);
+  }, []);
+
+  const handleBookmarkToggle = useCallback(async (item: FeedItem) => {
+    if (!user?.id) {
+      toast.error("Please sign in to bookmark posts");
+      return;
+    }
+
+    if (isLocalDraftPostId(item.id)) {
+      toast.info("This post is still syncing. Refresh in a moment to save it.");
+      return;
+    }
+
+    const interactionId = toUserPostInteractionId(item.id);
+    const wasBookmarked = bookmarkedPosts.has(interactionId);
+
+    setBookmarkedPosts((prev) => {
+      const next = new Set(prev);
+      if (wasBookmarked) next.delete(interactionId);
+      else next.add(interactionId);
+      return next;
+    });
+
+    try {
+      if (wasBookmarked) {
+        const { error } = await (supabase as any)
+          .from("bookmarks")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("item_type", "post")
+          .eq("item_id", interactionId);
+
+        if (error) throw error;
+        toast.success("Removed from bookmarks");
+      } else {
+        const { error } = await (supabase as any).from("bookmarks").insert({
+          user_id: user.id,
+          item_id: interactionId,
+          item_type: "post",
+          title: item.caption || `Post by ${item.user.name}`,
+          collection_name: "Posts",
+        });
+
+        if (error) throw error;
+        toast.success("Saved to bookmarks");
+      }
+    } catch (error: any) {
+      setBookmarkedPosts((prev) => {
+        const next = new Set(prev);
+        if (wasBookmarked) next.add(interactionId);
+        else next.delete(interactionId);
+        return next;
+      });
+      toast.error(error?.message || "Bookmark failed");
+    }
+  }, [bookmarkedPosts, user?.id]);
+
 
   return (
     <div className="space-y-3">
       {/* Create Post Bar */}
-      <motion.button
-        whileTap={{ scale: 0.97 }}
-        onClick={() => setShowComposer(true)}
-        className="w-full flex items-center gap-3 bg-card rounded-2xl border border-border/30 p-3.5 shadow-sm"
+      <button
+        onClick={() => setShowCreatePost(true)}
+        className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-border/10 bg-card hover:bg-muted/20 transition-colors rounded-2xl"
       >
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-          <Plus className="w-5 h-5 text-primary" />
+        <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border-2 border-primary/20 shrink-0">
+          {profileAvatar ? (
+            <img src={profileAvatar} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-muted-foreground/50">
+              <Camera className="h-4 w-4" />
+            </div>
+          )}
         </div>
-        <span className="text-sm text-muted-foreground flex-1 text-left">What's on your mind?</span>
-        <div className="flex items-center gap-2">
-          <Image className="w-4.5 h-4.5 text-primary/60" />
-          <Film className="w-4.5 h-4.5 text-accent-foreground/40" />
-          <Radio className="w-4.5 h-4.5 text-destructive/60" />
+        <p className="text-sm text-muted-foreground flex-1 text-left">What's on your mind?</p>
+        <div className="flex gap-1.5">
+          <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+            <Image className="h-3.5 w-3.5 text-emerald-600" />
+          </div>
+          <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+            <Film className="h-3.5 w-3.5 text-blue-600" />
+          </div>
+          <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+            <Camera className="h-3.5 w-3.5 text-orange-600" />
+          </div>
         </div>
-      </motion.button>
+      </button>
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-1 bg-muted/30 rounded-xl p-1">
@@ -336,84 +485,88 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         })}
       </div>
 
-      {/* Feed Grid */}
-      <div className={cn(
-        "grid gap-0.5 rounded-2xl overflow-hidden",
-        activeTab === "reel" ? "grid-cols-2" : "grid-cols-3"
-      )}>
-        {filtered.map((item) => {
-          const hasMedia = Boolean(item.url);
-
-          return (
-            <motion.div
+      {/* Feed - conditional layout */}
+      {activeTab === "all" && filtered.length > 0 ? (
+        /* Feed-style view for "All" tab — full parity with main feed */
+        <div className="divide-y divide-border/30">
+          {filtered.map((item) => (
+            <ProfileFeedCard
               key={item.id}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setSelectedPost(item)}
-              className={cn(
-                "relative bg-muted/40 group cursor-pointer overflow-hidden",
-                item.type === "reel" ? "aspect-[9/14]" : "aspect-square"
-              )}
-            >
-              {hasMedia ? (
-                item.type === "reel" ? (
-                  <video
-                    src={item.url ? `${item.url}#t=0.1` : undefined}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    style={{ filter: item.filterCss || "none" }}
-                    muted
-                    playsInline
-                    preload="metadata"
-                  />
+              item={{
+                ...item,
+                userId: profileOwnerId,
+              }}
+              currentUserId={user?.id}
+              profileOwnerId={profileOwnerId}
+              isLiked={likedPosts.has(item.id)}
+              isBookmarked={bookmarkedPosts.has(toUserPostInteractionId(item.id))}
+              onToggleLike={(feedItem) => {
+                const isLiked = likedPosts.has(feedItem.id);
+                setLikedPosts((prev) => { const next = new Set(prev); if (isLiked) next.delete(feedItem.id); else next.add(feedItem.id); return next; });
+                setFeed((prev) => prev.map((p) => p.id === feedItem.id ? { ...p, likes: p.likes + (isLiked ? -1 : 1) } : p));
+              }}
+              onToggleBookmark={(feedItem) => void handleBookmarkToggle(feedItem as any)}
+              onOpenMenu={(feedItem) => { setSelectedPost(feedItem as any); setShowPostMenu(true); }}
+              onShare={(postId) => setSharePostId(postId)}
+              onSelectPost={(feedItem) => setSelectedPost(feedItem as any)}
+            />
+          ))}
+        </div>
+      ) : (
+        /* Grid view for Photos/Reels tabs or empty state */
+        <div className={cn(
+          "grid gap-0.5 rounded-2xl overflow-hidden",
+          activeTab === "reel" ? "grid-cols-2" : "grid-cols-3"
+        )}>
+          {filtered.map((item) => {
+            const hasMedia = Boolean(item.url);
+            return (
+              <motion.div
+                key={item.id}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedPost(item)}
+                className={cn(
+                  "relative bg-muted/40 group cursor-pointer overflow-hidden",
+                  item.type === "reel" ? "aspect-[9/14]" : "aspect-square"
+                )}
+              >
+                {hasMedia ? (
+                  item.type === "reel" ? (
+                    <video src={item.url ? `${item.url}#t=0.1` : undefined} className="absolute inset-0 w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} muted playsInline preload="metadata" />
+                  ) : (
+                    <img src={item.url || undefined} alt={item.caption || "Post"} className="absolute inset-0 w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} loading="lazy" />
+                  )
                 ) : (
-                  <img
-                    src={item.url || undefined}
-                    alt={item.caption || "Shared post"}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    style={{ filter: item.filterCss || "none" }}
-                    loading="lazy"
-                  />
-                )
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-card to-muted/30 p-2.5 flex flex-col">
-                  <div className="h-7 w-7 rounded-full bg-primary/10 border border-primary/15 flex items-center justify-center mb-auto">
-                    <Share2 className="w-3.5 h-3.5 text-primary" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-card to-muted/30 p-2.5 flex flex-col">
+                    <div className="h-7 w-7 rounded-full bg-primary/10 border border-primary/15 flex items-center justify-center mb-auto">
+                      <Share2 className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    <p className="text-[10px] font-medium text-foreground/80 line-clamp-4 whitespace-pre-wrap break-words leading-tight mt-auto">{item.caption || "Shared post"}</p>
                   </div>
-                  <p className="text-[10px] font-medium text-foreground/80 line-clamp-4 whitespace-pre-wrap break-words leading-tight mt-auto">
-                    {item.caption || "Shared post"}
-                  </p>
+                )}
+                {item.isShared && hasMedia && (
+                  <div className="absolute top-1.5 left-1.5 z-10 bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-0.5 flex items-center gap-0.5">
+                    <Share2 className="w-2.5 h-2.5 text-white" />
+                    <span className="text-[9px] text-white font-bold">Shared</span>
+                  </div>
+                )}
+                {item.type === "reel" && hasMedia && (
+                  <div className="absolute top-1.5 right-1.5 z-10"><Play className="w-4 h-4 text-white fill-white drop-shadow-lg" /></div>
+                )}
+                {item.type === "reel" && hasMedia && item.views && (
+                  <div className="absolute bottom-1.5 left-1.5 z-10 bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-0.5 flex items-center gap-0.5">
+                    <Eye className="w-2.5 h-2.5 text-white" /><span className="text-[9px] text-white font-bold">{item.views > 1000 ? `${(item.views / 1000).toFixed(1)}k` : item.views}</span>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <span className="flex items-center gap-0.5 text-white text-[10px] font-bold"><Heart className="w-3 h-3 fill-white" /> {item.likes}</span>
+                  <span className="flex items-center gap-0.5 text-white text-[10px] font-bold"><MessageCircle className="w-3 h-3 fill-white" /> {item.comments}</span>
                 </div>
-              )}
-              {/* Shared post indicator */}
-              {item.isShared && (
-                <div className="absolute top-1.5 left-1.5 z-10 bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-0.5 flex items-center gap-0.5">
-                  <Share2 className="w-2.5 h-2.5 text-white" />
-                  <span className="text-[9px] text-white font-bold">Shared</span>
-                </div>
-              )}
-              {item.type === "reel" && hasMedia && (
-                <div className="absolute top-1.5 right-1.5 z-10">
-                  <Play className="w-4 h-4 text-white fill-white drop-shadow-lg" />
-                </div>
-              )}
-              {item.type === "reel" && hasMedia && item.views && (
-                <div className="absolute bottom-1.5 left-1.5 z-10 bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-0.5 flex items-center gap-0.5">
-                  <Eye className="w-2.5 h-2.5 text-white" />
-                  <span className="text-[9px] text-white font-bold">{item.views > 1000 ? `${(item.views / 1000).toFixed(1)}k` : item.views}</span>
-                </div>
-              )}
-              {/* Hover overlay */}
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                <span className="flex items-center gap-0.5 text-white text-[10px] font-bold">
-                  <Heart className="w-3 h-3 fill-white" /> {item.likes}
-                </span>
-                <span className="flex items-center gap-0.5 text-white text-[10px] font-bold">
-                  <MessageCircle className="w-3 h-3 fill-white" /> {item.comments}
-                </span>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Post Detail Viewer */}
       {createPortal(
@@ -442,47 +595,12 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   <p className="text-white/50 text-[10px]">{selectedPost.time} ago</p>
                 </div>
                 {profileOwnerId === user?.id && (
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowPostMenu(!showPostMenu)}
-                      className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
-                    >
-                      <MoreVertical className="w-5 h-5" />
-                    </button>
-                    <AnimatePresence>
-                      {showPostMenu && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.9, y: -5 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.9, y: -5 }}
-                          className="absolute right-0 top-full mt-1 bg-card rounded-xl shadow-2xl border border-border/30 overflow-hidden z-50 min-w-[160px]"
-                        >
-                          <button
-                            onClick={() => {
-                              setEditCaptionValue(selectedPost.caption);
-                              setEditingCaption(true);
-                              setShowPostMenu(false);
-                            }}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-muted/50 transition-colors"
-                          >
-                            <Pencil className="w-4 h-4" />
-                            Edit Caption
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (window.confirm("Delete this post? This can't be undone.")) {
-                                handleDeletePost(selectedPost.id);
-                              }
-                            }}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete Post
-                          </button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                  <button
+                    onClick={() => setShowPostMenu(!showPostMenu)}
+                    className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+                  >
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
                 )}
               </div>
 
@@ -573,7 +691,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     <Heart className={cn("w-6 h-6", likedPosts.has(selectedPost.id) ? "fill-red-500 text-red-500" : "text-white/70 hover:text-white")} />
                     <span className="text-sm font-medium text-white/90">{selectedPost.likes}</span>
                   </button>
-                  <button className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors">
+                  <button onClick={() => openComments(selectedPost)} className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors">
                     <MessageCircle className="w-6 h-6" />
                     <span className="text-sm font-medium">{selectedPost.comments}</span>
                   </button>
@@ -595,78 +713,24 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         document.body
       )}
 
-      {/* Composer Modal */}
+      {/* Create Post Modal */}
       {createPortal(
         <AnimatePresence>
-          {showComposer && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-end justify-center"
-              onClick={() => { setShowComposer(false); setComposerType(null); }}
-            >
-              <motion.div
-                initial={{ y: "100%" }}
-                animate={{ y: 0 }}
-                exit={{ y: "100%" }}
-                transition={{ type: "spring", damping: 28, stiffness: 300 }}
-                className="w-full max-w-lg bg-card rounded-t-3xl shadow-2xl overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex justify-center pt-3 pb-1">
-                  <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
-                </div>
-
-                {!composerType ? (
-                  <div className="p-5 space-y-4">
-                    <h3 className="text-lg font-bold text-foreground text-center">Create</h3>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { id: "photo" as const, label: "Photo", icon: Image, color: "text-primary" },
-                        { id: "reel" as const, label: "Reel", icon: Clapperboard, color: "text-accent-foreground" },
-                        { id: "live" as const, label: "Go Live", icon: Radio, color: "text-destructive" },
-                      ].map((opt) => {
-                        const Icon = opt.icon;
-                        return (
-                          <motion.button
-                            key={opt.id}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => {
-                            if (opt.id === "live") {
-                              toast("🔴 Go Live is coming soon!", { description: "Stay tuned for live broadcasting features." });
-                              return;
-                            } else {
-                                setComposerType(opt.id);
-                              }
-                            }}
-                            className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-muted/40 border border-border/20 hover:bg-muted/60 transition-colors"
-                          >
-                            <div className={cn("w-12 h-12 rounded-full bg-background flex items-center justify-center shadow-sm", opt.id === "live" && "bg-destructive/10")}>
-                              <Icon className={cn("w-6 h-6", opt.color)} />
-                            </div>
-                            <span className="text-sm font-semibold text-foreground">{opt.label}</span>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                    <button
-                      onClick={() => { setShowComposer(false); setComposerType(null); }}
-                      className="w-full py-3 text-sm font-medium text-muted-foreground"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <ComposerForm
-                    type={composerType}
-                    onCreatePost={handleCreatePost}
-                    onClose={() => { setShowComposer(false); setComposerType(null); }}
-                    onBack={() => setComposerType(null)}
-                  />
-                )}
-              </motion.div>
-            </motion.div>
+          {showCreatePost && user?.id && (
+            <CreatePostModal
+              userId={user.id}
+              userProfile={{
+                name: profileName || user?.email?.split("@")[0] || "You",
+                avatar: profileAvatar,
+              }}
+              onClose={() => setShowCreatePost(false)}
+              onCreated={() => {
+                setShowCreatePost(false);
+                // Refresh feed
+                setFeed([]);
+                window.location.reload();
+              }}
+            />
           )}
         </AnimatePresence>,
         document.body
@@ -681,6 +745,168 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       )}
 
       {/* Share Sheet */}
+      {/* Post Menu Bottom Sheet */}
+      {createPortal(
+        <AnimatePresence>
+          {showPostMenu && selectedPost && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 z-[9998]"
+                onClick={() => setShowPostMenu(false)}
+              />
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                className="fixed bottom-0 left-0 right-0 z-[9999] bg-card rounded-t-2xl shadow-2xl max-h-[80vh] overflow-y-auto safe-area-bottom"
+              >
+                {/* Post preview header */}
+                <div className="px-4 pt-4 pb-2">
+                  {/* Author row */}
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={selectedPost.user.avatar} />
+                      <AvatarFallback className="text-xs bg-muted">{selectedPost.user.name?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground leading-tight">{selectedPost.user.name}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {selectedPost.createdAt
+                          ? formatDistanceToNow(new Date(selectedPost.createdAt), { addSuffix: false }) + " ago"
+                          : selectedPost.time}
+                        {" · "}
+                        <Globe className="inline w-3 h-3 -mt-0.5" />
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Shared content preview if repost */}
+                  {selectedPost.isShared && selectedPost.sharedOrigin && (
+                    <div className="rounded-xl border border-border/50 p-2.5 mb-2 bg-muted/20">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-7 w-7">
+                          <AvatarImage src={selectedPost.sharedOrigin.avatar || ""} />
+                          <AvatarFallback className="text-[10px] bg-muted">{selectedPost.sharedOrigin.name?.[0]}</AvatarFallback>
+                        </Avatar>
+                        <p className="text-xs font-semibold text-foreground">{selectedPost.sharedOrigin.name}</p>
+                      </div>
+                      {selectedPost.caption && (
+                        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{selectedPost.caption}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Media thumbnail */}
+                  {selectedPost.url && (
+                    <div className="rounded-xl overflow-hidden max-h-48 mb-1">
+                      {selectedPost.type === "reel" ? (
+                        <video src={selectedPost.url} className="w-full h-full object-cover max-h-48" muted />
+                      ) : (
+                        <img src={selectedPost.url} alt="" className="w-full h-full object-cover max-h-48" style={selectedPost.filterCss ? { filter: selectedPost.filterCss } : undefined} />
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Drag handle */}
+                <div className="flex justify-center pb-1">
+                  <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+                </div>
+
+                <div className="py-2">
+                  <button
+                    onClick={() => { toast.info("Post reported"); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-destructive hover:bg-muted/50 transition-colors"
+                  >
+                    <Flag className="w-5 h-5" />
+                    Report
+                  </button>
+                  <button
+                    onClick={() => { toast.success("Notifications turned on"); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Bell className="w-5 h-5" />
+                    Turn on notifications
+                  </button>
+                  <button
+                    onClick={() => {
+                      const url = `${window.location.origin}/profile?post=${selectedPost.id}`;
+                      navigator.clipboard.writeText(url).then(() => toast.success("Link copied!")).catch(() => toast.info("Could not copy link"));
+                      setShowPostMenu(false);
+                    }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Link2 className="w-5 h-5" />
+                    Copy link
+                  </button>
+                  <button
+                    onClick={() => { toast.info("You won't see posts like this anymore"); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <EyeOff className="w-5 h-5" />
+                    Not interested
+                  </button>
+                  <button
+                    onClick={() => { setSharePostId(selectedPost.id); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Share2 className="w-5 h-5" />
+                    Share
+                  </button>
+                  <button
+                    onClick={() => { toast.info("Comment settings coming soon"); setShowPostMenu(false); }}
+                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Settings2 className="w-5 h-5" />
+                    Comment settings
+                  </button>
+                  {profileOwnerId === user?.id && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setEditCaptionValue(selectedPost.caption);
+                          setEditingCaption(true);
+                          setShowPostMenu(false);
+                        }}
+                        className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                      >
+                        <Settings2 className="w-5 h-5" />
+                        Edit caption
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (window.confirm("Delete this post? This can't be undone.")) {
+                            handleDeletePost(selectedPost.id);
+                          }
+                        }}
+                        className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-destructive hover:bg-muted/50 transition-colors"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                        Delete post
+                      </button>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      <CommentsSheet
+        open={!!commentPost}
+        onClose={() => setCommentPost(null)}
+        postId={commentPost ? toUserPostInteractionId(commentPost.id) : ""}
+        postSource="user"
+        currentUserId={user?.id ?? null}
+        commentsCount={commentPost?.comments ?? 0}
+      />
+
       {createPortal(
         <AnimatePresence>
           {sharePostId && (

@@ -28,7 +28,10 @@ import ChatSecurity from "./ChatSecurity";
 import CallHistoryPage from "./CallHistoryPage";
 import { ChatMediaUploader } from "./ChatMediaUploader";
 import CallEventBubble from "./CallEventBubble";
+import LockedMediaPricePicker from "./LockedMediaPricePicker";
 import ChatContactInfo from "./ChatContactInfo";
+import MessageScheduler from "./MessageScheduler";
+import PinnedMessagesPanel from "./PinnedMessagesPanel";
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
@@ -59,6 +62,7 @@ interface Message {
   expires_at?: string | null;
   created_at: string;
   is_read: boolean;
+  locked_price_cents?: number | null;
 }
 
 interface CallEvent {
@@ -108,12 +112,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showSecurity, setShowSecurity] = useState(false);
   const [showCallHistory, setShowCallHistory] = useState(false);
   const [showContactInfo, setShowContactInfo] = useState(false);
+  const [showScheduler, setShowScheduler] = useState(false);
+  const [showPinnedPanel, setShowPinnedPanel] = useState(false);
+  const [showLockedPricePicker, setShowLockedPricePicker] = useState(false);
+  const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const lockedImageInputRef = useRef<HTMLInputElement>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const { isTyping: recipientTyping, isOnline: recipientOnline, lastSeen: recipientLastSeen, setTyping } = useChatPresence(user?.id, recipientId);
@@ -146,8 +155,31 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     loadStyle();
   }, [user?.id, recipientId]);
 
-  const scrollToBottom = useCallback(() => {
+  const isNearBottomRef = useRef(true);
+
+  const scrollToBottom = useCallback((force?: boolean) => {
+    if (!force && !isNearBottomRef.current) return;
     setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // Consider "near bottom" if within 150px of the bottom
+    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+  }, []);
+
+  useEffect(() => {
+    const previousBodyOverscroll = document.body.style.overscrollBehavior;
+    const previousHtmlOverscroll = document.documentElement.style.overscrollBehavior;
+
+    document.body.style.overscrollBehavior = "none";
+    document.documentElement.style.overscrollBehavior = "none";
+
+    return () => {
+      document.body.style.overscrollBehavior = previousBodyOverscroll;
+      document.documentElement.style.overscrollBehavior = previousHtmlOverscroll;
+    };
   }, []);
 
   const handleStartCall = useCallback(async (type: "voice" | "video") => {
@@ -178,7 +210,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setMessages(data);
       setCallEvents((callRes.data || []).map((c: any) => ({ ...c, _isCallEvent: true as const })));
       setLoading(false);
-      scrollToBottom();
+      scrollToBottom(true);
 
       if (data?.length) {
         const unread = data.filter((m: Message) => m.receiver_id === user.id && !m.is_read);
@@ -358,7 +390,72 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (videoInputRef.current) videoInputRef.current.value = "";
   };
 
-  // Location sharing
+  // Locked media: first show price picker
+  const handleLockedMediaSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+    const isVideo = file.type.startsWith("video");
+    const maxSize = isVideo ? 25 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) { toast.error(`File must be under ${isVideo ? "25MB" : "5MB"}`); return; }
+    setPendingLockedFile(file);
+    setShowLockedPricePicker(true);
+    if (lockedImageInputRef.current) lockedImageInputRef.current.value = "";
+  };
+
+  // Locked media: upload after price confirmed
+  const handleLockedMediaConfirm = async (priceCents: number) => {
+    setShowLockedPricePicker(false);
+    const file = pendingLockedFile;
+    setPendingLockedFile(null);
+    if (!file || !user?.id) return;
+    const isVideo = file.type.startsWith("video");
+    setUploadingMedia(true);
+    try {
+      const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
+      const path = `${user.id}/locked_${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("chat-media-files").upload(path, file, { contentType: file.type });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("chat-media-files").getPublicUrl(path);
+      const messageType = isVideo ? "locked_video" : "locked_image";
+      const priceLabel = `$${(priceCents / 100).toFixed(2)}`;
+      const label = isVideo ? `🔒 Locked Video · ${priceLabel}` : `🔒 Locked Photo · ${priceLabel}`;
+      const text = input.trim();
+      setInput("");
+      clearDraft();
+      setSending(true);
+      const optimisticId = `opt-${Date.now()}`;
+      const optimisticMsg: Message = {
+        id: optimisticId, sender_id: user.id, receiver_id: recipientId,
+        message: text || label,
+        image_url: isVideo ? null : urlData.publicUrl,
+        video_url: isVideo ? urlData.publicUrl : null,
+        voice_url: null, message_type: messageType,
+        reply_to_id: null, location_lat: null, location_lng: null, location_label: null,
+        is_pinned: false, expires_at: null, created_at: new Date().toISOString(), is_read: false,
+        locked_price_cents: priceCents,
+      };
+      setMessages((prev) => [...prev, optimisticMsg]);
+      scrollToBottom();
+
+      const { data, error: insertErr } = await (supabase as any)
+        .from("direct_messages")
+        .insert({
+          sender_id: user.id, receiver_id: recipientId,
+          message: text || label,
+          image_url: isVideo ? null : urlData.publicUrl,
+          video_url: isVideo ? urlData.publicUrl : null,
+          message_type: messageType,
+          locked_price_cents: priceCents,
+        })
+        .select().single();
+      if (insertErr) throw insertErr;
+      setMessages((prev) => prev.map((m) => m.id === optimisticId ? data : m));
+    } catch { toast.error("Failed to upload locked media"); }
+    setUploadingMedia(false);
+    setSending(false);
+  };
+
+
   const handleLocationShare = () => {
     if (!navigator.geolocation) { toast.error("Location not supported"); return; }
     toast.loading("Getting location...", { id: "loc" });
@@ -499,6 +596,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 <Zap className="w-[18px] h-[18px] text-muted-foreground" /> Mini Apps
               </DropdownMenuItem>
               <DropdownMenuSeparator className="my-1.5 bg-border/15" />
+              <DropdownMenuItem onClick={() => setShowPinnedPanel(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <Pin className="w-[18px] h-[18px] text-muted-foreground" /> Pinned Messages
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowPersonalization(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <Palette className="w-[18px] h-[18px] text-muted-foreground" /> Theme
               </DropdownMenuItem>
@@ -516,7 +616,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         {/* Pinned messages bar */}
         {pinnedMessages.length > 0 && (
           <button
-            onClick={() => scrollToMessage(pinnedMessages[pinnedMessages.length - 1].id)}
+            onClick={() => setShowPinnedPanel(true)}
             className="w-full px-4 py-1.5 bg-primary/5 border-t border-primary/10 flex items-center gap-2 text-left"
           >
             <Pin className="w-3 h-3 text-primary shrink-0" />
@@ -568,7 +668,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       </AnimatePresence>
 
       {/* Messages */}
-      <div ref={scrollRef} className={`flex-1 overflow-y-auto px-4 py-3 space-y-2 ${getWallpaperClass(chatStyle.wallpaper)}`} style={getWallpaperStyle(chatStyle.wallpaper)}>
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className={`flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 space-y-2 ${getWallpaperClass(chatStyle.wallpaper)}`}
+        style={{
+          ...getWallpaperStyle(chatStyle.wallpaper),
+          WebkitOverflowScrolling: "touch",
+          touchAction: "pan-y",
+        }}
+      >
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -670,6 +779,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       videoUrl={msg.video_url}
                       isPinned={msg.is_pinned}
                       expiresAt={msg.expires_at}
+                      messageType={msg.message_type}
+                      senderId={msg.sender_id}
+                      lockedPriceCents={msg.locked_price_cents}
                       onReply={handleReply}
                       onDelete={handleDelete}
                       onForward={handleForward}
@@ -796,11 +908,21 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   toast.success(disappearingMode ? "Disappearing messages OFF" : "Disappearing messages ON — messages auto-delete after 24h");
                 }}
                 disappearingEnabled={disappearingMode}
+                onLockedImageSelect={() => lockedImageInputRef.current?.click()}
+
               />
             </div>
 
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
             <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} />
+            <input ref={lockedImageInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleLockedMediaSelect} />
+
+            {/* Locked media price picker */}
+            <LockedMediaPricePicker
+              open={showLockedPricePicker}
+              onClose={() => { setShowLockedPricePicker(false); setPendingLockedFile(null); }}
+              onConfirm={handleLockedMediaConfirm}
+            />
 
             {/* Document upload */}
             <ChatMediaUploader
@@ -845,8 +967,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             {input.trim() ? (
               <button
                 onClick={() => handleSend()}
+                onContextMenu={(e) => { e.preventDefault(); setShowScheduler(true); }}
                 disabled={sending}
                 className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
+                title="Long press to schedule"
               >
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-[17px] w-[17px]" />}
               </button>
@@ -957,6 +1081,45 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           />
         )}
       </AnimatePresence>
+
+      {/* Message Scheduler */}
+      <MessageScheduler
+        open={showScheduler}
+        onClose={() => setShowScheduler(false)}
+        message={input}
+        onSchedule={async (scheduledAt) => {
+          if (!user?.id || !input.trim()) return;
+          try {
+            await (supabase as any).from("scheduled_messages").insert({
+              sender_id: user.id,
+              receiver_id: recipientId,
+              message: input.trim(),
+              scheduled_at: scheduledAt.toISOString(),
+            });
+            setInput("");
+            clearDraft();
+            setShowScheduler(false);
+            toast.success(`Message scheduled for ${format(scheduledAt, "MMM d, h:mm a")}`);
+          } catch {
+            toast.error("Failed to schedule message");
+          }
+        }}
+      />
+
+      {/* Pinned Messages Panel */}
+      <PinnedMessagesPanel
+        open={showPinnedPanel}
+        onClose={() => setShowPinnedPanel(false)}
+        messages={pinnedMessages.map(m => ({
+          id: m.id,
+          message: m.message,
+          sender_name: m.sender_id === user?.id ? "You" : recipientName,
+          time: formatMsgTime(m.created_at),
+          isMe: m.sender_id === user?.id,
+        }))}
+        onJumpToMessage={scrollToMessage}
+        onUnpin={(id) => handlePin(id, false)}
+      />
     </motion.div>
   );
 }

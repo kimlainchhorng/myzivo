@@ -55,7 +55,7 @@ export default function ChatStories() {
     refetchInterval: 60000,
     queryFn: async () => {
       const { data } = await supabase
-        .from("user_stories" as any)
+        .from("stories" as any)
         .select("id, user_id, media_url, media_type, caption, created_at, expires_at, views_count")
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: true });
@@ -103,7 +103,7 @@ export default function ChatStories() {
 
   const deleteStory = useMutation({
     mutationFn: async (storyId: string) => {
-      const { error } = await supabase.from("user_stories" as any).delete().eq("id", storyId);
+      const { error } = await supabase.from("stories" as any).delete().eq("id", storyId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -127,7 +127,7 @@ export default function ChatStories() {
         .order("viewed_at", { ascending: false });
       if (!data || data.length === 0) return [];
       const viewerIds = (data as any[]).map((v: any) => v.viewer_id);
-      const { data: profiles } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", viewerIds);
+      const { data: profiles } = await supabase.from("public_profiles" as any).select("id, full_name, avatar_url").in("id", viewerIds);
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
       return (data as any[]).map((v: any) => ({
         ...v,
@@ -149,7 +149,7 @@ export default function ChatStories() {
         .order("created_at", { ascending: true });
       if (!data || data.length === 0) return [];
       const userIds = [...new Set((data as any[]).map((c: any) => c.user_id))];
-      const { data: profiles } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", userIds);
+      const { data: profiles } = await supabase.from("public_profiles" as any).select("id, full_name, avatar_url").in("id", userIds);
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
       return (data as any[]).map((c: any) => ({
         ...c,
@@ -214,7 +214,7 @@ export default function ChatStories() {
 
       const { data: urlData } = supabase.storage.from("user-stories").getPublicUrl(path);
 
-      const { error: insertError } = await supabase.from("user_stories" as any).insert({
+      const { error: insertError } = await supabase.from("stories" as any).insert({
         user_id: user.id,
         media_url: urlData.publicUrl,
         media_type: isVideo ? "video" : "image",
@@ -514,17 +514,20 @@ export default function ChatStories() {
             />
 
             {/* Right-side TikTok-style action buttons */}
-            <div className="absolute right-4 bottom-[140px] flex flex-col items-center gap-5 z-20">
+            <div className="absolute right-4 bottom-[160px] flex flex-col items-center gap-4 z-20">
               <button
                 onClick={() => setLiked((l) => !l)}
                 className="flex flex-col items-center gap-1"
               >
-                <div className={cn(
-                  "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm transition-all",
-                  liked ? "bg-destructive/80" : "bg-white/10"
-                )}>
+                <motion.div
+                  animate={liked ? { scale: [1, 1.3, 1] } : {}}
+                  className={cn(
+                    "w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm transition-all",
+                    liked ? "bg-destructive/80" : "bg-white/10"
+                  )}
+                >
                   <Heart className={cn("w-5 h-5 transition-all", liked ? "text-white fill-white" : "text-white")} />
-                </div>
+                </motion.div>
                 <span className="text-white/80 text-[10px] font-medium">Like</span>
               </button>
 
@@ -592,6 +595,23 @@ export default function ChatStories() {
                   <p className="text-white text-sm font-medium drop-shadow-lg leading-relaxed">
                     {currentStory.caption}
                   </p>
+                </div>
+              )}
+
+              {/* Quick emoji reactions */}
+              {!isOwner && (
+                <div className="px-4 pb-2">
+                  <div className="flex items-center justify-center gap-3">
+                    {["❤️", "😂", "😮", "🔥", "😢", "👏"].map((emoji) => (
+                      <button
+                        key={emoji}
+                        onClick={() => { toast.success(`Reacted with ${emoji}`); }}
+                        className="text-2xl active:scale-150 transition-transform"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 

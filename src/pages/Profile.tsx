@@ -9,7 +9,7 @@ import {
   User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
   Shield, Star, ChevronRight, UserPlus, UserCheck,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
-  Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell,
+  Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -168,6 +168,8 @@ const Profile = () => {
   const updateProfile = useUpdateUserProfile();
   const uploadAvatar = useUploadAvatar();
   const langTriggerRef = useRef<HTMLButtonElement>(null);
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  
   const [showLangPicker, setShowLangPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const profileCardRef = useRef<HTMLDivElement>(null);
@@ -359,25 +361,8 @@ const Profile = () => {
     toast.success("Cover position saved!");
   };
 
-  const quickLinks = [
-    { icon: Settings, label: "Settings", href: "/account/settings", description: "App settings & preferences", color: "from-gray-500/15 to-gray-600/10", iconColor: "text-muted-foreground" },
-    { icon: ShoppingBag, label: t("profile.my_orders"), href: "/grocery/orders", description: t("profile.orders_desc"), color: "from-blue-500/15 to-blue-600/10", iconColor: "text-blue-500" },
-    { icon: Wallet, label: t("profile.wallet"), href: "/wallet", description: t("profile.wallet_desc"), color: "from-emerald-500/15 to-emerald-600/10", iconColor: "text-emerald-500" },
-    { icon: Sparkles, label: t("profile.loyalty"), href: "/account/loyalty", description: t("profile.loyalty_desc"), color: "from-amber-500/15 to-amber-600/10", iconColor: "text-amber-500" },
-    { icon: MapPin, label: t("profile.saved_addresses"), href: "/account/addresses", description: t("profile.addresses_desc"), color: "from-rose-500/15 to-rose-600/10", iconColor: "text-rose-500" },
-    { icon: Handshake, label: "Become Partner", href: "#partner", description: "Join ZIVO as partner", color: "from-violet-500/15 to-violet-600/10", iconColor: "text-violet-500" },
-  ];
 
-  const [showPartnerSheet, setShowPartnerSheet] = useState(false);
 
-  const partnerOptions = [
-    { icon: Car, label: "Become a Driver", description: "Earn money driving with ZIVO", href: "/partner-with-zivo?type=driver", color: "from-blue-500 to-blue-600" },
-    { icon: UtensilsCrossed, label: "Become a Restaurant Partner", description: "List your restaurant on ZIVO", href: "/partner-with-zivo?type=restaurant", color: "from-orange-500 to-amber-500" },
-    { icon: Store, label: "Become a Shop Partner", description: "Sell products through ZIVO", href: "/partner-with-zivo?type=store", color: "from-emerald-500 to-green-500" },
-    { icon: Wrench, label: "Become an Auto Repair Partner", description: "Offer repair services on ZIVO", href: "/partner-with-zivo?type=auto-repair", color: "from-slate-500 to-slate-600" },
-    { icon: Building2, label: "Become a Hotel Partner", description: "List your property on ZIVO", href: "/partner-with-zivo?type=hotel", color: "from-purple-500 to-purple-600" },
-    { icon: Truck, label: "Become a Delivery Partner", description: "Deliver food & packages", href: "/partner-with-zivo?type=delivery", color: "from-rose-500 to-pink-500" },
-  ];
 
   const currentLang = LANGS.find(l => l.code === currentLanguage) || LANGS[0];
 
@@ -411,32 +396,6 @@ const Profile = () => {
         <div className="px-4 pt-4 max-w-lg mx-auto">
 
           {/* ── Header with 3D parallax ── */}
-          <motion.div style={{ y: headerY, scale: headerScale }} className="flex items-start justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <motion.div whileHover={{ scale: 1.1, rotateY: 10 }} whileTap={{ scale: 0.9 }}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate(-1)}
-                  className="rounded-2xl bg-card/60 backdrop-blur-xl border border-border/30 shadow-lg shadow-primary/[0.05] hover:bg-card/80 -ml-2 touch-manipulation active:scale-95"
-                  aria-label="Go back"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </motion.div>
-              <div>
-                <h1 className="font-display text-xl font-bold">{t("profile.title")}</h1>
-                <p className="text-muted-foreground text-xs">{t("profile.subtitle")}</p>
-              </div>
-            </div>
-            {isAdmin && (
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="outline" size="sm" onClick={() => navigate("/admin/analytics")} className="gap-2 rounded-2xl backdrop-blur-xl bg-card/60 border-border/30 shadow-lg">
-                  <Shield className="h-4 w-4" /> Admin Dashboard
-                </Button>
-              </motion.div>
-            )}
-          </motion.div>
 
           {/* ── Language Selector & Notifications (compact pills) ── */}
           <ParallaxSection index={0}>
@@ -456,47 +415,160 @@ const Profile = () => {
 
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/notifications')}
-                className="relative z-20 flex min-h-[36px] items-center gap-1.5 px-3.5 py-2 rounded-xl bg-card/70 backdrop-blur-xl border border-border/30 text-[11px] font-bold shadow-lg shadow-primary/[0.05] touch-manipulation transition-all hover:bg-card/90"
+                onClick={() => setShowNotifPanel(prev => !prev)}
+                className={cn(
+                  "relative z-20 flex min-h-[36px] items-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-bold shadow-lg touch-manipulation transition-all",
+                  showNotifPanel
+                    ? "bg-primary text-primary-foreground shadow-primary/25"
+                    : "bg-card/70 backdrop-blur-xl border border-border/30 shadow-primary/[0.05] hover:bg-card/90"
+                )}
                 style={{ perspective: "800px", transformStyle: "preserve-3d", transform: "translateZ(24px)" }}
               >
                 <span className="relative">
-                  <Bell className="w-3.5 h-3.5 text-destructive" />
-                  {totalNotifCount > 0 && (
+                  <Bell className={cn("w-3.5 h-3.5", showNotifPanel ? "text-primary-foreground" : "text-destructive")} />
+                  {totalNotifCount > 0 && !showNotifPanel && (
                     <span className="absolute -top-1.5 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground px-1 shadow-md shadow-destructive/30">
                       {totalNotifCount > 99 ? '99+' : totalNotifCount}
                     </span>
                   )}
                 </span>
                 <span className="ml-1">Notifications</span>
-                <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                <ChevronDown className={cn("w-3 h-3 transition-transform duration-300", showNotifPanel ? "rotate-180 text-primary-foreground/70" : "text-muted-foreground")} />
+              </motion.button>
+
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate("/more")}
+                className={cn(
+                  "relative z-20 flex min-h-[36px] items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-xl border text-[11px] font-bold shadow-lg touch-manipulation transition-all",
+                  "bg-card/70 border-border/30 shadow-primary/[0.05] hover:bg-card/90"
+                )}
+                style={{ perspective: "800px", transformStyle: "preserve-3d", transform: "translateZ(24px)" }}
+              >
+                <MoreHorizontal className={cn("w-3.5 h-3.5", "text-muted-foreground")} />
+                <span>More</span>
+                <ChevronRight className={cn("w-3 h-3 text-muted-foreground")} />
               </motion.button>
             </div>
+
+            {/* Inline Notifications Panel */}
+            <AnimatePresence>
+              {showNotifPanel && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-2 rounded-2xl bg-card/80 backdrop-blur-xl border border-border/40 shadow-xl shadow-primary/[0.04] p-3">
+                    {/* Panel Header */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Bell className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-bold">Notifications</span>
+                        {totalNotifCount > 0 && (
+                          <Badge variant="secondary" className="text-[10px] h-5 px-1.5">{totalNotifCount} new</Badge>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setShowNotifPanel(false)}
+                        className="p-1.5 rounded-xl hover:bg-muted/50 transition-colors touch-manipulation active:scale-90"
+                        aria-label="Close notifications"
+                      >
+                        <X className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </div>
+
+                    {/* Quick Notification Items */}
+                    <div className="space-y-1.5 mb-3">
+                      {totalNotifCount === 0 ? (
+                        <div className="text-center py-4">
+                          <Bell className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                          <p className="text-xs text-muted-foreground">No new notifications</p>
+                        </div>
+                      ) : (
+                        <>
+                          {socialCount > 0 && (
+                            <button
+                              onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
+                              className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-primary/5 border border-primary/15 hover:bg-primary/10 transition-colors text-left touch-manipulation"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                                <UserPlus className="w-4 h-4 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold">Friend Requests</p>
+                                <p className="text-[10px] text-muted-foreground">{socialCount} pending</p>
+                              </div>
+                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                            </button>
+                          )}
+                          {notifUnreadCount > 0 && (
+                            <button
+                              onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
+                              className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors text-left touch-manipulation"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                                <Bell className="w-4 h-4 text-destructive" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold">Unread Alerts</p>
+                                <p className="text-[10px] text-muted-foreground">{notifUnreadCount} notifications</p>
+                              </div>
+                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {/* View All + Close Buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
+                        className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold touch-manipulation active:scale-95 transition-transform"
+                      >
+                        View All
+                      </button>
+                      <button
+                        onClick={() => setShowNotifPanel(false)}
+                        className="px-4 py-2 rounded-xl bg-muted/50 text-muted-foreground text-xs font-bold touch-manipulation active:scale-95 transition-transform hover:bg-muted/70"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </ParallaxSection>
 
-          {/* ── Country Selector (compact cards) ── */}
-          <ParallaxSection index={1}>
-            <div className="flex items-center justify-center gap-2 mb-4">
-              {countries.map((c) => (
-                <motion.button
-                  key={c.code}
-                  whileTap={{ scale: 0.94 }}
-                  onClick={() => setCountry(c.code)}
-                  className={`relative flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-[12px] font-bold transition-all touch-manipulation overflow-hidden min-w-[120px] justify-center ${
-                    country === c.code
-                      ? "ring-2 ring-primary shadow-xl shadow-primary/20"
-                      : "ring-1 ring-border/30 opacity-65 hover:opacity-100"
-                  }`}
-                >
-                  <img src={CITY_BG[c.code]} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-                  <div className={`absolute inset-0 transition-colors duration-500 ${country === c.code ? "bg-primary/55" : "bg-foreground/40"}`} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/5" />
-                  <img src={getFlagUrl(c.code.toLowerCase())} alt={c.name} className="w-5 h-3.5 rounded-[2px] object-cover shadow-md border border-white/40 shrink-0 relative z-10" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                  <span className="relative z-10 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">{c.name}</span>
-                </motion.button>
-              ))}
-            </div>
-          </ParallaxSection>
+          {/* ── Country Selector (admin only — others use IP detection) ── */}
+          {isAdmin && (
+            <ParallaxSection index={1}>
+              <div className="flex items-center justify-center gap-2 mb-4">
+                {countries.map((c) => (
+                  <motion.button
+                    key={c.code}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => setCountry(c.code)}
+                    className={`relative flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-[12px] font-bold transition-all touch-manipulation overflow-hidden min-w-[120px] justify-center ${
+                      country === c.code
+                        ? "ring-2 ring-primary shadow-xl shadow-primary/20"
+                        : "ring-1 ring-border/30 opacity-65 hover:opacity-100"
+                    }`}
+                  >
+                    <img src={CITY_BG[c.code]} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                    <div className={`absolute inset-0 transition-colors duration-500 ${country === c.code ? "bg-primary/55" : "bg-foreground/40"}`} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/5" />
+                    <img src={getFlagUrl(c.code.toLowerCase())} alt={c.name} className="w-5 h-3.5 rounded-[2px] object-cover shadow-md border border-white/40 shrink-0 relative z-10" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                    <span className="relative z-10 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">{c.name}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </ParallaxSection>
+          )}
 
           {profileLoading ? (
             <div className="flex items-center justify-center py-20">
@@ -770,114 +842,8 @@ const Profile = () => {
               </ParallaxSection>
 
 
-              {/* ── Quick Access Links (3D floating glass tiles) ── */}
-              <ParallaxSection index={4}>
-                <h3 className="font-display font-bold text-base mb-3">{t("profile.quick_access")}</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {quickLinks.map((link, i) => {
-                    const isPartner = link.href === "#partner";
-                    const Wrapper = isPartner ? Fragment : ({ children }: { children: React.ReactNode }) => <Link to={link.href}>{children}</Link>;
-                    return (
-                      <motion.div
-                        key={link.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: i * 0.03, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={isPartner ? () => setShowPartnerSheet(true) : undefined}
-                        className={isPartner ? "cursor-pointer" : ""}
-                      >
-                        <Wrapper>
-                          <GlassCard3D className="shadow-sm hover:shadow-md transition-shadow duration-300 group">
-                            <div className="px-3 py-2.5 flex items-center gap-2.5">
-                              <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${link.color} flex items-center justify-center shrink-0`}>
-                                <link.icon className={`w-4 h-4 ${link.iconColor}`} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-[12px] leading-tight truncate">{link.label}</p>
-                                <p className="text-[10px] text-muted-foreground/70 truncate leading-tight">{link.description}</p>
-                              </div>
-                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
-                            </div>
-                          </GlassCard3D>
-                        </Wrapper>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </ParallaxSection>
 
 
-              {/* ── Merchant Dashboard (3D card) ── */}
-              {merchantData?.isMerchant && (
-                <ParallaxSection index={5}>
-                  <motion.button
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => void openExternalUrl(MERCHANT_APP_URL)}
-                    className="block w-full text-left"
-                    style={{ perspective: "800px" }}
-                  >
-                    <GlassCard3D className="shadow-xl hover:shadow-2xl transition-shadow duration-500 group">
-                      <div className="p-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-xl shadow-orange-500/25">
-                              <Store className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                              <p className="font-bold text-sm">{t("profile.merchant_dashboard")}</p>
-                              <p className="text-xs text-muted-foreground">{t("profile.merchant_desc")}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge className="bg-orange-500/12 text-orange-500 border-orange-500/20 font-semibold text-xs rounded-full">{t("profile.partner")}</Badge>
-                            <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-orange-500 transition-colors" />
-                          </div>
-                        </div>
-                      </div>
-                    </GlassCard3D>
-                  </motion.button>
-                </ParallaxSection>
-              )}
-
-              {/* ── Partner Attribution (3D glass) ── */}
-              {affiliateAttribution.hasAffiliateAttribution && (
-                <ParallaxSection index={6}>
-                  <GlassCard3D className="shadow-xl">
-                    <div className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500/15 to-violet-600/10 flex items-center justify-center shadow-inner">
-                          <Users className="w-5 h-5 text-violet-500" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm">{t("profile.referred_by")}</p>
-                          <p className="text-xs text-muted-foreground">{t("profile.joined_through")} {affiliateAttribution.partnerName}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </GlassCard3D>
-                </ParallaxSection>
-              )}
-
-              {/* ── Sign Out (bottom) ── */}
-              {user && (
-                <ParallaxSection index={7}>
-                  <div className="pt-2 pb-4">
-                    <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full h-13 text-base font-semibold rounded-2xl backdrop-blur-xl bg-card/50 border-border/40 shadow-lg shadow-foreground/[0.03] hover:shadow-xl hover:bg-card/70 transition-all duration-300 touch-manipulation"
-                        onClick={async () => { await signOut(); navigate("/"); }}
-                      >
-                        {t("profile.sign_out")}
-                      </Button>
-                    </motion.div>
-                  </div>
-                </ParallaxSection>
-              )}
             </div>
           )}
         </div>
@@ -924,58 +890,8 @@ const Profile = () => {
         document.body
       )}
 
-      {/* ── Become Partner Bottom Sheet ── */}
-      <AnimatePresence>
-        {showPartnerSheet && createPortal(
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
-              onClick={() => setShowPartnerSheet(false)}
-            />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-[61] bg-background rounded-t-3xl max-h-[85vh] overflow-y-auto"
-            >
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
-              </div>
-              <div className="px-5 pb-2">
-                <h2 className="text-lg font-bold">Become a ZIVO Partner</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Choose how you'd like to partner with us</p>
-              </div>
-              <div className="px-4 pb-8 space-y-2">
-                {partnerOptions.map((opt) => (
-                  <motion.button
-                    key={opt.label}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => {
-                      setShowPartnerSheet(false);
-                      navigate(opt.href);
-                    }}
-                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/40 hover:bg-accent/50 transition-colors text-left"
-                  >
-                    <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${opt.color} flex items-center justify-center shrink-0 shadow-lg`}>
-                      <opt.icon className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-[13px]">{opt.label}</p>
-                      <p className="text-[10px] text-muted-foreground">{opt.description}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          </>,
-          document.body
-        )}
-      </AnimatePresence>
+
+
       <SocialListModal
         open={socialModal.open}
         onClose={() => setSocialModal({ ...socialModal, open: false })}

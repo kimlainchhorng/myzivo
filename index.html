@@ -7,16 +7,16 @@
     
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="DENY" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Permissions-Policy" content="camera=(self), microphone=(), geolocation=(self)" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://maps.googleapis.com https://emrld.ltd https://js.hcaptcha.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co https://*.stripe.com https://maps.googleapis.com https://maps.gstatic.com https://*.google.com https://*.googleusercontent.com https://assets.duffel.com https://pics.avs.io https://ui-avatars.com; media-src 'self' blob: data: https://*.supabase.co; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://maps.googleapis.com https://api.duffel.com https://emrld.ltd; frame-src https://js.stripe.com https://hooks.stripe.com https://newassets.hcaptcha.com; worker-src 'self' blob:;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://maps.googleapis.com https://emrld.ltd https://js.hcaptcha.com https://bolt.new; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co https://*.stripe.com https://maps.googleapis.com https://maps.gstatic.com https://*.google.com https://*.googleusercontent.com https://assets.duffel.com https://pics.avs.io https://ui-avatars.com; media-src 'self' blob: data: https://*.supabase.co; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://maps.googleapis.com https://api.duffel.com https://emrld.ltd https://sentry.avs.io https://tpo.li https://tp.media https://www.travelpayouts.com; frame-src https://js.stripe.com https://hooks.stripe.com https://newassets.hcaptcha.com; worker-src 'self' blob:;" />
     
     <!-- Preconnect to critical origins for faster resource loading -->
-    <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://slirphzzwcogdbkeicff.supabase.co" crossorigin />
+    <link rel="preconnect" href="https://emrld.ltd" crossorigin />
+    <link rel="dns-prefetch" href="https://images.unsplash.com" />
     <link rel="dns-prefetch" href="https://api.duffel.com" />
     <link rel="dns-prefetch" href="https://js.stripe.com" />
     

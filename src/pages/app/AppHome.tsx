@@ -2,6 +2,7 @@
  * App Home Screen - 2026 Travel Super-App Layout
  * Premium scrollable design with saved places, quick estimate, popular services,
  * quick actions, promos, rewards, and personalized content.
+ * @module AppHome
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
