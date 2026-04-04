@@ -79,7 +79,7 @@ export default function GroceryOrderConfirmed() {
         await navigator.share({
           title: "ZIVO Grocery Order",
           text: `My grocery order from ${order?.store || "ZIVO"} is on its way!`,
-          url: window.location.href,
+          url: `${getPublicOrigin()}/grocery/orders`,
         });
       } catch {}
     } else {

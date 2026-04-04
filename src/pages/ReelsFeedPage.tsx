@@ -1006,7 +1006,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
     setShowShareSheet(true);
   };
 
-  const shareUrl = window.location.href;
+  const shareUrl = `${getPublicOrigin()}/reels?post=${item.id}`;
   const shareText = encodeURIComponent(item.caption || `Check out this post by ${item.author_name}`);
   const shareEncodedUrl = encodeURIComponent(shareUrl);
 

@@ -109,7 +109,7 @@ const FlightSocialShare = () => {
                 <div className="flex-1">
                   <p className="font-medium text-sm">ZIVO Flight Trip</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {window.location.href}
+                    {`${getPublicOrigin()}${window.location.pathname}`}
                   </p>
                 </div>
               </div>
