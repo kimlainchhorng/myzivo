@@ -36,6 +36,7 @@ import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import StorePaymentSection from "@/components/admin/StorePaymentSection";
 import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
 import StoreMarketingSection from "@/components/admin/StoreMarketingSection";
+import StoreEmployeesSection from "@/components/admin/store/StoreEmployeesSection";
 import StoreOrdersSection from "@/components/admin/StoreOrdersSection";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
