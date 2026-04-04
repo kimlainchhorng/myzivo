@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import {
   CheckCircle, ShoppingCart, ArrowLeft, Clock, Truck, CreditCard,
   Package, MapPin, Sparkles, ShoppingBag, ChevronRight, Shield,
