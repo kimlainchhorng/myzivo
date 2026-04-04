@@ -9,6 +9,7 @@ import { ArrowLeft, MapPin, Package, Loader2, Clock, DollarSign, CreditCard, Shi
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useEatsNotifications } from "@/hooks/useEatsNotifications";
