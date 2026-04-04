@@ -12,6 +12,7 @@ import {
   Plus, MapPin, Calendar, DollarSign, Trash2, Plane, Share2, MoreHorizontal, Ticket, Clock, CheckCircle, AlertCircle, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import { useTripItineraries, useCreateTrip, useDeleteTrip, TripItinerary } from "@/hooks/useTripItineraries";
 import { useFlightBookings, getTicketingStatusInfo } from "@/hooks/useFlightBooking";
 import PullToRefresh from "@/components/shared/PullToRefresh";
