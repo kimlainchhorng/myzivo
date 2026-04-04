@@ -7,7 +7,9 @@ import { motion } from "framer-motion";
 import {
   ChevronRight, Settings, ShoppingBag, Wallet, MapPin, Handshake,
   Sparkles, Car, UtensilsCrossed, Store, Wrench, Building2, Truck, Shield,
+  Copy, Share2, QrCode, Check,
 } from "lucide-react";
+import { toast } from "sonner";
 import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
