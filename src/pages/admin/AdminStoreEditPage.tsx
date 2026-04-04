@@ -2884,11 +2884,7 @@ export default function AdminStoreEditPage() {
           </TabsContent>
 
           <TabsContent value="employee-rules">
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-rose-500/10 flex items-center justify-center mb-4"><Shield className="w-7 h-7 text-rose-500" /></div>
-              <h2 className="font-semibold text-lg mb-1">Employee Rules</h2>
-              <p className="text-sm text-muted-foreground max-w-sm">Set employee rules, access levels, and workplace policies.</p>
-            </div>
+            <StoreEmployeeRulesSection storeId={storeId!} />
           </TabsContent>
 
           <TabsContent value="attendance">
