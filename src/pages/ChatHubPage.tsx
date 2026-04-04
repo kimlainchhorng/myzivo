@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft, Trash2, X, Bell, Users, Plus, Edit3, Check, CheckCheck, Image as ImageIcon, Mic, MapPin, Phone, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import GroupChat from "@/components/chat/GroupChat";
 import CreateGroupModal from "@/components/chat/CreateGroupModal";
 import { withRedirectParam } from "@/lib/authRedirect";
