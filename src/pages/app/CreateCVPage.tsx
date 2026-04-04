@@ -169,7 +169,7 @@ const CreateCVPage = () => {
                   <label className={labelClass}>Company</label>
                   <input className={inputClass} placeholder="Company Name" value={exp.company} onChange={(e) => updateExperience(exp.id, "company", e.target.value)} />
                 </div>
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className={labelClass}>Start Date</label>
                     <input type="month" className={inputClass} value={exp.startDate} onChange={(e) => updateExperience(exp.id, "startDate", e.target.value)} />
