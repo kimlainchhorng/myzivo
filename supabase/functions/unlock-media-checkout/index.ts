@@ -59,7 +59,10 @@ serve(async (req) => {
         {
           price_data: {
             currency: "usd",
-            product: "prod_UGow5ibJh2K1aA",
+            product_data: {
+              name: "Unlock Media",
+              description: "Unlock locked photo or video",
+            },
             unit_amount: priceCents,
           },
           quantity: 1,
