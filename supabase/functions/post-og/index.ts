@@ -19,6 +19,17 @@ type PostMeta = {
   authorName: string;
 };
 
+const VIDEO_EXT_RE = /\.(mp4|mov|webm|m4v|avi)(\?.*)?$/i;
+const IMAGE_EXT_RE = /\.(jpg|jpeg|png|webp|gif|avif)(\?.*)?$/i;
+
+function isVideoUrl(url: string): boolean {
+  return VIDEO_EXT_RE.test(url);
+}
+
+function isImageUrl(url: string): boolean {
+  return IMAGE_EXT_RE.test(url);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -142,21 +153,25 @@ async function resolvePostMeta(
     .maybeSingle();
 
   if (storePost?.media_urls?.length) {
+    const mediaUrls = (storePost.media_urls as string[]).filter(Boolean);
+    const detectedVideoUrl = mediaUrls.find(isVideoUrl) || mediaUrls[0];
+    const detectedImageUrl = mediaUrls.find(isImageUrl) || null;
+
     const { data: store } = await supabase
       .from("store_profiles")
-      .select("name")
+      .select("name, logo_url")
       .eq("id", storePost.store_id)
       .maybeSingle();
 
     const isVideo = storePost.media_type === "video";
-    const fallbackImage = storePost.thumbnail_url || `${APP_ORIGIN}/og-image.png`;
+    const fallbackImage = storePost.thumbnail_url || detectedImageUrl || store?.logo_url || `${APP_ORIGIN}/og-image.png`;
 
     return {
       id: storePost.id,
       caption: storePost.caption,
       mediaType: isVideo ? "video" : "image",
-      mediaUrl: storePost.media_urls[0],
-      ogImageUrl: isVideo ? fallbackImage : storePost.media_urls[0],
+      mediaUrl: isVideo ? detectedVideoUrl : (detectedImageUrl || mediaUrls[0]),
+      ogImageUrl: isVideo ? fallbackImage : (detectedImageUrl || mediaUrls[0] || fallbackImage),
       authorName: store?.name?.trim() || "ZIVO Store",
     };
   }
