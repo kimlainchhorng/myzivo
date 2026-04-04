@@ -277,6 +277,35 @@ const AppMore = () => {
           </div>
         </SheetContent>
       </Sheet>
+      {/* Switch Account Sheet */}
+      <Sheet open={showSwitchSheet} onOpenChange={setShowSwitchSheet}>
+        <SheetContent side="bottom" className="rounded-t-3xl max-h-[85dvh] overflow-auto pb-10">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="text-lg font-display">Switch Account</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-2">
+            {roleOptions.map((opt) => (
+              <button
+                key={opt.label}
+                onClick={() => {
+                  setShowSwitchSheet(false);
+                  navigate(opt.href);
+                }}
+                className="w-full flex items-center gap-3 p-3 rounded-2xl border border-border/30 bg-card/60 hover:bg-card/90 transition-colors touch-manipulation active:scale-[0.98] text-left"
+              >
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${opt.color} flex items-center justify-center shadow-lg`}>
+                  <opt.icon className="w-4.5 h-4.5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm">{opt.label}</p>
+                  <p className="text-xs text-muted-foreground">{opt.description}</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+              </button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
     </AppLayout>
   );
 };
