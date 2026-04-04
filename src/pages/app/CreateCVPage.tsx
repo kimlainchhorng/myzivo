@@ -562,9 +562,9 @@ const CreateCVPage = () => {
     if (cvId) {
       ({ error } = await supabase.from("user_cvs").update(payload).eq("id", cvId));
     } else {
-      const res = await supabase.from("user_cvs").insert(payload).select("id").single();
+      const res = await supabase.from("user_cvs").insert(payload).select("id, share_code").single();
       error = res.error;
-      if (res.data) setCvId(res.data.id);
+      if (res.data) { setCvId(res.data.id); if ((res.data as any).share_code) setShareCode((res.data as any).share_code); }
     }
     if (!silent) setSaving(false);
     if (error) { if (!silent) toast.error("Failed to save CV"); console.error(error); }
