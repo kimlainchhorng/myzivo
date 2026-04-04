@@ -350,9 +350,9 @@ function SplitFareTab() {
   };
 
   const generateLink = () => {
-    const link = `hizovo.com/split/${Date.now().toString(36)}`;
+    const link = `${getPublicOrigin()}/split/${Date.now().toString(36)}`;
     setSplitLink(link);
-    navigator.clipboard.writeText(`https://${link}`);
+    navigator.clipboard.writeText(link);
     toast.success("Split link copied!");
   };
 
