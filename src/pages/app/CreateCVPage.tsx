@@ -1053,7 +1053,7 @@ const CreateCVPage = () => {
 
       {/* Preview Modal */}
       <AnimatePresence>
-        {showPreview && <CVPreviewModal open={showPreview} onClose={() => setShowPreview(false)} data={previewData} />}
+        {showPreview && <CVPreviewModal open={showPreview} onClose={() => setShowPreview(false)} data={previewData} template={selectedTemplate} />}
       </AnimatePresence>
     </AppLayout>
   );
