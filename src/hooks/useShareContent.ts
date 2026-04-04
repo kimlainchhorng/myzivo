@@ -3,7 +3,7 @@
  */
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 
 interface ShareOptions {
   title: string;
