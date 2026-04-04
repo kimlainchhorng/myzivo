@@ -2895,6 +2895,38 @@ export default function AdminStoreEditPage() {
             </div>
           </TabsContent>
 
+          <TabsContent value="attendance">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-teal-500/10 flex items-center justify-center mb-4"><CalendarIcon className="w-7 h-7 text-teal-500" /></div>
+              <h2 className="font-semibold text-lg mb-1">Attendance & Leave</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">Track attendance, manage sick days, and handle vacation requests for your team.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="training">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-indigo-500/10 flex items-center justify-center mb-4"><Package className="w-7 h-7 text-indigo-500" /></div>
+              <h2 className="font-semibold text-lg mb-1">Training & Onboarding</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">Manage training programs, onboarding checklists, and skill development for employees.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="performance">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-yellow-500/10 flex items-center justify-center mb-4"><Eye className="w-7 h-7 text-yellow-500" /></div>
+              <h2 className="font-semibold text-lg mb-1">Performance Reviews</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">Conduct employee evaluations, set goals, and track performance feedback.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="documents">
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-full bg-sky-500/10 flex items-center justify-center mb-4"><Upload className="w-7 h-7 text-sky-500" /></div>
+              <h2 className="font-semibold text-lg mb-1">Documents & Files</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">Store and manage employee contracts, IDs, certifications, and other important documents.</p>
+            </div>
+          </TabsContent>
+
 
         </Tabs>
       </div>
