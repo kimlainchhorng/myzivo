@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.lookup-store-id]
 verify_jwt = false
+
+[functions.profile-og]
+verify_jwt = false
