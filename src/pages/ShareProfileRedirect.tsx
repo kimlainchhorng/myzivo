@@ -17,7 +17,7 @@ export default function ShareProfileRedirect() {
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          navigate(`/user/${data.id}`, { replace: true });
+          navigate(`/user/${data.id}?sc=${encodeURIComponent(code)}`, { replace: true });
         } else {
           setNotFound(true);
         }

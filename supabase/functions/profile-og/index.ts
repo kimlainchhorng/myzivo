@@ -47,8 +47,8 @@ Deno.serve(async (req) => {
     }
 
     const name = profile.full_name || "ZIVO User";
-    // Public profile routes resolve by profile id across the app.
-    const shareLandingUrl = `${APP_ORIGIN}/user/${encodeURIComponent(profile.id)}`;
+    // Preserve share code in URL so the profile page can fallback-resolve when direct reads are blocked.
+    const shareLandingUrl = `${APP_ORIGIN}/user/${encodeURIComponent(profile.id)}?sc=${encodeURIComponent(profile.share_code || code)}`;
     const avatar = profile.avatar_url || `${APP_ORIGIN}/og-image.png`;
     const cover = profile.cover_url || avatar;
     const ogImage = cover;
