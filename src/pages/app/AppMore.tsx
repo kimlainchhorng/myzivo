@@ -107,6 +107,37 @@ const AppMore = () => {
           </motion.div>
         )}
 
+        {/* Profile Share Actions */}
+        {user && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            className="mb-5 flex gap-2"
+          >
+            <button
+              onClick={copyProfileLink}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl border border-border/40 bg-card text-sm font-semibold touch-manipulation active:scale-[0.97] transition-all shadow-sm"
+            >
+              {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+              {copied ? "Copied!" : "Copy Link"}
+            </button>
+            <button
+              onClick={shareProfile}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl border border-border/40 bg-card text-sm font-semibold touch-manipulation active:scale-[0.97] transition-all shadow-sm"
+            >
+              <Share2 className="w-4 h-4 text-muted-foreground" />
+              Share
+            </button>
+            <button
+              onClick={() => navigate("/qr-profile")}
+              className="w-11 flex items-center justify-center rounded-2xl border border-border/40 bg-card touch-manipulation active:scale-[0.97] transition-all shadow-sm"
+            >
+              <QrCode className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </motion.div>
+        )}
+
         <h2 className="font-bold text-lg mb-4">Quick Access</h2>
 
         <div className="grid grid-cols-2 gap-3">
