@@ -61,7 +61,7 @@ export default function RideSocialHub() {
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { icon: MessageSquare, label: "Message", action: () => toast.success("Share link sent via message") },
-                    { icon: Copy, label: "Copy Link", action: () => { navigator.clipboard.writeText("https://hizovo.com/track/abc123"); toast.success("Tracking link copied!"); } },
+                    { icon: Copy, label: "Copy Link", action: () => { navigator.clipboard.writeText(`${getPublicOrigin()}/track/abc123`); toast.success("Tracking link copied!"); } },
                     { icon: Mail, label: "Email", action: () => toast.success("Tracking link emailed") },
                     { icon: Smartphone, label: "WhatsApp", action: () => toast.success("Opening WhatsApp...") },
                   ].map(opt => (
