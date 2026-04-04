@@ -4,6 +4,7 @@ import { MoreHorizontal, X, MessageCircle, User } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getPostShareUrl } from "@/lib/getPublicOrigin";
 
 interface ShareSheetProps {
   shareUrl: string;
@@ -40,13 +41,29 @@ export default function ShareSheet({
   const [sharingToProfile, setSharingToProfile] = useState(false);
   const navigate = useNavigate();
 
-  const shareEncodedUrl = encodeURIComponent(shareUrl);
+  const normalizeShareUrl = (url: string) => {
+    try {
+      const parsed = new URL(url);
+      const postId = parsed.searchParams.get("post");
+      if (postId && (parsed.pathname === "/reels" || parsed.pathname === "/feed")) {
+        return getPostShareUrl(postId);
+      }
+    } catch {
+      // Keep original URL if parsing fails.
+    }
+
+    return url;
+  };
+
+  const effectiveShareUrl = normalizeShareUrl(shareUrl);
+
+  const shareEncodedUrl = encodeURIComponent(effectiveShareUrl);
   const shareEncodedText = encodeURIComponent(shareText);
 
   const handleCopyLink = () => {
     try {
       const ta = document.createElement("textarea");
-      ta.value = shareUrl;
+      ta.value = effectiveShareUrl;
       ta.style.cssText = "position:fixed;opacity:0;left:-9999px";
       document.body.appendChild(ta);
       ta.focus();
@@ -72,7 +89,7 @@ export default function ShareSheet({
 
   const handleShareToChat = () => {
     onClose();
-    navigate("/chat", { state: { shareUrl, shareText } });
+    navigate("/chat", { state: { shareUrl: effectiveShareUrl, shareText } });
     toast.success("Select a chat to share");
   };
 

@@ -20,7 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { getPostShareUrl } from "@/lib/getPublicOrigin";
 import { repairVideoBlob } from "@/utils/videoRepair";
 
 interface FeedPost {
@@ -1045,7 +1045,7 @@ export default function FeedPage() {
       {/* Share sheet */}
       {sharePostId && (
         <UnifiedShareSheet
-          shareUrl={`${getPublicOrigin()}/feed?post=${sharePostId}`}
+          shareUrl={getPostShareUrl(sharePostId)}
           shareText={posts.find((p) => p.id === sharePostId)?.caption || "Check out this post!"}
           onClose={() => setSharePostId(null)}
         />
