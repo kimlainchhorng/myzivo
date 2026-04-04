@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const APP_ORIGIN = "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app";
+const APP_ORIGIN = "https://myzivo.lovable.app";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,21 +43,21 @@ Deno.serve(async (req) => {
     }
 
     const name = profile.full_name || "ZIVO User";
-    const shareUrl = `${url.origin}${url.pathname}?code=${encodeURIComponent(profile.share_code)}`;
     const appProfileUrl = `${APP_ORIGIN}/user/${profile.id}`;
     const avatar = profile.avatar_url || `${APP_ORIGIN}/og-image.png`;
     const cover = profile.cover_url || avatar;
     const ogImage = cover;
-    const description = `${name} — View my profile on ZIVO. One app for every journey.`;
+    const description = `${name} - View my profile on ZIVO. One app for every journey.`;
 
     // Serve crawlable HTML for social previews; real users are redirected with JS only.
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${escapeHtml(name)} on ZIVO</title>
   <meta name="description" content="${escapeHtml(description)}" />
-  <meta property="og:type" content="profile" />
+  <meta property="og:type" content="website" />
   <meta property="og:title" content="${escapeHtml(name)}" />
   <meta property="og:description" content="${escapeHtml(description)}" />
   <meta property="og:image" content="${escapeHtml(ogImage)}" />
@@ -65,13 +65,14 @@ Deno.serve(async (req) => {
   <meta property="og:image:alt" content="${escapeHtml(name)}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:url" content="${escapeHtml(shareUrl)}" />
+  <meta property="og:url" content="${escapeHtml(appProfileUrl)}" />
   <meta property="og:site_name" content="ZIVO" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(name)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
   <meta name="twitter:image" content="${escapeHtml(ogImage)}" />
-  <link rel="canonical" href="${escapeHtml(shareUrl)}" />
+  <meta name="twitter:url" content="${escapeHtml(appProfileUrl)}" />
+  <link rel="canonical" href="${escapeHtml(appProfileUrl)}" />
 </head>
 <body>
   <script>window.location.replace("${escapeHtml(appProfileUrl)}");</script>
