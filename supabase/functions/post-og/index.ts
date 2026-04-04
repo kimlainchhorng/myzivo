@@ -15,6 +15,7 @@ type PostMeta = {
   caption: string | null;
   mediaType: "image" | "video";
   mediaUrl: string;
+  ogImageUrl: string;
   authorName: string;
 };
 
@@ -66,8 +67,8 @@ Deno.serve(async (req) => {
   <meta property="og:type" content="${ogType}" />
   <meta property="og:title" content="${escapeHtml(postMeta.authorName)} on ZIVO" />
   <meta property="og:description" content="${escapeHtml(description)}" />
-  <meta property="og:image" content="${escapeHtml(postMeta.mediaUrl)}" />
-  <meta property="og:image:secure_url" content="${escapeHtml(postMeta.mediaUrl)}" />
+  <meta property="og:image" content="${escapeHtml(postMeta.ogImageUrl)}" />
+  <meta property="og:image:secure_url" content="${escapeHtml(postMeta.ogImageUrl)}" />
   <meta property="og:image:alt" content="${escapeHtml(postMeta.authorName)} post" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -77,7 +78,7 @@ Deno.serve(async (req) => {
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(postMeta.authorName)} on ZIVO" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
-  <meta name="twitter:image" content="${escapeHtml(postMeta.mediaUrl)}" />
+  <meta name="twitter:image" content="${escapeHtml(postMeta.ogImageUrl)}" />
   <meta name="twitter:url" content="${escapeHtml(shareLandingUrl)}" />
   <link rel="canonical" href="${escapeHtml(shareLandingUrl)}" />
 </head>
@@ -117,22 +118,26 @@ async function resolvePostMeta(
   if (userPost?.media_url) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name")
+      .select("full_name, avatar_url")
       .eq("user_id", userPost.user_id)
       .maybeSingle();
+
+    const isVideo = userPost.media_type === "video" || userPost.media_type === "reel";
+    const fallbackImage = profile?.avatar_url || `${APP_ORIGIN}/og-image.png`;
 
     return {
       id: userPost.id,
       caption: userPost.caption,
-      mediaType: userPost.media_type === "video" || userPost.media_type === "reel" ? "video" : "image",
+      mediaType: isVideo ? "video" : "image",
       mediaUrl: userPost.media_url,
+      ogImageUrl: isVideo ? fallbackImage : userPost.media_url,
       authorName: profile?.full_name?.trim() || "ZIVO User",
     };
   }
 
   const { data: storePost } = await supabase
     .from("store_posts")
-    .select("id, caption, media_urls, media_type, store_id")
+    .select("id, caption, media_urls, media_type, thumbnail_url, store_id")
     .eq("id", postId)
     .maybeSingle();
 
@@ -143,11 +148,15 @@ async function resolvePostMeta(
       .eq("id", storePost.store_id)
       .maybeSingle();
 
+    const isVideo = storePost.media_type === "video";
+    const fallbackImage = storePost.thumbnail_url || `${APP_ORIGIN}/og-image.png`;
+
     return {
       id: storePost.id,
       caption: storePost.caption,
-      mediaType: storePost.media_type === "video" ? "video" : "image",
+      mediaType: isVideo ? "video" : "image",
       mediaUrl: storePost.media_urls[0],
+      ogImageUrl: isVideo ? fallbackImage : storePost.media_urls[0],
       authorName: store?.name?.trim() || "ZIVO Store",
     };
   }
