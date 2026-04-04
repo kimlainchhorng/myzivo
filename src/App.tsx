@@ -461,6 +461,7 @@ const App = () => (
                 <Route path="/support" element={<ProtectedRoute><SupportCenterPage /></ProtectedRoute>} />
                 <Route path="/travel" element={<ProtectedRoute><AppTravel /></ProtectedRoute>} />
                 <Route path="/more" element={<ProtectedRoute><AppMore /></ProtectedRoute>} />
+                <Route path="/personal-dashboard" element={<ProtectedRoute><PersonalDashboard /></ProtectedRoute>} />
                 <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
 
                 {/* Legacy redirects */}
