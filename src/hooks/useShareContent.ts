@@ -13,7 +13,6 @@ interface ShareOptions {
 
 export function useShareContent() {
   const share = useCallback(async ({ title, text, url }: ShareOptions) => {
-    // Try native share first
     if (navigator.share) {
       try {
         await navigator.share({ title, text, url });
@@ -26,7 +25,6 @@ export function useShareContent() {
       }
     }
 
-    // Fallback: copy to clipboard
     try {
       await navigator.clipboard.writeText(url);
       toast.success("Link copied to clipboard");
@@ -45,11 +43,11 @@ export function useShareContent() {
     });
   }, [share]);
 
-  const shareProfile = useCallback((userId: string, name?: string) => {
+  const shareProfile = useCallback((shareCode: string, name?: string) => {
     return share({
       title: `${name || "User"} on ZIVO`,
       text: `Check out ${name || "this user"}'s profile on ZIVO`,
-      url: getProfileShareUrl(userId),
+      url: getProfileShareUrl(shareCode),
     });
   }, [share]);
 
