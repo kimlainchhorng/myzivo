@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { getPublicOrigin } from '@/lib/getPublicOrigin';
 
 export interface ReferralCode {
   id: string;
@@ -168,7 +169,7 @@ export const useReferrals = () => {
   // Generate share URL
   const getShareUrl = () => {
     if (!referralCode?.code) return '';
-    return `${window.location.origin}/signup?ref=${referralCode.code}`;
+    return `${getPublicOrigin()}/signup?ref=${referralCode.code}`;
   };
 
   // Copy referral link
