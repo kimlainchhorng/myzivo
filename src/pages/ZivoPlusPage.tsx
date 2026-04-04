@@ -234,7 +234,8 @@ export default function ZivoPlusPage() {
         if (!isAllowedCheckoutUrl(data.url)) {
           throw new Error("Invalid checkout URL");
         }
-        window.location.href = data.url;
+        const { openExternalUrl } = await import("@/lib/openExternalUrl");
+        await openExternalUrl(data.url);
       } else {
         throw new Error("No checkout URL returned");
       }
