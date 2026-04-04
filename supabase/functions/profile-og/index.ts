@@ -1,5 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
+const PUBLIC_ORIGIN = "https://hizivo.com";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -41,16 +43,12 @@ Deno.serve(async (req) => {
     }
 
     const name = profile.full_name || "ZIVO User";
-    const shareUrl = `https://hizivo.com/p/${profile.share_code}`;
-    const appProfileUrl = `https://hizivo.com/user/${profile.id}`;
-    const avatar = profile.avatar_url || "https://hizivo.com/og-image.png";
+    const shareUrl = `${PUBLIC_ORIGIN}/p/${profile.share_code}`;
+    const appProfileUrl = `${PUBLIC_ORIGIN}/user/${profile.id}`;
+    const avatar = profile.avatar_url || `${PUBLIC_ORIGIN}/og-image.png`;
     const cover = profile.cover_url || avatar;
     const ogImage = cover;
     const description = `${name} — View my profile on ZIVO. One app for every journey.`;
-
-    // Check if request is from a social media crawler
-    const userAgent = req.headers.get("user-agent") || "";
-    const isCrawler = /facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|Slackbot|TelegramBot|Pinterest|Discordbot/i.test(userAgent);
 
     // Always serve HTML with OG tags — crawlers need them, and real users get redirected via JS
     const html = `<!DOCTYPE html>
@@ -58,6 +56,8 @@ Deno.serve(async (req) => {
 <head>
   <meta charset="utf-8" />
   <title>${escapeHtml(name)} on ZIVO</title>
+  <meta name="description" content="${escapeHtml(description)}" />
+  <meta http-equiv="refresh" content="0;url=${escapeHtml(appProfileUrl)}" />
   <meta property="og:type" content="profile" />
   <meta property="og:title" content="${escapeHtml(name)}" />
   <meta property="og:description" content="${escapeHtml(description)}" />
@@ -80,9 +80,13 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
-    return new Response(html, {
+    return new Response(new Blob([html], { type: "text/html; charset=utf-8" }), {
       status: 200,
-      headers: { "Content-Type": "text/html; charset=utf-8", ...corsHeaders },
+      headers: new Headers({
+        ...corsHeaders,
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=300, s-maxage=300",
+      }),
     });
 
   } catch (err) {
