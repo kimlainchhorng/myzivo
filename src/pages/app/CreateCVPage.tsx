@@ -2,7 +2,7 @@
  * CreateCVPage — Professional CV/Resume builder with Supabase persistence.
  * Features: Photo cloud upload, templates, PDF download, share link, auto-save, progress tips.
  */
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -167,7 +167,7 @@ function ProgressTips({ data }: { data: any }) {
 }
 
 /* ── CV Preview Modal — Two-column professional layout ── */
-function CVPreviewModal({ open, onClose, data }: { open: boolean; onClose: () => void; data: any }) {
+const CVPreviewModal = forwardRef<HTMLDivElement, { open: boolean; onClose: () => void; data: any }>(({ open, onClose, data }, ref) => {
   if (!open) return null;
 
   const hasExperience = data.experiences?.some((e: any) => e.position);
@@ -417,8 +417,8 @@ function CVPreviewModal({ open, onClose, data }: { open: boolean; onClose: () =>
       </motion.div>
     </motion.div>
   );
-}
-
+});
+CVPreviewModal.displayName = "CVPreviewModal";
 function formatDate(d: string) {
   if (!d) return "";
   const [y, m] = d.split("-");
@@ -562,9 +562,9 @@ const CreateCVPage = () => {
     if (cvId) {
       ({ error } = await supabase.from("user_cvs").update(payload).eq("id", cvId));
     } else {
-      const res = await supabase.from("user_cvs").insert(payload).select("id").single();
+      const res = await supabase.from("user_cvs").insert(payload).select("id, share_code").single();
       error = res.error;
-      if (res.data) setCvId(res.data.id);
+      if (res.data) { setCvId(res.data.id); if ((res.data as any).share_code) setShareCode((res.data as any).share_code); }
     }
     if (!silent) setSaving(false);
     if (error) { if (!silent) toast.error("Failed to save CV"); console.error(error); }
@@ -573,7 +573,7 @@ const CreateCVPage = () => {
       if (!silent) toast.success("CV saved!");
       if (silent) { setAutoSaveStatus("saved"); setTimeout(() => setAutoSaveStatus("idle"), 2000); }
     }
-  }, [user, cvId, fullName, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies]);
+  }, [user, cvId, fullName, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies, selectedTemplate, photo]);
 
   const handleSave = useCallback(() => doSave(false), [doSave]);
 
