@@ -624,7 +624,18 @@ const CreateCVPage = () => {
     );
   }
 
-  const previewData = { photo, fullName, jobTitle, email, phone, location, summary, experiences, educations, skills, languages, certifications, references };
+  const previewData = { photo, fullName, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies };
+
+  const handleShare = () => {
+    if (!shareCode) { toast.error("Save your CV first to get a share link"); return; }
+    const url = `${window.location.origin}/cv/${shareCode}`;
+    navigator.clipboard.writeText(url).then(() => toast.success("Share link copied!")).catch(() => toast.error("Failed to copy"));
+  };
+
+  const handleDownloadPDF = () => {
+    setShowPreview(true);
+    setTimeout(() => { window.print(); }, 500);
+  };
 
   return (
     <AppLayout title="Create CV" hideHeader>
