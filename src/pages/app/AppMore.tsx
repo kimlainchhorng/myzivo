@@ -42,6 +42,29 @@ const AppMore = () => {
   const { user, signOut, isAdmin } = useAuth();
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const profileUrl = user ? `${window.location.origin}/profile/${user.id}` : "";
+
+  const copyProfileLink = () => {
+    navigator.clipboard.writeText(profileUrl);
+    setCopied(true);
+    toast.success("Profile link copied!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const shareProfile = async () => {
+    const name = profile?.full_name || user?.email?.split("@")[0] || "User";
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${name} on ZIVO`, text: `Check out ${name}'s profile on ZIVO`, url: profileUrl });
+      } catch (err: any) {
+        if (err.name !== "AbortError") copyProfileLink();
+      }
+    } else {
+      copyProfileLink();
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
