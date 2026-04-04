@@ -2,7 +2,7 @@
  * CreateCVPage — Professional CV/Resume builder with Supabase persistence.
  * Features: Photo cloud upload, templates, PDF download, share link, auto-save, progress tips.
  */
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
