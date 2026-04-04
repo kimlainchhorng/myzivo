@@ -13,10 +13,10 @@ Deno.serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const userId = url.searchParams.get("userId");
+    const code = url.searchParams.get("code");
 
-    if (!userId) {
-      return new Response(JSON.stringify({ error: "userId required" }), {
+    if (!code) {
+      return new Response(JSON.stringify({ error: "code required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -29,8 +29,8 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, full_name, avatar_url, cover_url")
-      .eq("id", userId)
+      .select("id, full_name, avatar_url, cover_url, share_code")
+      .eq("share_code", code)
       .single();
 
     if (!profile) {
@@ -41,10 +41,9 @@ Deno.serve(async (req) => {
     }
 
     const name = profile.full_name || "ZIVO User";
-    const profileUrl = `https://hizivo.com/user/${userId}`;
+    const profileUrl = `https://hizivo.com/p/${profile.share_code}`;
     const avatar = profile.avatar_url || "https://hizivo.com/og-image.png";
-    const cover = profile.cover_url || avatar;
-    const ogImage = avatar; // Use avatar as primary OG image for profile recognition
+    const ogImage = avatar;
     const description = `${name} — View my profile on ZIVO. One app for every journey.`;
 
     // Check if request is from a social media crawler
