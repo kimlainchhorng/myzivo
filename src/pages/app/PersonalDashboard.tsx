@@ -125,10 +125,10 @@ const PersonalDashboard = () => {
               onClick={handleClockOut}
               disabled={clockStatus !== "clocked-in"}
               className={cn(
-                "flex-1 py-2.5 rounded-xl font-semibold text-[13px] flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all",
+                "flex-1 py-2.5 rounded-xl font-semibold text-[13px] flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all border",
                 clockStatus !== "clocked-in"
-                  ? "bg-muted/40 text-muted-foreground cursor-not-allowed"
-                  : "bg-destructive text-destructive-foreground"
+                  ? "border-border/60 text-muted-foreground cursor-not-allowed bg-transparent"
+                  : "border-destructive bg-destructive text-destructive-foreground"
               )}
             >
               <LogOut className="w-3.5 h-3.5" />
