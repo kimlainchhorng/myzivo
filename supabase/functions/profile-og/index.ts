@@ -44,7 +44,8 @@ Deno.serve(async (req) => {
     const shareUrl = `https://hizivo.com/p/${profile.share_code}`;
     const appProfileUrl = `https://hizivo.com/user/${profile.id}`;
     const avatar = profile.avatar_url || "https://hizivo.com/og-image.png";
-    const ogImage = avatar;
+    const cover = profile.cover_url || avatar;
+    const ogImage = cover;
     const description = `${name} — View my profile on ZIVO. One app for every journey.`;
 
     // Check if request is from a social media crawler
@@ -61,11 +62,13 @@ Deno.serve(async (req) => {
   <meta property="og:title" content="${escapeHtml(name)}" />
   <meta property="og:description" content="${escapeHtml(description)}" />
   <meta property="og:image" content="${escapeHtml(ogImage)}" />
-  <meta property="og:image:width" content="512" />
-  <meta property="og:image:height" content="512" />
+  <meta property="og:image:secure_url" content="${escapeHtml(ogImage)}" />
+  <meta property="og:image:alt" content="${escapeHtml(name)}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:url" content="${escapeHtml(shareUrl)}" />
   <meta property="og:site_name" content="ZIVO" />
-  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(name)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
   <meta name="twitter:image" content="${escapeHtml(ogImage)}" />
