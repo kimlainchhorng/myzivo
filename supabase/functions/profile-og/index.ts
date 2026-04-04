@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const APP_ORIGIN = "https://myzivo.lovable.app";
+const SOCIAL_CRAWLER_UA = /facebookexternalhit|facebot|twitterbot|xbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|skypeuripreview|pinterest|redditbot|embedly|meta-externalagent|meta-externalfetcher/i;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +17,7 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
+    const userAgent = req.headers.get("user-agent") ?? "";
 
     if (!code) {
       return new Response(JSON.stringify({ error: "code required" }), {
@@ -48,6 +50,10 @@ Deno.serve(async (req) => {
     const cover = profile.cover_url || avatar;
     const ogImage = cover;
     const description = `${name} - View my profile on ZIVO. One app for every journey.`;
+
+    if (!SOCIAL_CRAWLER_UA.test(userAgent)) {
+      return Response.redirect(appProfileUrl, 302);
+    }
 
     // Serve crawlable HTML for social previews; real users are redirected with JS only.
     const html = `<!DOCTYPE html>
@@ -86,6 +92,7 @@ Deno.serve(async (req) => {
         ...corsHeaders,
         "content-type": "text/html; charset=utf-8",
         "cache-control": "public, max-age=300, s-maxage=300",
+        "vary": "User-Agent, Accept-Encoding",
       }),
     });
 
