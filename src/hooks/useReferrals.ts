@@ -169,7 +169,7 @@ export const useReferrals = () => {
   // Generate share URL
   const getShareUrl = () => {
     if (!referralCode?.code) return '';
-    return `${window.location.origin}/signup?ref=${referralCode.code}`;
+    return `${getPublicOrigin()}/signup?ref=${referralCode.code}`;
   };
 
   // Copy referral link
