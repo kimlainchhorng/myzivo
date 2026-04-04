@@ -70,8 +70,9 @@ const AppMore = () => {
     if (access?.isHotelOwner) {
       options.push({ icon: Hotel, label: "Hotel Dashboard", description: "Manage your hotel", href: "/hotel-dashboard", color: "from-purple-500 to-purple-600" });
     }
-    // Shop Dashboard — visible to anyone (or shop owners when that role exists)
-    options.push({ icon: Store, label: "Shop Dashboard", description: "Manage your shop", href: "/shop-dashboard", color: "from-emerald-500 to-green-500" });
+    if (access?.isStoreOwner) {
+      options.push({ icon: Store, label: "Shop Dashboard", description: "Manage your shop", href: access.storeId ? `/admin/stores/${access.storeId}` : "/shop-dashboard", color: "from-emerald-500 to-green-500" });
+    }
     return options;
   })();
 

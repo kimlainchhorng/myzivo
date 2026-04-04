@@ -8,10 +8,12 @@ export interface UserAccess {
   isCarRentalOwner: boolean;
   isHotelOwner: boolean;
   isFlightManager: boolean;
+  isStoreOwner: boolean;
   driverId?: string;
   restaurantId?: string;
   carRentalIds?: string[];
   hotelId?: string;
+  storeId?: string;
 }
 
 export const useUserAccess = (userId: string | undefined) => {
@@ -26,11 +28,12 @@ export const useUserAccess = (userId: string | undefined) => {
           isCarRentalOwner: false,
           isHotelOwner: false,
           isFlightManager: false,
+          isStoreOwner: false,
         };
       }
 
       // Check all access in parallel
-      const [adminRole, driver, restaurant, carRentals, hotel] = await Promise.all([
+      const [adminRole, driver, restaurant, carRentals, hotel, storeProfile] = await Promise.all([
         supabase
           .from("user_roles")
           .select("role")
@@ -56,6 +59,11 @@ export const useUserAccess = (userId: string | undefined) => {
           .select("id")
           .eq("owner_id", userId)
           .maybeSingle(),
+        supabase
+          .from("store_profiles")
+          .select("id")
+          .eq("owner_id", userId)
+          .maybeSingle(),
       ]);
 
       return {
@@ -64,11 +72,13 @@ export const useUserAccess = (userId: string | undefined) => {
         isRestaurantOwner: !!restaurant.data,
         isCarRentalOwner: (carRentals.data?.length ?? 0) > 0,
         isHotelOwner: !!hotel.data,
-        isFlightManager: !!adminRole.data, // For now, only admins can manage flights
+        isFlightManager: !!adminRole.data,
+        isStoreOwner: !!storeProfile.data,
         driverId: driver.data?.id,
         restaurantId: restaurant.data?.id,
         carRentalIds: carRentals.data?.map(c => c.id),
         hotelId: hotel.data?.id,
+        storeId: storeProfile.data?.id,
       };
     },
     enabled: !!userId,
