@@ -22,7 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { getPublicOrigin, getPostShareUrl } from "@/lib/getPublicOrigin";
+import { getPostShareUrl } from "@/lib/getPublicOrigin";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -65,6 +65,8 @@ interface FeedItem {
 const normalizeUserPostMediaType = (mediaType: string | null | undefined): "image" | "video" =>
   mediaType === "video" || mediaType === "reel" ? "video" : "image";
 
+const getReelsSharePostId = (item: FeedItem): string => item.id.replace(/^u-/, "");
+
 export default function ReelsFeedPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -74,6 +76,7 @@ export default function ReelsFeedPage() {
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
   const [reelsStartIndex, setReelsStartIndex] = useState<number | null>(null);
+  const reelsScrollRef = useRef<HTMLDivElement>(null);
   const fullscreenScrollRef = useRef<HTMLDivElement>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -309,6 +312,37 @@ export default function ReelsFeedPage() {
     staleTime: 30_000,
   });
 
+  useEffect(() => {
+    const postId = new URLSearchParams(location.search).get("post");
+    if (!postId || items.length === 0) return;
+
+    const target = items.find((item) => item.id === postId || item.id === `u-${postId}`);
+    if (!target) return;
+
+    if (target.media_type === "video") {
+      const videoItems = items.filter((item) => item.media_type === "video");
+      const videoIndex = videoItems.findIndex((item) => item.id === target.id);
+      if (videoIndex >= 0) {
+        setReelsStartIndex(videoIndex);
+      }
+      return;
+    }
+
+    const itemIndex = items.findIndex((item) => item.id === target.id);
+    if (itemIndex >= 0) {
+      setFullscreenIndex(itemIndex);
+    }
+  }, [items, location.search]);
+
+  useEffect(() => {
+    if (reelsStartIndex === null) return;
+
+    requestAnimationFrame(() => {
+      const slide = reelsScrollRef.current?.children[reelsStartIndex] as HTMLElement | undefined;
+      slide?.scrollIntoView({ block: "start" });
+    });
+  }, [reelsStartIndex]);
+
   const handlePullRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
   }, [queryClient]);
@@ -514,7 +548,7 @@ export default function ReelsFeedPage() {
             className="fixed inset-0 z-[100] bg-black"
           >
             {/* Snap-scroll container */}
-            <div className="h-full w-full overflow-y-scroll snap-y snap-mandatory">
+            <div ref={reelsScrollRef} className="h-full w-full overflow-y-scroll snap-y snap-mandatory">
               {items.filter((it) => it.media_type === 'video').map((item) => (
                 <ReelSlide
                   key={item.id}
@@ -643,7 +677,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     }
   })();
 
-  const shareUrl = getPostShareUrl(item.id);
+  const shareUrl = getPostShareUrl(getReelsSharePostId(item));
   const shareText = encodeURIComponent(item.caption || `Check out this post by ${item.author_name}`);
   const shareEncodedUrl = encodeURIComponent(shareUrl);
 
@@ -1006,7 +1040,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
     setShowShareSheet(true);
   };
 
-  const shareUrl = getPostShareUrl(item.id);
+  const shareUrl = getPostShareUrl(getReelsSharePostId(item));
   const shareText = encodeURIComponent(item.caption || `Check out this post by ${item.author_name}`);
   const shareEncodedUrl = encodeURIComponent(shareUrl);
 

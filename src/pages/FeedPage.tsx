@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import { repairVideoBlob } from "@/utils/videoRepair";
@@ -850,6 +850,7 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
 export default function FeedPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const location = useLocation();
   const [globalMuted, setGlobalMuted] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -955,6 +956,19 @@ export default function FeedPage() {
 
     return () => observers.forEach((o) => o.disconnect());
   }, [posts.length]);
+
+  useEffect(() => {
+    const sharedPostId = new URLSearchParams(location.search).get("post");
+    if (!sharedPostId || posts.length === 0) return;
+
+    const targetIndex = posts.findIndex((post) => post.id === sharedPostId);
+    if (targetIndex < 0) return;
+
+    setActiveIndex(targetIndex);
+    requestAnimationFrame(() => {
+      cardRefs.current[targetIndex]?.scrollIntoView({ block: "start" });
+    });
+  }, [posts, location.search]);
 
   if (isLoading) {
     return (
