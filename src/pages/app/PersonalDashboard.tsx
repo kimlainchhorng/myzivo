@@ -51,6 +51,7 @@ const PersonalDashboard = () => {
 
   const menuItems = [
     { icon: Users, label: "Employees", description: "Manage team members", onClick: () => navigate("/personal/employees"), color: "text-blue-500", bg: "bg-blue-500/10" },
+    { icon: Briefcase, label: "Apply Job", description: "Create CV & apply", onClick: () => navigate("/personal/create-cv"), color: "text-indigo-500", bg: "bg-indigo-500/10" },
     { icon: Calendar, label: "Schedule", description: "View work schedule", onClick: () => navigate("/personal/schedule"), color: "text-purple-500", bg: "bg-purple-500/10" },
     { icon: Timer, label: "Timesheet", description: "View hours history", onClick: () => navigate("/personal/timesheet"), color: "text-amber-500", bg: "bg-amber-500/10" },
     { icon: FileText, label: "Pay Stubs", description: "Earnings & deductions", onClick: () => navigate("/personal/pay-stubs"), color: "text-emerald-500", bg: "bg-emerald-500/10" },
