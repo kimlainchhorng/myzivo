@@ -5,6 +5,8 @@
 import { useState, useEffect, useCallback, useRef, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 import {
   ArrowLeft, Plus, Trash2, User, Briefcase, GraduationCap,
   Wrench, Globe, Award, Save, FileText, Link2, Linkedin,
@@ -447,6 +449,12 @@ function MinimalLayout({ data }: { data: any }) {
   );
 }
 
+function CVDocumentLayout({ data, template }: { data: any; template: TemplateId }) {
+  if (template === "modern") return <ModernLayout data={data} />;
+  if (template === "minimal") return <MinimalLayout data={data} />;
+  return <ClassicLayout data={data} />;
+}
+
 /* ── CV Preview Modal ─────────────────────────────── */
 const CVPreviewModal = forwardRef<HTMLDivElement, { open: boolean; onClose: () => void; data: any; template: TemplateId }>(({ open, onClose, data, template }, ref) => {
   if (!open) return null;
@@ -481,9 +489,7 @@ const CVPreviewModal = forwardRef<HTMLDivElement, { open: boolean; onClose: () =
 
         {/* CV Document */}
         <div className="overflow-y-auto flex-1">
-          {template === "modern" ? <ModernLayout data={data} /> :
-           template === "minimal" ? <MinimalLayout data={data} /> :
-           <ClassicLayout data={data} />}
+          <CVDocumentLayout data={data} template={template} />
         </div>
       </motion.div>
     </motion.div>
@@ -532,6 +538,7 @@ const CreateCVPage = () => {
 
   // UI state
   const [saving, setSaving] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [cvId, setCvId] = useState<string | null>(null);
   const [shareCode, setShareCode] = useState<string | null>(null);
@@ -547,7 +554,7 @@ const CreateCVPage = () => {
   const [completionPct, setCompletionPct] = useState(0);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialLoadDone = useRef(false);
-  const printRef = useRef<HTMLDivElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   /* ── Load existing CV ────────────────────────────── */
   useEffect(() => {
@@ -705,15 +712,78 @@ const CreateCVPage = () => {
   };
 
 
-  const handleDownloadPDF = () => {
-    const el = printRef.current;
-    if (!el) return;
-    // Show the hidden print container, print, then hide
-    el.style.display = "block";
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => { el.style.display = "none"; }, 500);
-    }, 200);
+  const waitForExportAssets = async (element: HTMLDivElement) => {
+    const images = Array.from(element.querySelectorAll("img"));
+
+    await Promise.all(images.map((img) => (
+      img.complete
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            const done = () => resolve();
+            img.addEventListener("load", done, { once: true });
+            img.addEventListener("error", done, { once: true });
+          })
+    )));
+
+    if ("fonts" in document) {
+      await document.fonts.ready;
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    const el = exportRef.current;
+    if (!el) {
+      toast.error("PDF export is not ready yet");
+      return;
+    }
+
+    try {
+      setDownloading(true);
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      await waitForExportAssets(el);
+
+      const canvas = await html2canvas(el, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        windowWidth: el.scrollWidth,
+        windowHeight: el.scrollHeight,
+      });
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imageWidth = pageWidth;
+      const imageHeight = (canvas.height * imageWidth) / canvas.width;
+      const imageData = canvas.toDataURL("image/png");
+
+      let heightLeft = imageHeight;
+      let position = 0;
+
+      pdf.addImage(imageData, "PNG", 0, position, imageWidth, imageHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0.1) {
+        position = heightLeft - imageHeight;
+        pdf.addPage();
+        pdf.addImage(imageData, "PNG", 0, position, imageWidth, imageHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const fileBaseName = (fullName.trim() || "cv")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "") || "cv";
+
+      pdf.save(`${fileBaseName}-a4.pdf`);
+      toast.success("PDF downloaded");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to download PDF");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -1015,9 +1085,10 @@ const CreateCVPage = () => {
             className="h-12 rounded-xl border-2 border-primary/30 text-primary font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all">
             <Eye className="w-4 h-4" /> Preview
           </button>
-          <button onClick={handleDownloadPDF}
-            className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all">
-            <Download className="w-3.5 h-3.5" /> Download PDF
+          <button onClick={() => void handleDownloadPDF()} disabled={downloading}
+            className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
+            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            {downloading ? "Preparing PDF…" : "Download PDF"}
           </button>
           <button onClick={handleShare}
             className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all">
@@ -1064,12 +1135,10 @@ const CreateCVPage = () => {
         {showPreview && <CVPreviewModal open={showPreview} onClose={() => setShowPreview(false)} data={previewData} template={selectedTemplate} />}
       </AnimatePresence>
 
-      {/* Hidden A4 print container */}
-      <div ref={printRef} id="cv-print-area" className="hidden print:block" style={{ display: "none" }}>
-        <div className="w-[210mm] min-h-[297mm] bg-white mx-auto" style={{ fontFamily: "system-ui, sans-serif", color: "#1a1a1a" }}>
-          {selectedTemplate === "modern" ? <ModernLayout data={previewData} /> :
-           selectedTemplate === "minimal" ? <MinimalLayout data={previewData} /> :
-           <ClassicLayout data={previewData} />}
+      {/* Hidden A4 export container */}
+      <div className="fixed left-[-10000px] top-0 pointer-events-none" aria-hidden="true">
+        <div ref={exportRef} id="cv-export-area" className="w-[210mm] min-h-[297mm] bg-white" style={{ fontFamily: "system-ui, sans-serif", color: "#1a1a1a" }}>
+          <CVDocumentLayout data={previewData} template={selectedTemplate} />
         </div>
       </div>
     </AppLayout>
