@@ -90,28 +90,38 @@ function DateRoller({ value, onChange, label, disabled }: {
   );
 }
 
-/* ── Photo Preview Component ──────────────────────── */
-function PhotoUpload({ photo, onPhotoChange }: { photo: string | null; onPhotoChange: (url: string) => void }) {
+/* ── Photo Upload to Supabase Storage ─────────────── */
+function PhotoUpload({ photo, onPhotoChange, userId }: { photo: string | null; onPhotoChange: (url: string) => void; userId?: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) { toast.error("Photo must be under 5MB"); return; }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      if (ev.target?.result) onPhotoChange(ev.target.result as string);
-    };
-    reader.readAsDataURL(file);
+    if (!userId) {
+      // Fallback to local preview if no userId
+      const reader = new FileReader();
+      reader.onload = (ev) => { if (ev.target?.result) onPhotoChange(ev.target.result as string); };
+      reader.readAsDataURL(file);
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${userId}/cv-photo.${ext}`;
+    const { error } = await supabase.storage.from("cv-photos").upload(path, file, { upsert: true });
+    if (error) { toast.error("Upload failed"); setUploading(false); return; }
+    const { data: urlData } = supabase.storage.from("cv-photos").getPublicUrl(path);
+    onPhotoChange(urlData.publicUrl + "?t=" + Date.now());
+    setUploading(false);
+    toast.success("Photo uploaded!");
   };
 
   return (
     <div className="flex flex-col items-center gap-2 mb-3">
-      <button
-        onClick={() => fileRef.current?.click()}
-        className="relative w-20 h-20 rounded-full border-2 border-dashed border-primary/30 bg-muted/20 flex items-center justify-center overflow-hidden touch-manipulation active:scale-95 transition-transform group"
-      >
-        {photo ? (
+      <button onClick={() => fileRef.current?.click()} disabled={uploading}
+        className="relative w-20 h-20 rounded-full border-2 border-dashed border-primary/30 bg-muted/20 flex items-center justify-center overflow-hidden touch-manipulation active:scale-95 transition-transform group">
+        {uploading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : photo ? (
           <img src={photo} alt="Profile" className="w-full h-full object-cover rounded-full" />
         ) : (
           <div className="flex flex-col items-center gap-0.5">
@@ -124,11 +134,34 @@ function PhotoUpload({ photo, onPhotoChange }: { photo: string | null; onPhotoCh
         </div>
       </button>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-      {photo && (
-        <button onClick={() => onPhotoChange("")} className="text-[10px] text-destructive/70 font-medium">
-          Remove photo
-        </button>
-      )}
+      {photo && !uploading && <button onClick={() => onPhotoChange("")} className="text-[10px] text-destructive/70 font-medium">Remove photo</button>}
+    </div>
+  );
+}
+
+/* ── Progress Tips ────────────────────────────────── */
+function ProgressTips({ data }: { data: any }) {
+  const tips: string[] = [];
+  if (!data.photo) tips.push("Add a professional photo to stand out");
+  if (!data.jobTitle?.trim()) tips.push("Add a job title/headline");
+  if (!data.summary?.trim()) tips.push("Write a professional summary (2-3 sentences)");
+  if (!data.experiences?.some((e: any) => e.description?.trim())) tips.push("Add descriptions to your work experience");
+  if ((data.skills?.filter((s: any) => s.name?.trim())?.length || 0) < 3) tips.push("Add at least 3 skills to strengthen your CV");
+  if (!data.linkedin?.trim()) tips.push("Add your LinkedIn profile link");
+  if (tips.length === 0) return null;
+  return (
+    <div className="bg-primary/5 rounded-xl p-3 border border-primary/10 mb-4">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Lightbulb className="w-3.5 h-3.5 text-primary" />
+        <span className="text-[11px] font-bold text-primary">Tips to improve your CV</span>
+      </div>
+      <ul className="space-y-1">
+        {tips.slice(0, 3).map((tip, i) => (
+          <li key={i} className="text-[10px] text-muted-foreground flex items-start gap-1.5">
+            <span className="w-1 h-1 rounded-full bg-primary/50 mt-1.5 shrink-0" />{tip}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
