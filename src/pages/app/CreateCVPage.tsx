@@ -417,8 +417,8 @@ const CVPreviewModal = forwardRef<HTMLDivElement, { open: boolean; onClose: () =
       </motion.div>
     </motion.div>
   );
-}
-
+});
+CVPreviewModal.displayName = "CVPreviewModal";
 function formatDate(d: string) {
   if (!d) return "";
   const [y, m] = d.split("-");
