@@ -703,47 +703,17 @@ const CreateCVPage = () => {
     navigator.clipboard.writeText(url).then(() => toast.success("Share link copied!")).catch(() => toast.error("Failed to copy"));
   };
 
+  const printRef = useRef<HTMLDivElement>(null);
+
   const handleDownloadPDF = () => {
-    // Create a full A4 print-only container
-    const printDiv = document.createElement("div");
-    printDiv.id = "cv-print-container";
-    printDiv.style.cssText = "position:fixed;top:0;left:0;width:210mm;min-height:297mm;background:white;z-index:99999;overflow:visible;";
-    document.body.appendChild(printDiv);
-
-    // Add print-only CSS
-    const style = document.createElement("style");
-    style.id = "cv-print-style";
-    style.textContent = `
-      @media print {
-        body > *:not(#cv-print-container) { display: none !important; }
-        #cv-print-container { position: static !important; width: 100% !important; }
-        @page { size: A4; margin: 0; }
-      }
-    `;
-    document.head.appendChild(style);
-
-    // Render the CV into the container using React
-    const { createRoot } = require("react-dom/client");
-    const root = createRoot(printDiv);
-    const TemplateComponent = selectedTemplate === "modern" ? ModernLayout
-      : selectedTemplate === "minimal" ? MinimalLayout
-      : ClassicLayout;
-    root.render(
-      <div style={{ width: "210mm", minHeight: "297mm", background: "white", padding: "0", fontFamily: "system-ui, sans-serif", color: "#1a1a1a" }}>
-        <TemplateComponent data={previewData} />
-      </div>
-    );
-
-    // Print after render
+    const el = printRef.current;
+    if (!el) return;
+    // Show the hidden print container, print, then hide
+    el.style.display = "block";
     setTimeout(() => {
       window.print();
-      // Cleanup after print
-      setTimeout(() => {
-        root.unmount();
-        printDiv.remove();
-        style.remove();
-      }, 500);
-    }, 300);
+      setTimeout(() => { el.style.display = "none"; }, 500);
+    }, 200);
   };
 
   return (
