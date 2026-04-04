@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -188,7 +188,7 @@ export default function ChatContactInfo({
   };
 
   const handleCopyProfile = () => {
-    navigator.clipboard.writeText(`${getPublicOrigin()}/user/${recipientId}`);
+    navigator.clipboard.writeText(getProfileShareUrl(recipientId));
     toast.success("Profile link copied");
   };
 

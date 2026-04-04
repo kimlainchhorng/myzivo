@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,7 +17,7 @@ export default function QRProfilePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("my-code");
-  const profileUrl = user ? `${getPublicOrigin()}/user/${user.id}` : `${getPublicOrigin()}/profile`;
+  const profileUrl = user ? getProfileShareUrl(user.id) : `${getPublicOrigin()}/profile`;
   const [copied, setCopied] = useState(false);
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
 
