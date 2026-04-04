@@ -44,8 +44,14 @@ const ROLES = [
 
 const DEPARTMENTS = ["General", "Sales", "Kitchen", "Delivery", "Customer Support", "Inventory"];
 
+const PAY_TYPES = [
+  { value: "hourly", label: "Hourly" },
+  { value: "monthly", label: "Monthly Salary" },
+];
+
 const emptyForm = {
   name: "", email: "", phone: "", role: "staff", hourly_rate: "",
+  pay_type: "hourly" as "hourly" | "monthly", monthly_salary: "",
   notes: "", department: "General", emergency_contact: "", address: "",
   start_date: format(new Date(), "yyyy-MM-dd"),
 };
