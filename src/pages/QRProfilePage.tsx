@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,12 +10,22 @@ import { QRCodeSVG } from "qrcode.react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function QRProfilePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("my-code");
-  const profileUrl = `${getPublicOrigin()}/profile`;
+  const profileUrl = user ? `${getPublicOrigin()}/user/${user.id}` : `${getPublicOrigin()}/profile`;
   const [copied, setCopied] = useState(false);
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("full_name, avatar_url").eq("id", user.id).maybeSingle()
+      .then(({ data }) => { if (data) setProfile(data as any); });
+  }, [user]);
 
   const copyLink = () => {
     navigator.clipboard.writeText(profileUrl);
