@@ -49,6 +49,7 @@ const AppTravel = lazy(() => import("./pages/app/AppTravel"));
 const AppMore = lazy(() => import("./pages/app/AppMore"));
 const PersonalDashboard = lazy(() => import("./pages/app/PersonalDashboard"));
 const ShopDashboard = lazy(() => import("./pages/app/ShopDashboard"));
+const CreateCVPage = lazy(() => import("./pages/app/CreateCVPage"));
 const ServicesPage = lazy(() => import("./pages/app/ServicesPage"));
 const UnifiedDashboard = lazy(() => import("./pages/app/UnifiedDashboard"));
 const MyTripsPage = lazy(() => import("./pages/app/MyTripsPage"));
@@ -464,6 +465,7 @@ const App = () => (
                 <Route path="/travel" element={<ProtectedRoute><AppTravel /></ProtectedRoute>} />
                 <Route path="/more" element={<ProtectedRoute><AppMore /></ProtectedRoute>} />
                 <Route path="/personal-dashboard" element={<ProtectedRoute><PersonalDashboard /></ProtectedRoute>} />
+                <Route path="/personal/create-cv" element={<ProtectedRoute><CreateCVPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard" element={<ProtectedRoute><ShopDashboard /></ProtectedRoute>} />
                 <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
 

@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Clock, Users, LogIn, LogOut, Calendar, Timer,
-  CheckCircle2, ChevronRight, FileText, Bell, HelpCircle, Settings,
+  CheckCircle2, ChevronRight, FileText, Bell, HelpCircle, Settings, Briefcase,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -51,6 +51,7 @@ const PersonalDashboard = () => {
 
   const menuItems = [
     { icon: Users, label: "Employees", description: "Manage team members", onClick: () => navigate("/personal/employees"), color: "text-blue-500", bg: "bg-blue-500/10" },
+    { icon: Briefcase, label: "Apply Job", description: "Create CV & apply", onClick: () => navigate("/personal/create-cv"), color: "text-indigo-500", bg: "bg-indigo-500/10" },
     { icon: Calendar, label: "Schedule", description: "View work schedule", onClick: () => navigate("/personal/schedule"), color: "text-purple-500", bg: "bg-purple-500/10" },
     { icon: Timer, label: "Timesheet", description: "View hours history", onClick: () => navigate("/personal/timesheet"), color: "text-amber-500", bg: "bg-amber-500/10" },
     { icon: FileText, label: "Pay Stubs", description: "Earnings & deductions", onClick: () => navigate("/personal/pay-stubs"), color: "text-emerald-500", bg: "bg-emerald-500/10" },
