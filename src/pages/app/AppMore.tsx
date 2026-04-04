@@ -56,7 +56,7 @@ const AppMore = () => {
     const options: { icon: typeof Shield; label: string; description: string; href: string; color: string }[] = [];
     options.push({ icon: User, label: "Personal", description: "Employees, Clock In & Out", href: "/personal-dashboard", color: "from-primary to-primary/80" });
     if (isDesignatedAdmin) {
-      options.push({ icon: Shield, label: "Admin Dashboard", description: "Manage the platform", href: "/admin", color: "from-red-500 to-red-600" });
+      options.push({ icon: Shield, label: "Admin Dashboard", description: "Manage the platform", href: "/admin/analytics", color: "from-red-500 to-red-600" });
     }
     if (access?.isDriver) {
       options.push({ icon: Car, label: "Driver Dashboard", description: "Manage your rides", href: "/driver", color: "from-blue-500 to-blue-600" });
