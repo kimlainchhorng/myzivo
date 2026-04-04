@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const APP_ORIGIN = "https://myzivo.lovable.app";
+const APP_ORIGIN = "https://hizivo.com";
 const SOCIAL_CRAWLER_UA = /facebookexternalhit|facebot|twitterbot|xbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|skypeuripreview|pinterest|redditbot|embedly|meta-externalagent|meta-externalfetcher/i;
 
 const corsHeaders = {
@@ -45,14 +45,14 @@ Deno.serve(async (req) => {
     }
 
     const name = profile.full_name || "ZIVO User";
-    const appProfileUrl = `${APP_ORIGIN}/user/${profile.id}`;
+    const shareLandingUrl = `${APP_ORIGIN}/?p=${encodeURIComponent(profile.share_code || code)}`;
     const avatar = profile.avatar_url || `${APP_ORIGIN}/og-image.png`;
     const cover = profile.cover_url || avatar;
     const ogImage = cover;
     const description = `${name} - View my profile on ZIVO. One app for every journey.`;
 
     if (!SOCIAL_CRAWLER_UA.test(userAgent)) {
-      return Response.redirect(appProfileUrl, 302);
+      return Response.redirect(shareLandingUrl, 302);
     }
 
     // Serve crawlable HTML for social previews; real users are redirected with JS only.
@@ -71,18 +71,18 @@ Deno.serve(async (req) => {
   <meta property="og:image:alt" content="${escapeHtml(name)}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:url" content="${escapeHtml(appProfileUrl)}" />
+  <meta property="og:url" content="${escapeHtml(shareLandingUrl)}" />
   <meta property="og:site_name" content="ZIVO" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(name)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
   <meta name="twitter:image" content="${escapeHtml(ogImage)}" />
-  <meta name="twitter:url" content="${escapeHtml(appProfileUrl)}" />
-  <link rel="canonical" href="${escapeHtml(appProfileUrl)}" />
+  <meta name="twitter:url" content="${escapeHtml(shareLandingUrl)}" />
+  <link rel="canonical" href="${escapeHtml(shareLandingUrl)}" />
 </head>
 <body>
-  <script>window.location.replace("${escapeHtml(appProfileUrl)}");</script>
-  <p>Redirecting to <a href="${escapeHtml(appProfileUrl)}">${escapeHtml(name)}'s profile</a>...</p>
+  <script>window.location.replace("${escapeHtml(shareLandingUrl)}");</script>
+  <p>Redirecting to <a href="${escapeHtml(shareLandingUrl)}">${escapeHtml(name)}'s profile</a>...</p>
 </body>
 </html>`;
 
