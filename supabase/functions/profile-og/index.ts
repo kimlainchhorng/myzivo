@@ -18,6 +18,7 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
+    const resolveOnly = url.searchParams.get("resolve") === "1";
     const userAgent = req.headers.get("user-agent") ?? "";
 
     if (!code) {
@@ -51,6 +52,22 @@ Deno.serve(async (req) => {
     const cover = profile.cover_url || avatar;
     const ogImage = cover;
     const description = `${name} - View my profile on ZIVO. One app for every journey.`;
+
+    if (resolveOnly) {
+      return new Response(JSON.stringify({
+        profile: {
+          id: profile.id,
+          user_id: profile.user_id,
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+          cover_url: profile.cover_url,
+          share_code: profile.share_code,
+        },
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!SOCIAL_CRAWLER_UA.test(userAgent)) {
       return Response.redirect(shareLandingUrl, 302);
