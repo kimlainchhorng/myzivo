@@ -12,12 +12,12 @@ export default function ShareProfileRedirect() {
     if (!code) return;
     supabase
       .from("profiles")
-      .select("id")
+      .select("id, user_id")
       .eq("share_code", code)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          navigate(`/user/${data.id}`, { replace: true });
+          navigate(`/user/${(data as any).user_id || data.id}`, { replace: true });
         } else {
           setNotFound(true);
         }

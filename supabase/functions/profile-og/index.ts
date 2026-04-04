@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const APP_ORIGIN = "https://hizivo.com";
+// Temporary landing origin until hizivo.com deep-link rewrites are fixed.
+const APP_ORIGIN = "https://endearing-tiramisu-95e81d.netlify.app";
 const SOCIAL_CRAWLER_UA = /facebookexternalhit|facebot|twitterbot|xbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp|skypeuripreview|pinterest|redditbot|embedly|meta-externalagent|meta-externalfetcher/i;
 
 const corsHeaders = {
@@ -33,7 +34,7 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, full_name, avatar_url, cover_url, share_code")
+      .select("id, user_id, full_name, avatar_url, cover_url, share_code")
       .eq("share_code", code)
       .single();
 
@@ -45,7 +46,7 @@ Deno.serve(async (req) => {
     }
 
     const name = profile.full_name || "ZIVO User";
-    const shareLandingUrl = `${APP_ORIGIN}/user/${encodeURIComponent(profile.id)}`;
+    const shareLandingUrl = `${APP_ORIGIN}/user/${encodeURIComponent(profile.user_id || profile.id)}`;
     const avatar = profile.avatar_url || `${APP_ORIGIN}/og-image.png`;
     const cover = profile.cover_url || avatar;
     const ogImage = cover;

@@ -50,9 +50,9 @@ export default function PublicProfilePage() {
       if (!userId) return null;
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, cover_url, cover_position, profile_visibility, is_verified, share_code")
-        .eq("id", userId)
-        .single();
+        .select("id, user_id, full_name, avatar_url, cover_url, cover_position, profile_visibility, is_verified, share_code")
+        .or(`id.eq.${userId},user_id.eq.${userId}`)
+        .maybeSingle();
       return data;
     },
     enabled: !!userId,
