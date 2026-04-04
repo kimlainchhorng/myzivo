@@ -108,7 +108,7 @@ export default function LiveTripTracker({
   const progressPct = 20 + phase * 22;
   const carProgress = progressPct;
 
-  const shareLink = `hizovo.com/track/${Date.now().toString(36)}`;
+  const shareLink = `${getPublicOrigin()}/track/${Date.now().toString(36)}`;
 
   const renderETAOverlay = () => (
     <div className="absolute top-3 left-3 bg-card/95 backdrop-blur-sm rounded-xl px-3 py-2 border border-border/30 shadow-md z-20">
