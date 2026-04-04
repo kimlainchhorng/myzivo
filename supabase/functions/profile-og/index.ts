@@ -44,7 +44,8 @@ Deno.serve(async (req) => {
     const shareUrl = `https://hizivo.com/p/${profile.share_code}`;
     const appProfileUrl = `https://hizivo.com/user/${profile.id}`;
     const avatar = profile.avatar_url || "https://hizivo.com/og-image.png";
-    const ogImage = avatar;
+    const cover = profile.cover_url || avatar;
+    const ogImage = cover;
     const description = `${name} — View my profile on ZIVO. One app for every journey.`;
 
     // Check if request is from a social media crawler
