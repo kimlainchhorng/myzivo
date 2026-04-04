@@ -92,7 +92,8 @@ export default function QRProfilePage() {
                   <Download className="h-4 w-4" /> Save QR
                 </Button>
                 <Button variant="outline" className="flex-1 gap-2" onClick={() => {
-                  if (navigator.share) navigator.share({ title: "My Profile", url: profileUrl });
+                  const name = profile?.full_name || user?.email?.split("@")[0] || "User";
+                  if (navigator.share) navigator.share({ title: `${name} on ZIVO`, text: `Check out ${name}'s profile on ZIVO`, url: profileUrl });
                   else copyLink();
                 }}>
                   <Share2 className="h-4 w-4" /> Share
