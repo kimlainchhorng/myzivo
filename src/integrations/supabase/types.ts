@@ -47618,8 +47618,10 @@ export type Database = {
           linkedin: string | null
           location: string | null
           phone: string | null
+          photo_url: string | null
           portfolio: string | null
           references_list: Json | null
+          share_code: string | null
           skills: Json | null
           summary: string | null
           template: string | null
@@ -47642,8 +47644,10 @@ export type Database = {
           linkedin?: string | null
           location?: string | null
           phone?: string | null
+          photo_url?: string | null
           portfolio?: string | null
           references_list?: Json | null
+          share_code?: string | null
           skills?: Json | null
           summary?: string | null
           template?: string | null
@@ -47666,8 +47670,10 @@ export type Database = {
           linkedin?: string | null
           location?: string | null
           phone?: string | null
+          photo_url?: string | null
           portfolio?: string | null
           references_list?: Json | null
+          share_code?: string | null
           skills?: Json | null
           summary?: string | null
           template?: string | null
