@@ -220,7 +220,7 @@ const CreateCVPage = () => {
                     <input className={inputClass} placeholder="Computer Science" value={edu.field} onChange={(e) => updateEducation(edu.id, "field", e.target.value)} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className={labelClass}>Start Date</label>
                     <input type="month" className={inputClass} value={edu.startDate} onChange={(e) => updateEducation(edu.id, "startDate", e.target.value)} />
