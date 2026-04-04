@@ -47602,6 +47602,81 @@ export type Database = {
         }
         Relationships: []
       }
+      user_cvs: {
+        Row: {
+          certifications: Json | null
+          created_at: string
+          educations: Json | null
+          email: string | null
+          experiences: Json | null
+          full_name: string
+          hobbies: string | null
+          id: string
+          is_primary: boolean | null
+          job_title: string | null
+          languages: Json | null
+          linkedin: string | null
+          location: string | null
+          phone: string | null
+          portfolio: string | null
+          references_list: Json | null
+          skills: Json | null
+          summary: string | null
+          template: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          certifications?: Json | null
+          created_at?: string
+          educations?: Json | null
+          email?: string | null
+          experiences?: Json | null
+          full_name: string
+          hobbies?: string | null
+          id?: string
+          is_primary?: boolean | null
+          job_title?: string | null
+          languages?: Json | null
+          linkedin?: string | null
+          location?: string | null
+          phone?: string | null
+          portfolio?: string | null
+          references_list?: Json | null
+          skills?: Json | null
+          summary?: string | null
+          template?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          certifications?: Json | null
+          created_at?: string
+          educations?: Json | null
+          email?: string | null
+          experiences?: Json | null
+          full_name?: string
+          hobbies?: string | null
+          id?: string
+          is_primary?: boolean | null
+          job_title?: string | null
+          languages?: Json | null
+          linkedin?: string | null
+          location?: string | null
+          phone?: string | null
+          portfolio?: string | null
+          references_list?: Json | null
+          skills?: Json | null
+          summary?: string | null
+          template?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       user_devices: {
         Row: {
           created_at: string | null
