@@ -68,6 +68,51 @@ export default function ChatMessageBubble({
     checkUnlock();
   }, [id, isLockedType, isMe]);
 
+  // Unlock payment handler — uses in-app browser on native, redirect on web
+  const handleUnlockPayment = useCallback(async () => {
+    if (unlockLoading) return;
+    setUnlockLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("unlock-media-checkout", {
+        body: { message_id: id, seller_id: senderId || "", amount_cents: unlockPrice },
+      });
+      if (error) throw error;
+      if (!data?.url) throw new Error("No checkout URL");
+
+      if (Capacitor.isNativePlatform()) {
+        // Native: open in-app browser, then verify on close
+        const { Browser } = await import("@capacitor/browser");
+        const verifyOnClose = async () => {
+          // Small delay to let Stripe process
+          await new Promise((r) => setTimeout(r, 1500));
+          try {
+            const { data: vData } = await supabase.functions.invoke("verify-media-unlock", {
+              body: { message_id: id },
+            });
+            if (vData?.unlocked) {
+              setIsLocked(false);
+              toast.success("Media unlocked! 🔓");
+            } else {
+              toast.info("Payment processing — media will unlock shortly");
+            }
+          } catch {}
+          setUnlockLoading(false);
+        };
+        await Browser.addListener("browserFinished", () => {
+          verifyOnClose();
+          Browser.removeAllListeners();
+        });
+        await Browser.open({ url: data.url });
+      } else {
+        // Web: redirect in same tab — auto-verify happens on /chat?unlocked= redirect
+        window.location.href = data.url;
+      }
+    } catch {
+      toast.error("Payment failed to start");
+      setUnlockLoading(false);
+    }
+  }, [id, senderId, unlockPrice, unlockLoading]);
+
   // Load reactions
   useEffect(() => {
     if (!id || id.startsWith("opt-")) return;
