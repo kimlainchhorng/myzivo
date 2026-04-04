@@ -573,7 +573,7 @@ const CreateCVPage = () => {
       if (!silent) toast.success("CV saved!");
       if (silent) { setAutoSaveStatus("saved"); setTimeout(() => setAutoSaveStatus("idle"), 2000); }
     }
-  }, [user, cvId, fullName, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies]);
+  }, [user, cvId, fullName, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies, selectedTemplate, photo]);
 
   const handleSave = useCallback(() => doSave(false), [doSave]);
 
