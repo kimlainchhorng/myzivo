@@ -120,7 +120,7 @@ const CreateCVPage = () => {
 
         {/* Personal Information */}
         <Section icon={User} title="Personal Information" index={0}>
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div>
               <label className={labelClass}>Full Name *</label>
               <input className={inputClass} placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} />
