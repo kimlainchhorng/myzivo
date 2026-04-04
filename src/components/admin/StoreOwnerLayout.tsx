@@ -89,23 +89,49 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           </div>
 
           {/* Nav */}
-          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-            {navItems.map((item) => {
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => { onTabChange?.(item.id); setSidebarOpen(false); }}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
-                    isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
-                >
-                  <item.icon className="w-4.5 h-4.5 shrink-0" />
-                  {item.label}
-                </button>
-              );
-            })}
+          <nav className="flex-1 px-3 py-4 overflow-y-auto">
+            <div className="space-y-1">
+              {navItems.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => { onTabChange?.(item.id); setSidebarOpen(false); }}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                      isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className="w-4.5 h-4.5 shrink-0" />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="my-4 px-3">
+              <div className="border-t border-border" />
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-3 mb-1 px-1">Employee Management</p>
+            </div>
+
+            <div className="space-y-1">
+              {employeeItems.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => { onTabChange?.(item.id); setSidebarOpen(false); }}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                      isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className="w-4.5 h-4.5 shrink-0" />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
           </nav>
 
           {/* Footer */}
