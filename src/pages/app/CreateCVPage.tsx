@@ -166,16 +166,290 @@ function ProgressTips({ data }: { data: any }) {
   );
 }
 
-/* ── CV Preview Modal — Two-column professional layout ── */
-const CVPreviewModal = forwardRef<HTMLDivElement, { open: boolean; onClose: () => void; data: any }>(({ open, onClose, data }, ref) => {
-  if (!open) return null;
+/* ── Shared preview helpers ────────────────────────── */
+function ContactLine({ icon: Icon, text }: { icon: typeof Phone; text?: string }) {
+  if (!text) return null;
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center shrink-0">
+        <Icon className="w-2.5 h-2.5 text-foreground/70" />
+      </div>
+      <span className="text-[10px] text-foreground/80 leading-tight break-all">{text}</span>
+    </div>
+  );
+}
 
-  const hasExperience = data.experiences?.some((e: any) => e.position);
-  const hasEducation = data.educations?.some((e: any) => e.school);
-  const hasSkills = data.skills?.some((s: any) => s.name);
-  const hasLanguages = data.languages?.some((l: any) => l.name);
-  const hasCerts = data.certifications?.some((c: any) => c.name);
-  const hasRefs = data.references?.some((r: any) => r.name);
+function SectionTitle({ title }: { title: string }) {
+  return (
+    <>
+      <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider">{title}</h3>
+      <div className="w-full h-[2px] bg-foreground/20 mt-1 mb-2" />
+    </>
+  );
+}
+
+function ExperienceBlock({ data }: { data: any }) {
+  const items = data.experiences?.filter((e: any) => e.position) || [];
+  if (!items.length) return null;
+  return (
+    <div>
+      <SectionTitle title="Work Experience" />
+      <div className="space-y-3">
+        {items.map((e: any, i: number) => (
+          <div key={i}>
+            <p className="text-[11px] font-bold text-foreground">{e.company}{e.position ? ` | ${e.position}` : ""}</p>
+            {e.startDate && <p className="text-[10px] font-semibold text-foreground/50 italic">{formatDate(e.startDate)} – {e.current ? "Present" : formatDate(e.endDate)}</p>}
+            {e.description && (
+              <ul className="mt-1 space-y-0.5">
+                {e.description.split("\n").filter(Boolean).map((line: string, li: number) => (
+                  <li key={li} className="flex items-start gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-foreground/40 mt-1.5 shrink-0" />
+                    <span className="text-[10px] text-foreground/70 leading-relaxed">{line}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EducationBlock({ data }: { data: any }) {
+  const items = data.educations?.filter((e: any) => e.school) || [];
+  if (!items.length) return null;
+  return (
+    <div>
+      <SectionTitle title="Education" />
+      <div className="space-y-2">
+        {items.map((e: any, i: number) => (
+          <div key={i}>
+            <p className="text-[11px] font-bold text-foreground">{e.school}{e.startDate ? `, ${formatDate(e.startDate)}–${formatDate(e.endDate)}` : ""}</p>
+            <p className="text-[10px] text-foreground/60">{e.degree}{e.field ? ` in ${e.field}` : ""}{e.gpa ? ` • GPA: ${e.gpa}` : ""}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SkillsList({ data, label = "Skills" }: { data: any; label?: string }) {
+  const items = data.skills?.filter((s: any) => s.name) || [];
+  if (!items.length) return null;
+  return (
+    <div>
+      <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider mb-1.5">{label}</h3>
+      <div className="w-8 h-[2px] bg-foreground/30 mb-2" />
+      <ul className="space-y-1.5">
+        {items.map((s: any, i: number) => (
+          <li key={i} className="flex items-start gap-1.5">
+            <span className="w-1 h-1 rounded-full bg-foreground/50 mt-1.5 shrink-0" />
+            <span className="text-[10px] text-foreground/80">{s.name}{s.level ? ` · ${s.level}` : ""}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function LanguagesList({ data }: { data: any }) {
+  const items = data.languages?.filter((l: any) => l.name) || [];
+  if (!items.length) return null;
+  return (
+    <div>
+      <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider mb-1.5">Languages</h3>
+      <div className="w-8 h-[2px] bg-foreground/30 mb-2" />
+      <ul className="space-y-1.5">
+        {items.map((l: any, i: number) => (
+          <li key={i} className="flex items-start gap-1.5">
+            <span className="w-1 h-1 rounded-full bg-foreground/50 mt-1.5 shrink-0" />
+            <span className="text-[10px] text-foreground/80">{l.name}{l.proficiency ? ` · ${l.proficiency}` : ""}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function CertsList({ data }: { data: any }) {
+  const items = data.certifications?.filter((c: any) => c.name) || [];
+  if (!items.length) return null;
+  return (
+    <div>
+      <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider mb-1.5">Certifications</h3>
+      <div className="w-8 h-[2px] bg-foreground/30 mb-2" />
+      <ul className="space-y-1.5">
+        {items.map((c: any, i: number) => (
+          <li key={i} className="text-[10px] text-foreground/80">
+            <p className="font-semibold">{c.name}</p>
+            {c.issuer && <p className="text-foreground/50">{c.issuer}</p>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function RefsBlock({ data }: { data: any }) {
+  const items = data.references?.filter((r: any) => r.name) || [];
+  if (!items.length) return null;
+  return (
+    <div>
+      <SectionTitle title="References" />
+      <div className="space-y-1.5">
+        {items.map((r: any, i: number) => (
+          <div key={i}>
+            <p className="text-[10px] font-bold text-foreground">{r.name}</p>
+            <p className="text-[9px] text-foreground/50">{r.position}{r.company ? `, ${r.company}` : ""}{r.phone ? ` • ${r.phone}` : ""}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PhotoCircle({ photo }: { photo?: string }) {
+  return photo ? (
+    <img src={photo} alt="" className="w-24 h-24 rounded-full object-cover border-[3px] border-white shadow-md" />
+  ) : (
+    <div className="w-24 h-24 rounded-full bg-muted/40 border-[3px] border-white shadow-md flex items-center justify-center">
+      <User className="w-10 h-10 text-muted-foreground/30" />
+    </div>
+  );
+}
+
+/* ── Classic Template — Two-column layout ── */
+function ClassicLayout({ data }: { data: any }) {
+  return (
+    <div className="flex min-h-full">
+      {/* LEFT SIDEBAR */}
+      <div className="w-[38%] shrink-0 bg-[hsl(var(--accent)/0.15)] p-4 space-y-5">
+        <div className="flex justify-center"><PhotoCircle photo={data.photo} /></div>
+        <div className="space-y-2.5">
+          <ContactLine icon={Phone} text={data.phone} />
+          <ContactLine icon={Mail} text={data.email} />
+          <ContactLine icon={Globe} text={data.website} />
+          <ContactLine icon={MapPin} text={data.location} />
+          <ContactLine icon={Linkedin} text={data.linkedin} />
+        </div>
+        <SkillsList data={data} />
+        <LanguagesList data={data} />
+        <CertsList data={data} />
+      </div>
+      {/* RIGHT MAIN */}
+      <div className="flex-1 p-4 space-y-4">
+        <div>
+          <h1 className="text-[22px] font-extrabold text-foreground tracking-tight leading-tight uppercase">{data.fullName || "Your Name"}</h1>
+          {data.jobTitle && <p className="text-[11px] font-semibold text-foreground/60 uppercase tracking-widest mt-0.5">{data.jobTitle}</p>}
+        </div>
+        {data.summary && <div><SectionTitle title="Professional Summary" /><p className="text-[10px] text-foreground/70 leading-relaxed text-justify">{data.summary}</p></div>}
+        <ExperienceBlock data={data} />
+        <EducationBlock data={data} />
+        <RefsBlock data={data} />
+        {data.hobbies && <div><SectionTitle title="Interests" /><p className="text-[10px] text-foreground/70">{data.hobbies}</p></div>}
+      </div>
+    </div>
+  );
+}
+
+/* ── Modern Template — Bold header with accent banner ── */
+function ModernLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full">
+      {/* Hero Banner */}
+      <div className="bg-primary px-5 py-5 flex items-center gap-4">
+        <div className="shrink-0">
+          {data.photo ? (
+            <img src={data.photo} alt="" className="w-20 h-20 rounded-xl object-cover border-2 border-white/30 shadow-lg" />
+          ) : (
+            <div className="w-20 h-20 rounded-xl bg-white/20 border-2 border-white/30 flex items-center justify-center">
+              <User className="w-8 h-8 text-white/50" />
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-[20px] font-extrabold text-white leading-tight truncate">{data.fullName || "Your Name"}</h1>
+          {data.jobTitle && <p className="text-[11px] font-semibold text-white/80 mt-0.5 uppercase tracking-wider">{data.jobTitle}</p>}
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+            {data.email && <span className="text-[9px] text-white/70 flex items-center gap-1"><Mail className="w-2.5 h-2.5" />{data.email}</span>}
+            {data.phone && <span className="text-[9px] text-white/70 flex items-center gap-1"><Phone className="w-2.5 h-2.5" />{data.phone}</span>}
+            {data.location && <span className="text-[9px] text-white/70 flex items-center gap-1"><MapPin className="w-2.5 h-2.5" />{data.location}</span>}
+          </div>
+        </div>
+      </div>
+      {/* Body */}
+      <div className="p-4 space-y-4">
+        {data.summary && <div><SectionTitle title="About Me" /><p className="text-[10px] text-foreground/70 leading-relaxed">{data.summary}</p></div>}
+        <ExperienceBlock data={data} />
+        <EducationBlock data={data} />
+        {(data.skills?.some((s: any) => s.name) || data.languages?.some((l: any) => l.name)) && (
+          <div className="grid grid-cols-2 gap-4">
+            <SkillsList data={data} />
+            <LanguagesList data={data} />
+          </div>
+        )}
+        <CertsList data={data} />
+        <RefsBlock data={data} />
+        {data.hobbies && <div><SectionTitle title="Interests" /><p className="text-[10px] text-foreground/70">{data.hobbies}</p></div>}
+      </div>
+    </div>
+  );
+}
+
+/* ── Minimal Template — Single-column clean layout ── */
+function MinimalLayout({ data }: { data: any }) {
+  return (
+    <div className="p-5 space-y-4 min-h-full">
+      {/* Header */}
+      <div className="text-center border-b border-foreground/10 pb-4">
+        {data.photo && (
+          <div className="flex justify-center mb-2">
+            <img src={data.photo} alt="" className="w-16 h-16 rounded-full object-cover" />
+          </div>
+        )}
+        <h1 className="text-[20px] font-bold text-foreground leading-tight">{data.fullName || "Your Name"}</h1>
+        {data.jobTitle && <p className="text-[11px] text-foreground/50 mt-0.5">{data.jobTitle}</p>}
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 text-[9px] text-foreground/50">
+          {data.email && <span>{data.email}</span>}
+          {data.phone && <span>• {data.phone}</span>}
+          {data.location && <span>• {data.location}</span>}
+          {data.linkedin && <span>• {data.linkedin}</span>}
+        </div>
+      </div>
+      {data.summary && <div><h3 className="text-[10px] font-bold text-foreground/80 uppercase tracking-wider mb-1">Summary</h3><p className="text-[10px] text-foreground/60 leading-relaxed">{data.summary}</p></div>}
+      <ExperienceBlock data={data} />
+      <EducationBlock data={data} />
+      {data.skills?.some((s: any) => s.name) && (
+        <div>
+          <SectionTitle title="Skills" />
+          <div className="flex flex-wrap gap-1.5">
+            {data.skills.filter((s: any) => s.name).map((s: any, i: number) => (
+              <span key={i} className="text-[9px] px-2 py-0.5 rounded-full bg-foreground/5 text-foreground/70 border border-foreground/10">{s.name}</span>
+            ))}
+          </div>
+        </div>
+      )}
+      {data.languages?.some((l: any) => l.name) && (
+        <div>
+          <SectionTitle title="Languages" />
+          <div className="flex flex-wrap gap-1.5">
+            {data.languages.filter((l: any) => l.name).map((l: any, i: number) => (
+              <span key={i} className="text-[9px] px-2 py-0.5 rounded-full bg-foreground/5 text-foreground/70 border border-foreground/10">{l.name}{l.proficiency ? ` (${l.proficiency})` : ""}</span>
+            ))}
+          </div>
+        </div>
+      )}
+      <CertsList data={data} />
+      <RefsBlock data={data} />
+      {data.hobbies && <div><SectionTitle title="Interests" /><p className="text-[10px] text-foreground/70">{data.hobbies}</p></div>}
+    </div>
+  );
+}
+
+/* ── CV Preview Modal ─────────────────────────────── */
+const CVPreviewModal = forwardRef<HTMLDivElement, { open: boolean; onClose: () => void; data: any; template: TemplateId }>(({ open, onClose, data, template }, ref) => {
+  if (!open) return null;
 
   return (
     <motion.div
@@ -198,221 +472,18 @@ const CVPreviewModal = forwardRef<HTMLDivElement, { open: boolean; onClose: () =
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-primary" />
             <h2 className="font-bold text-[13px] text-foreground">CV Preview</h2>
+            <span className="text-[9px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded capitalize">{template}</span>
           </div>
           <button onClick={onClose} className="text-[11px] font-semibold text-primary px-3 py-1.5 rounded-lg bg-primary/10 active:scale-95 transition-transform">
             Close
           </button>
         </div>
 
-        {/* CV Document — Two-column layout */}
+        {/* CV Document */}
         <div className="overflow-y-auto flex-1">
-          <div className="flex min-h-full">
-            {/* ── LEFT SIDEBAR ── */}
-            <div className="w-[38%] shrink-0 bg-[hsl(var(--accent)/0.15)] p-4 space-y-5">
-              {/* Photo */}
-              <div className="flex justify-center">
-                {data.photo ? (
-                  <img src={data.photo} alt="" className="w-24 h-24 rounded-full object-cover border-[3px] border-white shadow-md" />
-                ) : (
-                  <div className="w-24 h-24 rounded-full bg-muted/40 border-[3px] border-white shadow-md flex items-center justify-center">
-                    <User className="w-10 h-10 text-muted-foreground/30" />
-                  </div>
-                )}
-              </div>
-
-              {/* Contact */}
-              <div className="space-y-2.5">
-                {data.phone && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center shrink-0">
-                      <Phone className="w-2.5 h-2.5 text-foreground/70" />
-                    </div>
-                    <span className="text-[10px] text-foreground/80 leading-tight break-all">{data.phone}</span>
-                  </div>
-                )}
-                {data.email && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center shrink-0">
-                      <Mail className="w-2.5 h-2.5 text-foreground/70" />
-                    </div>
-                    <span className="text-[10px] text-foreground/80 leading-tight break-all">{data.email}</span>
-                  </div>
-                )}
-                {data.website && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center shrink-0">
-                      <Globe className="w-2.5 h-2.5 text-foreground/70" />
-                    </div>
-                    <span className="text-[10px] text-foreground/80 leading-tight break-all">{data.website}</span>
-                  </div>
-                )}
-                {data.location && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center shrink-0">
-                      <MapPin className="w-2.5 h-2.5 text-foreground/70" />
-                    </div>
-                    <span className="text-[10px] text-foreground/80 leading-tight">{data.location}</span>
-                  </div>
-                )}
-                {data.linkedin && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center shrink-0">
-                      <Linkedin className="w-2.5 h-2.5 text-foreground/70" />
-                    </div>
-                    <span className="text-[10px] text-foreground/80 leading-tight break-all">{data.linkedin}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Skills */}
-              {hasSkills && (
-                <div>
-                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider mb-1.5">Skills</h3>
-                  <div className="w-8 h-[2px] bg-foreground/30 mb-2" />
-                  <ul className="space-y-1.5">
-                    {data.skills.filter((s: any) => s.name).map((s: any, i: number) => (
-                      <li key={i} className="flex items-start gap-1.5">
-                        <span className="w-1 h-1 rounded-full bg-foreground/50 mt-1.5 shrink-0" />
-                        <span className="text-[10px] text-foreground/80">{s.name}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Languages */}
-              {hasLanguages && (
-                <div>
-                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider mb-1.5">Languages</h3>
-                  <div className="w-8 h-[2px] bg-foreground/30 mb-2" />
-                  <ul className="space-y-1.5">
-                    {data.languages.filter((l: any) => l.name).map((l: any, i: number) => (
-                      <li key={i} className="flex items-start gap-1.5">
-                        <span className="w-1 h-1 rounded-full bg-foreground/50 mt-1.5 shrink-0" />
-                        <span className="text-[10px] text-foreground/80">{l.name}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Certifications in sidebar */}
-              {hasCerts && (
-                <div>
-                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider mb-1.5">Certifications</h3>
-                  <div className="w-8 h-[2px] bg-foreground/30 mb-2" />
-                  <ul className="space-y-1.5">
-                    {data.certifications.filter((c: any) => c.name).map((c: any, i: number) => (
-                      <li key={i} className="text-[10px] text-foreground/80">
-                        <p className="font-semibold">{c.name}</p>
-                        {c.issuer && <p className="text-foreground/50">{c.issuer}</p>}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {/* ── RIGHT MAIN CONTENT ── */}
-            <div className="flex-1 p-4 space-y-4">
-              {/* Name & Title */}
-              <div>
-                <h1 className="text-[22px] font-extrabold text-foreground tracking-tight leading-tight uppercase">
-                  {data.fullName || "Your Name"}
-                </h1>
-                {data.jobTitle && (
-                  <p className="text-[11px] font-semibold text-foreground/60 uppercase tracking-widest mt-0.5">{data.jobTitle}</p>
-                )}
-              </div>
-
-              {/* Professional Summary */}
-              {data.summary && (
-                <div>
-                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider">Professional Experience</h3>
-                  <div className="w-full h-[2px] bg-foreground/20 mt-1 mb-2" />
-                  <p className="text-[10px] text-foreground/70 leading-relaxed text-justify">{data.summary}</p>
-                </div>
-              )}
-
-              {/* Work Experience */}
-              {hasExperience && (
-                <div>
-                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider">Work Experience</h3>
-                  <div className="w-full h-[2px] bg-foreground/20 mt-1 mb-2" />
-                  <div className="space-y-3">
-                    {data.experiences.filter((e: any) => e.position).map((e: any, i: number) => (
-                      <div key={i}>
-                        <p className="text-[11px] font-bold text-foreground">
-                          {e.company}{e.position ? ` | ${e.position}` : ""}
-                        </p>
-                        {e.startDate && (
-                          <p className="text-[10px] font-semibold text-foreground/50 italic">
-                            {formatDate(e.startDate)} – {e.current ? "Present" : formatDate(e.endDate)}
-                          </p>
-                        )}
-                        {e.description && (
-                          <ul className="mt-1 space-y-0.5">
-                            {e.description.split("\n").filter(Boolean).map((line: string, li: number) => (
-                              <li key={li} className="flex items-start gap-1.5">
-                                <span className="w-1 h-1 rounded-full bg-foreground/40 mt-1.5 shrink-0" />
-                                <span className="text-[10px] text-foreground/70 leading-relaxed">{line}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Education */}
-              {hasEducation && (
-                <div>
-                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider">Education</h3>
-                  <div className="w-full h-[2px] bg-foreground/20 mt-1 mb-2" />
-                  <div className="space-y-2">
-                    {data.educations.filter((e: any) => e.school).map((e: any, i: number) => (
-                      <div key={i}>
-                        <p className="text-[11px] font-bold text-foreground">
-                          {e.school}{e.startDate ? `, ${formatDate(e.startDate)}–${formatDate(e.endDate)}` : ""}
-                        </p>
-                        <p className="text-[10px] text-foreground/60">
-                          {e.degree}{e.field ? ` in ${e.field}` : ""}
-                          {e.gpa ? ` • GPA: ${e.gpa}` : ""}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* References */}
-              {hasRefs && (
-                <div>
-                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider">References</h3>
-                  <div className="w-full h-[2px] bg-foreground/20 mt-1 mb-2" />
-                  <div className="space-y-1.5">
-                    {data.references.filter((r: any) => r.name).map((r: any, i: number) => (
-                      <div key={i}>
-                        <p className="text-[10px] font-bold text-foreground">{r.name}</p>
-                        <p className="text-[9px] text-foreground/50">{r.position}{r.company ? `, ${r.company}` : ""}{r.phone ? ` • ${r.phone}` : ""}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Hobbies */}
-              {data.hobbies && (
-                <div>
-                  <h3 className="text-[11px] font-extrabold text-foreground uppercase tracking-wider">Interests</h3>
-                  <div className="w-full h-[2px] bg-foreground/20 mt-1 mb-2" />
-                  <p className="text-[10px] text-foreground/70">{data.hobbies}</p>
-                </div>
-              )}
-            </div>
-          </div>
+          {template === "modern" ? <ModernLayout data={data} /> :
+           template === "minimal" ? <MinimalLayout data={data} /> :
+           <ClassicLayout data={data} />}
         </div>
       </motion.div>
     </motion.div>
@@ -982,7 +1053,7 @@ const CreateCVPage = () => {
 
       {/* Preview Modal */}
       <AnimatePresence>
-        {showPreview && <CVPreviewModal open={showPreview} onClose={() => setShowPreview(false)} data={previewData} />}
+        {showPreview && <CVPreviewModal open={showPreview} onClose={() => setShowPreview(false)} data={previewData} template={selectedTemplate} />}
       </AnimatePresence>
     </AppLayout>
   );
