@@ -834,7 +834,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   </button>
                   <button
                     onClick={() => {
-                      const url = `${window.location.origin}/profile?post=${selectedPost.id}`;
+                      const url = `${getPublicOrigin()}/profile?post=${selectedPost.id}`;
                       navigator.clipboard.writeText(url).then(() => toast.success("Link copied!")).catch(() => toast.info("Could not copy link"));
                       setShowPostMenu(false);
                     }}
