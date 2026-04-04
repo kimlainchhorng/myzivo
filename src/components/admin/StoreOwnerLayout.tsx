@@ -42,6 +42,14 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
+  const employeeItems = [
+    { id: "employees", label: "Employees", icon: Users },
+    { id: "payroll", label: "Payroll", icon: Wallet },
+    { id: "employee-schedule", label: "Schedule", icon: Calendar },
+    { id: "time-clock", label: "Time Clock", icon: Clock },
+    { id: "employee-rules", label: "Employee Rules", icon: Shield },
+  ];
+
   return (
     <>
       <Helmet>
