@@ -142,7 +142,7 @@ const CreateCVPage = () => {
             <div>
               <label className={labelClass}>Professional Summary</label>
               <textarea
-                className={cn(inputClass, "min-h-[80px] resize-none")}
+                className={cn(inputClass, "min-h-[64px] resize-none")}
                 placeholder="Brief summary of your professional background..."
                 value={summary}
                 onChange={(e) => setSummary(e.target.value)}
