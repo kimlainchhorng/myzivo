@@ -8,6 +8,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const logStep = (step: string, details?: any) => {
+  const d = details ? ` - ${JSON.stringify(details)}` : "";
+  console.log(`[UNLOCK-MEDIA-CHECKOUT] ${step}${d}`);
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -19,16 +24,22 @@ serve(async (req) => {
   );
 
   try {
-    const authHeader = req.headers.get("Authorization")!;
+    logStep("Function started");
+
+    const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization") ?? "";
+    if (!authHeader) throw new Error("Not authenticated");
+
     const token = authHeader.replace("Bearer ", "");
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
     if (!user?.email) throw new Error("Not authenticated");
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
     const { message_id, seller_id, amount_cents } = await req.json();
     if (!message_id || !seller_id) throw new Error("Missing message_id or seller_id");
 
     const priceCents = typeof amount_cents === "number" && amount_cents >= 50 ? amount_cents : 99;
+    logStep("Unlock request", { message_id, seller_id, priceCents });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
@@ -37,6 +48,7 @@ serve(async (req) => {
     // Check existing customer
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     const customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
+    logStep("Customer lookup", { customerId });
 
     const origin = req.headers.get("origin") || "https://myzivo.lovable.app";
 
@@ -64,9 +76,10 @@ serve(async (req) => {
         amount_cents: String(priceCents),
       },
     });
+    logStep("Checkout session created", { sessionId: session.id });
 
     // Create pending unlock record
-    await supabaseClient.from("media_unlocks").insert({
+    const { error: insertErr } = await supabaseClient.from("media_unlocks").insert({
       message_id,
       buyer_id: user.id,
       seller_id,
@@ -74,13 +87,16 @@ serve(async (req) => {
       stripe_session_id: session.id,
       status: "pending",
     });
+    if (insertErr) logStep("Insert warning", { error: insertErr.message });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    const msg = error instanceof Error ? error.message : String(error);
+    logStep("ERROR", { message: msg });
+    return new Response(JSON.stringify({ error: msg }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

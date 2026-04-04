@@ -238,12 +238,12 @@ export default function ChatMessageBubble({
                         });
                         if (error) throw error;
                         if (data?.url) {
-                          window.open(data.url, "_blank");
+                          window.location.href = data.url;
                         }
                       } catch {
                         toast.error("Payment failed to start");
+                        setUnlockLoading(false);
                       }
-                      setUnlockLoading(false);
                     }}
                     className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-1.5"
                   >
@@ -315,12 +315,12 @@ export default function ChatMessageBubble({
                       });
                       if (error) throw error;
                       if (data?.url) {
-                        window.open(data.url, "_blank");
+                        window.location.href = data.url;
                       }
                     } catch {
                       toast.error("Payment failed to start");
+                      setUnlockLoading(false);
                     }
-                    setUnlockLoading(false);
                   }}
                   className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-1.5"
                 >
