@@ -1063,6 +1063,15 @@ const CreateCVPage = () => {
       <AnimatePresence>
         {showPreview && <CVPreviewModal open={showPreview} onClose={() => setShowPreview(false)} data={previewData} template={selectedTemplate} />}
       </AnimatePresence>
+
+      {/* Hidden A4 print container */}
+      <div ref={printRef} id="cv-print-area" className="hidden print:block" style={{ display: "none" }}>
+        <div className="w-[210mm] min-h-[297mm] bg-white mx-auto" style={{ fontFamily: "system-ui, sans-serif", color: "#1a1a1a" }}>
+          {selectedTemplate === "modern" ? <ModernLayout data={previewData} /> :
+           selectedTemplate === "minimal" ? <MinimalLayout data={previewData} /> :
+           <ClassicLayout data={previewData} />}
+        </div>
+      </div>
     </AppLayout>
   );
 };
