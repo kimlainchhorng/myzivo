@@ -145,7 +145,7 @@ const AppMore = () => {
               <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
             </div>
             <button
-              onClick={() => navigate("/profile")}
+              onClick={() => setShowSwitchSheet(true)}
               className="px-3.5 py-1.5 rounded-xl bg-primary/10 text-primary text-xs font-bold touch-manipulation active:scale-95 transition-transform"
             >
               Switch Account
