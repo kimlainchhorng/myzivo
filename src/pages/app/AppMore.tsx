@@ -56,7 +56,7 @@ const AppMore = () => {
     const options: { icon: typeof Shield; label: string; description: string; href: string; color: string }[] = [];
     options.push({ icon: User, label: "Personal", description: "Employees, Clock In & Out", href: "/personal-dashboard", color: "from-primary to-primary/80" });
     if (isDesignatedAdmin) {
-      options.push({ icon: Shield, label: "Admin Dashboard", description: "Manage the platform", href: "/admin", color: "from-red-500 to-red-600" });
+      options.push({ icon: Shield, label: "Admin Dashboard", description: "Manage the platform", href: "/admin/analytics", color: "from-red-500 to-red-600" });
     }
     if (access?.isDriver) {
       options.push({ icon: Car, label: "Driver Dashboard", description: "Manage your rides", href: "/driver", color: "from-blue-500 to-blue-600" });
@@ -71,7 +71,7 @@ const AppMore = () => {
       options.push({ icon: Hotel, label: "Hotel Dashboard", description: "Manage your hotel", href: "/hotel-dashboard", color: "from-purple-500 to-purple-600" });
     }
     // Shop Dashboard — visible to anyone (or shop owners when that role exists)
-    options.push({ icon: Store, label: "Shop Dashboard", description: "Manage your shop", href: "/grocery/orders", color: "from-emerald-500 to-green-500" });
+    options.push({ icon: Store, label: "Shop Dashboard", description: "Manage your shop", href: "/shop-dashboard", color: "from-emerald-500 to-green-500" });
     return options;
   })();
 
@@ -219,7 +219,7 @@ const AppMore = () => {
         {/* Admin Button */}
         {isAdmin && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-4">
-            <Link to="/admin" className="contents">
+            <Link to="/admin/analytics" className="contents">
               <div className="w-full py-3.5 rounded-2xl border border-primary/20 bg-primary/5 text-primary font-bold text-sm touch-manipulation active:scale-[0.98] transition-all shadow-sm flex items-center justify-center gap-2">
                 <Shield className="w-4 h-4" />
                 Admin Dashboard
