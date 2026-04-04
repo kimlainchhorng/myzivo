@@ -7,11 +7,12 @@ import { motion } from "framer-motion";
 import {
   ChevronRight, Settings, ShoppingBag, Wallet, MapPin, Handshake,
   Sparkles, Car, UtensilsCrossed, Store, Wrench, Building2, Truck, Shield,
-  Copy, Share2, QrCode, Check,
+  Copy, Share2, QrCode, Check, User, Plane, Hotel,
 } from "lucide-react";
 import { toast } from "sonner";
 import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserAccess } from "@/hooks/useUserAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
@@ -41,9 +42,37 @@ const quickLinks = [
 const AppMore = () => {
   const navigate = useNavigate();
   const { user, signOut, isAdmin } = useAuth();
+  const { data: access } = useUserAccess(user?.id);
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
+  const [showSwitchSheet, setShowSwitchSheet] = useState(false);
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; share_code: string | null } | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Build role options dynamically
+  const roleOptions = (() => {
+    const options: { icon: typeof Shield; label: string; description: string; href: string; color: string }[] = [];
+    // Always show "Personal" (user profile)
+    options.push({ icon: User, label: "Personal", description: "Your personal account", href: "/profile", color: "from-primary to-primary/80" });
+    if (access?.isAdmin) {
+      options.push({ icon: Shield, label: "Admin Dashboard", description: "Manage the platform", href: "/admin", color: "from-red-500 to-red-600" });
+    }
+    if (access?.isDriver) {
+      options.push({ icon: Car, label: "Driver Dashboard", description: "Manage your rides", href: "/driver", color: "from-blue-500 to-blue-600" });
+    }
+    if (access?.isRestaurantOwner) {
+      options.push({ icon: UtensilsCrossed, label: "Restaurant Dashboard", description: "Manage your restaurant", href: "/restaurant-dashboard", color: "from-orange-500 to-amber-500" });
+    }
+    if (access?.isCarRentalOwner) {
+      options.push({ icon: Car, label: "Car Rental Dashboard", description: "Manage your rentals", href: "/car-rental-dashboard", color: "from-emerald-500 to-green-500" });
+    }
+    if (access?.isHotelOwner) {
+      options.push({ icon: Hotel, label: "Hotel Dashboard", description: "Manage your hotel", href: "/hotel-dashboard", color: "from-purple-500 to-purple-600" });
+    }
+    if (access?.isFlightManager) {
+      options.push({ icon: Plane, label: "Flight Manager", description: "Manage flights", href: "/admin/flights", color: "from-sky-500 to-sky-600" });
+    }
+    return options;
+  })();
 
   const profileUrl = profile?.share_code
     ? getProfileShareUrl(profile.share_code)
