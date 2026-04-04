@@ -394,11 +394,16 @@ const CreateCVPage = () => {
   const [loading, setLoading] = useState(true);
   const [cvId, setCvId] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     personal: true, experience: true, education: true, skills: true,
     languages: true, certifications: false, references: false, hobbies: false,
   });
   const [completionPct, setCompletionPct] = useState(0);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialLoadDone = useRef(false);
 
   /* ── Load existing CV ────────────────────────────── */
   useEffect(() => {
@@ -429,8 +434,10 @@ const CreateCVPage = () => {
         if (Array.isArray(data.certifications) && data.certifications.length) setCertifications(data.certifications as any);
         if (Array.isArray((data as any).references_list) && (data as any).references_list.length) setReferences((data as any).references_list as any);
         setHobbies((data as any).hobbies || "");
+        setLastSaved(new Date(data.updated_at));
       }
       setLoading(false);
+      setTimeout(() => { initialLoadDone.current = true; }, 500);
     };
     void load();
   }, [user]);
@@ -452,11 +459,12 @@ const CreateCVPage = () => {
     setCompletionPct(Math.round((filled / total) * 100));
   }, [fullName, email, phone, jobTitle, summary, photo, experiences, educations, skills, languages]);
 
-  /* ── Save ────────────────────────────────────────── */
-  const handleSave = useCallback(async () => {
+  /* ── Save (manual + auto) ───────────────────────── */
+  const doSave = useCallback(async (silent = false) => {
     if (!user) return;
-    if (!fullName.trim()) { toast.error("Please enter your full name"); return; }
-    setSaving(true);
+    if (!fullName.trim()) { if (!silent) toast.error("Please enter your full name"); return; }
+    if (!silent) setSaving(true);
+    if (silent) setAutoSaveStatus("saving");
     const payload = {
       user_id: user.id,
       full_name: fullName.trim(),
@@ -481,10 +489,33 @@ const CreateCVPage = () => {
       error = res.error;
       if (res.data) setCvId(res.data.id);
     }
-    setSaving(false);
-    if (error) { toast.error("Failed to save CV"); console.error(error); }
-    else toast.success("CV saved successfully!");
+    if (!silent) setSaving(false);
+    if (error) { if (!silent) toast.error("Failed to save CV"); console.error(error); }
+    else {
+      setLastSaved(new Date());
+      if (!silent) toast.success("CV saved!");
+      if (silent) { setAutoSaveStatus("saved"); setTimeout(() => setAutoSaveStatus("idle"), 2000); }
+    }
   }, [user, cvId, fullName, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies]);
+
+  const handleSave = useCallback(() => doSave(false), [doSave]);
+
+  /* ── Auto-save debounce (3s after changes) ──────── */
+  useEffect(() => {
+    if (!initialLoadDone.current) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => { doSave(true); }, 3000);
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  }, [fullName, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies, doSave]);
+
+  /* ── Delete CV ──────────────────────────────────── */
+  const handleDelete = useCallback(async () => {
+    if (!cvId) return;
+    const { error } = await supabase.from("user_cvs").delete().eq("id", cvId);
+    if (error) { toast.error("Failed to delete CV"); return; }
+    toast.success("CV deleted");
+    navigate(-1);
+  }, [cvId, navigate]);
 
   /* ── Helpers ─────────────────────────────────────── */
   const toggle = (key: string) => setExpandedSections(p => ({ ...p, [key]: !p[key] }));
