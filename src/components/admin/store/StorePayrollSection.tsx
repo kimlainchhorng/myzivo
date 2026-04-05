@@ -470,19 +470,20 @@ export default function StorePayrollSection({ storeId }: Props) {
             </div>
           </Card>
 
-          {/* Reset */}
-          <Card className="p-5 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Reset to Defaults</p>
-              <p className="text-xs text-muted-foreground">Restore default tax (22%), benefits (8%), and other settings</p>
-            </div>
+          {/* Save & Reset */}
+          <div className="flex items-center gap-3">
+            <Button onClick={() => saveSettingsMutation.mutate()} disabled={saveSettingsMutation.isPending} className="gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {saveSettingsMutation.isPending ? "Saving..." : "Save Settings"}
+            </Button>
             <Button variant="outline" size="sm" onClick={() => {
               setTaxRate(DEFAULT_TAX_RATE); setBenefitsRate(DEFAULT_BENEFITS_RATE);
+              setTaxInput(String(DEFAULT_TAX_RATE * 100)); setBenefitsInput(String(DEFAULT_BENEFITS_RATE * 100));
               setOvertimeEnabled(true); setOvertimeRate("1.5");
               setPayFrequency("monthly"); setPayDay("last"); setBudgetLimit("50000");
               toast.success("Settings reset to defaults");
-            }}>Reset</Button>
-          </Card>
+            }}>Reset to Defaults</Button>
+          </div>
         </TabsContent>
       </Tabs>
 
