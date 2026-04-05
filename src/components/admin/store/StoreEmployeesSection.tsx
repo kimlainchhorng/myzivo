@@ -87,6 +87,7 @@ export default function StoreEmployeesSection({ storeId }: Props) {
         store_id: storeId, name: form.name.trim(),
         email: form.email.trim() || null, phone: form.phone.trim() || null,
         role: form.role, hourly_rate: rateValue,
+        pay_type: form.pay_type,
         notes: form.notes.trim() || null,
       };
       if (editing) {
