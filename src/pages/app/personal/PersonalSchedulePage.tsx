@@ -50,14 +50,32 @@ export default function PersonalSchedulePage() {
     queryKey: ["my-employee-record", user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await supabase
+      // Try matching by user_id first
+      const { data: byUserId } = await supabase
         .from("store_employees")
         .select("id, store_id, name, role, employee_number")
         .eq("user_id", user.id)
         .eq("status", "active")
         .limit(1)
         .maybeSingle();
-      return data;
+      if (byUserId) return byUserId;
+
+      // Fallback: match by email
+      if (user.email) {
+        const { data: byEmail } = await supabase
+          .from("store_employees")
+          .select("id, store_id, name, role, employee_number")
+          .eq("email", user.email)
+          .eq("status", "active")
+          .limit(1)
+          .maybeSingle();
+        if (byEmail) {
+          // Auto-link user_id for future lookups
+          await supabase.from("store_employees").update({ user_id: user.id }).eq("id", byEmail.id);
+          return byEmail;
+        }
+      }
+      return null;
     },
     enabled: !!user,
   });
