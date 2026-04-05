@@ -432,6 +432,9 @@ export default function CallScreen({
           return;
         }
         if (payload.new.status === "missed") {
+          if (remoteAccepted || callState === "connected") {
+            return;
+          }
           endReasonRef.current = "no_answer";
           void endCall();
           return;
@@ -442,7 +445,7 @@ export default function CallScreen({
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [role, callId, endCall]);
+  }, [role, callId, callState, endCall, remoteAccepted]);
 
   useEffect(() => {
     if (callState === "connected") {
