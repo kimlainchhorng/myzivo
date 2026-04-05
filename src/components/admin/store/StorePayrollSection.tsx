@@ -318,7 +318,7 @@ export default function StorePayrollSection({ storeId }: Props) {
                 <Label className="text-sm font-medium">Tax Rate</Label>
                 <p className="text-xs text-muted-foreground">Federal + State combined</p>
                 <div className="flex items-center gap-1.5">
-                  <Input type="number" min="0" max="100" step="0.5" value={(taxRate * 100).toFixed(1)} onChange={e => setTaxRate(Math.min(1, Math.max(0, parseFloat(e.target.value || "0") / 100)))} className="w-24 h-9" />
+                  <Input type="number" min="0" max="100" step="0.5" value={taxInput} onChange={e => setTaxInput(e.target.value)} onBlur={() => { const v = parseFloat(taxInput || "0"); setTaxRate(Math.min(1, Math.max(0, v / 100))); setTaxInput(String(Math.min(100, Math.max(0, v)))); }} className="w-24 h-9" />
                   <span className="text-sm text-muted-foreground">%</span>
                 </div>
               </div>
