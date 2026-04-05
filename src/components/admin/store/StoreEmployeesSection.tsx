@@ -257,7 +257,14 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                   <div className="mt-3 space-y-1.5 text-[11px] text-muted-foreground">
                     {emp.email && <div className="flex items-center gap-1.5"><Mail className="w-3 h-3 shrink-0" /><span className="truncate">{emp.email}</span></div>}
                     {emp.phone && <div className="flex items-center gap-1.5"><Phone className="w-3 h-3 shrink-0" />{emp.phone}</div>}
-                    {emp.hourly_rate && <div className="flex items-center gap-1.5"><DollarSign className="w-3 h-3 shrink-0" />${emp.hourly_rate}/hr · ~${(emp.hourly_rate * 160).toLocaleString()}/mo</div>}
+                    {emp.hourly_rate != null && emp.hourly_rate > 0 && (
+                      <div className="flex items-center gap-1.5"><DollarSign className="w-3 h-3 shrink-0" />
+                        {emp.hourly_rate >= 500
+                          ? <span>${emp.hourly_rate.toLocaleString()}/mo <span className="text-muted-foreground">(salary)</span></span>
+                          : <span>${emp.hourly_rate}/hr · ~${(emp.hourly_rate * 160).toLocaleString()}/mo</span>
+                        }
+                      </div>
+                    )}
                   </div>
                   <div className="mt-3 flex items-center justify-between">
                     <span className="text-[10px] text-muted-foreground flex items-center gap-1">
