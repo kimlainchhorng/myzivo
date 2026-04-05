@@ -71,8 +71,8 @@ export default function StorePayrollSection({ storeId }: Props) {
     return emp.pay_type === "monthly" ? rate : rate * 160;
   };
   const totalGross = employees.reduce((s: number, e: any) => s + getMonthlyGross(e), 0);
-  const totalTax = totalGross * TAX_RATE;
-  const totalBenefits = totalGross * BENEFITS_RATE;
+  const totalTax = totalGross * taxRate;
+  const totalBenefits = totalGross * benefitsRate;
   const totalNet = totalGross - totalTax - totalBenefits;
   const avgMonthly = employees.length ? totalGross / employees.length : 0;
   const highestPaid = employees.reduce((max: any, e: any) => getMonthlyGross(e) > getMonthlyGross(max || {}) ? e : max, employees[0]);
@@ -96,7 +96,7 @@ export default function StorePayrollSection({ storeId }: Props) {
         {[
           { icon: DollarSign, label: "Gross Payroll", value: `$${totalGross.toLocaleString()}`, sub: "Monthly estimate", color: "text-emerald-500", bg: "bg-emerald-500/10" },
           { icon: Banknote, label: "Net Pay", value: `$${totalNet.toLocaleString()}`, sub: "After deductions", color: "text-blue-500", bg: "bg-blue-500/10" },
-          { icon: Percent, label: "Tax Estimate", value: `$${totalTax.toLocaleString()}`, sub: `${(TAX_RATE * 100).toFixed(0)}% rate`, color: "text-amber-500", bg: "bg-amber-500/10" },
+          { icon: Percent, label: "Tax Estimate", value: `$${totalTax.toLocaleString()}`, sub: `${(taxRate * 100).toFixed(0)}% rate`, color: "text-amber-500", bg: "bg-amber-500/10" },
           { icon: Users, label: "Active Staff", value: employees.length, sub: `Avg $${avgMonthly.toFixed(0)}/mo`, color: "text-purple-500", bg: "bg-purple-500/10" },
         ].map((s, i) => (
           <Card key={i} className="p-4 relative overflow-hidden">
@@ -167,8 +167,8 @@ export default function StorePayrollSection({ storeId }: Props) {
                   ) : employees.map((emp: any) => {
                     const isSalary = emp.pay_type === "monthly";
                     const gross = getMonthlyGross(emp);
-                    const tax = gross * TAX_RATE;
-                    const net = gross - tax - (gross * BENEFITS_RATE);
+                    const tax = gross * taxRate;
+                    const net = gross - tax - (gross * benefitsRate);
                     return (
                       <tr key={emp.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
                         <td className="px-4 py-3">
@@ -219,8 +219,8 @@ export default function StorePayrollSection({ storeId }: Props) {
               <div className="space-y-3">
                 {[
                   { label: "Base Wages", value: totalGross, pct: 100, color: "bg-blue-500" },
-                  { label: `Tax (${(TAX_RATE * 100).toFixed(0)}%)`, value: totalTax, pct: TAX_RATE * 100, color: "bg-red-500" },
-                  { label: `Benefits (${(BENEFITS_RATE * 100).toFixed(0)}%)`, value: totalBenefits, pct: BENEFITS_RATE * 100, color: "bg-amber-500" },
+                  { label: `Tax (${(taxRate * 100).toFixed(0)}%)`, value: totalTax, pct: taxRate * 100, color: "bg-red-500" },
+                  { label: `Benefits (${(benefitsRate * 100).toFixed(0)}%)`, value: totalBenefits, pct: benefitsRate * 100, color: "bg-amber-500" },
                   { label: "Net Payout", value: totalNet, pct: (totalNet / totalGross) * 100 || 0, color: "bg-emerald-500" },
                 ].map((item, i) => (
                   <div key={i}>
@@ -299,8 +299,8 @@ export default function StorePayrollSection({ storeId }: Props) {
               </div>
             )}
             <div className="border-t pt-4 space-y-3">
-              <div><p className="text-sm font-medium">Tax Rate</p><p className="text-xs text-muted-foreground mb-1.5">Federal + State combined estimate</p><Input type="number" value={(TAX_RATE * 100).toFixed(0)} className="w-24 h-8" readOnly /><span className="text-xs text-muted-foreground ml-1.5">%</span></div>
-              <div><p className="text-sm font-medium">Benefits Deduction</p><p className="text-xs text-muted-foreground mb-1.5">Health, dental, and retirement</p><Input type="number" value={(BENEFITS_RATE * 100).toFixed(0)} className="w-24 h-8" readOnly /><span className="text-xs text-muted-foreground ml-1.5">%</span></div>
+              <div><p className="text-sm font-medium">Tax Rate</p><p className="text-xs text-muted-foreground mb-1.5">Federal + State combined estimate</p><Input type="number" value={(taxRate * 100).toFixed(0)} className="w-24 h-8" readOnly /><span className="text-xs text-muted-foreground ml-1.5">%</span></div>
+              <div><p className="text-sm font-medium">Benefits Deduction</p><p className="text-xs text-muted-foreground mb-1.5">Health, dental, and retirement</p><Input type="number" value={(benefitsRate * 100).toFixed(0)} className="w-24 h-8" readOnly /><span className="text-xs text-muted-foreground ml-1.5">%</span></div>
             </div>
           </Card>
         </TabsContent>
