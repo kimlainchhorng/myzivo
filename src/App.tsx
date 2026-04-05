@@ -30,6 +30,7 @@ import { SkipToContent } from "./components/shared/SkipToContent";
 import RoutePrefetcher from "./components/shared/RoutePrefetcher";
 import { GlobalViewportMeta } from "@/components/shared/GlobalViewportMeta";
 import IncomingCallListener from "@/components/chat/IncomingCallListener";
+import ChatNotificationListener from "@/components/chat/ChatNotificationListener";
 import { Loader2 } from "lucide-react";
 import { categorizeError } from "@/lib/supabaseErrors";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
