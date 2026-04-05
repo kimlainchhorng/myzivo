@@ -63,6 +63,42 @@ export default function StorePayrollSection({ storeId }: Props) {
   const [editingEmp, setEditingEmp] = useState<any>(null);
   const [editForm, setEditForm] = useState({ name: "", role: "", hourly_rate: "", pay_type: "hourly" });
   const periods = getPayPeriods();
+  const settingsKey = `payroll_settings_${storeId}`;
+
+  // Load saved settings
+  useQuery({
+    queryKey: ["payroll-settings", storeId],
+    queryFn: async () => {
+      const { data } = await supabase.from("app_settings").select("value").eq("key", settingsKey).maybeSingle();
+      if (data?.value && typeof data.value === "object") {
+        const s = data.value as any;
+        if (s.taxRate != null) { setTaxRate(s.taxRate); setTaxInput(String(s.taxRate * 100)); }
+        if (s.benefitsRate != null) { setBenefitsRate(s.benefitsRate); setBenefitsInput(String(s.benefitsRate * 100)); }
+        if (s.overtimeEnabled != null) setOvertimeEnabled(s.overtimeEnabled);
+        if (s.overtimeRate) setOvertimeRate(s.overtimeRate);
+        if (s.payFrequency) setPayFrequency(s.payFrequency);
+        if (s.payDay) setPayDay(s.payDay);
+        if (s.budgetLimit) setBudgetLimit(s.budgetLimit);
+      }
+      return data;
+    },
+  });
+
+  const saveSettingsMutation = useMutation({
+    mutationFn: async () => {
+      const value = { taxRate, benefitsRate, overtimeEnabled, overtimeRate, payFrequency, payDay, budgetLimit };
+      const { data: existing } = await supabase.from("app_settings").select("id").eq("key", settingsKey).maybeSingle();
+      if (existing) {
+        const { error } = await supabase.from("app_settings").update({ value, updated_at: new Date().toISOString() }).eq("key", settingsKey);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("app_settings").insert({ key: settingsKey, value, description: "Payroll settings" });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => toast.success("Payroll settings saved"),
+    onError: (e) => toast.error("Failed to save: " + e.message),
+  });
 
   const { data: employees = [] } = useQuery({
     queryKey: ["store-employees-payroll", storeId],
