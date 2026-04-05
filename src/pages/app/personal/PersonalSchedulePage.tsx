@@ -62,7 +62,7 @@ export default function PersonalSchedulePage() {
       if (!user) return null;
       const { data: byUserId } = await supabase
         .from("store_employees")
-        .select("id, store_id, name, role, employee_number, created_at, hourly_rate")
+        .select("id, store_id, name, role, employee_number, created_at, hourly_rate, pay_type")
         .eq("user_id", user.id)
         .eq("status", "active")
         .limit(1)
