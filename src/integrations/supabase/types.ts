@@ -42672,6 +42672,54 @@ export type Database = {
         }
         Relationships: []
       }
+      store_time_entries: {
+        Row: {
+          break_minutes: number
+          clock_in: string
+          clock_out: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          notes: string | null
+          store_id: string
+        }
+        Insert: {
+          break_minutes?: number
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          notes?: string | null
+          store_id: string
+        }
+        Update: {
+          break_minutes?: number
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_time_entries_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "store_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_time_entries_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stories: {
         Row: {
           background_color: string | null
