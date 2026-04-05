@@ -61,12 +61,16 @@ export default function StorePayrollSection({ storeId }: Props) {
     },
   });
 
-  const totalGross = employees.reduce((s: number, e: any) => s + (e.hourly_rate || 0) * 160, 0);
+  const getMonthlyGross = (emp: any) => {
+    const rate = emp.hourly_rate || 0;
+    return rate >= 500 ? rate : rate * 160;
+  };
+  const totalGross = employees.reduce((s: number, e: any) => s + getMonthlyGross(e), 0);
   const totalTax = totalGross * TAX_RATE;
   const totalBenefits = totalGross * BENEFITS_RATE;
   const totalNet = totalGross - totalTax - totalBenefits;
-  const avgRate = employees.length ? employees.reduce((s: number, e: any) => s + (e.hourly_rate || 0), 0) / employees.length : 0;
-  const highestPaid = employees.reduce((max: any, e: any) => (e.hourly_rate || 0) > (max?.hourly_rate || 0) ? e : max, employees[0]);
+  const avgMonthly = employees.length ? totalGross / employees.length : 0;
+  const highestPaid = employees.reduce((max: any, e: any) => getMonthlyGross(e) > getMonthlyGross(max || {}) ? e : max, employees[0]);
   const budgetUsed = totalGross > 0 ? Math.min(100, (totalGross / 50000) * 100) : 0;
 
   const processPayRun = () => {
@@ -88,7 +92,7 @@ export default function StorePayrollSection({ storeId }: Props) {
           { icon: DollarSign, label: "Gross Payroll", value: `$${totalGross.toLocaleString()}`, sub: "Monthly estimate", color: "text-emerald-500", bg: "bg-emerald-500/10" },
           { icon: Banknote, label: "Net Pay", value: `$${totalNet.toLocaleString()}`, sub: "After deductions", color: "text-blue-500", bg: "bg-blue-500/10" },
           { icon: Percent, label: "Tax Estimate", value: `$${totalTax.toLocaleString()}`, sub: `${(TAX_RATE * 100).toFixed(0)}% rate`, color: "text-amber-500", bg: "bg-amber-500/10" },
-          { icon: Users, label: "Active Staff", value: employees.length, sub: `Avg $${avgRate.toFixed(2)}/hr`, color: "text-purple-500", bg: "bg-purple-500/10" },
+          { icon: Users, label: "Active Staff", value: employees.length, sub: `Avg $${avgMonthly.toFixed(0)}/mo`, color: "text-purple-500", bg: "bg-purple-500/10" },
         ].map((s, i) => (
           <Card key={i} className="p-4 relative overflow-hidden">
             <div className="flex items-start gap-3">
@@ -156,7 +160,8 @@ export default function StorePayrollSection({ storeId }: Props) {
                   {employees.length === 0 ? (
                     <tr><td colSpan={8} className="text-center py-12 text-muted-foreground text-sm">No active employees.</td></tr>
                   ) : employees.map((emp: any) => {
-                    const gross = (emp.hourly_rate || 0) * 160;
+                    const isSalary = (emp.hourly_rate || 0) >= 500;
+                    const gross = getMonthlyGross(emp);
                     const tax = gross * TAX_RATE;
                     const net = gross - tax - (gross * BENEFITS_RATE);
                     return (
@@ -168,8 +173,15 @@ export default function StorePayrollSection({ storeId }: Props) {
                           </div>
                         </td>
                         <td className="px-4 py-3"><Badge variant="secondary" className="text-[11px] capitalize">{emp.role}</Badge></td>
-                        <td className="px-4 py-3 text-right font-mono text-[13px]">${(emp.hourly_rate || 0).toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right font-mono text-[13px]">160</td>
+                        <td className="px-4 py-3 text-right font-mono text-[13px]">
+                          {isSalary
+                            ? <span>${(emp.hourly_rate || 0).toLocaleString()}<span className="text-muted-foreground text-[10px]">/mo</span></span>
+                            : <span>${(emp.hourly_rate || 0).toFixed(2)}<span className="text-muted-foreground text-[10px]">/hr</span></span>
+                          }
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-[13px]">
+                          {isSalary ? <Badge variant="outline" className="text-[10px]">Salary</Badge> : "160h"}
+                        </td>
                         <td className="px-4 py-3 text-right font-mono text-[13px] font-semibold">${gross.toLocaleString()}</td>
                         <td className="px-4 py-3 text-right font-mono text-[13px] text-red-500">-${tax.toLocaleString()}</td>
                         <td className="px-4 py-3 text-right font-mono text-[13px] font-bold text-emerald-600">${net.toLocaleString()}</td>
@@ -219,7 +231,7 @@ export default function StorePayrollSection({ storeId }: Props) {
                 {["owner", "manager", "supervisor", "cashier", "staff", "intern"].map(role => {
                   const roleEmps = employees.filter((e: any) => e.role === role);
                   if (roleEmps.length === 0) return null;
-                  const roleTotal = roleEmps.reduce((s: number, e: any) => s + (e.hourly_rate || 0) * 160, 0);
+                  const roleTotal = roleEmps.reduce((s: number, e: any) => s + getMonthlyGross(e), 0);
                   const pct = totalGross > 0 ? (roleTotal / totalGross) * 100 : 0;
                   return (
                     <div key={role} className="flex items-center justify-between">

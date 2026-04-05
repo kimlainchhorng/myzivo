@@ -44,8 +44,14 @@ const ROLES = [
 
 const DEPARTMENTS = ["General", "Sales", "Kitchen", "Delivery", "Customer Support", "Inventory"];
 
+const PAY_TYPES = [
+  { value: "hourly", label: "Hourly" },
+  { value: "monthly", label: "Monthly Salary" },
+];
+
 const emptyForm = {
   name: "", email: "", phone: "", role: "staff", hourly_rate: "",
+  pay_type: "hourly" as "hourly" | "monthly", monthly_salary: "",
   notes: "", department: "General", emergency_contact: "", address: "",
   start_date: format(new Date(), "yyyy-MM-dd"),
 };
@@ -74,10 +80,13 @@ export default function StoreEmployeesSection({ storeId }: Props) {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const rateValue = form.pay_type === "monthly"
+        ? (form.monthly_salary ? parseFloat(form.monthly_salary) : null)
+        : (form.hourly_rate ? parseFloat(form.hourly_rate) : null);
       const payload = {
         store_id: storeId, name: form.name.trim(),
         email: form.email.trim() || null, phone: form.phone.trim() || null,
-        role: form.role, hourly_rate: form.hourly_rate ? parseFloat(form.hourly_rate) : null,
+        role: form.role, hourly_rate: rateValue,
         notes: form.notes.trim() || null,
       };
       if (editing) {
@@ -109,7 +118,15 @@ export default function StoreEmployeesSection({ storeId }: Props) {
   const openAdd = () => { setEditing(null); setForm(emptyForm); setDialog(true); };
   const openEdit = (emp: Employee) => {
     setEditing(emp);
-    setForm({ name: emp.name, email: emp.email || "", phone: emp.phone || "", role: emp.role, hourly_rate: emp.hourly_rate?.toString() || "", notes: emp.notes || "", department: "General", emergency_contact: "", address: "", start_date: format(new Date(emp.created_at), "yyyy-MM-dd") });
+    const isMonthlySalary = (emp.hourly_rate || 0) >= 500;
+    setForm({
+      name: emp.name, email: emp.email || "", phone: emp.phone || "", role: emp.role,
+      hourly_rate: isMonthlySalary ? "" : (emp.hourly_rate?.toString() || ""),
+      pay_type: isMonthlySalary ? "monthly" : "hourly",
+      monthly_salary: isMonthlySalary ? (emp.hourly_rate?.toString() || "") : "",
+      notes: emp.notes || "", department: "General", emergency_contact: "", address: "",
+      start_date: format(new Date(emp.created_at), "yyyy-MM-dd"),
+    });
     setDialog(true);
   };
   const closeDialog = () => { setDialog(false); setEditing(null); setForm(emptyForm); };
@@ -131,7 +148,11 @@ export default function StoreEmployeesSection({ storeId }: Props) {
   const activeCount = employees.filter(e => e.status === "active").length;
   const inactiveCount = employees.filter(e => e.status !== "active").length;
   const roleOf = (r: string) => ROLES.find(x => x.value === r);
-  const totalPayroll = employees.filter(e => e.status === "active").reduce((s, e) => s + (e.hourly_rate || 0) * 160, 0);
+  const getMonthlyPay = (emp: Employee) => {
+    const rate = emp.hourly_rate || 0;
+    return rate >= 500 ? rate : rate * 160;
+  };
+  const totalPayroll = employees.filter(e => e.status === "active").reduce((s, e) => s + getMonthlyPay(e), 0);
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
@@ -236,7 +257,14 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                   <div className="mt-3 space-y-1.5 text-[11px] text-muted-foreground">
                     {emp.email && <div className="flex items-center gap-1.5"><Mail className="w-3 h-3 shrink-0" /><span className="truncate">{emp.email}</span></div>}
                     {emp.phone && <div className="flex items-center gap-1.5"><Phone className="w-3 h-3 shrink-0" />{emp.phone}</div>}
-                    {emp.hourly_rate && <div className="flex items-center gap-1.5"><DollarSign className="w-3 h-3 shrink-0" />${emp.hourly_rate}/hr · ~${(emp.hourly_rate * 160).toLocaleString()}/mo</div>}
+                    {emp.hourly_rate != null && emp.hourly_rate > 0 && (
+                      <div className="flex items-center gap-1.5"><DollarSign className="w-3 h-3 shrink-0" />
+                        {emp.hourly_rate >= 500
+                          ? <span>${emp.hourly_rate.toLocaleString()}/mo <span className="text-muted-foreground">(salary)</span></span>
+                          : <span>${emp.hourly_rate}/hr · ~${(emp.hourly_rate * 160).toLocaleString()}/mo</span>
+                        }
+                      </div>
+                    )}
                   </div>
                   <div className="mt-3 flex items-center justify-between">
                     <span className="text-[10px] text-muted-foreground flex items-center gap-1">
@@ -277,19 +305,34 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                 <div className="grid grid-cols-2 gap-3">
                   <Card className="p-3"><p className="text-[10px] text-muted-foreground mb-0.5">Email</p><p className="text-sm font-medium truncate">{detailDialog.email || "—"}</p></Card>
                   <Card className="p-3"><p className="text-[10px] text-muted-foreground mb-0.5">Phone</p><p className="text-sm font-medium">{detailDialog.phone || "—"}</p></Card>
-                  <Card className="p-3"><p className="text-[10px] text-muted-foreground mb-0.5">Hourly Rate</p><p className="text-sm font-medium">{detailDialog.hourly_rate ? `$${detailDialog.hourly_rate}/hr` : "—"}</p></Card>
+                  <Card className="p-3">
+                    <p className="text-[10px] text-muted-foreground mb-0.5">Compensation</p>
+                    <p className="text-sm font-medium">
+                      {detailDialog.hourly_rate
+                        ? detailDialog.hourly_rate >= 500
+                          ? `$${detailDialog.hourly_rate.toLocaleString()}/mo (Salary)`
+                          : `$${detailDialog.hourly_rate}/hr (Hourly)`
+                        : "—"}
+                    </p>
+                  </Card>
                   <Card className="p-3"><p className="text-[10px] text-muted-foreground mb-0.5">Joined</p><p className="text-sm font-medium">{format(new Date(detailDialog.created_at), "MMM d, yyyy")}</p></Card>
                 </div>
-                {detailDialog.hourly_rate && (
-                  <Card className="p-4">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">Estimated Compensation</p>
-                    <div className="grid grid-cols-3 gap-3 text-center">
-                      <div><p className="text-lg font-bold">${(detailDialog.hourly_rate * 40).toLocaleString()}</p><p className="text-[10px] text-muted-foreground">Weekly</p></div>
-                      <div><p className="text-lg font-bold">${(detailDialog.hourly_rate * 160).toLocaleString()}</p><p className="text-[10px] text-muted-foreground">Monthly</p></div>
-                      <div><p className="text-lg font-bold">${(detailDialog.hourly_rate * 2080).toLocaleString()}</p><p className="text-[10px] text-muted-foreground">Yearly</p></div>
-                    </div>
-                  </Card>
-                )}
+                {detailDialog.hourly_rate != null && detailDialog.hourly_rate > 0 && (() => {
+                  const isSalary = detailDialog.hourly_rate! >= 500;
+                  const monthly = isSalary ? detailDialog.hourly_rate! : detailDialog.hourly_rate! * 160;
+                  const weekly = monthly / 4;
+                  const yearly = monthly * 12;
+                  return (
+                    <Card className="p-4">
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">Estimated Compensation</p>
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div><p className="text-lg font-bold">${weekly.toLocaleString()}</p><p className="text-[10px] text-muted-foreground">Weekly</p></div>
+                        <div><p className="text-lg font-bold">${monthly.toLocaleString()}</p><p className="text-[10px] text-muted-foreground">Monthly</p></div>
+                        <div><p className="text-lg font-bold">${yearly.toLocaleString()}</p><p className="text-[10px] text-muted-foreground">Yearly</p></div>
+                      </div>
+                    </Card>
+                  );
+                })()}
                 {detailDialog.notes && (
                   <div><p className="text-xs font-semibold text-muted-foreground mb-1">Notes</p><p className="text-sm bg-muted/30 rounded-lg p-3">{detailDialog.notes}</p></div>
                 )}
@@ -328,7 +371,26 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                   <SelectContent>{ROLES.map((r) => <SelectItem key={r.value} value={r.value}>{r.icon} {r.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5"><Label>Hourly Rate ($)</Label><Input value={form.hourly_rate} onChange={(e) => setForm({ ...form, hourly_rate: e.target.value })} placeholder="0.00" type="number" step="0.01" /></div>
+              <div className="space-y-1.5">
+                <Label>Pay Type</Label>
+                <Select value={form.pay_type} onValueChange={(v: "hourly" | "monthly") => setForm({ ...form, pay_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{PAY_TYPES.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              {form.pay_type === "hourly" ? (
+                <><Label>Hourly Rate ($)</Label><Input value={form.hourly_rate} onChange={(e) => setForm({ ...form, hourly_rate: e.target.value })} placeholder="0.00" type="number" step="0.01" /></>
+              ) : (
+                <><Label>Monthly Salary ($)</Label><Input value={form.monthly_salary} onChange={(e) => setForm({ ...form, monthly_salary: e.target.value })} placeholder="0.00" type="number" step="1" /></>
+              )}
+              {form.pay_type === "hourly" && form.hourly_rate && (
+                <p className="text-[11px] text-muted-foreground">≈ ${(parseFloat(form.hourly_rate) * 160).toLocaleString()}/month</p>
+              )}
+              {form.pay_type === "monthly" && form.monthly_salary && (
+                <p className="text-[11px] text-muted-foreground">≈ ${(parseFloat(form.monthly_salary) / 160).toFixed(2)}/hour equivalent</p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
