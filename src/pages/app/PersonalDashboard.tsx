@@ -67,27 +67,40 @@ const PersonalDashboard = () => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    supabase
-      .from("store_time_entries" as any)
-      .select("id, clock_in, clock_out")
-      .eq("employee_id", empRecord.id)
-      .gte("clock_in", todayStart.toISOString())
-      .order("clock_in", { ascending: false })
-      .then(({ data }) => {
-        const entries = (data || []) as Array<{ id: string; clock_in: string; clock_out: string | null }>;
-        if (entries.length > 0) {
-          const openEntry = entries.find((e) => !e.clock_out);
-          if (openEntry) {
-            setClockStatus("clocked-in");
-            setClockInTime(new Date(openEntry.clock_in));
-          }
-          // Sum completed hours
-          const completedHrs = entries
-            .filter((e) => e.clock_out)
-            .reduce((sum, e) => sum + (new Date(e.clock_out!).getTime() - new Date(e.clock_in).getTime()) / 3600000, 0);
-          setTotalHoursToday(completedHrs);
+    let cancelled = false;
+
+    void (async () => {
+      const { data } = await (supabase as any)
+        .from("store_time_entries")
+        .select("id, clock_in, clock_out")
+        .eq("employee_id", empRecord.id)
+        .gte("clock_in", todayStart.toISOString())
+        .order("clock_in", { ascending: false });
+
+      if (cancelled) return;
+
+      const entries: Array<{ id: string; clock_in: string; clock_out: string | null }> = Array.isArray(data)
+        ? data
+        : [];
+
+      if (entries.length > 0) {
+        const openEntry = entries.find((e) => !e.clock_out);
+        if (openEntry) {
+          setClockStatus("clocked-in");
+          setClockInTime(new Date(openEntry.clock_in));
         }
-      });
+
+        const completedHrs = entries
+          .filter((e) => e.clock_out)
+          .reduce((sum, e) => sum + (new Date(e.clock_out!).getTime() - new Date(e.clock_in).getTime()) / 3600000, 0);
+
+        setTotalHoursToday(completedHrs);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [empRecord?.id]);
 
   const handleQRScan = async (token: string): Promise<{ success: boolean; message: string; action?: string }> => {
