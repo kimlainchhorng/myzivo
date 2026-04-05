@@ -63,6 +63,42 @@ export default function StorePayrollSection({ storeId }: Props) {
   const [editingEmp, setEditingEmp] = useState<any>(null);
   const [editForm, setEditForm] = useState({ name: "", role: "", hourly_rate: "", pay_type: "hourly" });
   const periods = getPayPeriods();
+  const settingsKey = `payroll_settings_${storeId}`;
+
+  // Load saved settings
+  useQuery({
+    queryKey: ["payroll-settings", storeId],
+    queryFn: async () => {
+      const { data } = await supabase.from("app_settings").select("value").eq("key", settingsKey).maybeSingle();
+      if (data?.value && typeof data.value === "object") {
+        const s = data.value as any;
+        if (s.taxRate != null) { setTaxRate(s.taxRate); setTaxInput(String(s.taxRate * 100)); }
+        if (s.benefitsRate != null) { setBenefitsRate(s.benefitsRate); setBenefitsInput(String(s.benefitsRate * 100)); }
+        if (s.overtimeEnabled != null) setOvertimeEnabled(s.overtimeEnabled);
+        if (s.overtimeRate) setOvertimeRate(s.overtimeRate);
+        if (s.payFrequency) setPayFrequency(s.payFrequency);
+        if (s.payDay) setPayDay(s.payDay);
+        if (s.budgetLimit) setBudgetLimit(s.budgetLimit);
+      }
+      return data;
+    },
+  });
+
+  const saveSettingsMutation = useMutation({
+    mutationFn: async () => {
+      const value = { taxRate, benefitsRate, overtimeEnabled, overtimeRate, payFrequency, payDay, budgetLimit };
+      const { data: existing } = await supabase.from("app_settings").select("id").eq("key", settingsKey).maybeSingle();
+      if (existing) {
+        const { error } = await supabase.from("app_settings").update({ value, updated_at: new Date().toISOString() }).eq("key", settingsKey);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("app_settings").insert({ key: settingsKey, value, description: "Payroll settings" });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => toast.success("Payroll settings saved"),
+    onError: (e) => toast.error("Failed to save: " + e.message),
+  });
 
   const { data: employees = [] } = useQuery({
     queryKey: ["store-employees-payroll", storeId],
@@ -434,19 +470,20 @@ export default function StorePayrollSection({ storeId }: Props) {
             </div>
           </Card>
 
-          {/* Reset */}
-          <Card className="p-5 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Reset to Defaults</p>
-              <p className="text-xs text-muted-foreground">Restore default tax (22%), benefits (8%), and other settings</p>
-            </div>
+          {/* Save & Reset */}
+          <div className="flex items-center gap-3">
+            <Button onClick={() => saveSettingsMutation.mutate()} disabled={saveSettingsMutation.isPending} className="gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {saveSettingsMutation.isPending ? "Saving..." : "Save Settings"}
+            </Button>
             <Button variant="outline" size="sm" onClick={() => {
               setTaxRate(DEFAULT_TAX_RATE); setBenefitsRate(DEFAULT_BENEFITS_RATE);
+              setTaxInput(String(DEFAULT_TAX_RATE * 100)); setBenefitsInput(String(DEFAULT_BENEFITS_RATE * 100));
               setOvertimeEnabled(true); setOvertimeRate("1.5");
               setPayFrequency("monthly"); setPayDay("last"); setBudgetLimit("50000");
               toast.success("Settings reset to defaults");
-            }}>Reset</Button>
-          </Card>
+            }}>Reset to Defaults</Button>
+          </div>
         </TabsContent>
       </Tabs>
 
