@@ -253,7 +253,7 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                         </Badge>
                         {emp.employee_number && (
                           <span className="text-[10px] font-mono text-muted-foreground bg-muted/50 px-1.5 py-0 rounded">
-                            ID-{String(emp.employee_number).padStart(4, "0")}
+                            EMP-{new Date(emp.created_at).getFullYear()}-{String(emp.employee_number).padStart(5, "0")}
                           </span>
                         )}
                       </div>
