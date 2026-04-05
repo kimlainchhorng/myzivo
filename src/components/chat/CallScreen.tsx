@@ -125,16 +125,6 @@ export default function CallScreen({
   const handleRemoteStream = useCallback((stream: MediaStream) => {
     remoteStreamRef.current = stream;
 
-    if (minimized && onPipStateChange) {
-      onPipStateChange({
-        remoteStream: stream,
-        duration,
-        isMuted,
-        callType,
-        isCameraOff,
-      });
-    }
-
     if (callType === "video") {
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = stream;
@@ -147,7 +137,7 @@ export default function CallScreen({
       remoteAudioRef.current.muted = false;
       void remoteAudioRef.current.play().catch(() => {});
     }
-  }, [callType, minimized, onPipStateChange]);
+  }, [callType]);
 
   const handleEnded = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
