@@ -91,6 +91,14 @@ function formatMsgTime(dateStr: string) {
 
 export default function PersonalChat({ recipientId, recipientName, recipientAvatar, onClose }: PersonalChatProps) {
   const { user } = useAuth();
+
+  // Notify global listener that this chat is open
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("chat-opened", { detail: { recipientId } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent("chat-closed"));
+    };
+  }, [recipientId]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
