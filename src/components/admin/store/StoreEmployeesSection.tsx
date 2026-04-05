@@ -80,10 +80,13 @@ export default function StoreEmployeesSection({ storeId }: Props) {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const rateValue = form.pay_type === "monthly"
+        ? (form.monthly_salary ? parseFloat(form.monthly_salary) : null)
+        : (form.hourly_rate ? parseFloat(form.hourly_rate) : null);
       const payload = {
         store_id: storeId, name: form.name.trim(),
         email: form.email.trim() || null, phone: form.phone.trim() || null,
-        role: form.role, hourly_rate: form.hourly_rate ? parseFloat(form.hourly_rate) : null,
+        role: form.role, hourly_rate: rateValue,
         notes: form.notes.trim() || null,
       };
       if (editing) {
