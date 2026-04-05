@@ -286,22 +286,120 @@ export default function StorePayrollSection({ storeId }: Props) {
 
         {/* Settings Tab */}
         <TabsContent value="settings" className="mt-4 space-y-4">
+          {/* Overtime */}
           <Card className="p-5 space-y-5">
-            <h3 className="font-semibold text-sm flex items-center gap-2"><PiggyBank className="w-4 h-4 text-muted-foreground" /> Payroll Settings</h3>
-            <div className="flex items-center justify-between"><div><p className="text-sm font-medium">Overtime Calculation</p><p className="text-xs text-muted-foreground">Auto-calculate overtime beyond 40h/week</p></div><Switch checked={overtimeEnabled} onCheckedChange={setOvertimeEnabled} /></div>
+            <h3 className="font-semibold text-sm flex items-center gap-2"><PiggyBank className="w-4 h-4 text-muted-foreground" /> Overtime</h3>
+            <div className="flex items-center justify-between">
+              <div><p className="text-sm font-medium">Overtime Calculation</p><p className="text-xs text-muted-foreground">Auto-calculate overtime beyond 40h/week</p></div>
+              <Switch checked={overtimeEnabled} onCheckedChange={setOvertimeEnabled} />
+            </div>
             {overtimeEnabled && (
               <div className="space-y-1.5 pl-4 border-l-2 border-primary/20">
                 <Label className="text-xs">Overtime Multiplier</Label>
                 <Select value={overtimeRate} onValueChange={setOvertimeRate}>
                   <SelectTrigger className="w-40 h-8"><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="1.5">1.5x (Standard)</SelectItem><SelectItem value="2.0">2.0x (Double Time)</SelectItem><SelectItem value="1.25">1.25x</SelectItem></SelectContent>
+                  <SelectContent>
+                    <SelectItem value="1.25">1.25x</SelectItem>
+                    <SelectItem value="1.5">1.5x (Standard)</SelectItem>
+                    <SelectItem value="2.0">2.0x (Double Time)</SelectItem>
+                  </SelectContent>
                 </Select>
               </div>
             )}
-            <div className="border-t pt-4 space-y-3">
-              <div><p className="text-sm font-medium">Tax Rate</p><p className="text-xs text-muted-foreground mb-1.5">Federal + State combined estimate</p><Input type="number" value={(taxRate * 100).toFixed(0)} className="w-24 h-8" readOnly /><span className="text-xs text-muted-foreground ml-1.5">%</span></div>
-              <div><p className="text-sm font-medium">Benefits Deduction</p><p className="text-xs text-muted-foreground mb-1.5">Health, dental, and retirement</p><Input type="number" value={(benefitsRate * 100).toFixed(0)} className="w-24 h-8" readOnly /><span className="text-xs text-muted-foreground ml-1.5">%</span></div>
+          </Card>
+
+          {/* Tax & Deductions */}
+          <Card className="p-5 space-y-5">
+            <h3 className="font-semibold text-sm flex items-center gap-2"><Percent className="w-4 h-4 text-muted-foreground" /> Tax & Deductions</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">Tax Rate</Label>
+                <p className="text-xs text-muted-foreground">Federal + State combined</p>
+                <div className="flex items-center gap-1.5">
+                  <Input type="number" min="0" max="100" step="0.5" value={(taxRate * 100).toFixed(1)} onChange={e => setTaxRate(Math.min(1, Math.max(0, parseFloat(e.target.value || "0") / 100)))} className="w-24 h-9" />
+                  <span className="text-sm text-muted-foreground">%</span>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">Benefits Deduction</Label>
+                <p className="text-xs text-muted-foreground">Health, dental, retirement</p>
+                <div className="flex items-center gap-1.5">
+                  <Input type="number" min="0" max="100" step="0.5" value={(benefitsRate * 100).toFixed(1)} onChange={e => setBenefitsRate(Math.min(1, Math.max(0, parseFloat(e.target.value || "0") / 100)))} className="w-24 h-9" />
+                  <span className="text-sm text-muted-foreground">%</span>
+                </div>
+              </div>
             </div>
+            <div className="rounded-lg bg-muted/30 p-3">
+              <p className="text-[11px] text-muted-foreground mb-1">Total Deduction Rate</p>
+              <p className="text-sm font-semibold">{((taxRate + benefitsRate) * 100).toFixed(1)}% <span className="text-muted-foreground font-normal">({(taxRate * 100).toFixed(1)}% tax + {(benefitsRate * 100).toFixed(1)}% benefits)</span></p>
+            </div>
+          </Card>
+
+          {/* Pay Schedule */}
+          <Card className="p-5 space-y-5">
+            <h3 className="font-semibold text-sm flex items-center gap-2"><Calendar className="w-4 h-4 text-muted-foreground" /> Pay Schedule</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">Pay Frequency</Label>
+                <Select value={payFrequency} onValueChange={setPayFrequency}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="biweekly">Bi-Weekly</SelectItem>
+                    <SelectItem value="semimonthly">Semi-Monthly (1st & 15th)</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">Pay Day</Label>
+                <Select value={payDay} onValueChange={setPayDay}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="last">Last Day of Month</SelectItem>
+                    <SelectItem value="1">1st of Month</SelectItem>
+                    <SelectItem value="15">15th of Month</SelectItem>
+                    <SelectItem value="25">25th of Month</SelectItem>
+                    <SelectItem value="friday">Every Friday</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </Card>
+
+          {/* Budget */}
+          <Card className="p-5 space-y-5">
+            <h3 className="font-semibold text-sm flex items-center gap-2"><DollarSign className="w-4 h-4 text-muted-foreground" /> Budget</h3>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">Monthly Payroll Budget</Label>
+              <p className="text-xs text-muted-foreground">Set a target to track spending against</p>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm text-muted-foreground">$</span>
+                <Input type="number" min="0" step="1000" value={budgetLimit} onChange={e => setBudgetLimit(e.target.value)} className="w-36 h-9" />
+              </div>
+            </div>
+            <div className="rounded-lg bg-muted/30 p-3">
+              <div className="flex justify-between text-sm mb-1.5">
+                <span className="text-muted-foreground">Current Usage</span>
+                <span className="font-semibold">${totalGross.toLocaleString()} / ${parseFloat(budgetLimit || "50000").toLocaleString()}</span>
+              </div>
+              <Progress value={budgetUsed} className="h-2" />
+              <p className={cn("text-[10px] mt-1", budgetUsed > 90 ? "text-destructive" : "text-muted-foreground")}>{budgetUsed.toFixed(0)}% used{budgetUsed > 90 ? " ⚠️ Over budget!" : ""}</p>
+            </div>
+          </Card>
+
+          {/* Reset */}
+          <Card className="p-5 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Reset to Defaults</p>
+              <p className="text-xs text-muted-foreground">Restore default tax (22%), benefits (8%), and other settings</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => {
+              setTaxRate(DEFAULT_TAX_RATE); setBenefitsRate(DEFAULT_BENEFITS_RATE);
+              setOvertimeEnabled(true); setOvertimeRate("1.5");
+              setPayFrequency("monthly"); setPayDay("last"); setBudgetLimit("50000");
+              toast.success("Settings reset to defaults");
+            }}>Reset</Button>
           </Card>
         </TabsContent>
       </Tabs>
