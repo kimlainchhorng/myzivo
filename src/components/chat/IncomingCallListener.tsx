@@ -9,8 +9,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Phone, PhoneOff, Video, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import CallScreen from "./CallScreen";
 import { playIncomingRingtone, primeCallAudio, registerCallAudioUnlock } from "@/lib/callAudio";
+import { Capacitor } from "@capacitor/core";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
 interface IncomingCall {
   id: string;
@@ -33,6 +36,7 @@ export default function IncomingCallListener() {
   const [incoming, setIncoming] = useState<IncomingCall | null>(null);
   const [answeredCall, setAnsweredCall] = useState<IncomingCall | null>(null);
   const lastIncomingCallIdRef = useRef<string | null>(null);
+  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
 
   const mapIncomingCall = useCallback(async (call: { id: string; caller_id: string; call_type: "voice" | "video" }) => {
     const { data: profile } = await (supabase as any)
@@ -90,6 +94,11 @@ export default function IncomingCallListener() {
   }, [answeredCall, incoming, mapIncomingCall, user?.id]);
 
   useEffect(() => registerCallAudioUnlock(), []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    setPortalRoot(document.body);
+  }, []);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -191,6 +200,16 @@ export default function IncomingCallListener() {
   }, [incoming?.id]);
 
   useEffect(() => {
+    if (!incoming || !Capacitor.isNativePlatform()) return;
+
+    const intervalId = window.setInterval(() => {
+      void Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+    }, 1800);
+
+    return () => window.clearInterval(intervalId);
+  }, [incoming?.id]);
+
+  useEffect(() => {
     if (!incoming) return;
 
     // Auto-mark unanswered calls as missed after 45 seconds.
@@ -251,100 +270,116 @@ export default function IncomingCallListener() {
     ? (incoming.caller_name || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "";
 
+  const incomingOverlay = (
+    <AnimatePresence>
+      {incoming && (
+        <motion.div
+          className="fixed inset-0 z-[9999] bg-black/35 backdrop-blur-md flex items-center justify-center px-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <motion.div
+            className="relative w-full max-w-sm rounded-3xl border border-white/20 bg-white/92 p-6 shadow-2xl"
+            initial={{ y: 24, scale: 0.96 }}
+            animate={{ y: 0, scale: 1 }}
+            exit={{ y: 24, scale: 0.96 }}
+            transition={{ type: "spring", damping: 24, stiffness: 260 }}
+          >
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
+
+            <div className="relative flex flex-col items-center text-center gap-3">
+              <div className="relative">
+                <motion.div
+                  className="absolute -inset-2 rounded-full border-2 border-primary/30"
+                  animate={{ scale: [1, 1.18, 1], opacity: [0.8, 0.2, 0.8] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <Avatar className="h-20 w-20 border-2 border-primary/30 shadow-md">
+                  <AvatarImage src={incoming.caller_avatar || undefined} />
+                  <AvatarFallback className="text-xl font-bold bg-muted text-muted-foreground">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+
+              <div>
+                <p className="text-2xl font-bold text-foreground leading-tight">
+                  {incoming.caller_name}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Incoming {incoming.call_type} call
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>Tap answer to join</span>
+              </div>
+
+              <div className="w-full mt-2 flex items-center justify-center gap-6">
+                <button
+                  onClick={handleDecline}
+                  aria-label="Decline incoming call"
+                  title="Decline"
+                  className="h-14 w-14 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform shadow-md"
+                >
+                  <PhoneOff className="h-6 w-6" />
+                </button>
+                <button
+                  onClick={handleAccept}
+                  aria-label="Accept incoming call"
+                  title="Accept"
+                  className="h-14 w-14 rounded-full bg-green-500 text-white flex items-center justify-center active:scale-90 transition-transform shadow-md"
+                >
+                  {incoming.call_type === "video" ? (
+                    <Video className="h-6 w-6" />
+                  ) : (
+                    <Phone className="h-6 w-6" />
+                  )}
+                </button>
+              </div>
+
+              <div className="w-full flex items-center justify-between px-2 text-xs font-medium text-muted-foreground">
+                <span>Decline</span>
+                <span>Answer</span>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  const activeCallOverlay = (
+    <AnimatePresence>
+      {answeredCall && (
+        <CallScreen
+          recipientName={answeredCall.caller_name}
+          recipientAvatar={answeredCall.caller_avatar}
+          recipientId={answeredCall.caller_id}
+          callType={answeredCall.call_type}
+          existingCallId={answeredCall.id}
+          onEnd={handleCallEnd}
+        />
+      )}
+    </AnimatePresence>
+  );
+
+  if (!portalRoot) {
+    return (
+      <>
+        {incomingOverlay}
+        {activeCallOverlay}
+      </>
+    );
+  }
+
   return (
     <>
-      <AnimatePresence>
-        {incoming && (
-          <motion.div
-            className="fixed inset-0 z-[70] bg-black/35 backdrop-blur-md flex items-center justify-center px-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <motion.div
-              className="relative w-full max-w-sm rounded-3xl border border-white/20 bg-white/92 p-6 shadow-2xl"
-              initial={{ y: 24, scale: 0.96 }}
-              animate={{ y: 0, scale: 1 }}
-              exit={{ y: 24, scale: 0.96 }}
-              transition={{ type: "spring", damping: 24, stiffness: 260 }}
-            >
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
-
-              <div className="relative flex flex-col items-center text-center gap-3">
-                <div className="relative">
-                  <motion.div
-                    className="absolute -inset-2 rounded-full border-2 border-primary/30"
-                    animate={{ scale: [1, 1.18, 1], opacity: [0.8, 0.2, 0.8] }}
-                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                  <Avatar className="h-20 w-20 border-2 border-primary/30 shadow-md">
-                    <AvatarImage src={incoming.caller_avatar || undefined} />
-                    <AvatarFallback className="text-xl font-bold bg-muted text-muted-foreground">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-
-                <div>
-                  <p className="text-2xl font-bold text-foreground leading-tight">
-                    {incoming.caller_name}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Incoming {incoming.call_type} call
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  <span>Tap answer to join</span>
-                </div>
-
-                <div className="w-full mt-2 flex items-center justify-center gap-6">
-                  <button
-                    onClick={handleDecline}
-                    aria-label="Decline incoming call"
-                    title="Decline"
-                    className="h-14 w-14 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform shadow-md"
-                  >
-                    <PhoneOff className="h-6 w-6" />
-                  </button>
-                  <button
-                    onClick={handleAccept}
-                    aria-label="Accept incoming call"
-                    title="Accept"
-                    className="h-14 w-14 rounded-full bg-green-500 text-white flex items-center justify-center active:scale-90 transition-transform shadow-md"
-                  >
-                    {incoming.call_type === "video" ? (
-                      <Video className="h-6 w-6" />
-                    ) : (
-                      <Phone className="h-6 w-6" />
-                    )}
-                  </button>
-                </div>
-
-                <div className="w-full flex items-center justify-between px-2 text-xs font-medium text-muted-foreground">
-                  <span>Decline</span>
-                  <span>Answer</span>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {answeredCall && (
-          <CallScreen
-            recipientName={answeredCall.caller_name}
-            recipientAvatar={answeredCall.caller_avatar}
-            recipientId={answeredCall.caller_id}
-            callType={answeredCall.call_type}
-            existingCallId={answeredCall.id}
-            onEnd={handleCallEnd}
-          />
-        )}
-      </AnimatePresence>
+      {createPortal(incomingOverlay, portalRoot)}
+      {createPortal(activeCallOverlay, portalRoot)}
     </>
   );
 }
