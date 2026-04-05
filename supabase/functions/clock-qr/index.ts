@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
           .from("store_employees")
           .select("id, name, store_id")
           .eq("store_id", storeId)
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .eq("status", "active")
           .maybeSingle();
         if (!emp) {
