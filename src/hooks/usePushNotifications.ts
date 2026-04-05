@@ -430,7 +430,6 @@ export const usePushNotifications = () => {
               caller_avatar: data.caller_avatar,
             },
           }));
-          window.location.href = `/chat`;
           break;
 
         default:
