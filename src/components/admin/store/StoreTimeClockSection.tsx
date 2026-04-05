@@ -112,14 +112,6 @@ export default function StoreTimeClockSection({ storeId }: Props) {
       }
     }));
   };
-      if (e.id !== id) return e;
-      if (e.isOnBreak) {
-        return { ...e, isOnBreak: false, breaks: e.breaks.map(b => b.end ? b : { ...b, end: new Date() }) };
-      } else {
-        return { ...e, isOnBreak: true, breaks: [...e.breaks, { start: new Date(), end: null }] };
-      }
-    }));
-  };
 
   const getHoursWorked = (entry: ClockEntry): number => {
     const end = entry.clockOut || new Date();
