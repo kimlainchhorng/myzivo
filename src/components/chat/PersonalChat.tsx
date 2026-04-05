@@ -193,7 +193,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   }, []);
 
   const handleStartCall = useCallback(async (type: "voice" | "video") => {
-    await primeCallAudio();
+    // Do not block call start on audio priming; on iOS this can stall UI.
+    void primeCallAudio();
     setActiveCall(type);
   }, []);
 

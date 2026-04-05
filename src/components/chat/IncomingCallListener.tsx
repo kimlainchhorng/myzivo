@@ -82,13 +82,24 @@ export default function IncomingCallListener() {
     }
 
     if (!pendingCall) {
-      const minCreatedAt = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const nowIso = new Date().toISOString();
+      const freshWindowStart = new Date(Date.now() - 90 * 1000).toISOString();
+
+      // Cleanup stale local ringing records first so hydration cannot pick
+      // an outdated call ID when a newer call is ringing.
+      await (supabase as any)
+        .from("call_signals")
+        .update({ status: "missed", ended_at: nowIso })
+        .eq("callee_id", user.id)
+        .eq("status", "ringing")
+        .lt("created_at", freshWindowStart);
+
       const { data } = await (supabase as any)
         .from("call_signals")
         .select("id, caller_id, call_type, created_at")
         .eq("callee_id", user.id)
         .eq("status", "ringing")
-        .gte("created_at", minCreatedAt)
+        .gte("created_at", freshWindowStart)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();

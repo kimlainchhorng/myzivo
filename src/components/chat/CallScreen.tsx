@@ -224,31 +224,58 @@ export default function CallScreen({
     if (existingCallId || !user?.id || callId || createCallFiredRef.current) return;
     createCallFiredRef.current = true;
     const create = async () => {
-      const minPairCreatedAt = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+      // Preflight local media first. If caller cannot access required devices,
+      // do not create a ringing signal on the remote side.
+      try {
+        const preflightStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: callType === "video",
+        });
+        preflightStream.getTracks().forEach((track) => track.stop());
+      } catch (mediaErr) {
+        handleCallFailure(classifyWebRTCFailure(mediaErr, callType));
+        onEnd();
+        return;
+      }
 
-      // Reuse an already-active outgoing call for this same pair to avoid
-      // creating duplicate call IDs between caller and callee flows.
-      const { data: existingPairCall } = await (supabase as any)
+      const nowIso = new Date().toISOString();
+      const stalePairWindow = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+
+      // Always create a fresh outgoing call ID. Before doing so, close any
+      // stale open rows for this same caller/callee pair.
+      const { data: openPairCalls } = await (supabase as any)
         .from("call_signals")
         .select("id, status")
         .eq("caller_id", user.id)
         .eq("callee_id", recipientId)
         .in("status", ["ringing", "answered"])
         .is("ended_at", null)
-        .gte("created_at", minPairCreatedAt)
+        .gte("created_at", stalePairWindow)
         .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(10);
 
-      if (existingPairCall?.id) {
-        setCallId(existingPairCall.id);
-        setRemoteAccepted(existingPairCall.status === "answered");
-        reminderPushSentRef.current = false;
+      const staleRingingPairIds = (openPairCalls || [])
+        .filter((row: any) => row.status === "ringing")
+        .map((row: any) => row.id);
 
-        if (existingPairCall.status === "ringing") {
-          await sendIncomingCallPush(existingPairCall.id, "reminder");
-        }
-        return;
+      const staleAnsweredPairIds = (openPairCalls || [])
+        .filter((row: any) => row.status === "answered")
+        .map((row: any) => row.id);
+
+      if (staleRingingPairIds.length) {
+        await (supabase as any)
+          .from("call_signals")
+          .update({ status: "missed", ended_at: nowIso })
+          .in("id", staleRingingPairIds)
+          .eq("status", "ringing");
+      }
+
+      if (staleAnsweredPairIds.length) {
+        await (supabase as any)
+          .from("call_signals")
+          .update({ status: "ended", ended_at: nowIso })
+          .in("id", staleAnsweredPairIds)
+          .eq("status", "answered");
       }
 
       const nowMs = Date.now();
@@ -259,7 +286,7 @@ export default function CallScreen({
 
       const { data: possibleActiveCalls } = await (supabase as any)
         .from("call_signals")
-        .select("id, status, created_at, started_at")
+        .select("id, caller_id, callee_id, status, created_at, started_at")
         .or(`caller_id.eq.${recipientId},callee_id.eq.${recipientId}`)
         .in("status", ["ringing", "answered"])
         .is("ended_at", null)
@@ -288,6 +315,14 @@ export default function CallScreen({
       const staleEndedIds: string[] = [];
 
       const activeForRecipient = (possibleActiveCalls || []).find((row: any) => {
+        const otherPartyId = row.caller_id === recipientId ? row.callee_id : row.caller_id;
+
+        // Ignore rows that are only between current user and this recipient;
+        // those are handled via stale-pair cleanup and should not trigger busy.
+        if (otherPartyId === user.id) {
+          return false;
+        }
+
         const createdMs = new Date(row.created_at).getTime();
         const startedMs = row.started_at ? new Date(row.started_at).getTime() : null;
         const hasHistory = historicalSignalIds.has(row.id);

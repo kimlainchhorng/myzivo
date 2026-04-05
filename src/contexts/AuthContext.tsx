@@ -30,6 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const initializedRef = useRef(false);
   const loginGraceUntilRef = useRef(0);
+  const explicitSignOutRef = useRef(false);
 
   const checkAdminRole = async (userId: string) => {
     try {
@@ -77,23 +78,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           expiresAt: session?.expires_at ?? null,
         });
 
-        // iOS/WebView can sometimes emit a transient SIGNED_OUT right after SIGNED_IN.
-        // During a short grace window, attempt to rehydrate before accepting logout.
-        if (event === "SIGNED_OUT" && Date.now() < loginGraceUntilRef.current) {
-          console.warn("[Auth] Ignoring transient SIGNED_OUT during login grace window");
-          void supabase.auth.getSession().then(async ({ data: { session: recoveredSession } }) => {
-            if (!recoveredSession?.user) return;
+        // iOS/WebView can emit transient SIGNED_OUT during network churn.
+        // Unless this was an explicit user sign-out, rehydrate before accepting logout.
+        if (event === "SIGNED_OUT" && !explicitSignOutRef.current) {
+          console.warn("[Auth] Received SIGNED_OUT, verifying persisted session before logout");
+          void (async () => {
+            for (let attempt = 0; attempt < 3; attempt += 1) {
+              const { data: { session: recoveredSession } } = await supabase.auth.getSession();
+              if (recoveredSession?.user) {
+                setSession(recoveredSession);
+                setUser(recoveredSession.user);
 
-            setSession(recoveredSession);
-            setUser(recoveredSession.user);
+                try {
+                  const adminStatus = await checkAdminRole(recoveredSession.user.id);
+                  setIsAdmin(adminStatus);
+                } catch {
+                  setIsAdmin(false);
+                }
+                return;
+              }
 
-            try {
-              const adminStatus = await checkAdminRole(recoveredSession.user.id);
-              setIsAdmin(adminStatus);
-            } catch {
-              setIsAdmin(false);
+              await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
             }
-          });
+
+            // No recovered session after retries; apply signed-out state.
+            clearSessionArtifacts();
+            setSession(null);
+            setUser(null);
+            setIsAdmin(false);
+          })();
           return;
         }
 
@@ -166,11 +179,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = useCallback(async () => {
+    explicitSignOutRef.current = true;
     clearSessionArtifacts();
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setIsAdmin(false);
+    // Keep a short guard window; next sign-in resets this naturally.
+    setTimeout(() => {
+      explicitSignOutRef.current = false;
+    }, 1000);
   }, []);
 
   // Session security: idle timeout and max age enforcement

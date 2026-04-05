@@ -119,6 +119,7 @@ interface CallSignalData {
 
 const PRE_CONNECT_GRACE_MS = 30000;
 const POST_CONNECT_GRACE_MS = 10000;
+const CALLEE_TERMINATION_GUARD_MS = 8000;
 
 export function useWebRTC({
   callId,
@@ -141,6 +142,8 @@ export function useWebRTC({
   const failureReportedRef = useRef(false);
   const disconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const restartIceAttemptedRef = useRef(false);
+  const callStartAtRef = useRef(0);
+  const terminalCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const reportFailure = useCallback((error: unknown) => {
     if (failureReportedRef.current) return;
@@ -156,6 +159,10 @@ export function useWebRTC({
 
   const cleanup = useCallback(() => {
     clearDisconnectTimeout();
+    if (terminalCheckTimerRef.current) {
+      clearTimeout(terminalCheckTimerRef.current);
+      terminalCheckTimerRef.current = null;
+    }
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
     localStreamRef.current = null;
     pcRef.current?.close();
@@ -164,10 +171,59 @@ export function useWebRTC({
     hasEverConnectedRef.current = false;
     failureReportedRef.current = false;
     restartIceAttemptedRef.current = false;
+    callStartAtRef.current = 0;
     setIsReconnecting(false);
     setCallState("ended");
     startedRef.current = false;
   }, [clearDisconnectTimeout]);
+
+  const shouldDelayTerminalForCallee = useCallback((status: string | null | undefined) => {
+    if (role !== "callee") return false;
+    if (hasEverConnectedRef.current) return false;
+    if (!callStartAtRef.current) return false;
+    if (status === "declined") return false;
+    return Date.now() - callStartAtRef.current < CALLEE_TERMINATION_GUARD_MS;
+  }, [role]);
+
+  const confirmTerminalStatus = useCallback(async (status: string) => {
+    try {
+      const { data } = await (supabase as any)
+        .from("call_signals")
+        .select("status")
+        .eq("id", callId)
+        .maybeSingle();
+
+      return data?.status === status;
+    } catch {
+      return false;
+    }
+  }, [callId]);
+
+  const handleTerminalStatus = useCallback(async (status: string) => {
+    // "missed" is meaningful for caller no-answer flow. For callee, it can be
+    // a stale race artifact right after acceptance, so ignore it.
+    if (status === "missed" && role === "callee") {
+      return;
+    }
+
+    if (shouldDelayTerminalForCallee(status)) {
+      if (terminalCheckTimerRef.current) return;
+
+      terminalCheckTimerRef.current = setTimeout(() => {
+        terminalCheckTimerRef.current = null;
+        void (async () => {
+          const stillTerminal = await confirmTerminalStatus(status);
+          if (!stillTerminal) return;
+          cleanup();
+          onEnded();
+        })();
+      }, 1200);
+      return;
+    }
+
+    cleanup();
+    onEnded();
+  }, [cleanup, confirmTerminalStatus, onEnded, role, shouldDelayTerminalForCallee]);
 
   const scheduleDisconnectTimeout = useCallback((pc: RTCPeerConnection, timeoutMs: number) => {
     if (disconnectTimeoutRef.current) return;
@@ -186,9 +242,8 @@ export function useWebRTC({
     // IMPORTANT: Check termination status BEFORE the pc null guard.
     // If the other side ends/declines while our PeerConnection hasn't been
     // created yet, we must still honor the termination signal.
-    if (data.status === "ended" || data.status === "declined") {
-      cleanup();
-      onEnded();
+    if (data.status === "ended" || data.status === "declined" || data.status === "missed") {
+      await handleTerminalStatus(data.status);
       return;
     }
 
@@ -250,6 +305,7 @@ export function useWebRTC({
   const start = useCallback(async (activeCallId: string) => {
     if (startedRef.current || !activeCallId) return null;
     startedRef.current = true;
+    callStartAtRef.current = Date.now();
     setCallState("ringing");
     setIsReconnecting(false);
     clearDisconnectTimeout();
@@ -380,6 +436,19 @@ export function useWebRTC({
       return localStream;
     } catch (err) {
       console.error("WebRTC start failed:", err);
+
+      // If local setup fails (permissions/device/network), immediately end
+      // the signaling row so the remote side does not keep ringing.
+      try {
+        await (supabase as any)
+          .from("call_signals")
+          .update({ status: "ended", ended_at: new Date().toISOString() })
+          .eq("id", activeCallId)
+          .in("status", ["ringing", "answered"]);
+      } catch {
+        // non-blocking; local cleanup still proceeds
+      }
+
       reportFailure(err);
       cleanup();
       onEnded();
@@ -413,8 +482,7 @@ export function useWebRTC({
           .maybeSingle();
 
         if (data?.status === "ended" || data?.status === "declined" || data?.status === "missed") {
-          cleanup();
-          onEnded();
+          void processSignalData({ status: data.status });
         }
       } catch {
         // ignore polling errors
