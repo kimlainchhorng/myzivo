@@ -308,38 +308,37 @@ export default function StoreScheduleSection({ storeId }: Props) {
         <TabsContent value="schedule" className="mt-4">
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[750px]">
+              <table className="w-full text-sm min-w-[1580px]">
                 <thead>
                   <tr className="border-b bg-muted/40">
                     <th className="text-left px-3 py-2.5 font-semibold text-xs text-muted-foreground w-40 sticky left-0 bg-muted/40 z-10">Employee</th>
-                    {DAYS.map((d, i) => {
-                      const date = addDays(weekStart, i);
+                    {weekDates.map((date) => {
                       const isToday = isSameDay(date, new Date());
-                      const isWeekend = i >= 5;
+                      const weekDayIndex = (date.getDay() + 6) % 7;
+                      const isWeekend = weekDayIndex >= 5;
                       return (
-                        <th key={d} className={cn("text-center px-2 py-2.5 font-semibold text-xs min-w-[105px]", isToday ? "text-primary" : isWeekend ? "text-destructive/70" : "text-muted-foreground")}>
-                          {d}<div className="text-[10px] font-normal">{format(date, "MMM d")}</div>
+                        <th key={date.toISOString()} className={cn("text-center px-2 py-2.5 font-semibold text-xs min-w-[105px]", isToday ? "text-primary" : isWeekend ? "text-destructive/70" : "text-muted-foreground")}>
+                          {format(date, "EEE")}<div className="text-[10px] font-normal">{format(date, "MMM d")}</div>
                         </th>
                       );
                     })}
-                    <th className="text-center px-2 py-2.5 font-semibold text-xs text-muted-foreground w-16">Hours</th>
+                    <th className="text-center px-2 py-2.5 font-semibold text-xs text-muted-foreground w-16 sticky right-0 bg-muted/40 z-10">Hours</th>
                   </tr>
                 </thead>
                 <tbody>
                   {employees.length === 0 ? (
-                    <tr><td colSpan={9} className="text-center py-14 text-muted-foreground text-sm">No employees yet.</td></tr>
+                    <tr><td colSpan={weekDates.length + 2} className="text-center py-14 text-muted-foreground text-sm">No employees yet.</td></tr>
                   ) : employees.map((emp: any) => {
                     let weekHours = 0;
                     return (
                       <tr key={emp.id} className="border-b last:border-0 hover:bg-muted/10 transition-colors">
-                        <td className="px-3 py-3 sticky left-0 bg-card z-10">
+                        <td className="px-3 py-3 sticky left-0 bg-card z-10 min-w-[160px]">
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">{emp.name?.charAt(0)?.toUpperCase()}</div>
                             <div><p className="font-medium text-[12px] leading-tight">{emp.name}</p><p className="text-[10px] text-muted-foreground capitalize">{emp.role}</p></div>
                           </div>
                         </td>
-                        {DAYS.map((_, dayIdx) => {
-                          const date = addDays(weekStart, dayIdx);
+                        {weekDates.map((date, dayIdx) => {
                           const isToday = isSameDay(date, new Date());
                           const { status, dayOff, assignment } = getDayStatus(emp.id, date);
 
