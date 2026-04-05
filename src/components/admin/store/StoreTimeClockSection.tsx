@@ -7,8 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Clock, LogIn, LogOut, Timer, Users, Calendar, Download,
   Coffee, MapPin, AlertTriangle, TrendingUp, BarChart3,
-  CheckCircle2, Pause, Play
+  CheckCircle2, Pause, Play, QrCode, ScanLine
 } from "lucide-react";
+import { StoreQRDisplay } from "@/components/clock/StoreQRDisplay";
+import { QRScannerModal } from "@/components/clock/QRScannerModal";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
