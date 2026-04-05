@@ -139,13 +139,16 @@ export default function StoreScheduleSection({ storeId }: Props) {
 
   const addAssignment = () => {
     if (!assignForm.employeeId || assignForm.workDays.length === 0) return;
-    setAssignments(prev => [...prev, {
+    const newAssignment: WorkAssignment = {
       id: crypto.randomUUID(), employeeId: assignForm.employeeId,
       startDate: assignForm.startDate, endDate: assignForm.endDate,
       shiftType: assignForm.shiftType, shiftStart: assignForm.shiftStart,
       shiftEnd: assignForm.shiftEnd, workDays: assignForm.workDays,
       note: assignForm.note,
-    }]);
+    };
+    const updated = [...assignments, newAssignment];
+    setAssignments(updated);
+    persistSchedule(updated, daysOff);
     setAssignDialog(false);
     toast.success("Work schedule assigned");
   };
@@ -159,13 +162,23 @@ export default function StoreScheduleSection({ storeId }: Props) {
       id: crypto.randomUUID(), employeeId: offForm.employeeId,
       date: format(d, "yyyy-MM-dd"), reason: offForm.reason, note: offForm.note,
     }));
-    setDaysOff(prev => [...prev, ...newOffs]);
+    const updated = [...daysOff, ...newOffs];
+    setDaysOff(updated);
+    persistSchedule(assignments, updated);
     setOffDialog(false);
     toast.success(`${newOffs.length} day(s) off added`);
   };
 
-  const removeAssignment = (id: string) => setAssignments(prev => prev.filter(a => a.id !== id));
-  const removeDayOff = (id: string) => setDaysOff(prev => prev.filter(d => d.id !== id));
+  const removeAssignment = (id: string) => {
+    const updated = assignments.filter(a => a.id !== id);
+    setAssignments(updated);
+    persistSchedule(updated, daysOff);
+  };
+  const removeDayOff = (id: string) => {
+    const updated = daysOff.filter(d => d.id !== id);
+    setDaysOff(updated);
+    persistSchedule(assignments, updated);
+  };
 
   const toggleWorkDay = (day: number) => {
     setAssignForm(f => ({
