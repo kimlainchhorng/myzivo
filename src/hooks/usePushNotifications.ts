@@ -339,6 +339,11 @@ export const usePushNotifications = () => {
           window.location.href = `/rides`;
           break;
 
+        // Calling
+        case "incoming_call":
+          window.location.href = `/chat`;
+          break;
+
         default:
           window.location.href = `/notifications`;
       }

@@ -48,6 +48,35 @@ export default function CallScreen({
   const role: CallRole = existingCallId ? "callee" : "caller";
   const initials = (recipientName || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
+  const sendIncomingCallPush = useCallback(async (newCallId: string) => {
+    if (!user?.id || !recipientId || recipientId === user.id) return;
+
+    const callerName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      user.email?.split("@")[0] ||
+      "Incoming call";
+
+    try {
+      await supabase.functions.invoke("send-push-notification", {
+        body: {
+          user_id: recipientId,
+          notification_type: "incoming_call",
+          title: callerName,
+          body: callType === "video" ? "Video calling you" : "Voice calling you",
+          data: {
+            type: "incoming_call",
+            call_id: newCallId,
+            call_type: callType,
+            caller_id: user.id,
+          },
+        },
+      });
+    } catch (pushError) {
+      console.error("[Call] Failed to send incoming call push:", pushError);
+    }
+  }, [callType, recipientId, user?.email, user?.id, user?.user_metadata]);
+
   const handleRemoteStream = useCallback((stream: MediaStream) => {
     remoteStreamRef.current = stream;
     if (callType === "video") {
@@ -101,15 +130,26 @@ export default function CallScreen({
   useEffect(() => {
     if (existingCallId || !user?.id || callId) return;
     const create = async () => {
-      const { data } = await (supabase as any).from("call_signals").insert({
+      const { data, error } = await (supabase as any).from("call_signals").insert({
         caller_id: user.id,
         callee_id: recipientId,
         call_type: callType,
       }).select("id").single();
-      if (data?.id) setCallId(data.id);
+
+      if (error) {
+        console.error("[Call] Failed to create call signal:", error);
+        toast.error("Failed to start call");
+        onEnd();
+        return;
+      }
+
+      if (data?.id) {
+        setCallId(data.id);
+        await sendIncomingCallPush(data.id);
+      }
     };
-    create();
-  }, [user?.id, recipientId, callType, existingCallId, callId]);
+    void create();
+  }, [user?.id, recipientId, callType, existingCallId, callId, onEnd, sendIncomingCallPush]);
 
   useEffect(() => {
     if (!callId) return;

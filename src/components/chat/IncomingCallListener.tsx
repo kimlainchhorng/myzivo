@@ -25,6 +25,42 @@ export default function IncomingCallListener() {
   const [incoming, setIncoming] = useState<IncomingCall | null>(null);
   const [answeredCall, setAnsweredCall] = useState<IncomingCall | null>(null);
 
+  const mapIncomingCall = useCallback(async (call: { id: string; caller_id: string; call_type: "voice" | "video" }) => {
+    const { data: profile } = await (supabase as any)
+      .from("profiles")
+      .select("full_name, avatar_url")
+      .or(`id.eq.${call.caller_id},user_id.eq.${call.caller_id}`)
+      .limit(1)
+      .maybeSingle();
+
+    return {
+      id: call.id,
+      caller_id: call.caller_id,
+      call_type: call.call_type,
+      caller_name: profile?.full_name || "Unknown",
+      caller_avatar: profile?.avatar_url || null,
+    } as IncomingCall;
+  }, []);
+
+  const hydratePendingIncomingCall = useCallback(async () => {
+    if (!user?.id || incoming || answeredCall) return;
+
+    const minCreatedAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const { data: pendingCall } = await (supabase as any)
+      .from("call_signals")
+      .select("id, caller_id, call_type, created_at")
+      .eq("callee_id", user.id)
+      .eq("status", "ringing")
+      .gte("created_at", minCreatedAt)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!pendingCall?.id) return;
+    const mapped = await mapIncomingCall(pendingCall);
+    setIncoming(mapped);
+  }, [answeredCall, incoming, mapIncomingCall, user?.id]);
+
   useEffect(() => registerCallAudioUnlock(), []);
 
   useEffect(() => {
@@ -41,24 +77,37 @@ export default function IncomingCallListener() {
         const call = payload.new;
         if (call.status !== "ringing") return;
 
-        const { data: profile } = await (supabase as any)
-          .from("profiles")
-          .select("full_name, avatar_url")
-          .eq("id", call.caller_id)
-          .single();
-
-        setIncoming({
-          id: call.id,
-          caller_id: call.caller_id,
-          call_type: call.call_type,
-          caller_name: profile?.full_name || "Unknown",
-          caller_avatar: profile?.avatar_url || null,
-        });
+        const mapped = await mapIncomingCall(call);
+        setIncoming(mapped);
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [user?.id]);
+  }, [mapIncomingCall, user?.id]);
+
+  useEffect(() => {
+    void hydratePendingIncomingCall();
+  }, [hydratePendingIncomingCall]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void hydratePendingIncomingCall();
+      }
+    };
+
+    const onFocus = () => {
+      void hydratePendingIncomingCall();
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [hydratePendingIncomingCall]);
 
   useEffect(() => {
     if (!incoming) return;
@@ -139,12 +188,16 @@ export default function IncomingCallListener() {
               </div>
               <button
                 onClick={handleDecline}
+                aria-label="Decline incoming call"
+                title="Decline"
                 className="h-12 w-12 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform"
               >
                 <PhoneOff className="h-5 w-5" />
               </button>
               <button
                 onClick={handleAccept}
+                aria-label="Accept incoming call"
+                title="Accept"
                 className="h-12 w-12 rounded-full bg-green-500 text-white flex items-center justify-center active:scale-90 transition-transform"
               >
                 {incoming.call_type === "video" ? (
