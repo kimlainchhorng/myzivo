@@ -160,7 +160,7 @@ export default function StorePayrollSection({ storeId }: Props) {
                   {employees.length === 0 ? (
                     <tr><td colSpan={8} className="text-center py-12 text-muted-foreground text-sm">No active employees.</td></tr>
                   ) : employees.map((emp: any) => {
-                    const isSalary = (emp.hourly_rate || 0) >= 500;
+                    const isSalary = emp.pay_type === "monthly";
                     const gross = getMonthlyGross(emp);
                     const tax = gross * TAX_RATE;
                     const net = gross - tax - (gross * BENEFITS_RATE);
