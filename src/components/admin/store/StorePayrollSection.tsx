@@ -63,7 +63,7 @@ export default function StorePayrollSection({ storeId }: Props) {
 
   const getMonthlyGross = (emp: any) => {
     const rate = emp.hourly_rate || 0;
-    return rate >= 500 ? rate : rate * 160;
+    return emp.pay_type === "monthly" ? rate : rate * 160;
   };
   const totalGross = employees.reduce((s: number, e: any) => s + getMonthlyGross(e), 0);
   const totalTax = totalGross * TAX_RATE;
