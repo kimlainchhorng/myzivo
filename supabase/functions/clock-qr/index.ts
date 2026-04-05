@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
           .from("store_employees")
           .select("id")
           .eq("id", employee_id)
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .maybeSingle();
         if (!emp) {
           return new Response(JSON.stringify({ error: "Not your employee record" }), {
