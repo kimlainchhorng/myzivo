@@ -189,16 +189,12 @@ Deno.serve(async (req) => {
         .update({ used_at: new Date().toISOString(), used_by: userId })
         .eq("id", qrToken.id);
 
-      // Check if already clocked in (no clock_out yet today)
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-
       const { data: openEntry } = await supabaseAdmin
-        .from("time_entries")
+        .from("store_time_entries")
         .select("id, clock_in")
-        .eq("staff_id", employeeId)
+        .eq("employee_id", employeeId)
         .is("clock_out", null)
-        .gte("clock_in", todayStart.toISOString())
+        .order("clock_in", { ascending: false })
         .maybeSingle();
 
       // Get employee name
@@ -211,7 +207,7 @@ Deno.serve(async (req) => {
       if (openEntry) {
         // Clock OUT
         await supabaseAdmin
-          .from("time_entries")
+          .from("store_time_entries")
           .update({ clock_out: new Date().toISOString() })
           .eq("id", openEntry.id);
 
@@ -227,10 +223,10 @@ Deno.serve(async (req) => {
       } else {
         // Clock IN
         const { data: newEntry, error: insertErr } = await supabaseAdmin
-          .from("time_entries")
+          .from("store_time_entries")
           .insert({
-            staff_id: employeeId,
-            restaurant_id: storeId,
+            employee_id: employeeId,
+            store_id: storeId,
             clock_in: new Date().toISOString(),
           })
           .select("id, clock_in")
