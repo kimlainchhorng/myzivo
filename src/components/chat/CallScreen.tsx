@@ -72,6 +72,22 @@ export default function CallScreen({
           },
         },
       });
+
+      // Fallback push type for older clients that only route chat_message.
+      await supabase.functions.invoke("send-push-notification", {
+        body: {
+          user_id: recipientId,
+          notification_type: "chat_message",
+          title: callerName,
+          body: callType === "video" ? "Video calling you now" : "Voice calling you now",
+          data: {
+            type: "incoming_call",
+            call_id: newCallId,
+            call_type: callType,
+            caller_id: user.id,
+          },
+        },
+      });
     } catch (pushError) {
       console.error("[Call] Failed to send incoming call push:", pushError);
     }
