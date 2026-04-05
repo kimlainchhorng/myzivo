@@ -127,9 +127,9 @@ serve(async (req) => {
           // Legacy web tokens - use web push
           sendResult = await sendWebPush(token.token, { title, body, data });
         } else if (token.platform === "ios") {
-          sendResult = await sendAPNS(token.token, { title, body, data });
+          sendResult = await sendAPNS(token.token, { title, body, data, image_url });
         } else if (token.platform === "android") {
-          sendResult = await sendFCM(token.token, { title, body, data });
+          sendResult = await sendFCM(token.token, { title, body, data, image_url });
         }
 
         await updateNotificationLog(supabase, log?.id, sendResult);
