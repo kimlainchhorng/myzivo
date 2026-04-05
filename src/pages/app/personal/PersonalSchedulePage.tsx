@@ -333,20 +333,22 @@ export default function PersonalSchedulePage() {
                 </div>
 
                 {/* Estimated Earnings */}
-                {hourlyRate > 0 && (
+                {rateValue > 0 && (
                   <div className="flex items-center justify-between pt-1 border-t border-border/20">
                     <div className="flex items-center gap-1.5">
                       <DollarSign className="w-3 h-3 text-emerald-500" />
-                      <span className="text-[10px] font-semibold text-muted-foreground">Est. Earnings</span>
+                      <span className="text-[10px] font-semibold text-muted-foreground">
+                        Est. Earnings {payType === "monthly" ? "(monthly)" : ""}
+                      </span>
                     </div>
                     <span className="text-[13px] font-extrabold text-emerald-500">${estimatedEarnings.toFixed(2)}</span>
                   </div>
                 )}
-                {hourlyRate <= 0 && (
+                {rateValue <= 0 && (
                   <div className="flex items-center justify-between pt-1 border-t border-border/20">
                     <div className="flex items-center gap-1.5">
                       <DollarSign className="w-3 h-3 text-muted-foreground/50" />
-                      <span className="text-[10px] text-muted-foreground/60">Hourly rate not set</span>
+                      <span className="text-[10px] text-muted-foreground/60">Rate not set</span>
                     </div>
                   </div>
                 )}
