@@ -24,6 +24,49 @@ export interface PushNotificationState {
   permission: "granted" | "denied" | "prompt" | "unknown";
 }
 
+type IncomingCallPayload = {
+  type: "incoming_call";
+  call_id?: string;
+  caller_id?: string;
+  call_type?: "voice" | "video";
+  caller_name?: string;
+  caller_avatar?: string;
+};
+
+const normalizeIncomingCallPayload = (
+  rawData: Record<string, any> | undefined,
+  fallbackTitle?: string,
+  fallbackBody?: string,
+): IncomingCallPayload | null => {
+  if (!rawData) return null;
+
+  const nested = typeof rawData.data === "object" && rawData.data !== null
+    ? rawData.data as Record<string, any>
+    : {};
+
+  const merged = { ...nested, ...rawData };
+  const type = String(merged.type || merged.notification_type || "").toLowerCase();
+
+  const hasCallHints = Boolean(merged.call_id || merged.caller_id || merged.call_type);
+  const textHint = `${fallbackTitle || ""} ${fallbackBody || ""}`.toLowerCase();
+  const looksLikeCallText = textHint.includes("calling") && textHint.includes("you");
+
+  if (type !== "incoming_call" && !(hasCallHints && looksLikeCallText)) {
+    return null;
+  }
+
+  const callType = merged.call_type === "video" ? "video" : "voice";
+
+  return {
+    type: "incoming_call",
+    call_id: typeof merged.call_id === "string" ? merged.call_id : undefined,
+    caller_id: typeof merged.caller_id === "string" ? merged.caller_id : undefined,
+    call_type: callType,
+    caller_name: typeof merged.caller_name === "string" ? merged.caller_name : fallbackTitle,
+    caller_avatar: typeof merged.caller_avatar === "string" ? merged.caller_avatar : undefined,
+  };
+};
+
 export const usePushNotifications = () => {
   const { user, session } = useAuth();
   const [state, setState] = useState<PushNotificationState>({
@@ -35,6 +78,7 @@ export const usePushNotifications = () => {
   const [notifications, setNotifications] = useState<PushNotificationSchema[]>([]);
   const tokenRetryAttemptsRef = useRef<Record<string, number>>({});
   const pendingNativeTokenRef = useRef<string | null>(null);
+  const recentIncomingPushRef = useRef<Record<string, number>>({});
 
   // Check if push notifications are supported (native or web with service worker)
   const checkSupport = useCallback(() => {
@@ -243,14 +287,22 @@ export const usePushNotifications = () => {
         setNotifications(prev => [notification, ...prev].slice(0, 50));
 
         const payloadData = notification.data as Record<string, any> | undefined;
-        if (payloadData?.type === "incoming_call") {
+        const incomingCall = normalizeIncomingCallPayload(payloadData, notification.title, notification.body);
+
+        if (incomingCall) {
+          const dedupeKey = incomingCall.call_id || `${incomingCall.caller_id || "unknown"}:${incomingCall.call_type || "voice"}`;
+          const now = Date.now();
+          const lastSeen = recentIncomingPushRef.current[dedupeKey] || 0;
+          if (now - lastSeen < 4000) return;
+          recentIncomingPushRef.current[dedupeKey] = now;
+
           window.dispatchEvent(new CustomEvent("incoming-call-push", {
             detail: {
-              call_id: payloadData.call_id,
-              caller_id: payloadData.caller_id,
-              call_type: payloadData.call_type,
-              caller_name: payloadData.caller_name || notification.title,
-              caller_avatar: payloadData.caller_avatar,
+              call_id: incomingCall.call_id,
+              caller_id: incomingCall.caller_id,
+              call_type: incomingCall.call_type,
+              caller_name: incomingCall.caller_name || notification.title,
+              caller_avatar: incomingCall.caller_avatar,
             },
           }));
           return;
@@ -290,7 +342,9 @@ export const usePushNotifications = () => {
 
   // Handle notification action (when user taps notification)
   const handleNotificationAction = (action: ActionPerformed) => {
-    const data = action.notification.data as Record<string, any>;
+    const rawData = action.notification.data as Record<string, any>;
+    const incomingCall = normalizeIncomingCallPayload(rawData, action.notification.title, action.notification.body);
+    const data = incomingCall ? { ...rawData, ...incomingCall, type: "incoming_call" } : rawData;
     
     if (data?.type) {
       switch (data.type) {
