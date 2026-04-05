@@ -53,6 +53,8 @@ export default function StorePayrollSection({ storeId }: Props) {
   const [overtimeRate, setOvertimeRate] = useState("1.5");
   const [taxRate, setTaxRate] = useState(DEFAULT_TAX_RATE);
   const [benefitsRate, setBenefitsRate] = useState(DEFAULT_BENEFITS_RATE);
+  const [taxInput, setTaxInput] = useState((DEFAULT_TAX_RATE * 100).toString());
+  const [benefitsInput, setBenefitsInput] = useState((DEFAULT_BENEFITS_RATE * 100).toString());
   const [payFrequency, setPayFrequency] = useState("monthly");
   const [payDay, setPayDay] = useState("last");
   const [budgetLimit, setBudgetLimit] = useState("50000");
@@ -316,7 +318,7 @@ export default function StorePayrollSection({ storeId }: Props) {
                 <Label className="text-sm font-medium">Tax Rate</Label>
                 <p className="text-xs text-muted-foreground">Federal + State combined</p>
                 <div className="flex items-center gap-1.5">
-                  <Input type="number" min="0" max="100" step="0.5" value={(taxRate * 100).toFixed(1)} onChange={e => setTaxRate(Math.min(1, Math.max(0, parseFloat(e.target.value || "0") / 100)))} className="w-24 h-9" />
+                  <Input type="number" min="0" max="100" step="0.5" value={taxInput} onChange={e => setTaxInput(e.target.value)} onBlur={() => { const v = parseFloat(taxInput || "0"); setTaxRate(Math.min(1, Math.max(0, v / 100))); setTaxInput(String(Math.min(100, Math.max(0, v)))); }} className="w-24 h-9" />
                   <span className="text-sm text-muted-foreground">%</span>
                 </div>
               </div>
@@ -324,7 +326,7 @@ export default function StorePayrollSection({ storeId }: Props) {
                 <Label className="text-sm font-medium">Benefits Deduction</Label>
                 <p className="text-xs text-muted-foreground">Health, dental, retirement</p>
                 <div className="flex items-center gap-1.5">
-                  <Input type="number" min="0" max="100" step="0.5" value={(benefitsRate * 100).toFixed(1)} onChange={e => setBenefitsRate(Math.min(1, Math.max(0, parseFloat(e.target.value || "0") / 100)))} className="w-24 h-9" />
+                  <Input type="number" min="0" max="100" step="0.5" value={benefitsInput} onChange={e => setBenefitsInput(e.target.value)} onBlur={() => { const v = parseFloat(benefitsInput || "0"); setBenefitsRate(Math.min(1, Math.max(0, v / 100))); setBenefitsInput(String(Math.min(100, Math.max(0, v)))); }} className="w-24 h-9" />
                   <span className="text-sm text-muted-foreground">%</span>
                 </div>
               </div>
