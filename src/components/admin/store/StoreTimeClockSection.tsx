@@ -92,16 +92,26 @@ export default function StoreTimeClockSection({ storeId }: Props) {
     if (!selectedEmployee) return;
     const emp = employees.find((e: any) => e.id === selectedEmployee);
     if (!emp) return;
-    setEntries(prev => [...prev, { id: crypto.randomUUID(), employeeId: emp.id, employeeName: emp.name, role: emp.role, clockIn: new Date(), clockOut: null, breaks: [], isOnBreak: false }]);
+    setLocalEntries(prev => [...prev, { id: crypto.randomUUID(), employeeId: emp.id, employeeName: emp.name, role: emp.role, clockIn: new Date(), clockOut: null, breaks: [], isOnBreak: false }]);
     setSelectedEmployee("");
+    refetchEntries();
   };
 
   const handleClockOut = (id: string) => {
-    setEntries(prev => prev.map(e => e.id === id ? { ...e, clockOut: new Date(), isOnBreak: false, breaks: e.breaks.map(b => b.end ? b : { ...b, end: new Date() }) } : e));
+    setLocalEntries(prev => prev.map(e => e.id === id ? { ...e, clockOut: new Date(), isOnBreak: false, breaks: e.breaks.map(b => b.end ? b : { ...b, end: new Date() }) } : e));
+    refetchEntries();
   };
 
   const toggleBreak = (id: string) => {
-    setEntries(prev => prev.map(e => {
+    setLocalEntries(prev => prev.map(e => {
+      if (e.id !== id) return e;
+      if (e.isOnBreak) {
+        return { ...e, isOnBreak: false, breaks: e.breaks.map(b => b.end ? b : { ...b, end: new Date() }) };
+      } else {
+        return { ...e, isOnBreak: true, breaks: [...e.breaks, { start: new Date(), end: null }] };
+      }
+    }));
+  };
       if (e.id !== id) return e;
       if (e.isOnBreak) {
         return { ...e, isOnBreak: false, breaks: e.breaks.map(b => b.end ? b : { ...b, end: new Date() }) };
