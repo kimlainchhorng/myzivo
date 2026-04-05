@@ -8542,6 +8542,57 @@ export type Database = {
           },
         ]
       }
+      clock_qr_tokens: {
+        Row: {
+          created_at: string
+          employee_id: string | null
+          expires_at: string
+          id: string
+          store_id: string
+          token: string
+          token_type: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          employee_id?: string | null
+          expires_at: string
+          id?: string
+          store_id: string
+          token: string
+          token_type: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string | null
+          expires_at?: string
+          id?: string
+          store_id?: string
+          token?: string
+          token_type?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clock_qr_tokens_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "store_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clock_qr_tokens_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       close_friends: {
         Row: {
           created_at: string | null
@@ -54270,6 +54321,7 @@ export type Database = {
       clean_expired_flight_cache: { Args: never; Returns: undefined }
       cleanup_expired_messages: { Args: never; Returns: undefined }
       cleanup_expired_otp_codes: { Args: never; Returns: undefined }
+      cleanup_expired_qr_tokens: { Args: never; Returns: undefined }
       cleanup_expired_tokens: { Args: never; Returns: undefined }
       cleanup_old_location_history: { Args: never; Returns: undefined }
       cleanup_old_login_sessions: { Args: never; Returns: undefined }
