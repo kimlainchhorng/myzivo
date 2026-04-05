@@ -40,6 +40,7 @@ Deno.serve(async (req) => {
     const userId = user.id;
 
     const { action, ...params } = await req.json();
+    const clockOutReason = params.clock_out_reason || null;
 
     // ─── GENERATE: create a new rotating QR token ───
     if (action === "generate") {
