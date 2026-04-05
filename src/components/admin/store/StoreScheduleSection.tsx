@@ -1,7 +1,7 @@
 /**
  * StoreScheduleSection — Work schedule with date-range assignments, day-off management, and weekly view.
  */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -79,26 +79,33 @@ export default function StoreScheduleSection({ storeId }: Props) {
   });
 
   const scheduleKey = `schedule_data_${storeId}`;
+  const scheduleQueryKey = ["schedule-data", storeId] as const;
 
-  // Load saved schedule data
-  useQuery({
-    queryKey: ["schedule-data", storeId],
+  const { data: scheduleData } = useQuery({
+    queryKey: scheduleQueryKey,
+    refetchOnMount: "always",
     queryFn: async () => {
-      const { data } = await supabase.from("app_settings").select("value").eq("key", scheduleKey).maybeSingle();
-      if (data?.value && typeof data.value === "object") {
-        const s = data.value as any;
-        if (Array.isArray(s.assignments)) setAssignments(s.assignments);
-        if (Array.isArray(s.daysOff)) setDaysOff(s.daysOff);
-      }
-      return data;
+      const { data, error } = await supabase.from("app_settings").select("value").eq("key", scheduleKey).maybeSingle();
+      if (error) throw error;
+      const value = data?.value && typeof data.value === "object" ? (data.value as any) : {};
+      return {
+        assignments: Array.isArray(value.assignments) ? (value.assignments as WorkAssignment[]) : [],
+        daysOff: Array.isArray(value.daysOff) ? (value.daysOff as DayOff[]) : [],
+      };
     },
   });
 
-  // Save schedule data to DB
+  useEffect(() => {
+    if (!scheduleData) return;
+    setAssignments(scheduleData.assignments);
+    setDaysOff(scheduleData.daysOff);
+  }, [scheduleData]);
+
   const saveScheduleMutation = useMutation({
     mutationFn: async (payload: { assignments: WorkAssignment[]; daysOff: DayOff[] }) => {
       const value = { assignments: payload.assignments, daysOff: payload.daysOff };
-      const { data: existing } = await supabase.from("app_settings").select("id").eq("key", scheduleKey).maybeSingle();
+      const { data: existing, error: existingError } = await supabase.from("app_settings").select("id").eq("key", scheduleKey).maybeSingle();
+      if (existingError) throw existingError;
       if (existing) {
         const { error } = await supabase.from("app_settings").update({ value, updated_at: new Date().toISOString() }).eq("key", scheduleKey);
         if (error) throw error;
@@ -106,12 +113,21 @@ export default function StoreScheduleSection({ storeId }: Props) {
         const { error } = await supabase.from("app_settings").insert({ key: scheduleKey, value, description: "Store schedule data" });
         if (error) throw error;
       }
+      return payload;
+    },
+    onSuccess: (payload) => {
+      queryClient.setQueryData(scheduleQueryKey, payload);
+    },
+    onError: (error: any) => {
+      toast.error("Failed to save schedule: " + error.message);
     },
   });
 
-  const persistSchedule = useCallback((newAssignments: WorkAssignment[], newDaysOff: DayOff[]) => {
-    saveScheduleMutation.mutate({ assignments: newAssignments, daysOff: newDaysOff });
-  }, []);
+  const persistSchedule = (newAssignments: WorkAssignment[], newDaysOff: DayOff[]) => {
+    const nextValue = { assignments: newAssignments, daysOff: newDaysOff };
+    queryClient.setQueryData(scheduleQueryKey, nextValue);
+    saveScheduleMutation.mutate(nextValue);
+  };
 
   const { data: employees = [] } = useQuery({
     queryKey: ["store-employees-schedule", storeId],
