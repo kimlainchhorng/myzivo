@@ -76,7 +76,7 @@ export default function StorePayrollSection({ storeId }: Props) {
   const totalNet = totalGross - totalTax - totalBenefits;
   const avgMonthly = employees.length ? totalGross / employees.length : 0;
   const highestPaid = employees.reduce((max: any, e: any) => getMonthlyGross(e) > getMonthlyGross(max || {}) ? e : max, employees[0]);
-  const budgetUsed = totalGross > 0 ? Math.min(100, (totalGross / 50000) * 100) : 0;
+  const budgetUsed = totalGross > 0 ? Math.min(100, (totalGross / (parseFloat(budgetLimit) || 50000)) * 100) : 0;
 
   const processPayRun = () => {
     const run: PayRun = {
