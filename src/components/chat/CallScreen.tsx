@@ -55,6 +55,7 @@ export default function CallScreen({
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const remoteStreamRef = useRef<MediaStream | null>(null);
   const reminderPushSentRef = useRef(false);
+  const createCallFiredRef = useRef(false);
 
   const handleCallFailure = useCallback((failure: WebRTCFailure) => {
     toast.error(failure.title, {
