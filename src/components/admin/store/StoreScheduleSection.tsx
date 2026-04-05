@@ -47,6 +47,88 @@ type DayOff = {
   date: string; reason: string; note?: string;
 };
 
+/** Inline cell action menu with editable times */
+function CellActionMenu({ cellMenu, employees, onClose, onQuickAssign, onCustom, onDayOff }: {
+  cellMenu: { empId: string; date: Date };
+  employees: any[];
+  onClose: () => void;
+  onQuickAssign: (empId: string, date: Date, preset: typeof SHIFT_PRESETS[0], start: string, end: string) => void;
+  onCustom: (empId: string, date: Date) => void;
+  onDayOff: (empId: string, date: Date, reason: string) => void;
+}) {
+  const emp = employees.find((e: any) => e.id === cellMenu.empId);
+  const date = cellMenu.date;
+  const [times, setTimes] = useState<Record<string, { start: string; end: string }>>(
+    () => Object.fromEntries(SHIFT_PRESETS.map(p => [p.type, { start: p.start, end: p.end }]))
+  );
+
+  return (
+    <Dialog open onOpenChange={() => onClose()}>
+      <DialogContent className="max-w-[300px] p-0 gap-0 rounded-2xl overflow-hidden">
+        <div className="px-4 py-3 bg-gradient-to-r from-muted/50 to-muted/20 border-b">
+          <p className="text-[13px] font-bold">{format(date, "EEEE, MMM d")}</p>
+          <p className="text-[11px] text-muted-foreground">{emp?.name} · {emp?.role}</p>
+        </div>
+        <div className="px-2 py-2">
+          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-2 pb-1.5">Assign Shift</p>
+          {SHIFT_PRESETS.map(p => (
+            <div key={p.type} className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-muted/40 transition-colors group">
+              <div className={cn("w-3 h-3 rounded-full bg-gradient-to-r shrink-0", p.gradient)} />
+              <span className="text-[12px] font-semibold w-[70px]">{p.label}</span>
+              <div className="flex items-center gap-1 flex-1">
+                <input
+                  type="time"
+                  value={times[p.type]?.start || p.start}
+                  onChange={e => setTimes(t => ({ ...t, [p.type]: { ...t[p.type], start: e.target.value } }))}
+                  className="w-[72px] text-[11px] tabular-nums bg-muted/30 border border-border/40 rounded-md px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary/30 text-center"
+                />
+                <span className="text-[10px] text-muted-foreground">–</span>
+                <input
+                  type="time"
+                  value={times[p.type]?.end || p.end}
+                  onChange={e => setTimes(t => ({ ...t, [p.type]: { ...t[p.type], end: e.target.value } }))}
+                  className="w-[72px] text-[11px] tabular-nums bg-muted/30 border border-border/40 rounded-md px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary/30 text-center"
+                />
+              </div>
+              <button
+                onClick={() => onQuickAssign(cellMenu.empId, date, p, times[p.type]?.start || p.start, times[p.type]?.end || p.end)}
+                className="w-6 h-6 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shrink-0"
+              >
+                <Check className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+          <button
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-muted/50 transition-colors text-left mt-1"
+            onClick={() => onCustom(cellMenu.empId, date)}
+          >
+            <div className="w-3 h-3 rounded-full bg-muted-foreground/20 shrink-0" />
+            <span className="text-[12px] font-medium text-muted-foreground">Custom…</span>
+          </button>
+        </div>
+        <div className="border-t mx-3" />
+        <div className="px-2 py-2 pb-3">
+          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-2 pb-1.5">Time Off</p>
+          {[
+            { reason: "Day Off", icon: Coffee, color: "text-muted-foreground" },
+            { reason: "Vacation", icon: Palmtree, color: "text-amber-600" },
+            { reason: "Sick Leave", icon: Thermometer, color: "text-orange-600" },
+            { reason: "Personal", icon: User, color: "text-blue-600" },
+          ].map(item => (
+            <button key={item.reason}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
+              onClick={() => onDayOff(cellMenu.empId, date, item.reason)}
+            >
+              <item.icon className={cn("w-4 h-4 shrink-0", item.color)} />
+              <span className="text-[12px] font-semibold">{item.reason}</span>
+            </button>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function StoreScheduleSection({ storeId }: Props) {
   const queryClient = useQueryClient();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
@@ -456,71 +538,35 @@ export default function StoreScheduleSection({ storeId }: Props) {
         </div>
       </div>
 
-      {/* ── Cell Action Menu (Portal-style overlay) ── */}
-      {cellMenu && (() => {
-        const emp = employees.find((e: any) => e.id === cellMenu.empId);
-        const date = cellMenu.date;
-        return (
-          <>
-            <div className="fixed inset-0 z-[60]" onClick={() => setCellMenu(null)} />
-            <Dialog open onOpenChange={() => setCellMenu(null)}>
-              <DialogContent className="max-w-[260px] p-0 gap-0 rounded-2xl overflow-hidden">
-                {/* Header */}
-                <div className="px-4 py-3 bg-gradient-to-r from-muted/50 to-muted/20 border-b">
-                  <p className="text-[13px] font-bold">{format(date, "EEEE, MMM d")}</p>
-                  <p className="text-[11px] text-muted-foreground">{emp?.name} · {emp?.role}</p>
-                </div>
-                {/* Shifts */}
-                <div className="px-2 py-2">
-                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-2 pb-1">Assign Shift</p>
-                  {SHIFT_PRESETS.map(p => (
-                    <button key={p.type}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
-                      onClick={() => quickAssign(cellMenu.empId, date, p)}
-                    >
-                      <div className={cn("w-3 h-3 rounded-full bg-gradient-to-r shrink-0", p.gradient)} />
-                      <span className="text-[12px] font-semibold flex-1">{p.label}</span>
-                      <span className="text-[10px] text-muted-foreground tabular-nums">{p.start}–{p.end}</span>
-                    </button>
-                  ))}
-                  <button
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
-                    onClick={() => {
-                      const dow = (date.getDay() + 6) % 7;
-                      setAssignForm(f => ({ ...f, employeeId: cellMenu.empId, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), workDays: [dow] }));
-                      setAssignDialog(true);
-                      setCellMenu(null);
-                    }}
-                  >
-                    <div className="w-3 h-3 rounded-full bg-muted-foreground/20 shrink-0" />
-                    <span className="text-[12px] font-medium text-muted-foreground">Custom…</span>
-                  </button>
-                </div>
-                {/* Divider */}
-                <div className="border-t mx-3" />
-                {/* Time Off */}
-                <div className="px-2 py-2 pb-3">
-                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-2 pb-1">Time Off</p>
-                  {[
-                    { reason: "Day Off", icon: Coffee, color: "text-muted-foreground" },
-                    { reason: "Vacation", icon: Palmtree, color: "text-amber-600" },
-                    { reason: "Sick Leave", icon: Thermometer, color: "text-orange-600" },
-                    { reason: "Personal", icon: User, color: "text-blue-600" },
-                  ].map(item => (
-                    <button key={item.reason}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
-                      onClick={() => quickDayOff(cellMenu.empId, date, item.reason)}
-                    >
-                      <item.icon className={cn("w-4 h-4 shrink-0", item.color)} />
-                      <span className="text-[12px] font-semibold">{item.reason}</span>
-                    </button>
-                  ))}
-                </div>
-              </DialogContent>
-            </Dialog>
-          </>
-        );
-      })()}
+      {/* ── Cell Action Menu ── */}
+      {cellMenu && <CellActionMenu
+        cellMenu={cellMenu}
+        employees={employees}
+        onClose={() => setCellMenu(null)}
+        onQuickAssign={(empId, date, preset, startTime, endTime) => {
+          const dow = (date.getDay() + 6) % 7;
+          const n: WorkAssignment = {
+            id: crypto.randomUUID(), employeeId: empId,
+            startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"),
+            shiftType: preset.type, shiftStart: startTime, shiftEnd: endTime,
+            workDays: [dow],
+          };
+          const updated = [...safeAssignments, n];
+          setAssignments(updated);
+          persistSchedule(updated, safeDaysOff);
+          setCellMenu(null);
+          toast.success(`${preset.label} shift assigned`);
+        }}
+        onCustom={(empId, date) => {
+          const dow = (date.getDay() + 6) % 7;
+          setAssignForm(f => ({ ...f, employeeId: empId, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), workDays: [dow] }));
+          setAssignDialog(true);
+          setCellMenu(null);
+        }}
+        onDayOff={(empId, date, reason) => {
+          quickDayOff(empId, date, reason);
+        }}
+      />}
       {/* ── Legend ── */}
       <div className="flex items-center gap-4 flex-wrap px-1">
         {SHIFT_PRESETS.map(p => (
