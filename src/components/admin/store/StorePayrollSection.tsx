@@ -490,6 +490,50 @@ export default function StorePayrollSection({ storeId }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Employee Dialog */}
+      <Dialog open={editDialog} onOpenChange={v => { setEditDialog(v); if (!v) setEditingEmp(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Edit Employee Payroll</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-3">
+            <div className="space-y-2">
+              <Label>Name</Label>
+              <Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <Select value={editForm.role} onValueChange={v => setEditForm(f => ({ ...f, role: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {["owner","manager","supervisor","cashier","staff","intern"].map(r => (
+                    <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Pay Type</Label>
+              <Select value={editForm.pay_type} onValueChange={v => setEditForm(f => ({ ...f, pay_type: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hourly">Hourly</SelectItem>
+                  <SelectItem value="monthly">Monthly Salary</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{editForm.pay_type === "monthly" ? "Monthly Salary ($)" : "Hourly Rate ($)"}</Label>
+              <Input type="number" min="0" step="0.01" value={editForm.hourly_rate} onChange={e => setEditForm(f => ({ ...f, hourly_rate: e.target.value }))} placeholder="0.00" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditDialog(false); setEditingEmp(null); }}>Cancel</Button>
+            <Button onClick={() => updateMutation.mutate()} disabled={!editForm.name.trim() || updateMutation.isPending}>
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
