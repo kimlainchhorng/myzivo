@@ -42,19 +42,38 @@ export default function IncomingCallListener() {
     } as IncomingCall;
   }, []);
 
-  const hydratePendingIncomingCall = useCallback(async () => {
+  const hydratePendingIncomingCall = useCallback(async (preferredCallId?: string) => {
     if (!user?.id || incoming || answeredCall) return;
 
-    const minCreatedAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const { data: pendingCall } = await (supabase as any)
-      .from("call_signals")
-      .select("id, caller_id, call_type, created_at")
-      .eq("callee_id", user.id)
-      .eq("status", "ringing")
-      .gte("created_at", minCreatedAt)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    let pendingCall: { id: string; caller_id: string; call_type: "voice" | "video" } | null = null;
+
+    if (preferredCallId) {
+      const { data } = await (supabase as any)
+        .from("call_signals")
+        .select("id, caller_id, call_type, status")
+        .eq("id", preferredCallId)
+        .eq("callee_id", user.id)
+        .maybeSingle();
+
+      if (data?.status === "ringing") {
+        pendingCall = data;
+      }
+    }
+
+    if (!pendingCall) {
+      const minCreatedAt = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const { data } = await (supabase as any)
+        .from("call_signals")
+        .select("id, caller_id, call_type, created_at")
+        .eq("callee_id", user.id)
+        .eq("status", "ringing")
+        .gte("created_at", minCreatedAt)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      pendingCall = data || null;
+    }
 
     if (!pendingCall?.id) return;
     const mapped = await mapIncomingCall(pendingCall);
@@ -66,6 +85,13 @@ export default function IncomingCallListener() {
   useEffect(() => {
     if (!user?.id) return;
 
+    const onSignal = async (payload: any) => {
+      const call = payload.new;
+      if (!call || call.status !== "ringing") return;
+      const mapped = await mapIncomingCall(call);
+      setIncoming(mapped);
+    };
+
     const channel = supabase
       .channel(`incoming-calls-${user.id}`)
       .on("postgres_changes", {
@@ -73,13 +99,13 @@ export default function IncomingCallListener() {
         schema: "public",
         table: "call_signals",
         filter: `callee_id=eq.${user.id}`,
-      }, async (payload: any) => {
-        const call = payload.new;
-        if (call.status !== "ringing") return;
-
-        const mapped = await mapIncomingCall(call);
-        setIncoming(mapped);
-      })
+      }, onSignal)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "call_signals",
+        filter: `callee_id=eq.${user.id}`,
+      }, onSignal)
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -106,6 +132,27 @@ export default function IncomingCallListener() {
     return () => {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onFocus);
+    };
+  }, [hydratePendingIncomingCall]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const timer = window.setInterval(() => {
+      void hydratePendingIncomingCall();
+    }, 4000);
+
+    return () => window.clearInterval(timer);
+  }, [hydratePendingIncomingCall, user?.id]);
+
+  useEffect(() => {
+    const onIncomingCallPush = (event: Event) => {
+      const customEvent = event as CustomEvent<{ call_id?: string }>;
+      void hydratePendingIncomingCall(customEvent.detail?.call_id);
+    };
+
+    window.addEventListener("incoming-call-push", onIncomingCallPush as EventListener);
+    return () => {
+      window.removeEventListener("incoming-call-push", onIncomingCallPush as EventListener);
     };
   }, [hydratePendingIncomingCall]);
 
