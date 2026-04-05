@@ -506,23 +506,23 @@ export function useWebRTC({
       })
       .subscribe();
 
-    // Polling fallback: periodically check call status in case realtime
-    // misses an update (e.g., network hiccup, subscription gap).
+    // Polling fallback: periodically sync full signal data in case realtime
+    // misses an update (e.g., network hiccup, subscription gap on mobile).
     const pollInterval = setInterval(async () => {
       try {
         const { data } = await (supabase as any)
           .from("call_signals")
-          .select("status")
+          .select("offer, answer, caller_ice_candidates, callee_ice_candidates, status")
           .eq("id", callId)
           .maybeSingle();
 
-        if (data?.status === "ended" || data?.status === "declined" || data?.status === "missed") {
-          void processSignalData({ status: data.status });
+        if (data) {
+          void processSignalData(data);
         }
       } catch {
         // ignore polling errors
       }
-    }, 5000);
+    }, 3000);
 
     return () => {
       supabase.removeChannel(channel);
