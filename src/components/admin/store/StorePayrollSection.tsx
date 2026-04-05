@@ -118,7 +118,7 @@ export default function StorePayrollSection({ storeId }: Props) {
       <Card className="p-4">
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-semibold">Monthly Payroll Budget</p>
-          <p className="text-xs text-muted-foreground">${totalGross.toLocaleString()} / $50,000</p>
+          <p className="text-xs text-muted-foreground">${totalGross.toLocaleString()} / ${parseFloat(budgetLimit || "50000").toLocaleString()}</p>
         </div>
         <Progress value={budgetUsed} className="h-2" />
         <p className="text-[10px] text-muted-foreground mt-1">{budgetUsed.toFixed(0)}% of budget allocated</p>
