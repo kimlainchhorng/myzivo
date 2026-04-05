@@ -56,6 +56,9 @@ export default function CallScreen({
       user.user_metadata?.name ||
       user.email?.split("@")[0] ||
       "Incoming call";
+    const callerAvatar = typeof user.user_metadata?.avatar_url === "string"
+      ? user.user_metadata.avatar_url
+      : "";
 
     try {
       await supabase.functions.invoke("send-push-notification", {
@@ -69,22 +72,8 @@ export default function CallScreen({
             call_id: newCallId,
             call_type: callType,
             caller_id: user.id,
-          },
-        },
-      });
-
-      // Fallback push type for older clients that only route chat_message.
-      await supabase.functions.invoke("send-push-notification", {
-        body: {
-          user_id: recipientId,
-          notification_type: "chat_message",
-          title: callerName,
-          body: callType === "video" ? "Video calling you now" : "Voice calling you now",
-          data: {
-            type: "incoming_call",
-            call_id: newCallId,
-            call_type: callType,
-            caller_id: user.id,
+            caller_name: callerName,
+            caller_avatar: callerAvatar,
           },
         },
       });

@@ -3,7 +3,7 @@
  * Shows a banner when another user calls, allowing accept/decline
  * Plays a ringtone sound while ringing
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Phone, PhoneOff, Video, MessageCircle } from "lucide-react";
@@ -20,10 +20,19 @@ interface IncomingCall {
   caller_avatar: string | null;
 }
 
+interface IncomingCallPushDetail {
+  call_id?: string;
+  caller_id?: string;
+  call_type?: "voice" | "video";
+  caller_name?: string;
+  caller_avatar?: string;
+}
+
 export default function IncomingCallListener() {
   const { user } = useAuth();
   const [incoming, setIncoming] = useState<IncomingCall | null>(null);
   const [answeredCall, setAnsweredCall] = useState<IncomingCall | null>(null);
+  const lastIncomingCallIdRef = useRef<string | null>(null);
 
   const mapIncomingCall = useCallback(async (call: { id: string; caller_id: string; call_type: "voice" | "video" }) => {
     const { data: profile } = await (supabase as any)
@@ -146,8 +155,27 @@ export default function IncomingCallListener() {
 
   useEffect(() => {
     const onIncomingCallPush = (event: Event) => {
-      const customEvent = event as CustomEvent<{ call_id?: string }>;
-      void hydratePendingIncomingCall(customEvent.detail?.call_id);
+      const customEvent = event as CustomEvent<IncomingCallPushDetail>;
+      const detail = customEvent.detail || {};
+      const pushedCallId = detail.call_id || null;
+
+      if (pushedCallId && lastIncomingCallIdRef.current === pushedCallId) return;
+
+      if (pushedCallId && detail.caller_id && detail.call_type) {
+        lastIncomingCallIdRef.current = pushedCallId;
+        setIncoming((prev) => {
+          if (prev?.id === pushedCallId) return prev;
+          return {
+            id: pushedCallId,
+            caller_id: detail.caller_id!,
+            call_type: detail.call_type!,
+            caller_name: detail.caller_name || "Incoming call",
+            caller_avatar: detail.caller_avatar || null,
+          };
+        });
+      }
+
+      void hydratePendingIncomingCall(pushedCallId || undefined);
     };
 
     window.addEventListener("incoming-call-push", onIncomingCallPush as EventListener);

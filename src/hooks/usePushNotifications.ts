@@ -253,6 +253,8 @@ export const usePushNotifications = () => {
               call_id: payloadData.call_id,
               caller_id: payloadData.caller_id,
               call_type: payloadData.call_type,
+              caller_name: payloadData.caller_name || notification.title,
+              caller_avatar: payloadData.caller_avatar,
             },
           }));
           return;
