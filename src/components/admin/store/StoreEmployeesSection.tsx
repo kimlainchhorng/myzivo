@@ -260,7 +260,7 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                     {emp.phone && <div className="flex items-center gap-1.5"><Phone className="w-3 h-3 shrink-0" />{emp.phone}</div>}
                     {emp.hourly_rate != null && emp.hourly_rate > 0 && (
                       <div className="flex items-center gap-1.5"><DollarSign className="w-3 h-3 shrink-0" />
-                        {emp.hourly_rate >= 500
+                        {emp.pay_type === "monthly"
                           ? <span>${emp.hourly_rate.toLocaleString()}/mo <span className="text-muted-foreground">(salary)</span></span>
                           : <span>${emp.hourly_rate}/hr · ~${(emp.hourly_rate * 160).toLocaleString()}/mo</span>
                         }
