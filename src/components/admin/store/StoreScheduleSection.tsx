@@ -34,6 +34,7 @@ const SHIFT_PRESETS = [
 ];
 
 const OFF_REASONS = ["Day Off", "Vacation", "Sick Leave", "Personal", "Public Holiday"];
+const VISIBLE_DAY_COUNT = 14;
 
 type WorkAssignment = {
   id: string;
@@ -137,15 +138,20 @@ export default function StoreScheduleSection({ storeId }: Props) {
     },
   });
 
+  const safeAssignments = Array.isArray(assignments) ? assignments : [];
+  const safeDaysOff = Array.isArray(daysOff) ? daysOff : [];
+  const weekDates = Array.from({ length: VISIBLE_DAY_COUNT }, (_, i) => addDays(weekStart, i));
+
   // Get status for a specific employee on a specific date
   const getDayStatus = (empId: string, date: Date) => {
     const dateStr = format(date, "yyyy-MM-dd");
-    const dayOff = daysOff.find(d => d.employeeId === empId && d.date === dateStr);
+    const dayOff = safeDaysOff.find(d => d.employeeId === empId && d.date === dateStr);
     if (dayOff) return { status: "off" as const, dayOff, assignment: null };
 
     const dayOfWeek = (date.getDay() + 6) % 7; // convert to Mon=0
-    const assignment = assignments.find(a =>
+    const assignment = safeAssignments.find(a =>
       a.employeeId === empId &&
+      Array.isArray(a.workDays) &&
       a.workDays.includes(dayOfWeek) &&
       isWithinInterval(date, { start: parseISO(a.startDate), end: parseISO(a.endDate) })
     );
@@ -162,9 +168,9 @@ export default function StoreScheduleSection({ storeId }: Props) {
       shiftEnd: assignForm.shiftEnd, workDays: assignForm.workDays,
       note: assignForm.note,
     };
-    const updated = [...assignments, newAssignment];
+    const updated = [...safeAssignments, newAssignment];
     setAssignments(updated);
-    persistSchedule(updated, daysOff);
+    persistSchedule(updated, safeDaysOff);
     setAssignDialog(false);
     toast.success("Work schedule assigned");
   };
@@ -178,22 +184,22 @@ export default function StoreScheduleSection({ storeId }: Props) {
       id: crypto.randomUUID(), employeeId: offForm.employeeId,
       date: format(d, "yyyy-MM-dd"), reason: offForm.reason, note: offForm.note,
     }));
-    const updated = [...daysOff, ...newOffs];
+    const updated = [...safeDaysOff, ...newOffs];
     setDaysOff(updated);
-    persistSchedule(assignments, updated);
+    persistSchedule(safeAssignments, updated);
     setOffDialog(false);
     toast.success(`${newOffs.length} day(s) off added`);
   };
 
   const removeAssignment = (id: string) => {
-    const updated = assignments.filter(a => a.id !== id);
+    const updated = safeAssignments.filter(a => a.id !== id);
     setAssignments(updated);
-    persistSchedule(updated, daysOff);
+    persistSchedule(updated, safeDaysOff);
   };
   const removeDayOff = (id: string) => {
-    const updated = daysOff.filter(d => d.id !== id);
+    const updated = safeDaysOff.filter(d => d.id !== id);
     setDaysOff(updated);
-    persistSchedule(assignments, updated);
+    persistSchedule(safeAssignments, updated);
   };
 
   const toggleWorkDay = (day: number) => {
@@ -204,12 +210,11 @@ export default function StoreScheduleSection({ storeId }: Props) {
   };
 
   // Stats
-  const weekDates = DAYS.map((_, i) => addDays(weekStart, i));
   const weekStats = useMemo(() => {
     let totalShifts = 0;
     let totalHours = 0;
     const scheduledIds = new Set<string>();
-    const coverageByDay = DAYS.map(() => 0);
+    const coverageByDay = weekDates.map(() => 0);
 
     employees.forEach((emp: any) => {
       weekDates.forEach((date, dayIdx) => {
@@ -225,7 +230,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
       });
     });
     return { totalShifts, totalHours, scheduledCount: scheduledIds.size, coverageByDay };
-  }, [employees, weekDates, assignments, daysOff]);
+  }, [employees, weekDates, safeAssignments, safeDaysOff]);
 
   const maxCoverage = Math.max(...weekStats.coverageByDay, 1);
 
@@ -256,20 +261,22 @@ export default function StoreScheduleSection({ storeId }: Props) {
       {/* Coverage Bar */}
       <Card className="p-4">
         <p className="text-xs font-semibold mb-3">Daily Coverage</p>
-        <div className="flex items-end gap-2 h-16">
-          {DAYS.map((d, i) => {
-            const count = weekStats.coverageByDay[i];
-            const height = (count / maxCoverage) * 100;
-            return (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-[10px] font-semibold">{count}</span>
-                <div className="w-full rounded-t-md bg-muted relative" style={{ height: "48px" }}>
-                  <div className={cn("absolute bottom-0 w-full rounded-t-md transition-all", count > 0 ? "bg-primary/70" : "bg-muted-foreground/10")} style={{ height: `${Math.max(height, 5)}%` }} />
+        <div className="overflow-x-auto pb-2">
+          <div className="flex items-end gap-2 h-16 min-w-[980px]">
+            {weekDates.map((date, i) => {
+              const count = weekStats.coverageByDay[i] || 0;
+              const height = (count / maxCoverage) * 100;
+              return (
+                <div key={date.toISOString()} className="min-w-[60px] flex-1 flex flex-col items-center gap-1">
+                  <span className="text-[10px] font-semibold">{count}</span>
+                  <div className="w-full rounded-t-md bg-muted relative" style={{ height: "48px" }}>
+                    <div className={cn("absolute bottom-0 w-full rounded-t-md transition-all", count > 0 ? "bg-primary/70" : "bg-muted-foreground/10")} style={{ height: `${Math.max(height, 5)}%` }} />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">{format(date, "EEE")}</span>
                 </div>
-                <span className="text-[10px] text-muted-foreground">{d}</span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </Card>
 
@@ -277,7 +284,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setWeekStart(subWeeks(weekStart, 1))}><ChevronLeft className="w-4 h-4" /></Button>
-          <div className="text-sm font-semibold px-2">{format(weekStart, "MMM d")} — {format(addDays(weekStart, 6), "MMM d, yyyy")}</div>
+          <div className="text-sm font-semibold px-2">{format(weekStart, "MMM d")} — {format(addDays(weekStart, VISIBLE_DAY_COUNT - 1), "MMM d, yyyy")}</div>
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setWeekStart(addWeeks(weekStart, 1))}><ChevronRight className="w-4 h-4" /></Button>
           <Button variant="ghost" size="sm" className="text-xs ml-1" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>Today</Button>
         </div>
@@ -293,46 +300,45 @@ export default function StoreScheduleSection({ storeId }: Props) {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="w-full justify-start">
           <TabsTrigger value="schedule" className="text-xs gap-1.5"><Calendar className="w-3.5 h-3.5" /> Weekly View</TabsTrigger>
-          <TabsTrigger value="assignments" className="text-xs gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Assignments ({assignments.length})</TabsTrigger>
-          <TabsTrigger value="daysoff" className="text-xs gap-1.5"><CalendarOff className="w-3.5 h-3.5" /> Days Off ({daysOff.length})</TabsTrigger>
+          <TabsTrigger value="assignments" className="text-xs gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Assignments ({safeAssignments.length})</TabsTrigger>
+          <TabsTrigger value="daysoff" className="text-xs gap-1.5"><CalendarOff className="w-3.5 h-3.5" /> Days Off ({safeDaysOff.length})</TabsTrigger>
         </TabsList>
 
         {/* Weekly Grid */}
         <TabsContent value="schedule" className="mt-4">
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[750px]">
+              <table className="w-full text-sm min-w-[1580px]">
                 <thead>
                   <tr className="border-b bg-muted/40">
                     <th className="text-left px-3 py-2.5 font-semibold text-xs text-muted-foreground w-40 sticky left-0 bg-muted/40 z-10">Employee</th>
-                    {DAYS.map((d, i) => {
-                      const date = addDays(weekStart, i);
+                    {weekDates.map((date) => {
                       const isToday = isSameDay(date, new Date());
-                      const isWeekend = i >= 5;
+                      const weekDayIndex = (date.getDay() + 6) % 7;
+                      const isWeekend = weekDayIndex >= 5;
                       return (
-                        <th key={d} className={cn("text-center px-2 py-2.5 font-semibold text-xs min-w-[105px]", isToday ? "text-primary" : isWeekend ? "text-destructive/70" : "text-muted-foreground")}>
-                          {d}<div className="text-[10px] font-normal">{format(date, "MMM d")}</div>
+                        <th key={date.toISOString()} className={cn("text-center px-2 py-2.5 font-semibold text-xs min-w-[105px]", isToday ? "text-primary" : isWeekend ? "text-destructive/70" : "text-muted-foreground")}>
+                          {format(date, "EEE")}<div className="text-[10px] font-normal">{format(date, "MMM d")}</div>
                         </th>
                       );
                     })}
-                    <th className="text-center px-2 py-2.5 font-semibold text-xs text-muted-foreground w-16">Hours</th>
+                    <th className="text-center px-2 py-2.5 font-semibold text-xs text-muted-foreground w-16 sticky right-0 bg-muted/40 z-10">Hours</th>
                   </tr>
                 </thead>
                 <tbody>
                   {employees.length === 0 ? (
-                    <tr><td colSpan={9} className="text-center py-14 text-muted-foreground text-sm">No employees yet.</td></tr>
+                    <tr><td colSpan={weekDates.length + 2} className="text-center py-14 text-muted-foreground text-sm">No employees yet.</td></tr>
                   ) : employees.map((emp: any) => {
                     let weekHours = 0;
                     return (
                       <tr key={emp.id} className="border-b last:border-0 hover:bg-muted/10 transition-colors">
-                        <td className="px-3 py-3 sticky left-0 bg-card z-10">
+                        <td className="px-3 py-3 sticky left-0 bg-card z-10 min-w-[160px]">
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">{emp.name?.charAt(0)?.toUpperCase()}</div>
                             <div><p className="font-medium text-[12px] leading-tight">{emp.name}</p><p className="text-[10px] text-muted-foreground capitalize">{emp.role}</p></div>
                           </div>
                         </td>
-                        {DAYS.map((_, dayIdx) => {
-                          const date = addDays(weekStart, dayIdx);
+                        {weekDates.map((date, dayIdx) => {
                           const isToday = isSameDay(date, new Date());
                           const { status, dayOff, assignment } = getDayStatus(emp.id, date);
 
@@ -345,7 +351,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
                           const preset = assignment ? SHIFT_PRESETS.find(p => p.type === assignment.shiftType) : null;
 
                           return (
-                            <td key={dayIdx} className={cn("px-1 py-1.5 text-center align-top", isToday && "bg-primary/5")}>
+                            <td key={date.toISOString()} className={cn("px-1 py-1.5 text-center align-top", isToday && "bg-primary/5")}>
                               {status === "off" ? (
                                 <div className="w-full rounded-lg bg-destructive/8 border border-destructive/20 px-2 py-2 text-[10px]">
                                   <CalendarOff className="w-3.5 h-3.5 text-destructive/60 mx-auto mb-0.5" />
@@ -362,7 +368,8 @@ export default function StoreScheduleSection({ storeId }: Props) {
                               ) : (
                                 <button
                                   onClick={() => {
-                                    setAssignForm(f => ({ ...f, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), workDays: [dayIdx] }));
+                                    const weekDayIndex = (date.getDay() + 6) % 7;
+                                    setAssignForm(f => ({ ...f, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), workDays: [weekDayIndex] }));
                                     setAssignDialog(true);
                                   }}
                                   className="w-full h-12 rounded-lg border border-dashed border-border/50 flex items-center justify-center hover:bg-muted/30 hover:border-primary/30 transition-all group"
@@ -373,7 +380,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
                             </td>
                           );
                         })}
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center sticky right-0 bg-card z-10">
                           <span className={cn("text-xs font-semibold", weekHours > 40 ? "text-destructive" : "text-foreground")}>{weekHours.toFixed(0)}h</span>
                           {weekHours > 40 && <AlertTriangle className="w-3 h-3 text-destructive mx-auto mt-0.5" />}
                         </td>
@@ -400,13 +407,13 @@ export default function StoreScheduleSection({ storeId }: Props) {
 
         {/* Assignments List */}
         <TabsContent value="assignments" className="mt-4 space-y-3">
-          {assignments.length === 0 ? (
+          {safeAssignments.length === 0 ? (
             <Card className="flex flex-col items-center justify-center py-16 text-center">
               <Briefcase className="w-10 h-10 text-muted-foreground/30 mb-3" />
               <p className="text-sm text-muted-foreground mb-3">No work assignments yet. Assign schedules to your employees.</p>
               <Button size="sm" onClick={() => setAssignDialog(true)} className="gap-1.5"><Plus className="w-3.5 h-3.5" /> Assign Work</Button>
             </Card>
-          ) : assignments.map(a => {
+          ) : safeAssignments.map(a => {
             const emp = employees.find((e: any) => e.id === a.employeeId);
             const preset = SHIFT_PRESETS.find(p => p.type === a.shiftType);
             return (
@@ -443,14 +450,14 @@ export default function StoreScheduleSection({ storeId }: Props) {
 
         {/* Days Off List */}
         <TabsContent value="daysoff" className="mt-4 space-y-3">
-          {daysOff.length === 0 ? (
+          {safeDaysOff.length === 0 ? (
             <Card className="flex flex-col items-center justify-center py-16 text-center">
               <CalendarOff className="w-10 h-10 text-muted-foreground/30 mb-3" />
               <p className="text-sm text-muted-foreground mb-3">No days off set yet.</p>
               <Button size="sm" variant="outline" onClick={() => setOffDialog(true)} className="gap-1.5"><CalendarOff className="w-3.5 h-3.5" /> Set Day Off</Button>
             </Card>
           ) : (() => {
-            const grouped = daysOff.reduce((acc, d) => {
+            const grouped = safeDaysOff.reduce((acc, d) => {
               const key = d.employeeId;
               if (!acc[key]) acc[key] = [];
               acc[key].push(d);
