@@ -5,7 +5,7 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 function generateToken(): string {
-  const arr = new Uint8Array(32);
+  const arr = new Uint8Array(16);
   crypto.getRandomValues(arr);
   return Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
 }

@@ -91,10 +91,10 @@ export function StoreQRDisplay({ storeId }: StoreQRDisplayProps) {
         >
           {token ? (
             <QRCodeSVG
-              value={`ZIVO_CLOCK:${token}`}
-              size={180}
-              level="H"
-              includeMargin={false}
+              value={token}
+              size={208}
+              level="M"
+              includeMargin={true}
               bgColor="#ffffff"
               fgColor="#000000"
             />
