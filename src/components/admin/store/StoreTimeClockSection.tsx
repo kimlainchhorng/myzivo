@@ -143,6 +143,21 @@ export default function StoreTimeClockSection({ storeId }: Props) {
         </div>
       </Card>
 
+      {/* QR Code Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <StoreQRDisplay storeId={storeId} />
+        <Card className="p-5 flex flex-col items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+            <ScanLine className="w-6 h-6 text-primary" />
+          </div>
+          <h3 className="font-semibold text-sm mb-1">Scan Employee QR</h3>
+          <p className="text-[11px] text-muted-foreground text-center mb-3">Scan an employee's personal QR code to clock them in or out</p>
+          <Button onClick={() => setAdminScannerOpen(true)} className="gap-1.5">
+            <QrCode className="w-3.5 h-3.5" /> Open Scanner
+          </Button>
+        </Card>
+      </div>
+
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="w-full justify-start">
           <TabsTrigger value="today" className="text-xs gap-1.5"><Clock className="w-3.5 h-3.5" /> Live View</TabsTrigger>
