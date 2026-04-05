@@ -138,15 +138,20 @@ export default function StoreScheduleSection({ storeId }: Props) {
     },
   });
 
+  const safeAssignments = Array.isArray(assignments) ? assignments : [];
+  const safeDaysOff = Array.isArray(daysOff) ? daysOff : [];
+  const weekDates = Array.from({ length: VISIBLE_DAY_COUNT }, (_, i) => addDays(weekStart, i));
+
   // Get status for a specific employee on a specific date
   const getDayStatus = (empId: string, date: Date) => {
     const dateStr = format(date, "yyyy-MM-dd");
-    const dayOff = daysOff.find(d => d.employeeId === empId && d.date === dateStr);
+    const dayOff = safeDaysOff.find(d => d.employeeId === empId && d.date === dateStr);
     if (dayOff) return { status: "off" as const, dayOff, assignment: null };
 
     const dayOfWeek = (date.getDay() + 6) % 7; // convert to Mon=0
-    const assignment = assignments.find(a =>
+    const assignment = safeAssignments.find(a =>
       a.employeeId === empId &&
+      Array.isArray(a.workDays) &&
       a.workDays.includes(dayOfWeek) &&
       isWithinInterval(date, { start: parseISO(a.startDate), end: parseISO(a.endDate) })
     );
@@ -163,9 +168,9 @@ export default function StoreScheduleSection({ storeId }: Props) {
       shiftEnd: assignForm.shiftEnd, workDays: assignForm.workDays,
       note: assignForm.note,
     };
-    const updated = [...assignments, newAssignment];
+    const updated = [...safeAssignments, newAssignment];
     setAssignments(updated);
-    persistSchedule(updated, daysOff);
+    persistSchedule(updated, safeDaysOff);
     setAssignDialog(false);
     toast.success("Work schedule assigned");
   };
@@ -179,22 +184,22 @@ export default function StoreScheduleSection({ storeId }: Props) {
       id: crypto.randomUUID(), employeeId: offForm.employeeId,
       date: format(d, "yyyy-MM-dd"), reason: offForm.reason, note: offForm.note,
     }));
-    const updated = [...daysOff, ...newOffs];
+    const updated = [...safeDaysOff, ...newOffs];
     setDaysOff(updated);
-    persistSchedule(assignments, updated);
+    persistSchedule(safeAssignments, updated);
     setOffDialog(false);
     toast.success(`${newOffs.length} day(s) off added`);
   };
 
   const removeAssignment = (id: string) => {
-    const updated = assignments.filter(a => a.id !== id);
+    const updated = safeAssignments.filter(a => a.id !== id);
     setAssignments(updated);
-    persistSchedule(updated, daysOff);
+    persistSchedule(updated, safeDaysOff);
   };
   const removeDayOff = (id: string) => {
-    const updated = daysOff.filter(d => d.id !== id);
+    const updated = safeDaysOff.filter(d => d.id !== id);
     setDaysOff(updated);
-    persistSchedule(assignments, updated);
+    persistSchedule(safeAssignments, updated);
   };
 
   const toggleWorkDay = (day: number) => {
@@ -205,12 +210,11 @@ export default function StoreScheduleSection({ storeId }: Props) {
   };
 
   // Stats
-  const weekDates = DAYS.map((_, i) => addDays(weekStart, i));
   const weekStats = useMemo(() => {
     let totalShifts = 0;
     let totalHours = 0;
     const scheduledIds = new Set<string>();
-    const coverageByDay = DAYS.map(() => 0);
+    const coverageByDay = weekDates.map(() => 0);
 
     employees.forEach((emp: any) => {
       weekDates.forEach((date, dayIdx) => {
@@ -226,7 +230,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
       });
     });
     return { totalShifts, totalHours, scheduledCount: scheduledIds.size, coverageByDay };
-  }, [employees, weekDates, assignments, daysOff]);
+  }, [employees, weekDates, safeAssignments, safeDaysOff]);
 
   const maxCoverage = Math.max(...weekStats.coverageByDay, 1);
 
