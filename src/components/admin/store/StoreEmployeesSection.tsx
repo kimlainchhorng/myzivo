@@ -31,6 +31,7 @@ type Employee = {
   name: string; email: string | null; phone: string | null;
   role: string; status: string; hourly_rate: number | null;
   pay_type: string; notes: string | null; created_at: string;
+  employee_number: number | null;
 };
 
 const ROLES = [
@@ -246,9 +247,16 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                         <p className="font-semibold text-sm truncate">{emp.name}</p>
                         <span className="text-sm">{role?.icon}</span>
                       </div>
-                      <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 mt-0.5", role?.color || "bg-muted text-muted-foreground border-border")}>
-                        {role?.label || emp.role}
-                      </Badge>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", role?.color || "bg-muted text-muted-foreground border-border")}>
+                          {role?.label || emp.role}
+                        </Badge>
+                        {emp.employee_number && (
+                          <span className="text-[10px] font-mono text-muted-foreground bg-muted/50 px-1.5 py-0 rounded">
+                            ID-{String(emp.employee_number).padStart(4, "0")}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(emp)}><Edit className="w-3 h-3" /></Button>
@@ -296,8 +304,15 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
                     {detailDialog.name.charAt(0).toUpperCase()}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">{detailDialog.name} <span>{roleOf(detailDialog.role)?.icon}</span></div>
+                   <div>
+                    <div className="flex items-center gap-2">
+                      {detailDialog.name} <span>{roleOf(detailDialog.role)?.icon}</span>
+                      {detailDialog.employee_number && (
+                        <span className="text-[11px] font-mono text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md">
+                          ID-{String(detailDialog.employee_number).padStart(4, "0")}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs font-normal text-muted-foreground capitalize">{detailDialog.role} · {detailDialog.status}</p>
                   </div>
                 </DialogTitle>
