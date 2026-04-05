@@ -261,20 +261,22 @@ export default function StoreScheduleSection({ storeId }: Props) {
       {/* Coverage Bar */}
       <Card className="p-4">
         <p className="text-xs font-semibold mb-3">Daily Coverage</p>
-        <div className="flex items-end gap-2 h-16">
-          {DAYS.map((d, i) => {
-            const count = weekStats.coverageByDay[i];
-            const height = (count / maxCoverage) * 100;
-            return (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-[10px] font-semibold">{count}</span>
-                <div className="w-full rounded-t-md bg-muted relative" style={{ height: "48px" }}>
-                  <div className={cn("absolute bottom-0 w-full rounded-t-md transition-all", count > 0 ? "bg-primary/70" : "bg-muted-foreground/10")} style={{ height: `${Math.max(height, 5)}%` }} />
+        <div className="overflow-x-auto pb-2">
+          <div className="flex items-end gap-2 h-16 min-w-[980px]">
+            {weekDates.map((date, i) => {
+              const count = weekStats.coverageByDay[i] || 0;
+              const height = (count / maxCoverage) * 100;
+              return (
+                <div key={date.toISOString()} className="min-w-[60px] flex-1 flex flex-col items-center gap-1">
+                  <span className="text-[10px] font-semibold">{count}</span>
+                  <div className="w-full rounded-t-md bg-muted relative" style={{ height: "48px" }}>
+                    <div className={cn("absolute bottom-0 w-full rounded-t-md transition-all", count > 0 ? "bg-primary/70" : "bg-muted-foreground/10")} style={{ height: `${Math.max(height, 5)}%` }} />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">{format(date, "EEE")}</span>
                 </div>
-                <span className="text-[10px] text-muted-foreground">{d}</span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </Card>
 
@@ -282,7 +284,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setWeekStart(subWeeks(weekStart, 1))}><ChevronLeft className="w-4 h-4" /></Button>
-          <div className="text-sm font-semibold px-2">{format(weekStart, "MMM d")} — {format(addDays(weekStart, 6), "MMM d, yyyy")}</div>
+          <div className="text-sm font-semibold px-2">{format(weekStart, "MMM d")} — {format(addDays(weekStart, VISIBLE_DAY_COUNT - 1), "MMM d, yyyy")}</div>
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setWeekStart(addWeeks(weekStart, 1))}><ChevronRight className="w-4 h-4" /></Button>
           <Button variant="ghost" size="sm" className="text-xs ml-1" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>Today</Button>
         </div>
