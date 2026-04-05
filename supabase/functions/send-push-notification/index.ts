@@ -18,6 +18,7 @@ interface PushRequest {
   body?: string;
   data?: Record<string, unknown>;
   order_id?: string;
+  image_url?: string;
 }
 
 serve(async (req) => {
