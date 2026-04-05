@@ -405,6 +405,72 @@ export default function StoreTimeClockSection({ storeId }: Props) {
         }}
         title="Scan Employee QR"
       />
+
+      {/* Clock Out Reason Dialog */}
+      <Dialog open={!!clockOutTarget} onOpenChange={(open) => !open && setClockOutTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <LogOut className="w-4 h-4 text-destructive" />
+              Clock Out — {clockOutTarget?.employeeName}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {clockOutTarget && clockOutTarget.hoursWorked < 8 && (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-[12px] text-amber-700">
+                  This employee has only worked <strong>{clockOutTarget.hoursWorked.toFixed(1)} hours</strong> (less than a full 8-hour shift).
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label className="text-[13px] font-medium">Reason for clocking out</Label>
+              <RadioGroup value={clockOutReason} onValueChange={setClockOutReason} className="grid gap-2">
+                {CLOCK_OUT_REASONS.map(r => (
+                  <Label
+                    key={r.value}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+                      clockOutReason === r.value ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                    )}
+                  >
+                    <RadioGroupItem value={r.value} />
+                    <span className="text-[13px]">{r.label}</span>
+                  </Label>
+                ))}
+              </RadioGroup>
+            </div>
+
+            {(clockOutReason === "other" || clockOutReason === "early_leave" || clockOutReason === "emergency") && (
+              <div className="space-y-1.5">
+                <Label className="text-[12px]">Additional notes</Label>
+                <Textarea
+                  placeholder="Please provide more details..."
+                  value={clockOutNote}
+                  onChange={(e) => setClockOutNote(e.target.value)}
+                  className="text-[13px] min-h-[80px] resize-none"
+                />
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" size="sm" onClick={() => setClockOutTarget(null)}>Cancel</Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={confirmClockOut}
+              disabled={clockOutReason === "other" && !clockOutNote.trim()}
+              className="gap-1.5"
+            >
+              <LogOut className="w-3.5 h-3.5" /> Confirm Clock Out
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
