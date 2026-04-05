@@ -56,6 +56,7 @@ type DayOff = {
 };
 
 export default function StoreScheduleSection({ storeId }: Props) {
+  const queryClient = useQueryClient();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [assignments, setAssignments] = useState<WorkAssignment[]>([]);
   const [daysOff, setDaysOff] = useState<DayOff[]>([]);
@@ -76,6 +77,41 @@ export default function StoreScheduleSection({ storeId }: Props) {
     endDate: format(new Date(), "yyyy-MM-dd"),
     reason: "Day Off", note: "",
   });
+
+  const scheduleKey = `schedule_data_${storeId}`;
+
+  // Load saved schedule data
+  useQuery({
+    queryKey: ["schedule-data", storeId],
+    queryFn: async () => {
+      const { data } = await supabase.from("app_settings").select("value").eq("key", scheduleKey).maybeSingle();
+      if (data?.value && typeof data.value === "object") {
+        const s = data.value as any;
+        if (Array.isArray(s.assignments)) setAssignments(s.assignments);
+        if (Array.isArray(s.daysOff)) setDaysOff(s.daysOff);
+      }
+      return data;
+    },
+  });
+
+  // Save schedule data to DB
+  const saveScheduleMutation = useMutation({
+    mutationFn: async (payload: { assignments: WorkAssignment[]; daysOff: DayOff[] }) => {
+      const value = { assignments: payload.assignments, daysOff: payload.daysOff };
+      const { data: existing } = await supabase.from("app_settings").select("id").eq("key", scheduleKey).maybeSingle();
+      if (existing) {
+        const { error } = await supabase.from("app_settings").update({ value, updated_at: new Date().toISOString() }).eq("key", scheduleKey);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("app_settings").insert({ key: scheduleKey, value, description: "Store schedule data" });
+        if (error) throw error;
+      }
+    },
+  });
+
+  const persistSchedule = useCallback((newAssignments: WorkAssignment[], newDaysOff: DayOff[]) => {
+    saveScheduleMutation.mutate({ assignments: newAssignments, daysOff: newDaysOff });
+  }, []);
 
   const { data: employees = [] } = useQuery({
     queryKey: ["store-employees-schedule", storeId],
