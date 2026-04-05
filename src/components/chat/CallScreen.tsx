@@ -221,7 +221,8 @@ export default function CallScreen({
   }, [endCall, onPipControlsChange, toggleCamera, toggleMute]);
 
   useEffect(() => {
-    if (existingCallId || !user?.id || callId) return;
+    if (existingCallId || !user?.id || callId || createCallFiredRef.current) return;
+    createCallFiredRef.current = true;
     const create = async () => {
       const minCreatedAt = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
       const { data: activeForRecipient } = await (supabase as any)
