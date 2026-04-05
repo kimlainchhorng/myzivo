@@ -30,7 +30,7 @@ type Employee = {
   id: string; store_id: string; user_id: string | null;
   name: string; email: string | null; phone: string | null;
   role: string; status: string; hourly_rate: number | null;
-  notes: string | null; created_at: string;
+  pay_type: string; notes: string | null; created_at: string;
 };
 
 const ROLES = [
