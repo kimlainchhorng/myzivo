@@ -61,89 +61,126 @@ function CellActionMenu({ cellMenu, employees, onClose, onQuickAssign, onCustom,
   const [times, setTimes] = useState<Record<string, { start: string; end: string }>>(
     () => Object.fromEntries(SHIFT_PRESETS.map(p => [p.type, { start: p.start, end: p.end }]))
   );
-  const [selectedShift, setSelectedShift] = useState<string | null>(null);
+  const [selectedShift, setSelectedShift] = useState<string | null>("morning");
+
+  const formatTime12 = (t: string) => {
+    const [h, m] = t.split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const h12 = h % 12 || 12;
+    return `${String(h12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${ampm}`;
+  };
+
+  const selectedPreset = SHIFT_PRESETS.find(p => p.type === selectedShift);
 
   return (
     <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-[360px] p-0 gap-0 rounded-2xl overflow-hidden shadow-2xl border-border/50">
+      <DialogContent className="max-w-[380px] p-0 gap-0 rounded-2xl overflow-hidden shadow-2xl border-border/40">
         {/* Header */}
-        <div className="px-5 py-4 bg-gradient-to-br from-primary/5 via-muted/30 to-transparent border-b">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-sm font-bold text-primary ring-2 ring-primary/10">
+        <div className="px-5 py-4 border-b border-border/40">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-base font-bold text-white shadow-md">
               {emp?.name?.charAt(0)?.toUpperCase()}
             </div>
-            <div className="flex-1">
-              <p className="text-[15px] font-bold leading-tight">{format(date, "EEEE, MMM d")}</p>
-              <p className="text-[12px] text-muted-foreground mt-0.5">{emp?.name} · <span className="capitalize">{emp?.role}</span></p>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-bold leading-tight">{format(date, "EEEE, MMM d")}</p>
+              <p className="text-[13px] text-muted-foreground mt-0.5 truncate">{emp?.name} · <span className="capitalize">{emp?.role}</span></p>
             </div>
           </div>
         </div>
 
-        <div className="max-h-[60vh] overflow-y-auto">
-          {/* Shifts */}
-          <div className="px-3 pt-3 pb-1">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-2 pb-2 flex items-center gap-1.5">
-              <Clock className="w-3 h-3" /> Assign Shift
+        <div className="max-h-[65vh] overflow-y-auto">
+          {/* Assign Shift Section */}
+          <div className="px-5 pt-4 pb-2">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-3">
+              <Clock className="w-3.5 h-3.5" /> Assign Shift
             </p>
-            <div className="space-y-0.5">
-              {SHIFT_PRESETS.map(p => {
-                const isSelected = selectedShift === p.type;
-                return (
-                  <div key={p.type}>
-                    <button
-                      onClick={() => setSelectedShift(isSelected ? null : p.type)}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left",
-                        isSelected ? cn(p.color, "shadow-sm ring-1 ring-current/10") : "hover:bg-muted/40"
-                      )}
-                    >
-                      <div className={cn("w-4 h-4 rounded-full bg-gradient-to-r shrink-0 transition-transform shadow-sm", p.gradient, isSelected && "scale-110")} />
-                      <span className="text-[13px] font-semibold flex-1">{p.label}</span>
-                      <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {times[p.type]?.start || p.start} – {times[p.type]?.end || p.end}
-                      </span>
-                      <ChevronRight className={cn("w-4 h-4 text-muted-foreground/30 transition-transform duration-200", isSelected && "rotate-90 text-muted-foreground")} />
-                    </button>
-                    {isSelected && (
-                      <div className="mx-2 mt-1.5 mb-2 p-4 rounded-xl bg-muted/15 border border-border/30 animate-in slide-in-from-top-1 duration-200">
-                        <div className="flex items-end gap-3">
-                          <div className="flex-1 space-y-1.5">
-                            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Start Time</label>
-                            <input
-                              type="time"
-                              value={times[p.type]?.start || p.start}
-                              onChange={e => setTimes(t => ({ ...t, [p.type]: { ...t[p.type], start: e.target.value } }))}
-                              className="w-full text-[14px] font-semibold tabular-nums bg-card border border-border rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
-                            />
-                          </div>
-                          <div className="pb-3">
-                            <div className="w-4 h-[2px] bg-muted-foreground/15 rounded-full" />
-                          </div>
-                          <div className="flex-1 space-y-1.5">
-                            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">End Time</label>
-                            <input
-                              type="time"
-                              value={times[p.type]?.end || p.end}
-                              onChange={e => setTimes(t => ({ ...t, [p.type]: { ...t[p.type], end: e.target.value } }))}
-                              className="w-full text-[14px] font-semibold tabular-nums bg-card border border-border rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
-                            />
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          className="w-full mt-3.5 gap-2 text-[12px] h-9 bg-gradient-to-r from-primary to-primary/80 shadow-md hover:shadow-lg transition-all rounded-xl"
-                          onClick={() => onQuickAssign(cellMenu.empId, date, p, times[p.type]?.start || p.start, times[p.type]?.end || p.end)}
-                        >
-                          <Check className="w-3.5 h-3.5" /> Assign {p.label} Shift
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+
+            {/* Shift Type Selector */}
             <button
-              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted/40 transition-colors text-left mt-0.5"
+              onClick={() => {}}
+              className={cn(
+                "w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all mb-4",
+                selectedPreset ? cn("border-current/20", selectedPreset.color) : "border-border"
+              )}
+            >
+              {selectedPreset && (
+                <div className={cn("w-5 h-5 rounded-full bg-gradient-to-r shrink-0 shadow-sm", selectedPreset.gradient)} />
+              )}
+              <span className="text-[14px] font-semibold flex-1 text-left">{selectedPreset?.label || "Select shift"}</span>
+              <span className="text-[12px] text-muted-foreground tabular-nums">
+                {selectedPreset ? `${selectedPreset.start} – ${selectedPreset.end}` : ""}
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground/40 rotate-90" />
+            </button>
+
+            {/* Editable Time Inputs */}
+            {selectedPreset && (
+              <div className="mb-4">
+                <div className="flex items-end gap-4">
+                  <div className="flex-1 space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Start Time</label>
+                    <div className="relative">
+                      <input
+                        type="time"
+                        value={times[selectedPreset.type]?.start || selectedPreset.start}
+                        onChange={e => setTimes(t => ({ ...t, [selectedPreset.type]: { ...t[selectedPreset.type], start: e.target.value } }))}
+                        className="w-full text-lg font-bold tabular-nums bg-card border-2 border-border rounded-xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all"
+                      />
+                      <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/40 pointer-events-none" />
+                    </div>
+                  </div>
+                  <div className="pb-4">
+                    <div className="w-5 h-[2px] bg-muted-foreground/20 rounded-full" />
+                  </div>
+                  <div className="flex-1 space-y-1.5">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">End Time</label>
+                    <div className="relative">
+                      <input
+                        type="time"
+                        value={times[selectedPreset.type]?.end || selectedPreset.end}
+                        onChange={e => setTimes(t => ({ ...t, [selectedPreset.type]: { ...t[selectedPreset.type], end: e.target.value } }))}
+                        className="w-full text-lg font-bold tabular-nums bg-card border-2 border-border rounded-xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all"
+                      />
+                      <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/40 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Assign Button */}
+                <Button
+                  className="w-full mt-4 gap-2.5 h-11 text-[13px] font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all rounded-xl"
+                  onClick={() => onQuickAssign(
+                    cellMenu.empId, date, selectedPreset,
+                    times[selectedPreset.type]?.start || selectedPreset.start,
+                    times[selectedPreset.type]?.end || selectedPreset.end
+                  )}
+                >
+                  <Check className="w-4 h-4" /> Assign {selectedPreset.label} Shift
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Other Shift Options */}
+          <div className="px-5 pb-2">
+            {SHIFT_PRESETS.filter(p => p.type !== selectedShift).map(p => (
+              <button
+                key={p.type}
+                onClick={() => setSelectedShift(p.type)}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left hover:bg-muted/40 active:scale-[0.99]"
+              >
+                <div className={cn("w-4 h-4 rounded-full bg-gradient-to-r shrink-0 shadow-sm", p.gradient)} />
+                <span className="text-[13px] font-semibold flex-1">{p.label}</span>
+                <span className="text-[11px] text-muted-foreground tabular-nums">{p.start} – {p.end}</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground/25" />
+              </button>
+            ))}
+          </div>
+
+          {/* Custom Shift */}
+          <div className="px-5 pb-2">
+            <button
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted/40 transition-colors text-left"
               onClick={() => onCustom(cellMenu.empId, date)}
             >
               <Plus className="w-4 h-4 text-muted-foreground/40 shrink-0" />
@@ -151,28 +188,25 @@ function CellActionMenu({ cellMenu, employees, onClose, onQuickAssign, onCustom,
             </button>
           </div>
 
-          <div className="border-t mx-4 my-1" />
+          <div className="border-t border-border/40 mx-5 my-1" />
 
           {/* Time Off */}
-          <div className="px-3 pt-2 pb-4">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-2 pb-2 flex items-center gap-1.5">
-              <CalendarOff className="w-3 h-3" /> Time Off
+          <div className="px-5 pt-3 pb-5">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-3">
+              <CalendarOff className="w-3.5 h-3.5" /> Time Off
             </p>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { reason: "Day Off", icon: Coffee, color: "text-muted-foreground", bgHover: "hover:bg-muted/50", borderHover: "hover:border-muted-foreground/20" },
-                { reason: "Vacation", icon: Palmtree, color: "text-amber-600", bgHover: "hover:bg-amber-50", borderHover: "hover:border-amber-200" },
-                { reason: "Sick Leave", icon: Thermometer, color: "text-orange-600", bgHover: "hover:bg-orange-50", borderHover: "hover:border-orange-200" },
-                { reason: "Personal", icon: User, color: "text-blue-600", bgHover: "hover:bg-blue-50", borderHover: "hover:border-blue-200" },
+                { reason: "Day Off", icon: Coffee, dotColor: "bg-gray-400" },
+                { reason: "Vacation", icon: Palmtree, dotColor: "bg-amber-400" },
+                { reason: "Sick Leave", icon: Thermometer, dotColor: "bg-orange-400" },
+                { reason: "Personal", icon: User, dotColor: "bg-blue-400" },
               ].map(item => (
                 <button key={item.reason}
-                  className={cn(
-                    "flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all text-left border border-border/30",
-                    item.bgHover, item.borderHover, "hover:shadow-sm active:scale-[0.98]"
-                  )}
+                  className="flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all text-left border border-border/40 hover:bg-muted/40 hover:border-border hover:shadow-sm active:scale-[0.98]"
                   onClick={() => onDayOff(cellMenu.empId, date, item.reason)}
                 >
-                  <item.icon className={cn("w-4.5 h-4.5 shrink-0", item.color)} />
+                  <item.icon className="w-4 h-4 shrink-0 text-muted-foreground" />
                   <span className="text-[12px] font-semibold">{item.reason}</span>
                 </button>
               ))}
