@@ -304,8 +304,15 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
                     {detailDialog.name.charAt(0).toUpperCase()}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">{detailDialog.name} <span>{roleOf(detailDialog.role)?.icon}</span></div>
+                   <div>
+                    <div className="flex items-center gap-2">
+                      {detailDialog.name} <span>{roleOf(detailDialog.role)?.icon}</span>
+                      {detailDialog.employee_number && (
+                        <span className="text-[11px] font-mono text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md">
+                          ID-{String(detailDialog.employee_number).padStart(4, "0")}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs font-normal text-muted-foreground capitalize">{detailDialog.role} · {detailDialog.status}</p>
                   </div>
                 </DialogTitle>
