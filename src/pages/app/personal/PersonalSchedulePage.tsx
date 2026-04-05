@@ -138,10 +138,10 @@ export default function PersonalSchedulePage() {
   const weekOffs = weekDates.filter(d => getDayInfo(d).type === "off").length;
   const payType = empRecord?.pay_type || "hourly";
   const rateValue = empRecord?.hourly_rate || 0;
-  // For monthly pay: divide monthly salary by ~4.33 weeks to get weekly estimate
+  // For monthly pay: prorate based on actual shifts this week vs expected (weekdays=5)
   // For hourly pay: multiply hours × rate
   const estimatedEarnings = payType === "monthly"
-    ? rateValue / 4.33
+    ? (rateValue / 4.33) * (weekShifts > 0 ? weekShifts / 5 : 0)
     : weekHours * rateValue;
   const hoursProgress = Math.min((weekHours / WEEKLY_TARGET_HOURS) * 100, 100);
 
