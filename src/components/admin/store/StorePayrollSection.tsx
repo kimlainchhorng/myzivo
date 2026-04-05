@@ -2,12 +2,12 @@
  * StorePayrollSection — 2026 Payroll: pay runs, deductions, overtime, tax estimates, pay history, bonuses.
  */
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DollarSign, Plus, Download, Users, TrendingUp, Clock, FileText,
   Receipt, Percent, Award, AlertCircle, CheckCircle2, ArrowUpRight,
-  Calculator, Banknote, PiggyBank, CreditCard, Calendar
+  Calculator, Banknote, PiggyBank, CreditCard, Calendar, Edit, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
