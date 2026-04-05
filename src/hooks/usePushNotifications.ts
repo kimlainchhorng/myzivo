@@ -122,12 +122,16 @@ export const usePushNotifications = () => {
 
     try {
       const platform = Capacitor.getPlatform(); // 'ios' | 'android' | 'web'
+      const { data: { session } } = await supabase.auth.getSession();
       
       setState(prev => ({ ...prev, isRegistered: true, token }));
       
       // Persist token to Supabase so server can send push notifications
       const { error } = await supabase.functions.invoke("register-push-token", {
-        body: { token, platform }
+        body: { token, platform },
+        headers: session?.access_token
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : undefined,
       });
 
       if (error) {
