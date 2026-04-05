@@ -224,14 +224,59 @@ export default function CallScreen({
     if (existingCallId || !user?.id || callId || createCallFiredRef.current) return;
     createCallFiredRef.current = true;
     const create = async () => {
-      const minCreatedAt = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
-      const { data: activeForRecipient } = await (supabase as any)
+      const nowMs = Date.now();
+      const minCreatedAt = new Date(nowMs - 12 * 60 * 60 * 1000).toISOString();
+      const ringingStaleMs = 90 * 1000;
+      const answeredStaleMs = 3 * 60 * 60 * 1000;
+
+      const { data: possibleActiveCalls } = await (supabase as any)
         .from("call_signals")
-        .select("id")
-        .or(`and(caller_id.eq.${recipientId},status.in.(ringing,answered)),and(callee_id.eq.${recipientId},status.in.(ringing,answered))`)
+        .select("id, status, created_at, started_at")
+        .or(`caller_id.eq.${recipientId},callee_id.eq.${recipientId}`)
+        .in("status", ["ringing", "answered"])
+        .is("ended_at", null)
         .gte("created_at", minCreatedAt)
-        .limit(1)
-        .maybeSingle();
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const staleMissedIds: string[] = [];
+      const staleEndedIds: string[] = [];
+
+      const activeForRecipient = (possibleActiveCalls || []).find((row: any) => {
+        const createdMs = new Date(row.created_at).getTime();
+        const startedMs = row.started_at ? new Date(row.started_at).getTime() : null;
+
+        const isStaleRinging = row.status === "ringing" && nowMs - createdMs > ringingStaleMs;
+        const isStaleAnswered = row.status === "answered" && nowMs - (startedMs ?? createdMs) > answeredStaleMs;
+
+        if (isStaleRinging) {
+          staleMissedIds.push(row.id);
+          return false;
+        }
+
+        if (isStaleAnswered) {
+          staleEndedIds.push(row.id);
+          return false;
+        }
+
+        return true;
+      });
+
+      if (staleMissedIds.length) {
+        await (supabase as any)
+          .from("call_signals")
+          .update({ status: "missed", ended_at: new Date().toISOString() })
+          .in("id", staleMissedIds)
+          .eq("status", "ringing");
+      }
+
+      if (staleEndedIds.length) {
+        await (supabase as any)
+          .from("call_signals")
+          .update({ status: "ended", ended_at: new Date().toISOString() })
+          .in("id", staleEndedIds)
+          .eq("status", "answered");
+      }
 
       if (activeForRecipient?.id) {
         toast.info("User is busy", { description: "They are currently in another call." });
@@ -318,11 +363,26 @@ export default function CallScreen({
 
     const timeout = window.setTimeout(() => {
       (async () => {
-        endReasonRef.current = "no_answer";
-        await (supabase as any).from("call_signals")
+        const { data: liveCall } = await (supabase as any)
+          .from("call_signals")
+          .select("status")
+          .eq("id", callId)
+          .maybeSingle();
+
+        // Guard race: if callee already accepted around timeout boundary,
+        // do not force a no-answer hangup.
+        if (liveCall?.status !== "ringing") return;
+
+        const { data: markedMissed } = await (supabase as any).from("call_signals")
           .update({ status: "missed", ended_at: new Date().toISOString() })
           .eq("id", callId)
-          .eq("status", "ringing");
+          .eq("status", "ringing")
+          .select("id")
+          .maybeSingle();
+
+        if (!markedMissed?.id) return;
+
+        endReasonRef.current = "no_answer";
         toast.info("No answer", { description: "Call ended after 45 seconds." });
         await endCall();
       })();
