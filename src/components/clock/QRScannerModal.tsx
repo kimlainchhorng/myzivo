@@ -1,11 +1,10 @@
 /**
- * QR Scanner Modal — uses device camera to scan QR codes for clock in/out
- * Uses jsQR as universal fallback when BarcodeDetector is unavailable
+ * QR Scanner Modal — uses device camera to scan QR codes for clock in/out.
+ * Runs BarcodeDetector when available, with jsQR as a frame-based fallback for mobile reliability.
  */
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Camera, X, CheckCircle2, XCircle, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import jsQR from "jsqr";
 
@@ -23,116 +22,224 @@ export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanIntervalRef = useRef<number | null>(null);
+  const barcodeDetectorRef = useRef<any>(null);
+  const scanBusyRef = useRef(false);
   const stateRef = useRef<ScanState>("scanning");
+
   const [state, setState] = useState<ScanState>("scanning");
   const [message, setMessage] = useState("");
   const [actionType, setActionType] = useState("");
 
-  // Keep stateRef in sync so interval callbacks see current value
-  useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
+  const setScannerState = useCallback((next: ScanState) => {
+    stateRef.current = next;
+    setState(next);
+  }, []);
 
   const stopCamera = useCallback(() => {
     if (scanIntervalRef.current) {
       clearInterval(scanIntervalRef.current);
       scanIntervalRef.current = null;
     }
+
+    barcodeDetectorRef.current = null;
+    scanBusyRef.current = false;
+
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
+    }
+
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
     }
   }, []);
 
+  const readCurrentFrame = useCallback(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    if (!video || !canvas) return null;
+    if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return null;
+    if (!video.videoWidth || !video.videoHeight) return null;
+
+    const maxDimension = 960;
+    const scale = Math.min(1, maxDimension / Math.max(video.videoWidth, video.videoHeight));
+    const width = Math.max(1, Math.round(video.videoWidth * scale));
+    const height = Math.max(1, Math.round(video.videoHeight * scale));
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return null;
+
+    ctx.drawImage(video, 0, 0, width, height);
+    const imageData = ctx.getImageData(0, 0, width, height);
+
+    return { canvas, imageData };
+  }, []);
+
   const handleDetectedQR = useCallback(async (rawValue: string) => {
-    if (stateRef.current !== "scanning") return;
-    setState("processing");
+    const normalizedValue = rawValue.trim();
+    if (!normalizedValue || stateRef.current !== "scanning") return;
+
+    setScannerState("processing");
     setMessage("Validating QR code...");
+    setActionType("");
 
     try {
-      const token = rawValue.startsWith("ZIVO_CLOCK:") ? rawValue.replace("ZIVO_CLOCK:", "") : rawValue;
+      const token = normalizedValue.replace(/^ZIVO_CLOCK:/, "").replace(/^ZIVO:/, "");
+      console.info("[QRScanner] QR detected", { length: token.length });
+
       const result = await onScan(token);
       if (result.success) {
-        setState("success");
+        setScannerState("success");
         setMessage(result.message);
         setActionType(result.action || "");
-      } else {
-        setState("error");
-        setMessage(result.message);
+        return;
       }
-    } catch (err) {
-      setState("error");
+
+      setScannerState("error");
+      setMessage(result.message);
+    } catch (error) {
+      console.error("[QRScanner] Failed to process detected QR", error);
+      setScannerState("error");
       setMessage("Failed to process QR code");
     }
-  }, [onScan]);
+  }, [onScan, setScannerState]);
+
+  const scanFrame = useCallback(async () => {
+    if (stateRef.current !== "scanning") return;
+
+    const frame = readCurrentFrame();
+    if (!frame) return;
+
+    if (barcodeDetectorRef.current) {
+      try {
+        const barcodes = await barcodeDetectorRef.current.detect(frame.canvas);
+        const detectedValue = barcodes.find((barcode: any) => barcode.rawValue)?.rawValue;
+
+        if (detectedValue) {
+          console.info("[QRScanner] Detected via BarcodeDetector");
+          await handleDetectedQR(detectedValue);
+          return;
+        }
+      } catch (error) {
+        console.warn("[QRScanner] BarcodeDetector failed, falling back to jsQR", error);
+      }
+    }
+
+    const qrCode = jsQR(frame.imageData.data, frame.imageData.width, frame.imageData.height, {
+      inversionAttempts: "attemptBoth",
+    });
+
+    if (qrCode?.data) {
+      console.info("[QRScanner] Detected via jsQR");
+      await handleDetectedQR(qrCode.data);
+    }
+  }, [handleDetectedQR, readCurrentFrame]);
 
   const startCamera = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } }
-      });
+      stopCamera();
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Camera API is not available on this device.");
+      }
+
+      const cameraOptions: MediaStreamConstraints[] = [
+        {
+          audio: false,
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+        },
+        {
+          audio: false,
+          video: {
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+        },
+        { audio: false, video: true },
+      ];
+
+      let stream: MediaStream | null = null;
+      let lastError: unknown = null;
+
+      for (const constraints of cameraOptions) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      if (!stream) {
+        throw lastError ?? new Error("Unable to access camera.");
+      }
+
       streamRef.current = stream;
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.setAttribute("playsinline", "true");
         await videoRef.current.play();
       }
 
-      // Use BarcodeDetector if available, otherwise jsQR
-      const hasBarcodeDetector = "BarcodeDetector" in window;
+      const BarcodeDetectorCtor = (window as any).BarcodeDetector;
+      barcodeDetectorRef.current = null;
 
-      if (hasBarcodeDetector) {
-        const detector = new (window as any).BarcodeDetector({ formats: ["qr_code"] });
-        scanIntervalRef.current = window.setInterval(async () => {
-          if (!videoRef.current || stateRef.current !== "scanning") return;
-          try {
-            const barcodes = await detector.detect(videoRef.current);
-            if (barcodes.length > 0 && barcodes[0].rawValue) {
-              handleDetectedQR(barcodes[0].rawValue);
-            }
-          } catch {}
-        }, 300);
-      } else {
-        // jsQR fallback — works on all browsers
-        scanIntervalRef.current = window.setInterval(() => {
-          if (!videoRef.current || !canvasRef.current || stateRef.current !== "scanning") return;
-          const video = videoRef.current;
-          if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+      if (BarcodeDetectorCtor) {
+        try {
+          const supportedFormats = typeof BarcodeDetectorCtor.getSupportedFormats === "function"
+            ? await BarcodeDetectorCtor.getSupportedFormats()
+            : ["qr_code"];
 
-          const canvas = canvasRef.current;
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          const ctx = canvas.getContext("2d", { willReadFrequently: true });
-          if (!ctx) return;
-
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(imageData.data, imageData.width, imageData.height, {
-            inversionAttempts: "dontInvert",
-          });
-
-          if (code && code.data) {
-            handleDetectedQR(code.data);
+          if (supportedFormats.includes("qr_code")) {
+            barcodeDetectorRef.current = new BarcodeDetectorCtor({ formats: ["qr_code"] });
           }
-        }, 250);
+        } catch (error) {
+          console.warn("[QRScanner] Could not initialize BarcodeDetector", error);
+        }
       }
-    } catch (err) {
-      console.error("Camera access error:", err);
-      setState("error");
-      setMessage("Camera access denied. Please allow camera permissions.");
+
+      scanIntervalRef.current = window.setInterval(() => {
+        if (scanBusyRef.current || stateRef.current !== "scanning") return;
+
+        scanBusyRef.current = true;
+        void scanFrame().finally(() => {
+          scanBusyRef.current = false;
+        });
+      }, 180);
+    } catch (error) {
+      console.error("[QRScanner] Camera access error", error);
+      setScannerState("error");
+      setMessage("Camera access denied. Please allow camera permissions and try again.");
     }
-  }, [handleDetectedQR]);
+  }, [scanFrame, setScannerState, stopCamera]);
+
+  const handleRetry = useCallback(() => {
+    setMessage("");
+    setActionType("");
+    setScannerState("scanning");
+  }, [setScannerState]);
 
   useEffect(() => {
     if (open) {
-      setState("scanning");
-      setMessage("");
-      setActionType("");
-      startCamera();
+      handleRetry();
+      void startCamera();
     } else {
       stopCamera();
     }
+
     return stopCamera;
-  }, [open, startCamera, stopCamera]);
+  }, [open, handleRetry, startCamera, stopCamera]);
 
   const handleClose = () => {
     stopCamera();
@@ -140,27 +247,28 @@ export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent className="max-w-[360px] p-0 gap-0 rounded-2xl overflow-hidden bg-black">
         <DialogHeader className="px-4 py-3 bg-black/80 backdrop-blur-sm relative z-10">
           <DialogTitle className="text-white text-[14px] font-semibold flex items-center gap-2">
             <Camera className="w-4 h-4" />
             {title}
           </DialogTitle>
-          <button onClick={handleClose} className="absolute right-3 top-3 w-7 h-7 rounded-full bg-white/10 flex items-center justify-center">
+          <button
+            onClick={handleClose}
+            className="absolute right-3 top-3 w-7 h-7 rounded-full bg-white/10 flex items-center justify-center"
+          >
             <X className="w-3.5 h-3.5 text-white" />
           </button>
         </DialogHeader>
 
-        {/* Camera View */}
         <div className="relative aspect-square bg-black">
-          <video ref={videoRef} className="w-full h-full object-cover" playsInline muted />
+          <video ref={videoRef} className="w-full h-full object-cover" playsInline muted autoPlay />
           <canvas ref={canvasRef} className="hidden" />
 
-          {/* Scan overlay */}
           {state === "scanning" && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-52 h-52 relative">
+              <div className="w-56 h-56 relative">
                 <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-white/80 rounded-tl-lg" />
                 <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-white/80 rounded-tr-lg" />
                 <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-white/80 rounded-bl-lg" />
@@ -168,13 +276,12 @@ export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }
                 <motion.div
                   className="absolute left-2 right-2 h-0.5 bg-primary shadow-[0_0_8px_rgba(34,197,94,0.6)]"
                   animate={{ top: ["10%", "90%", "10%"] }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
                 />
               </div>
             </div>
           )}
 
-          {/* Status overlays */}
           <AnimatePresence>
             {state === "processing" && (
               <motion.div
@@ -186,6 +293,7 @@ export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }
                 <p className="text-white text-[13px] font-medium">{message}</p>
               </motion.div>
             )}
+
             {state === "success" && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -201,6 +309,7 @@ export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }
                 <p className="text-emerald-200 text-[12px] text-center px-6">{message}</p>
               </motion.div>
             )}
+
             {state === "error" && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -211,7 +320,7 @@ export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }
                 <p className="text-white text-[15px] font-bold mb-1">Failed</p>
                 <p className="text-red-200 text-[12px] text-center px-6">{message}</p>
                 <button
-                  onClick={() => { setState("scanning"); setMessage(""); }}
+                  onClick={handleRetry}
                   className="mt-4 px-5 py-2 rounded-full bg-white/20 text-white text-[12px] font-semibold"
                 >
                   Try Again
@@ -221,10 +330,9 @@ export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }
           </AnimatePresence>
         </div>
 
-        {/* Bottom hint */}
         <div className="px-4 py-3 bg-black/80 text-center">
           <p className="text-white/60 text-[11px]">
-            {state === "scanning" ? "Point your camera at the QR code" : ""}
+            {state === "scanning" ? "Hold the QR fully inside the frame" : ""}
           </p>
         </div>
       </DialogContent>

@@ -80,10 +80,10 @@ export function EmployeeQRDisplay({ employeeId, storeId, employeeName }: Employe
       >
         {token ? (
           <QRCodeSVG
-            value={`ZIVO_CLOCK:${token}`}
-            size={160}
-            level="H"
-            includeMargin={false}
+            value={token}
+            size={176}
+            level="M"
+            includeMargin={true}
             bgColor="#ffffff"
             fgColor="#000000"
           />
