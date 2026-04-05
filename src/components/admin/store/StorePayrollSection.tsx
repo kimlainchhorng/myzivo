@@ -92,7 +92,7 @@ export default function StorePayrollSection({ storeId }: Props) {
           { icon: DollarSign, label: "Gross Payroll", value: `$${totalGross.toLocaleString()}`, sub: "Monthly estimate", color: "text-emerald-500", bg: "bg-emerald-500/10" },
           { icon: Banknote, label: "Net Pay", value: `$${totalNet.toLocaleString()}`, sub: "After deductions", color: "text-blue-500", bg: "bg-blue-500/10" },
           { icon: Percent, label: "Tax Estimate", value: `$${totalTax.toLocaleString()}`, sub: `${(TAX_RATE * 100).toFixed(0)}% rate`, color: "text-amber-500", bg: "bg-amber-500/10" },
-          { icon: Users, label: "Active Staff", value: employees.length, sub: `Avg $${avgRate.toFixed(2)}/hr`, color: "text-purple-500", bg: "bg-purple-500/10" },
+          { icon: Users, label: "Active Staff", value: employees.length, sub: `Avg $${avgMonthly.toFixed(0)}/mo`, color: "text-purple-500", bg: "bg-purple-500/10" },
         ].map((s, i) => (
           <Card key={i} className="p-4 relative overflow-hidden">
             <div className="flex items-start gap-3">
