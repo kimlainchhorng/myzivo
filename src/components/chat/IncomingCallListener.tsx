@@ -42,7 +42,7 @@ export default function IncomingCallListener() {
   const [pipControls, setPipControls] = useState<{ toggleMute: () => void; endCall: () => void; toggleCamera: () => void } | null>(null);
   const lastIncomingCallIdRef = useRef<string | null>(null);
   const originalTitleRef = useRef<string>(typeof document !== "undefined" ? document.title : "Zivo");
-  const titleFlashTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const titleFlashTimerRef = useRef<number | null>(null);
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
 
   const mapIncomingCall = useCallback(async (call: { id: string; caller_id: string; call_type: "voice" | "video" }) => {
