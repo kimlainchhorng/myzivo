@@ -7,8 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Clock, LogIn, LogOut, Timer, Users, Calendar, Download,
   Coffee, MapPin, AlertTriangle, TrendingUp, BarChart3,
-  CheckCircle2, Pause, Play
+  CheckCircle2, Pause, Play, QrCode, ScanLine
 } from "lucide-react";
+import { StoreQRDisplay } from "@/components/clock/StoreQRDisplay";
+import { QRScannerModal } from "@/components/clock/QRScannerModal";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +35,7 @@ export default function StoreTimeClockSection({ storeId }: Props) {
   const [entries, setEntries] = useState<ClockEntry[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [tab, setTab] = useState("today");
+  const [adminScannerOpen, setAdminScannerOpen] = useState(false);
   const [, setTick] = useState(0);
 
   // Live timer update
@@ -138,6 +142,21 @@ export default function StoreTimeClockSection({ storeId }: Props) {
           <MapPin className="w-3 h-3" /> Location tracking available · <Clock className="w-3 h-3" /> {format(new Date(), "h:mm a")}
         </div>
       </Card>
+
+      {/* QR Code Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <StoreQRDisplay storeId={storeId} />
+        <Card className="p-5 flex flex-col items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+            <ScanLine className="w-6 h-6 text-primary" />
+          </div>
+          <h3 className="font-semibold text-sm mb-1">Scan Employee QR</h3>
+          <p className="text-[11px] text-muted-foreground text-center mb-3">Scan an employee's personal QR code to clock them in or out</p>
+          <Button onClick={() => setAdminScannerOpen(true)} className="gap-1.5">
+            <QrCode className="w-3.5 h-3.5" /> Open Scanner
+          </Button>
+        </Card>
+      </div>
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="w-full justify-start">
@@ -284,6 +303,31 @@ export default function StoreTimeClockSection({ storeId }: Props) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Admin QR Scanner */}
+      <QRScannerModal
+        open={adminScannerOpen}
+        onClose={() => setAdminScannerOpen(false)}
+        onScan={async (token) => {
+          try {
+            const { data, error } = await supabase.functions.invoke("clock-qr", {
+              body: { action: "validate", token, scanner_type: "admin_scans_employee" },
+            });
+            if (error) throw error;
+            if (data?.success) {
+              toast.success(
+                data.action_performed === "clock_in" ? "Employee Clocked In" : "Employee Clocked Out",
+                { description: data.employee_name }
+              );
+              return { success: true, message: data.employee_name || "Success", action: data.action_performed };
+            }
+            return { success: false, message: data?.error || "Failed" };
+          } catch (err: any) {
+            return { success: false, message: err?.message || "Network error" };
+          }
+        }}
+        title="Scan Employee QR"
+      />
     </div>
   );
 }
