@@ -300,8 +300,8 @@ export default function StoreScheduleSection({ storeId }: Props) {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="w-full justify-start">
           <TabsTrigger value="schedule" className="text-xs gap-1.5"><Calendar className="w-3.5 h-3.5" /> Weekly View</TabsTrigger>
-          <TabsTrigger value="assignments" className="text-xs gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Assignments ({assignments.length})</TabsTrigger>
-          <TabsTrigger value="daysoff" className="text-xs gap-1.5"><CalendarOff className="w-3.5 h-3.5" /> Days Off ({daysOff.length})</TabsTrigger>
+          <TabsTrigger value="assignments" className="text-xs gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Assignments ({safeAssignments.length})</TabsTrigger>
+          <TabsTrigger value="daysoff" className="text-xs gap-1.5"><CalendarOff className="w-3.5 h-3.5" /> Days Off ({safeDaysOff.length})</TabsTrigger>
         </TabsList>
 
         {/* Weekly Grid */}
