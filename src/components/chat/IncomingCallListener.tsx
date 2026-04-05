@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Phone, PhoneOff, Video } from "lucide-react";
+import { Phone, PhoneOff, Video, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import CallScreen from "./CallScreen";
@@ -165,6 +165,23 @@ export default function IncomingCallListener() {
   useEffect(() => {
     if (!incoming) return;
 
+    // Auto-mark unanswered calls as missed after 45 seconds.
+    const timeout = window.setTimeout(() => {
+      (async () => {
+        await (supabase as any).from("call_signals")
+          .update({ status: "missed", ended_at: new Date().toISOString() })
+          .eq("id", incoming.id)
+          .eq("status", "ringing");
+        setIncoming(null);
+      })();
+    }, 45000);
+
+    return () => window.clearTimeout(timeout);
+  }, [incoming]);
+
+  useEffect(() => {
+    if (!incoming) return;
+
     const channel = supabase
       .channel(`incoming-status-${incoming.id}`)
       .on("postgres_changes", {
@@ -211,49 +228,79 @@ export default function IncomingCallListener() {
       <AnimatePresence>
         {incoming && (
           <motion.div
-            className="fixed top-0 left-0 right-0 z-[70] px-4"
-            initial={{ y: -120 }}
-            animate={{ y: 0 }}
-            exit={{ y: -120 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 0.75rem)" }}
+            className="fixed inset-0 z-[70] bg-black/35 backdrop-blur-md flex items-center justify-center px-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
-            <div className="bg-card border border-border rounded-2xl shadow-2xl p-4 flex items-center gap-3">
-              <Avatar className="h-12 w-12 border-2 border-primary/30">
-                <AvatarImage src={incoming.caller_avatar || undefined} />
-                <AvatarFallback className="text-sm font-bold bg-muted text-muted-foreground">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground truncate">
-                  {incoming.caller_name}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Incoming {incoming.call_type} call...
-                </p>
+            <motion.div
+              className="relative w-full max-w-sm rounded-3xl border border-white/20 bg-white/92 p-6 shadow-2xl"
+              initial={{ y: 24, scale: 0.96 }}
+              animate={{ y: 0, scale: 1 }}
+              exit={{ y: 24, scale: 0.96 }}
+              transition={{ type: "spring", damping: 24, stiffness: 260 }}
+            >
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
+
+              <div className="relative flex flex-col items-center text-center gap-3">
+                <div className="relative">
+                  <motion.div
+                    className="absolute -inset-2 rounded-full border-2 border-primary/30"
+                    animate={{ scale: [1, 1.18, 1], opacity: [0.8, 0.2, 0.8] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <Avatar className="h-20 w-20 border-2 border-primary/30 shadow-md">
+                    <AvatarImage src={incoming.caller_avatar || undefined} />
+                    <AvatarFallback className="text-xl font-bold bg-muted text-muted-foreground">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+
+                <div>
+                  <p className="text-2xl font-bold text-foreground leading-tight">
+                    {incoming.caller_name}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Incoming {incoming.call_type} call
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>Tap answer to join</span>
+                </div>
+
+                <div className="w-full mt-2 flex items-center justify-center gap-6">
+                  <button
+                    onClick={handleDecline}
+                    aria-label="Decline incoming call"
+                    title="Decline"
+                    className="h-14 w-14 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform shadow-md"
+                  >
+                    <PhoneOff className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={handleAccept}
+                    aria-label="Accept incoming call"
+                    title="Accept"
+                    className="h-14 w-14 rounded-full bg-green-500 text-white flex items-center justify-center active:scale-90 transition-transform shadow-md"
+                  >
+                    {incoming.call_type === "video" ? (
+                      <Video className="h-6 w-6" />
+                    ) : (
+                      <Phone className="h-6 w-6" />
+                    )}
+                  </button>
+                </div>
+
+                <div className="w-full flex items-center justify-between px-2 text-xs font-medium text-muted-foreground">
+                  <span>Decline</span>
+                  <span>Answer</span>
+                </div>
               </div>
-              <button
-                onClick={handleDecline}
-                aria-label="Decline incoming call"
-                title="Decline"
-                className="h-12 w-12 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center active:scale-90 transition-transform"
-              >
-                <PhoneOff className="h-5 w-5" />
-              </button>
-              <button
-                onClick={handleAccept}
-                aria-label="Accept incoming call"
-                title="Accept"
-                className="h-12 w-12 rounded-full bg-green-500 text-white flex items-center justify-center active:scale-90 transition-transform"
-              >
-                {incoming.call_type === "video" ? (
-                  <Video className="h-5 w-5" />
-                ) : (
-                  <Phone className="h-5 w-5" />
-                )}
-              </button>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
