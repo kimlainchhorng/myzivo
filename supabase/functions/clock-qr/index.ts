@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -29,12 +29,25 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Use getClaims for reliable JWT validation, fallback to getUser
+    const token = authHeader.replace("Bearer ", "");
+    let userId: string;
+    try {
+      const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token);
+      if (claimsError || !claimsData?.claims?.sub) {
+        throw new Error("Claims failed");
+      }
+      userId = claimsData.claims.sub as string;
+    } catch {
+      // Fallback to getUser
+      const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      userId = user.id;
     }
 
     const { action, ...params } = await req.json();
@@ -55,7 +68,7 @@ Deno.serve(async (req) => {
           .from("store_profiles")
           .select("id")
           .eq("id", store_id)
-          .eq("owner_id", user.id)
+          .eq("owner_id", userId)
           .maybeSingle();
         if (!store) {
           return new Response(JSON.stringify({ error: "Not store owner" }), {
@@ -68,7 +81,7 @@ Deno.serve(async (req) => {
           .from("store_employees")
           .select("id")
           .eq("id", employee_id)
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .maybeSingle();
         if (!emp) {
           return new Response(JSON.stringify({ error: "Not your employee record" }), {
@@ -149,7 +162,7 @@ Deno.serve(async (req) => {
           .from("store_employees")
           .select("id, name, store_id")
           .eq("store_id", storeId)
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .eq("status", "active")
           .maybeSingle();
         if (!emp) {
@@ -165,7 +178,7 @@ Deno.serve(async (req) => {
           .from("store_profiles")
           .select("id")
           .eq("id", storeId)
-          .eq("owner_id", user.id)
+          .eq("owner_id", userId)
           .maybeSingle();
         if (!store) {
           return new Response(JSON.stringify({ error: "You are not the store owner", code: "NOT_OWNER" }), {
@@ -184,7 +197,7 @@ Deno.serve(async (req) => {
       // Mark token as used
       await supabaseAdmin
         .from("clock_qr_tokens")
-        .update({ used_at: new Date().toISOString(), used_by: user.id })
+        .update({ used_at: new Date().toISOString(), used_by: userId })
         .eq("id", qrToken.id);
 
       // Check if already clocked in (no clock_out yet today)
