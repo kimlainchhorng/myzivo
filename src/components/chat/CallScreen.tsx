@@ -147,7 +147,7 @@ export default function CallScreen({
       remoteAudioRef.current.muted = false;
       void remoteAudioRef.current.play().catch(() => {});
     }
-  }, [callType, duration, isMuted, minimized, onPipStateChange, isCameraOff]);
+  }, [callType, minimized, onPipStateChange]);
 
   const handleEnded = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
