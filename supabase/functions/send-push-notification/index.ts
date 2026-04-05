@@ -310,8 +310,8 @@ async function sendAPNS(
   const privateKeyRaw = Deno.env.get("APNS_PRIVATE_KEY");
 
   if (!keyId || !teamId || !privateKeyRaw) {
-    console.log("[APNS] Missing APNS credentials, skipping iOS native push");
-    return { success: true };
+    console.error("[APNS] Missing APNS credentials");
+    return { success: false, error: "Missing APNS credentials" };
   }
 
   try {
