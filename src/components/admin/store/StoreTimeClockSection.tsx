@@ -27,6 +27,15 @@ import { format } from "date-fns";
 
 interface Props { storeId: string; }
 
+const CLOCK_OUT_REASONS = [
+  { value: "end_of_shift", label: "End of Shift" },
+  { value: "early_leave", label: "Early Leave" },
+  { value: "emergency", label: "Emergency" },
+  { value: "sick", label: "Feeling Sick" },
+  { value: "personal", label: "Personal Reason" },
+  { value: "other", label: "Other" },
+];
+
 type ClockEntry = {
   id: string; employeeId: string; employeeName: string; role: string;
   clockIn: Date; clockOut: Date | null;
