@@ -413,7 +413,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
               <p className="text-sm text-muted-foreground mb-3">No work assignments yet. Assign schedules to your employees.</p>
               <Button size="sm" onClick={() => setAssignDialog(true)} className="gap-1.5"><Plus className="w-3.5 h-3.5" /> Assign Work</Button>
             </Card>
-          ) : assignments.map(a => {
+          ) : safeAssignments.map(a => {
             const emp = employees.find((e: any) => e.id === a.employeeId);
             const preset = SHIFT_PRESETS.find(p => p.type === a.shiftType);
             return (
