@@ -846,6 +846,7 @@ const App = () => (
           
           <BrandThemeApplicator />
           <IncomingCallListener />
+          <ChatNotificationListener />
         </ZivoPlusProvider>
         </RemoteConfigProvider>
         </AuthProvider>
