@@ -313,7 +313,15 @@ export default function StoreTimeClockSection({ storeId }: Props) {
             const { data, error } = await supabase.functions.invoke("clock-qr", {
               body: { action: "validate", token, scanner_type: "admin_scans_employee" },
             });
-            if (error) throw error;
+
+            if (error) {
+              const details = (error as any)?.context ? await (error as any).context.json().catch(() => null) : null;
+              return {
+                success: false,
+                message: details?.error || details?.message || error.message || "Clock scan failed",
+              };
+            }
+
             if (data?.success) {
               toast.success(
                 data.action_performed === "clock_in" ? "Employee Clocked In" : "Employee Clocked Out",
@@ -321,7 +329,8 @@ export default function StoreTimeClockSection({ storeId }: Props) {
               );
               return { success: true, message: data.employee_name || "Success", action: data.action_performed };
             }
-            return { success: false, message: data?.error || "Failed" };
+
+            return { success: false, message: data?.error || "Clock scan failed" };
           } catch (err: any) {
             return { success: false, message: err?.message || "Network error" };
           }

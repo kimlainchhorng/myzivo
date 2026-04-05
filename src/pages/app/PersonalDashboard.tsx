@@ -94,7 +94,15 @@ const PersonalDashboard = () => {
       const { data, error } = await supabase.functions.invoke("clock-qr", {
         body: { action: "validate", token, scanner_type: "employee_scans_store" },
       });
-      if (error) throw error;
+
+      if (error) {
+        const details = (error as any)?.context ? await (error as any).context.json().catch(() => null) : null;
+        return {
+          success: false,
+          message: details?.error || details?.message || error.message || "Clock scan failed",
+        };
+      }
+
       if (data?.success) {
         if (data.action_performed === "clock_in") {
           setClockStatus("clocked-in");
@@ -103,13 +111,14 @@ const PersonalDashboard = () => {
         } else {
           setClockStatus("clocked-out");
           const hrs = (new Date(data.clock_out).getTime() - new Date(data.clock_in).getTime()) / 3600000;
-          setTotalHoursToday(prev => prev + hrs);
+          setTotalHoursToday((prev) => prev + hrs);
           setClockInTime(null);
           toast.success("Clocked Out!", { description: `Worked ${hrs.toFixed(1)}h` });
         }
         return { success: true, message: data.employee_name || "Success", action: data.action_performed };
       }
-      return { success: false, message: data?.error || "Failed" };
+
+      return { success: false, message: data?.error || "Clock scan failed" };
     } catch (err: any) {
       return { success: false, message: err?.message || "Network error" };
     }
