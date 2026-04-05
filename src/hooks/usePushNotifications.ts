@@ -408,6 +408,19 @@ export const usePushNotifications = () => {
 
         // Calling
         case "incoming_call":
+          try {
+            sessionStorage.setItem("pendingIncomingCallPush", JSON.stringify({
+              call_id: data.call_id,
+              caller_id: data.caller_id,
+              call_type: data.call_type,
+              caller_name: data.caller_name || action.notification.title,
+              caller_avatar: data.caller_avatar,
+              ts: Date.now(),
+            }));
+          } catch {
+            // Storage can fail in some restricted contexts; fallback still dispatches event.
+          }
+
           window.dispatchEvent(new CustomEvent("incoming-call-push", {
             detail: {
               call_id: data.call_id,

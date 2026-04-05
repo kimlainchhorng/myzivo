@@ -179,6 +179,12 @@ let incomingArmed = false;
 let outgoingArmed = false;
 let incomingRequested = false;
 let outgoingRequested = false;
+let armWarningLogged = false;
+
+type BrowserAudioError = {
+  name?: string;
+  message?: string;
+};
 
 function createLoopingAudio(src: string) {
   const audio = new Audio(src);
@@ -199,43 +205,63 @@ function getOutgoingAudio() {
   return outgoingAudio;
 }
 
-async function armAudioElement(audio: HTMLAudioElement) {
+function isExpectedArmFailure(error: unknown) {
+  const typed = (error && typeof error === "object") ? (error as BrowserAudioError) : { name: undefined, message: String(error) };
+  const message = (typed.message ?? "").toLowerCase();
+  return typed.name === "NotAllowedError" || typed.name === "AbortError" || message.includes("notallowed") || message.includes("interrupted");
+}
+
+function logArmFailure(error: unknown) {
+  const expected = isExpectedArmFailure(error);
+  if (expected) {
+    if (armWarningLogged) return;
+    armWarningLogged = true;
+    console.info("[callAudio] Audio not yet unlocked by user gesture; ringtone will arm on interaction");
+    return;
+  }
+
+  console.warn("[callAudio] armAudioElement play() failed:", error);
+}
+
+async function armAudioElement(audio: HTMLAudioElement): Promise<boolean> {
   audio.pause();
   audio.currentTime = 0;
   audio.muted = true;
   try {
     await audio.play();
     console.log("[callAudio] Audio element armed successfully");
+    armWarningLogged = false;
+    return true;
   } catch (err) {
-    console.warn("[callAudio] armAudioElement play() failed:", err);
-    throw err;
+    logArmFailure(err);
+    return false;
   }
 }
 
 async function primeIncomingAudio() {
-  try {
-    const audio = getIncomingAudio();
-    await armAudioElement(audio);
+  const audio = getIncomingAudio();
+  const armed = await armAudioElement(audio);
+  if (armed) {
     incomingArmed = true;
     if (incomingRequested) {
       audio.currentTime = 0;
       audio.muted = false;
     }
-  } catch {
+  } else {
     incomingArmed = false;
   }
 }
 
 async function primeOutgoingAudio() {
-  try {
-    const audio = getOutgoingAudio();
-    await armAudioElement(audio);
+  const audio = getOutgoingAudio();
+  const armed = await armAudioElement(audio);
+  if (armed) {
     outgoingArmed = true;
     if (outgoingRequested) {
       audio.currentTime = 0;
       audio.muted = false;
     }
-  } catch {
+  } else {
     outgoingArmed = false;
   }
 }

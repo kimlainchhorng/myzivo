@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { airports } from "@/data/airports";
+import { edgeFunctionFallback } from "@/utils/edgeFunctionFallback";
 
 /**
  * Fetches real lowest flight fares from Duffel API for popular destinations.
@@ -63,8 +64,12 @@ export function useDestinationPrices(destinations: string[], isKH: boolean, auto
       });
 
       if (error) {
-        console.error("Failed to fetch destination prices:", error);
-        return {} as Record<string, number | null>;
+        return edgeFunctionFallback({
+          functionName: "duffel-destination-prices",
+          error,
+          fallback: {} as Record<string, number | null>,
+          context: { origin, destinationCount: destinations.length },
+        });
       }
 
       return (data?.prices || {}) as Record<string, number | null>;

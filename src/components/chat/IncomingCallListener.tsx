@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import CallScreen from "./CallScreen";
+import CallPiP from "./CallPiP";
 import { playIncomingRingtone, primeCallAudio, registerCallAudioUnlock } from "@/lib/callAudio";
 import { Capacitor } from "@capacitor/core";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
@@ -35,7 +36,13 @@ export default function IncomingCallListener() {
   const { user } = useAuth();
   const [incoming, setIncoming] = useState<IncomingCall | null>(null);
   const [answeredCall, setAnsweredCall] = useState<IncomingCall | null>(null);
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [pipMode, setPipMode] = useState(false);
+  const [pipData, setPipData] = useState<{ remoteStream: MediaStream | null; duration: number; isMuted: boolean; callType: "voice" | "video"; isCameraOff: boolean } | null>(null);
+  const [pipControls, setPipControls] = useState<{ toggleMute: () => void; endCall: () => void; toggleCamera: () => void } | null>(null);
   const lastIncomingCallIdRef = useRef<string | null>(null);
+  const originalTitleRef = useRef<string>(typeof document !== "undefined" ? document.title : "Zivo");
+  const titleFlashTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
 
   const mapIncomingCall = useCallback(async (call: { id: string; caller_id: string; call_type: "voice" | "video" }) => {
@@ -101,11 +108,47 @@ export default function IncomingCallListener() {
   }, []);
 
   useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("pendingIncomingCallPush");
+      if (!raw) return;
+
+      sessionStorage.removeItem("pendingIncomingCallPush");
+      const parsed = JSON.parse(raw) as IncomingCallPushDetail & { ts?: number };
+
+      if (!parsed || typeof parsed !== "object") return;
+
+      // Ignore stale pending payloads.
+      if (parsed.ts && Date.now() - parsed.ts > 90_000) return;
+
+      window.dispatchEvent(new CustomEvent("incoming-call-push", {
+        detail: {
+          call_id: parsed.call_id,
+          caller_id: parsed.caller_id,
+          call_type: parsed.call_type,
+          caller_name: parsed.caller_name,
+          caller_avatar: parsed.caller_avatar,
+        },
+      }));
+    } catch {
+      sessionStorage.removeItem("pendingIncomingCallPush");
+    }
+  }, []);
+
+  useEffect(() => {
     if (!user?.id) return;
 
     const onSignal = async (payload: any) => {
       const call = payload.new;
       if (!call || call.status !== "ringing") return;
+
+      if (answeredCall) {
+        await (supabase as any).from("call_signals")
+          .update({ status: "declined", ended_at: new Date().toISOString() })
+          .eq("id", call.id)
+          .eq("status", "ringing");
+        return;
+      }
+
       const mapped = await mapIncomingCall(call);
       setIncoming(mapped);
     };
@@ -127,7 +170,7 @@ export default function IncomingCallListener() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [mapIncomingCall, user?.id]);
+  }, [answeredCall, mapIncomingCall, user?.id]);
 
   useEffect(() => {
     void hydratePendingIncomingCall();
@@ -144,12 +187,24 @@ export default function IncomingCallListener() {
       void hydratePendingIncomingCall();
     };
 
+    const onOnline = () => {
+      void hydratePendingIncomingCall();
+    };
+
+    const onPageShow = () => {
+      void hydratePendingIncomingCall();
+    };
+
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("pageshow", onPageShow);
 
     return () => {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("pageshow", onPageShow);
     };
   }, [hydratePendingIncomingCall]);
 
@@ -197,6 +252,54 @@ export default function IncomingCallListener() {
     if (!incoming) return;
     const stopRing = playIncomingRingtone();
     return () => { stopRing(); };
+  }, [incoming?.id]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    if (!incoming) {
+      if (titleFlashTimerRef.current) {
+        clearInterval(titleFlashTimerRef.current);
+        titleFlashTimerRef.current = null;
+      }
+      document.title = originalTitleRef.current;
+      return;
+    }
+
+    originalTitleRef.current = document.title;
+    let toggle = false;
+
+    const applyTitle = () => {
+      document.title = toggle
+        ? `${incoming.call_type === "video" ? "Video" : "Voice"} call from ${incoming.caller_name}`
+        : `Incoming ${incoming.call_type} call`;
+      toggle = !toggle;
+    };
+
+    applyTitle();
+    titleFlashTimerRef.current = window.setInterval(applyTitle, 1200);
+
+    return () => {
+      if (titleFlashTimerRef.current) {
+        clearInterval(titleFlashTimerRef.current);
+        titleFlashTimerRef.current = null;
+      }
+      document.title = originalTitleRef.current;
+    };
+  }, [incoming?.call_type, incoming?.caller_name, incoming?.id]);
+
+  useEffect(() => {
+    if (!incoming || Capacitor.isNativePlatform() || typeof navigator === "undefined" || !("vibrate" in navigator)) return;
+
+    navigator.vibrate?.([250, 150, 250, 900]);
+    const intervalId = window.setInterval(() => {
+      navigator.vibrate?.([250, 150, 250, 900]);
+    }, 2200);
+
+    return () => {
+      window.clearInterval(intervalId);
+      navigator.vibrate?.(0);
+    };
   }, [incoming?.id]);
 
   useEffect(() => {
@@ -248,11 +351,50 @@ export default function IncomingCallListener() {
   }, [incoming?.id]);
 
   const handleAccept = useCallback(async () => {
-    if (!incoming) return;
-    await primeCallAudio();
-    setAnsweredCall(incoming);
+    if (!incoming || isAccepting) return;
+    setIsAccepting(true);
+
+    try {
+      await primeCallAudio();
+    } catch {
+      // Continue anyway. Audio unlock failure should not block call accept.
+    }
+
+    const { error: updateError } = await (supabase as any).from("call_signals")
+      .update({ status: "answered" })
+      .eq("id", incoming.id)
+      .in("status", ["ringing", "answered"]);
+
+    if (updateError) {
+      console.error("[Call] Failed to accept incoming call:", updateError);
+    }
+
+    const { data: statusCheck, error: statusError } = await (supabase as any)
+      .from("call_signals")
+      .select("status")
+      .eq("id", incoming.id)
+      .maybeSingle();
+
+    if (statusError) {
+      // If status read is blocked/transient, continue optimistically and let
+      // call state updates end the UI if the call was already closed.
+      setAnsweredCall(incoming);
+      setIncoming(null);
+      setIsAccepting(false);
+      return;
+    }
+
+    const status = statusCheck?.status;
+    if (status === "ringing" || status === "answered") {
+      setAnsweredCall(incoming);
+      setIncoming(null);
+      setIsAccepting(false);
+      return;
+    }
+
     setIncoming(null);
-  }, [incoming]);
+    setIsAccepting(false);
+  }, [incoming, isAccepting]);
 
   const handleDecline = useCallback(async () => {
     if (!incoming) return;
@@ -264,6 +406,9 @@ export default function IncomingCallListener() {
 
   const handleCallEnd = useCallback(() => {
     setAnsweredCall(null);
+    setPipMode(false);
+    setPipData(null);
+    setPipControls(null);
   }, []);
 
   const initials = incoming
@@ -329,9 +474,10 @@ export default function IncomingCallListener() {
                 </button>
                 <button
                   onClick={handleAccept}
+                  disabled={isAccepting}
                   aria-label="Accept incoming call"
                   title="Accept"
-                  className="h-14 w-14 rounded-full bg-green-500 text-white flex items-center justify-center active:scale-90 transition-transform shadow-md"
+                  className="h-14 w-14 rounded-full bg-green-500 text-white flex items-center justify-center active:scale-90 transition-transform shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {incoming.call_type === "video" ? (
                     <Video className="h-6 w-6" />
@@ -361,7 +507,50 @@ export default function IncomingCallListener() {
           recipientId={answeredCall.caller_id}
           callType={answeredCall.call_type}
           existingCallId={answeredCall.id}
+          minimized={pipMode}
           onEnd={handleCallEnd}
+          onMinimize={(data) => {
+            setPipData(data);
+            setPipMode(true);
+          }}
+          onPipStateChange={(data) => {
+            setPipData(data);
+          }}
+          onPipControlsChange={(controls) => {
+            setPipControls(controls);
+          }}
+        />
+      )}
+    </AnimatePresence>
+  );
+
+  const pipOverlay = (
+    <AnimatePresence>
+      {answeredCall && pipMode && (
+        <CallPiP
+          remoteStream={pipData?.remoteStream || null}
+          recipientName={answeredCall.caller_name}
+          isMuted={pipData?.isMuted || false}
+          duration={pipData?.duration || 0}
+          callType={pipData?.callType || answeredCall.call_type}
+          isCameraOff={pipData?.isCameraOff}
+          onExpand={() => setPipMode(false)}
+          onEndCall={() => {
+            if (pipControls) {
+              pipControls.endCall();
+              return;
+            }
+
+            handleCallEnd();
+          }}
+          onToggleMute={() => {
+            pipControls?.toggleMute();
+          }}
+          onToggleCamera={() => {
+            if ((pipData?.callType || answeredCall.call_type) === "video") {
+              pipControls?.toggleCamera();
+            }
+          }}
         />
       )}
     </AnimatePresence>
@@ -372,6 +561,7 @@ export default function IncomingCallListener() {
       <>
         {incomingOverlay}
         {activeCallOverlay}
+        {pipOverlay}
       </>
     );
   }
@@ -380,6 +570,7 @@ export default function IncomingCallListener() {
     <>
       {createPortal(incomingOverlay, portalRoot)}
       {createPortal(activeCallOverlay, portalRoot)}
+      {createPortal(pipOverlay, portalRoot)}
     </>
   );
 }

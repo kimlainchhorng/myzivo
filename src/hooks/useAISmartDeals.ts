@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { airports } from "@/data/airports";
+import { edgeFunctionFallback } from "@/utils/edgeFunctionFallback";
 
 export interface SmartDeal {
   id: string;
@@ -81,8 +82,17 @@ export function useAISmartDeals(category?: string, autoDetectOrigin = false) {
         body: { origin, category },
       });
       if (error) {
-        console.error("Failed to fetch AI smart deals:", error);
-        return { deals: [], generatedAt: new Date().toISOString(), totalRoutesSearched: 0, totalDealsFound: 0 };
+        return edgeFunctionFallback({
+          functionName: "ai-smart-deals",
+          error,
+          fallback: {
+            deals: [],
+            generatedAt: new Date().toISOString(),
+            totalRoutesSearched: 0,
+            totalDealsFound: 0,
+          },
+          context: { origin, category },
+        });
       }
       return {
         deals: (data?.deals || []) as SmartDeal[],

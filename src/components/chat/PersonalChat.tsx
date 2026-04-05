@@ -6,7 +6,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Send, Loader2, Phone, X, Mic, Search, Plus, Pin, Settings, Image as ImageIcon, Smile, Palette, Zap, Shield, Video, History, FileText, MoreVertical } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Phone, X, Mic, Search, Plus, Pin, Settings, Image as ImageIcon, Smile, Palette, Zap, Shield, Video, History, FileText, MoreVertical, PhoneCall } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
@@ -105,7 +105,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [sending, setSending] = useState(false);
   const [activeCall, setActiveCall] = useState<"voice" | "video" | null>(null);
   const [pipMode, setPipMode] = useState(false);
-  const [pipData, setPipData] = useState<{ remoteStream: MediaStream | null; duration: number; isMuted: boolean } | null>(null);
+  const [pipData, setPipData] = useState<{ remoteStream: MediaStream | null; duration: number; isMuted: boolean; callType: "voice" | "video"; isCameraOff: boolean } | null>(null);
+  const [pipControls, setPipControls] = useState<{ toggleMute: () => void; endCall: () => void; toggleCamera: () => void } | null>(null);
   const [replyTo, setReplyTo] = useState<{ id: string; message: string; isMe: boolean } | null>(null);
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -126,6 +127,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
+  const [dismissedMissedCallId, setDismissedMissedCallId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -319,6 +321,29 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, recipientId, scrollToBottom]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channelName = `call-history-${[user.id, recipientId].sort().join("-")}`;
+    const channel = supabase
+      .channel(channelName)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "call_history" }, (payload: any) => {
+        const call = payload.new as Omit<CallEvent, "_isCallEvent">;
+        if (
+          (call.caller_id === user.id && call.callee_id === recipientId) ||
+          (call.caller_id === recipientId && call.callee_id === user.id)
+        ) {
+          setCallEvents((prev) => {
+            if (prev.some((item) => item.id === call.id)) return prev;
+            return [...prev, { ...call, _isCallEvent: true as const }];
+          });
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [recipientId, user?.id]);
 
   // Send
   const handleSend = async (opts?: {
@@ -588,6 +613,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   // Pinned messages
   const pinnedMessages = messages.filter((m) => m.is_pinned);
 
+  const latestMissedCall = [...callEvents]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .find((event) => ["missed", "no_answer", "declined"].includes(event.status));
+
   const initials = (recipientName || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
@@ -687,6 +716,53 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <span className="text-[9px] text-muted-foreground">{pinnedMessages.length} pinned</span>
           </button>
         )}
+
+        {latestMissedCall && latestMissedCall.id !== dismissedMissedCallId && !activeCall && (
+          <div className="w-full px-4 py-2 border-t border-amber-500/15 bg-amber-500/8 flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] font-semibold text-amber-700 truncate">
+                {latestMissedCall.call_type === "video" ? "Missed video call" : "Missed voice call"}
+              </p>
+              <p className="text-[11px] text-amber-700/70 truncate">
+                {latestMissedCall.status === "declined"
+                  ? "Call was declined. Tap below to call back."
+                  : "Tap below to call back quickly."}
+              </p>
+            </div>
+            <button
+              onClick={() => { void handleStartCall(latestMissedCall.call_type as "voice" | "video"); }}
+              title={latestMissedCall.call_type === "video" ? "Call back with video" : "Call back with voice"}
+              aria-label={latestMissedCall.call_type === "video" ? "Call back with video" : "Call back with voice"}
+              className="h-9 px-3 rounded-full bg-amber-500 text-white text-[12px] font-semibold inline-flex items-center gap-1.5 shrink-0"
+            >
+              {latestMissedCall.call_type === "video" ? <Video className="h-3.5 w-3.5" /> : <Phone className="h-3.5 w-3.5" />}
+              Call back
+            </button>
+            <button
+              onClick={() => setDismissedMissedCallId(latestMissedCall.id)}
+              title="Dismiss missed call banner"
+              aria-label="Dismiss missed call banner"
+              className="h-8 w-8 rounded-full flex items-center justify-center text-amber-700/70 hover:bg-amber-500/10 shrink-0"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {activeCall && pipMode && (
+          <button
+            onClick={() => setPipMode(false)}
+            className="w-full px-4 py-2 bg-emerald-500/10 border-t border-emerald-500/20 flex items-center justify-between gap-2 text-left"
+          >
+            <span className="inline-flex items-center gap-2 text-[12px] font-semibold text-emerald-700">
+              <PhoneCall className="w-3.5 h-3.5" />
+              Return to call
+            </span>
+            <span className="text-[11px] tabular-nums text-emerald-700/80">
+              {`${Math.floor((pipData?.duration || 0) / 60).toString().padStart(2, "0")}:${((pipData?.duration || 0) % 60).toString().padStart(2, "0")}`}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Search bar */}
@@ -698,16 +774,23 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
       {/* Call overlay */}
       <AnimatePresence>
-        {activeCall && !pipMode && (
+        {activeCall && (
           <CallScreen
             recipientName={recipientName}
             recipientAvatar={recipientAvatar}
             recipientId={recipientId}
             callType={activeCall}
-            onEnd={() => { setActiveCall(null); setPipMode(false); setPipData(null); }}
+            minimized={pipMode}
+            onEnd={() => { setActiveCall(null); setPipMode(false); setPipData(null); setPipControls(null); }}
             onMinimize={(data) => {
               setPipData(data);
               setPipMode(true);
+            }}
+            onPipStateChange={(data) => {
+              setPipData(data);
+            }}
+            onPipControlsChange={(controls) => {
+              setPipControls(controls);
             }}
           />
         )}
@@ -721,9 +804,27 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             recipientName={recipientName}
             isMuted={pipData?.isMuted || false}
             duration={pipData?.duration || 0}
+            callType={pipData?.callType}
+            isCameraOff={pipData?.isCameraOff}
             onExpand={() => setPipMode(false)}
-            onEndCall={() => { setActiveCall(null); setPipMode(false); setPipData(null); }}
-            onToggleMute={() => {}}
+            onEndCall={() => {
+              if (pipControls) {
+                pipControls.endCall();
+                return;
+              }
+
+              setActiveCall(null);
+              setPipMode(false);
+              setPipData(null);
+            }}
+            onToggleMute={() => {
+              pipControls?.toggleMute();
+            }}
+            onToggleCamera={() => {
+              if ((pipData?.callType || activeCall) === "video") {
+                pipControls?.toggleCamera();
+              }
+            }}
           />
         )}
       </AnimatePresence>

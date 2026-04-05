@@ -60,6 +60,20 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## WebRTC Call Reliability
+
+Voice and video calls currently support default STUN discovery plus optional TURN relay.
+
+For production mobile reliability, configure TURN relay environment variables:
+
+```sh
+VITE_WEBRTC_TURN_URLS=turn:your-turn-host:3478,turns:your-turn-host:5349
+VITE_WEBRTC_TURN_USERNAME=your-username
+VITE_WEBRTC_TURN_CREDENTIAL=your-password
+```
+
+Without TURN, calls may still fail on restrictive mobile carriers, NATs, or enterprise Wi-Fi even when signaling succeeds.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.

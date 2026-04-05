@@ -3,9 +3,9 @@
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PhoneOff, Mic, MicOff, Video, VideoOff, Volume2, Monitor, MonitorOff, Minimize2, MessageCircle } from "lucide-react";
+import { PhoneOff, Mic, MicOff, Video, VideoOff, Volume2, Monitor, MonitorOff, Minimize2, MessageCircle, WifiOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useWebRTC, CallRole } from "@/hooks/useWebRTC";
+import { useWebRTC, CallRole, WebRTCFailure } from "@/hooks/useWebRTC";
 import { useCallQuality } from "@/hooks/useCallQuality";
 import { useScreenShare } from "@/hooks/useScreenShare";
 
@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { playOutgoingRingback } from "@/lib/callAudio";
 import CallQualityBadge from "./CallQualityBadge";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface CallScreenProps {
   recipientName: string;
@@ -22,7 +23,10 @@ interface CallScreenProps {
   recipientId: string;
   existingCallId?: string;
   onEnd: () => void;
-  onMinimize?: (data: { remoteStream: MediaStream | null; duration: number; isMuted: boolean }) => void;
+  onMinimize?: (data: { remoteStream: MediaStream | null; duration: number; isMuted: boolean; callType: "voice" | "video"; isCameraOff: boolean }) => void;
+  minimized?: boolean;
+  onPipStateChange?: (data: { remoteStream: MediaStream | null; duration: number; isMuted: boolean; callType: "voice" | "video"; isCameraOff: boolean }) => void;
+  onPipControlsChange?: (controls: { toggleMute: () => void; endCall: () => void; toggleCamera: () => void } | null) => void;
 }
 
 export default function CallScreen({
@@ -33,22 +37,35 @@ export default function CallScreen({
   existingCallId,
   onEnd,
   onMinimize,
+  minimized = false,
+  onPipStateChange,
+  onPipControlsChange,
 }: CallScreenProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [callId, setCallId] = useState<string | null>(existingCallId || null);
   const [callHistoryId, setCallHistoryId] = useState<string | null>(null);
   const [duration, setDuration] = useState(0);
+  const [remoteAccepted, setRemoteAccepted] = useState(false);
   const [isSpeaker, setIsSpeaker] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const endReasonRef = useRef<"declined" | "no_answer" | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const remoteStreamRef = useRef<MediaStream | null>(null);
+  const reminderPushSentRef = useRef(false);
+
+  const handleCallFailure = useCallback((failure: WebRTCFailure) => {
+    toast.error(failure.title, {
+      description: failure.description,
+    });
+  }, []);
 
   const role: CallRole = existingCallId ? "callee" : "caller";
   const initials = (recipientName || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
-  const sendIncomingCallPush = useCallback(async (newCallId: string) => {
+  const sendIncomingCallPush = useCallback(async (newCallId: string, mode: "initial" | "reminder" = "initial") => {
     if (!user?.id || !recipientId || recipientId === user.id) return;
 
     // Fetch caller profile from profiles table for accurate name & avatar
@@ -75,7 +92,9 @@ export default function CallScreen({
             user_id: recipientId,
             notification_type: "incoming_call",
             title: callerName,
-            body: callType === "video" ? "Video calling you" : "Voice calling you",
+            body: mode === "reminder"
+              ? callType === "video" ? "Still video calling you" : "Still voice calling you"
+              : callType === "video" ? "Video calling you" : "Voice calling you",
             image_url: callerAvatar || undefined,
             data: {
               type: "incoming_call",
@@ -84,6 +103,7 @@ export default function CallScreen({
               caller_id: user.id,
               caller_name: callerName,
               caller_avatar: callerAvatar,
+              ring_stage: mode,
             },
           },
         });
@@ -104,6 +124,17 @@ export default function CallScreen({
 
   const handleRemoteStream = useCallback((stream: MediaStream) => {
     remoteStreamRef.current = stream;
+
+    if (minimized && onPipStateChange) {
+      onPipStateChange({
+        remoteStream: stream,
+        duration,
+        isMuted,
+        callType,
+        isCameraOff,
+      });
+    }
+
     if (callType === "video") {
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = stream;
@@ -116,17 +147,27 @@ export default function CallScreen({
       remoteAudioRef.current.muted = false;
       void remoteAudioRef.current.play().catch(() => {});
     }
-  }, [callType]);
+  }, [callType, duration, isMuted, minimized, onPipStateChange, isCameraOff]);
 
   const handleEnded = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
+    setRemoteAccepted(false);
+
+    const resolvedStatus =
+      endReasonRef.current === "declined"
+        ? "declined"
+        : endReasonRef.current === "no_answer"
+          ? "no_answer"
+          : duration > 0
+            ? "answered"
+            : "missed";
 
     if (user?.id && callId) {
       (supabase as any).from("call_history").insert({
         caller_id: role === "caller" ? user.id : recipientId,
         callee_id: role === "caller" ? recipientId : user.id,
         call_type: callType,
-        status: duration > 0 ? "answered" : "missed",
+        status: resolvedStatus,
         duration_seconds: duration,
         call_signal_id: callId,
       }).then(({ data }: any) => {
@@ -134,12 +175,28 @@ export default function CallScreen({
       });
     }
 
+    if (role === "caller" && user?.id && (resolvedStatus === "no_answer" || resolvedStatus === "declined")) {
+      const callLabel = callType === "video" ? "video" : "voice";
+      const message = resolvedStatus === "declined"
+        ? `Missed ${callLabel} call (declined)`
+        : `Missed ${callLabel} call (no answer)`;
+
+      void (supabase as any).from("direct_messages").insert({
+        sender_id: user.id,
+        receiver_id: recipientId,
+        message,
+        message_type: "text",
+      });
+    }
+
+    endReasonRef.current = null;
+
     setTimeout(onEnd, 300);
   }, [onEnd, user?.id, callId, role, recipientId, callType, duration]);
 
   const {
     start, endCall, toggleMute, toggleCamera,
-    isMuted, isCameraOff, callState, localStream, peerConnection,
+    isMuted, isCameraOff, isReconnecting, callState, localStream, peerConnection,
   } = useWebRTC({
     callId: callId || "",
     role,
@@ -147,14 +204,64 @@ export default function CallScreen({
     userId: user?.id || "",
     onRemoteStream: handleRemoteStream,
     onEnded: handleEnded,
+    onFailure: handleCallFailure,
   });
 
   const qualityStats = useCallQuality(peerConnection);
   const screenShare = useScreenShare(peerConnection);
 
   useEffect(() => {
+    if (!onPipControlsChange) return;
+    onPipControlsChange({
+      toggleMute: () => {
+        toggleMute();
+      },
+      endCall: () => {
+        void endCall();
+      },
+      toggleCamera: () => {
+        toggleCamera();
+      },
+    });
+
+    return () => {
+      onPipControlsChange(null);
+    };
+  }, [endCall, onPipControlsChange, toggleCamera, toggleMute]);
+
+  useEffect(() => {
     if (existingCallId || !user?.id || callId) return;
     const create = async () => {
+      const minCreatedAt = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+      const { data: activeForRecipient } = await (supabase as any)
+        .from("call_signals")
+        .select("id")
+        .or(`and(caller_id.eq.${recipientId},status.in.(ringing,answered)),and(callee_id.eq.${recipientId},status.in.(ringing,answered))`)
+        .gte("created_at", minCreatedAt)
+        .limit(1)
+        .maybeSingle();
+
+      if (activeForRecipient?.id) {
+        toast.info("User is busy", { description: "They are currently in another call." });
+        await (supabase as any).from("call_history").insert({
+          caller_id: user.id,
+          callee_id: recipientId,
+          call_type: callType,
+          status: "busy",
+          duration_seconds: 0,
+        });
+
+        await (supabase as any).from("direct_messages").insert({
+          sender_id: user.id,
+          receiver_id: recipientId,
+          message: `${callType === "video" ? "Video" : "Voice"} call attempt (busy)`,
+          message_type: "text",
+        });
+
+        onEnd();
+        return;
+      }
+
       const { data, error } = await (supabase as any).from("call_signals").insert({
         caller_id: user.id,
         callee_id: recipientId,
@@ -170,11 +277,32 @@ export default function CallScreen({
 
       if (data?.id) {
         setCallId(data.id);
+        reminderPushSentRef.current = false;
         await sendIncomingCallPush(data.id);
       }
     };
     void create();
   }, [user?.id, recipientId, callType, existingCallId, callId, onEnd, sendIncomingCallPush]);
+
+  useEffect(() => {
+    if (role !== "caller" || !callId || callState !== "ringing" || remoteAccepted || reminderPushSentRef.current) return;
+
+    const reminderTimer = window.setTimeout(() => {
+      (async () => {
+        const { data } = await (supabase as any)
+          .from("call_signals")
+          .select("status")
+          .eq("id", callId)
+          .maybeSingle();
+
+        if (data?.status !== "ringing") return;
+        reminderPushSentRef.current = true;
+        await sendIncomingCallPush(callId, "reminder");
+      })();
+    }, 12000);
+
+    return () => window.clearTimeout(reminderTimer);
+  }, [callId, callState, remoteAccepted, role, sendIncomingCallPush]);
 
   useEffect(() => {
     if (!callId) return;
@@ -188,16 +316,17 @@ export default function CallScreen({
   }, [callId, callType, start]);
 
   useEffect(() => {
-    if (role !== "caller" || callState !== "ringing" || !callId) return;
+    if (role !== "caller" || callState !== "ringing" || remoteAccepted || !callId) return;
     const stopRingback = playOutgoingRingback();
     return () => { stopRingback(); };
-  }, [role, callId, callState]);
+  }, [role, callId, callState, remoteAccepted]);
 
   useEffect(() => {
-    if (role !== "caller" || callState !== "ringing" || !callId) return;
+    if (role !== "caller" || callState !== "ringing" || remoteAccepted || !callId) return;
 
     const timeout = window.setTimeout(() => {
       (async () => {
+        endReasonRef.current = "no_answer";
         await (supabase as any).from("call_signals")
           .update({ status: "missed", ended_at: new Date().toISOString() })
           .eq("id", callId)
@@ -208,7 +337,7 @@ export default function CallScreen({
     }, 45000);
 
     return () => window.clearTimeout(timeout);
-  }, [callId, callState, endCall, role]);
+  }, [callId, callState, endCall, remoteAccepted, role]);
 
   useEffect(() => {
     if (role !== "caller" || !callId) return;
@@ -218,7 +347,21 @@ export default function CallScreen({
         event: "UPDATE", schema: "public", table: "call_signals",
         filter: `id=eq.${callId}`,
       }, (payload: any) => {
-        if (payload.new.status === "declined" || payload.new.status === "ended") {
+        if (payload.new.status === "answered") {
+          setRemoteAccepted(true);
+          return;
+        }
+        if (payload.new.status === "declined") {
+          endReasonRef.current = "declined";
+          void endCall();
+          return;
+        }
+        if (payload.new.status === "missed") {
+          endReasonRef.current = "no_answer";
+          void endCall();
+          return;
+        }
+        if (payload.new.status === "ended") {
           void endCall();
         }
       })
@@ -242,11 +385,48 @@ export default function CallScreen({
   const statusText =
     callState === "ringing"
       ? role === "caller"
-        ? callType === "video" ? "Video calling..." : "Calling..."
+        ? remoteAccepted
+          ? "Connecting..."
+          : callType === "video" ? "Video calling..." : "Calling..."
         : "Connecting..."
       : callState === "connected"
         ? formatDuration(duration)
         : "Call ended";
+
+  const handleOpenChat = useCallback(() => {
+    onMinimize?.({
+      remoteStream: remoteStreamRef.current,
+      duration,
+      isMuted,
+      callType,
+      isCameraOff,
+    });
+
+    navigate("/chat", {
+      state: {
+        openChat: {
+          recipientId,
+          recipientName,
+          recipientAvatar,
+        },
+      },
+    });
+  }, [callType, duration, isCameraOff, isMuted, navigate, onMinimize, recipientAvatar, recipientId, recipientName]);
+
+  useEffect(() => {
+    if (!minimized || !onPipStateChange) return;
+    onPipStateChange({
+      remoteStream: remoteStreamRef.current,
+      duration,
+      isMuted,
+      callType,
+      isCameraOff,
+    });
+  }, [callType, duration, isCameraOff, isMuted, minimized, onPipStateChange]);
+
+  if (minimized) {
+    return null;
+  }
 
   // Control button helper
   const ControlBtn = ({ onClick, active, activeColor = "destructive", children, size = "default" }: {
@@ -307,7 +487,7 @@ export default function CallScreen({
             {onMinimize && (
               <motion.button
                 whileTap={{ scale: 0.9 }}
-                onClick={() => onMinimize({ remoteStream: remoteStreamRef.current, duration, isMuted })}
+                onClick={() => onMinimize({ remoteStream: remoteStreamRef.current, duration, isMuted, callType, isCameraOff })}
                 className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10"
               >
                 <Minimize2 className="h-4 w-4 text-white/80" />
@@ -336,6 +516,11 @@ export default function CallScreen({
                   transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.2 }}
                 />
               ))}
+            </div>
+          )}
+          {isReconnecting && (
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 text-[11px] font-semibold text-amber-200">
+              <WifiOff className="h-3.5 w-3.5" /> Reconnecting call...
             </div>
           )}
         </div>
@@ -408,6 +593,20 @@ export default function CallScreen({
                 <span className="text-[10px] text-white/50 font-medium">Screen</span>
               </div>
 
+              {/* Chat */}
+              <div className="flex flex-col items-center gap-1.5">
+                <motion.button
+                  whileTap={{ scale: 0.88 }}
+                  onClick={handleOpenChat}
+                  className="h-12 w-12 rounded-full flex items-center justify-center transition-all bg-white/10 text-white/80 hover:bg-white/20"
+                  aria-label="Open chat conversation"
+                  title="Open chat"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                </motion.button>
+                <span className="text-[10px] text-white/50 font-medium">Chat</span>
+              </div>
+
               {/* End Call */}
               <div className="flex flex-col items-center gap-1.5">
                 <motion.button
@@ -448,7 +647,7 @@ export default function CallScreen({
           {onMinimize && (
             <motion.button
               whileTap={{ scale: 0.9 }}
-              onClick={() => onMinimize({ remoteStream: remoteStreamRef.current, duration, isMuted })}
+              onClick={() => onMinimize({ remoteStream: remoteStreamRef.current, duration, isMuted, callType, isCameraOff })}
               className="h-10 w-10 rounded-full bg-foreground/5 backdrop-blur-md flex items-center justify-center border border-border/20"
             >
               <Minimize2 className="h-4 w-4 text-foreground/60" />
@@ -497,6 +696,11 @@ export default function CallScreen({
             ))}
           </div>
         )}
+        {isReconnecting && (
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1 text-[11px] font-semibold text-amber-600">
+            <WifiOff className="h-3.5 w-3.5" /> Reconnecting call...
+          </div>
+        )}
       </div>
 
       <audio ref={remoteAudioRef} autoPlay playsInline className="absolute h-0 w-0 opacity-0 pointer-events-none" />
@@ -518,7 +722,7 @@ export default function CallScreen({
             <ControlLabel>Speaker</ControlLabel>
           </div>
           <div className="flex flex-col items-center">
-            <ControlBtn onClick={() => toast.info("Opening chat...")}>
+            <ControlBtn onClick={handleOpenChat}>
               <MessageCircle className="h-5 w-5" />
             </ControlBtn>
             <ControlLabel>Chat</ControlLabel>

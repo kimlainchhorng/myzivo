@@ -4,14 +4,100 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const ICE_SERVERS: RTCConfiguration = {
-  iceServers: [
+function getIceServers(): RTCIceServer[] {
+  const defaultServers: RTCIceServer[] = [
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
-  ],
+  ];
+
+  const turnUrls = import.meta.env.VITE_WEBRTC_TURN_URLS
+    ?.split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (!turnUrls?.length) {
+    return defaultServers;
+  }
+
+  const turnServer: RTCIceServer = {
+    urls: turnUrls,
+  };
+
+  if (import.meta.env.VITE_WEBRTC_TURN_USERNAME) {
+    turnServer.username = import.meta.env.VITE_WEBRTC_TURN_USERNAME;
+  }
+
+  if (import.meta.env.VITE_WEBRTC_TURN_CREDENTIAL) {
+    turnServer.credential = import.meta.env.VITE_WEBRTC_TURN_CREDENTIAL;
+  }
+
+  return [...defaultServers, turnServer];
+}
+
+const ICE_SERVERS: RTCConfiguration = {
+  iceServers: getIceServers(),
 };
 
 export type CallRole = "caller" | "callee";
+
+export interface WebRTCFailure {
+  code: "permissions" | "devices_unavailable" | "device_busy" | "connection" | "unknown";
+  title: string;
+  description: string;
+}
+
+function getRequestedDeviceLabel(callType: "voice" | "video") {
+  return callType === "video" ? "camera and microphone" : "microphone";
+}
+
+export function classifyWebRTCFailure(error: unknown, callType: "voice" | "video"): WebRTCFailure {
+  const normalizedError = error as DOMException | Error | undefined;
+  const errorName = normalizedError?.name || "UnknownError";
+  const requestedDeviceLabel = getRequestedDeviceLabel(callType);
+
+  if (errorName === "NotAllowedError" || errorName === "PermissionDeniedError" || errorName === "SecurityError") {
+    return {
+      code: "permissions",
+      title: "Permission required",
+      description: `Allow ${requestedDeviceLabel} access to answer calls.`,
+    };
+  }
+
+  if (errorName === "NotFoundError" || errorName === "DevicesNotFoundError" || errorName === "OverconstrainedError") {
+    return {
+      code: "devices_unavailable",
+      title: "Device unavailable",
+      description: `Your ${requestedDeviceLabel} is unavailable for this call.`,
+    };
+  }
+
+  if (errorName === "NotReadableError" || errorName === "TrackStartError") {
+    return {
+      code: "device_busy",
+      title: "Device busy",
+      description: `Another app may already be using your ${requestedDeviceLabel}.`,
+    };
+  }
+
+  if (
+    errorName === "OperationError"
+    || errorName === "InvalidStateError"
+    || errorName === "NetworkError"
+    || errorName === "AbortError"
+  ) {
+    return {
+      code: "connection",
+      title: "Connection problem",
+      description: "Call setup did not complete. Check network quality and try again.",
+    };
+  }
+
+  return {
+    code: "unknown",
+    title: "Call failed",
+    description: "The call could not start. Try again in a moment.",
+  };
+}
 
 interface UseWebRTCOptions {
   callId: string;
@@ -20,6 +106,7 @@ interface UseWebRTCOptions {
   userId: string;
   onRemoteStream: (stream: MediaStream) => void;
   onEnded: () => void;
+  onFailure?: (failure: WebRTCFailure) => void;
 }
 
 interface CallSignalData {
@@ -30,6 +117,8 @@ interface CallSignalData {
   status?: string | null;
 }
 
+const DISCONNECT_GRACE_MS = 10000;
+
 export function useWebRTC({
   callId,
   role,
@@ -37,24 +126,60 @@ export function useWebRTC({
   userId,
   onRemoteStream,
   onEnded,
+  onFailure,
 }: UseWebRTCOptions) {
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
   const [callState, setCallState] = useState<"ringing" | "connected" | "ended">("ringing");
   const addedCandidatesCount = useRef(0);
   const startedRef = useRef(false);
+  const hasEverConnectedRef = useRef(false);
+  const failureReportedRef = useRef(false);
+  const disconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const restartIceAttemptedRef = useRef(false);
+
+  const reportFailure = useCallback((error: unknown) => {
+    if (failureReportedRef.current) return;
+    failureReportedRef.current = true;
+    onFailure?.(classifyWebRTCFailure(error, callType));
+  }, [callType, onFailure]);
+
+  const clearDisconnectTimeout = useCallback(() => {
+    if (!disconnectTimeoutRef.current) return;
+    clearTimeout(disconnectTimeoutRef.current);
+    disconnectTimeoutRef.current = null;
+  }, []);
 
   const cleanup = useCallback(() => {
+    clearDisconnectTimeout();
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
     localStreamRef.current = null;
     pcRef.current?.close();
     pcRef.current = null;
     addedCandidatesCount.current = 0;
+    hasEverConnectedRef.current = false;
+    failureReportedRef.current = false;
+    restartIceAttemptedRef.current = false;
+    setIsReconnecting(false);
     setCallState("ended");
     startedRef.current = false;
-  }, []);
+  }, [clearDisconnectTimeout]);
+
+  const scheduleDisconnectTimeout = useCallback((pc: RTCPeerConnection) => {
+    if (disconnectTimeoutRef.current) return;
+
+    disconnectTimeoutRef.current = setTimeout(() => {
+      if (pcRef.current !== pc) return;
+      if (pc.connectionState === "connected") return;
+
+      reportFailure(new DOMException("Connection timed out", "NetworkError"));
+      cleanup();
+      onEnded();
+    }, DISCONNECT_GRACE_MS);
+  }, [cleanup, onEnded, reportFailure]);
 
   const processSignalData = useCallback(async (data: CallSignalData) => {
     const pc = pcRef.current;
@@ -122,13 +247,31 @@ export function useWebRTC({
     if (startedRef.current || !activeCallId) return null;
     startedRef.current = true;
     setCallState("ringing");
+    setIsReconnecting(false);
+    clearDisconnectTimeout();
+    hasEverConnectedRef.current = false;
+    failureReportedRef.current = false;
+    restartIceAttemptedRef.current = false;
 
     try {
       const constraints: MediaStreamConstraints = {
         audio: true,
         video: callType === "video",
       };
-      const localStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      let localStream: MediaStream;
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (initialMediaError) {
+        if (callType !== "video") throw initialMediaError;
+
+        // If camera is unavailable/blocked for a video call, fall back to audio
+        // so users can still answer instead of dropping the call entirely.
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        setIsCameraOff(true);
+        console.warn("[WebRTC] Video capture unavailable, continuing as audio-only", initialMediaError);
+      }
+
       localStreamRef.current = localStream;
 
       const pc = new RTCPeerConnection(ICE_SERVERS);
@@ -156,13 +299,54 @@ export function useWebRTC({
 
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === "connected") {
+          clearDisconnectTimeout();
+          hasEverConnectedRef.current = true;
+          restartIceAttemptedRef.current = false;
+          setIsReconnecting(false);
           setCallState("connected");
           (supabase as any).from("call_signals")
             .update({ status: "answered", started_at: new Date().toISOString() })
             .eq("id", activeCallId)
             .then(() => {});
+          return;
         }
-        if (["disconnected", "failed", "closed"].includes(pc.connectionState)) {
+
+        if (pc.connectionState === "disconnected") {
+          setIsReconnecting(true);
+          scheduleDisconnectTimeout(pc);
+          return;
+        }
+
+        if (pc.connectionState === "failed") {
+          setIsReconnecting(true);
+
+          if (!restartIceAttemptedRef.current && typeof pc.restartIce === "function") {
+            restartIceAttemptedRef.current = true;
+            try {
+              pc.restartIce();
+              scheduleDisconnectTimeout(pc);
+              return;
+            } catch (err) {
+              console.warn("ICE restart failed:", err);
+            }
+          }
+
+          // During the initial accept/connect phase some browsers can briefly
+          // surface `failed` before negotiation fully stabilizes. Give the call
+          // a grace window instead of ending immediately.
+          if (!hasEverConnectedRef.current) {
+            scheduleDisconnectTimeout(pc);
+            return;
+          }
+
+          clearDisconnectTimeout();
+          cleanup();
+          onEnded();
+          return;
+        }
+
+        if (pc.connectionState === "closed") {
+          clearDisconnectTimeout();
           cleanup();
           onEnded();
         }
@@ -180,11 +364,12 @@ export function useWebRTC({
       return localStream;
     } catch (err) {
       console.error("WebRTC start failed:", err);
+      reportFailure(err);
       cleanup();
       onEnded();
       return null;
     }
-  }, [callType, cleanup, onEnded, onRemoteStream, role, syncExistingSignal]);
+  }, [callType, cleanup, clearDisconnectTimeout, onEnded, onRemoteStream, reportFailure, role, scheduleDisconnectTimeout, syncExistingSignal]);
 
   useEffect(() => {
     if (!callId) return;
@@ -233,6 +418,7 @@ export function useWebRTC({
     toggleCamera,
     isMuted,
     isCameraOff,
+    isReconnecting,
     callState,
     localStream: localStreamRef,
     peerConnection: pcRef,
