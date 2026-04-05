@@ -56,6 +56,13 @@ export default function CallScreen({
   const remoteStreamRef = useRef<MediaStream | null>(null);
   const reminderPushSentRef = useRef(false);
   const createCallFiredRef = useRef(false);
+  const pipControlsChangeRef = useRef(onPipControlsChange);
+  const pipStateChangeRef = useRef(onPipStateChange);
+  const pipActionFnsRef = useRef({
+    toggleMute: () => {},
+    endCall: async () => {},
+    toggleCamera: () => {},
+  });
 
   const handleCallFailure = useCallback((failure: WebRTCFailure) => {
     toast.error(failure.title, {
@@ -202,23 +209,39 @@ export default function CallScreen({
   const screenShare = useScreenShare(peerConnection);
 
   useEffect(() => {
-    if (!onPipControlsChange) return;
-    onPipControlsChange({
+    pipControlsChangeRef.current = onPipControlsChange;
+  }, [onPipControlsChange]);
+
+  useEffect(() => {
+    pipStateChangeRef.current = onPipStateChange;
+  }, [onPipStateChange]);
+
+  useEffect(() => {
+    pipActionFnsRef.current = {
+      toggleMute,
+      endCall,
+      toggleCamera,
+    };
+  }, [endCall, toggleCamera, toggleMute]);
+
+  useEffect(() => {
+    if (!pipControlsChangeRef.current) return;
+    pipControlsChangeRef.current({
       toggleMute: () => {
-        toggleMute();
+        pipActionFnsRef.current.toggleMute();
       },
       endCall: () => {
-        void endCall();
+        void pipActionFnsRef.current.endCall();
       },
       toggleCamera: () => {
-        toggleCamera();
+        pipActionFnsRef.current.toggleCamera();
       },
     });
 
     return () => {
-      onPipControlsChange(null);
+      pipControlsChangeRef.current?.(null);
     };
-  }, [endCall, onPipControlsChange, toggleCamera, toggleMute]);
+  }, []);
 
   useEffect(() => {
     if (existingCallId || !user?.id || callId || createCallFiredRef.current) return;
@@ -592,15 +615,15 @@ export default function CallScreen({
   }, [callType, duration, isCameraOff, isMuted, navigate, onMinimize, recipientAvatar, recipientId, recipientName]);
 
   useEffect(() => {
-    if (!minimized || !onPipStateChange) return;
-    onPipStateChange({
+    if (!minimized || !pipStateChangeRef.current) return;
+    pipStateChangeRef.current({
       remoteStream: remoteStreamRef.current,
       duration,
       isMuted,
       callType,
       isCameraOff,
     });
-  }, [callType, duration, isCameraOff, isMuted, minimized, onPipStateChange]);
+  }, [callType, duration, isCameraOff, isMuted, minimized]);
 
   if (minimized) {
     return null;

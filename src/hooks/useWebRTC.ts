@@ -144,6 +144,7 @@ export function useWebRTC({
   const restartIceAttemptedRef = useRef(false);
   const callStartAtRef = useRef(0);
   const terminalCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const connectionPromotedRef = useRef(false);
 
   const reportFailure = useCallback((error: unknown) => {
     if (failureReportedRef.current) return;
@@ -156,6 +157,23 @@ export function useWebRTC({
     clearTimeout(disconnectTimeoutRef.current);
     disconnectTimeoutRef.current = null;
   }, []);
+
+  const markConnected = useCallback((activeCallId: string) => {
+    clearDisconnectTimeout();
+    hasEverConnectedRef.current = true;
+    restartIceAttemptedRef.current = false;
+    setIsReconnecting(false);
+    setCallState("connected");
+
+    if (connectionPromotedRef.current) return;
+    connectionPromotedRef.current = true;
+
+    (supabase as any).from("call_signals")
+      .update({ status: "answered", started_at: new Date().toISOString() })
+      .eq("id", activeCallId)
+      .in("status", ["ringing", "answered"])
+      .then(() => {});
+  }, [clearDisconnectTimeout]);
 
   const cleanup = useCallback(() => {
     clearDisconnectTimeout();
@@ -172,6 +190,7 @@ export function useWebRTC({
     failureReportedRef.current = false;
     restartIceAttemptedRef.current = false;
     callStartAtRef.current = 0;
+    connectionPromotedRef.current = false;
     setIsReconnecting(false);
     setCallState("ended");
     startedRef.current = false;
@@ -230,7 +249,12 @@ export function useWebRTC({
 
     disconnectTimeoutRef.current = setTimeout(() => {
       if (pcRef.current !== pc) return;
-      if (pc.connectionState === "connected") return;
+      if (
+        pc.connectionState === "connected"
+        || pc.iceConnectionState === "connected"
+        || pc.iceConnectionState === "completed"
+        || hasEverConnectedRef.current
+      ) return;
 
       reportFailure(new DOMException("Connection timed out", "NetworkError"));
       cleanup();
@@ -255,6 +279,7 @@ export function useWebRTC({
         await pc.setRemoteDescription(data.offer);
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
+        scheduleDisconnectTimeout(pc, PRE_CONNECT_GRACE_MS);
         await (supabase as any)
           .from("call_signals")
           .update({ answer: { type: answer.type, sdp: answer.sdp } })
@@ -267,6 +292,7 @@ export function useWebRTC({
     if (role === "caller" && data.answer && !pc.remoteDescription) {
       try {
         await pc.setRemoteDescription(data.answer);
+        scheduleDisconnectTimeout(pc, PRE_CONNECT_GRACE_MS);
       } catch (e) {
         console.error("Error handling answer:", e);
       }
@@ -284,7 +310,7 @@ export function useWebRTC({
         }
       }
     }
-  }, [callId, cleanup, onEnded, role]);
+  }, [callId, handleTerminalStatus, role, scheduleDisconnectTimeout]);
 
   const syncExistingSignal = useCallback(async (activeCallId: string) => {
     try {
@@ -312,6 +338,7 @@ export function useWebRTC({
     hasEverConnectedRef.current = false;
     failureReportedRef.current = false;
     restartIceAttemptedRef.current = false;
+    connectionPromotedRef.current = false;
 
     try {
       const constraints: MediaStreamConstraints = {
@@ -341,6 +368,22 @@ export function useWebRTC({
 
       pc.ontrack = (e) => {
         if (e.streams[0]) onRemoteStream(e.streams[0]);
+
+        const promoteConnection = () => {
+          markConnected(activeCallId);
+        };
+
+        e.track?.addEventListener("unmute", promoteConnection, { once: true });
+
+        if (e.track && !e.track.muted && e.track.readyState === "live") {
+          promoteConnection();
+        }
+      };
+
+      pc.oniceconnectionstatechange = () => {
+        if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
+          markConnected(activeCallId);
+        }
       };
 
       pc.onicecandidate = async (e) => {
@@ -359,15 +402,7 @@ export function useWebRTC({
 
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === "connected") {
-          clearDisconnectTimeout();
-          hasEverConnectedRef.current = true;
-          restartIceAttemptedRef.current = false;
-          setIsReconnecting(false);
-          setCallState("connected");
-          (supabase as any).from("call_signals")
-            .update({ status: "answered", started_at: new Date().toISOString() })
-            .eq("id", activeCallId)
-            .then(() => {});
+          markConnected(activeCallId);
           return;
         }
 
@@ -454,7 +489,7 @@ export function useWebRTC({
       onEnded();
       return null;
     }
-  }, [callType, cleanup, clearDisconnectTimeout, onEnded, onRemoteStream, reportFailure, role, scheduleDisconnectTimeout, syncExistingSignal]);
+  }, [callType, cleanup, clearDisconnectTimeout, markConnected, onEnded, onRemoteStream, reportFailure, role, scheduleDisconnectTimeout, syncExistingSignal]);
 
   useEffect(() => {
     if (!callId) return;
