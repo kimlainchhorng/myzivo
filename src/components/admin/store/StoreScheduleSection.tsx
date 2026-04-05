@@ -1,8 +1,8 @@
 /**
  * StoreScheduleSection — Work schedule with date-range assignments, day-off management, and weekly view.
  */
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Calendar, ChevronLeft, ChevronRight, Plus, Clock, Users,
@@ -56,6 +56,7 @@ type DayOff = {
 };
 
 export default function StoreScheduleSection({ storeId }: Props) {
+  const queryClient = useQueryClient();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [assignments, setAssignments] = useState<WorkAssignment[]>([]);
   const [daysOff, setDaysOff] = useState<DayOff[]>([]);
@@ -76,6 +77,41 @@ export default function StoreScheduleSection({ storeId }: Props) {
     endDate: format(new Date(), "yyyy-MM-dd"),
     reason: "Day Off", note: "",
   });
+
+  const scheduleKey = `schedule_data_${storeId}`;
+
+  // Load saved schedule data
+  useQuery({
+    queryKey: ["schedule-data", storeId],
+    queryFn: async () => {
+      const { data } = await supabase.from("app_settings").select("value").eq("key", scheduleKey).maybeSingle();
+      if (data?.value && typeof data.value === "object") {
+        const s = data.value as any;
+        if (Array.isArray(s.assignments)) setAssignments(s.assignments);
+        if (Array.isArray(s.daysOff)) setDaysOff(s.daysOff);
+      }
+      return data;
+    },
+  });
+
+  // Save schedule data to DB
+  const saveScheduleMutation = useMutation({
+    mutationFn: async (payload: { assignments: WorkAssignment[]; daysOff: DayOff[] }) => {
+      const value = { assignments: payload.assignments, daysOff: payload.daysOff };
+      const { data: existing } = await supabase.from("app_settings").select("id").eq("key", scheduleKey).maybeSingle();
+      if (existing) {
+        const { error } = await supabase.from("app_settings").update({ value, updated_at: new Date().toISOString() }).eq("key", scheduleKey);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("app_settings").insert({ key: scheduleKey, value, description: "Store schedule data" });
+        if (error) throw error;
+      }
+    },
+  });
+
+  const persistSchedule = useCallback((newAssignments: WorkAssignment[], newDaysOff: DayOff[]) => {
+    saveScheduleMutation.mutate({ assignments: newAssignments, daysOff: newDaysOff });
+  }, []);
 
   const { data: employees = [] } = useQuery({
     queryKey: ["store-employees-schedule", storeId],
@@ -103,13 +139,16 @@ export default function StoreScheduleSection({ storeId }: Props) {
 
   const addAssignment = () => {
     if (!assignForm.employeeId || assignForm.workDays.length === 0) return;
-    setAssignments(prev => [...prev, {
+    const newAssignment: WorkAssignment = {
       id: crypto.randomUUID(), employeeId: assignForm.employeeId,
       startDate: assignForm.startDate, endDate: assignForm.endDate,
       shiftType: assignForm.shiftType, shiftStart: assignForm.shiftStart,
       shiftEnd: assignForm.shiftEnd, workDays: assignForm.workDays,
       note: assignForm.note,
-    }]);
+    };
+    const updated = [...assignments, newAssignment];
+    setAssignments(updated);
+    persistSchedule(updated, daysOff);
     setAssignDialog(false);
     toast.success("Work schedule assigned");
   };
@@ -123,13 +162,23 @@ export default function StoreScheduleSection({ storeId }: Props) {
       id: crypto.randomUUID(), employeeId: offForm.employeeId,
       date: format(d, "yyyy-MM-dd"), reason: offForm.reason, note: offForm.note,
     }));
-    setDaysOff(prev => [...prev, ...newOffs]);
+    const updated = [...daysOff, ...newOffs];
+    setDaysOff(updated);
+    persistSchedule(assignments, updated);
     setOffDialog(false);
     toast.success(`${newOffs.length} day(s) off added`);
   };
 
-  const removeAssignment = (id: string) => setAssignments(prev => prev.filter(a => a.id !== id));
-  const removeDayOff = (id: string) => setDaysOff(prev => prev.filter(d => d.id !== id));
+  const removeAssignment = (id: string) => {
+    const updated = assignments.filter(a => a.id !== id);
+    setAssignments(updated);
+    persistSchedule(updated, daysOff);
+  };
+  const removeDayOff = (id: string) => {
+    const updated = daysOff.filter(d => d.id !== id);
+    setDaysOff(updated);
+    persistSchedule(assignments, updated);
+  };
 
   const toggleWorkDay = (day: number) => {
     setAssignForm(f => ({
