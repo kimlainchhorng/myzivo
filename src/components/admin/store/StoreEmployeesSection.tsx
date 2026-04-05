@@ -305,19 +305,34 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                 <div className="grid grid-cols-2 gap-3">
                   <Card className="p-3"><p className="text-[10px] text-muted-foreground mb-0.5">Email</p><p className="text-sm font-medium truncate">{detailDialog.email || "—"}</p></Card>
                   <Card className="p-3"><p className="text-[10px] text-muted-foreground mb-0.5">Phone</p><p className="text-sm font-medium">{detailDialog.phone || "—"}</p></Card>
-                  <Card className="p-3"><p className="text-[10px] text-muted-foreground mb-0.5">Hourly Rate</p><p className="text-sm font-medium">{detailDialog.hourly_rate ? `$${detailDialog.hourly_rate}/hr` : "—"}</p></Card>
+                  <Card className="p-3">
+                    <p className="text-[10px] text-muted-foreground mb-0.5">Compensation</p>
+                    <p className="text-sm font-medium">
+                      {detailDialog.hourly_rate
+                        ? detailDialog.hourly_rate >= 500
+                          ? `$${detailDialog.hourly_rate.toLocaleString()}/mo (Salary)`
+                          : `$${detailDialog.hourly_rate}/hr (Hourly)`
+                        : "—"}
+                    </p>
+                  </Card>
                   <Card className="p-3"><p className="text-[10px] text-muted-foreground mb-0.5">Joined</p><p className="text-sm font-medium">{format(new Date(detailDialog.created_at), "MMM d, yyyy")}</p></Card>
                 </div>
-                {detailDialog.hourly_rate && (
-                  <Card className="p-4">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">Estimated Compensation</p>
-                    <div className="grid grid-cols-3 gap-3 text-center">
-                      <div><p className="text-lg font-bold">${(detailDialog.hourly_rate * 40).toLocaleString()}</p><p className="text-[10px] text-muted-foreground">Weekly</p></div>
-                      <div><p className="text-lg font-bold">${(detailDialog.hourly_rate * 160).toLocaleString()}</p><p className="text-[10px] text-muted-foreground">Monthly</p></div>
-                      <div><p className="text-lg font-bold">${(detailDialog.hourly_rate * 2080).toLocaleString()}</p><p className="text-[10px] text-muted-foreground">Yearly</p></div>
-                    </div>
-                  </Card>
-                )}
+                {detailDialog.hourly_rate != null && detailDialog.hourly_rate > 0 && (() => {
+                  const isSalary = detailDialog.hourly_rate! >= 500;
+                  const monthly = isSalary ? detailDialog.hourly_rate! : detailDialog.hourly_rate! * 160;
+                  const weekly = monthly / 4;
+                  const yearly = monthly * 12;
+                  return (
+                    <Card className="p-4">
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">Estimated Compensation</p>
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div><p className="text-lg font-bold">${weekly.toLocaleString()}</p><p className="text-[10px] text-muted-foreground">Weekly</p></div>
+                        <div><p className="text-lg font-bold">${monthly.toLocaleString()}</p><p className="text-[10px] text-muted-foreground">Monthly</p></div>
+                        <div><p className="text-lg font-bold">${yearly.toLocaleString()}</p><p className="text-[10px] text-muted-foreground">Yearly</p></div>
+                      </div>
+                    </Card>
+                  );
+                })()}
                 {detailDialog.notes && (
                   <div><p className="text-xs font-semibold text-muted-foreground mb-1">Notes</p><p className="text-sm bg-muted/30 rounded-lg p-3">{detailDialog.notes}</p></div>
                 )}
