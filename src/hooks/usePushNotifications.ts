@@ -244,10 +244,6 @@ export const usePushNotifications = () => {
 
         const payloadData = notification.data as Record<string, any> | undefined;
         if (payloadData?.type === "incoming_call") {
-          toast.info(notification.title || "Incoming call", {
-            description: notification.body || "Someone is calling you",
-          });
-
           window.dispatchEvent(new CustomEvent("incoming-call-push", {
             detail: {
               call_id: payloadData.call_id,
