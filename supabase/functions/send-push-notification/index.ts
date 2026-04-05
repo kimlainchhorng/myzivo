@@ -304,10 +304,120 @@ async function sendAPNS(
   token: string,
   payload: { title: string; body?: string; data?: Record<string, unknown> }
 ): Promise<{ success: boolean; error?: string }> {
-  // Capacitor push-notifications plugin uses FCM on both iOS and Android
-  // FCM handles the APNs routing automatically for iOS
-  // So we send via FCM for both platforms
-  return sendFCM(token, payload);
+  const keyId = Deno.env.get("APNS_KEY_ID");
+  const teamId = Deno.env.get("APNS_TEAM_ID");
+  const bundleId = Deno.env.get("APNS_BUNDLE_ID") || "com.hizovo.app";
+  const privateKeyRaw = Deno.env.get("APNS_PRIVATE_KEY");
+
+  if (!keyId || !teamId || !privateKeyRaw) {
+    console.log("[APNS] Missing APNS credentials, skipping iOS native push");
+    return { success: true };
+  }
+
+  try {
+    const privateKeyPem = privateKeyRaw.includes("-----BEGIN")
+      ? privateKeyRaw
+      : privateKeyRaw.replace(/\\n/g, "\n");
+
+    const tokenJwt = await createAPNsJWT({ keyId, teamId, privateKeyPem });
+
+    const apnsPayload: Record<string, unknown> = {
+      aps: {
+        alert: {
+          title: payload.title,
+          body: payload.body || "",
+        },
+        sound: "default",
+        badge: 1,
+      },
+      ...(payload.data || {}),
+    };
+
+    const response = await fetch(`https://api.push.apple.com/3/device/${token}`, {
+      method: "POST",
+      headers: {
+        authorization: `bearer ${tokenJwt}`,
+        "apns-topic": bundleId,
+        "apns-push-type": "alert",
+        "apns-priority": "10",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(apnsPayload),
+    });
+
+    if (response.status === 200) {
+      console.log(`[APNS] Sent to token: ${token.substring(0, 16)}...`);
+      return { success: true };
+    }
+
+    const errorText = await response.text();
+    console.error("[APNS] Send failed:", response.status, errorText);
+    return { success: false, error: `APNS ${response.status}: ${errorText}` };
+  } catch (error) {
+    console.error("[APNS] Error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "APNS send failed",
+    };
+  }
+}
+
+async function createAPNsJWT(params: {
+  keyId: string;
+  teamId: string;
+  privateKeyPem: string;
+}): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: "ES256", kid: params.keyId, typ: "JWT" };
+  const claims = { iss: params.teamId, iat: now };
+
+  const encodedHeader = base64UrlEncode(JSON.stringify(header));
+  const encodedClaims = base64UrlEncode(JSON.stringify(claims));
+  const signingInput = `${encodedHeader}.${encodedClaims}`;
+
+  const key = await importP8PrivateKey(params.privateKeyPem);
+  const signatureBuffer = await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    key,
+    new TextEncoder().encode(signingInput),
+  );
+
+  const signature = base64UrlEncodeBytes(new Uint8Array(signatureBuffer));
+  return `${signingInput}.${signature}`;
+}
+
+async function importP8PrivateKey(pem: string): Promise<CryptoKey> {
+  const clean = pem
+    .replace("-----BEGIN PRIVATE KEY-----", "")
+    .replace("-----END PRIVATE KEY-----", "")
+    .replace(/\s+/g, "");
+
+  const der = base64ToBytes(clean);
+  return crypto.subtle.importKey(
+    "pkcs8",
+    der,
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"],
+  );
+}
+
+function base64UrlEncode(value: string): string {
+  return base64UrlEncodeBytes(new TextEncoder().encode(value));
+}
+
+function base64UrlEncodeBytes(bytes: Uint8Array): string {
+  const base64 = btoa(String.fromCharCode(...bytes));
+  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function base64ToBytes(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
 }
 
 // FCM v1 HTTP API implementation

@@ -37,6 +37,7 @@ import { SpatialCursor } from "./components/ui/SpatialCursor";
 import { useBrand } from "@/hooks/useBrand";
 import { applyBrandTheme, resetBrandTheme } from "@/lib/brandTheme";
 import { lazyRetry } from "@/lib/lazyRetry";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 // Eager load critical pages
 import Login from "./pages/Login";
@@ -441,6 +442,12 @@ function GeoDetector() {
   return null;
 }
 
+/** Initializes native/web push registration listeners once auth context is mounted. */
+function PushNotificationsBootstrap() {
+  usePushNotifications();
+  return null;
+}
+
 const App = () => (
   <ErrorBoundary>
     <HelmetProvider>
@@ -457,6 +464,7 @@ const App = () => (
                 <GeoDetector />
                 <RoutePrefetcher />
                 <AuthProvider>
+                  <PushNotificationsBootstrap />
                    <RemoteConfigProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
