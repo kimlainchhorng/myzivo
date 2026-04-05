@@ -1,11 +1,13 @@
 /**
  * QR Scanner Modal — uses device camera to scan QR codes for clock in/out
+ * Uses jsQR as universal fallback when BarcodeDetector is unavailable
  */
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Camera, X, CheckCircle2, XCircle, Loader2, ScanLine } from "lucide-react";
+import { Camera, X, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import jsQR from "jsqr";
 
 interface QRScannerModalProps {
   open: boolean;
@@ -21,9 +23,15 @@ export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanIntervalRef = useRef<number | null>(null);
+  const stateRef = useRef<ScanState>("scanning");
   const [state, setState] = useState<ScanState>("scanning");
   const [message, setMessage] = useState("");
   const [actionType, setActionType] = useState("");
+
+  // Keep stateRef in sync so interval callbacks see current value
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   const stopCamera = useCallback(() => {
     if (scanIntervalRef.current) {
@@ -36,56 +44,12 @@ export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }
     }
   }, []);
 
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } }
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-
-      // Start scanning with BarcodeDetector if available, else fallback
-      if ("BarcodeDetector" in window) {
-        const detector = new (window as any).BarcodeDetector({ formats: ["qr_code"] });
-        scanIntervalRef.current = window.setInterval(async () => {
-          if (!videoRef.current || state !== "scanning") return;
-          try {
-            const barcodes = await detector.detect(videoRef.current);
-            if (barcodes.length > 0) {
-              const raw = barcodes[0].rawValue;
-              if (raw) handleDetectedQR(raw);
-            }
-          } catch {}
-        }, 300);
-      } else {
-        // Fallback: draw to canvas and attempt detection
-        scanIntervalRef.current = window.setInterval(() => {
-          if (!videoRef.current || !canvasRef.current || state !== "scanning") return;
-          const ctx = canvasRef.current.getContext("2d");
-          if (!ctx) return;
-          canvasRef.current.width = videoRef.current.videoWidth;
-          canvasRef.current.height = videoRef.current.videoHeight;
-          ctx.drawImage(videoRef.current, 0, 0);
-          // Without BarcodeDetector, we'll rely on manual entry or native camera
-        }, 500);
-      }
-    } catch (err) {
-      console.error("Camera access error:", err);
-      setState("error");
-      setMessage("Camera access denied. Please allow camera permissions.");
-    }
-  }, []);
-
-  const handleDetectedQR = async (rawValue: string) => {
-    if (state !== "scanning") return;
+  const handleDetectedQR = useCallback(async (rawValue: string) => {
+    if (stateRef.current !== "scanning") return;
     setState("processing");
     setMessage("Validating QR code...");
 
     try {
-      // Extract token from QR value (format: "ZIVO_CLOCK:{token}")
       const token = rawValue.startsWith("ZIVO_CLOCK:") ? rawValue.replace("ZIVO_CLOCK:", "") : rawValue;
       const result = await onScan(token);
       if (result.success) {
@@ -100,18 +64,75 @@ export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }
       setState("error");
       setMessage("Failed to process QR code");
     }
-  };
+  }, [onScan]);
+
+  const startCamera = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } }
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+
+      // Use BarcodeDetector if available, otherwise jsQR
+      const hasBarcodeDetector = "BarcodeDetector" in window;
+
+      if (hasBarcodeDetector) {
+        const detector = new (window as any).BarcodeDetector({ formats: ["qr_code"] });
+        scanIntervalRef.current = window.setInterval(async () => {
+          if (!videoRef.current || stateRef.current !== "scanning") return;
+          try {
+            const barcodes = await detector.detect(videoRef.current);
+            if (barcodes.length > 0 && barcodes[0].rawValue) {
+              handleDetectedQR(barcodes[0].rawValue);
+            }
+          } catch {}
+        }, 300);
+      } else {
+        // jsQR fallback — works on all browsers
+        scanIntervalRef.current = window.setInterval(() => {
+          if (!videoRef.current || !canvasRef.current || stateRef.current !== "scanning") return;
+          const video = videoRef.current;
+          if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
+          const canvas = canvasRef.current;
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext("2d", { willReadFrequently: true });
+          if (!ctx) return;
+
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "dontInvert",
+          });
+
+          if (code && code.data) {
+            handleDetectedQR(code.data);
+          }
+        }, 250);
+      }
+    } catch (err) {
+      console.error("Camera access error:", err);
+      setState("error");
+      setMessage("Camera access denied. Please allow camera permissions.");
+    }
+  }, [handleDetectedQR]);
 
   useEffect(() => {
     if (open) {
       setState("scanning");
       setMessage("");
+      setActionType("");
       startCamera();
     } else {
       stopCamera();
     }
     return stopCamera;
-  }, [open]);
+  }, [open, startCamera, stopCamera]);
 
   const handleClose = () => {
     stopCamera();
@@ -140,12 +161,10 @@ export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }
           {state === "scanning" && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-52 h-52 relative">
-                {/* Corner brackets */}
                 <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-white/80 rounded-tl-lg" />
                 <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-white/80 rounded-tr-lg" />
                 <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-white/80 rounded-bl-lg" />
                 <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-white/80 rounded-br-lg" />
-                {/* Scanning line animation */}
                 <motion.div
                   className="absolute left-2 right-2 h-0.5 bg-primary shadow-[0_0_8px_rgba(34,197,94,0.6)]"
                   animate={{ top: ["10%", "90%", "10%"] }}

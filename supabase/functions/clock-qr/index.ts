@@ -29,26 +29,15 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Use getClaims for reliable JWT validation, fallback to getUser
-    const token = authHeader.replace("Bearer ", "");
-    let userId: string;
-    try {
-      const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token);
-      if (claimsError || !claimsData?.claims?.sub) {
-        throw new Error("Claims failed");
-      }
-      userId = claimsData.claims.sub as string;
-    } catch {
-      // Fallback to getUser
-      const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
-      if (authError || !user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      userId = user.id;
+    const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
+    if (authError || !user) {
+      console.error("Auth failed:", authError?.message);
+      return new Response(JSON.stringify({ error: "Unauthorized", detail: authError?.message }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
+    const userId = user.id;
 
     const { action, ...params } = await req.json();
 
