@@ -458,7 +458,7 @@ function base64ToBytes(base64: string): Uint8Array {
 // FCM v1 HTTP API implementation
 async function sendFCM(
   token: string,
-  payload: { title: string; body?: string; data?: Record<string, unknown> }
+  payload: { title: string; body?: string; data?: Record<string, unknown>; image_url?: string }
 ): Promise<{ success: boolean; error?: string }> {
   const fcmKey = Deno.env.get("FCM_SERVER_KEY");
 
@@ -475,6 +475,19 @@ async function sendFCM(
         stringData[key] = String(value ?? "");
       }
     }
+    if (payload.image_url) {
+      stringData.image_url = payload.image_url;
+    }
+
+    const notification: Record<string, unknown> = {
+      title: payload.title,
+      body: payload.body || "",
+      sound: "default",
+      badge: "1",
+    };
+    if (payload.image_url) {
+      notification.image = payload.image_url;
+    }
 
     const response = await fetch("https://fcm.googleapis.com/fcm/send", {
       method: "POST",
@@ -484,12 +497,7 @@ async function sendFCM(
       },
       body: JSON.stringify({
         to: token,
-        notification: {
-          title: payload.title,
-          body: payload.body || "",
-          sound: "default",
-          badge: "1",
-        },
+        notification,
         data: stringData,
         priority: "high",
         // iOS-specific: ensure notification appears when app is in background
