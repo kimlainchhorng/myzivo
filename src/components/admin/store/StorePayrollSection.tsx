@@ -231,7 +231,7 @@ export default function StorePayrollSection({ storeId }: Props) {
                 {["owner", "manager", "supervisor", "cashier", "staff", "intern"].map(role => {
                   const roleEmps = employees.filter((e: any) => e.role === role);
                   if (roleEmps.length === 0) return null;
-                  const roleTotal = roleEmps.reduce((s: number, e: any) => s + (e.hourly_rate || 0) * 160, 0);
+                  const roleTotal = roleEmps.reduce((s: number, e: any) => s + getMonthlyGross(e), 0);
                   const pct = totalGross > 0 ? (roleTotal / totalGross) * 100 : 0;
                   return (
                     <div key={role} className="flex items-center justify-between">
