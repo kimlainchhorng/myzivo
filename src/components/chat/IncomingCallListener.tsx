@@ -404,6 +404,7 @@ export default function IncomingCallListener() {
     }
 
     if (confirmedStatus === "answered") {
+      lastIncomingCallIdRef.current = incoming.id;
       setAnsweredCall(incoming);
       setIncoming(null);
       setIsAccepting(false);

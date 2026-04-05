@@ -224,6 +224,33 @@ export default function CallScreen({
     if (existingCallId || !user?.id || callId || createCallFiredRef.current) return;
     createCallFiredRef.current = true;
     const create = async () => {
+      const minPairCreatedAt = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+
+      // Reuse an already-active outgoing call for this same pair to avoid
+      // creating duplicate call IDs between caller and callee flows.
+      const { data: existingPairCall } = await (supabase as any)
+        .from("call_signals")
+        .select("id, status")
+        .eq("caller_id", user.id)
+        .eq("callee_id", recipientId)
+        .in("status", ["ringing", "answered"])
+        .is("ended_at", null)
+        .gte("created_at", minPairCreatedAt)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingPairCall?.id) {
+        setCallId(existingPairCall.id);
+        setRemoteAccepted(existingPairCall.status === "answered");
+        reminderPushSentRef.current = false;
+
+        if (existingPairCall.status === "ringing") {
+          await sendIncomingCallPush(existingPairCall.id, "reminder");
+        }
+        return;
+      }
+
       const nowMs = Date.now();
       const minCreatedAt = new Date(nowMs - 12 * 60 * 60 * 1000).toISOString();
       const ringingStaleMs = 90 * 1000;
@@ -445,6 +472,44 @@ export default function CallScreen({
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
+  }, [role, callId, callState, endCall, remoteAccepted]);
+
+  useEffect(() => {
+    if (role !== "caller" || !callId || callState === "ended") return;
+
+    const intervalId = window.setInterval(() => {
+      (async () => {
+        const { data } = await (supabase as any)
+          .from("call_signals")
+          .select("status")
+          .eq("id", callId)
+          .maybeSingle();
+
+        const status = data?.status;
+        if (status === "answered") {
+          setRemoteAccepted(true);
+          return;
+        }
+
+        if (status === "declined") {
+          endReasonRef.current = "declined";
+          await endCall();
+          return;
+        }
+
+        if (status === "missed" && !(remoteAccepted || callState === "connected")) {
+          endReasonRef.current = "no_answer";
+          await endCall();
+          return;
+        }
+
+        if (status === "ended") {
+          await endCall();
+        }
+      })();
+    }, 1500);
+
+    return () => window.clearInterval(intervalId);
   }, [role, callId, callState, endCall, remoteAccepted]);
 
   useEffect(() => {

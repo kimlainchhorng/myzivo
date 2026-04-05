@@ -356,6 +356,12 @@ export function useWebRTC({
         }
 
         if (pc.connectionState === "closed") {
+          if (!hasEverConnectedRef.current) {
+            setIsReconnecting(true);
+            scheduleDisconnectTimeout(pc, PRE_CONNECT_GRACE_MS);
+            return;
+          }
+
           clearDisconnectTimeout();
           cleanup();
           onEnded();
