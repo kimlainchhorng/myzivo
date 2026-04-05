@@ -375,90 +375,74 @@ export default function StoreScheduleSection({ storeId }: Props) {
                                     <Plus className="w-3 h-3 text-muted-foreground/40 group-hover:text-primary/60" />
                                   </button>
                                   {cellMenu && cellMenu.empId === emp.id && isSameDay(cellMenu.date, date) && (
-                                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 z-50 bg-popover border border-border/60 rounded-xl shadow-xl p-1.5 min-w-[170px] animate-in fade-in-0 zoom-in-95 slide-in-from-top-2">
-                                      <div className="px-2.5 py-1.5 mb-1 border-b border-border/40">
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-50 bg-popover border border-border/60 rounded-xl shadow-xl min-w-[180px] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2">
+                                      <div className="px-3 py-2 border-b border-border/40 flex items-center justify-between">
                                         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{format(date, "EEE, MMM d")}</p>
+                                        <button onClick={() => setCellMenu(null)} className="text-muted-foreground hover:text-foreground"><X className="w-3 h-3" /></button>
                                       </div>
-                                      {/* Quick shift presets */}
-                                      {SHIFT_PRESETS.slice(0, 4).map(preset => (
+                                      <div className="p-1.5 max-h-[240px] overflow-y-auto">
+                                        <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1">Shifts</p>
+                                        {SHIFT_PRESETS.map(preset => (
+                                          <button
+                                            key={preset.type}
+                                            className="w-full flex items-center gap-2 px-2 py-1.5 text-[11px] rounded-lg hover:bg-muted/60 transition-colors text-left"
+                                            onClick={() => {
+                                              const weekDayIndex = (date.getDay() + 6) % 7;
+                                              setAssignForm(f => ({
+                                                ...f, employeeId: emp.id,
+                                                startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"),
+                                                workDays: [weekDayIndex], shiftType: preset.type,
+                                                shiftStart: preset.start, shiftEnd: preset.end,
+                                              }));
+                                              setAssignDialog(true);
+                                              setCellMenu(null);
+                                            }}
+                                          >
+                                            <div className={cn("w-5 h-5 rounded-md flex items-center justify-center shrink-0", preset.color)}>
+                                              <preset.icon className="w-3 h-3" />
+                                            </div>
+                                            <span className="font-medium">{preset.label}</span>
+                                            <span className="text-[9px] text-muted-foreground ml-auto">{preset.start}–{preset.end}</span>
+                                          </button>
+                                        ))}
                                         <button
-                                          key={preset.type}
-                                          className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs rounded-lg hover:bg-muted/60 transition-colors text-left group/item"
+                                          className="w-full flex items-center gap-2 px-2 py-1.5 text-[11px] rounded-lg hover:bg-muted/60 transition-colors text-left"
                                           onClick={() => {
                                             const weekDayIndex = (date.getDay() + 6) % 7;
-                                            setAssignForm(f => ({
-                                              ...f, employeeId: emp.id,
-                                              startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"),
-                                              workDays: [weekDayIndex], shiftType: preset.type,
-                                              shiftStart: preset.start, shiftEnd: preset.end,
-                                            }));
+                                            setAssignForm(f => ({ ...f, employeeId: emp.id, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), workDays: [weekDayIndex] }));
                                             setAssignDialog(true);
                                             setCellMenu(null);
                                           }}
                                         >
-                                          <div className={cn("w-5 h-5 rounded-md flex items-center justify-center", preset.color)}>
-                                            <preset.icon className="w-3 h-3" />
+                                          <div className="w-5 h-5 rounded-md flex items-center justify-center bg-primary/10 text-primary shrink-0">
+                                            <Clock className="w-3 h-3" />
                                           </div>
-                                          <div className="flex-1">
-                                            <span className="font-medium">{preset.label}</span>
-                                            <span className="text-[10px] text-muted-foreground ml-1.5">{preset.start}–{preset.end}</span>
-                                          </div>
+                                          <span className="font-medium">Custom…</span>
                                         </button>
-                                      ))}
-                                      <button
-                                        className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs rounded-lg hover:bg-muted/60 transition-colors text-left"
-                                        onClick={() => {
-                                          const weekDayIndex = (date.getDay() + 6) % 7;
-                                          setAssignForm(f => ({ ...f, employeeId: emp.id, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), workDays: [weekDayIndex] }));
-                                          setAssignDialog(true);
-                                          setCellMenu(null);
-                                        }}
-                                      >
-                                        <div className="w-5 h-5 rounded-md flex items-center justify-center bg-primary/10 text-primary">
-                                          <Clock className="w-3 h-3" />
-                                        </div>
-                                        <span className="font-medium">Custom Shift…</span>
-                                      </button>
-                                      <div className="my-1 border-t border-border/40" />
-                                      <button
-                                        className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs rounded-lg hover:bg-destructive/8 transition-colors text-left"
-                                        onClick={() => {
-                                          setOffForm(f => ({ ...f, employeeId: emp.id, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), reason: "Day Off" }));
-                                          setOffDialog(true);
-                                          setCellMenu(null);
-                                        }}
-                                      >
-                                        <div className="w-5 h-5 rounded-md flex items-center justify-center bg-destructive/10 text-destructive">
-                                          <CalendarOff className="w-3 h-3" />
-                                        </div>
-                                        <span className="font-medium text-destructive/80">Day Off</span>
-                                      </button>
-                                      <button
-                                        className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs rounded-lg hover:bg-amber-500/8 transition-colors text-left"
-                                        onClick={() => {
-                                          setOffForm(f => ({ ...f, employeeId: emp.id, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), reason: "Vacation" }));
-                                          setOffDialog(true);
-                                          setCellMenu(null);
-                                        }}
-                                      >
-                                        <div className="w-5 h-5 rounded-md flex items-center justify-center bg-amber-500/10 text-amber-600">
-                                          <Sun className="w-3 h-3" />
-                                        </div>
-                                        <span className="font-medium text-amber-700">Vacation</span>
-                                      </button>
-                                      <button
-                                        className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs rounded-lg hover:bg-orange-500/8 transition-colors text-left"
-                                        onClick={() => {
-                                          setOffForm(f => ({ ...f, employeeId: emp.id, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), reason: "Sick Leave" }));
-                                          setOffDialog(true);
-                                          setCellMenu(null);
-                                        }}
-                                      >
-                                        <div className="w-5 h-5 rounded-md flex items-center justify-center bg-orange-500/10 text-orange-600">
-                                          <AlertTriangle className="w-3 h-3" />
-                                        </div>
-                                        <span className="font-medium text-orange-700">Sick Leave</span>
-                                      </button>
+                                        <div className="my-1 border-t border-border/30" />
+                                        <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1">Time Off</p>
+                                        {[
+                                          { reason: "Day Off", icon: CalendarOff, cls: "bg-destructive/10 text-destructive", textCls: "text-destructive/80" },
+                                          { reason: "Vacation", icon: Sun, cls: "bg-amber-500/10 text-amber-600", textCls: "text-amber-700" },
+                                          { reason: "Sick Leave", icon: AlertTriangle, cls: "bg-orange-500/10 text-orange-600", textCls: "text-orange-700" },
+                                          { reason: "Personal", icon: Users, cls: "bg-blue-500/10 text-blue-600", textCls: "text-blue-700" },
+                                        ].map(item => (
+                                          <button
+                                            key={item.reason}
+                                            className="w-full flex items-center gap-2 px-2 py-1.5 text-[11px] rounded-lg hover:bg-muted/60 transition-colors text-left"
+                                            onClick={() => {
+                                              setOffForm(f => ({ ...f, employeeId: emp.id, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), reason: item.reason }));
+                                              setOffDialog(true);
+                                              setCellMenu(null);
+                                            }}
+                                          >
+                                            <div className={cn("w-5 h-5 rounded-md flex items-center justify-center shrink-0", item.cls)}>
+                                              <item.icon className="w-3 h-3" />
+                                            </div>
+                                            <span className={cn("font-medium", item.textCls)}>{item.reason}</span>
+                                          </button>
+                                        ))}
+                                      </div>
                                     </div>
                                   )}
                                 </div>
