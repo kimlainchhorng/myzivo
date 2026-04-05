@@ -40,6 +40,9 @@ export default function StoreTimeClockSection({ storeId }: Props) {
   const [tab, setTab] = useState("today");
   const [adminScannerOpen, setAdminScannerOpen] = useState(false);
   const [, setTick] = useState(0);
+  const [clockOutTarget, setClockOutTarget] = useState<{ id: string; employeeName: string; hoursWorked: number } | null>(null);
+  const [clockOutReason, setClockOutReason] = useState("end_of_shift");
+  const [clockOutNote, setClockOutNote] = useState("");
 
   // Live timer update
   useEffect(() => {
