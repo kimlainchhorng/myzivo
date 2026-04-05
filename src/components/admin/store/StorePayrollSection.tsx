@@ -39,8 +39,8 @@ function getPayPeriods() {
   });
 }
 
-const TAX_RATE = 0.22;
-const BENEFITS_RATE = 0.08;
+const DEFAULT_TAX_RATE = 0.22;
+const DEFAULT_BENEFITS_RATE = 0.08;
 
 export default function StorePayrollSection({ storeId }: Props) {
   const [period, setPeriod] = useState(0);
