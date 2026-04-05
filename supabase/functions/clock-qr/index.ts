@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
       // Mark token as used
       await supabaseAdmin
         .from("clock_qr_tokens")
-        .update({ used_at: new Date().toISOString(), used_by: user.id })
+        .update({ used_at: new Date().toISOString(), used_by: userId })
         .eq("id", qrToken.id);
 
       // Check if already clocked in (no clock_out yet today)
