@@ -68,27 +68,38 @@ export default function CallScreen({
       // fallback to user_metadata values above
     }
 
-    try {
-      await supabase.functions.invoke("send-push-notification", {
-        body: {
-          user_id: recipientId,
-          notification_type: "incoming_call",
-          title: callerName,
-          body: callType === "video" ? "Video calling you" : "Voice calling you",
-          image_url: callerAvatar || undefined,
-          data: {
-            type: "incoming_call",
-            call_id: newCallId,
-            call_type: callType,
-            caller_id: user.id,
-            caller_name: callerName,
-            caller_avatar: callerAvatar,
+    const sendPushAttempt = async (attempt: number) => {
+      try {
+        const { error } = await supabase.functions.invoke("send-push-notification", {
+          body: {
+            user_id: recipientId,
+            notification_type: "incoming_call",
+            title: callerName,
+            body: callType === "video" ? "Video calling you" : "Voice calling you",
+            image_url: callerAvatar || undefined,
+            data: {
+              type: "incoming_call",
+              call_id: newCallId,
+              call_type: callType,
+              caller_id: user.id,
+              caller_name: callerName,
+              caller_avatar: callerAvatar,
+            },
           },
-        },
-      });
-    } catch (pushError) {
-      console.error("[Call] Failed to send incoming call push:", pushError);
-    }
+        });
+
+        if (error) throw error;
+      } catch (pushError) {
+        if (attempt < 2) {
+          await new Promise((resolve) => window.setTimeout(resolve, 600 * (attempt + 1)));
+          await sendPushAttempt(attempt + 1);
+          return;
+        }
+        console.error("[Call] Failed to send incoming call push:", pushError);
+      }
+    };
+
+    await sendPushAttempt(0);
   }, [callType, recipientId, user?.email, user?.id, user?.user_metadata]);
 
   const handleRemoteStream = useCallback((stream: MediaStream) => {
@@ -181,6 +192,23 @@ export default function CallScreen({
     const stopRingback = playOutgoingRingback();
     return () => { stopRingback(); };
   }, [role, callId, callState]);
+
+  useEffect(() => {
+    if (role !== "caller" || callState !== "ringing" || !callId) return;
+
+    const timeout = window.setTimeout(() => {
+      (async () => {
+        await (supabase as any).from("call_signals")
+          .update({ status: "missed", ended_at: new Date().toISOString() })
+          .eq("id", callId)
+          .eq("status", "ringing");
+        toast.info("No answer", { description: "Call ended after 45 seconds." });
+        await endCall();
+      })();
+    }, 45000);
+
+    return () => window.clearTimeout(timeout);
+  }, [callId, callState, endCall, role]);
 
   useEffect(() => {
     if (role !== "caller" || !callId) return;
