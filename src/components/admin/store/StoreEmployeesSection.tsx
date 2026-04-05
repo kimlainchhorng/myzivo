@@ -151,7 +151,7 @@ export default function StoreEmployeesSection({ storeId }: Props) {
   const roleOf = (r: string) => ROLES.find(x => x.value === r);
   const getMonthlyPay = (emp: Employee) => {
     const rate = emp.hourly_rate || 0;
-    return rate >= 500 ? rate : rate * 160;
+    return emp.pay_type === "monthly" ? rate : rate * 160;
   };
   const totalPayroll = employees.filter(e => e.status === "active").reduce((s, e) => s + getMonthlyPay(e), 0);
 
