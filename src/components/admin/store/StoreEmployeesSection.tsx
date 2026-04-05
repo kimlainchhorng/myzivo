@@ -119,12 +119,12 @@ export default function StoreEmployeesSection({ storeId }: Props) {
   const openAdd = () => { setEditing(null); setForm(emptyForm); setDialog(true); };
   const openEdit = (emp: Employee) => {
     setEditing(emp);
-    const isMonthlySalary = (emp.hourly_rate || 0) >= 500;
+    const isSalary = emp.pay_type === "monthly";
     setForm({
       name: emp.name, email: emp.email || "", phone: emp.phone || "", role: emp.role,
-      hourly_rate: isMonthlySalary ? "" : (emp.hourly_rate?.toString() || ""),
-      pay_type: isMonthlySalary ? "monthly" : "hourly",
-      monthly_salary: isMonthlySalary ? (emp.hourly_rate?.toString() || "") : "",
+      hourly_rate: isSalary ? "" : (emp.hourly_rate?.toString() || ""),
+      pay_type: isSalary ? "monthly" : "hourly",
+      monthly_salary: isSalary ? (emp.hourly_rate?.toString() || "") : "",
       notes: emp.notes || "", department: "General", emergency_contact: "", address: "",
       start_date: format(new Date(emp.created_at), "yyyy-MM-dd"),
     });
