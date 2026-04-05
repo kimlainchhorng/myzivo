@@ -64,6 +64,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
   const [assignDialog, setAssignDialog] = useState(false);
   const [offDialog, setOffDialog] = useState(false);
   const [detailDialog, setDetailDialog] = useState<{ empId: string; dayIdx: number } | null>(null);
+  const [cellMenu, setCellMenu] = useState<{ empId: string; date: Date } | null>(null);
   const [tab, setTab] = useState("schedule");
 
   const [assignForm, setAssignForm] = useState({
