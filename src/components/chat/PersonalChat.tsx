@@ -195,6 +195,43 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     setActiveCall(type);
   }, []);
 
+  const sendChatPush = useCallback(async (messageType: string, messageText: string) => {
+    if (!user?.id || !recipientId || recipientId === user.id) return;
+
+    const senderName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      user.email?.split("@")[0] ||
+      "Someone";
+
+    let preview = messageText.trim();
+    if (messageType === "image" || messageType === "locked_image") preview = "📷 Photo";
+    else if (messageType === "video" || messageType === "locked_video") preview = "🎥 Video";
+    else if (messageType === "voice") preview = "🎤 Voice message";
+    else if (messageType === "location") preview = "📍 Location";
+    else if (messageType === "sticker") preview = "🎭 Sticker";
+    else if (messageType === "gif") preview = "GIF";
+    else if (preview.length > 120) preview = `${preview.slice(0, 117)}...`;
+
+    try {
+      await supabase.functions.invoke("send-push-notification", {
+        body: {
+          user_id: recipientId,
+          notification_type: "chat_message",
+          title: senderName,
+          body: preview || "Sent you a message",
+          data: {
+            type: "chat_message",
+            sender_id: user.id,
+            sender_name: senderName,
+          },
+        },
+      });
+    } catch (pushError) {
+      console.error("[Chat] Failed to send push notification:", pushError);
+    }
+  }, [recipientId, user]);
+
   // Load messages
   useEffect(() => {
     if (!user?.id) return;
@@ -337,6 +374,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
       if (error) throw error;
       setMessages((prev) => prev.map((m) => m.id === optimisticId ? data : m));
+      void sendChatPush(msgType, text);
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
       toast.error("Failed to send message");
@@ -458,6 +496,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         .select().single();
       if (insertErr) throw insertErr;
       setMessages((prev) => prev.map((m) => m.id === optimisticId ? data : m));
+      void sendChatPush(messageType, text || label);
     } catch { toast.error("Failed to upload locked media"); }
     setUploadingMedia(false);
     setSending(false);
