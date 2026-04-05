@@ -136,8 +136,13 @@ export default function PersonalSchedulePage() {
     return sum + getShiftHours(info.start, info.end);
   }, 0);
   const weekOffs = weekDates.filter(d => getDayInfo(d).type === "off").length;
-  const hourlyRate = empRecord?.hourly_rate || 0;
-  const estimatedEarnings = weekHours * hourlyRate;
+  const payType = empRecord?.pay_type || "hourly";
+  const rateValue = empRecord?.hourly_rate || 0;
+  // For monthly pay: divide monthly salary by ~4.33 weeks to get weekly estimate
+  // For hourly pay: multiply hours × rate
+  const estimatedEarnings = payType === "monthly"
+    ? rateValue / 4.33
+    : weekHours * rateValue;
   const hoursProgress = Math.min((weekHours / WEEKLY_TARGET_HOURS) * 100, 100);
 
   // Next shift countdown
