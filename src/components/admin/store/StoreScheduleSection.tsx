@@ -351,7 +351,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
                           const preset = assignment ? SHIFT_PRESETS.find(p => p.type === assignment.shiftType) : null;
 
                           return (
-                            <td key={dayIdx} className={cn("px-1 py-1.5 text-center align-top", isToday && "bg-primary/5")}>
+                            <td key={date.toISOString()} className={cn("px-1 py-1.5 text-center align-top", isToday && "bg-primary/5")}>
                               {status === "off" ? (
                                 <div className="w-full rounded-lg bg-destructive/8 border border-destructive/20 px-2 py-2 text-[10px]">
                                   <CalendarOff className="w-3.5 h-3.5 text-destructive/60 mx-auto mb-0.5" />
@@ -368,7 +368,8 @@ export default function StoreScheduleSection({ storeId }: Props) {
                               ) : (
                                 <button
                                   onClick={() => {
-                                    setAssignForm(f => ({ ...f, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), workDays: [dayIdx] }));
+                                    const weekDayIndex = (date.getDay() + 6) % 7;
+                                    setAssignForm(f => ({ ...f, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), workDays: [weekDayIndex] }));
                                     setAssignDialog(true);
                                   }}
                                   className="w-full h-12 rounded-lg border border-dashed border-border/50 flex items-center justify-center hover:bg-muted/30 hover:border-primary/30 transition-all group"
@@ -379,7 +380,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
                             </td>
                           );
                         })}
-                        <td className="px-2 py-3 text-center">
+                        <td className="px-2 py-3 text-center sticky right-0 bg-card z-10">
                           <span className={cn("text-xs font-semibold", weekHours > 40 ? "text-destructive" : "text-foreground")}>{weekHours.toFixed(0)}h</span>
                           {weekHours > 40 && <AlertTriangle className="w-3 h-3 text-destructive mx-auto mt-0.5" />}
                         </td>
