@@ -104,7 +104,25 @@ export default function StoreTimeClockSection({ storeId }: Props) {
   };
 
   const handleClockOut = (id: string) => {
-    setLocalEntries(prev => prev.map(e => e.id === id ? { ...e, clockOut: new Date(), isOnBreak: false, breaks: e.breaks.map(b => b.end ? b : { ...b, end: new Date() }) } : e));
+    const entry = entries.find(e => e.id === id);
+    if (!entry) return;
+    const hours = getHoursWorked(entry);
+    setClockOutTarget({ id, employeeName: entry.employeeName, hoursWorked: hours });
+    setClockOutReason(hours >= 8 ? "end_of_shift" : "early_leave");
+    setClockOutNote("");
+  };
+
+  const confirmClockOut = async () => {
+    if (!clockOutTarget) return;
+    const reason = clockOutReason === "other" ? clockOutNote : CLOCK_OUT_REASONS.find(r => r.value === clockOutReason)?.label || clockOutReason;
+    // Update DB directly
+    await supabase
+      .from("store_time_entries")
+      .update({ clock_out: new Date().toISOString(), clock_out_reason: reason } as any)
+      .eq("id", clockOutTarget.id);
+    setLocalEntries(prev => prev.map(e => e.id === clockOutTarget.id ? { ...e, clockOut: new Date(), isOnBreak: false, breaks: e.breaks.map(b => b.end ? b : { ...b, end: new Date() }) } : e));
+    toast.success("Clocked Out", { description: `${clockOutTarget.employeeName} — ${reason}` });
+    setClockOutTarget(null);
     refetchEntries();
   };
 
