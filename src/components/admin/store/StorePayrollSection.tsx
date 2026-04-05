@@ -199,11 +199,12 @@ export default function StorePayrollSection({ storeId }: Props) {
                     <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">Tax</th>
                     <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">Net Pay</th>
                     <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground">Status</th>
+                    <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {employees.length === 0 ? (
-                    <tr><td colSpan={8} className="text-center py-12 text-muted-foreground text-sm">No active employees.</td></tr>
+                    <tr><td colSpan={9} className="text-center py-12 text-muted-foreground text-sm">No active employees.</td></tr>
                   ) : employees.map((emp: any) => {
                     const isSalary = emp.pay_type === "monthly";
                     const gross = getMonthlyGross(emp);
@@ -228,9 +229,14 @@ export default function StorePayrollSection({ storeId }: Props) {
                           {isSalary ? <Badge variant="outline" className="text-[10px]">Salary</Badge> : "160h"}
                         </td>
                         <td className="px-4 py-3 text-right font-mono text-[13px] font-semibold">${gross.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-right font-mono text-[13px] text-red-500">-${tax.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-right font-mono text-[13px] text-destructive">-${tax.toLocaleString()}</td>
                         <td className="px-4 py-3 text-right font-mono text-[13px] font-bold text-emerald-600">${net.toLocaleString()}</td>
                         <td className="px-4 py-3 text-center"><Badge className="text-[10px] bg-amber-500/10 text-amber-600">Pending</Badge></td>
+                        <td className="px-4 py-3 text-center">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditEmp(emp)}>
+                            <Edit className="w-3.5 h-3.5 text-muted-foreground" />
+                          </Button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -240,9 +246,9 @@ export default function StorePayrollSection({ storeId }: Props) {
                     <tr className="bg-muted/30 font-semibold">
                       <td colSpan={4} className="px-4 py-3 text-[13px]">Total</td>
                       <td className="px-4 py-3 text-right font-mono text-[13px]">${totalGross.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-right font-mono text-[13px] text-red-500">-${totalTax.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right font-mono text-[13px] text-destructive">-${totalTax.toLocaleString()}</td>
                       <td className="px-4 py-3 text-right font-mono text-[13px] font-bold text-emerald-600">${totalNet.toLocaleString()}</td>
-                      <td />
+                      <td colSpan={2} />
                     </tr>
                   </tfoot>
                 )}
