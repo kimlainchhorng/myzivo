@@ -32,7 +32,7 @@ type ClockEntry = {
 };
 
 export default function StoreTimeClockSection({ storeId }: Props) {
-  const [entries, setEntries] = useState<ClockEntry[]>([]);
+  const [localEntries, setLocalEntries] = useState<ClockEntry[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [tab, setTab] = useState("today");
   const [adminScannerOpen, setAdminScannerOpen] = useState(false);
@@ -51,6 +51,38 @@ export default function StoreTimeClockSection({ storeId }: Props) {
       return (data || []) as any[];
     },
   });
+
+  // Fetch real clock entries from DB
+  const { data: dbEntries = [], refetch: refetchEntries } = useQuery({
+    queryKey: ["store-time-entries", storeId],
+    queryFn: async () => {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const { data } = await supabase
+        .from("store_time_entries")
+        .select("*, store_employees(name, role)")
+        .eq("store_id", storeId)
+        .gte("clock_in", todayStart.toISOString())
+        .order("clock_in", { ascending: false });
+      return (data || []).map((row: any) => ({
+        id: row.id,
+        employeeId: row.employee_id,
+        employeeName: row.store_employees?.name || "Unknown",
+        role: row.store_employees?.role || "staff",
+        clockIn: new Date(row.clock_in),
+        clockOut: row.clock_out ? new Date(row.clock_out) : null,
+        breaks: [],
+        isOnBreak: false,
+      } as ClockEntry));
+    },
+    refetchInterval: 10000, // Auto-refresh every 10 seconds
+  });
+
+  // Merge DB entries with any local-only entries
+  const entries = [
+    ...dbEntries,
+    ...localEntries.filter(le => !dbEntries.some(de => de.employeeId === le.employeeId && !de.clockOut)),
+  ];
 
   const clockedIn = entries.filter(e => !e.clockOut);
   const onBreak = clockedIn.filter(e => e.isOnBreak);
