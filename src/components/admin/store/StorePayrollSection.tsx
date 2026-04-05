@@ -2,12 +2,12 @@
  * StorePayrollSection — 2026 Payroll: pay runs, deductions, overtime, tax estimates, pay history, bonuses.
  */
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DollarSign, Plus, Download, Users, TrendingUp, Clock, FileText,
   Receipt, Percent, Award, AlertCircle, CheckCircle2, ArrowUpRight,
-  Calculator, Banknote, PiggyBank, CreditCard, Calendar
+  Calculator, Banknote, PiggyBank, CreditCard, Calendar, Edit, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -43,6 +43,7 @@ const DEFAULT_TAX_RATE = 0.22;
 const DEFAULT_BENEFITS_RATE = 0.08;
 
 export default function StorePayrollSection({ storeId }: Props) {
+  const queryClient = useQueryClient();
   const [period, setPeriod] = useState(0);
   const [runDialog, setRunDialog] = useState(false);
   const [bonusDialog, setBonusDialog] = useState(false);
@@ -58,6 +59,9 @@ export default function StorePayrollSection({ storeId }: Props) {
   const [payFrequency, setPayFrequency] = useState("monthly");
   const [payDay, setPayDay] = useState("last");
   const [budgetLimit, setBudgetLimit] = useState("50000");
+  const [editDialog, setEditDialog] = useState(false);
+  const [editingEmp, setEditingEmp] = useState<any>(null);
+  const [editForm, setEditForm] = useState({ name: "", role: "", hourly_rate: "", pay_type: "hourly" });
   const periods = getPayPeriods();
 
   const { data: employees = [] } = useQuery({
@@ -67,6 +71,40 @@ export default function StorePayrollSection({ storeId }: Props) {
       return (data || []) as any[];
     },
   });
+
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      const rateValue = editForm.pay_type === "monthly"
+        ? parseFloat(editForm.hourly_rate || "0")
+        : parseFloat(editForm.hourly_rate || "0");
+      const { error } = await supabase.from("store_employees").update({
+        name: editForm.name.trim(),
+        role: editForm.role,
+        hourly_rate: rateValue,
+        pay_type: editForm.pay_type,
+      }).eq("id", editingEmp?.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["store-employees-payroll", storeId] });
+      queryClient.invalidateQueries({ queryKey: ["store-employees", storeId] });
+      toast.success("Employee updated");
+      setEditDialog(false);
+      setEditingEmp(null);
+    },
+    onError: (e) => toast.error("Failed: " + e.message),
+  });
+
+  const openEditEmp = (emp: any) => {
+    setEditingEmp(emp);
+    setEditForm({
+      name: emp.name || "",
+      role: emp.role || "staff",
+      hourly_rate: emp.hourly_rate?.toString() || "",
+      pay_type: emp.pay_type || "hourly",
+    });
+    setEditDialog(true);
+  };
 
   const getMonthlyGross = (emp: any) => {
     const rate = emp.hourly_rate || 0;
@@ -161,11 +199,12 @@ export default function StorePayrollSection({ storeId }: Props) {
                     <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">Tax</th>
                     <th className="text-right px-4 py-3 font-semibold text-xs text-muted-foreground">Net Pay</th>
                     <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground">Status</th>
+                    <th className="text-center px-4 py-3 font-semibold text-xs text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {employees.length === 0 ? (
-                    <tr><td colSpan={8} className="text-center py-12 text-muted-foreground text-sm">No active employees.</td></tr>
+                    <tr><td colSpan={9} className="text-center py-12 text-muted-foreground text-sm">No active employees.</td></tr>
                   ) : employees.map((emp: any) => {
                     const isSalary = emp.pay_type === "monthly";
                     const gross = getMonthlyGross(emp);
@@ -190,9 +229,14 @@ export default function StorePayrollSection({ storeId }: Props) {
                           {isSalary ? <Badge variant="outline" className="text-[10px]">Salary</Badge> : "160h"}
                         </td>
                         <td className="px-4 py-3 text-right font-mono text-[13px] font-semibold">${gross.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-right font-mono text-[13px] text-red-500">-${tax.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-right font-mono text-[13px] text-destructive">-${tax.toLocaleString()}</td>
                         <td className="px-4 py-3 text-right font-mono text-[13px] font-bold text-emerald-600">${net.toLocaleString()}</td>
                         <td className="px-4 py-3 text-center"><Badge className="text-[10px] bg-amber-500/10 text-amber-600">Pending</Badge></td>
+                        <td className="px-4 py-3 text-center">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditEmp(emp)}>
+                            <Edit className="w-3.5 h-3.5 text-muted-foreground" />
+                          </Button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -202,9 +246,9 @@ export default function StorePayrollSection({ storeId }: Props) {
                     <tr className="bg-muted/30 font-semibold">
                       <td colSpan={4} className="px-4 py-3 text-[13px]">Total</td>
                       <td className="px-4 py-3 text-right font-mono text-[13px]">${totalGross.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-right font-mono text-[13px] text-red-500">-${totalTax.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right font-mono text-[13px] text-destructive">-${totalTax.toLocaleString()}</td>
                       <td className="px-4 py-3 text-right font-mono text-[13px] font-bold text-emerald-600">${totalNet.toLocaleString()}</td>
-                      <td />
+                      <td colSpan={2} />
                     </tr>
                   </tfoot>
                 )}
@@ -443,6 +487,50 @@ export default function StorePayrollSection({ storeId }: Props) {
           <DialogFooter>
             <Button variant="outline" onClick={() => setBonusDialog(false)}>Cancel</Button>
             <Button onClick={() => { setBonusDialog(false); toast.success("Bonus added"); }} disabled={!bonusForm.employeeId || !bonusForm.amount}>Add Bonus</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Employee Dialog */}
+      <Dialog open={editDialog} onOpenChange={v => { setEditDialog(v); if (!v) setEditingEmp(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Edit Employee Payroll</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-3">
+            <div className="space-y-2">
+              <Label>Name</Label>
+              <Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <Select value={editForm.role} onValueChange={v => setEditForm(f => ({ ...f, role: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {["owner","manager","supervisor","cashier","staff","intern"].map(r => (
+                    <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Pay Type</Label>
+              <Select value={editForm.pay_type} onValueChange={v => setEditForm(f => ({ ...f, pay_type: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hourly">Hourly</SelectItem>
+                  <SelectItem value="monthly">Monthly Salary</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{editForm.pay_type === "monthly" ? "Monthly Salary ($)" : "Hourly Rate ($)"}</Label>
+              <Input type="number" min="0" step="0.01" value={editForm.hourly_rate} onChange={e => setEditForm(f => ({ ...f, hourly_rate: e.target.value }))} placeholder="0.00" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditDialog(false); setEditingEmp(null); }}>Cancel</Button>
+            <Button onClick={() => updateMutation.mutate()} disabled={!editForm.name.trim() || updateMutation.isPending}>
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
