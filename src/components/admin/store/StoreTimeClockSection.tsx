@@ -361,6 +361,7 @@ export default function StoreTimeClockSection({ storeId }: Props) {
                 data.action_performed === "clock_in" ? "Employee Clocked In" : "Employee Clocked Out",
                 { description: data.employee_name }
               );
+              refetchEntries();
               return { success: true, message: data.employee_name || "Success", action: data.action_performed };
             }
 
