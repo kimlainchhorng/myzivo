@@ -327,7 +327,7 @@ async function sendWebPush(
 // APNs implementation via FCM (Firebase handles APNs routing for Capacitor apps)
 async function sendAPNS(
   token: string,
-  payload: { title: string; body?: string; data?: Record<string, unknown> }
+  payload: { title: string; body?: string; data?: Record<string, unknown>; image_url?: string }
 ): Promise<{ success: boolean; error?: string }> {
   const keyId = Deno.env.get("APNS_KEY_ID");
   const teamId = Deno.env.get("APNS_TEAM_ID");
@@ -358,9 +358,15 @@ async function sendAPNS(
         },
         sound: "default",
         badge: 1,
+        "mutable-content": 1,
       },
       ...(payload.data || {}),
     };
+
+    // Include image URL for Notification Service Extension to download
+    if (payload.image_url) {
+      apnsPayload.image_url = payload.image_url;
+    }
 
     const response = await fetch(`${apnsHost}/3/device/${token}`, {
       method: "POST",
