@@ -42677,6 +42677,7 @@ export type Database = {
           break_minutes: number
           clock_in: string
           clock_out: string | null
+          clock_out_reason: string | null
           created_at: string
           employee_id: string
           id: string
@@ -42687,6 +42688,7 @@ export type Database = {
           break_minutes?: number
           clock_in?: string
           clock_out?: string | null
+          clock_out_reason?: string | null
           created_at?: string
           employee_id: string
           id?: string
@@ -42697,6 +42699,7 @@ export type Database = {
           break_minutes?: number
           clock_in?: string
           clock_out?: string | null
+          clock_out_reason?: string | null
           created_at?: string
           employee_id?: string
           id?: string

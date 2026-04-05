@@ -40,6 +40,7 @@ Deno.serve(async (req) => {
     const userId = user.id;
 
     const { action, ...params } = await req.json();
+    const clockOutReason = params.clock_out_reason || null;
 
     // ─── GENERATE: create a new rotating QR token ───
     if (action === "generate") {
@@ -208,7 +209,7 @@ Deno.serve(async (req) => {
         // Clock OUT
         await supabaseAdmin
           .from("store_time_entries")
-          .update({ clock_out: new Date().toISOString() })
+          .update({ clock_out: new Date().toISOString(), clock_out_reason: clockOutReason || "QR Clock Out" })
           .eq("id", openEntry.id);
 
         return new Response(JSON.stringify({

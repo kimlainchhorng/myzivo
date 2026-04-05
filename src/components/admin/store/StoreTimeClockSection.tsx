@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Clock, LogIn, LogOut, Timer, Users, Calendar, Download,
   Coffee, MapPin, AlertTriangle, TrendingUp, BarChart3,
-  CheckCircle2, Pause, Play, QrCode, ScanLine
+  CheckCircle2, Pause, Play, QrCode, ScanLine, MessageSquare
 } from "lucide-react";
 import { StoreQRDisplay } from "@/components/clock/StoreQRDisplay";
 import { QRScannerModal } from "@/components/clock/QRScannerModal";
@@ -19,10 +19,22 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
 interface Props { storeId: string; }
+
+const CLOCK_OUT_REASONS = [
+  { value: "end_of_shift", label: "End of Shift" },
+  { value: "early_leave", label: "Early Leave" },
+  { value: "emergency", label: "Emergency" },
+  { value: "sick", label: "Feeling Sick" },
+  { value: "personal", label: "Personal Reason" },
+  { value: "other", label: "Other" },
+];
 
 type ClockEntry = {
   id: string; employeeId: string; employeeName: string; role: string;
@@ -37,6 +49,9 @@ export default function StoreTimeClockSection({ storeId }: Props) {
   const [tab, setTab] = useState("today");
   const [adminScannerOpen, setAdminScannerOpen] = useState(false);
   const [, setTick] = useState(0);
+  const [clockOutTarget, setClockOutTarget] = useState<{ id: string; employeeName: string; hoursWorked: number } | null>(null);
+  const [clockOutReason, setClockOutReason] = useState("end_of_shift");
+  const [clockOutNote, setClockOutNote] = useState("");
 
   // Live timer update
   useEffect(() => {
@@ -98,7 +113,25 @@ export default function StoreTimeClockSection({ storeId }: Props) {
   };
 
   const handleClockOut = (id: string) => {
-    setLocalEntries(prev => prev.map(e => e.id === id ? { ...e, clockOut: new Date(), isOnBreak: false, breaks: e.breaks.map(b => b.end ? b : { ...b, end: new Date() }) } : e));
+    const entry = entries.find(e => e.id === id);
+    if (!entry) return;
+    const hours = getHoursWorked(entry);
+    setClockOutTarget({ id, employeeName: entry.employeeName, hoursWorked: hours });
+    setClockOutReason(hours >= 8 ? "end_of_shift" : "early_leave");
+    setClockOutNote("");
+  };
+
+  const confirmClockOut = async () => {
+    if (!clockOutTarget) return;
+    const reason = clockOutReason === "other" ? clockOutNote : CLOCK_OUT_REASONS.find(r => r.value === clockOutReason)?.label || clockOutReason;
+    // Update DB directly
+    await supabase
+      .from("store_time_entries")
+      .update({ clock_out: new Date().toISOString(), clock_out_reason: reason } as any)
+      .eq("id", clockOutTarget.id);
+    setLocalEntries(prev => prev.map(e => e.id === clockOutTarget.id ? { ...e, clockOut: new Date(), isOnBreak: false, breaks: e.breaks.map(b => b.end ? b : { ...b, end: new Date() }) } : e));
+    toast.success("Clocked Out", { description: `${clockOutTarget.employeeName} — ${reason}` });
+    setClockOutTarget(null);
     refetchEntries();
   };
 
@@ -372,6 +405,72 @@ export default function StoreTimeClockSection({ storeId }: Props) {
         }}
         title="Scan Employee QR"
       />
+
+      {/* Clock Out Reason Dialog */}
+      <Dialog open={!!clockOutTarget} onOpenChange={(open) => !open && setClockOutTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <LogOut className="w-4 h-4 text-destructive" />
+              Clock Out — {clockOutTarget?.employeeName}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {clockOutTarget && clockOutTarget.hoursWorked < 8 && (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-[12px] text-amber-700">
+                  This employee has only worked <strong>{clockOutTarget.hoursWorked.toFixed(1)} hours</strong> (less than a full 8-hour shift).
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label className="text-[13px] font-medium">Reason for clocking out</Label>
+              <RadioGroup value={clockOutReason} onValueChange={setClockOutReason} className="grid gap-2">
+                {CLOCK_OUT_REASONS.map(r => (
+                  <Label
+                    key={r.value}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+                      clockOutReason === r.value ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                    )}
+                  >
+                    <RadioGroupItem value={r.value} />
+                    <span className="text-[13px]">{r.label}</span>
+                  </Label>
+                ))}
+              </RadioGroup>
+            </div>
+
+            {(clockOutReason === "other" || clockOutReason === "early_leave" || clockOutReason === "emergency") && (
+              <div className="space-y-1.5">
+                <Label className="text-[12px]">Additional notes</Label>
+                <Textarea
+                  placeholder="Please provide more details..."
+                  value={clockOutNote}
+                  onChange={(e) => setClockOutNote(e.target.value)}
+                  className="text-[13px] min-h-[80px] resize-none"
+                />
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" size="sm" onClick={() => setClockOutTarget(null)}>Cancel</Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={confirmClockOut}
+              disabled={clockOutReason === "other" && !clockOutNote.trim()}
+              className="gap-1.5"
+            >
+              <LogOut className="w-3.5 h-3.5" /> Confirm Clock Out
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
