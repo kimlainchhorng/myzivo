@@ -227,6 +227,7 @@ export default function CallScreen({
       const nowMs = Date.now();
       const minCreatedAt = new Date(nowMs - 12 * 60 * 60 * 1000).toISOString();
       const ringingStaleMs = 90 * 1000;
+      const answeredWithoutStartStaleMs = 90 * 1000;
       const answeredStaleMs = 3 * 60 * 60 * 1000;
 
       const { data: possibleActiveCalls } = await (supabase as any)
@@ -239,15 +240,37 @@ export default function CallScreen({
         .order("created_at", { ascending: false })
         .limit(10);
 
+      const candidateIds = (possibleActiveCalls || []).map((row: any) => row.id).filter(Boolean);
+      const historicalSignalIds = new Set<string>();
+
+      if (candidateIds.length) {
+        const { data: existingHistoryRows } = await (supabase as any)
+          .from("call_history")
+          .select("call_signal_id")
+          .in("call_signal_id", candidateIds)
+          .limit(50);
+
+        for (const row of existingHistoryRows || []) {
+          if (row?.call_signal_id) {
+            historicalSignalIds.add(row.call_signal_id);
+          }
+        }
+      }
+
       const staleMissedIds: string[] = [];
       const staleEndedIds: string[] = [];
 
       const activeForRecipient = (possibleActiveCalls || []).find((row: any) => {
         const createdMs = new Date(row.created_at).getTime();
         const startedMs = row.started_at ? new Date(row.started_at).getTime() : null;
+        const hasHistory = historicalSignalIds.has(row.id);
 
-        const isStaleRinging = row.status === "ringing" && nowMs - createdMs > ringingStaleMs;
-        const isStaleAnswered = row.status === "answered" && nowMs - (startedMs ?? createdMs) > answeredStaleMs;
+        const isStaleRinging = row.status === "ringing" && (hasHistory || nowMs - createdMs > ringingStaleMs);
+        const isStaleAnswered = row.status === "answered" && (
+          hasHistory
+          || (!startedMs && nowMs - createdMs > answeredWithoutStartStaleMs)
+          || (startedMs ? nowMs - startedMs > answeredStaleMs : false)
+        );
 
         if (isStaleRinging) {
           staleMissedIds.push(row.id);
