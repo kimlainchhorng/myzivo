@@ -367,16 +367,41 @@ export default function StoreScheduleSection({ storeId }: Props) {
                                   <div className="opacity-75">{assignment.shiftStart}–{assignment.shiftEnd}</div>
                                 </button>
                               ) : (
-                                <button
-                                  onClick={() => {
-                                    const weekDayIndex = (date.getDay() + 6) % 7;
-                                    setAssignForm(f => ({ ...f, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), workDays: [weekDayIndex] }));
-                                    setAssignDialog(true);
-                                  }}
-                                  className="w-full h-12 rounded-lg border border-dashed border-border/50 flex items-center justify-center hover:bg-muted/30 hover:border-primary/30 transition-all group"
-                                >
-                                  <Plus className="w-3 h-3 text-muted-foreground/40 group-hover:text-primary/60" />
-                                </button>
+                                <div className="relative">
+                                  <button
+                                    onClick={() => setCellMenu(prev => prev?.empId === emp.id && isSameDay(prev.date, date) ? null : { empId: emp.id, date })}
+                                    className="w-full h-12 rounded-lg border border-dashed border-border/50 flex items-center justify-center hover:bg-muted/30 hover:border-primary/30 transition-all group"
+                                  >
+                                    <Plus className="w-3 h-3 text-muted-foreground/40 group-hover:text-primary/60" />
+                                  </button>
+                                  {cellMenu && cellMenu.empId === emp.id && isSameDay(cellMenu.date, date) && (
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 bg-popover border rounded-lg shadow-lg p-1 min-w-[130px] animate-in fade-in-0 zoom-in-95">
+                                      <button
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-md hover:bg-muted transition-colors text-left"
+                                        onClick={() => {
+                                          const weekDayIndex = (date.getDay() + 6) % 7;
+                                          setAssignForm(f => ({ ...f, employeeId: emp.id, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), workDays: [weekDayIndex] }));
+                                          setAssignDialog(true);
+                                          setCellMenu(null);
+                                        }}
+                                      >
+                                        <Clock className="w-3.5 h-3.5 text-primary" />
+                                        <span>Assign Shift</span>
+                                      </button>
+                                      <button
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-md hover:bg-muted transition-colors text-left"
+                                        onClick={() => {
+                                          setOffForm(f => ({ ...f, employeeId: emp.id, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), reason: "Day Off" }));
+                                          setOffDialog(true);
+                                          setCellMenu(null);
+                                        }}
+                                      >
+                                        <CalendarOff className="w-3.5 h-3.5 text-destructive" />
+                                        <span>Day Off</span>
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
                               )}
                             </td>
                           );
