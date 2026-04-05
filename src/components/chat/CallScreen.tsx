@@ -51,14 +51,22 @@ export default function CallScreen({
   const sendIncomingCallPush = useCallback(async (newCallId: string) => {
     if (!user?.id || !recipientId || recipientId === user.id) return;
 
-    const callerName =
-      user.user_metadata?.full_name ||
-      user.user_metadata?.name ||
-      user.email?.split("@")[0] ||
-      "Incoming call";
-    const callerAvatar = typeof user.user_metadata?.avatar_url === "string"
-      ? user.user_metadata.avatar_url
-      : "";
+    // Fetch caller profile from profiles table for accurate name & avatar
+    let callerName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Incoming call";
+    let callerAvatar = "";
+
+    try {
+      const { data: profile } = await (supabase as any)
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profile?.full_name) callerName = profile.full_name;
+      if (profile?.avatar_url) callerAvatar = profile.avatar_url;
+    } catch {
+      // fallback to user_metadata values above
+    }
 
     try {
       await supabase.functions.invoke("send-push-notification", {
@@ -67,6 +75,7 @@ export default function CallScreen({
           notification_type: "incoming_call",
           title: callerName,
           body: callType === "video" ? "Video calling you" : "Voice calling you",
+          image_url: callerAvatar || undefined,
           data: {
             type: "incoming_call",
             call_id: newCallId,
