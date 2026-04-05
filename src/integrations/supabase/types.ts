@@ -42125,6 +42125,7 @@ export type Database = {
           id: string
           name: string
           notes: string | null
+          pay_type: string
           phone: string | null
           role: string
           status: string
@@ -42139,6 +42140,7 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
+          pay_type?: string
           phone?: string | null
           role?: string
           status?: string
@@ -42153,6 +42155,7 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+          pay_type?: string
           phone?: string | null
           role?: string
           status?: string

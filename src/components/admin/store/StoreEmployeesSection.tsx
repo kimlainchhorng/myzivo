@@ -30,7 +30,7 @@ type Employee = {
   id: string; store_id: string; user_id: string | null;
   name: string; email: string | null; phone: string | null;
   role: string; status: string; hourly_rate: number | null;
-  notes: string | null; created_at: string;
+  pay_type: string; notes: string | null; created_at: string;
 };
 
 const ROLES = [
@@ -87,6 +87,7 @@ export default function StoreEmployeesSection({ storeId }: Props) {
         store_id: storeId, name: form.name.trim(),
         email: form.email.trim() || null, phone: form.phone.trim() || null,
         role: form.role, hourly_rate: rateValue,
+        pay_type: form.pay_type,
         notes: form.notes.trim() || null,
       };
       if (editing) {
@@ -118,12 +119,12 @@ export default function StoreEmployeesSection({ storeId }: Props) {
   const openAdd = () => { setEditing(null); setForm(emptyForm); setDialog(true); };
   const openEdit = (emp: Employee) => {
     setEditing(emp);
-    const isMonthlySalary = (emp.hourly_rate || 0) >= 500;
+    const isSalary = emp.pay_type === "monthly";
     setForm({
       name: emp.name, email: emp.email || "", phone: emp.phone || "", role: emp.role,
-      hourly_rate: isMonthlySalary ? "" : (emp.hourly_rate?.toString() || ""),
-      pay_type: isMonthlySalary ? "monthly" : "hourly",
-      monthly_salary: isMonthlySalary ? (emp.hourly_rate?.toString() || "") : "",
+      hourly_rate: isSalary ? "" : (emp.hourly_rate?.toString() || ""),
+      pay_type: isSalary ? "monthly" : "hourly",
+      monthly_salary: isSalary ? (emp.hourly_rate?.toString() || "") : "",
       notes: emp.notes || "", department: "General", emergency_contact: "", address: "",
       start_date: format(new Date(emp.created_at), "yyyy-MM-dd"),
     });
@@ -150,7 +151,7 @@ export default function StoreEmployeesSection({ storeId }: Props) {
   const roleOf = (r: string) => ROLES.find(x => x.value === r);
   const getMonthlyPay = (emp: Employee) => {
     const rate = emp.hourly_rate || 0;
-    return rate >= 500 ? rate : rate * 160;
+    return emp.pay_type === "monthly" ? rate : rate * 160;
   };
   const totalPayroll = employees.filter(e => e.status === "active").reduce((s, e) => s + getMonthlyPay(e), 0);
 
@@ -259,7 +260,7 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                     {emp.phone && <div className="flex items-center gap-1.5"><Phone className="w-3 h-3 shrink-0" />{emp.phone}</div>}
                     {emp.hourly_rate != null && emp.hourly_rate > 0 && (
                       <div className="flex items-center gap-1.5"><DollarSign className="w-3 h-3 shrink-0" />
-                        {emp.hourly_rate >= 500
+                        {emp.pay_type === "monthly"
                           ? <span>${emp.hourly_rate.toLocaleString()}/mo <span className="text-muted-foreground">(salary)</span></span>
                           : <span>${emp.hourly_rate}/hr · ~${(emp.hourly_rate * 160).toLocaleString()}/mo</span>
                         }
@@ -309,7 +310,7 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                     <p className="text-[10px] text-muted-foreground mb-0.5">Compensation</p>
                     <p className="text-sm font-medium">
                       {detailDialog.hourly_rate
-                        ? detailDialog.hourly_rate >= 500
+                        ? detailDialog.pay_type === "monthly"
                           ? `$${detailDialog.hourly_rate.toLocaleString()}/mo (Salary)`
                           : `$${detailDialog.hourly_rate}/hr (Hourly)`
                         : "—"}
@@ -318,7 +319,7 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                   <Card className="p-3"><p className="text-[10px] text-muted-foreground mb-0.5">Joined</p><p className="text-sm font-medium">{format(new Date(detailDialog.created_at), "MMM d, yyyy")}</p></Card>
                 </div>
                 {detailDialog.hourly_rate != null && detailDialog.hourly_rate > 0 && (() => {
-                  const isSalary = detailDialog.hourly_rate! >= 500;
+                  const isSalary = detailDialog.pay_type === "monthly";
                   const monthly = isSalary ? detailDialog.hourly_rate! : detailDialog.hourly_rate! * 160;
                   const weekly = monthly / 4;
                   const yearly = monthly * 12;
