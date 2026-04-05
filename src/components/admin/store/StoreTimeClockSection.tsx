@@ -303,6 +303,31 @@ export default function StoreTimeClockSection({ storeId }: Props) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Admin QR Scanner */}
+      <QRScannerModal
+        open={adminScannerOpen}
+        onClose={() => setAdminScannerOpen(false)}
+        onScan={async (token) => {
+          try {
+            const { data, error } = await supabase.functions.invoke("clock-qr", {
+              body: { action: "validate", token, scanner_type: "admin_scans_employee" },
+            });
+            if (error) throw error;
+            if (data?.success) {
+              toast.success(
+                data.action_performed === "clock_in" ? "Employee Clocked In" : "Employee Clocked Out",
+                { description: data.employee_name }
+              );
+              return { success: true, message: data.employee_name || "Success", action: data.action_performed };
+            }
+            return { success: false, message: data?.error || "Failed" };
+          } catch (err: any) {
+            return { success: false, message: err?.message || "Network error" };
+          }
+        }}
+        title="Scan Employee QR"
+      />
     </div>
   );
 }
