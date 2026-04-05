@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Clock, LogIn, LogOut, Timer, Users, Calendar, Download,
   Coffee, MapPin, AlertTriangle, TrendingUp, BarChart3,
-  CheckCircle2, Pause, Play, QrCode, ScanLine
+  CheckCircle2, Pause, Play, QrCode, ScanLine, MessageSquare
 } from "lucide-react";
 import { StoreQRDisplay } from "@/components/clock/StoreQRDisplay";
 import { QRScannerModal } from "@/components/clock/QRScannerModal";
@@ -19,6 +19,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
