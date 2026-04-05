@@ -342,26 +342,26 @@ export default function StoreScheduleSection({ storeId }: Props) {
       </div>
 
       {/* ── Schedule Grid ── */}
-      <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
+      <div className="rounded-xl border bg-card overflow-visible shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm" style={{ minWidth: viewMode === "2week" ? "1200px" : "700px" }}>
+          <table className="w-full text-sm" style={{ minWidth: viewMode === "2week" ? "1200px" : "800px" }}>
             <thead>
               <tr className="bg-muted/30">
-                <th className="text-left px-4 py-3 font-semibold text-[11px] text-muted-foreground uppercase tracking-wider w-44 sticky left-0 bg-muted/30 z-10">
+                <th className="text-left px-4 py-3 font-semibold text-[11px] text-muted-foreground uppercase tracking-wider w-48 sticky left-0 bg-muted/30 z-10">
                   Team
                 </th>
                 {weekDates.map((date) => {
                   const isToday = isSameDay(date, new Date());
                   const isWeekend = ((date.getDay() + 6) % 7) >= 5;
                   return (
-                    <th key={date.toISOString()} className={cn("text-center px-1.5 py-3 font-medium text-[11px] min-w-[90px]",
+                    <th key={date.toISOString()} className={cn("text-center px-2 py-3 font-medium text-[11px] min-w-[100px]",
                       isToday ? "text-primary" : isWeekend ? "text-destructive/60" : "text-muted-foreground"
                     )}>
                       <div className={cn("inline-flex flex-col items-center gap-0.5",
-                        isToday && "bg-primary/10 rounded-lg px-2 py-1"
+                        isToday && "bg-primary/10 rounded-lg px-3 py-1"
                       )}>
                         <span className="uppercase tracking-wider">{format(date, "EEE")}</span>
-                        <span className={cn("text-[13px] font-bold", isToday ? "text-primary" : "text-foreground")}>{format(date, "d")}</span>
+                        <span className={cn("text-[14px] font-bold", isToday ? "text-primary" : "text-foreground")}>{format(date, "d")}</span>
                       </div>
                     </th>
                   );
@@ -388,14 +388,14 @@ export default function StoreScheduleSection({ storeId }: Props) {
                 let weekHours = 0;
                 return (
                   <tr key={emp.id} className="border-t border-border/40 hover:bg-muted/5 transition-colors">
-                    <td className="px-4 py-2.5 sticky left-0 bg-card z-10">
+                    <td className="px-4 py-3 sticky left-0 bg-card z-10">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-[11px] font-bold text-primary ring-2 ring-primary/10">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-[12px] font-bold text-primary ring-2 ring-primary/10">
                           {emp.name?.charAt(0)?.toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-semibold text-[12px] leading-tight">{emp.name}</p>
-                          <p className="text-[10px] text-muted-foreground capitalize">{emp.role}</p>
+                          <p className="font-semibold text-[13px] leading-tight">{emp.name}</p>
+                          <p className="text-[11px] text-muted-foreground capitalize">{emp.role}</p>
                         </div>
                       </div>
                     </td>
@@ -411,99 +411,37 @@ export default function StoreScheduleSection({ storeId }: Props) {
                       const isMenuOpen = cellMenu && cellMenu.empId === emp.id && isSameDay(cellMenu.date, date);
 
                       return (
-                        <td key={date.toISOString()} className={cn("px-1 py-1.5 text-center align-middle", isToday && "bg-primary/[0.03]")}>
+                        <td key={date.toISOString()} className={cn("px-1.5 py-2 text-center align-middle", isToday && "bg-primary/[0.03]")}>
                           {status === "off" ? (
                             <button onClick={() => setDetailDialog({ empId: emp.id, dayIdx })}
-                              className="w-full rounded-lg bg-muted/40 border border-dashed border-muted-foreground/15 px-1.5 py-2 transition-all hover:bg-muted/60 active:scale-95">
-                              <Coffee className="w-3.5 h-3.5 text-muted-foreground/50 mx-auto" />
-                              <div className="text-[9px] font-medium text-muted-foreground/70 mt-0.5">{dayOff?.reason}</div>
+                              className="w-full rounded-xl bg-muted/40 border border-dashed border-muted-foreground/15 px-2 py-2.5 transition-all hover:bg-muted/60 active:scale-95">
+                              <Coffee className="w-4 h-4 text-muted-foreground/50 mx-auto" />
+                              <div className="text-[10px] font-medium text-muted-foreground/70 mt-1">{dayOff?.reason}</div>
                             </button>
                           ) : status === "working" && assignment ? (
                             <button
                               onClick={() => setDetailDialog({ empId: emp.id, dayIdx })}
-                              className={cn("w-full rounded-lg border px-1.5 py-1.5 transition-all hover:shadow-md active:scale-[0.97]", preset?.color || SHIFT_PRESETS[3].color)}
+                              className={cn("w-full rounded-xl border px-2 py-2 transition-all hover:shadow-md active:scale-[0.97]", preset?.color || SHIFT_PRESETS[3].color)}
                             >
-                              <div className="font-bold text-[10px] capitalize">{assignment.shiftType === "full" ? "Full" : assignment.shiftType}</div>
-                              <div className="text-[9px] opacity-70 font-medium">{assignment.shiftStart}–{assignment.shiftEnd}</div>
+                              <div className="font-bold text-[11px] capitalize">{preset?.label || assignment.shiftType}</div>
+                              <div className="text-[10px] opacity-70 font-medium mt-0.5">{assignment.shiftStart}–{assignment.shiftEnd}</div>
                             </button>
                           ) : (
-                            <div className="relative" ref={isMenuOpen ? menuRef : undefined}>
-                              <button
-                                onClick={() => setCellMenu(isMenuOpen ? null : { empId: emp.id, date })}
-                                className={cn(
-                                  "w-full h-[46px] rounded-lg border border-dashed flex items-center justify-center transition-all",
-                                  isMenuOpen ? "border-primary/40 bg-primary/5" : "border-transparent hover:border-border/60 hover:bg-muted/20 group"
-                                )}
-                              >
-                                <Plus className={cn("w-3.5 h-3.5 transition-colors", isMenuOpen ? "text-primary" : "text-muted-foreground/25 group-hover:text-muted-foreground/50")} />
-                              </button>
-                              {isMenuOpen && (
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-[200px] animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-150">
-                                  <div className="bg-popover rounded-xl border shadow-xl overflow-hidden">
-                                    {/* Header */}
-                                    <div className="px-3 py-2 bg-muted/30 border-b flex items-center justify-between">
-                                      <div>
-                                        <p className="text-[11px] font-bold">{format(date, "EEE, MMM d")}</p>
-                                        <p className="text-[9px] text-muted-foreground">{emp.name}</p>
-                                      </div>
-                                      <button onClick={() => setCellMenu(null)} className="w-5 h-5 rounded-md hover:bg-muted flex items-center justify-center">
-                                        <X className="w-3 h-3 text-muted-foreground" />
-                                      </button>
-                                    </div>
-                                    {/* Shifts */}
-                                    <div className="p-1">
-                                      {SHIFT_PRESETS.map(p => (
-                                        <button key={p.type}
-                                          className="w-full flex items-center gap-2 px-2 py-[6px] rounded-lg hover:bg-muted/50 transition-colors text-left"
-                                          onClick={() => quickAssign(emp.id, date, p)}
-                                        >
-                                          <div className={cn("w-2 h-2 rounded-full bg-gradient-to-r shrink-0", p.gradient)} />
-                                          <span className="text-[11px] font-medium flex-1">{p.label}</span>
-                                          <span className="text-[9px] text-muted-foreground tabular-nums">{p.start}–{p.end}</span>
-                                        </button>
-                                      ))}
-                                      <button
-                                        className="w-full flex items-center gap-2 px-2 py-[6px] rounded-lg hover:bg-muted/50 transition-colors text-left"
-                                        onClick={() => {
-                                          const dow = (date.getDay() + 6) % 7;
-                                          setAssignForm(f => ({ ...f, employeeId: emp.id, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), workDays: [dow] }));
-                                          setAssignDialog(true);
-                                          setCellMenu(null);
-                                        }}
-                                      >
-                                        <div className="w-2 h-2 rounded-full bg-muted-foreground/30 shrink-0" />
-                                        <span className="text-[11px] font-medium text-muted-foreground">Custom…</span>
-                                      </button>
-                                    </div>
-                                    {/* Divider */}
-                                    <div className="border-t mx-2" />
-                                    {/* Time Off */}
-                                    <div className="p-1">
-                                      {[
-                                        { reason: "Day Off", icon: Coffee, color: "text-muted-foreground" },
-                                        { reason: "Vacation", icon: Palmtree, color: "text-amber-600" },
-                                        { reason: "Sick Leave", icon: Thermometer, color: "text-orange-600" },
-                                        { reason: "Personal", icon: User, color: "text-blue-600" },
-                                      ].map(item => (
-                                        <button key={item.reason}
-                                          className="w-full flex items-center gap-2 px-2 py-[6px] rounded-lg hover:bg-muted/50 transition-colors text-left"
-                                          onClick={() => quickDayOff(emp.id, date, item.reason)}
-                                        >
-                                          <item.icon className={cn("w-3.5 h-3.5 shrink-0", item.color)} />
-                                          <span className="text-[11px] font-medium">{item.reason}</span>
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </div>
-                                </div>
+                            <button
+                              onClick={() => setCellMenu(isMenuOpen ? null : { empId: emp.id, date })}
+                              className={cn(
+                                "w-full h-[52px] rounded-xl border border-dashed flex items-center justify-center transition-all",
+                                isMenuOpen ? "border-primary/40 bg-primary/5" : "border-transparent hover:border-border/60 hover:bg-muted/20 group"
                               )}
-                            </div>
+                            >
+                              <Plus className={cn("w-4 h-4 transition-colors", isMenuOpen ? "text-primary" : "text-muted-foreground/20 group-hover:text-muted-foreground/50")} />
+                            </button>
                           )}
                         </td>
                       );
                     })}
-                    <td className="px-2 py-2.5 text-center sticky right-0 bg-card z-10">
-                      <div className={cn("inline-flex items-center gap-0.5 px-2 py-1 rounded-md text-xs font-bold tabular-nums",
+                    <td className="px-3 py-3 text-center sticky right-0 bg-card z-10">
+                      <div className={cn("inline-flex items-center gap-0.5 px-2.5 py-1 rounded-lg text-xs font-bold tabular-nums",
                         weekHours > 40 ? "bg-destructive/10 text-destructive" : "text-foreground"
                       )}>
                         {weekHours.toFixed(0)}h
@@ -518,6 +456,71 @@ export default function StoreScheduleSection({ storeId }: Props) {
         </div>
       </div>
 
+      {/* ── Cell Action Menu (Portal-style overlay) ── */}
+      {cellMenu && (() => {
+        const emp = employees.find((e: any) => e.id === cellMenu.empId);
+        const date = cellMenu.date;
+        return (
+          <>
+            <div className="fixed inset-0 z-[60]" onClick={() => setCellMenu(null)} />
+            <Dialog open onOpenChange={() => setCellMenu(null)}>
+              <DialogContent className="max-w-[260px] p-0 gap-0 rounded-2xl overflow-hidden">
+                {/* Header */}
+                <div className="px-4 py-3 bg-gradient-to-r from-muted/50 to-muted/20 border-b">
+                  <p className="text-[13px] font-bold">{format(date, "EEEE, MMM d")}</p>
+                  <p className="text-[11px] text-muted-foreground">{emp?.name} · {emp?.role}</p>
+                </div>
+                {/* Shifts */}
+                <div className="px-2 py-2">
+                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-2 pb-1">Assign Shift</p>
+                  {SHIFT_PRESETS.map(p => (
+                    <button key={p.type}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
+                      onClick={() => quickAssign(cellMenu.empId, date, p)}
+                    >
+                      <div className={cn("w-3 h-3 rounded-full bg-gradient-to-r shrink-0", p.gradient)} />
+                      <span className="text-[12px] font-semibold flex-1">{p.label}</span>
+                      <span className="text-[10px] text-muted-foreground tabular-nums">{p.start}–{p.end}</span>
+                    </button>
+                  ))}
+                  <button
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
+                    onClick={() => {
+                      const dow = (date.getDay() + 6) % 7;
+                      setAssignForm(f => ({ ...f, employeeId: cellMenu.empId, startDate: format(date, "yyyy-MM-dd"), endDate: format(date, "yyyy-MM-dd"), workDays: [dow] }));
+                      setAssignDialog(true);
+                      setCellMenu(null);
+                    }}
+                  >
+                    <div className="w-3 h-3 rounded-full bg-muted-foreground/20 shrink-0" />
+                    <span className="text-[12px] font-medium text-muted-foreground">Custom…</span>
+                  </button>
+                </div>
+                {/* Divider */}
+                <div className="border-t mx-3" />
+                {/* Time Off */}
+                <div className="px-2 py-2 pb-3">
+                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-2 pb-1">Time Off</p>
+                  {[
+                    { reason: "Day Off", icon: Coffee, color: "text-muted-foreground" },
+                    { reason: "Vacation", icon: Palmtree, color: "text-amber-600" },
+                    { reason: "Sick Leave", icon: Thermometer, color: "text-orange-600" },
+                    { reason: "Personal", icon: User, color: "text-blue-600" },
+                  ].map(item => (
+                    <button key={item.reason}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-muted/50 transition-colors text-left"
+                      onClick={() => quickDayOff(cellMenu.empId, date, item.reason)}
+                    >
+                      <item.icon className={cn("w-4 h-4 shrink-0", item.color)} />
+                      <span className="text-[12px] font-semibold">{item.reason}</span>
+                    </button>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
+          </>
+        );
+      })()}
       {/* ── Legend ── */}
       <div className="flex items-center gap-4 flex-wrap px-1">
         {SHIFT_PRESETS.map(p => (
