@@ -34,6 +34,7 @@ const SHIFT_PRESETS = [
 ];
 
 const OFF_REASONS = ["Day Off", "Vacation", "Sick Leave", "Personal", "Public Holiday"];
+const VISIBLE_DAY_COUNT = 14;
 
 type WorkAssignment = {
   id: string;
