@@ -310,7 +310,7 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                     <p className="text-[10px] text-muted-foreground mb-0.5">Compensation</p>
                     <p className="text-sm font-medium">
                       {detailDialog.hourly_rate
-                        ? detailDialog.hourly_rate >= 500
+                        ? detailDialog.pay_type === "monthly"
                           ? `$${detailDialog.hourly_rate.toLocaleString()}/mo (Salary)`
                           : `$${detailDialog.hourly_rate}/hr (Hourly)`
                         : "—"}
