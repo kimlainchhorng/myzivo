@@ -148,7 +148,11 @@ export default function StoreEmployeesSection({ storeId }: Props) {
   const activeCount = employees.filter(e => e.status === "active").length;
   const inactiveCount = employees.filter(e => e.status !== "active").length;
   const roleOf = (r: string) => ROLES.find(x => x.value === r);
-  const totalPayroll = employees.filter(e => e.status === "active").reduce((s, e) => s + (e.hourly_rate || 0) * 160, 0);
+  const getMonthlyPay = (emp: Employee) => {
+    const rate = emp.hourly_rate || 0;
+    return rate >= 500 ? rate : rate * 160;
+  };
+  const totalPayroll = employees.filter(e => e.status === "active").reduce((s, e) => s + getMonthlyPay(e), 0);
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
