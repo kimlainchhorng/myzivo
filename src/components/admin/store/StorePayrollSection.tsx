@@ -61,12 +61,16 @@ export default function StorePayrollSection({ storeId }: Props) {
     },
   });
 
-  const totalGross = employees.reduce((s: number, e: any) => s + (e.hourly_rate || 0) * 160, 0);
+  const getMonthlyGross = (emp: any) => {
+    const rate = emp.hourly_rate || 0;
+    return rate >= 500 ? rate : rate * 160;
+  };
+  const totalGross = employees.reduce((s: number, e: any) => s + getMonthlyGross(e), 0);
   const totalTax = totalGross * TAX_RATE;
   const totalBenefits = totalGross * BENEFITS_RATE;
   const totalNet = totalGross - totalTax - totalBenefits;
-  const avgRate = employees.length ? employees.reduce((s: number, e: any) => s + (e.hourly_rate || 0), 0) / employees.length : 0;
-  const highestPaid = employees.reduce((max: any, e: any) => (e.hourly_rate || 0) > (max?.hourly_rate || 0) ? e : max, employees[0]);
+  const avgMonthly = employees.length ? totalGross / employees.length : 0;
+  const highestPaid = employees.reduce((max: any, e: any) => getMonthlyGross(e) > getMonthlyGross(max || {}) ? e : max, employees[0]);
   const budgetUsed = totalGross > 0 ? Math.min(100, (totalGross / 50000) * 100) : 0;
 
   const processPayRun = () => {
