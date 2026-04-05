@@ -240,16 +240,14 @@ export const usePushNotifications = () => {
     const notificationReceivedListener = PushNotifications.addListener(
       "pushNotificationReceived",
       (notification: PushNotificationSchema) => {
-        
         setNotifications(prev => [notification, ...prev].slice(0, 50));
-        
-        // Show in-app toast for foreground notifications
-        toast.info(notification.title || "Notification", {
-          description: notification.body,
-        });
 
         const payloadData = notification.data as Record<string, any> | undefined;
         if (payloadData?.type === "incoming_call") {
+          toast.info(notification.title || "Incoming call", {
+            description: notification.body || "Someone is calling you",
+          });
+
           window.dispatchEvent(new CustomEvent("incoming-call-push", {
             detail: {
               call_id: payloadData.call_id,
@@ -257,10 +255,13 @@ export const usePushNotifications = () => {
               call_type: payloadData.call_type,
             },
           }));
-          if (!window.location.pathname.startsWith("/chat")) {
-            window.location.href = "/chat";
-          }
+          return;
         }
+
+        // Show in-app toast for foreground notifications
+        toast.info(notification.title || "Notification", {
+          description: notification.body,
+        });
       }
     );
 
