@@ -183,14 +183,17 @@ export function useWebRTC({
   }, [cleanup, onEnded, reportFailure]);
 
   const processSignalData = useCallback(async (data: CallSignalData) => {
-    const pc = pcRef.current;
-    if (!pc) return;
-
+    // IMPORTANT: Check termination status BEFORE the pc null guard.
+    // If the other side ends/declines while our PeerConnection hasn't been
+    // created yet, we must still honor the termination signal.
     if (data.status === "ended" || data.status === "declined") {
       cleanup();
       onEnded();
       return;
     }
+
+    const pc = pcRef.current;
+    if (!pc) return;
 
     if (role === "callee" && data.offer && !pc.remoteDescription) {
       try {
