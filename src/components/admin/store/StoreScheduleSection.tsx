@@ -450,7 +450,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
 
         {/* Days Off List */}
         <TabsContent value="daysoff" className="mt-4 space-y-3">
-          {daysOff.length === 0 ? (
+          {safeDaysOff.length === 0 ? (
             <Card className="flex flex-col items-center justify-center py-16 text-center">
               <CalendarOff className="w-10 h-10 text-muted-foreground/30 mb-3" />
               <p className="text-sm text-muted-foreground mb-3">No days off set yet.</p>
