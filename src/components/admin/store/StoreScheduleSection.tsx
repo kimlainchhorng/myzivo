@@ -407,7 +407,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
 
         {/* Assignments List */}
         <TabsContent value="assignments" className="mt-4 space-y-3">
-          {assignments.length === 0 ? (
+          {safeAssignments.length === 0 ? (
             <Card className="flex flex-col items-center justify-center py-16 text-center">
               <Briefcase className="w-10 h-10 text-muted-foreground/30 mb-3" />
               <p className="text-sm text-muted-foreground mb-3">No work assignments yet. Assign schedules to your employees.</p>
