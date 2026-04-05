@@ -115,7 +115,15 @@ export default function StoreEmployeesSection({ storeId }: Props) {
   const openAdd = () => { setEditing(null); setForm(emptyForm); setDialog(true); };
   const openEdit = (emp: Employee) => {
     setEditing(emp);
-    setForm({ name: emp.name, email: emp.email || "", phone: emp.phone || "", role: emp.role, hourly_rate: emp.hourly_rate?.toString() || "", notes: emp.notes || "", department: "General", emergency_contact: "", address: "", start_date: format(new Date(emp.created_at), "yyyy-MM-dd") });
+    const isMonthlySalary = (emp.hourly_rate || 0) >= 500;
+    setForm({
+      name: emp.name, email: emp.email || "", phone: emp.phone || "", role: emp.role,
+      hourly_rate: isMonthlySalary ? "" : (emp.hourly_rate?.toString() || ""),
+      pay_type: isMonthlySalary ? "monthly" : "hourly",
+      monthly_salary: isMonthlySalary ? (emp.hourly_rate?.toString() || "") : "",
+      notes: emp.notes || "", department: "General", emergency_contact: "", address: "",
+      start_date: format(new Date(emp.created_at), "yyyy-MM-dd"),
+    });
     setDialog(true);
   };
   const closeDialog = () => { setDialog(false); setEditing(null); setForm(emptyForm); };
