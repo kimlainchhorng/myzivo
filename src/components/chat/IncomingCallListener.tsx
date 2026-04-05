@@ -15,6 +15,7 @@ import CallPiP from "./CallPiP";
 import { playIncomingRingtone, primeCallAudio, registerCallAudioUnlock } from "@/lib/callAudio";
 import { Capacitor } from "@capacitor/core";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { toast } from "sonner";
 
 interface IncomingCall {
   id: string;
@@ -363,38 +364,57 @@ export default function IncomingCallListener() {
     const { error: updateError } = await (supabase as any).from("call_signals")
       .update({ status: "answered" })
       .eq("id", incoming.id)
+      .eq("callee_id", user?.id)
       .in("status", ["ringing", "answered"]);
 
     if (updateError) {
       console.error("[Call] Failed to accept incoming call:", updateError);
+      toast.error("Could not answer call", { description: "Please try again." });
+      setIsAccepting(false);
+      return;
     }
 
-    const { data: statusCheck, error: statusError } = await (supabase as any)
-      .from("call_signals")
-      .select("status")
-      .eq("id", incoming.id)
-      .maybeSingle();
+    let confirmedStatus: string | null = null;
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const { data: statusCheck } = await (supabase as any)
+        .from("call_signals")
+        .select("status")
+        .eq("id", incoming.id)
+        .eq("callee_id", user?.id)
+        .maybeSingle();
 
-    if (statusError) {
-      // If status read is blocked/transient, continue optimistically and let
-      // call state updates end the UI if the call was already closed.
+      const nextStatus = statusCheck?.status ?? null;
+      if (nextStatus === "answered") {
+        confirmedStatus = nextStatus;
+        break;
+      }
+
+      if (nextStatus === "declined" || nextStatus === "missed" || nextStatus === "ended") {
+        confirmedStatus = nextStatus;
+        break;
+      }
+
+      await new Promise((resolve) => window.setTimeout(resolve, 220));
+    }
+
+    if (confirmedStatus === "answered") {
       setAnsweredCall(incoming);
       setIncoming(null);
       setIsAccepting(false);
       return;
     }
 
-    const status = statusCheck?.status;
-    if (status === "ringing" || status === "answered") {
-      setAnsweredCall(incoming);
+    if (confirmedStatus === "declined" || confirmedStatus === "missed" || confirmedStatus === "ended") {
       setIncoming(null);
       setIsAccepting(false);
       return;
     }
 
-    setIncoming(null);
+    toast.error("Call answer did not sync", {
+      description: "Please answer again. Network may be unstable.",
+    });
     setIsAccepting(false);
-  }, [incoming, isAccepting]);
+  }, [incoming, isAccepting, user?.id]);
 
   const handleDecline = useCallback(async () => {
     if (!incoming) return;
