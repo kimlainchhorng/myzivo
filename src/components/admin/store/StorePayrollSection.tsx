@@ -160,7 +160,8 @@ export default function StorePayrollSection({ storeId }: Props) {
                   {employees.length === 0 ? (
                     <tr><td colSpan={8} className="text-center py-12 text-muted-foreground text-sm">No active employees.</td></tr>
                   ) : employees.map((emp: any) => {
-                    const gross = (emp.hourly_rate || 0) * 160;
+                    const isSalary = (emp.hourly_rate || 0) >= 500;
+                    const gross = getMonthlyGross(emp);
                     const tax = gross * TAX_RATE;
                     const net = gross - tax - (gross * BENEFITS_RATE);
                     return (
@@ -172,8 +173,15 @@ export default function StorePayrollSection({ storeId }: Props) {
                           </div>
                         </td>
                         <td className="px-4 py-3"><Badge variant="secondary" className="text-[11px] capitalize">{emp.role}</Badge></td>
-                        <td className="px-4 py-3 text-right font-mono text-[13px]">${(emp.hourly_rate || 0).toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right font-mono text-[13px]">160</td>
+                        <td className="px-4 py-3 text-right font-mono text-[13px]">
+                          {isSalary
+                            ? <span>${(emp.hourly_rate || 0).toLocaleString()}<span className="text-muted-foreground text-[10px]">/mo</span></span>
+                            : <span>${(emp.hourly_rate || 0).toFixed(2)}<span className="text-muted-foreground text-[10px]">/hr</span></span>
+                          }
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-[13px]">
+                          {isSalary ? <Badge variant="outline" className="text-[10px]">Salary</Badge> : "160h"}
+                        </td>
                         <td className="px-4 py-3 text-right font-mono text-[13px] font-semibold">${gross.toLocaleString()}</td>
                         <td className="px-4 py-3 text-right font-mono text-[13px] text-red-500">-${tax.toLocaleString()}</td>
                         <td className="px-4 py-3 text-right font-mono text-[13px] font-bold text-emerald-600">${net.toLocaleString()}</td>
