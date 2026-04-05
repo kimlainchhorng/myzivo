@@ -457,7 +457,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
               <Button size="sm" variant="outline" onClick={() => setOffDialog(true)} className="gap-1.5"><CalendarOff className="w-3.5 h-3.5" /> Set Day Off</Button>
             </Card>
           ) : (() => {
-            const grouped = daysOff.reduce((acc, d) => {
+            const grouped = safeDaysOff.reduce((acc, d) => {
               const key = d.employeeId;
               if (!acc[key]) acc[key] = [];
               acc[key].push(d);
