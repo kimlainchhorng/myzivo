@@ -117,7 +117,8 @@ interface CallSignalData {
   status?: string | null;
 }
 
-const DISCONNECT_GRACE_MS = 10000;
+const PRE_CONNECT_GRACE_MS = 30000;
+const POST_CONNECT_GRACE_MS = 10000;
 
 export function useWebRTC({
   callId,
@@ -168,7 +169,7 @@ export function useWebRTC({
     startedRef.current = false;
   }, [clearDisconnectTimeout]);
 
-  const scheduleDisconnectTimeout = useCallback((pc: RTCPeerConnection) => {
+  const scheduleDisconnectTimeout = useCallback((pc: RTCPeerConnection, timeoutMs: number) => {
     if (disconnectTimeoutRef.current) return;
 
     disconnectTimeoutRef.current = setTimeout(() => {
@@ -178,7 +179,7 @@ export function useWebRTC({
       reportFailure(new DOMException("Connection timed out", "NetworkError"));
       cleanup();
       onEnded();
-    }, DISCONNECT_GRACE_MS);
+    }, timeoutMs);
   }, [cleanup, onEnded, reportFailure]);
 
   const processSignalData = useCallback(async (data: CallSignalData) => {
@@ -313,7 +314,10 @@ export function useWebRTC({
 
         if (pc.connectionState === "disconnected") {
           setIsReconnecting(true);
-          scheduleDisconnectTimeout(pc);
+          scheduleDisconnectTimeout(
+            pc,
+            hasEverConnectedRef.current ? POST_CONNECT_GRACE_MS : PRE_CONNECT_GRACE_MS,
+          );
           return;
         }
 
@@ -324,7 +328,10 @@ export function useWebRTC({
             restartIceAttemptedRef.current = true;
             try {
               pc.restartIce();
-              scheduleDisconnectTimeout(pc);
+              scheduleDisconnectTimeout(
+                pc,
+                hasEverConnectedRef.current ? POST_CONNECT_GRACE_MS : PRE_CONNECT_GRACE_MS,
+              );
               return;
             } catch (err) {
               console.warn("ICE restart failed:", err);
@@ -335,7 +342,7 @@ export function useWebRTC({
           // surface `failed` before negotiation fully stabilizes. Give the call
           // a grace window instead of ending immediately.
           if (!hasEverConnectedRef.current) {
-            scheduleDisconnectTimeout(pc);
+            scheduleDisconnectTimeout(pc, PRE_CONNECT_GRACE_MS);
             return;
           }
 
