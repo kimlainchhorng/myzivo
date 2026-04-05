@@ -204,6 +204,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       user.email?.split("@")[0] ||
       "Someone";
 
+    // Fetch sender's avatar URL for rich notification
+    let senderAvatarUrl = "";
+    try {
+      const { data: profile } = await (supabase as any)
+        .from("profiles")
+        .select("avatar_url")
+        .or(`id.eq.${user.id},user_id.eq.${user.id}`)
+        .limit(1)
+        .maybeSingle();
+      senderAvatarUrl = profile?.avatar_url || "";
+    } catch { /* ignore */ }
+
     let preview = messageText.trim();
     if (messageType === "image" || messageType === "locked_image") preview = "📷 Photo";
     else if (messageType === "video" || messageType === "locked_video") preview = "🎥 Video";
@@ -224,7 +236,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             type: "chat_message",
             sender_id: user.id,
             sender_name: senderName,
+            sender_avatar_url: senderAvatarUrl,
           },
+          image_url: senderAvatarUrl,
         },
       });
     } catch (pushError) {

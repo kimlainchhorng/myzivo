@@ -18,6 +18,7 @@ interface PushRequest {
   body?: string;
   data?: Record<string, unknown>;
   order_id?: string;
+  image_url?: string;
 }
 
 serve(async (req) => {
@@ -55,7 +56,7 @@ serve(async (req) => {
       );
     }
 
-    const { user_id, device_token_id, notification_type, title, body, data } = payload;
+    const { user_id, device_token_id, notification_type, title, body, data, image_url } = payload;
 
     if (!title || !notification_type) {
       return new Response(
@@ -126,9 +127,9 @@ serve(async (req) => {
           // Legacy web tokens - use web push
           sendResult = await sendWebPush(token.token, { title, body, data });
         } else if (token.platform === "ios") {
-          sendResult = await sendAPNS(token.token, { title, body, data });
+          sendResult = await sendAPNS(token.token, { title, body, data, image_url });
         } else if (token.platform === "android") {
-          sendResult = await sendFCM(token.token, { title, body, data });
+          sendResult = await sendFCM(token.token, { title, body, data, image_url });
         }
 
         await updateNotificationLog(supabase, log?.id, sendResult);
@@ -326,7 +327,7 @@ async function sendWebPush(
 // APNs implementation via FCM (Firebase handles APNs routing for Capacitor apps)
 async function sendAPNS(
   token: string,
-  payload: { title: string; body?: string; data?: Record<string, unknown> }
+  payload: { title: string; body?: string; data?: Record<string, unknown>; image_url?: string }
 ): Promise<{ success: boolean; error?: string }> {
   const keyId = Deno.env.get("APNS_KEY_ID");
   const teamId = Deno.env.get("APNS_TEAM_ID");
@@ -357,9 +358,15 @@ async function sendAPNS(
         },
         sound: "default",
         badge: 1,
+        "mutable-content": 1,
       },
       ...(payload.data || {}),
     };
+
+    // Include image URL for Notification Service Extension to download
+    if (payload.image_url) {
+      apnsPayload.image_url = payload.image_url;
+    }
 
     const response = await fetch(`${apnsHost}/3/device/${token}`, {
       method: "POST",
@@ -451,7 +458,7 @@ function base64ToBytes(base64: string): Uint8Array {
 // FCM v1 HTTP API implementation
 async function sendFCM(
   token: string,
-  payload: { title: string; body?: string; data?: Record<string, unknown> }
+  payload: { title: string; body?: string; data?: Record<string, unknown>; image_url?: string }
 ): Promise<{ success: boolean; error?: string }> {
   const fcmKey = Deno.env.get("FCM_SERVER_KEY");
 
@@ -468,6 +475,19 @@ async function sendFCM(
         stringData[key] = String(value ?? "");
       }
     }
+    if (payload.image_url) {
+      stringData.image_url = payload.image_url;
+    }
+
+    const notification: Record<string, unknown> = {
+      title: payload.title,
+      body: payload.body || "",
+      sound: "default",
+      badge: "1",
+    };
+    if (payload.image_url) {
+      notification.image = payload.image_url;
+    }
 
     const response = await fetch("https://fcm.googleapis.com/fcm/send", {
       method: "POST",
@@ -477,12 +497,7 @@ async function sendFCM(
       },
       body: JSON.stringify({
         to: token,
-        notification: {
-          title: payload.title,
-          body: payload.body || "",
-          sound: "default",
-          badge: "1",
-        },
+        notification,
         data: stringData,
         priority: "high",
         // iOS-specific: ensure notification appears when app is in background
