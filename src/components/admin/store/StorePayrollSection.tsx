@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   DollarSign, Plus, Download, Users, TrendingUp, Clock, FileText,
   Receipt, Percent, Award, AlertCircle, CheckCircle2, ArrowUpRight,
-  Calculator, Banknote, PiggyBank, CreditCard
+  Calculator, Banknote, PiggyBank, CreditCard, Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
