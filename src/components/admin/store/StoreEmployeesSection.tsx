@@ -31,6 +31,7 @@ type Employee = {
   name: string; email: string | null; phone: string | null;
   role: string; status: string; hourly_rate: number | null;
   pay_type: string; notes: string | null; created_at: string;
+  employee_number: number | null;
 };
 
 const ROLES = [
