@@ -319,7 +319,7 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                   <Card className="p-3"><p className="text-[10px] text-muted-foreground mb-0.5">Joined</p><p className="text-sm font-medium">{format(new Date(detailDialog.created_at), "MMM d, yyyy")}</p></Card>
                 </div>
                 {detailDialog.hourly_rate != null && detailDialog.hourly_rate > 0 && (() => {
-                  const isSalary = detailDialog.hourly_rate! >= 500;
+                  const isSalary = detailDialog.pay_type === "monthly";
                   const monthly = isSalary ? detailDialog.hourly_rate! : detailDialog.hourly_rate! * 160;
                   const weekly = monthly / 4;
                   const yearly = monthly * 12;
