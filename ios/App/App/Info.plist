@@ -25,7 +25,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>ZIVO uses your camera to capture a profile photo for your account. For example, when you tap "Change Profile Photo" on your Profile page, your camera opens so you can take a new picture. The photo is stored on your account and may be shown to restaurant partners or drivers to help confirm your orders.</string>
+	<string>ZIVO uses your camera for video calls and to capture a profile photo for your account.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>ZIVO uses your microphone for voice and video calls between users.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>ZIVO accesses your photo library so you can select an existing photo to use as your profile picture on your account.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
@@ -43,6 +45,8 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
+		<string>voip</string>
+		<string>audio</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
