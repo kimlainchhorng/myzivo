@@ -2,10 +2,10 @@
  * Push Notifications Hook
  * Handles push notification registration and management for Capacitor apps
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from "@capacitor/push-notifications";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { safeInternalPath } from "@/lib/urlSafety";
@@ -25,7 +25,7 @@ export interface PushNotificationState {
 }
 
 export const usePushNotifications = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [state, setState] = useState<PushNotificationState>({
     isSupported: false,
     isRegistered: false,
@@ -33,6 +33,8 @@ export const usePushNotifications = () => {
     permission: "unknown",
   });
   const [notifications, setNotifications] = useState<PushNotificationSchema[]>([]);
+  const tokenRetryAttemptsRef = useRef<Record<string, number>>({});
+  const pendingNativeTokenRef = useRef<string | null>(null);
 
   // Check if push notifications are supported (native or web with service worker)
   const checkSupport = useCallback(() => {
@@ -116,33 +118,92 @@ export const usePushNotifications = () => {
     return false;
   }, []);
 
-  // Save token to database via edge function
-  const saveToken = useCallback(async (token: string) => {
+  // Save token to database so server-side push delivery can target this device.
+  const saveToken = useCallback(async (token: string, saveAttempt = 0) => {
     if (!user?.id) return;
 
     try {
       const platform = Capacitor.getPlatform(); // 'ios' | 'android' | 'web'
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session: storedSession } } = await supabase.auth.getSession();
+      const activeSession = session ?? storedSession;
+
+      // Native auth/session hydration can lag behind registration event after app launch.
+      // Retry a few times so token registration doesn't silently fail with 401.
+      if (!activeSession?.access_token) {
+        const sessionRetryAttempt = (tokenRetryAttemptsRef.current[token] || 0) + 1;
+        tokenRetryAttemptsRef.current[token] = sessionRetryAttempt;
+
+        if (sessionRetryAttempt <= 8) {
+          setTimeout(() => {
+            void saveToken(token);
+          }, 700 * sessionRetryAttempt);
+          return;
+        }
+
+        console.error("[Push] Could not register token: auth session unavailable");
+        return;
+      }
       
       setState(prev => ({ ...prev, isRegistered: true, token }));
-      
-      // Persist token to Supabase so server can send push notifications
-      const { error } = await supabase.functions.invoke("register-push-token", {
-        body: { token, platform },
-        headers: session?.access_token
-          ? { Authorization: `Bearer ${session.access_token}` }
-          : undefined,
+
+      const now = new Date().toISOString();
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/device_tokens?on_conflict=user_id,token`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${activeSession.access_token}`,
+          Prefer: "resolution=merge-duplicates,return=representation",
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          token,
+          platform,
+          is_active: true,
+          last_used_at: now,
+          updated_at: now,
+        }),
       });
 
-      if (error) {
-        console.error("[Push] Error saving token to server:", error);
+      const rawText = await response.text();
+      let responseBody: unknown = null;
+
+      try {
+        responseBody = rawText ? JSON.parse(rawText) : null;
+      } catch {
+        responseBody = rawText;
+      }
+
+      if (!response.ok) {
+        const errorMessage = typeof responseBody === "string"
+          ? responseBody
+          : JSON.stringify(responseBody);
+
+        console.error("[Push] Error saving token to server:", {
+          status: response.status,
+          body: responseBody,
+        });
+
+        const msg = `${response.status} ${errorMessage}`.toLowerCase();
+        if ((msg.includes("401") || msg.includes("invalid") || msg.includes("expired")) && saveAttempt < 2) {
+          setTimeout(() => {
+            void saveToken(token, saveAttempt + 1);
+          }, 800);
+        }
       } else {
+        delete tokenRetryAttemptsRef.current[token];
+        pendingNativeTokenRef.current = null;
         console.log(`[Push] ${platform} token registered successfully`);
       }
     } catch (error) {
       console.error("[Push] Error saving token:", error);
     }
-  }, [user?.id]);
+  }, [session, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id || !pendingNativeTokenRef.current) return;
+    void saveToken(pendingNativeTokenRef.current);
+  }, [user?.id, saveToken]);
 
   // Initialize push notifications
   useEffect(() => {
@@ -160,8 +221,11 @@ export const usePushNotifications = () => {
     const registrationListener = PushNotifications.addListener(
       "registration",
       (token: Token) => {
-        
-        saveToken(token.value);
+        if (!user?.id) {
+          pendingNativeTokenRef.current = token.value;
+          return;
+        }
+        void saveToken(token.value);
       }
     );
 
@@ -197,6 +261,10 @@ export const usePushNotifications = () => {
     // Auto-register if user is logged in
     if (user?.id) {
       register();
+      // Second attempt helps when iOS permission/session setup races at launch.
+      setTimeout(() => {
+        void register();
+      }, 2000);
     }
 
     return () => {

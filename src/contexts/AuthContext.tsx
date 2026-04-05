@@ -29,6 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const initializedRef = useRef(false);
+  const loginGraceUntilRef = useRef(0);
 
   const checkAdminRole = async (userId: string) => {
     try {
@@ -65,9 +66,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // 2. Listen for subsequent auth changes (sign in, sign out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         // Ignore events that fire before getSession has finished
         if (!initializedRef.current) return;
+
+        console.log("[Auth] onAuthStateChange", {
+          event,
+          hasSession: !!session,
+          userId: session?.user?.id ?? null,
+          expiresAt: session?.expires_at ?? null,
+        });
+
+        // iOS/WebView can sometimes emit a transient SIGNED_OUT right after SIGNED_IN.
+        // During a short grace window, attempt to rehydrate before accepting logout.
+        if (event === "SIGNED_OUT" && Date.now() < loginGraceUntilRef.current) {
+          console.warn("[Auth] Ignoring transient SIGNED_OUT during login grace window");
+          void supabase.auth.getSession().then(async ({ data: { session: recoveredSession } }) => {
+            if (!recoveredSession?.user) return;
+
+            setSession(recoveredSession);
+            setUser(recoveredSession.user);
+
+            try {
+              const adminStatus = await checkAdminRole(recoveredSession.user.id);
+              setIsAdmin(adminStatus);
+            } catch {
+              setIsAdmin(false);
+            }
+          });
+          return;
+        }
+
+        // Fresh logins should always start a fresh security window.
+        // Keep INITIAL_SESSION untouched so persisted sessions still respect max age.
+        if (event === "SIGNED_IN") {
+          loginGraceUntilRef.current = Date.now() + 15_000;
+          clearSessionArtifacts();
+        }
 
         setSession(session);
         setUser(session?.user ?? null);
@@ -79,6 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setIsAdmin(false);
           });
         } else {
+          clearSessionArtifacts();
           setIsAdmin(false);
         }
       }
@@ -113,6 +149,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password,
       });
       if (!error) {
+        loginGraceUntilRef.current = Date.now() + 15_000;
+
+        // Reset session-security timers at the exact moment of successful auth.
+        clearSessionArtifacts();
+
         // Log login event asynchronously (fire-and-forget)
         supabase.functions.invoke("log-login", {
           body: { user_agent: navigator.userAgent },

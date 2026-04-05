@@ -308,6 +308,10 @@ async function sendAPNS(
   const teamId = Deno.env.get("APNS_TEAM_ID");
   const bundleId = Deno.env.get("APNS_BUNDLE_ID") || "com.hizovo.app";
   const privateKeyRaw = Deno.env.get("APNS_PRIVATE_KEY");
+  const apnsEnvironment = (Deno.env.get("APNS_ENV") || "development").toLowerCase();
+  const apnsHost = apnsEnvironment === "production"
+    ? "https://api.push.apple.com"
+    : "https://api.sandbox.push.apple.com";
 
   if (!keyId || !teamId || !privateKeyRaw) {
     console.error("[APNS] Missing APNS credentials");
@@ -333,7 +337,7 @@ async function sendAPNS(
       ...(payload.data || {}),
     };
 
-    const response = await fetch(`https://api.push.apple.com/3/device/${token}`, {
+    const response = await fetch(`${apnsHost}/3/device/${token}`, {
       method: "POST",
       headers: {
         authorization: `bearer ${tokenJwt}`,
