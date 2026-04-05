@@ -198,21 +198,21 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const sendChatPush = useCallback(async (messageType: string, messageText: string) => {
     if (!user?.id || !recipientId || recipientId === user.id) return;
 
-    const senderName =
+    let senderName =
       user.user_metadata?.full_name ||
       user.user_metadata?.name ||
       user.email?.split("@")[0] ||
       "Someone";
 
-    // Fetch sender's avatar URL for rich notification
+    // Fetch sender's profile for accurate name & avatar
     let senderAvatarUrl = "";
     try {
       const { data: profile } = await (supabase as any)
         .from("profiles")
-        .select("avatar_url")
-        .or(`id.eq.${user.id},user_id.eq.${user.id}`)
-        .limit(1)
+        .select("full_name, avatar_url")
+        .eq("id", user.id)
         .maybeSingle();
+      if (profile?.full_name) senderName = profile.full_name;
       senderAvatarUrl = profile?.avatar_url || "";
     } catch { /* ignore */ }
 
