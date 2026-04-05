@@ -43,6 +43,7 @@ const DEFAULT_TAX_RATE = 0.22;
 const DEFAULT_BENEFITS_RATE = 0.08;
 
 export default function StorePayrollSection({ storeId }: Props) {
+  const queryClient = useQueryClient();
   const [period, setPeriod] = useState(0);
   const [runDialog, setRunDialog] = useState(false);
   const [bonusDialog, setBonusDialog] = useState(false);
@@ -58,6 +59,9 @@ export default function StorePayrollSection({ storeId }: Props) {
   const [payFrequency, setPayFrequency] = useState("monthly");
   const [payDay, setPayDay] = useState("last");
   const [budgetLimit, setBudgetLimit] = useState("50000");
+  const [editDialog, setEditDialog] = useState(false);
+  const [editingEmp, setEditingEmp] = useState<any>(null);
+  const [editForm, setEditForm] = useState({ name: "", role: "", hourly_rate: "", pay_type: "hourly" });
   const periods = getPayPeriods();
 
   const { data: employees = [] } = useQuery({
@@ -67,6 +71,40 @@ export default function StorePayrollSection({ storeId }: Props) {
       return (data || []) as any[];
     },
   });
+
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      const rateValue = editForm.pay_type === "monthly"
+        ? parseFloat(editForm.hourly_rate || "0")
+        : parseFloat(editForm.hourly_rate || "0");
+      const { error } = await supabase.from("store_employees").update({
+        name: editForm.name.trim(),
+        role: editForm.role,
+        hourly_rate: rateValue,
+        pay_type: editForm.pay_type,
+      }).eq("id", editingEmp?.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["store-employees-payroll", storeId] });
+      queryClient.invalidateQueries({ queryKey: ["store-employees", storeId] });
+      toast.success("Employee updated");
+      setEditDialog(false);
+      setEditingEmp(null);
+    },
+    onError: (e) => toast.error("Failed: " + e.message),
+  });
+
+  const openEditEmp = (emp: any) => {
+    setEditingEmp(emp);
+    setEditForm({
+      name: emp.name || "",
+      role: emp.role || "staff",
+      hourly_rate: emp.hourly_rate?.toString() || "",
+      pay_type: emp.pay_type || "hourly",
+    });
+    setEditDialog(true);
+  };
 
   const getMonthlyGross = (emp: any) => {
     const rate = emp.hourly_rate || 0;
