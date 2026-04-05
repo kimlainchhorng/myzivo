@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
           .from("store_profiles")
           .select("id")
           .eq("id", store_id)
-          .eq("owner_id", user.id)
+          .eq("owner_id", userId)
           .maybeSingle();
         if (!store) {
           return new Response(JSON.stringify({ error: "Not store owner" }), {
