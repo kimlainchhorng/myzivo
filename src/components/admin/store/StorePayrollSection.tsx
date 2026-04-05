@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   DollarSign, Plus, Download, Users, TrendingUp, Clock, FileText,
   Receipt, Percent, Award, AlertCircle, CheckCircle2, ArrowUpRight,
-  Calculator, Banknote, PiggyBank, CreditCard
+  Calculator, Banknote, PiggyBank, CreditCard, Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -39,8 +39,8 @@ function getPayPeriods() {
   });
 }
 
-const TAX_RATE = 0.22;
-const BENEFITS_RATE = 0.08;
+const DEFAULT_TAX_RATE = 0.22;
+const DEFAULT_BENEFITS_RATE = 0.08;
 
 export default function StorePayrollSection({ storeId }: Props) {
   const [period, setPeriod] = useState(0);
@@ -51,6 +51,11 @@ export default function StorePayrollSection({ storeId }: Props) {
   const [tab, setTab] = useState("overview");
   const [overtimeEnabled, setOvertimeEnabled] = useState(true);
   const [overtimeRate, setOvertimeRate] = useState("1.5");
+  const [taxRate, setTaxRate] = useState(DEFAULT_TAX_RATE);
+  const [benefitsRate, setBenefitsRate] = useState(DEFAULT_BENEFITS_RATE);
+  const [payFrequency, setPayFrequency] = useState("monthly");
+  const [payDay, setPayDay] = useState("last");
+  const [budgetLimit, setBudgetLimit] = useState("50000");
   const periods = getPayPeriods();
 
   const { data: employees = [] } = useQuery({
@@ -66,12 +71,12 @@ export default function StorePayrollSection({ storeId }: Props) {
     return emp.pay_type === "monthly" ? rate : rate * 160;
   };
   const totalGross = employees.reduce((s: number, e: any) => s + getMonthlyGross(e), 0);
-  const totalTax = totalGross * TAX_RATE;
-  const totalBenefits = totalGross * BENEFITS_RATE;
+  const totalTax = totalGross * taxRate;
+  const totalBenefits = totalGross * benefitsRate;
   const totalNet = totalGross - totalTax - totalBenefits;
   const avgMonthly = employees.length ? totalGross / employees.length : 0;
   const highestPaid = employees.reduce((max: any, e: any) => getMonthlyGross(e) > getMonthlyGross(max || {}) ? e : max, employees[0]);
-  const budgetUsed = totalGross > 0 ? Math.min(100, (totalGross / 50000) * 100) : 0;
+  const budgetUsed = totalGross > 0 ? Math.min(100, (totalGross / (parseFloat(budgetLimit) || 50000)) * 100) : 0;
 
   const processPayRun = () => {
     const run: PayRun = {
@@ -91,7 +96,7 @@ export default function StorePayrollSection({ storeId }: Props) {
         {[
           { icon: DollarSign, label: "Gross Payroll", value: `$${totalGross.toLocaleString()}`, sub: "Monthly estimate", color: "text-emerald-500", bg: "bg-emerald-500/10" },
           { icon: Banknote, label: "Net Pay", value: `$${totalNet.toLocaleString()}`, sub: "After deductions", color: "text-blue-500", bg: "bg-blue-500/10" },
-          { icon: Percent, label: "Tax Estimate", value: `$${totalTax.toLocaleString()}`, sub: `${(TAX_RATE * 100).toFixed(0)}% rate`, color: "text-amber-500", bg: "bg-amber-500/10" },
+          { icon: Percent, label: "Tax Estimate", value: `$${totalTax.toLocaleString()}`, sub: `${(taxRate * 100).toFixed(0)}% rate`, color: "text-amber-500", bg: "bg-amber-500/10" },
           { icon: Users, label: "Active Staff", value: employees.length, sub: `Avg $${avgMonthly.toFixed(0)}/mo`, color: "text-purple-500", bg: "bg-purple-500/10" },
         ].map((s, i) => (
           <Card key={i} className="p-4 relative overflow-hidden">
@@ -113,7 +118,7 @@ export default function StorePayrollSection({ storeId }: Props) {
       <Card className="p-4">
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-semibold">Monthly Payroll Budget</p>
-          <p className="text-xs text-muted-foreground">${totalGross.toLocaleString()} / $50,000</p>
+          <p className="text-xs text-muted-foreground">${totalGross.toLocaleString()} / ${parseFloat(budgetLimit || "50000").toLocaleString()}</p>
         </div>
         <Progress value={budgetUsed} className="h-2" />
         <p className="text-[10px] text-muted-foreground mt-1">{budgetUsed.toFixed(0)}% of budget allocated</p>
@@ -162,8 +167,8 @@ export default function StorePayrollSection({ storeId }: Props) {
                   ) : employees.map((emp: any) => {
                     const isSalary = emp.pay_type === "monthly";
                     const gross = getMonthlyGross(emp);
-                    const tax = gross * TAX_RATE;
-                    const net = gross - tax - (gross * BENEFITS_RATE);
+                    const tax = gross * taxRate;
+                    const net = gross - tax - (gross * benefitsRate);
                     return (
                       <tr key={emp.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
                         <td className="px-4 py-3">
@@ -214,8 +219,8 @@ export default function StorePayrollSection({ storeId }: Props) {
               <div className="space-y-3">
                 {[
                   { label: "Base Wages", value: totalGross, pct: 100, color: "bg-blue-500" },
-                  { label: `Tax (${(TAX_RATE * 100).toFixed(0)}%)`, value: totalTax, pct: TAX_RATE * 100, color: "bg-red-500" },
-                  { label: `Benefits (${(BENEFITS_RATE * 100).toFixed(0)}%)`, value: totalBenefits, pct: BENEFITS_RATE * 100, color: "bg-amber-500" },
+                  { label: `Tax (${(taxRate * 100).toFixed(0)}%)`, value: totalTax, pct: taxRate * 100, color: "bg-red-500" },
+                  { label: `Benefits (${(benefitsRate * 100).toFixed(0)}%)`, value: totalBenefits, pct: benefitsRate * 100, color: "bg-amber-500" },
                   { label: "Net Payout", value: totalNet, pct: (totalNet / totalGross) * 100 || 0, color: "bg-emerald-500" },
                 ].map((item, i) => (
                   <div key={i}>
@@ -281,22 +286,120 @@ export default function StorePayrollSection({ storeId }: Props) {
 
         {/* Settings Tab */}
         <TabsContent value="settings" className="mt-4 space-y-4">
+          {/* Overtime */}
           <Card className="p-5 space-y-5">
-            <h3 className="font-semibold text-sm flex items-center gap-2"><PiggyBank className="w-4 h-4 text-muted-foreground" /> Payroll Settings</h3>
-            <div className="flex items-center justify-between"><div><p className="text-sm font-medium">Overtime Calculation</p><p className="text-xs text-muted-foreground">Auto-calculate overtime beyond 40h/week</p></div><Switch checked={overtimeEnabled} onCheckedChange={setOvertimeEnabled} /></div>
+            <h3 className="font-semibold text-sm flex items-center gap-2"><PiggyBank className="w-4 h-4 text-muted-foreground" /> Overtime</h3>
+            <div className="flex items-center justify-between">
+              <div><p className="text-sm font-medium">Overtime Calculation</p><p className="text-xs text-muted-foreground">Auto-calculate overtime beyond 40h/week</p></div>
+              <Switch checked={overtimeEnabled} onCheckedChange={setOvertimeEnabled} />
+            </div>
             {overtimeEnabled && (
               <div className="space-y-1.5 pl-4 border-l-2 border-primary/20">
                 <Label className="text-xs">Overtime Multiplier</Label>
                 <Select value={overtimeRate} onValueChange={setOvertimeRate}>
                   <SelectTrigger className="w-40 h-8"><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="1.5">1.5x (Standard)</SelectItem><SelectItem value="2.0">2.0x (Double Time)</SelectItem><SelectItem value="1.25">1.25x</SelectItem></SelectContent>
+                  <SelectContent>
+                    <SelectItem value="1.25">1.25x</SelectItem>
+                    <SelectItem value="1.5">1.5x (Standard)</SelectItem>
+                    <SelectItem value="2.0">2.0x (Double Time)</SelectItem>
+                  </SelectContent>
                 </Select>
               </div>
             )}
-            <div className="border-t pt-4 space-y-3">
-              <div><p className="text-sm font-medium">Tax Rate</p><p className="text-xs text-muted-foreground mb-1.5">Federal + State combined estimate</p><Input type="number" value={(TAX_RATE * 100).toFixed(0)} className="w-24 h-8" readOnly /><span className="text-xs text-muted-foreground ml-1.5">%</span></div>
-              <div><p className="text-sm font-medium">Benefits Deduction</p><p className="text-xs text-muted-foreground mb-1.5">Health, dental, and retirement</p><Input type="number" value={(BENEFITS_RATE * 100).toFixed(0)} className="w-24 h-8" readOnly /><span className="text-xs text-muted-foreground ml-1.5">%</span></div>
+          </Card>
+
+          {/* Tax & Deductions */}
+          <Card className="p-5 space-y-5">
+            <h3 className="font-semibold text-sm flex items-center gap-2"><Percent className="w-4 h-4 text-muted-foreground" /> Tax & Deductions</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">Tax Rate</Label>
+                <p className="text-xs text-muted-foreground">Federal + State combined</p>
+                <div className="flex items-center gap-1.5">
+                  <Input type="number" min="0" max="100" step="0.5" value={(taxRate * 100).toFixed(1)} onChange={e => setTaxRate(Math.min(1, Math.max(0, parseFloat(e.target.value || "0") / 100)))} className="w-24 h-9" />
+                  <span className="text-sm text-muted-foreground">%</span>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">Benefits Deduction</Label>
+                <p className="text-xs text-muted-foreground">Health, dental, retirement</p>
+                <div className="flex items-center gap-1.5">
+                  <Input type="number" min="0" max="100" step="0.5" value={(benefitsRate * 100).toFixed(1)} onChange={e => setBenefitsRate(Math.min(1, Math.max(0, parseFloat(e.target.value || "0") / 100)))} className="w-24 h-9" />
+                  <span className="text-sm text-muted-foreground">%</span>
+                </div>
+              </div>
             </div>
+            <div className="rounded-lg bg-muted/30 p-3">
+              <p className="text-[11px] text-muted-foreground mb-1">Total Deduction Rate</p>
+              <p className="text-sm font-semibold">{((taxRate + benefitsRate) * 100).toFixed(1)}% <span className="text-muted-foreground font-normal">({(taxRate * 100).toFixed(1)}% tax + {(benefitsRate * 100).toFixed(1)}% benefits)</span></p>
+            </div>
+          </Card>
+
+          {/* Pay Schedule */}
+          <Card className="p-5 space-y-5">
+            <h3 className="font-semibold text-sm flex items-center gap-2"><Calendar className="w-4 h-4 text-muted-foreground" /> Pay Schedule</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">Pay Frequency</Label>
+                <Select value={payFrequency} onValueChange={setPayFrequency}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="biweekly">Bi-Weekly</SelectItem>
+                    <SelectItem value="semimonthly">Semi-Monthly (1st & 15th)</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">Pay Day</Label>
+                <Select value={payDay} onValueChange={setPayDay}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="last">Last Day of Month</SelectItem>
+                    <SelectItem value="1">1st of Month</SelectItem>
+                    <SelectItem value="15">15th of Month</SelectItem>
+                    <SelectItem value="25">25th of Month</SelectItem>
+                    <SelectItem value="friday">Every Friday</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </Card>
+
+          {/* Budget */}
+          <Card className="p-5 space-y-5">
+            <h3 className="font-semibold text-sm flex items-center gap-2"><DollarSign className="w-4 h-4 text-muted-foreground" /> Budget</h3>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">Monthly Payroll Budget</Label>
+              <p className="text-xs text-muted-foreground">Set a target to track spending against</p>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm text-muted-foreground">$</span>
+                <Input type="number" min="0" step="1000" value={budgetLimit} onChange={e => setBudgetLimit(e.target.value)} className="w-36 h-9" />
+              </div>
+            </div>
+            <div className="rounded-lg bg-muted/30 p-3">
+              <div className="flex justify-between text-sm mb-1.5">
+                <span className="text-muted-foreground">Current Usage</span>
+                <span className="font-semibold">${totalGross.toLocaleString()} / ${parseFloat(budgetLimit || "50000").toLocaleString()}</span>
+              </div>
+              <Progress value={budgetUsed} className="h-2" />
+              <p className={cn("text-[10px] mt-1", budgetUsed > 90 ? "text-destructive" : "text-muted-foreground")}>{budgetUsed.toFixed(0)}% used{budgetUsed > 90 ? " ⚠️ Over budget!" : ""}</p>
+            </div>
+          </Card>
+
+          {/* Reset */}
+          <Card className="p-5 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Reset to Defaults</p>
+              <p className="text-xs text-muted-foreground">Restore default tax (22%), benefits (8%), and other settings</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => {
+              setTaxRate(DEFAULT_TAX_RATE); setBenefitsRate(DEFAULT_BENEFITS_RATE);
+              setOvertimeEnabled(true); setOvertimeRate("1.5");
+              setPayFrequency("monthly"); setPayDay("last"); setBudgetLimit("50000");
+              toast.success("Settings reset to defaults");
+            }}>Reset</Button>
           </Card>
         </TabsContent>
       </Tabs>
