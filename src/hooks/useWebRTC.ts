@@ -396,7 +396,29 @@ export function useWebRTC({
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    // Polling fallback: periodically check call status in case realtime
+    // misses an update (e.g., network hiccup, subscription gap).
+    const pollInterval = setInterval(async () => {
+      try {
+        const { data } = await (supabase as any)
+          .from("call_signals")
+          .select("status")
+          .eq("id", callId)
+          .maybeSingle();
+
+        if (data?.status === "ended" || data?.status === "declined" || data?.status === "missed") {
+          cleanup();
+          onEnded();
+        }
+      } catch {
+        // ignore polling errors
+      }
+    }, 5000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
+    };
   }, [callId, processSignalData]);
 
   const toggleMute = useCallback(() => {
