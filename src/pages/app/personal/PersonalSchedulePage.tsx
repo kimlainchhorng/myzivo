@@ -62,7 +62,7 @@ export default function PersonalSchedulePage() {
       if (!user) return null;
       const { data: byUserId } = await supabase
         .from("store_employees")
-        .select("id, store_id, name, role, employee_number, created_at, hourly_rate")
+        .select("id, store_id, name, role, employee_number, created_at, hourly_rate, pay_type")
         .eq("user_id", user.id)
         .eq("status", "active")
         .limit(1)
@@ -71,7 +71,7 @@ export default function PersonalSchedulePage() {
       if (user.email) {
         const { data: byEmail } = await supabase
           .from("store_employees")
-          .select("id, store_id, name, role, employee_number, created_at, hourly_rate")
+          .select("id, store_id, name, role, employee_number, created_at, hourly_rate, pay_type")
           .eq("email", user.email)
           .eq("status", "active")
           .limit(1)
@@ -136,8 +136,13 @@ export default function PersonalSchedulePage() {
     return sum + getShiftHours(info.start, info.end);
   }, 0);
   const weekOffs = weekDates.filter(d => getDayInfo(d).type === "off").length;
-  const hourlyRate = empRecord?.hourly_rate || 0;
-  const estimatedEarnings = weekHours * hourlyRate;
+  const payType = empRecord?.pay_type || "hourly";
+  const rateValue = empRecord?.hourly_rate || 0;
+  // For monthly pay: divide monthly salary by ~4.33 weeks to get weekly estimate
+  // For hourly pay: multiply hours × rate
+  const estimatedEarnings = payType === "monthly"
+    ? rateValue / 4.33
+    : weekHours * rateValue;
   const hoursProgress = Math.min((weekHours / WEEKLY_TARGET_HOURS) * 100, 100);
 
   // Next shift countdown
@@ -328,20 +333,22 @@ export default function PersonalSchedulePage() {
                 </div>
 
                 {/* Estimated Earnings */}
-                {hourlyRate > 0 && (
+                {rateValue > 0 && (
                   <div className="flex items-center justify-between pt-1 border-t border-border/20">
                     <div className="flex items-center gap-1.5">
                       <DollarSign className="w-3 h-3 text-emerald-500" />
-                      <span className="text-[10px] font-semibold text-muted-foreground">Est. Earnings</span>
+                      <span className="text-[10px] font-semibold text-muted-foreground">
+                        Est. Earnings {payType === "monthly" ? "(monthly)" : ""}
+                      </span>
                     </div>
                     <span className="text-[13px] font-extrabold text-emerald-500">${estimatedEarnings.toFixed(2)}</span>
                   </div>
                 )}
-                {hourlyRate <= 0 && (
+                {rateValue <= 0 && (
                   <div className="flex items-center justify-between pt-1 border-t border-border/20">
                     <div className="flex items-center gap-1.5">
                       <DollarSign className="w-3 h-3 text-muted-foreground/50" />
-                      <span className="text-[10px] text-muted-foreground/60">Hourly rate not set</span>
+                      <span className="text-[10px] text-muted-foreground/60">Rate not set</span>
                     </div>
                   </div>
                 )}
