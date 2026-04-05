@@ -491,22 +491,27 @@ export default function StoreScheduleSection({ storeId }: Props) {
 
       {/* ── Week Navigation ── */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setWeekStart(subWeeks(weekStart, 1))}>
+        <div className="flex items-center gap-0.5 bg-muted/40 rounded-full p-0.5">
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-background hover:shadow-sm transition-all" onClick={() => setWeekStart(subWeeks(weekStart, 1))}>
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="text-xs font-medium h-8 px-3 rounded-lg" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-sm font-semibold h-9 px-5 rounded-full hover:bg-background hover:shadow-sm transition-all"
+            onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}
+          >
             Today
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-background hover:shadow-sm transition-all" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
         <div className="flex items-center gap-1.5">
-          <Button variant="ghost" size="sm" className="gap-1.5 text-[11px] h-7" onClick={() => { toast.success("Copied to next week"); setWeekStart(addWeeks(weekStart, 1)); }}>
+          <Button variant="ghost" size="sm" className="gap-1.5 text-[11px] h-8 rounded-lg" onClick={() => { toast.success("Copied to next week"); setWeekStart(addWeeks(weekStart, 1)); }}>
             <Copy className="w-3 h-3" /> Copy
           </Button>
-          <Button variant="ghost" size="sm" className="gap-1.5 text-[11px] h-7">
+          <Button variant="ghost" size="sm" className="gap-1.5 text-[11px] h-8 rounded-lg">
             <Download className="w-3 h-3" /> Export
           </Button>
         </div>
