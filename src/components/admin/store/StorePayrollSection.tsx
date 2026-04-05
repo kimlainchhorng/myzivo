@@ -53,6 +53,8 @@ export default function StorePayrollSection({ storeId }: Props) {
   const [overtimeRate, setOvertimeRate] = useState("1.5");
   const [taxRate, setTaxRate] = useState(DEFAULT_TAX_RATE);
   const [benefitsRate, setBenefitsRate] = useState(DEFAULT_BENEFITS_RATE);
+  const [taxInput, setTaxInput] = useState((DEFAULT_TAX_RATE * 100).toString());
+  const [benefitsInput, setBenefitsInput] = useState((DEFAULT_BENEFITS_RATE * 100).toString());
   const [payFrequency, setPayFrequency] = useState("monthly");
   const [payDay, setPayDay] = useState("last");
   const [budgetLimit, setBudgetLimit] = useState("50000");
