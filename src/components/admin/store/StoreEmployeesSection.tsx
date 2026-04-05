@@ -371,7 +371,26 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                   <SelectContent>{ROLES.map((r) => <SelectItem key={r.value} value={r.value}>{r.icon} {r.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5"><Label>Hourly Rate ($)</Label><Input value={form.hourly_rate} onChange={(e) => setForm({ ...form, hourly_rate: e.target.value })} placeholder="0.00" type="number" step="0.01" /></div>
+              <div className="space-y-1.5">
+                <Label>Pay Type</Label>
+                <Select value={form.pay_type} onValueChange={(v: "hourly" | "monthly") => setForm({ ...form, pay_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{PAY_TYPES.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              {form.pay_type === "hourly" ? (
+                <><Label>Hourly Rate ($)</Label><Input value={form.hourly_rate} onChange={(e) => setForm({ ...form, hourly_rate: e.target.value })} placeholder="0.00" type="number" step="0.01" /></>
+              ) : (
+                <><Label>Monthly Salary ($)</Label><Input value={form.monthly_salary} onChange={(e) => setForm({ ...form, monthly_salary: e.target.value })} placeholder="0.00" type="number" step="1" /></>
+              )}
+              {form.pay_type === "hourly" && form.hourly_rate && (
+                <p className="text-[11px] text-muted-foreground">≈ ${(parseFloat(form.hourly_rate) * 160).toLocaleString()}/month</p>
+              )}
+              {form.pay_type === "monthly" && form.monthly_salary && (
+                <p className="text-[11px] text-muted-foreground">≈ ${(parseFloat(form.monthly_salary) / 160).toFixed(2)}/hour equivalent</p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
