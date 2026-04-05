@@ -35,6 +35,7 @@ export default function StoreTimeClockSection({ storeId }: Props) {
   const [entries, setEntries] = useState<ClockEntry[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [tab, setTab] = useState("today");
+  const [adminScannerOpen, setAdminScannerOpen] = useState(false);
   const [, setTick] = useState(0);
 
   // Live timer update
