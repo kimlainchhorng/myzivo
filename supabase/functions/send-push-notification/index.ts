@@ -56,7 +56,7 @@ serve(async (req) => {
       );
     }
 
-    const { user_id, device_token_id, notification_type, title, body, data } = payload;
+    const { user_id, device_token_id, notification_type, title, body, data, image_url } = payload;
 
     if (!title || !notification_type) {
       return new Response(
