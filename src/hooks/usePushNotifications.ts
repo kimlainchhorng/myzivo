@@ -247,6 +247,20 @@ export const usePushNotifications = () => {
         toast.info(notification.title || "Notification", {
           description: notification.body,
         });
+
+        const payloadData = notification.data as Record<string, any> | undefined;
+        if (payloadData?.type === "incoming_call") {
+          window.dispatchEvent(new CustomEvent("incoming-call-push", {
+            detail: {
+              call_id: payloadData.call_id,
+              caller_id: payloadData.caller_id,
+              call_type: payloadData.call_type,
+            },
+          }));
+          if (!window.location.pathname.startsWith("/chat")) {
+            window.location.href = "/chat";
+          }
+        }
       }
     );
 
