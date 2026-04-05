@@ -143,6 +143,12 @@ export default function IncomingCallListener() {
       if (!call || call.status !== "ringing") return;
 
       if (answeredCall) {
+        // If this update belongs to the active call we already accepted,
+        // ignore it instead of force-declining the same call.
+        if (answeredCall.id === call.id) {
+          return;
+        }
+
         await (supabase as any).from("call_signals")
           .update({ status: "declined", ended_at: new Date().toISOString() })
           .eq("id", call.id)
