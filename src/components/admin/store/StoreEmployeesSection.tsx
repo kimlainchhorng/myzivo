@@ -309,7 +309,7 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                       {detailDialog.name} <span>{roleOf(detailDialog.role)?.icon}</span>
                       {detailDialog.employee_number && (
                         <span className="text-[11px] font-mono text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md">
-                          ID-{String(detailDialog.employee_number).padStart(4, "0")}
+                          EMP-{new Date(detailDialog.created_at).getFullYear()}-{String(detailDialog.employee_number).padStart(5, "0")}
                         </span>
                       )}
                     </div>
