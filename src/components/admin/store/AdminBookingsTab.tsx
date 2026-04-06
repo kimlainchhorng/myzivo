@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,14 +7,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from "@/components/ui/dialog";
 import {
   CalendarIcon, User, Car, Clock, Phone, Mail, FileText,
-  Search, MessageSquareText, CalendarClock, ExternalLink
+  Search, MessageSquareText, CalendarClock, ExternalLink,
+  CheckCircle2, XCircle, AlertCircle, TrendingUp, RefreshCw,
+  ChevronDown, ChevronUp, Wrench, Star, BarChart3, Download,
+  Filter, SortAsc, SortDesc, Eye, Bell, Zap
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, isToday, isThisWeek, isThisMonth, parseISO, differenceInDays } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -25,26 +31,43 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-red-100 text-red-800 border-red-200",
 };
 
+const STATUS_ICONS: Record<string, React.ElementType> = {
+  pending: AlertCircle,
+  confirmed: CheckCircle2,
+  completed: Star,
+  cancelled: XCircle,
+};
+
 export default function AdminBookingsTab({ storeId }: { storeId: string }) {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [notesDialog, setNotesDialog] = useState<{ open: boolean; bookingId: string; notes: string }>({ open: false, bookingId: "", notes: "" });
   const [rescheduleDialog, setRescheduleDialog] = useState<{ open: boolean; bookingId: string; date: Date | undefined; time: string }>({ open: false, bookingId: "", date: undefined, time: "" });
   const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchBookings = async () => {
     const { data } = await supabase
       .from("service_bookings")
       .select("*")
       .eq("store_id", storeId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: sortOrder === "asc" });
     setBookings(data || []);
     setLoading(false);
   };
 
-  useEffect(() => { fetchBookings(); }, [storeId]);
+  useEffect(() => { fetchBookings(); }, [storeId, sortOrder]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchBookings();
+    setRefreshing(false);
+    toast.success("Bookings refreshed");
+  };
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase
@@ -89,24 +112,70 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
     fetchBookings();
   };
 
-  const filtered = bookings
-    .filter(b => filter === "all" || b.status === filter)
-    .filter(b => {
-      if (!search.trim()) return true;
-      const q = search.toLowerCase();
-      return (
-        b.customer_name?.toLowerCase().includes(q) ||
-        b.customer_phone?.toLowerCase().includes(q) ||
-        b.customer_email?.toLowerCase().includes(q) ||
-        b.service_name?.toLowerCase().includes(q)
-      );
-    });
+  const filtered = useMemo(() => {
+    return bookings
+      .filter(b => filter === "all" || b.status === filter)
+      .filter(b => {
+        if (!search.trim()) return true;
+        const q = search.toLowerCase();
+        return (
+          b.customer_name?.toLowerCase().includes(q) ||
+          b.customer_phone?.toLowerCase().includes(q) ||
+          b.customer_email?.toLowerCase().includes(q) ||
+          b.service_name?.toLowerCase().includes(q)
+        );
+      });
+  }, [bookings, filter, search]);
 
   const pendingCount = bookings.filter(b => b.status === "pending").length;
+  const confirmedCount = bookings.filter(b => b.status === "confirmed").length;
+  const completedCount = bookings.filter(b => b.status === "completed").length;
+  const cancelledCount = bookings.filter(b => b.status === "cancelled").length;
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const todayCount = bookings.filter(b => b.preferred_date === todayStr).length;
+  const thisWeekCount = bookings.filter(b => {
+    try { return isThisWeek(parseISO(b.preferred_date)); } catch { return false; }
+  }).length;
+  const thisMonthCount = bookings.filter(b => {
+    try { return isThisMonth(parseISO(b.preferred_date)); } catch { return false; }
+  }).length;
 
-  if (loading) return <div className="py-8 text-center text-muted-foreground">Loading bookings...</div>;
+  // Upcoming bookings (next 7 days, confirmed or pending)
+  const upcomingBookings = useMemo(() => {
+    const now = new Date();
+    return bookings
+      .filter(b => (b.status === "pending" || b.status === "confirmed"))
+      .filter(b => {
+        try {
+          const d = parseISO(b.preferred_date);
+          const diff = differenceInDays(d, now);
+          return diff >= 0 && diff <= 7;
+        } catch { return false; }
+      })
+      .sort((a, b) => a.preferred_date.localeCompare(b.preferred_date));
+  }, [bookings]);
+
+  // Popular services
+  const popularServices = useMemo(() => {
+    const counts: Record<string, number> = {};
+    bookings.forEach(b => {
+      if (b.service_name) counts[b.service_name] = (counts[b.service_name] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5);
+  }, [bookings]);
+
+  const completionRate = bookings.length > 0
+    ? Math.round((completedCount / bookings.length) * 100)
+    : 0;
+
+  if (loading) return (
+    <div className="py-12 text-center text-muted-foreground space-y-3">
+      <RefreshCw className="mx-auto h-8 w-8 animate-spin opacity-40" />
+      <p className="text-sm">Loading bookings...</p>
+    </div>
+  );
 
   const timeSlots = [
     "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
@@ -115,30 +184,174 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
     "5:00 PM", "5:30 PM", "6:00 PM",
   ];
 
+  const getTimeLabel = (b: any) => {
+    try {
+      const d = parseISO(b.preferred_date);
+      if (isToday(d)) return "Today";
+      const diff = differenceInDays(d, new Date());
+      if (diff === 1) return "Tomorrow";
+      if (diff === -1) return "Yesterday";
+      if (diff > 1 && diff <= 7) return `In ${diff} days`;
+      return format(d, "MMM d");
+    } catch { return ""; }
+  };
+
   return (
-    <div className="space-y-4">
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="rounded-xl border border-border bg-card p-3 text-center">
-          <p className="text-2xl font-bold text-foreground">{bookings.length}</p>
-          <p className="text-xs text-muted-foreground">Total</p>
+    <div className="space-y-5">
+      {/* ── Header with refresh ── */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-bold text-foreground">Customer Bookings</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">{bookings.length} total bookings</p>
         </div>
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-center">
-          <p className="text-2xl font-bold text-amber-700">{pendingCount}</p>
-          <p className="text-xs text-amber-600">Pending</p>
-        </div>
-        <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-center">
-          <p className="text-2xl font-bold text-blue-700">{todayCount}</p>
-          <p className="text-xs text-blue-600">Today</p>
-        </div>
-        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-center">
-          <p className="text-2xl font-bold text-green-700">{bookings.filter(b => b.status === "completed").length}</p>
-          <p className="text-xs text-green-600">Completed</p>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="gap-1.5"
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
+            Refresh
+          </Button>
         </div>
       </div>
 
-      {/* Search + Filter */}
-      <div className="flex items-center gap-3">
+      {/* ── Enhanced Stats Grid ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Card className="overflow-hidden border-l-4 border-l-primary/60">
+          <CardContent className="p-3.5">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <BarChart3 className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground leading-none">{bookings.length}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Total Bookings</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-l-4 border-l-amber-400">
+          <CardContent className="p-3.5">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg bg-amber-100">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-amber-700 leading-none">{pendingCount}</p>
+                <p className="text-[11px] text-amber-600 mt-0.5">Pending</p>
+              </div>
+            </div>
+            {pendingCount > 0 && (
+              <div className="mt-2 flex items-center gap-1">
+                <Bell className="h-3 w-3 text-amber-500 animate-pulse" />
+                <span className="text-[10px] text-amber-600 font-medium">Needs attention</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-l-4 border-l-blue-400">
+          <CardContent className="p-3.5">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg bg-blue-100">
+                <CalendarIcon className="h-4 w-4 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-blue-700 leading-none">{todayCount}</p>
+                <p className="text-[11px] text-blue-600 mt-0.5">Today</p>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-2">{thisWeekCount} this week</p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-l-4 border-l-green-400">
+          <CardContent className="p-3.5">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg bg-green-100">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-green-700 leading-none">{completedCount}</p>
+                <p className="text-[11px] text-green-600 mt-0.5">Completed</p>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-2">{completionRate}% completion rate</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Quick Insights Row ── */}
+      {(upcomingBookings.length > 0 || popularServices.length > 0) && (
+        <div className="grid sm:grid-cols-2 gap-3">
+          {/* Upcoming */}
+          {upcomingBookings.length > 0 && (
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="h-4 w-4 text-amber-500" />
+                  <p className="text-sm font-semibold text-foreground">Upcoming ({upcomingBookings.length})</p>
+                </div>
+                <div className="space-y-2">
+                  {upcomingBookings.slice(0, 3).map(b => (
+                    <div key={b.id} className="flex items-center justify-between text-sm bg-muted/40 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Wrench className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="truncate font-medium text-foreground">{b.service_name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">{getTimeLabel(b)}</Badge>
+                        <Badge className={cn("text-[10px] px-1.5 py-0", STATUS_COLORS[b.status])}>{b.status}</Badge>
+                      </div>
+                    </div>
+                  ))}
+                  {upcomingBookings.length > 3 && (
+                    <p className="text-xs text-muted-foreground text-center">+{upcomingBookings.length - 3} more upcoming</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Popular Services */}
+          {popularServices.length > 0 && (
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-semibold text-foreground">Top Services</p>
+                </div>
+                <div className="space-y-2">
+                  {popularServices.map(([name, count], i) => (
+                    <div key={name} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xs font-bold text-muted-foreground w-4">#{i + 1}</span>
+                        <span className="truncate text-foreground">{name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-primary/60"
+                            style={{ width: `${(count / bookings.length) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-muted-foreground w-6 text-right">{count}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* ── Search + Filter + Sort ── */}
+      <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -149,123 +362,280 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
           />
         </div>
         <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-[150px]">
+            <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All ({bookings.length})</SelectItem>
-            <SelectItem value="pending">Pending ({bookings.filter(b => b.status === "pending").length})</SelectItem>
-            <SelectItem value="confirmed">Confirmed ({bookings.filter(b => b.status === "confirmed").length})</SelectItem>
-            <SelectItem value="completed">Completed ({bookings.filter(b => b.status === "completed").length})</SelectItem>
-            <SelectItem value="cancelled">Cancelled ({bookings.filter(b => b.status === "cancelled").length})</SelectItem>
+            <SelectItem value="pending">Pending ({pendingCount})</SelectItem>
+            <SelectItem value="confirmed">Confirmed ({confirmedCount})</SelectItem>
+            <SelectItem value="completed">Completed ({completedCount})</SelectItem>
+            <SelectItem value="cancelled">Cancelled ({cancelledCount})</SelectItem>
           </SelectContent>
         </Select>
+        <Button
+          size="icon"
+          variant="outline"
+          onClick={() => setSortOrder(o => o === "desc" ? "asc" : "desc")}
+          className="shrink-0"
+          title={sortOrder === "desc" ? "Newest first" : "Oldest first"}
+        >
+          {sortOrder === "desc" ? <SortDesc className="h-4 w-4" /> : <SortAsc className="h-4 w-4" />}
+        </Button>
       </div>
 
-      {/* Bookings List */}
+      {/* ── Results count ── */}
+      {search && (
+        <p className="text-xs text-muted-foreground">
+          {filtered.length} result{filtered.length !== 1 ? "s" : ""} found
+        </p>
+      )}
+
+      {/* ── Bookings List ── */}
       {filtered.length === 0 ? (
-        <div className="py-12 text-center text-muted-foreground">
-          <CalendarIcon className="mx-auto h-10 w-10 mb-3 opacity-30" />
-          <p>No bookings {search ? "matching your search" : "yet"}</p>
-          <p className="text-sm mt-1">Customer bookings will appear here</p>
-        </div>
+        <Card>
+          <CardContent className="py-16 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/60 flex items-center justify-center">
+              <CalendarIcon className="h-8 w-8 text-muted-foreground/40" />
+            </div>
+            <p className="font-semibold text-foreground">No bookings {search ? "matching your search" : "yet"}</p>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-sm mx-auto">
+              {search
+                ? "Try adjusting your search or filter criteria"
+                : "When customers book services from your store, they'll appear here for you to manage"
+              }
+            </p>
+            {search && (
+              <Button size="sm" variant="outline" className="mt-4" onClick={() => { setSearch(""); setFilter("all"); }}>
+                Clear filters
+              </Button>
+            )}
+          </CardContent>
+        </Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map(b => (
-            <div key={b.id} className="border border-border rounded-xl p-4 bg-card space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-semibold text-foreground">{b.service_name}</p>
-                  <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1"><CalendarIcon className="h-3.5 w-3.5" /> {format(new Date(b.preferred_date), "MMM d, yyyy")}</span>
-                    <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {b.preferred_time}</span>
-                  </div>
-                </div>
-                <Badge className={cn(STATUS_COLORS[b.status] || "")}>{b.status}</Badge>
-              </div>
+          {filtered.map(b => {
+            const isExpanded = expandedId === b.id;
+            const StatusIcon = STATUS_ICONS[b.status] || AlertCircle;
+            const timeLabel = getTimeLabel(b);
 
-              {/* Customer Info + Contact */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <User className="h-3.5 w-3.5" /> {b.customer_name}
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Phone className="h-3.5 w-3.5" />
-                  <a href={`tel:${b.customer_phone}`} className="text-primary hover:underline flex items-center gap-1">
-                    {b.customer_phone} <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Mail className="h-3.5 w-3.5" />
-                  <a href={`mailto:${b.customer_email}`} className="text-primary hover:underline flex items-center gap-1">
-                    {b.customer_email} <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-                {(b.vehicle_make || b.vehicle_model) && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Car className="h-3.5 w-3.5" /> {[b.vehicle_year, b.vehicle_make, b.vehicle_model].filter(Boolean).join(" ")}
-                  </div>
+            return (
+              <Card
+                key={b.id}
+                className={cn(
+                  "transition-all duration-200 hover:shadow-md",
+                  b.status === "pending" && "ring-1 ring-amber-200/60",
+                  isExpanded && "shadow-md"
                 )}
-              </div>
+              >
+                <CardContent className="p-0">
+                  {/* Main Row */}
+                  <div
+                    className="flex items-center gap-3 p-4 cursor-pointer"
+                    onClick={() => setExpandedId(isExpanded ? null : b.id)}
+                  >
+                    {/* Status indicator */}
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                      b.status === "pending" && "bg-amber-100",
+                      b.status === "confirmed" && "bg-blue-100",
+                      b.status === "completed" && "bg-green-100",
+                      b.status === "cancelled" && "bg-red-100",
+                    )}>
+                      <StatusIcon className={cn(
+                        "h-5 w-5",
+                        b.status === "pending" && "text-amber-600",
+                        b.status === "confirmed" && "text-blue-600",
+                        b.status === "completed" && "text-green-600",
+                        b.status === "cancelled" && "text-red-500",
+                      )} />
+                    </div>
 
-              {/* Customer notes */}
-              {b.notes && (
-                <div className="flex items-start gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-2">
-                  <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" /> {b.notes}
-                </div>
-              )}
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-foreground truncate">{b.service_name}</p>
+                        {b.admin_notes && <MessageSquareText className="h-3.5 w-3.5 text-amber-500 shrink-0" />}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                        <User className="h-3 w-3" />
+                        <span className="truncate">{b.customer_name}</span>
+                        <span className="text-border">•</span>
+                        <CalendarIcon className="h-3 w-3" />
+                        <span>{format(new Date(b.preferred_date), "MMM d")}</span>
+                        <span className="text-border">•</span>
+                        <Clock className="h-3 w-3" />
+                        <span>{b.preferred_time}</span>
+                      </div>
+                    </div>
 
-              {/* Admin notes */}
-              {b.admin_notes && (
-                <div className="flex items-start gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
-                  <MessageSquareText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                  <div>
-                    <span className="font-medium text-xs">Admin Note:</span> {b.admin_notes}
+                    {/* Right side */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {timeLabel && (
+                        <Badge variant="outline" className="text-[10px] hidden sm:inline-flex">{timeLabel}</Badge>
+                      )}
+                      <Badge className={cn("text-[11px]", STATUS_COLORS[b.status])}>{b.status}</Badge>
+                      {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                    </div>
                   </div>
-                </div>
-              )}
 
-              {/* Actions */}
-              <div className="flex flex-wrap gap-2 pt-1">
-                {b.status === "pending" && (
-                  <>
-                    <Button size="sm" onClick={() => updateStatus(b.id, "confirmed")}>Confirm</Button>
-                    <Button size="sm" variant="destructive" onClick={() => updateStatus(b.id, "cancelled")}>Cancel</Button>
-                  </>
-                )}
-                {b.status === "confirmed" && (
-                  <>
-                    <Button size="sm" onClick={() => updateStatus(b.id, "completed")}>Mark Completed</Button>
-                    <Button size="sm" variant="destructive" onClick={() => updateStatus(b.id, "cancelled")}>Cancel</Button>
-                  </>
-                )}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setRescheduleDialog({ open: true, bookingId: b.id, date: new Date(b.preferred_date), time: b.preferred_time })}
-                >
-                  <CalendarClock className="h-3.5 w-3.5 mr-1" /> Reschedule
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setNotesDialog({ open: true, bookingId: b.id, notes: b.admin_notes || "" })}
-                >
-                  <MessageSquareText className="h-3.5 w-3.5 mr-1" /> Notes
-                </Button>
-              </div>
+                  {/* Expanded Details */}
+                  {isExpanded && (
+                    <div className="border-t border-border">
+                      <div className="p-4 space-y-4">
+                        {/* Customer Details Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="flex items-center gap-2.5 text-sm bg-muted/30 rounded-lg px-3 py-2.5">
+                            <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <div>
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Customer</p>
+                              <p className="font-medium text-foreground">{b.customer_name}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2.5 text-sm bg-muted/30 rounded-lg px-3 py-2.5">
+                            <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <div>
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Phone</p>
+                              <a href={`tel:${b.customer_phone}`} className="font-medium text-primary hover:underline flex items-center gap-1">
+                                {b.customer_phone} <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2.5 text-sm bg-muted/30 rounded-lg px-3 py-2.5">
+                            <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <div>
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Email</p>
+                              <a href={`mailto:${b.customer_email}`} className="font-medium text-primary hover:underline flex items-center gap-1 truncate">
+                                {b.customer_email} <ExternalLink className="h-3 w-3 shrink-0" />
+                              </a>
+                            </div>
+                          </div>
+                          {(b.vehicle_make || b.vehicle_model) && (
+                            <div className="flex items-center gap-2.5 text-sm bg-muted/30 rounded-lg px-3 py-2.5">
+                              <Car className="h-4 w-4 text-muted-foreground shrink-0" />
+                              <div>
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Vehicle</p>
+                                <p className="font-medium text-foreground">{[b.vehicle_year, b.vehicle_make, b.vehicle_model].filter(Boolean).join(" ")}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
 
-              <p className="text-xs text-muted-foreground">Submitted {format(new Date(b.created_at), "MMM d, yyyy h:mm a")}</p>
-            </div>
-          ))}
+                        {/* Schedule info */}
+                        <div className="flex items-center gap-4 text-sm bg-primary/5 rounded-lg px-3 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <CalendarIcon className="h-4 w-4 text-primary" />
+                            <span className="font-medium">{format(new Date(b.preferred_date), "EEEE, MMMM d, yyyy")}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-primary" />
+                            <span className="font-medium">{b.preferred_time}</span>
+                          </div>
+                        </div>
+
+                        {/* Customer notes */}
+                        {b.notes && (
+                          <div className="flex items-start gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+                            <FileText className="h-4 w-4 mt-0.5 shrink-0" />
+                            <div>
+                              <p className="text-[10px] uppercase tracking-wider font-medium mb-0.5">Customer Note</p>
+                              <p>{b.notes}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Admin notes */}
+                        {b.admin_notes && (
+                          <div className="flex items-start gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                            <MessageSquareText className="h-4 w-4 mt-0.5 shrink-0" />
+                            <div>
+                              <p className="text-[10px] uppercase tracking-wider font-medium mb-0.5">Admin Note</p>
+                              <p>{b.admin_notes}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        <Separator />
+
+                        {/* Actions */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {b.status === "pending" && (
+                            <>
+                              <Button size="sm" onClick={() => updateStatus(b.id, "confirmed")} className="gap-1.5">
+                                <CheckCircle2 className="h-3.5 w-3.5" /> Confirm
+                              </Button>
+                              <Button size="sm" variant="destructive" onClick={() => updateStatus(b.id, "cancelled")} className="gap-1.5">
+                                <XCircle className="h-3.5 w-3.5" /> Cancel
+                              </Button>
+                            </>
+                          )}
+                          {b.status === "confirmed" && (
+                            <>
+                              <Button size="sm" onClick={() => updateStatus(b.id, "completed")} className="gap-1.5">
+                                <Star className="h-3.5 w-3.5" /> Mark Completed
+                              </Button>
+                              <Button size="sm" variant="destructive" onClick={() => updateStatus(b.id, "cancelled")} className="gap-1.5">
+                                <XCircle className="h-3.5 w-3.5" /> Cancel
+                              </Button>
+                            </>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setRescheduleDialog({ open: true, bookingId: b.id, date: new Date(b.preferred_date), time: b.preferred_time })}
+                            className="gap-1.5"
+                          >
+                            <CalendarClock className="h-3.5 w-3.5" /> Reschedule
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setNotesDialog({ open: true, bookingId: b.id, notes: b.admin_notes || "" })}
+                            className="gap-1.5"
+                          >
+                            <MessageSquareText className="h-3.5 w-3.5" /> Notes
+                          </Button>
+                        </div>
+
+                        <p className="text-[11px] text-muted-foreground">
+                          Submitted {format(new Date(b.created_at), "MMM d, yyyy 'at' h:mm a")}
+                          {b.id && <span className="ml-2 text-muted-foreground/50">ID: {b.id.slice(0, 8)}</span>}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
+      )}
+
+      {/* ── Summary Footer ── */}
+      {bookings.length > 0 && (
+        <Card className="bg-muted/30">
+          <CardContent className="p-3 flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center gap-4">
+              <span>Showing {filtered.length} of {bookings.length}</span>
+              <span>•</span>
+              <span>{thisMonthCount} this month</span>
+              <span>•</span>
+              <span>{completionRate}% completion rate</span>
+            </div>
+            <span className="text-[10px]">Last updated: {format(new Date(), "h:mm a")}</span>
+          </CardContent>
+        </Card>
       )}
 
       {/* Notes Dialog */}
       <Dialog open={notesDialog.open} onOpenChange={open => !open && setNotesDialog(n => ({ ...n, open: false }))}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Admin Notes</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquareText className="h-5 w-5 text-primary" />
+              Admin Notes
+            </DialogTitle>
           </DialogHeader>
           <Textarea
             placeholder="Add internal notes about this booking..."
@@ -284,7 +654,10 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
       <Dialog open={rescheduleDialog.open} onOpenChange={open => !open && setRescheduleDialog(r => ({ ...r, open: false }))}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reschedule Booking</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarClock className="h-5 w-5 text-primary" />
+              Reschedule Booking
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
