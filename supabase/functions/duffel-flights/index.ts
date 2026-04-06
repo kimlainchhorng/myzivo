@@ -925,7 +925,7 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
   const groups = new Map<string, DuffelOfferTransformed[]>();
   for (const offer of transformed) {
     // Build fingerprint from all segment flight numbers + times to uniquely identify the itinerary
-    const segFP = offer.segments.map((s: Record<string, string>) => `${s.marketingCarrierCode}${s.flightNumber}-${s.departingAt}`).join('|');
+    const segFP = offer.segments.map((s: any) => `${s.marketingCarrierCode}${s.flightNumber}-${s.departingAt}`).join('|');
     const flightFP = `${offer.airlineCode}-${segFP}`;
     const group = groups.get(flightFP) || [];
     // Avoid only truly identical duplicates; preserve same-price Duffel fare bundles with different bags/rules

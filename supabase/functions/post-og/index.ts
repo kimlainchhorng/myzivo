@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
 });
 
 async function resolvePostMeta(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   postId: string
 ): Promise<PostMeta | null> {
   const { data: userPost } = await supabase
@@ -130,19 +130,19 @@ async function resolvePostMeta(
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name, avatar_url")
-      .eq("user_id", userPost.user_id)
+      .eq("user_id", userPost.user_id as string)
       .maybeSingle();
 
     const isVideo = userPost.media_type === "video" || userPost.media_type === "reel";
-    const fallbackImage = profile?.avatar_url || `${APP_ORIGIN}/og-image.png`;
+    const fallbackImage = (profile?.avatar_url as string) || `${APP_ORIGIN}/og-image.png`;
 
     return {
-      id: userPost.id,
-      caption: userPost.caption,
+      id: userPost.id as string,
+      caption: userPost.caption as string | null,
       mediaType: isVideo ? "video" : "image",
-      mediaUrl: userPost.media_url,
-      ogImageUrl: isVideo ? fallbackImage : userPost.media_url,
-      authorName: profile?.full_name?.trim() || "ZIVO User",
+      mediaUrl: userPost.media_url as string,
+      ogImageUrl: isVideo ? fallbackImage : (userPost.media_url as string),
+      authorName: (profile?.full_name as string)?.trim() || "ZIVO User",
     };
   }
 
@@ -152,7 +152,7 @@ async function resolvePostMeta(
     .eq("id", postId)
     .maybeSingle();
 
-  if (storePost?.media_urls?.length) {
+  if ((storePost?.media_urls as any[])?.length) {
     const mediaUrls = (storePost.media_urls as string[]).filter(Boolean);
     const detectedVideoUrl = mediaUrls.find(isVideoUrl) || mediaUrls[0];
     const detectedImageUrl = mediaUrls.find(isImageUrl) || null;
@@ -160,19 +160,19 @@ async function resolvePostMeta(
     const { data: store } = await supabase
       .from("store_profiles")
       .select("name, logo_url")
-      .eq("id", storePost.store_id)
+      .eq("id", storePost.store_id as string)
       .maybeSingle();
 
     const isVideo = storePost.media_type === "video";
-    const fallbackImage = storePost.thumbnail_url || detectedImageUrl || store?.logo_url || `${APP_ORIGIN}/og-image.png`;
+    const fallbackImage = (storePost.thumbnail_url as string) || detectedImageUrl || (store?.logo_url as string) || `${APP_ORIGIN}/og-image.png`;
 
     return {
-      id: storePost.id,
-      caption: storePost.caption,
+      id: storePost.id as string,
+      caption: storePost.caption as string | null,
       mediaType: isVideo ? "video" : "image",
       mediaUrl: isVideo ? detectedVideoUrl : (detectedImageUrl || mediaUrls[0]),
       ogImageUrl: isVideo ? fallbackImage : (detectedImageUrl || mediaUrls[0] || fallbackImage),
-      authorName: store?.name?.trim() || "ZIVO Store",
+      authorName: (store?.name as string)?.trim() || "ZIVO Store",
     };
   }
 

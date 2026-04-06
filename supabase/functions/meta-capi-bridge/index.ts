@@ -364,7 +364,7 @@ serve(async (req: Request) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    const enriched = await enrichRecord(supabase, table, record);
+    const enriched = await enrichRecord(supabase as any, table, record);
 
     const valueCurrency = inferValueCurrency(table, enriched);
     if (!valueCurrency) {
