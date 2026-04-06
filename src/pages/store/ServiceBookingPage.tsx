@@ -60,8 +60,7 @@ export default function ServiceBookingPage() {
       const { data: p } = await supabase
         .from("store_products")
         .select("id, name, price, category, image_url")
-        .eq("store_id", s.id)
-        .eq("is_active", true);
+        .eq("store_id", s.id);
       setServices(p || []);
       // Auto-select service from URL query param
       const preselect = searchParams.get("service");
