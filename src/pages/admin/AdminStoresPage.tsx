@@ -212,8 +212,29 @@ export default function AdminStoresPage() {
 
       if (updateError) throw updateError;
 
+      // Send invite email with store login link
+      const storeAccountId = getStoreAccountId(ownerDialog.storeId);
+      const loginUrl = `${window.location.origin}/partner-login?store_id=${storeAccountId}`;
+      try {
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "partner-store-invite",
+            recipientEmail: normalizedEmail,
+            idempotencyKey: `partner-invite-${ownerDialog.storeId}-${targetUserId}`,
+            templateData: {
+              storeName: ownerDialog.storeName,
+              storeAccountId,
+              loginUrl,
+              supportUrl: "https://hizivo.com/help",
+            },
+          },
+        });
+      } catch (emailErr) {
+        console.error("Failed to send invite email:", emailErr);
+      }
+
       queryClient.invalidateQueries({ queryKey: ["admin-stores"] });
-      toast.success(`Store "${ownerDialog.storeName}" linked to ${normalizedEmail}`);
+      toast.success(`Store "${ownerDialog.storeName}" linked to ${normalizedEmail} — invite email sent!`);
       setOwnerDialog(null);
       setOwnerEmail("");
     } catch (e: any) {
