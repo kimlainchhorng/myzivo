@@ -4,7 +4,7 @@
  */
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -254,11 +254,30 @@ export default function StoreProfilePage() {
                   <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                   {store.rating || "4.5"}
                 </span>
-                {store.hours && (
-                  <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" /> {store.hours}
-                  </span>
-                )}
+                {store.hours && (() => {
+                  // Parse hours JSON and show today's hours
+                  try {
+                    const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+                    const today = days[new Date().getDay()];
+                    const parsed = typeof store.hours === "string" ? JSON.parse(store.hours) : store.hours;
+                    const todayHours = parsed?.[today];
+                    if (todayHours?.closed) {
+                      return (
+                        <span className="flex items-center gap-0.5 text-xs text-red-500">
+                          <Clock className="h-3 w-3" /> Closed Today
+                        </span>
+                      );
+                    }
+                    if (todayHours?.open && todayHours?.close) {
+                      return (
+                        <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" /> {todayHours.open} – {todayHours.close}
+                        </span>
+                      );
+                    }
+                  } catch {}
+                  return null;
+                })()}
                 {store.delivery_min && (
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/15">
                     {store.delivery_min}m delivery
@@ -550,6 +569,24 @@ export default function StoreProfilePage() {
               </motion.a>
             )}
           </div>
+
+          {/* Book Now button for auto-repair stores */}
+          {store.category === "auto-repair" && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mt-3 pt-3 border-t border-white/[0.06]"
+            >
+              <Button
+                onClick={() => navigate(`/book/${slug}`)}
+                className="w-full h-12 rounded-xl text-sm font-bold gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
+              >
+                <CalendarCheck className="h-4 w-4" />
+                Book a Service
+              </Button>
+            </motion.div>
+          )}
         </motion.div>
       </div>
 
