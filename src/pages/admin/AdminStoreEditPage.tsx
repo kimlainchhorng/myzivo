@@ -3080,7 +3080,7 @@ export default function AdminStoreEditPage() {
 
           {/* Marketing Tab */}
           <TabsContent value="marketing">
-            <StoreMarketingSection storeId={storeId!} />
+            <StoreMarketingSection storeId={storeId!} storeSlug={form.slug} storeName={form.name} />
           </TabsContent>
 
           <TabsContent value="employees">
