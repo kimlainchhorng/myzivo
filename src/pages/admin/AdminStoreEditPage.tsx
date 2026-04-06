@@ -2924,8 +2924,7 @@ export default function AdminStoreEditPage() {
                                   <Package className="h-5 w-5 text-muted-foreground/30" />
                                 </div>
                               );
-                            })()
-                            )}
+                            })()}
                             <div>
                               <p className="font-medium text-sm text-foreground">{product.name}</p>
                               <p className="text-xs text-muted-foreground">
