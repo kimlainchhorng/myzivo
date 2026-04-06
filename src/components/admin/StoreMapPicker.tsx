@@ -91,11 +91,14 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, cur
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
+  const marketConfig = MARKET_DEFAULTS[market || "US"] || MARKET_DEFAULTS.US;
+  const marketCenter = { lat: marketConfig.lat, lng: marketConfig.lng };
+
   useEffect(() => {
     if (!open) return;
     setAddress(currentAddress || "");
     setSearchQuery(currentAddress || "");
-    setCoords(currentCoords ?? DEFAULT_CENTER);
+    setCoords(currentCoords ?? marketCenter);
   }, [open, currentAddress, currentCoords]);
 
   // Reverse geocode
