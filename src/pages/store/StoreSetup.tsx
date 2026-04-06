@@ -393,7 +393,7 @@ export default function StoreSetup() {
             return (
               <div key={s.id} className="flex items-center gap-1.5">
                 <button
-                  onClick={() => { if (isDone) setStep(s.id); }}
+                  onClick={() => { if (isDone) goToStep(s.id); }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-300 ${
                     isActive
                       ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-105"
