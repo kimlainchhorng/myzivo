@@ -104,6 +104,25 @@ const SERVICE_IMAGE_RULES: [string, string][] = [
   ["fuel", serviceFuel],
   ["injector", serviceFuel],
 
+  // Body & Paint
+  ["paint", serviceBodyPaint],
+  ["dent", serviceBodyPaint],
+  ["bumper", serviceBodyPaint],
+  ["body", serviceBodyPaint],
+
+  // Detailing
+  ["detail", serviceDetailing],
+  ["polish", serviceDetailing],
+  ["wax", serviceDetailing],
+
+  // Additional mappings
+  ["cv axle", serviceTransmission],
+  ["differential", serviceTransmission],
+  ["thermostat", serviceCoolant],
+  ["radiator", serviceCoolant],
+  ["wheel bearing", serviceSuspension],
+  ["compressor", serviceAC],
+
   // General engine fallback
   ["engine", serviceEngine],
   ["diagnostic", serviceDiagnostic],
