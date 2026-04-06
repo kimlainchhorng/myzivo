@@ -662,6 +662,34 @@ export default function CallScreen({
   );
 
   // Full-screen video layout
+  // Flip camera (switch front/back on mobile)
+  const handleFlipCamera = useCallback(async () => {
+    if (!localStream) return;
+    const videoTrack = localStream.getVideoTracks()[0];
+    if (!videoTrack) return;
+    const constraints = videoTrack.getConstraints();
+    const currentFacing = (constraints as any).facingMode;
+    const newFacing = currentFacing === "environment" ? "user" : "environment";
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: newFacing },
+        audio: false,
+      });
+      const newTrack = newStream.getVideoTracks()[0];
+      // Replace track in peer connection
+      if (peerConnection?.current) {
+        const sender = peerConnection.current.getSenders().find((s: any) => s.track?.kind === "video");
+        if (sender) await sender.replaceTrack(newTrack);
+      }
+      // Replace track in local stream
+      localStream.removeTrack(videoTrack);
+      videoTrack.stop();
+      localStream.addTrack(newTrack);
+      if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
+    } catch { /* not supported */ }
+  }, [localStream, peerConnection]);
+
+  // Full-screen video layout
   if (callType === "video") {
     return (
       <motion.div
@@ -707,14 +735,14 @@ export default function CallScreen({
             key={statusText}
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`text-sm mt-0.5 font-medium ${callState === "connected" ? "text-green-400 tabular-nums" : "text-white/70"}`}
+            className={`text-sm mt-0.5 font-medium ${callState === "connected" ? "text-emerald-400 tabular-nums" : "text-white/70"}`}
           >
             {statusText}
           </motion.p>
           {callState === "ringing" && (
             <div className="flex gap-1.5 mt-2">
               {[0, 1, 2].map((i) => (
-                <motion.div key={i} className="h-2 w-2 rounded-full bg-green-400"
+                <motion.div key={i} className="h-2 w-2 rounded-full bg-emerald-400"
                   animate={{ opacity: [0.2, 1, 0.2], scale: [0.6, 1.3, 0.6] }}
                   transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.2 }}
                 />
@@ -740,10 +768,20 @@ export default function CallScreen({
           <motion.div
             drag
             dragMomentum={false}
-            className="absolute bottom-32 right-4 cursor-grab active:cursor-grabbing z-20"
+            className="absolute bottom-36 right-4 cursor-grab active:cursor-grabbing z-20"
           >
-            <video ref={localVideoRef} autoPlay playsInline muted
-              className="w-[110px] h-[150px] rounded-2xl border-2 border-white/20 object-cover shadow-2xl" />
+            <div className="relative">
+              <video ref={localVideoRef} autoPlay playsInline muted
+                className="w-[110px] h-[150px] rounded-2xl border-2 border-white/20 object-cover shadow-2xl" />
+              {/* Flip camera mini-button on PiP */}
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                onClick={handleFlipCamera}
+                className="absolute top-1.5 right-1.5 h-7 w-7 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center"
+              >
+                <SwitchCamera className="h-3.5 w-3.5 text-white/80" />
+              </motion.button>
+            </div>
           </motion.div>
         )}
 
@@ -752,7 +790,7 @@ export default function CallScreen({
         {/* Bottom controls */}
         <div className="absolute bottom-0 left-0 right-0 z-20 px-4"
           style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 0.75rem), 1.25rem)" }}>
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/10 px-5 py-4 shadow-2xl">
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/10 px-4 py-4 shadow-2xl">
             <div className="flex items-center justify-around">
               {/* Mute */}
               <div className="flex flex-col items-center gap-1.5">
@@ -782,32 +820,24 @@ export default function CallScreen({
                 <span className="text-[10px] text-white/50 font-medium">{isCameraOff ? "Start" : "Stop"}</span>
               </div>
 
+              {/* Reactions */}
+              <div className="flex flex-col items-center gap-1.5">
+                <CallReactions variant="dark" />
+                <span className="text-[10px] text-white/50 font-medium">React</span>
+              </div>
+
               {/* Screen Share */}
               <div className="flex flex-col items-center gap-1.5">
                 <motion.button
                   whileTap={{ scale: 0.88 }}
                   onClick={screenShare.toggleSharing}
                   className={`h-12 w-12 rounded-full flex items-center justify-center transition-all ${
-                    screenShare.isSharing ? "bg-green-500/30 text-green-400" : "bg-white/10 text-white/80 hover:bg-white/20"
+                    screenShare.isSharing ? "bg-emerald-500/30 text-emerald-400" : "bg-white/10 text-white/80 hover:bg-white/20"
                   }`}
                 >
                   {screenShare.isSharing ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
                 </motion.button>
                 <span className="text-[10px] text-white/50 font-medium">Screen</span>
-              </div>
-
-              {/* Chat */}
-              <div className="flex flex-col items-center gap-1.5">
-                <motion.button
-                  whileTap={{ scale: 0.88 }}
-                  onClick={handleOpenChat}
-                  className="h-12 w-12 rounded-full flex items-center justify-center transition-all bg-white/10 text-white/80 hover:bg-white/20"
-                  aria-label="Open chat conversation"
-                  title="Open chat"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                </motion.button>
-                <span className="text-[10px] text-white/50 font-medium">Chat</span>
               </div>
 
               {/* End Call */}
