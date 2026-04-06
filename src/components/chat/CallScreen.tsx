@@ -664,8 +664,9 @@ export default function CallScreen({
   // Full-screen video layout
   // Flip camera (switch front/back on mobile)
   const handleFlipCamera = useCallback(async () => {
-    if (!localStream) return;
-    const videoTrack = localStream.getVideoTracks()[0];
+    const stream = localStream?.current ?? localStream;
+    if (!stream || !(stream instanceof MediaStream)) return;
+    const videoTrack = stream.getVideoTracks()[0];
     if (!videoTrack) return;
     const constraints = videoTrack.getConstraints();
     const currentFacing = (constraints as any).facingMode;
@@ -676,16 +677,14 @@ export default function CallScreen({
         audio: false,
       });
       const newTrack = newStream.getVideoTracks()[0];
-      // Replace track in peer connection
       if (peerConnection?.current) {
         const sender = peerConnection.current.getSenders().find((s: any) => s.track?.kind === "video");
         if (sender) await sender.replaceTrack(newTrack);
       }
-      // Replace track in local stream
-      localStream.removeTrack(videoTrack);
+      stream.removeTrack(videoTrack);
       videoTrack.stop();
-      localStream.addTrack(newTrack);
-      if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
+      stream.addTrack(newTrack);
+      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
     } catch { /* not supported */ }
   }, [localStream, peerConnection]);
 
