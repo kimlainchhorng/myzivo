@@ -131,6 +131,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
   const [dismissedMissedCallId, setDismissedMissedCallId] = useState<string | null>(null);
   const [activeEffect, setActiveEffect] = useState<EffectType>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
