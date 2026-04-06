@@ -688,12 +688,6 @@ export default function CallScreen({
   );
 
   // Full-screen video layout
-    const constraints = videoTrack.getConstraints();
-    const currentFacing = (constraints as any).facingMode;
-    const newFacing = currentFacing === "environment" ? "user" : "environment";
-    try {
-
-  // Full-screen video layout
   if (callType === "video") {
     return (
       <motion.div
