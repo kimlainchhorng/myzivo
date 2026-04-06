@@ -385,22 +385,10 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
         >
           {sortOrder === "desc" ? <SortDesc className="h-4 w-4" /> : <SortAsc className="h-4 w-4" />}
         </Button>
-        <Button
-          size="icon"
-          variant={viewMode === "calendar" ? "default" : "outline"}
-          onClick={() => {
-            setViewMode(v => v === "list" ? "calendar" : "list");
-            if (viewMode === "calendar") setCalendarDate(undefined);
-          }}
-          className="shrink-0"
-          title="Calendar view"
-        >
-          <CalendarIcon className="h-4 w-4" />
-        </Button>
       </div>
 
       {/* ── Calendar View ── */}
-      {viewMode === "calendar" && (() => {
+      {(() => {
         const bookingDates = new Map<string, { count: number; statuses: string[] }>();
         bookings.forEach(b => {
           if (!b.preferred_date) return;
