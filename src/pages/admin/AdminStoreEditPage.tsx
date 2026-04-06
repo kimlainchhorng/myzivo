@@ -3877,6 +3877,7 @@ export default function AdminStoreEditPage() {
               </>
             )}
 
+            {form.category !== "auto-repair" && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Sort Order</Label>
@@ -3896,9 +3897,10 @@ export default function AdminStoreEditPage() {
               </div>
               <div className="flex items-center gap-3 pt-6">
                 <Switch checked={productForm.in_stock} onCheckedChange={v => updateProductField("in_stock", v)} />
-                <Label>{form.category === "auto-repair" ? "Available" : "In Stock"}</Label>
+                <Label>In Stock</Label>
               </div>
             </div>
+            )}
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setProductDialog(false)}>Cancel</Button>
