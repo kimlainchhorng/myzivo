@@ -1,6 +1,7 @@
 /**
- * ChatMessageBubble — Facebook Messenger-style message bubble
+ * ChatMessageBubble — iMessage 2026-style message bubble
  * Features: long-press actions (reply/delete/copy/forward/pin), swipe-to-reply, emoji reactions, image/video display
+ * Design: Glassmorphic iMessage aesthetic with gradient bubbles, tail shapes, and depth effects
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
