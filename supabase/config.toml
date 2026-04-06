@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.register-push-token]
 verify_jwt = false
+
+[functions.meta-capi-bridge]
+verify_jwt = false
