@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
+import { trackInitiateCheckout } from "@/services/metaConversion";
 
 const DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 };
 
@@ -26,6 +27,12 @@ interface StorePin {
   logo_url: string | null;
   latitude: number;
   longitude: number;
+}
+
+interface StoreProduct {
+  id: string;
+  name: string;
+  price: number;
 }
 
 async function getApiKey(): Promise<string> {
@@ -223,7 +230,15 @@ export default function StoreMapPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null);
+    });
+  }, []);
 
   const { data: allStores = [] } = useQuery({
     queryKey: ["store-map-all"],
@@ -254,6 +269,32 @@ export default function StoreMapPage() {
     }
     return result;
   }, [stores, activeCategory, searchQuery]);
+
+  const { data: selectedStoreProducts = [] } = useQuery({
+    queryKey: ["store-map-products", selectedStore?.id],
+    queryFn: async () => {
+      if (!selectedStore?.id) return [] as StoreProduct[];
+      const { data, error } = await (supabase as any)
+        .from("store_products")
+        .select("id, name, price")
+        .eq("store_id", selectedStore.id)
+        .eq("in_stock", true)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) return [] as StoreProduct[];
+      return (data || []) as StoreProduct[];
+    },
+    enabled: !!selectedStore?.id,
+    staleTime: 30_000,
+  });
+
+  useEffect(() => {
+    if (selectedStoreProducts.length > 0) {
+      setSelectedProductId(selectedStoreProducts[0].id);
+    } else {
+      setSelectedProductId("");
+    }
+  }, [selectedStoreProducts]);
 
   useEffect(() => {
     if (!("geolocation" in navigator)) return;
@@ -569,6 +610,14 @@ export default function StoreMapPage() {
                   className="flex-1 py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
                   onClick={(e) => {
                     e.stopPropagation();
+                    trackInitiateCheckout({
+                      eventId: `ride-book-${selectedStore.id}-${Date.now()}`,
+                      externalId: currentUserId || undefined,
+                      sourceType: "ride_book",
+                      sourceTable: "store_profiles",
+                      sourceId: selectedStore.id,
+                      payload: { destination: selectedStore.address || selectedStore.name },
+                    });
                     navigate(`/rides/hub?destination=${encodeURIComponent(selectedStore.address || selectedStore.name)}&destLat=${selectedStore.latitude}&destLng=${selectedStore.longitude}`);
                   }}
                 >
@@ -591,6 +640,71 @@ export default function StoreMapPage() {
                       <Phone className="w-3.5 h-3.5" /> Call
                     </button>
                   </>
+                )}
+              </div>
+
+              <div className="border-t border-border/20 px-3 py-3 bg-muted/20">
+                <p className="text-[11px] font-semibold text-muted-foreground mb-2">Social-to-Sale</p>
+                {selectedStoreProducts.length > 0 ? (
+                  <>
+                    <select
+                      value={selectedProductId}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => setSelectedProductId(e.target.value)}
+                      className="w-full h-9 rounded-lg border border-border/40 bg-background px-2 text-xs"
+                    >
+                      {selectedStoreProducts.map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name} (${Number(product.price).toFixed(2)})
+                        </option>
+                      ))}
+                    </select>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <button
+                        className="h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const checkoutPath = `/grocery/shop/${selectedStore.slug}?buy=${selectedProductId}`;
+                          navigate("/reels", {
+                            state: {
+                              openCreate: true,
+                              commerceLinkDraft: {
+                                linkType: "store_product",
+                                storeId: selectedStore.id,
+                                storeProductId: selectedProductId,
+                                checkoutPath,
+                                mapLat: selectedStore.latitude,
+                                mapLng: selectedStore.longitude,
+                                mapLabel: selectedStore.name,
+                              },
+                            },
+                          });
+                        }}
+                      >
+                        Create Reel
+                      </button>
+                      <button
+                        className="h-9 rounded-lg border border-primary/30 text-primary text-xs font-semibold"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const checkoutPath = `/grocery/shop/${selectedStore.slug}?buy=${selectedProductId}`;
+                          trackInitiateCheckout({
+                            eventId: `store-buy-${selectedStore.id}-${selectedProductId}-${Date.now()}`,
+                            externalId: currentUserId || undefined,
+                            sourceType: "store_product",
+                            sourceTable: "store_products",
+                            sourceId: selectedProductId,
+                            payload: { store_id: selectedStore.id },
+                          });
+                          navigate(checkoutPath);
+                        }}
+                      >
+                        Buy Now
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground">Add products to this store to enable Create Reel and Buy Now links.</p>
                 )}
               </div>
             </div>

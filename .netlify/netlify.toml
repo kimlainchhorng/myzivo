@@ -1,12 +1,18 @@
-plugins = []
 headers = []
 
 [functions]
 
 [functions."*"]
 
+[[plugins]]
+origin = "ui"
+package = "@netlify/plugin-lighthouse"
+pinned_version = "6"
+
+[plugins.inputs]
+
 [build]
-publish = "/Users/viyitta/Documents/GitHub/myzivo/dist"
+publish = "/workspaces/myzivo/dist"
 publishOrigin = "ui"
 commandOrigin = "ui"
 command = "npm run build"

@@ -23,6 +23,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
+import { trackInitiateCheckout } from "@/services/metaConversion";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -60,6 +61,16 @@ interface FeedItem {
   hide_like_counts?: boolean;
   allow_sharing?: boolean;
   allow_mentions?: boolean;
+  commerce_link?: {
+    link_type: "store_product" | "truck_sale";
+    store_id?: string | null;
+    store_product_id?: string | null;
+    truck_sale_id?: string | null;
+    checkout_path?: string | null;
+    map_lat?: number | null;
+    map_lng?: number | null;
+    map_label?: string | null;
+  } | null;
 }
 
 const normalizeUserPostMediaType = (mediaType: string | null | undefined): "image" | "video" =>
@@ -72,6 +83,16 @@ export default function ReelsFeedPage() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [shareForPost, setShareForPost] = useState<{ shareUrl: string; shareText: string; shareMediaUrl?: string; shareMediaType?: "image" | "video"; sharePostId?: string; sharePostAuthorId?: string; sharePostAuthorName?: string } | null>(null);
+  const [commerceDraft, setCommerceDraft] = useState<{
+    linkType: "store_product" | "truck_sale";
+    storeId?: string;
+    storeProductId?: string;
+    truckSaleId?: string;
+    checkoutPath?: string;
+    mapLat?: number;
+    mapLng?: number;
+    mapLabel?: string;
+  } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
@@ -89,12 +110,34 @@ export default function ReelsFeedPage() {
 
   // Handle share-to-profile deep link
   useEffect(() => {
-    const state = location.state as { shareToProfile?: boolean; openCreate?: boolean; shareUrl?: string; shareText?: string; shareMediaUrl?: string; shareMediaType?: "image" | "video"; sharePostId?: string; sharePostAuthorId?: string; sharePostAuthorName?: string } | null;
+    const state = location.state as {
+      shareToProfile?: boolean;
+      openCreate?: boolean;
+      shareUrl?: string;
+      shareText?: string;
+      shareMediaUrl?: string;
+      shareMediaType?: "image" | "video";
+      sharePostId?: string;
+      sharePostAuthorId?: string;
+      sharePostAuthorName?: string;
+      commerceLinkDraft?: {
+        linkType: "store_product" | "truck_sale";
+        storeId?: string;
+        storeProductId?: string;
+        truckSaleId?: string;
+        checkoutPath?: string;
+        mapLat?: number;
+        mapLng?: number;
+        mapLabel?: string;
+      };
+    } | null;
     if (state?.shareToProfile && userId) {
       setShareForPost({ shareUrl: state.shareUrl || "", shareText: state.shareText || "", shareMediaUrl: state.shareMediaUrl, shareMediaType: state.shareMediaType, sharePostId: state.sharePostId, sharePostAuthorId: state.sharePostAuthorId, sharePostAuthorName: state.sharePostAuthorName });
+      setCommerceDraft(state.commerceLinkDraft || null);
       setShowCreate(true);
       window.history.replaceState({}, document.title);
     } else if (state?.openCreate && userId) {
+      setCommerceDraft(state.commerceLinkDraft || null);
       setShowCreate(true);
       window.history.replaceState({}, document.title);
     }
@@ -305,6 +348,49 @@ export default function ReelsFeedPage() {
           }
         }
       } catch {}
+
+      try {
+        const storePostIds = allItems.filter((i) => i.source === "store").map((i) => i.id);
+        const userPostIds = allItems.filter((i) => i.source === "user").map((i) => i.id.replace(/^u-/, ""));
+
+        const [storeLinksRes, userLinksRes] = await Promise.all([
+          storePostIds.length
+            ? (supabase as any)
+                .from("social_reel_links")
+                .select("post_id, post_source, link_type, store_id, store_product_id, truck_sale_id, checkout_path, map_lat, map_lng, map_label")
+                .eq("post_source", "store")
+                .in("post_id", storePostIds)
+            : Promise.resolve({ data: [] as any[] }),
+          userPostIds.length
+            ? (supabase as any)
+                .from("social_reel_links")
+                .select("post_id, post_source, link_type, store_id, store_product_id, truck_sale_id, checkout_path, map_lat, map_lng, map_label")
+                .eq("post_source", "user")
+                .in("post_id", userPostIds)
+            : Promise.resolve({ data: [] as any[] }),
+        ]);
+
+        const links = [...(storeLinksRes.data || []), ...(userLinksRes.data || [])] as any[];
+        const linkMap = new Map(links.map((row) => [`${row.post_source}:${row.post_id}`, row]));
+
+        allItems.forEach((item) => {
+          const rawId = item.source === "user" ? item.id.replace(/^u-/, "") : item.id;
+          const link = linkMap.get(`${item.source}:${rawId}`);
+          if (!link) return;
+          item.commerce_link = {
+            link_type: link.link_type,
+            store_id: link.store_id,
+            store_product_id: link.store_product_id,
+            truck_sale_id: link.truck_sale_id,
+            checkout_path: link.checkout_path,
+            map_lat: link.map_lat,
+            map_lng: link.map_lng,
+            map_label: link.map_label,
+          };
+        });
+      } catch {
+        // Keep feed rendering even if commerce links fail.
+      }
 
       allItems.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       return allItems;
@@ -527,10 +613,12 @@ export default function ReelsFeedPage() {
             sharedPostId={shareForPost?.sharePostId}
             sharedPostAuthorId={shareForPost?.sharePostAuthorId}
             sharedPostAuthorName={shareForPost?.sharePostAuthorName}
-            onClose={() => { setShowCreate(false); setShareForPost(null); }}
+            commerceLinkDraft={commerceDraft || undefined}
+            onClose={() => { setShowCreate(false); setShareForPost(null); setCommerceDraft(null); }}
             onCreated={() => {
               setShowCreate(false);
               setShareForPost(null);
+              setCommerceDraft(null);
               queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
             }}
           />
@@ -698,6 +786,39 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     setShowShareSheet(false);
   };
 
+  const handleBuyNow = async () => {
+    const commerce = item.commerce_link;
+    if (!commerce) return;
+
+    const checkoutPath = commerce.checkout_path
+      || (commerce.link_type === "store_product" && commerce.store_product_id
+        ? `/grocery/shop/${item.store_slug || ""}?buy=${commerce.store_product_id}`
+        : commerce.link_type === "truck_sale" && commerce.truck_sale_id
+          ? `/marketplace?truckSale=${commerce.truck_sale_id}`
+          : null);
+
+    if (!checkoutPath) {
+      toast.error("Checkout path is not configured for this reel");
+      return;
+    }
+
+    await trackInitiateCheckout({
+      eventId: `${item.id}-buy-now-${Date.now()}`,
+      externalId: currentUserId || undefined,
+      sourceType: commerce.link_type,
+      sourceTable: "social_reel_links",
+      sourceId: item.id,
+      payload: {
+        post_id: item.id,
+        store_product_id: commerce.store_product_id,
+        truck_sale_id: commerce.truck_sale_id,
+      },
+    });
+
+    onClose();
+    navigate(checkoutPath);
+  };
+
   const shareOptions = [
     { label: "WhatsApp", color: "#25D366", svg: "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.654-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.531 3.488 11.821 11.821 0 0012.05 0zm0 21.785a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.981.998-3.648-.235-.374A9.86 9.86 0 012.15 11.892C2.15 6.443 6.602 1.992 12.053 1.992a9.84 9.84 0 016.988 2.899 9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.9-9.884 9.9z", url: `https://wa.me/?text=${shareText}%20${shareEncodedUrl}` },
     { label: "Telegram", color: "#0088CC", svg: "M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0h-.056zm5.091 8.104l-1.681 7.927c-.128.564-.46.701-.931.437l-2.57-1.894-1.24 1.193c-.137.137-.253.253-.519.253l.185-2.618 4.763-4.303c.207-.184-.045-.286-.321-.102l-5.889 3.71-2.537-.793c-.552-.172-.563-.552.115-.817l9.915-3.822c.459-.166.861.112.71.827z", url: `https://t.me/share/url?url=${shareEncodedUrl}&text=${shareText}` },
@@ -799,6 +920,14 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           <Share2 className="h-7 w-7 text-white drop-shadow-lg" />
           <span className="text-white text-[10px] font-medium drop-shadow">Share</span>
         </button>
+
+        {item.commerce_link && (
+          <button onClick={handleBuyNow} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
+            <div className="px-2.5 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold shadow-lg">
+              Buy Now
+            </div>
+          </button>
+        )}
 
         {/* Author avatar with Follow button */}
         <div className="relative">
@@ -1038,6 +1167,38 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
 
   const handleShare = () => {
     setShowShareSheet(true);
+  };
+
+  const handleBuyNow = async () => {
+    const commerce = item.commerce_link;
+    if (!commerce) return;
+
+    const checkoutPath = commerce.checkout_path
+      || (commerce.link_type === "store_product" && commerce.store_product_id
+        ? `/grocery/shop/${item.store_slug || ""}?buy=${commerce.store_product_id}`
+        : commerce.link_type === "truck_sale" && commerce.truck_sale_id
+          ? `/marketplace?truckSale=${commerce.truck_sale_id}`
+          : null);
+
+    if (!checkoutPath) {
+      toast.error("Checkout path is not configured for this reel");
+      return;
+    }
+
+    await trackInitiateCheckout({
+      eventId: `${item.id}-buy-now-${Date.now()}`,
+      externalId: currentUserId || undefined,
+      sourceType: commerce.link_type,
+      sourceTable: "social_reel_links",
+      sourceId: item.id,
+      payload: {
+        post_id: item.id,
+        store_product_id: commerce.store_product_id,
+        truck_sale_id: commerce.truck_sale_id,
+      },
+    });
+
+    navigate(checkoutPath);
   };
 
   const shareUrl = getPostShareUrl(getReelsSharePostId(item));
@@ -1370,6 +1531,14 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                   >
                     {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
                   </button>
+                  {item.commerce_link && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleBuyNow(); }}
+                      className="absolute bottom-3 left-3 px-3 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg min-h-[44px]"
+                    >
+                      Buy Now
+                    </button>
+                  )}
                 </>
               ) : (
                 <img
@@ -1487,6 +1656,17 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
           <Bookmark className={cn("h-[22px] w-[22px] transition-all", saved ? "text-primary fill-primary" : "text-foreground")} />
         </button>
       </div>
+
+      {item.commerce_link && (
+        <div className="px-3 pb-2">
+          <button
+            onClick={handleBuyNow}
+            className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold"
+          >
+            Buy Now
+          </button>
+        </div>
+      )}
 
       {/* Caption for normal posts already shown above media; skip duplicate */}
 

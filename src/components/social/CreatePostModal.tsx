@@ -24,6 +24,16 @@ interface CreatePostModalProps {
   sharedPostId?: string;
   sharedPostAuthorId?: string;
   sharedPostAuthorName?: string;
+  commerceLinkDraft?: {
+    linkType: "store_product" | "truck_sale";
+    storeId?: string;
+    storeProductId?: string;
+    truckSaleId?: string;
+    checkoutPath?: string;
+    mapLat?: number;
+    mapLng?: number;
+    mapLabel?: string;
+  };
 }
 
 const FILTERS = [
@@ -59,6 +69,7 @@ export default function CreatePostModal({
   sharedPostId,
   sharedPostAuthorId,
   sharedPostAuthorName,
+  commerceLinkDraft,
 }: CreatePostModalProps) {
   // Load draft from localStorage
   const loadDraft = () => {
@@ -242,8 +253,28 @@ export default function CreatePostModal({
       if (sharedPostId) insertData.shared_from_post_id = sharedPostId;
       if (sharedPostAuthorId) insertData.shared_from_user_id = sharedPostAuthorId;
 
-      const { error: insertErr } = await (supabase as any).from("user_posts").insert(insertData);
+      const { data: insertedPost, error: insertErr } = await (supabase as any)
+        .from("user_posts")
+        .insert(insertData)
+        .select("id")
+        .single();
       if (insertErr) throw insertErr;
+
+      if (commerceLinkDraft && insertedPost?.id) {
+        await (supabase as any).from("social_reel_links").insert({
+          post_id: insertedPost.id,
+          post_source: "user",
+          link_type: commerceLinkDraft.linkType,
+          store_id: commerceLinkDraft.storeId || null,
+          store_product_id: commerceLinkDraft.storeProductId || null,
+          truck_sale_id: commerceLinkDraft.truckSaleId || null,
+          checkout_path: commerceLinkDraft.checkoutPath || null,
+          map_lat: commerceLinkDraft.mapLat ?? null,
+          map_lng: commerceLinkDraft.mapLng ?? null,
+          map_label: commerceLinkDraft.mapLabel || null,
+          created_by: userId,
+        });
+      }
 
       // Clear draft on successful post
       localStorage.removeItem(DRAFT_KEY);
