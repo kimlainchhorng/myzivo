@@ -3,6 +3,7 @@
  */
 import { useParams, useNavigate } from "react-router-dom";
 import serviceBrakePads from "@/assets/service-brake-pads.jpg";
+import serviceOilChange from "@/assets/service-oil-change.jpg";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
