@@ -692,21 +692,6 @@ export default function CallScreen({
     const currentFacing = (constraints as any).facingMode;
     const newFacing = currentFacing === "environment" ? "user" : "environment";
     try {
-      const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: newFacing },
-        audio: false,
-      });
-      const newTrack = newStream.getVideoTracks()[0];
-      if (peerConnection?.current) {
-        const sender = peerConnection.current.getSenders().find((s: any) => s.track?.kind === "video");
-        if (sender) await sender.replaceTrack(newTrack);
-      }
-      stream.removeTrack(videoTrack);
-      videoTrack.stop();
-      stream.addTrack(newTrack);
-      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
-    } catch { /* not supported */ }
-  }, [localStream, peerConnection]);
 
   // Full-screen video layout
   if (callType === "video") {
