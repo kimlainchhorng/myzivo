@@ -49,6 +49,8 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
   const [rescheduleDialog, setRescheduleDialog] = useState<{ open: boolean; bookingId: string; date: Date | undefined; time: string }>({ open: false, bookingId: "", date: undefined, time: "" });
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [calendarDate, setCalendarDate] = useState<Date | undefined>(undefined);
 
   const fetchBookings = async () => {
     const { data } = await supabase
