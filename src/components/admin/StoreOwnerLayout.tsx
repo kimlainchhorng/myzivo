@@ -33,11 +33,15 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const isAutoRepair = storeCategory === "auto-repair";
+  const productsLabel = isAutoRepair ? "Services" : "Products";
+  const paymentLabel = isAutoRepair ? "Bookings" : "Payment";
+
   const navItems = [
     { id: "profile", label: "Profile", icon: Store },
     { id: "orders", label: `Orders${orderCount ? ` (${orderCount})` : ""}`, icon: ClipboardList },
-    { id: "products", label: `Products${productCount != null ? ` (${productCount})` : ""}`, icon: Package },
-    { id: "payment", label: "Payment", icon: CreditCard },
+    { id: "products", label: `${productsLabel}${productCount != null ? ` (${productCount})` : ""}`, icon: Package },
+    { id: "payment", label: paymentLabel, icon: CreditCard },
     { id: "customers", label: "Customers", icon: Users },
     { id: "marketing", label: "Marketing & Ads", icon: Megaphone },
     { id: "settings", label: "Settings", icon: Settings },
