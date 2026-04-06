@@ -1772,9 +1772,10 @@ export default function AdminStoreEditPage() {
   };
 
   const employeeTitles: Record<string, string> = { employees: "Employees", payroll: "Payroll", "employee-schedule": "Employee Schedule", "time-clock": "Time Clock", "employee-rules": "Employee Rules", attendance: "Attendance & Leave", training: "Training & Onboarding", documents: "Documents & Files" };
-  const storeOwnerTitle = employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? "Products" : activeTab === "payment" ? (form.category === "car-dealership" ? t("admin.store.booking_appointment") : t("admin.store.payment")) : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
+  const isAutoRepair = form.category === "auto-repair";
+  const storeOwnerTitle = employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? (isAutoRepair ? "Services" : "Products") : activeTab === "payment" ? (form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : t("admin.store.payment")) : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
   const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
-    <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
+    <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} storeCategory={form.category} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
   );
 
   if (isLoading) {
