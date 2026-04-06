@@ -2524,80 +2524,80 @@ export default function AdminStoreEditPage() {
                     }}
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>{t("admin.store.phone")}</Label>
-                    <div className="flex gap-2">
-                      <div className="flex items-center gap-1.5 px-3 rounded-xl border border-border bg-muted text-sm text-muted-foreground shrink-0">
-                        <span>🇰🇭</span>
-                        <span>+855</span>
-                      </div>
-                      <Input
-                        value={form.phone.replace(/^\+855\s?/, "")}
-                        onChange={e => {
-                          let val = e.target.value.replace(/[^0-9]/g, "").replace(/^0+/, "");
-                          if (val.length > 9) val = val.slice(0, 9);
-                          updateField("phone", val ? `+855 ${val}` : "");
-                        }}
-                        placeholder="12 345 678"
-                        maxLength={9}
-                      />
+                <div className="space-y-2">
+                  <Label>{t("admin.store.phone")}</Label>
+                  <div className="flex gap-2">
+                    <div className="flex items-center gap-1.5 px-3 rounded-xl border border-border bg-muted text-sm text-muted-foreground shrink-0">
+                      <span>{{ KH: "🇰🇭", US: "🇺🇸", VN: "🇻🇳", TH: "🇹🇭", CN: "🇨🇳", KR: "🇰🇷", JP: "🇯🇵", IN: "🇮🇳", GB: "🇬🇧", AU: "🇦🇺", SG: "🇸🇬", MY: "🇲🇾", PH: "🇵🇭", ID: "🇮🇩", LA: "🇱🇦", MM: "🇲🇲" }[form.market] || "🌐"}</span>
+                      <span>{{ KH: "+855", US: "+1", VN: "+84", TH: "+66", CN: "+86", KR: "+82", JP: "+81", IN: "+91", GB: "+44", AU: "+61", SG: "+65", MY: "+60", PH: "+63", ID: "+62", LA: "+856", MM: "+95" }[form.market] || "+1"}</span>
                     </div>
-                    {form.phone && (() => {
-                      const digits = form.phone.replace(/^\+855\s?/, "").replace(/\D/g, "");
-                      if (digits.length > 0 && (digits.length < 8 || digits.length > 9)) {
-                        return <p className="text-xs text-destructive">Must be 8–9 digits</p>;
+                    <Input
+                      value={form.phone}
+                      onChange={e => updateField("phone", e.target.value.replace(/[^0-9\s]/g, ""))}
+                      placeholder="Phone number"
+                    />
+                  </div>
+                </div>
+
+                {/* Weekly Hours Schedule */}
+                <div className="space-y-2 md:col-span-3">
+                  <Label>Operating Hours</Label>
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    {(() => {
+                      const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+                      const DAY_LABELS: Record<string, string> = { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" };
+                      type DaySchedule = { open: string; close: string; closed: boolean };
+                      type WeekSchedule = Record<string, DaySchedule>;
+                      let schedule: WeekSchedule;
+                      try {
+                        const parsed = JSON.parse(form.hours);
+                        schedule = parsed?.mon ? parsed : Object.fromEntries(DAYS.map(d => [d, { open: "8:00 AM", close: "5:00 PM", closed: false }]));
+                      } catch {
+                        const parts = form.hours?.split(/[–-]/) || [];
+                        const open = parts[0]?.trim() || "8:00 AM";
+                        const close = parts[1]?.trim() || "5:00 PM";
+                        schedule = Object.fromEntries(DAYS.map(d => [d, { open, close, closed: false }]));
                       }
-                      return null;
+                      const timeOptions = Array.from({ length: 48 }, (_, i) => {
+                        const h = Math.floor(i / 2); const m = i % 2 === 0 ? "00" : "30";
+                        const ampm = h < 12 ? "AM" : "PM"; const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                        return `${h12}:${m} ${ampm}`;
+                      });
+                      const updateDay = (day: string, field: string, value: any) => {
+                        const updated = { ...schedule, [day]: { ...schedule[day], [field]: value } };
+                        updateField("hours", JSON.stringify(updated));
+                      };
+                      return DAYS.map((day, idx) => (
+                        <div key={day} className={`flex items-center gap-2 px-3 py-2 ${idx > 0 ? "border-t border-border" : ""} ${schedule[day]?.closed ? "bg-muted/50" : ""}`}>
+                          <span className="w-10 text-xs font-medium flex-shrink-0">{DAY_LABELS[day]}</span>
+                          <Switch checked={!schedule[day]?.closed} onCheckedChange={(open) => updateDay(day, "closed", !open)} className="scale-75" />
+                          {schedule[day]?.closed ? (
+                            <span className="text-xs text-muted-foreground italic">Closed</span>
+                          ) : (
+                            <div className="flex items-center gap-1 flex-1">
+                              <select value={schedule[day]?.open || "8:00 AM"} onChange={e => updateDay(day, "open", e.target.value)}
+                                className="flex h-8 rounded-md border border-input bg-background px-1.5 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                                {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                              <span className="text-xs text-muted-foreground">to</span>
+                              <select value={schedule[day]?.close || "5:00 PM"} onChange={e => updateDay(day, "close", e.target.value)}
+                                className="flex h-8 rounded-md border border-input bg-background px-1.5 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                                {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                      ));
                     })()}
                   </div>
-                  <div className="space-y-2">
-                    <Label>Open Hour</Label>
-                    <select
-                      value={form.hours?.split(" - ")[0] || ""}
-                      onChange={e => {
-                        const close = form.hours?.split(" - ")[1] || "";
-                        updateField("hours", close ? `${e.target.value} - ${close}` : e.target.value);
-                      }}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring overflow-y-auto"
-                    >
-                      <option value="">Select</option>
-                      {Array.from({ length: 48 }, (_, i) => {
-                        const h = Math.floor(i / 2);
-                        const m = i % 2 === 0 ? "00" : "30";
-                        const ampm = h < 12 ? "AM" : "PM";
-                        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-                        const label = `${h12}:${m} ${ampm}`;
-                        return <option key={i} value={label}>{label}</option>;
-                      })}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Close Hour</Label>
-                    <select
-                      value={form.hours?.split(" - ")[1] || ""}
-                      onChange={e => {
-                        const open = form.hours?.split(" - ")[0] || "";
-                        updateField("hours", open ? `${open} - ${e.target.value}` : `- ${e.target.value}`);
-                      }}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring overflow-y-auto"
-                    >
-                      <option value="">Select</option>
-                      {Array.from({ length: 48 }, (_, i) => {
-                        const h = Math.floor(i / 2);
-                        const m = i % 2 === 0 ? "00" : "30";
-                        const ampm = h < 12 ? "AM" : "PM";
-                        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-                        const label = `${h12}:${m} ${ampm}`;
-                        return <option key={i} value={label}>{label}</option>;
-                      })}
-                    </select>
-                  </div>
+                </div>
+
+                {["restaurant", "food-market", "drink", "grocery", "supermarket"].includes(form.category) && (
                   <div className="space-y-2">
                     <Label>{t("admin.store.delivery_min")}</Label>
                     <Input type="number" value={form.delivery_min} onChange={e => updateField("delivery_min", parseInt(e.target.value) || 0)} />
                   </div>
-                </div>
+                )}
                 <div className="space-y-2">
                   <Label>Facebook URL</Label>
                   <Input
