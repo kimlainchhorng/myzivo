@@ -389,6 +389,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     scrollToBottom();
     setTyping(false);
 
+    // Trigger message effect if detected
+    const effect = detectMessageEffect(text);
+    if (effect) setActiveEffect(effect);
+
     try {
       const insertData: any = {
         sender_id: user.id,
