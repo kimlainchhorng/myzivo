@@ -3672,8 +3672,7 @@ export default function AdminStoreEditPage() {
                     </select>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                <div className="space-y-2">
                     <Label>Service Category</Label>
                     <select
                       value={productForm.category || ""}
@@ -3699,19 +3698,6 @@ export default function AdminStoreEditPage() {
                       <option value="Detailing">Detailing</option>
                       <option value="Other">Other</option>
                     </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Vehicle Types</Label>
-                    <ManagedTagDropdown
-                      label="Vehicle Types"
-                      value={productForm.brand}
-                      onChange={(v) => updateProductField("brand", v)}
-                      savedItems={savedBrands}
-                      onSaveItem={(item) => setSavedBrands((prev) => [...new Set([...prev, item])])}
-                      onDeleteItem={(item) => setSavedBrands((prev) => prev.filter((b) => b !== item))}
-                      placeholder="e.g. Sedan, SUV, Truck"
-                    />
-                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Images ({(productForm.image_urls || []).length}/8)</Label>
