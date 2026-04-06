@@ -966,11 +966,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
         {/* Typing indicator */}
         {recipientTyping && (
-          <div className="flex justify-start">
-            <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-1">
-              <motion.span className="h-2 w-2 rounded-full bg-muted-foreground" animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} />
-              <motion.span className="h-2 w-2 rounded-full bg-muted-foreground" animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.15 }} />
-              <motion.span className="h-2 w-2 rounded-full bg-muted-foreground/50" animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.3 }} />
+          <div className="flex justify-start px-1">
+            <div className="bg-muted/60 backdrop-blur-lg rounded-[22px] rounded-bl-[6px] px-4 py-3 flex items-center gap-1.5 shadow-sm">
+              <motion.span className="h-[7px] w-[7px] rounded-full bg-foreground/30" animate={{ y: [0, -5, 0], opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0 }} />
+              <motion.span className="h-[7px] w-[7px] rounded-full bg-foreground/30" animate={{ y: [0, -5, 0], opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.2 }} />
+              <motion.span className="h-[7px] w-[7px] rounded-full bg-foreground/30" animate={{ y: [0, -5, 0], opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.4 }} />
             </div>
           </div>
         )}
