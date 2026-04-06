@@ -1290,6 +1290,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         onJumpToMessage={scrollToMessage}
         onUnpin={(id) => handlePin(id, false)}
       />
+
+      {/* Message effects overlay */}
+      <MessageEffects effect={activeEffect} onComplete={() => setActiveEffect(null)} />
     </motion.div>
   );
 }
