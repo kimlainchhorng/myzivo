@@ -3117,6 +3117,15 @@ export default function AdminStoreEditPage() {
             <StoreDocumentsSection storeId={storeId!} />
           </TabsContent>
 
+          {form.category === "auto-repair" && (
+            <TabsContent value="customer-bookings">
+              <Card>
+                <CardContent className="pt-6">
+                  <AdminBookingsTab storeId={storeId!} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
         </Tabs>
       </div>
