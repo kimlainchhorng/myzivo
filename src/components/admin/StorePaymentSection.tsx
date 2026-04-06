@@ -15,6 +15,12 @@ import wingLogo from "@/assets/payments/wing-logo.png";
 import wingBanner from "@/assets/payments/wing-banner.jpg";
 import acledaLogo from "@/assets/payments/acleda-logo.webp";
 import acledaBanner from "@/assets/payments/acleda-banner.jpg";
+import cardPaymentIcon from "@/assets/payments/card-payment-icon.png";
+import confirmedOrderIcon from "@/assets/payments/confirmed-order-icon.png";
+import bankTransferIcon from "@/assets/payments/bank-transfer-icon.png";
+import stripeConnectIcon from "@/assets/payments/stripe-connect-icon.png";
+import invoiceIcon from "@/assets/payments/invoice-icon.png";
+import cashDeliveryIcon from "@/assets/payments/cash-delivery-icon.png";
 
 interface PaymentMethod {
   id?: string;
