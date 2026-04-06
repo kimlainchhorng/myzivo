@@ -3634,17 +3634,17 @@ export default function AdminStoreEditPage() {
                     <Input
                       type="text"
                       inputMode="decimal"
-                      value={productForm.price || ""}
+                      defaultValue={productForm.price || ""}
+                      key={`price-${editingProduct?.id || "new"}-${productDialog}`}
                       onChange={e => {
-                        const parts = e.target.value.split(".");
-                        const safe = parts.length > 1
-                          ? `${parts[0].replace(/[^0-9]/g, "")}.${parts.slice(1).join("").replace(/[^0-9]/g, "")}`
-                          : e.target.value.replace(/[^0-9]/g, "");
-                        if (safe === "" || safe === ".") {
+                        const raw = e.target.value;
+                        const sanitized = raw.replace(/[^0-9.]/g, "").replace(/(\..*?)\./g, "$1");
+                        if (sanitized !== raw) e.target.value = sanitized;
+                        if (sanitized === "" || sanitized === ".") {
                           updateProductField("price", 0);
                           return;
                         }
-                        const num = parseFloat(safe);
+                        const num = parseFloat(sanitized);
                         if (!Number.isNaN(num)) updateProductField("price", num);
                       }}
                       placeholder="0.00"
