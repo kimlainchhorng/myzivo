@@ -56,6 +56,13 @@ export default function AdminStoresPage() {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [ownerDialog, setOwnerDialog] = useState<{ storeId: string; storeName: string } | null>(null);
+  const [ownerEmail, setOwnerEmail] = useState("");
+  const [assigningOwner, setAssigningOwner] = useState(false);
+  const [inviteDialog, setInviteDialog] = useState<{ storeId: string; storeName: string; storeAccountId: string } | null>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const [sendingInvite, setSendingInvite] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
