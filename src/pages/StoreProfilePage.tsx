@@ -254,11 +254,30 @@ export default function StoreProfilePage() {
                   <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                   {store.rating || "4.5"}
                 </span>
-                {store.hours && (
-                  <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" /> {store.hours}
-                  </span>
-                )}
+                {store.hours && (() => {
+                  // Parse hours JSON and show today's hours
+                  try {
+                    const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+                    const today = days[new Date().getDay()];
+                    const parsed = typeof store.hours === "string" ? JSON.parse(store.hours) : store.hours;
+                    const todayHours = parsed?.[today];
+                    if (todayHours?.closed) {
+                      return (
+                        <span className="flex items-center gap-0.5 text-xs text-red-500">
+                          <Clock className="h-3 w-3" /> Closed Today
+                        </span>
+                      );
+                    }
+                    if (todayHours?.open && todayHours?.close) {
+                      return (
+                        <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" /> {todayHours.open} – {todayHours.close}
+                        </span>
+                      );
+                    }
+                  } catch {}
+                  return null;
+                })()}
                 {store.delivery_min && (
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/15">
                     {store.delivery_min}m delivery
