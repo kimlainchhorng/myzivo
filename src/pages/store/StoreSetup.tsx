@@ -120,6 +120,8 @@ export default function StoreSetup() {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const logoRef = useRef<HTMLInputElement>(null);
@@ -234,6 +236,63 @@ export default function StoreSetup() {
     setter(formatPhone(value));
   };
 
+  // Save draft to DB (setup_complete stays false)
+  const saveDraft = async (silent = true) => {
+    if (!user) return;
+    setSavingDraft(true);
+    try {
+      // Save owner profile
+      await supabase.from("profiles").update({
+        full_name: ownerName || undefined,
+        phone: ownerPhone.replace(/\D/g, "") || null,
+      }).eq("user_id", user.id);
+
+      const hoursJson = JSON.stringify(schedule);
+      const storeData: Record<string, any> = {
+        name: storeName || "Untitled Store",
+        slug: storeSlug || `store-${Date.now()}`,
+        description: storeDesc || null,
+        category: storeCategory,
+        address: storeAddress || null,
+        phone: storePhone.replace(/\D/g, "") || null,
+        hours: hoursJson,
+        logo_url: logoUrl || null,
+        banner_url: bannerUrl || null,
+        owner_id: user.id,
+        setup_complete: false,
+        is_active: false,
+        market: storeMarket,
+      };
+
+      if (myStore?.id) {
+        await supabase.from("store_profiles").update(storeData).eq("id", myStore.id);
+      } else {
+        const { data } = await supabase.from("store_profiles").insert(storeData as any).select("id").single();
+      }
+
+      setLastSaved(new Date());
+      if (!silent) toast.success("Draft saved! You can come back anytime.");
+    } catch (err: any) {
+      if (!silent) toast.error("Could not save draft");
+      console.error("Draft save error:", err);
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
+  // Auto-save when moving to next step
+  const goToStep = async (nextStep: number) => {
+    if (nextStep > step) {
+      await saveDraft(true);
+    }
+    setStep(nextStep);
+  };
+
+  const handleSaveAndExit = async () => {
+    await saveDraft(false);
+    navigate("/shop-dashboard", { replace: true });
+  };
+
   const canProceed = () => {
     if (step === 1) return ownerName.trim().length > 0 && ownerEmail.trim().length > 0;
     if (step === 2) return storeName.trim().length > 0 && storeSlug.trim().length > 0;
@@ -334,7 +393,7 @@ export default function StoreSetup() {
             return (
               <div key={s.id} className="flex items-center gap-1.5">
                 <button
-                  onClick={() => { if (isDone) setStep(s.id); }}
+                  onClick={() => { if (isDone) goToStep(s.id); }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-300 ${
                     isActive
                       ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-105"
@@ -636,16 +695,34 @@ export default function StoreSetup() {
               </motion.div>
             </AnimatePresence>
 
+            {/* Auto-save indicator */}
+            {lastSaved && (
+              <p className="text-white/20 text-[10px] text-center mt-4">
+                Draft saved {lastSaved.toLocaleTimeString()}
+              </p>
+            )}
+
             {/* Navigation */}
-            <div className="flex items-center justify-between mt-8 pt-5 border-t border-white/[0.08]">
-              {step > 1 ? (
-                <Button variant="ghost" onClick={() => setStep(s => s - 1)} className="text-white/50 hover:text-white hover:bg-white/[0.08] rounded-xl h-10 px-4 text-[13px]">
-                  <ArrowLeft className="w-4 h-4 mr-1.5" /> Back
+            <div className="flex items-center justify-between mt-6 pt-5 border-t border-white/[0.08]">
+              <div className="flex items-center gap-2">
+                {step > 1 && (
+                  <Button variant="ghost" onClick={() => setStep(s => s - 1)} className="text-white/50 hover:text-white hover:bg-white/[0.08] rounded-xl h-10 px-4 text-[13px]">
+                    <ArrowLeft className="w-4 h-4 mr-1.5" /> Back
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  onClick={handleSaveAndExit}
+                  disabled={savingDraft}
+                  className="text-white/40 hover:text-white hover:bg-white/[0.08] rounded-xl h-10 px-4 text-[13px]"
+                >
+                  {savingDraft ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
+                  Save & Exit
                 </Button>
-              ) : <div />}
+              </div>
 
               {step < 4 ? (
-                <Button onClick={() => setStep(s => s + 1)} disabled={!canProceed()} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-10 px-6 text-[13px] font-semibold shadow-lg shadow-primary/20">
+                <Button onClick={() => goToStep(step + 1)} disabled={!canProceed()} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-10 px-6 text-[13px] font-semibold shadow-lg shadow-primary/20">
                   Next <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
               ) : (
