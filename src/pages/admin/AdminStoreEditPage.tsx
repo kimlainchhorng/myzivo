@@ -5,6 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import serviceBrakePads from "@/assets/service-brake-pads.jpg";
 import serviceOilChange from "@/assets/service-oil-change.jpg";
 import { getServiceImage } from "@/config/autoRepairServiceImages";
+import AdminBookingsTab from "@/components/admin/store/AdminBookingsTab";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -2278,6 +2279,9 @@ export default function AdminStoreEditPage() {
                 <TabsTrigger value="payment" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> {t("admin.store.payment")}</TabsTrigger>
               )}
               <TabsTrigger value="settings" className="gap-1.5"><Building2 className="h-3.5 w-3.5" /> Settings</TabsTrigger>
+              {form.category === "auto-repair" && (
+                <TabsTrigger value="customer-bookings" className="gap-1.5"><CalendarIcon className="h-3.5 w-3.5" /> Customer Bookings</TabsTrigger>
+              )}
             </TabsList>
           )}
 
@@ -3114,6 +3118,15 @@ export default function AdminStoreEditPage() {
             <StoreDocumentsSection storeId={storeId!} />
           </TabsContent>
 
+          {form.category === "auto-repair" && (
+            <TabsContent value="customer-bookings">
+              <Card>
+                <CardContent className="pt-6">
+                  <AdminBookingsTab storeId={storeId!} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
         </Tabs>
       </div>
