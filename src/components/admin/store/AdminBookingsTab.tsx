@@ -448,7 +448,7 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
                               <div
                                 key={b.id}
                                 className="flex items-center justify-between p-3 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
-                                onClick={() => { setViewMode("list"); setExpandedId(b.id); }}
+                                onClick={() => { setExpandedId(b.id); }}
                               >
                                 <div className="min-w-0">
                                   <p className="text-sm font-medium text-foreground truncate">{b.service_name}</p>
