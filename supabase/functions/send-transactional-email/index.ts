@@ -125,26 +125,25 @@ Deno.serve(async (req) => {
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  // 2. Check suppression list (graceful: if table doesn't exist, proceed)
-  let suppressed = null
-  try {
-    const { data, error: suppressionError } = await supabase
-      .from('suppressed_emails')
-      .select('id')
-      .eq('email', effectiveRecipient.toLowerCase())
-      .maybeSingle()
+  // 2. Check suppression list (fail-closed: if we can't verify, don't send)
+  const { data: suppressed, error: suppressionError } = await supabase
+    .from('suppressed_emails')
+    .select('id')
+    .eq('email', effectiveRecipient.toLowerCase())
+    .maybeSingle()
 
-    if (suppressionError) {
-      // Table may not exist — log and proceed
-      console.warn('Suppression check failed — proceeding with send', {
-        error: suppressionError,
-        effectiveRecipient,
-      })
-    } else {
-      suppressed = data
-    }
-  } catch (e) {
-    console.warn('Suppression check exception — proceeding with send', e)
+  if (suppressionError) {
+    console.error('Suppression check failed — refusing to send', {
+      error: suppressionError,
+      effectiveRecipient,
+    })
+    return new Response(
+      JSON.stringify({ error: 'Failed to verify suppression status' }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    )
   }
 
   if (suppressed) {
