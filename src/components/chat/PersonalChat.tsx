@@ -539,7 +539,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         locked_price_cents: priceCents,
       };
       setMessages((prev) => [...prev, optimisticMsg]);
-      scrollToBottom();
+      scrollToBottom(true);
 
       const { data, error: insertErr } = await (supabase as any)
         .from("direct_messages")
