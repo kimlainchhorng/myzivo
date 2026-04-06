@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { playOutgoingRingback } from "@/lib/callAudio";
 import CallQualityBadge from "./CallQualityBadge";
+import CallReactions from "./CallReactions";
+import AudioVisualizer from "./AudioVisualizer";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
