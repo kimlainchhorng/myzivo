@@ -214,7 +214,7 @@ export default function AdminStoresPage() {
 
       // Send invite email with store login link
       const storeAccountId = getStoreAccountId(ownerDialog.storeId);
-      const loginUrl = `${window.location.origin}/partner-login?store_id=${storeAccountId}`;
+      const loginUrl = `https://hizivo.com/partner-login?store_id=${storeAccountId}`;
       try {
         await supabase.functions.invoke("send-transactional-email", {
           body: {
