@@ -64,12 +64,9 @@ export default function ServiceBookingPage() {
       setServices(p || []);
       // Auto-select service from URL query param
       const preselect = searchParams.get("service");
-      if (preselect && p) {
-        const q = preselect.toLowerCase();
-        const match = p.find((svc: any) => svc.name === preselect || svc.name?.toLowerCase() === q);
-        if (match) {
-          setForm(f => ({ ...f, product_id: match.id, service_name: match.name }));
-        }
+      if (preselect) {
+        const svc = (p || []).find((s: any) => s.name?.toLowerCase() === preselect.toLowerCase());
+        setForm(f => ({ ...f, service_name: preselect, product_id: svc?.id || "" }));
       }
       setLoading(false);
     })();
@@ -110,8 +107,8 @@ export default function ServiceBookingPage() {
   if (loading) return <div className="flex items-center justify-center min-h-screen"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
   if (!store) return <div className="flex flex-col items-center justify-center min-h-screen gap-4"><p className="text-muted-foreground">Store not found</p><Button onClick={() => navigate(-1)}>Go Back</Button></div>;
 
-  const selectedService = services.find(s => s.id === form.product_id);
-  const serviceImg = selectedService ? (selectedService.image_url || getServiceImage(selectedService.name)) : "";
+  const selectedService = services.find(s => s.name === form.service_name);
+  const serviceImg = form.service_name ? (selectedService?.image_url || getServiceImage(form.service_name)) : "";
 
   return (
     <div className="min-h-screen bg-background">
@@ -139,26 +136,109 @@ export default function ServiceBookingPage() {
               <Wrench className="h-4 w-4 text-primary" /> Select Service
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Select
-              value={form.product_id}
-              onValueChange={(val) => {
-                const svc = services.find(s => s.id === val);
-                update("product_id", val);
-                update("service_name", svc?.name || "");
+           <CardContent className="space-y-3">
+            <select
+              value={form.service_name}
+              onChange={(e) => {
+                const name = e.target.value;
+                update("service_name", name);
+                const svc = services.find(s => s.name === name);
+                update("product_id", svc?.id || "");
               }}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a service..." />
-              </SelectTrigger>
-              <SelectContent>
-                {services.map(s => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <option value="">Choose a service...</option>
+              <optgroup label="🛢️ Oil & Fluids">
+                <option>Oil Change - Conventional</option>
+                <option>Oil Change - Synthetic</option>
+                <option>Oil Change - Full Synthetic</option>
+                <option>Transmission Fluid Change</option>
+                <option>Coolant Flush</option>
+                <option>Brake Fluid Flush</option>
+                <option>Power Steering Fluid Flush</option>
+              </optgroup>
+              <optgroup label="🛑 Brake System">
+                <option>Front Brake Pads - Replace</option>
+                <option>Rear Brake Pads - Replace</option>
+                <option>Front Brake Rotors - Replace</option>
+                <option>Rear Brake Rotors - Replace</option>
+                <option>Brake Caliper - Replace</option>
+                <option>Brake Line Repair</option>
+              </optgroup>
+              <optgroup label="⚙️ Engine">
+                <option>Engine Tune-Up</option>
+                <option>Spark Plug Replacement</option>
+                <option>Timing Belt Replacement</option>
+                <option>Serpentine Belt Replacement</option>
+                <option>Engine Diagnostic</option>
+                <option>Head Gasket Repair</option>
+                <option>Engine Mount Replacement</option>
+              </optgroup>
+              <optgroup label="🔧 Transmission">
+                <option>Transmission Repair</option>
+                <option>Transmission Rebuild</option>
+                <option>Clutch Replacement</option>
+                <option>CV Axle Replacement</option>
+                <option>Differential Service</option>
+              </optgroup>
+              <optgroup label="🛞 Tires & Wheels">
+                <option>Tire Rotation</option>
+                <option>Tire Balance</option>
+                <option>Tire Replacement (per tire)</option>
+                <option>Wheel Alignment - 2 Wheel</option>
+                <option>Wheel Alignment - 4 Wheel</option>
+                <option>Flat Tire Repair</option>
+              </optgroup>
+              <optgroup label="🔩 Suspension & Steering">
+                <option>Shock Absorber - Replace</option>
+                <option>Strut Assembly - Replace</option>
+                <option>Ball Joint Replacement</option>
+                <option>Control Arm Replacement</option>
+                <option>Tie Rod End Replacement</option>
+                <option>Power Steering Pump - Replace</option>
+                <option>Steering Rack Replacement</option>
+              </optgroup>
+              <optgroup label="🔋 Electrical & Battery">
+                <option>Battery Replacement</option>
+                <option>Alternator Replacement</option>
+                <option>Starter Motor Replacement</option>
+                <option>Headlight Bulb Replacement</option>
+                <option>Fuse Diagnosis & Replace</option>
+                <option>Wiring Repair</option>
+              </optgroup>
+              <optgroup label="❄️ AC / Heating">
+                <option>AC Recharge</option>
+                <option>AC Compressor Replacement</option>
+                <option>Heater Core Replacement</option>
+                <option>Thermostat Replacement</option>
+                <option>Radiator Replacement</option>
+              </optgroup>
+              <optgroup label="💨 Exhaust">
+                <option>Exhaust Pipe Repair</option>
+                <option>Muffler Replacement</option>
+                <option>Catalytic Converter Replacement</option>
+              </optgroup>
+              <optgroup label="🔍 Diagnostics & Inspection">
+                <option>Check Engine Light Diagnostic</option>
+                <option>Pre-Purchase Inspection</option>
+                <option>State Inspection</option>
+                <option>Multi-Point Inspection</option>
+              </optgroup>
+              <optgroup label="🪟 Windshield & Glass">
+                <option>Windshield Replacement</option>
+                <option>Windshield Chip Repair</option>
+              </optgroup>
+              <optgroup label="🎨 Body & Paint">
+                <option>Paint Correction</option>
+                <option>Dent Repair (PDR)</option>
+                <option>Bumper Repair</option>
+              </optgroup>
+              <optgroup label="✨ Detailing">
+                <option>Full Detail - Interior & Exterior</option>
+                <option>Interior Detail</option>
+                <option>Exterior Detail</option>
+              </optgroup>
+            </select>
             {serviceImg && (
               <img src={serviceImg} alt={form.service_name} className="w-full h-40 object-cover rounded-lg" />
             )}
