@@ -267,7 +267,7 @@ export default function StoreSetup() {
       if (myStore?.id) {
         await supabase.from("store_profiles").update(storeData).eq("id", myStore.id);
       } else {
-        await supabase.from("store_profiles").insert(storeData).select("id").single();
+        const { data } = await supabase.from("store_profiles").insert(storeData as any).select("id").single();
       }
 
       setLastSaved(new Date());
