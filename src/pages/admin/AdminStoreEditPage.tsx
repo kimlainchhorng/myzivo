@@ -2602,21 +2602,51 @@ export default function AdminStoreEditPage() {
                 {/* Holiday / Special Closed Dates */}
                 <div className="space-y-2 md:col-span-3">
                   <Label>Holidays & Special Closures</Label>
-                  <div className="border border-border rounded-lg p-3 space-y-2">
+                  <div className="border border-border rounded-lg p-3 space-y-3">
                     <p className="text-xs text-muted-foreground">Add dates when the store will be closed (holidays, maintenance, etc.)</p>
                     {(() => {
+                      const US_HOLIDAYS_TEMPLATE = [
+                        { name: "New Year's Day", month: 0, day: 1 },
+                        { name: "Martin Luther King Jr. Day", month: 0, day: 20 },
+                        { name: "Presidents' Day", month: 1, day: 17 },
+                        { name: "Memorial Day", month: 4, day: 26 },
+                        { name: "Independence Day", month: 6, day: 4 },
+                        { name: "Labor Day", month: 8, day: 1 },
+                        { name: "Columbus Day", month: 9, day: 13 },
+                        { name: "Veterans Day", month: 10, day: 11 },
+                        { name: "Thanksgiving Day", month: 10, day: 27 },
+                        { name: "Christmas Day", month: 11, day: 25 },
+                      ];
+                      const currentYear = new Date().getFullYear();
+                      const getHolidayDate = (h: typeof US_HOLIDAYS_TEMPLATE[0], year: number) => {
+                        const d = new Date(year, h.month, h.day);
+                        return format(d, "yyyy-MM-dd");
+                      };
+
                       let holidays: { date: string; label: string }[] = [];
                       try {
                         const parsed = JSON.parse(form.hours);
                         holidays = parsed?.holidays || [];
                       } catch { /* */ }
-                      const addHoliday = (date: Date) => {
+
+                      const addHoliday = (date: Date, label = "") => {
                         try {
                           const parsed = JSON.parse(form.hours);
                           const existing = parsed?.holidays || [];
                           const dateStr = format(date, "yyyy-MM-dd");
                           if (existing.some((h: any) => h.date === dateStr)) return;
-                          const updated = { ...parsed, holidays: [...existing, { date: dateStr, label: "" }] };
+                          const updated = { ...parsed, holidays: [...existing, { date: dateStr, label }] };
+                          updateField("hours", JSON.stringify(updated));
+                        } catch { /* */ }
+                      };
+                      const addMultipleHolidays = (items: { date: string; label: string }[]) => {
+                        try {
+                          const parsed = JSON.parse(form.hours);
+                          const existing: { date: string; label: string }[] = parsed?.holidays || [];
+                          const existingDates = new Set(existing.map((h: any) => h.date));
+                          const newOnes = items.filter(i => !existingDates.has(i.date));
+                          if (newOnes.length === 0) return;
+                          const updated = { ...parsed, holidays: [...existing, ...newOnes] };
                           updateField("hours", JSON.stringify(updated));
                         } catch { /* */ }
                       };
@@ -2634,8 +2664,60 @@ export default function AdminStoreEditPage() {
                           updateField("hours", JSON.stringify(updated));
                         } catch { /* */ }
                       };
+
+                      const holidayDates = new Set(holidays.map(h => h.date));
+
                       return (
                         <>
+                          {/* Quick-add US holidays */}
+                          {form.market !== "KH" && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium">🇺🇸 US Federal Holidays ({currentYear})</span>
+                                <Button
+                                  variant="outline" size="sm" className="text-[10px] h-6 gap-1"
+                                  onClick={() => {
+                                    const items = US_HOLIDAYS_TEMPLATE.map(h => ({
+                                      date: getHolidayDate(h, currentYear),
+                                      label: h.name,
+                                    }));
+                                    addMultipleHolidays(items);
+                                  }}
+                                >
+                                  <Check className="h-2.5 w-2.5" /> Add All
+                                </Button>
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {US_HOLIDAYS_TEMPLATE.map(h => {
+                                  const dateStr = getHolidayDate(h, currentYear);
+                                  const isAdded = holidayDates.has(dateStr);
+                                  return (
+                                    <button
+                                      key={h.name}
+                                      onClick={() => {
+                                        if (isAdded) {
+                                          removeHoliday(dateStr);
+                                        } else {
+                                          addHoliday(new Date(currentYear, h.month, h.day), h.name);
+                                        }
+                                      }}
+                                      className={cn(
+                                        "text-[10px] px-2 py-1 rounded-md border transition-colors",
+                                        isAdded
+                                          ? "bg-primary/10 border-primary text-primary font-medium"
+                                          : "bg-muted border-border text-muted-foreground hover:border-primary/50"
+                                      )}
+                                    >
+                                      {isAdded && <Check className="h-2.5 w-2.5 inline mr-0.5" />}
+                                      {h.name}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Current holidays list */}
                           <div className="flex flex-wrap gap-2">
                             {holidays.sort((a, b) => a.date.localeCompare(b.date)).map(h => (
                               <div key={h.date} className="flex items-center gap-1.5 bg-muted rounded-lg px-2.5 py-1.5 border border-border">
@@ -2656,10 +2738,12 @@ export default function AdminStoreEditPage() {
                               <span className="text-xs text-muted-foreground italic">No holidays added</span>
                             )}
                           </div>
+
+                          {/* Custom date picker */}
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-                                <Plus className="h-3 w-3" /> Add Holiday
+                                <Plus className="h-3 w-3" /> Add Custom Date
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
