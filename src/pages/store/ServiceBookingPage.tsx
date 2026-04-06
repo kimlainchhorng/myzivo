@@ -21,6 +21,41 @@ const TIME_SLOTS = [
   "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM",
 ];
 
+const VEHICLE_MODELS: Record<string, string[]> = {
+  Acura: ["ILX","Integra","MDX","RDX","TLX"],
+  Audi: ["A3","A4","A5","A6","A7","Q3","Q5","Q7","Q8","e-tron"],
+  BMW: ["2 Series","3 Series","4 Series","5 Series","7 Series","X1","X3","X5","X7","iX"],
+  Buick: ["Enclave","Encore","Envision"],
+  Cadillac: ["CT4","CT5","Escalade","XT4","XT5","XT6","Lyriq"],
+  Chevrolet: ["Blazer","Camaro","Colorado","Corvette","Equinox","Malibu","Silverado","Suburban","Tahoe","Trailblazer","Traverse"],
+  Chrysler: ["300","Pacifica"],
+  Dodge: ["Challenger","Charger","Durango","Hornet"],
+  Ford: ["Bronco","Edge","Escape","Explorer","F-150","Maverick","Mustang","Ranger","Transit"],
+  Genesis: ["G70","G80","G90","GV70","GV80"],
+  GMC: ["Acadia","Canyon","Sierra","Terrain","Yukon"],
+  Honda: ["Accord","Civic","CR-V","HR-V","Odyssey","Passport","Pilot","Ridgeline"],
+  Hyundai: ["Elantra","Ioniq","Kona","Palisade","Santa Fe","Sonata","Tucson","Venue"],
+  Infiniti: ["Q50","Q60","QX50","QX55","QX60","QX80"],
+  Jaguar: ["E-Pace","F-Pace","F-Type","XF"],
+  Jeep: ["Cherokee","Compass","Gladiator","Grand Cherokee","Renegade","Wagoneer","Wrangler"],
+  Kia: ["Carnival","EV6","Forte","K5","Seltos","Sorento","Sportage","Stinger","Telluride"],
+  "Land Rover": ["Defender","Discovery","Range Rover","Range Rover Sport","Range Rover Velar"],
+  Lexus: ["ES","GX","IS","LC","LS","LX","NX","RX","TX","UX"],
+  Lincoln: ["Aviator","Corsair","Nautilus","Navigator"],
+  Mazda: ["CX-30","CX-5","CX-50","CX-90","Mazda3","MX-5 Miata"],
+  "Mercedes-Benz": ["A-Class","C-Class","E-Class","GLA","GLB","GLC","GLE","GLS","S-Class","EQS"],
+  Mini: ["Clubman","Countryman","Cooper","Hardtop"],
+  Mitsubishi: ["Eclipse Cross","Mirage","Outlander","Outlander Sport"],
+  Nissan: ["Altima","Ariya","Frontier","Kicks","Maxima","Murano","Pathfinder","Rogue","Sentra","Titan","Versa"],
+  Porsche: ["911","Cayenne","Macan","Panamera","Taycan"],
+  Ram: ["1500","2500","3500","ProMaster"],
+  Subaru: ["Ascent","BRZ","Crosstrek","Forester","Impreza","Legacy","Outback","Solterra","WRX"],
+  Tesla: ["Model 3","Model S","Model X","Model Y","Cybertruck"],
+  Toyota: ["4Runner","Camry","Corolla","GR86","Highlander","Prius","RAV4","Sequoia","Sienna","Tacoma","Tundra","Venza"],
+  Volkswagen: ["Atlas","Golf","ID.4","Jetta","Taos","Tiguan"],
+  Volvo: ["C40","S60","S90","V60","V90","XC40","XC60","XC90"],
+};
+
 export default function ServiceBookingPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -327,7 +362,7 @@ export default function ServiceBookingPage() {
                 <Label>Make</Label>
                 <select
                   value={form.vehicle_make}
-                  onChange={e => update("vehicle_make", e.target.value)}
+                  onChange={e => { update("vehicle_make", e.target.value); update("vehicle_model", ""); }}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring mt-1"
                 >
                   <option value="">Select</option>
@@ -338,7 +373,16 @@ export default function ServiceBookingPage() {
               </div>
               <div>
                 <Label>Model</Label>
-                <Input value={form.vehicle_model} onChange={e => update("vehicle_model", e.target.value)} placeholder="Camry" className="mt-1" />
+                <select
+                  value={form.vehicle_model}
+                  onChange={e => update("vehicle_model", e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring mt-1"
+                >
+                  <option value="">Select</option>
+                  {(VEHICLE_MODELS[form.vehicle_make] || []).map(m => (
+                    <option key={m}>{m}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <Label>Year</Label>
