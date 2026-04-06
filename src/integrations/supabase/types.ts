@@ -40178,6 +40178,7 @@ export type Database = {
       }
       service_bookings: {
         Row: {
+          admin_notes: string | null
           created_at: string
           customer_email: string
           customer_name: string
@@ -40196,6 +40197,7 @@ export type Database = {
           vehicle_year: string | null
         }
         Insert: {
+          admin_notes?: string | null
           created_at?: string
           customer_email: string
           customer_name: string
@@ -40214,6 +40216,7 @@ export type Database = {
           vehicle_year?: string | null
         }
         Update: {
+          admin_notes?: string | null
           created_at?: string
           customer_email?: string
           customer_name?: string
