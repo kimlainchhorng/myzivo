@@ -975,15 +975,23 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           })()
         )}
 
-        {/* Typing indicator */}
+        {/* Typing indicator — 2026 style */}
         {recipientTyping && (
-          <div className="flex justify-start px-1">
-            <div className="bg-muted/60 backdrop-blur-lg rounded-[22px] rounded-bl-[6px] px-4 py-3 flex items-center gap-1.5 shadow-sm">
-              <motion.span className="h-[7px] w-[7px] rounded-full bg-foreground/30" animate={{ y: [0, -5, 0], opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0 }} />
-              <motion.span className="h-[7px] w-[7px] rounded-full bg-foreground/30" animate={{ y: [0, -5, 0], opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.2 }} />
-              <motion.span className="h-[7px] w-[7px] rounded-full bg-foreground/30" animate={{ y: [0, -5, 0], opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.4 }} />
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.9 }}
+            className="flex justify-start px-1"
+          >
+            <div className="bg-muted/70 backdrop-blur-xl rounded-[22px] rounded-bl-[6px] px-4 py-3 flex items-center gap-2 shadow-sm border border-border/10">
+              <div className="flex items-center gap-1">
+                <motion.span className="h-[6px] w-[6px] rounded-full bg-primary/60" animate={{ y: [0, -6, 0], scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1, ease: "easeInOut", delay: 0 }} />
+                <motion.span className="h-[6px] w-[6px] rounded-full bg-primary/60" animate={{ y: [0, -6, 0], scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1, ease: "easeInOut", delay: 0.15 }} />
+                <motion.span className="h-[6px] w-[6px] rounded-full bg-primary/60" animate={{ y: [0, -6, 0], scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1, ease: "easeInOut", delay: 0.3 }} />
+              </div>
+              <span className="text-[10px] text-muted-foreground/60 font-medium">{recipientName.split(" ")[0]} is typing</span>
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
 
