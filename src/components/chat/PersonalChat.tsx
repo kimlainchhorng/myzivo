@@ -22,7 +22,7 @@ import ChatSearch from "./ChatSearch";
 import ChatAttachMenu from "./ChatAttachMenu";
 import ChatNotificationSettings from "./ChatNotificationSettings";
 import ChatMediaGallery from "./ChatMediaGallery";
-import StickerKeyboard from "./StickerKeyboard";
+import StickerKeyboard, { type StickerSendPayload } from "./StickerKeyboard";
 import ChatPersonalization, { getWallpaperClass, getWallpaperStyle } from "./ChatPersonalization";
 import ChatMiniApps from "./ChatMiniApps";
 import ChatSecurity from "./ChatSecurity";
@@ -620,6 +620,62 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     setTyping(!!e.target.value.trim());
   };
 
+  const handleQuickPanelSend = useCallback(async (payload: StickerSendPayload) => {
+    if (!user?.id || sending) return;
+    const text = payload.text?.trim();
+    if (!text) return;
+
+    const msgType = payload.messageType === "sticker" || payload.messageType === "gif"
+      ? payload.messageType
+      : "text";
+
+    const optimisticId = `opt-${Date.now()}`;
+    const optimisticMsg: Message = {
+      id: optimisticId,
+      sender_id: user.id,
+      receiver_id: recipientId,
+      message: text,
+      image_url: null,
+      video_url: null,
+      voice_url: null,
+      message_type: msgType,
+      reply_to_id: null,
+      location_lat: null,
+      location_lng: null,
+      location_label: null,
+      is_pinned: false,
+      expires_at: null,
+      created_at: new Date().toISOString(),
+      is_read: false,
+    };
+
+    setMessages((prev) => [...prev, optimisticMsg]);
+    scrollToBottom();
+
+    try {
+      const { data, error } = await (supabase as any)
+        .from("direct_messages")
+        .insert({
+          sender_id: user.id,
+          receiver_id: recipientId,
+          message: text,
+          message_type: msgType,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      setMessages((prev) => prev.map((m) => m.id === optimisticId ? data : m));
+      void sendChatPush(msgType, text);
+    } catch {
+      setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+      toast.error("Failed to send item");
+    }
+
+    setShowStickerKeyboard(false);
+    inputRef.current?.focus();
+  }, [recipientId, scrollToBottom, sendChatPush, sending, user?.id]);
+
   const scrollToMessage = useCallback((id: string) => {
     setHighlightedMsgId(id);
     const el = messageRefs.current.get(id);
@@ -1191,11 +1247,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <StickerKeyboard
             open={showStickerKeyboard}
             onClose={() => setShowStickerKeyboard(false)}
-            onSendSticker={(sticker) => {
-              setInput((prev) => prev + sticker);
-              setShowStickerKeyboard(false);
-              inputRef.current?.focus();
-            }}
+            onSendSticker={(payload) => { void handleQuickPanelSend(payload); }}
           />
         )}
       </AnimatePresence>
