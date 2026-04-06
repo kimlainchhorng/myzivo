@@ -3524,6 +3524,9 @@ export default function AdminStoreEditPage() {
                         "Bumper Repair": "Body & Paint",
                       };
                       if (catMap[val]) updateProductField("category", catMap[val]);
+                      // Auto-assign service image
+                      const autoImg = getServiceImage(val);
+                      if (autoImg) updateProductField("image_url", autoImg);
                     }}
                     className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
                   >
