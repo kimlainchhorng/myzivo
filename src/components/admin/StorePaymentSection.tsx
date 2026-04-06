@@ -15,6 +15,12 @@ import wingLogo from "@/assets/payments/wing-logo.png";
 import wingBanner from "@/assets/payments/wing-banner.jpg";
 import acledaLogo from "@/assets/payments/acleda-logo.webp";
 import acledaBanner from "@/assets/payments/acleda-banner.jpg";
+import cardPaymentIcon from "@/assets/payments/card-payment-icon.png";
+import confirmedOrderIcon from "@/assets/payments/confirmed-order-icon.png";
+import bankTransferIcon from "@/assets/payments/bank-transfer-icon.png";
+import stripeConnectIcon from "@/assets/payments/stripe-connect-icon.png";
+import invoiceIcon from "@/assets/payments/invoice-icon.png";
+import cashDeliveryIcon from "@/assets/payments/cash-delivery-icon.png";
 
 interface PaymentMethod {
   id?: string;
@@ -205,17 +211,22 @@ export default function StorePaymentSection({ storeId, market = "KH" }: { storeI
   // Render a simple toggle card (no banner, no QR)
   const renderSimpleToggle = (
     key: string,
-    icon: React.ReactNode,
+    icon: React.ReactNode | string,
     name: string,
     desc: string,
     iconBg: string
   ) => {
     const method = getMethod(key);
+    const isImageIcon = typeof icon === "string";
     return (
       <div key={key} className="rounded-lg border border-border/60 px-3 py-2.5 bg-muted/30">
         <div className="flex items-center gap-2.5">
-          <div className={`h-7 w-7 rounded-md flex items-center justify-center ${iconBg}`}>
-            {icon}
+          <div className={`h-9 w-9 rounded-lg flex items-center justify-center overflow-hidden ${isImageIcon ? "" : iconBg}`}>
+            {isImageIcon ? (
+              <img src={icon} alt={name} className="h-full w-full object-contain p-1" loading="lazy" />
+            ) : (
+              icon
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-foreground">{name}</p>
@@ -248,19 +259,19 @@ export default function StorePaymentSection({ storeId, market = "KH" }: { storeI
           {/* Card Payment — All markets */}
           {renderSimpleToggle(
             "card",
-            <CreditCard className="h-3.5 w-3.5 text-primary" />,
+            cardPaymentIcon,
             "Card Payment",
             "Visa, Mastercard & more via Stripe",
-            "bg-primary/10"
+            ""
           )}
 
           {/* Confirmed Payment Order — All markets */}
           {renderSimpleToggle(
             "confirmed_order",
-            <ClipboardCheck className="h-3.5 w-3.5 text-emerald-600" />,
+            confirmedOrderIcon,
             "Confirmed Payment Order",
             "Require payment confirmation before processing orders",
-            "bg-emerald-500/10"
+            ""
           )}
 
           {/* US-specific payment methods */}
@@ -268,26 +279,26 @@ export default function StorePaymentSection({ storeId, market = "KH" }: { storeI
             <>
               {renderSimpleToggle(
                 "bank_transfer",
-                <Landmark className="h-3.5 w-3.5 text-blue-600" />,
+                bankTransferIcon,
                 "Bank Transfer (ACH)",
                 "Accept direct bank transfers & ACH payments",
-                "bg-blue-500/10"
+                ""
               )}
 
               {renderSimpleToggle(
                 "stripe_connect",
-                <Link2 className="h-3.5 w-3.5 text-violet-600" />,
+                stripeConnectIcon,
                 "Stripe Connect",
                 "Connect your Stripe account for direct payouts",
-                "bg-violet-500/10"
+                ""
               )}
 
               {renderSimpleToggle(
                 "invoice",
-                <Banknote className="h-3.5 w-3.5 text-amber-600" />,
+                invoiceIcon,
                 "Invoice Payment",
                 "Send invoices and accept payment on terms",
-                "bg-amber-500/10"
+                ""
               )}
             </>
           )}
@@ -423,21 +434,13 @@ export default function StorePaymentSection({ storeId, market = "KH" }: { storeI
           })}
 
           {/* Cash on Delivery — All markets */}
-          <div className="rounded-xl border border-border p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">Cash on Delivery</p>
-                <p className="text-xs text-muted-foreground">Customers pay in cash upon receiving their order</p>
-              </div>
-              <Switch
-                checked={getMethod("cash")?.is_enabled ?? false}
-                onCheckedChange={(checked) => handleToggle("cash", checked)}
-              />
-            </div>
-          </div>
+          {renderSimpleToggle(
+            "cash",
+            cashDeliveryIcon,
+            "Cash on Delivery",
+            "Customers pay in cash upon receiving their order",
+            ""
+          )}
         </CardContent>
       </Card>
 
