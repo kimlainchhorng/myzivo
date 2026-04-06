@@ -16,9 +16,33 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
 
+const DAYS_OF_WEEK = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+const DAY_LABELS: Record<string, string> = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
+
+type DaySchedule = { open: string; close: string; closed: boolean };
+type WeeklySchedule = Record<string, DaySchedule>;
+
+const DEFAULT_SCHEDULE: WeeklySchedule = Object.fromEntries(
+  DAYS_OF_WEEK.map(d => [d, { open: "8:00 AM", close: "5:00 PM", closed: false }])
+);
+
+const FOOD_CATEGORIES = ["restaurant", "food-market", "drink", "grocery", "supermarket"];
+
+function parseSchedule(hours: string): WeeklySchedule {
+  try {
+    const parsed = JSON.parse(hours);
+    if (parsed && typeof parsed === "object" && parsed.mon) return parsed;
+  } catch {}
+  // Legacy "7:00 AM–10:00 PM" format → apply to all days
+  const parts = hours?.split("–") || [];
+  const open = parts[0]?.trim() || "8:00 AM";
+  const close = parts[1]?.trim() || "5:00 PM";
+  return Object.fromEntries(DAYS_OF_WEEK.map(d => [d, { open, close, closed: false }]));
+}
+
 const emptyStore = {
   name: "", slug: "", description: "", logo_url: "", banner_url: "",
-  market: "KH", category: "grocery", address: "", phone: "", hours: "",
+  market: "KH", category: "grocery", address: "", phone: "", hours: JSON.stringify(DEFAULT_SCHEDULE),
   rating: 0, delivery_min: 30, is_active: true,
 };
 
