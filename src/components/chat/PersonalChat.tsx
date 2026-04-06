@@ -197,7 +197,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     };
   }, []);
 
-  const handleStartCall = useCallback(async (type: "voice" | "video") => {
+  // Auto-start call from profile page deep-link
+  const autoStartFiredRef = useRef(false);
+  useEffect(() => {
+    if (autoStartCall && !autoStartFiredRef.current && !loading) {
+      autoStartFiredRef.current = true;
+      void handleStartCall(autoStartCall);
+      onCallStarted?.();
+    }
+  }, [autoStartCall, loading, handleStartCall, onCallStarted]);
+
+
     // Do not block call start on audio priming; on iOS this can stall UI.
     void primeCallAudio();
     setActiveCall(type);
