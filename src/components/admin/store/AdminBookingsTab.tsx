@@ -49,6 +49,8 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
   const [rescheduleDialog, setRescheduleDialog] = useState<{ open: boolean; bookingId: string; date: Date | undefined; time: string }>({ open: false, bookingId: "", date: undefined, time: "" });
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [calendarDate, setCalendarDate] = useState<Date | undefined>(undefined);
 
   const fetchBookings = async () => {
     const { data } = await supabase
@@ -383,7 +385,131 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
         >
           {sortOrder === "desc" ? <SortDesc className="h-4 w-4" /> : <SortAsc className="h-4 w-4" />}
         </Button>
+        <Button
+          size="icon"
+          variant={viewMode === "calendar" ? "default" : "outline"}
+          onClick={() => {
+            setViewMode(v => v === "list" ? "calendar" : "list");
+            if (viewMode === "calendar") setCalendarDate(undefined);
+          }}
+          className="shrink-0"
+          title="Calendar view"
+        >
+          <CalendarIcon className="h-4 w-4" />
+        </Button>
       </div>
+
+      {/* ── Calendar View ── */}
+      {viewMode === "calendar" && (() => {
+        const bookingDates = new Map<string, { count: number; statuses: string[] }>();
+        bookings.forEach(b => {
+          if (!b.preferred_date) return;
+          const key = b.preferred_date;
+          const existing = bookingDates.get(key) || { count: 0, statuses: [] };
+          existing.count++;
+          existing.statuses.push(b.status);
+          bookingDates.set(key, existing);
+        });
+
+        const datesWithBookings = Array.from(bookingDates.keys()).map(d => parseISO(d));
+
+        return (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 flex justify-center">
+                  <Calendar
+                    mode="single"
+                    selected={calendarDate}
+                    onSelect={(d) => setCalendarDate(d)}
+                    className="rounded-md pointer-events-auto"
+                    modifiers={{
+                      booked: datesWithBookings,
+                    }}
+                    modifiersStyles={{
+                      booked: {
+                        fontWeight: "bold",
+                        backgroundColor: "hsl(var(--primary) / 0.15)",
+                        borderRadius: "6px",
+                      },
+                    }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <CalendarIcon className="h-4 w-4 text-primary" />
+                    {calendarDate
+                      ? format(calendarDate, "EEEE, MMM d, yyyy")
+                      : "Select a date to view bookings"
+                    }
+                  </h4>
+                  {calendarDate ? (() => {
+                    const dateStr = format(calendarDate, "yyyy-MM-dd");
+                    const dayBookings = filtered.filter(b => b.preferred_date === dateStr);
+                    if (dayBookings.length === 0) return (
+                      <div className="text-center py-8">
+                        <CalendarClock className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">No bookings on this day</p>
+                      </div>
+                    );
+                    return (
+                      <ScrollArea className="h-[260px]">
+                        <div className="space-y-2 pr-2">
+                          {dayBookings.map(b => {
+                            const StatusIcon = STATUS_ICONS[b.status] || AlertCircle;
+                            return (
+                              <div
+                                key={b.id}
+                                className="flex items-center justify-between p-3 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
+                                onClick={() => { setViewMode("list"); setExpandedId(b.id); }}
+                              >
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-foreground truncate">{b.service_name}</p>
+                                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                    <User className="h-3 w-3" />
+                                    {b.customer_name}
+                                    {b.preferred_time && (
+                                      <span className="ml-2 flex items-center gap-0.5">
+                                        <Clock className="h-3 w-3" /> {b.preferred_time}
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                                <Badge className={cn("text-[10px] shrink-0", STATUS_COLORS[b.status])}>
+                                  <StatusIcon className="h-3 w-3 mr-1" />
+                                  {b.status}
+                                </Badge>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </ScrollArea>
+                    );
+                  })() : (
+                    <div className="space-y-2">
+                      {Array.from(bookingDates.entries()).slice(0, 5).map(([dateKey, info]) => (
+                        <div
+                          key={dateKey}
+                          className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => setCalendarDate(parseISO(dateKey))}
+                        >
+                          <span className="text-sm text-foreground">{format(parseISO(dateKey), "EEE, MMM d")}</span>
+                          <Badge variant="secondary" className="text-[10px]">
+                            {info.count} booking{info.count > 1 ? "s" : ""}
+                          </Badge>
+                        </div>
+                      ))}
+                      {bookingDates.size === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-6">No bookings scheduled</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* ── Results count ── */}
       {search && (
