@@ -1117,8 +1117,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 onChange={handleInputChange}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                 placeholder={disappearingMode ? "Disappearing message..." : "Message..."}
-                className={`w-full h-11 pl-4 pr-12 rounded-full border text-[14.5px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/15 transition-all ${
-                  disappearingMode ? "bg-amber-500/5 border-amber-500/15" : "bg-muted/25 border-border/10"
+                className={`w-full h-11 pl-4 pr-12 rounded-full text-[14.5px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none transition-all ${
+                  disappearingMode
+                    ? "bg-amber-500/5 border border-amber-500/15 focus:ring-2 focus:ring-amber-500/10"
+                    : "bg-muted/30 border border-border/10 focus:ring-2 focus:ring-primary/15 focus:border-primary/20"
                 }`}
               />
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center">
