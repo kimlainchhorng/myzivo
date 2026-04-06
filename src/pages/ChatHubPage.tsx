@@ -141,6 +141,35 @@ export default function ChatHubPage() {
     }
   }, [location.state]);
 
+  useEffect(() => {
+    if (!user?.id || !openPersonalChat?.id) return;
+
+    const recipientId = openPersonalChat.id;
+
+    queryClient.setQueryData<any[]>(["chat-hub-personal", user.id], (previous = []) =>
+      previous.map((chat: any) =>
+        chat.id === recipientId
+          ? { ...chat, unread: 0, isRead: true }
+          : chat
+      )
+    );
+
+    void (async () => {
+      const { error } = await supabase
+        .from("direct_messages")
+        .update({ is_read: true })
+        .eq("receiver_id", user.id)
+        .eq("sender_id", recipientId)
+        .eq("is_read", false);
+
+      if (error) {
+        console.error("[ChatHub] Failed to mark conversation as read:", error);
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ["chat-hub-personal", user.id] });
+    })();
+  }, [openPersonalChat?.id, queryClient, user?.id]);
+
   // Send shared content as a DM to selected contact
   const handleShareToContact = async (contactId: string, contactName: string, contactAvatar?: string | null) => {
     if (!sharePayload || !user) return;
