@@ -1630,7 +1630,7 @@ export default function AdminStoreEditPage() {
 
   const saveProduct = useMutation({
     mutationFn: async (keepOpen?: boolean) => {
-      const { _khrRaw, ...rest } = productForm as typeof productForm & { _khrRaw?: string };
+      const { _khrRaw, car_make, car_model, car_year, car_vin, car_mileage, car_transmission, car_fuel_type, car_color, car_condition, car_engine, car_doors, car_body_type, ...rest } = productForm as typeof productForm & { _khrRaw?: string };
       // Auto-generate SKU if empty
       const productPayload = {
         ...rest,
