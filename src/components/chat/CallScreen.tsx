@@ -3,7 +3,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PhoneOff, Mic, MicOff, Video, VideoOff, Volume2, Monitor, MonitorOff, Minimize2, MessageCircle, WifiOff } from "lucide-react";
+import { PhoneOff, Mic, MicOff, Video, VideoOff, Volume2, Monitor, MonitorOff, Minimize2, MessageCircle, WifiOff, SwitchCamera, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWebRTC, CallRole, WebRTCFailure, classifyWebRTCFailure } from "@/hooks/useWebRTC";
 import { useCallQuality } from "@/hooks/useCallQuality";
