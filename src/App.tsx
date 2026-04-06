@@ -140,6 +140,7 @@ const AdminFlightPriceAlerts = lazy(() => import("./pages/admin/AdminFlightPrice
 const AdminStoresPage = lazy(() => import("./pages/admin/AdminStoresPage"));
 const AdminStoreEditPage = lazy(() => import("./pages/admin/AdminStoreEditPage"));
 const StoreSetup = lazy(() => import("./pages/store/StoreSetup"));
+const ServiceBookingPage = lazy(() => import("./pages/store/ServiceBookingPage"));
 const AdminEmployeesPage = lazy(() => import("./pages/admin/AdminEmployeesPage"));
 const AdminSystemHealth = lazy(() => import("./pages/admin/AdminSystemHealth"));
 const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
