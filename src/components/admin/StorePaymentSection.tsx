@@ -295,6 +295,14 @@ export default function StorePaymentSection({ storeId, market = "KH" }: { storeI
               )}
 
               {renderSimpleToggle(
+                "square",
+                squareIcon,
+                "Square",
+                "Accept payments via Square POS & online",
+                ""
+              )}
+
+              {renderSimpleToggle(
                 "invoice",
                 invoiceIcon,
                 "Invoice Payment",
