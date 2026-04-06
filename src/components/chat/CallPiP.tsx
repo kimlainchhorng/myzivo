@@ -1,5 +1,5 @@
 /**
- * CallPiP — Floating picture-in-picture mini video during active calls
+ * CallPiP — Floating picture-in-picture mini call overlay (FaceTime 2026 style)
  */
 import { useState, useRef, useEffect } from "react";
 import { PhoneOff, Maximize2, Mic, MicOff, Video, VideoOff } from "lucide-react";
@@ -31,8 +31,6 @@ export default function CallPiP({
   onToggleCamera,
 }: CallPiPProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [position, setPosition] = useState({ x: 16, y: 100 });
-  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     if (videoRef.current && remoteStream) {
@@ -44,72 +42,73 @@ export default function CallPiP({
   const formatDur = (s: number) =>
     `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
+  const hasVideo = remoteStream && callType === "video";
+
   return (
     <motion.div
       drag
       dragMomentum={false}
-      onDragStart={() => setDragging(true)}
-      onDragEnd={() => setDragging(false)}
-      className="fixed z-[70] shadow-2xl rounded-2xl overflow-hidden border-2 border-primary/30 bg-background"
-      style={{ top: position.y, right: position.x, width: 160, height: remoteStream ? 220 : 80 }}
-      initial={{ opacity: 0, scale: 0.5 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.5 }}
+      className="fixed z-[70] shadow-2xl rounded-[22px] overflow-hidden border border-primary/20 bg-background/90 backdrop-blur-xl"
+      style={{ top: 100, right: 16, width: 168, height: hasVideo ? 230 : 88 }}
+      initial={{ opacity: 0, scale: 0.5, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.5, y: 20 }}
+      transition={{ type: "spring", damping: 20 }}
     >
-      {remoteStream && (
+      {hasVideo && (
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
-          className="w-full h-[140px] object-cover bg-muted"
+          className="w-full h-[142px] object-cover bg-muted"
         />
       )}
 
-      <div className="p-2 flex flex-col gap-1">
+      <div className="p-2.5 flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-bold text-foreground truncate flex-1">{recipientName}</span>
-          <span className="text-[9px] text-primary font-mono">{formatDur(duration)}</span>
+          <span className="text-[9px] text-primary font-mono tabular-nums bg-primary/5 px-1.5 py-0.5 rounded-full">{formatDur(duration)}</span>
         </div>
         <div className="flex items-center gap-1">
-          <button
+          <motion.button
+            whileTap={{ scale: 0.85 }}
             onClick={onToggleMute}
             aria-label={isMuted ? "Unmute call" : "Mute call"}
-            title={isMuted ? "Unmute" : "Mute"}
-            className={`h-7 w-7 rounded-full flex items-center justify-center text-xs ${
-              isMuted ? "bg-destructive/15 text-destructive" : "bg-muted text-foreground"
+            className={`h-7 w-7 rounded-full flex items-center justify-center text-xs transition-colors ${
+              isMuted ? "bg-destructive/15 text-destructive" : "bg-foreground/[0.06] text-foreground/60"
             }`}
           >
             {isMuted ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
-          </button>
+          </motion.button>
           {callType === "video" && onToggleCamera && (
-            <button
+            <motion.button
+              whileTap={{ scale: 0.85 }}
               onClick={onToggleCamera}
               aria-label={isCameraOff ? "Enable camera" : "Disable camera"}
-              title={isCameraOff ? "Enable camera" : "Disable camera"}
-              className={`h-7 w-7 rounded-full flex items-center justify-center text-xs ${
-                isCameraOff ? "bg-destructive/15 text-destructive" : "bg-muted text-foreground"
+              className={`h-7 w-7 rounded-full flex items-center justify-center text-xs transition-colors ${
+                isCameraOff ? "bg-destructive/15 text-destructive" : "bg-foreground/[0.06] text-foreground/60"
               }`}
             >
               {isCameraOff ? <VideoOff className="w-3 h-3" /> : <Video className="w-3 h-3" />}
-            </button>
+            </motion.button>
           )}
-          <button
+          <motion.button
+            whileTap={{ scale: 0.85 }}
             onClick={onExpand}
             aria-label="Expand call"
-            title="Expand"
-            className="h-7 w-7 rounded-full bg-muted text-foreground flex items-center justify-center"
+            className="h-7 w-7 rounded-full bg-foreground/[0.06] text-foreground/60 flex items-center justify-center"
           >
             <Maximize2 className="w-3 h-3" />
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.85 }}
             onClick={onEndCall}
             aria-label="End call"
-            title="End call"
             className="h-7 flex-1 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-[10px] font-medium gap-1"
           >
             <PhoneOff className="w-3 h-3" /> End
-          </button>
+          </motion.button>
         </div>
       </div>
     </motion.div>
