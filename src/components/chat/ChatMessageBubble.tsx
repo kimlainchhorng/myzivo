@@ -376,15 +376,29 @@ export default function ChatMessageBubble({
 
           return (
             <div
-              className={`text-[14.5px] leading-[1.45] ${
+              className={`text-[14.5px] leading-[1.5] relative overflow-hidden ${
                 isMe
-                  ? "bg-primary text-primary-foreground rounded-[18px] rounded-br-[5px]"
-                  : "bg-muted text-foreground rounded-[18px] rounded-bl-[5px]"
-              } overflow-hidden`}
+                  ? "rounded-[22px] rounded-br-[6px] shadow-sm"
+                  : "rounded-[22px] rounded-bl-[6px] shadow-sm"
+              }`}
+              style={{
+                background: isMe
+                  ? "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85))"
+                  : "hsl(var(--muted) / 0.7)",
+                backdropFilter: isMe ? "none" : "blur(20px)",
+              }}
             >
+              {/* Subtle inner glow for sent messages */}
+              {isMe && (
+                <div className="absolute inset-0 rounded-[22px] pointer-events-none"
+                  style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 50%)" }} />
+              )}
+
               {/* Text portion */}
               {textWithoutUrl && (
-                <p className="whitespace-pre-wrap break-words px-3.5 pt-2.5 pb-1">{textWithoutUrl}</p>
+                <p className={`whitespace-pre-wrap break-words px-4 pt-3 pb-1 relative z-[1] ${
+                  isMe ? "text-primary-foreground" : "text-foreground"
+                }`}>{textWithoutUrl}</p>
               )}
 
               {/* Rich link preview */}
@@ -392,18 +406,18 @@ export default function ChatMessageBubble({
                 <LinkPreviewCard url={linkUrl} isMe={isMe} hasText={!!textWithoutUrl} />
               )}
 
-              {/* Timestamp */}
-              <div className="flex items-center gap-1 justify-end px-3.5 pb-1.5 -mt-0.5">
+              {/* Timestamp — iMessage style */}
+              <div className="flex items-center gap-1 justify-end px-4 pb-2 -mt-0.5 relative z-[1]">
                 {isDisappearing && <Timer className={`h-2.5 w-2.5 ${isMe ? "text-primary-foreground/40" : "text-muted-foreground/40"}`} />}
-                <span className={`text-[10px] ${isMe ? "text-primary-foreground/45" : "text-muted-foreground/50"}`}>
+                <span className={`text-[10px] font-medium ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/50"}`}>
                   {time}
                 </span>
                 {isMe && !isOptimistic && (
                   isRead
-                    ? <CheckCheck className="h-3.5 w-3.5 text-sky-400" />
+                    ? <CheckCheck className="h-3.5 w-3.5 text-sky-300" />
                     : isDelivered
-                    ? <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/30" />
-                    : <Check className="h-3.5 w-3.5 text-primary-foreground/30" />
+                    ? <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/35" />
+                    : <Check className="h-3.5 w-3.5 text-primary-foreground/35" />
                 )}
               </div>
             </div>

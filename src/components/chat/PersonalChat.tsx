@@ -1,7 +1,8 @@
 /**
- * PersonalChat — Full messenger-style 1-on-1 chat
+ * PersonalChat — iMessage 2026-style 1-on-1 chat
  * Features: realtime messages, image/video/GIF sharing, emoji reactions, typing indicator, online status,
- * voice messages, reply threads, message search, disappearing messages, forward, pin, location sharing
+ * voice messages, reply threads, message search, disappearing messages, forward, pin, location sharing,
+ * message effects (confetti, fireworks, hearts, lasers)
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
