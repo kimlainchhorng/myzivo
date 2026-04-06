@@ -336,13 +336,24 @@ export default function AdminStoresPage() {
                       <div>
                         <p className="font-medium text-foreground">{store.name}</p>
                         <p className="text-sm text-muted-foreground">{store.market} · {STORE_CATEGORY_OPTIONS.find(o => o.value === store.category)?.label || store.category} · /{store.slug}</p>
-                        <p className="text-xs text-muted-foreground font-mono">ID: CBD{store.id.replace(/-/g, '').slice(0, 8).toUpperCase()}</p>
+                        <p className="text-xs text-muted-foreground font-mono">ID: {getStoreAccountId(store.id)}</p>
+                        {store.owner_id ? (
+                          <p className="text-xs text-primary flex items-center gap-1 mt-0.5"><Check className="h-3 w-3" /> Owner linked</p>
+                        ) : (
+                          <p className="text-xs text-amber-500 mt-0.5">No owner assigned</p>
+                        )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
                       <Badge variant={store.is_active ? "default" : "secondary"}>
                         {store.is_active ? "Active" : "Inactive"}
                       </Badge>
+                      <Button size="sm" variant="outline" title="Assign Owner Email" onClick={() => { setOwnerDialog({ storeId: store.id, storeName: store.name }); setOwnerEmail(""); }}>
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline" title="Invite Partner" onClick={() => { setInviteDialog({ storeId: store.id, storeName: store.name, storeAccountId: getStoreAccountId(store.id) }); setInviteEmail(""); setInviteCopied(false); }}>
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => navigate(`/admin/stores/${store.id}`)}>
                         <Edit className="h-4 w-4" />
                       </Button>
