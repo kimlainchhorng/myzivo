@@ -134,14 +134,10 @@ export default function ReelsFeedPage() {
     searchTimerRef.current = setTimeout(async () => {
       try {
         const words = q.trim().toLowerCase().split(/\s+/);
-        let query = supabase.from("public_profiles" as any).select("id, full_name, avatar_url").limit(40);
+        let query = supabase.from("public_profiles" as any).select("id, full_name, avatar_url").limit(20);
         words.forEach((w) => { query = query.ilike("full_name", `%${w}%`); });
         const { data } = await query;
-        // Filter out driver accounts — only show ZIVO customers
-        const { data: driverRows } = await supabase.from("drivers").select("user_id");
-        const driverIds = new Set((driverRows || []).map((d: any) => d.user_id));
-        const filtered = (data || []).filter((u: any) => !driverIds.has(u.id) && !driverIds.has(u.user_id));
-        setSearchResults(filtered);
+        setSearchResults(data || []);
       } catch { setSearchResults([]); }
       setSearchLoading(false);
     }, 300);
