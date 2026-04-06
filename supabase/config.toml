@@ -57,5 +57,8 @@ verify_jwt = false
 [functions.meta-capi-bridge]
 verify_jwt = false
 
+[functions.check-device-integrity]
+verify_jwt = false
+
 [functions.meta-conversion-bridge]
 verify_jwt = false
