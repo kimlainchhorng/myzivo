@@ -2933,7 +2933,7 @@ export default function AdminStoreEditPage() {
                             <div>
                               <p className="font-medium text-sm text-foreground">{product.name}</p>
                               <p className="text-xs text-muted-foreground">
-                                {form.market === "KH" && `៛${(product.price_khr || Math.round(product.price * (form.khr_rate || 4062.5))).toLocaleString()} · `}${product.price?.toFixed(2)}
+                                {form.market === "KH" && `៛${(product.price_khr || Math.round(product.price * (form.khr_rate || 4062.5))).toLocaleString()} · `}${form.market === "KH" ? "" : "$"}{product.price?.toFixed(2)}
                                 {product.brand && ` · ${product.brand}`}
                               </p>
                               {product.category && (
