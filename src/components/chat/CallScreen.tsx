@@ -941,6 +941,12 @@ export default function CallScreen({
             {statusText}
           </motion.p>
         </div>
+
+        {/* Audio Visualizer — shown when connected */}
+        {callState === "connected" && (
+          <AudioVisualizer isActive={!isMuted} barCount={7} className="mt-2" />
+        )}
+
         {callState === "ringing" && (
           <div className="flex gap-2 mt-1">
             {[0, 1, 2].map((i) => (
@@ -962,13 +968,14 @@ export default function CallScreen({
 
       {/* Controls — FaceTime glassmorphic pill */}
       <div className="w-full px-5 pb-4 relative z-[1]">
-        <div className="bg-foreground/[0.04] backdrop-blur-2xl rounded-[28px] border border-border/10 px-5 py-5 shadow-xl">
-          <div className="flex items-end justify-center gap-6">
+        <div className="bg-foreground/[0.04] backdrop-blur-2xl rounded-[28px] border border-border/10 px-4 py-5 shadow-xl">
+          {/* Top row — main controls */}
+          <div className="flex items-end justify-center gap-5">
             <div className="flex flex-col items-center gap-2">
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 onClick={toggleMute}
-                className={`h-[54px] w-[54px] rounded-full flex items-center justify-center transition-all ${
+                className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all ${
                   isMuted
                     ? "bg-foreground/90 text-background shadow-lg"
                     : "bg-foreground/[0.06] text-foreground/60 hover:bg-foreground/10"
@@ -982,7 +989,7 @@ export default function CallScreen({
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 onClick={() => setIsSpeaker(!isSpeaker)}
-                className={`h-[54px] w-[54px] rounded-full flex items-center justify-center transition-all ${
+                className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all ${
                   isSpeaker
                     ? "bg-foreground/90 text-background shadow-lg"
                     : "bg-foreground/[0.06] text-foreground/60 hover:bg-foreground/10"
@@ -992,16 +999,39 @@ export default function CallScreen({
               </motion.button>
               <span className="text-[10px] text-muted-foreground/70 font-medium">Speaker</span>
             </div>
+            {/* Reactions */}
+            <div className="flex flex-col items-center gap-2">
+              <CallReactions variant="light" />
+              <span className="text-[10px] text-muted-foreground/70 font-medium">React</span>
+            </div>
+            {/* Screen Share */}
+            <div className="flex flex-col items-center gap-2">
+              <motion.button
+                whileTap={{ scale: 0.88 }}
+                onClick={screenShare.toggleSharing}
+                className={`h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all ${
+                  screenShare.isSharing
+                    ? "bg-primary/15 text-primary shadow-lg"
+                    : "bg-foreground/[0.06] text-foreground/60 hover:bg-foreground/10"
+                }`}
+              >
+                {screenShare.isSharing ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
+              </motion.button>
+              <span className="text-[10px] text-muted-foreground/70 font-medium">Screen</span>
+            </div>
             <div className="flex flex-col items-center gap-2">
               <motion.button
                 whileTap={{ scale: 0.88 }}
                 onClick={handleOpenChat}
-                className="h-[54px] w-[54px] rounded-full flex items-center justify-center transition-all bg-foreground/[0.06] text-foreground/60 hover:bg-foreground/10"
+                className="h-[52px] w-[52px] rounded-full flex items-center justify-center transition-all bg-foreground/[0.06] text-foreground/60 hover:bg-foreground/10"
               >
                 <MessageCircle className="h-5 w-5" />
               </motion.button>
               <span className="text-[10px] text-muted-foreground/70 font-medium">Chat</span>
             </div>
+          </div>
+          {/* End call — centered below */}
+          <div className="flex justify-center mt-4">
             <div className="flex flex-col items-center gap-2">
               <motion.button
                 whileTap={{ scale: 0.85 }}
