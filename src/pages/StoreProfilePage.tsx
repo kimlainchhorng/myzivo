@@ -1016,8 +1016,8 @@ export default function StoreProfilePage() {
                     <ShoppingCart className="h-4 w-4" />
                   </div>
                   <div className="text-left">
-                    <p className="text-[13px] font-extrabold">{t("store.view_cart")}</p>
-                    <p className="text-[10px] font-medium opacity-80">{cart.itemCount} {t("store.items")}</p>
+                    <p className="text-[13px] font-extrabold">{store?.category === "auto-repair" ? "View Booking" : t("store.view_cart")}</p>
+                    <p className="text-[10px] font-medium opacity-80">{cart.itemCount} {store?.category === "auto-repair" ? "services" : t("store.items")}</p>
                   </div>
                 </div>
                 {/* Right: price */}
