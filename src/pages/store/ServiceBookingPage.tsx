@@ -60,7 +60,7 @@ export default function ServiceBookingPage() {
         .select("id, name, price, category, image_url")
         .eq("store_id", s.id)
         .eq("is_active", true)
-        .order("name");
+        .order("name") as { data: any[] | null };
       setServices(p || []);
       setLoading(false);
     })();
