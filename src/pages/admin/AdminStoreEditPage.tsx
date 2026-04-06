@@ -3443,7 +3443,110 @@ export default function AdminStoreEditPage() {
               </div>
             )}
 
+            {/* ── Auto Repair Service Fields ── */}
+            {form.category === "auto-repair" && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Service Name *</Label>
+                  <Input value={productForm.name} onChange={e => updateProductField("name", e.target.value)} placeholder="e.g. Oil Change, Brake Pad Replacement" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea value={productForm.description} onChange={e => updateProductField("description", e.target.value)} rows={2} placeholder="Describe the service, what's included..." />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Price ($) *</Label>
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      value={productForm.price || ""}
+                      onChange={e => {
+                        const parts = e.target.value.split(".");
+                        const safe = parts.length > 1
+                          ? `${parts[0].replace(/[^0-9]/g, "")}.${parts.slice(1).join("").replace(/[^0-9]/g, "")}`
+                          : e.target.value.replace(/[^0-9]/g, "");
+                        if (safe === "" || safe === ".") {
+                          updateProductField("price", 0);
+                          return;
+                        }
+                        const num = parseFloat(safe);
+                        if (!Number.isNaN(num)) updateProductField("price", num);
+                      }}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Est. Duration</Label>
+                    <select
+                      value={productForm.unit || ""}
+                      onChange={e => updateProductField("unit", e.target.value)}
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                    >
+                      <option value="">Select duration</option>
+                      <option value="15 min">15 min</option>
+                      <option value="30 min">30 min</option>
+                      <option value="45 min">45 min</option>
+                      <option value="1 hour">1 hour</option>
+                      <option value="1.5 hours">1.5 hours</option>
+                      <option value="2 hours">2 hours</option>
+                      <option value="3 hours">3 hours</option>
+                      <option value="4 hours">4 hours</option>
+                      <option value="Half day">Half day</option>
+                      <option value="Full day">Full day</option>
+                      <option value="2-3 days">2-3 days</option>
+                      <option value="Varies">Varies</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Service Category</Label>
+                    <ManagedTagDropdown
+                      label="Category"
+                      value={productForm.category}
+                      onChange={(v) => updateProductField("category", v)}
+                      savedItems={savedCategories}
+                      onSaveItem={(item) => setSavedCategories((prev) => [...new Set([...prev, item])])}
+                      onDeleteItem={(item) => setSavedCategories((prev) => prev.filter((c) => c !== item))}
+                      placeholder="e.g. Engine, Brakes, Tires"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Vehicle Types</Label>
+                    <ManagedTagDropdown
+                      label="Vehicle Types"
+                      value={productForm.brand}
+                      onChange={(v) => updateProductField("brand", v)}
+                      savedItems={savedBrands}
+                      onSaveItem={(item) => setSavedBrands((prev) => [...new Set([...prev, item])])}
+                      onDeleteItem={(item) => setSavedBrands((prev) => prev.filter((b) => b !== item))}
+                      placeholder="e.g. Sedan, SUV, Truck"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Images ({(productForm.image_urls || []).length}/8)</Label>
+                  <input ref={productImageInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadProductImage(f); e.target.value = ""; }} />
+                  <div className="flex flex-wrap gap-2">
+                    {(productForm.image_urls || []).map((url: string, idx: number) => (
+                      <div key={idx} className="relative group shrink-0">
+                        <img src={url} alt={`Service ${idx + 1}`} className="w-20 h-20 rounded-xl object-cover border border-border" />
+                        <button type="button" onClick={() => removeProductImage(idx)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs shadow-sm">×</button>
+                      </div>
+                    ))}
+                    {(productForm.image_urls || []).length < 8 && (
+                      <button type="button" onClick={() => productImageInputRef.current?.click()} disabled={uploadingProductImage} className="w-20 h-20 rounded-xl border-2 border-dashed border-border bg-muted/50 flex flex-col items-center justify-center gap-1 hover:bg-muted transition-colors shrink-0">
+                        {uploadingProductImage ? <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" /> : <><Upload className="h-5 w-5 text-muted-foreground" /><span className="text-[10px] text-muted-foreground">Upload</span></>}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* ── Discount Section ── */}
+            {form.category !== "auto-repair" && (
             <div className="space-y-3 rounded-xl border border-border/50 bg-muted/30 p-3">
               <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4 text-primary" />
