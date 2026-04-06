@@ -325,7 +325,16 @@ export default function ServiceBookingPage() {
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <Label>Make</Label>
-                <Input value={form.vehicle_make} onChange={e => update("vehicle_make", e.target.value)} placeholder="Toyota" className="mt-1" />
+                <select
+                  value={form.vehicle_make}
+                  onChange={e => update("vehicle_make", e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring mt-1"
+                >
+                  <option value="">Select</option>
+                  {["Acura","Audi","BMW","Buick","Cadillac","Chevrolet","Chrysler","Dodge","Ford","Genesis","GMC","Honda","Hyundai","Infiniti","Jaguar","Jeep","Kia","Land Rover","Lexus","Lincoln","Mazda","Mercedes-Benz","Mini","Mitsubishi","Nissan","Porsche","Ram","Subaru","Tesla","Toyota","Volkswagen","Volvo"].map(m => (
+                    <option key={m}>{m}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <Label>Model</Label>
@@ -333,7 +342,16 @@ export default function ServiceBookingPage() {
               </div>
               <div>
                 <Label>Year</Label>
-                <Input value={form.vehicle_year} onChange={e => update("vehicle_year", e.target.value)} placeholder="2023" className="mt-1" />
+                <select
+                  value={form.vehicle_year}
+                  onChange={e => update("vehicle_year", e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring mt-1"
+                >
+                  <option value="">Select</option>
+                  {Array.from({ length: 30 }, (_, i) => String(new Date().getFullYear() + 1 - i)).map(y => (
+                    <option key={y}>{y}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </CardContent>
