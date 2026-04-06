@@ -2903,12 +2903,12 @@ export default function AdminStoreEditPage() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">SEO Title (auto-generated if empty)</Label>
                   <Input
-                    value={form.seo_title || ""}
-                    onChange={e => updateField("seo_title", e.target.value)}
+                    value={(form as any).seo_title || ""}
+                    onChange={e => updateField("seo_title" as any, e.target.value)}
                     placeholder={`${form.name} — ZIVO Store`}
                     maxLength={60}
                   />
-                  <p className="text-[10px] text-muted-foreground">{(form.seo_title || "").length}/60 characters</p>
+                  <p className="text-[10px] text-muted-foreground">{((form as any).seo_title || "").length}/60 characters</p>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Meta Description</Label>
