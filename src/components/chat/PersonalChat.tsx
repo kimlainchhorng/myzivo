@@ -1054,7 +1054,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
       {/* Input area */}
       {!voice.isRecording && (
-        <div className="bg-background border-t border-border/10 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+        <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
           <div className="flex items-end gap-1.5">
             {/* Attach */}
             <div className="relative shrink-0">
