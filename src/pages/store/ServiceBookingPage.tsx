@@ -362,7 +362,7 @@ export default function ServiceBookingPage() {
                 <Label>Make</Label>
                 <select
                   value={form.vehicle_make}
-                  onChange={e => update("vehicle_make", e.target.value)}
+                  onChange={e => { update("vehicle_make", e.target.value); update("vehicle_model", ""); }}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring mt-1"
                 >
                   <option value="">Select</option>
