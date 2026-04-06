@@ -495,8 +495,6 @@ export default function ChatHubPage() {
               onClick={() => navigate('/')}
               className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
             >
-              className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
-            >
               <ArrowLeft className="w-5 h-5 text-foreground" />
             </button>
             <div>
