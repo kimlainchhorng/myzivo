@@ -236,6 +236,63 @@ export default function StoreSetup() {
     setter(formatPhone(value));
   };
 
+  // Save draft to DB (setup_complete stays false)
+  const saveDraft = async (silent = true) => {
+    if (!user) return;
+    setSavingDraft(true);
+    try {
+      // Save owner profile
+      await supabase.from("profiles").update({
+        full_name: ownerName || undefined,
+        phone: ownerPhone.replace(/\D/g, "") || null,
+      }).eq("user_id", user.id);
+
+      const hoursJson = JSON.stringify(schedule);
+      const storeData: Record<string, any> = {
+        name: storeName || "Untitled Store",
+        slug: storeSlug || `store-${Date.now()}`,
+        description: storeDesc || null,
+        category: storeCategory,
+        address: storeAddress || null,
+        phone: storePhone.replace(/\D/g, "") || null,
+        hours: hoursJson,
+        logo_url: logoUrl || null,
+        banner_url: bannerUrl || null,
+        owner_id: user.id,
+        setup_complete: false,
+        is_active: false,
+        market: storeMarket,
+      };
+
+      if (myStore?.id) {
+        await supabase.from("store_profiles").update(storeData).eq("id", myStore.id);
+      } else {
+        await supabase.from("store_profiles").insert(storeData).select("id").single();
+      }
+
+      setLastSaved(new Date());
+      if (!silent) toast.success("Draft saved! You can come back anytime.");
+    } catch (err: any) {
+      if (!silent) toast.error("Could not save draft");
+      console.error("Draft save error:", err);
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
+  // Auto-save when moving to next step
+  const goToStep = async (nextStep: number) => {
+    if (nextStep > step) {
+      await saveDraft(true);
+    }
+    setStep(nextStep);
+  };
+
+  const handleSaveAndExit = async () => {
+    await saveDraft(false);
+    navigate("/shop-dashboard", { replace: true });
+  };
+
   const canProceed = () => {
     if (step === 1) return ownerName.trim().length > 0 && ownerEmail.trim().length > 0;
     if (step === 2) return storeName.trim().length > 0 && storeSlug.trim().length > 0;
