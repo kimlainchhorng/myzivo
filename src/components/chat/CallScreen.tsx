@@ -826,7 +826,7 @@ export default function CallScreen({
     );
   }
 
-  // Voice call layout
+  // Voice call layout — FaceTime 2026 style
   return (
     <motion.div
       className="fixed inset-0 z-[60] flex flex-col items-center"
@@ -837,9 +837,25 @@ export default function CallScreen({
       style={{
         paddingTop: "max(env(safe-area-inset-top, 0px), 2.5rem)",
         paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1.5rem)",
-        background: "linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.5) 100%)",
+        background: "linear-gradient(165deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.4) 50%, hsl(var(--primary) / 0.08) 100%)",
       }}
     >
+      {/* Ambient blur orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.4), transparent 70%)" }}
+          animate={{ scale: [1, 1.2, 1], x: [0, 20, 0], y: [0, -10, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute -bottom-10 -left-10 w-56 h-56 rounded-full opacity-15"
+          style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.3), transparent 70%)" }}
+          animate={{ scale: [1.2, 1, 1.2], x: [0, -15, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
       {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 px-5 flex items-center justify-between z-10"
         style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 1rem)" }}>
@@ -849,7 +865,7 @@ export default function CallScreen({
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => onMinimize({ remoteStream: remoteStreamRef.current, duration, isMuted, callType, isCameraOff })}
-              className="h-10 w-10 rounded-full bg-foreground/5 backdrop-blur-md flex items-center justify-center border border-border/20"
+              className="h-10 w-10 rounded-full bg-foreground/5 backdrop-blur-xl flex items-center justify-center border border-border/10"
             >
               <Minimize2 className="h-4 w-4 text-foreground/60" />
             </motion.button>
@@ -858,48 +874,55 @@ export default function CallScreen({
       </div>
 
       {/* Caller info */}
-      <div className="flex flex-col items-center gap-4 mt-14 px-6">
+      <div className="flex flex-col items-center gap-4 mt-14 px-6 relative z-[1]">
         <div className="relative">
           {callState === "ringing" && (
             <>
-              <motion.div className="absolute -inset-4 rounded-full border-2 border-primary/15"
-                animate={{ scale: [1, 1.5, 1], opacity: [0.6, 0, 0.6] }}
-                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }} />
-              <motion.div className="absolute -inset-8 rounded-full border border-primary/8"
-                animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0, 0.3] }}
-                transition={{ duration: 2.2, repeat: Infinity, delay: 0.4, ease: "easeInOut" }} />
-              <motion.div className="absolute -inset-12 rounded-full border border-primary/5"
-                animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0, 0.15] }}
-                transition={{ duration: 2.2, repeat: Infinity, delay: 0.8, ease: "easeInOut" }} />
+              <motion.div className="absolute -inset-5 rounded-full"
+                style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.15), transparent 70%)" }}
+                animate={{ scale: [1, 1.6, 1], opacity: [0.8, 0, 0.8] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }} />
+              <motion.div className="absolute -inset-10 rounded-full"
+                style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.08), transparent 70%)" }}
+                animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0, 0.4] }}
+                transition={{ duration: 2.4, repeat: Infinity, delay: 0.5, ease: "easeInOut" }} />
+              <motion.div className="absolute -inset-16 rounded-full"
+                style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.04), transparent 70%)" }}
+                animate={{ scale: [1, 1.4, 1], opacity: [0.2, 0, 0.2] }}
+                transition={{ duration: 2.4, repeat: Infinity, delay: 1, ease: "easeInOut" }} />
             </>
           )}
           {callState === "connected" && (
-            <div className="absolute -inset-1 rounded-full bg-primary/10 blur-md" />
+            <motion.div className="absolute -inset-2 rounded-full"
+              style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.15), transparent 70%)" }}
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            />
           )}
-          <Avatar className="h-32 w-32 border-4 border-primary/10 shadow-2xl relative z-[1]">
+          <Avatar className="h-36 w-36 border-4 border-primary/8 shadow-2xl relative z-[1]">
             <AvatarImage src={recipientAvatar || undefined} />
-            <AvatarFallback className="text-4xl font-bold bg-primary/8 text-primary">{initials}</AvatarFallback>
+            <AvatarFallback className="text-5xl font-bold bg-primary/5 text-primary">{initials}</AvatarFallback>
           </Avatar>
         </div>
-        <div className="text-center mt-2">
-          <h2 className="text-2xl font-bold text-foreground tracking-tight">{recipientName}</h2>
+        <div className="text-center mt-3">
+          <h2 className="text-[28px] font-bold text-foreground tracking-tight">{recipientName}</h2>
           <motion.p key={statusText} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-            className={`text-sm mt-1 font-medium ${callState === "connected" ? "text-primary tabular-nums" : "text-muted-foreground"}`}>
+            className={`text-[15px] mt-1 font-semibold ${callState === "connected" ? "text-primary tabular-nums" : "text-muted-foreground"}`}>
             {statusText}
           </motion.p>
         </div>
         {callState === "ringing" && (
-          <div className="flex gap-1.5 mt-1">
+          <div className="flex gap-2 mt-1">
             {[0, 1, 2].map((i) => (
-              <motion.div key={i} className="h-2 w-2 rounded-full bg-primary"
-                animate={{ opacity: [0.2, 1, 0.2], scale: [0.6, 1.3, 0.6] }}
-                transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.2 }} />
+              <motion.div key={i} className="h-2.5 w-2.5 rounded-full bg-primary/60"
+                animate={{ opacity: [0.2, 1, 0.2], scale: [0.5, 1.4, 0.5] }}
+                transition={{ duration: 1.6, repeat: Infinity, delay: i * 0.25 }} />
             ))}
           </div>
         )}
         {isReconnecting && (
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1 text-[11px] font-semibold text-amber-600">
-            <WifiOff className="h-3.5 w-3.5" /> Reconnecting call...
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 backdrop-blur-md px-3.5 py-1.5 text-[11px] font-semibold text-amber-600 border border-amber-500/10">
+            <WifiOff className="h-3.5 w-3.5" /> Reconnecting...
           </div>
         )}
       </div>
@@ -907,33 +930,58 @@ export default function CallScreen({
       <audio ref={remoteAudioRef} autoPlay playsInline className="absolute h-0 w-0 opacity-0 pointer-events-none" />
       <div className="flex-1" />
 
-      {/* Controls */}
-      <div className="w-full px-6 pb-4">
-        <div className="flex items-end justify-center gap-5">
-          <div className="flex flex-col items-center">
-            <ControlBtn onClick={toggleMute} active={isMuted}>
-              {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-            </ControlBtn>
-            <ControlLabel>{isMuted ? "Unmute" : "Mute"}</ControlLabel>
-          </div>
-          <div className="flex flex-col items-center">
-            <ControlBtn onClick={() => setIsSpeaker(!isSpeaker)} active={isSpeaker} activeColor="primary">
-              <Volume2 className="h-5 w-5" />
-            </ControlBtn>
-            <ControlLabel>Speaker</ControlLabel>
-          </div>
-          <div className="flex flex-col items-center">
-            <ControlBtn onClick={handleOpenChat}>
-              <MessageCircle className="h-5 w-5" />
-            </ControlBtn>
-            <ControlLabel>Chat</ControlLabel>
-          </div>
-          <div className="flex flex-col items-center">
-            <motion.button whileTap={{ scale: 0.85 }} onClick={() => { void endCall(); }}
-              className="h-16 w-16 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-xl shadow-destructive/25">
-              <PhoneOff className="h-6 w-6" />
-            </motion.button>
-            <ControlLabel>End</ControlLabel>
+      {/* Controls — FaceTime glassmorphic pill */}
+      <div className="w-full px-5 pb-4 relative z-[1]">
+        <div className="bg-foreground/[0.04] backdrop-blur-2xl rounded-[28px] border border-border/10 px-5 py-5 shadow-xl">
+          <div className="flex items-end justify-center gap-6">
+            <div className="flex flex-col items-center gap-2">
+              <motion.button
+                whileTap={{ scale: 0.88 }}
+                onClick={toggleMute}
+                className={`h-[54px] w-[54px] rounded-full flex items-center justify-center transition-all ${
+                  isMuted
+                    ? "bg-foreground/90 text-background shadow-lg"
+                    : "bg-foreground/[0.06] text-foreground/60 hover:bg-foreground/10"
+                }`}
+              >
+                {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              </motion.button>
+              <span className="text-[10px] text-muted-foreground/70 font-medium">{isMuted ? "Unmute" : "Mute"}</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <motion.button
+                whileTap={{ scale: 0.88 }}
+                onClick={() => setIsSpeaker(!isSpeaker)}
+                className={`h-[54px] w-[54px] rounded-full flex items-center justify-center transition-all ${
+                  isSpeaker
+                    ? "bg-foreground/90 text-background shadow-lg"
+                    : "bg-foreground/[0.06] text-foreground/60 hover:bg-foreground/10"
+                }`}
+              >
+                <Volume2 className="h-5 w-5" />
+              </motion.button>
+              <span className="text-[10px] text-muted-foreground/70 font-medium">Speaker</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <motion.button
+                whileTap={{ scale: 0.88 }}
+                onClick={handleOpenChat}
+                className="h-[54px] w-[54px] rounded-full flex items-center justify-center transition-all bg-foreground/[0.06] text-foreground/60 hover:bg-foreground/10"
+              >
+                <MessageCircle className="h-5 w-5" />
+              </motion.button>
+              <span className="text-[10px] text-muted-foreground/70 font-medium">Chat</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                onClick={() => { void endCall(); }}
+                className="h-[60px] w-[60px] rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg shadow-destructive/30"
+              >
+                <PhoneOff className="h-6 w-6" />
+              </motion.button>
+              <span className="text-[10px] text-muted-foreground/70 font-medium">End</span>
+            </div>
           </div>
         </div>
       </div>

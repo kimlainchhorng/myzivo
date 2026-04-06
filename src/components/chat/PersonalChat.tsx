@@ -1,7 +1,8 @@
 /**
- * PersonalChat — Full messenger-style 1-on-1 chat
+ * PersonalChat — iMessage 2026-style 1-on-1 chat
  * Features: realtime messages, image/video/GIF sharing, emoji reactions, typing indicator, online status,
- * voice messages, reply threads, message search, disappearing messages, forward, pin, location sharing
+ * voice messages, reply threads, message search, disappearing messages, forward, pin, location sharing,
+ * message effects (confetti, fireworks, hearts, lasers)
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,7 @@ import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { useChatDraft } from "@/hooks/useChatDraft";
+import MessageEffects, { detectMessageEffect, type EffectType } from "./MessageEffects";
 
 interface PersonalChatProps {
   recipientId: string;
@@ -128,6 +130,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
   const [dismissedMissedCallId, setDismissedMissedCallId] = useState<string | null>(null);
+  const [activeEffect, setActiveEffect] = useState<EffectType>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -386,6 +389,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     scrollToBottom();
     setTyping(false);
 
+    // Trigger message effect if detected
+    const effect = detectMessageEffect(text);
+    if (effect) setActiveEffect(effect);
+
     try {
       const insertData: any = {
         sender_id: user.id,
@@ -622,14 +629,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 bg-background flex flex-col"
+      className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden"
       initial={{ x: "100%" }}
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-2xl border-b border-border/8 safe-area-top">
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-2xl border-b border-border/5 safe-area-top">
         <div className="px-2 py-2.5 flex items-center gap-3">
           <button onClick={onClose} className="min-h-[44px] min-w-[36px] flex items-center justify-center -ml-1 active:scale-90 transition-transform">
             <ArrowLeft className="h-5 w-5 text-foreground" />
@@ -959,11 +966,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
         {/* Typing indicator */}
         {recipientTyping && (
-          <div className="flex justify-start">
-            <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-1">
-              <motion.span className="h-2 w-2 rounded-full bg-muted-foreground" animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} />
-              <motion.span className="h-2 w-2 rounded-full bg-muted-foreground" animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.15 }} />
-              <motion.span className="h-2 w-2 rounded-full bg-muted-foreground/50" animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.3 }} />
+          <div className="flex justify-start px-1">
+            <div className="bg-muted/60 backdrop-blur-lg rounded-[22px] rounded-bl-[6px] px-4 py-3 flex items-center gap-1.5 shadow-sm">
+              <motion.span className="h-[7px] w-[7px] rounded-full bg-foreground/30" animate={{ y: [0, -5, 0], opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0 }} />
+              <motion.span className="h-[7px] w-[7px] rounded-full bg-foreground/30" animate={{ y: [0, -5, 0], opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.2 }} />
+              <motion.span className="h-[7px] w-[7px] rounded-full bg-foreground/30" animate={{ y: [0, -5, 0], opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.4 }} />
             </div>
           </div>
         )}
@@ -1047,7 +1054,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
       {/* Input area */}
       {!voice.isRecording && (
-        <div className="bg-background border-t border-border/10 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+        <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
           <div className="flex items-end gap-1.5">
             {/* Attach */}
             <div className="relative shrink-0">
@@ -1110,8 +1117,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 onChange={handleInputChange}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                 placeholder={disappearingMode ? "Disappearing message..." : "Message..."}
-                className={`w-full h-11 pl-4 pr-12 rounded-full border text-[14.5px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary/15 transition-all ${
-                  disappearingMode ? "bg-amber-500/5 border-amber-500/15" : "bg-muted/25 border-border/10"
+                className={`w-full h-11 pl-4 pr-12 rounded-full text-[14.5px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none transition-all ${
+                  disappearingMode
+                    ? "bg-amber-500/5 border border-amber-500/15 focus:ring-2 focus:ring-amber-500/10"
+                    : "bg-muted/30 border border-border/10 focus:ring-2 focus:ring-primary/15 focus:border-primary/20"
                 }`}
               />
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center">
@@ -1283,6 +1292,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         onJumpToMessage={scrollToMessage}
         onUnpin={(id) => handlePin(id, false)}
       />
+
+      {/* Message effects overlay */}
+      <MessageEffects effect={activeEffect} onComplete={() => setActiveEffect(null)} />
     </motion.div>
   );
 }
