@@ -21,6 +21,7 @@ import bankTransferIcon from "@/assets/payments/bank-transfer-icon.png";
 import stripeConnectIcon from "@/assets/payments/stripe-connect-icon.png";
 import invoiceIcon from "@/assets/payments/invoice-icon.png";
 import cashDeliveryIcon from "@/assets/payments/cash-delivery-icon.png";
+import squareIcon from "@/assets/payments/square-icon.png";
 
 interface PaymentMethod {
   id?: string;
@@ -290,6 +291,14 @@ export default function StorePaymentSection({ storeId, market = "KH" }: { storeI
                 stripeConnectIcon,
                 "Stripe Connect",
                 "Connect your Stripe account for direct payouts",
+                ""
+              )}
+
+              {renderSimpleToggle(
+                "square",
+                squareIcon,
+                "Square",
+                "Accept payments via Square POS & online",
                 ""
               )}
 
