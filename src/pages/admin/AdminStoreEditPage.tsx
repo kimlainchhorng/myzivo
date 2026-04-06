@@ -35,7 +35,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send, Users, Shield } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send, Users, Shield, Bell, Info, Copy } from "lucide-react";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import StorePaymentSection from "@/components/admin/StorePaymentSection";
 import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
@@ -2448,6 +2448,7 @@ export default function AdminStoreEditPage() {
 
           {/* Settings Tab — Store Information */}
           <TabsContent value="settings">
+            <div className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">{t("admin.store.store_info")}</CardTitle>
@@ -2841,6 +2842,180 @@ export default function AdminStoreEditPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Store Visibility Control */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-primary" />
+                  Store Visibility
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted/40">
+                  <div>
+                    <p className="text-sm font-medium">Store Active</p>
+                    <p className="text-[11px] text-muted-foreground">When off, your store is hidden from customers</p>
+                  </div>
+                  <Switch
+                    checked={form.is_active}
+                    onCheckedChange={(v) => updateField("is_active", v)}
+                  />
+                </div>
+                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted/40">
+                  <div>
+                    <p className="text-sm font-medium">Accept Orders</p>
+                    <p className="text-[11px] text-muted-foreground">Temporarily pause incoming orders</p>
+                  </div>
+                  <Switch
+                    checked={(form as any).accepts_orders !== false}
+                    onCheckedChange={(v) => updateField("accepts_orders" as any, v)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* SEO & Discoverability */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-primary" />
+                  SEO & Discoverability
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="p-3 rounded-xl bg-muted/40 space-y-2">
+                  <p className="text-xs font-medium">Store URL Preview</p>
+                  <div className="flex items-center gap-2">
+                    <code className="text-xs font-mono bg-background px-2 py-1 rounded border border-border flex-1 truncate">
+                      hizivo.com/store/{form.slug || "your-store"}
+                    </code>
+                    <Button variant="outline" size="sm" className="shrink-0 gap-1 text-xs"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`https://hizivo.com/store/${form.slug}`);
+                        toast.success("URL copied");
+                      }}
+                    >
+                      <Copy className="h-3 w-3" /> Copy
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">SEO Title (auto-generated if empty)</Label>
+                  <Input
+                    value={(form as any).seo_title || ""}
+                    onChange={e => updateField("seo_title" as any, e.target.value)}
+                    placeholder={`${form.name} — ZIVO Store`}
+                    maxLength={60}
+                  />
+                  <p className="text-[10px] text-muted-foreground">{((form as any).seo_title || "").length}/60 characters</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Meta Description</Label>
+                  <Textarea
+                    value={(form as any).seo_description || ""}
+                    onChange={e => updateField("seo_description" as any, e.target.value)}
+                    placeholder={form.description || "Describe your store for search engines..."}
+                    rows={2}
+                    maxLength={160}
+                  />
+                  <p className="text-[10px] text-muted-foreground">{((form as any).seo_description || "").length}/160 characters</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Notification Preferences */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-primary" />
+                  Notifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {[
+                  { key: "notify_new_orders", label: "New Orders", desc: "Get notified when a customer places an order" },
+                  { key: "notify_reviews", label: "Customer Reviews", desc: "Alerts when customers leave a review" },
+                  { key: "notify_low_stock", label: "Low Stock Alerts", desc: "Notifications when products run low" },
+                  { key: "notify_promotions", label: "Promotion Updates", desc: "Updates about your active promotions" },
+                ].map(n => (
+                  <div key={n.key} className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted/40">
+                    <div>
+                      <p className="text-sm font-medium">{n.label}</p>
+                      <p className="text-[11px] text-muted-foreground">{n.desc}</p>
+                    </div>
+                    <Switch
+                      checked={(form as any)[n.key] !== false}
+                      onCheckedChange={(v) => updateField(n.key, v)}
+                    />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Store ID & Account Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Info className="h-4 w-4 text-primary" />
+                  Account Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted/40">
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Store ID</p>
+                    <p className="text-xs font-mono">{storeId}</p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-xs" onClick={() => {
+                    navigator.clipboard.writeText(storeId || "");
+                    toast.success("Store ID copied");
+                  }}>
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted/40">
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Account Code</p>
+                    <p className="text-xs font-mono font-semibold">CBD{storeId?.replace(/-/g, "").slice(0, 8).toUpperCase()}</p>
+                  </div>
+                </div>
+                {store?.created_at && (
+                  <div className="py-2 px-3 rounded-xl bg-muted/40">
+                    <p className="text-[11px] text-muted-foreground">Created</p>
+                    <p className="text-xs">{format(new Date(store.created_at), "MMMM d, yyyy")}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Danger Zone */}
+            <Card className="border-destructive/30">
+              <CardHeader>
+                <CardTitle className="text-base text-destructive flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Danger Zone
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-destructive/5">
+                  <div>
+                    <p className="text-sm font-medium">Deactivate Store</p>
+                    <p className="text-[11px] text-muted-foreground">Your store will be hidden from all customers</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs"
+                    onClick={() => {
+                      updateField("is_active", false);
+                      toast.info("Store deactivated — save changes to apply");
+                    }}
+                    disabled={!form.is_active}
+                  >
+                    {form.is_active ? "Deactivate" : "Already Inactive"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            </div>
           </TabsContent>
 
           {/* Products Tab */}
