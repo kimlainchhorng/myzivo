@@ -15,9 +15,6 @@ import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
 import { useI18n } from "@/hooks/useI18n";
 import { cn } from "@/lib/utils";
-import { getRedirectFromLocation, getSafeRedirectTarget, withRedirectParam } from "@/lib/authRedirect";
-import { checkRateLimit, recordAuthFailure, clearAuthLockout, formatLockout } from "@/lib/security/rateLimiter";
-import { checkPasswordBreach } from "@/lib/security/passwordStrength";
 import InlineLegalSheet, { useLegalSheet } from "@/components/checkout/InlineLegalSheet";
 
 // Login schema
@@ -106,10 +103,8 @@ const Login = () => {
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectFromState = getRedirectFromLocation(
-    (location.state as { from?: { hash?: string; pathname?: string; search?: string } } | null)?.from,
-  );
-  const redirectTo = getSafeRedirectTarget(searchParams.get("redirect") ?? redirectFromState);
+  
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/";
 
   // Login form
   const loginForm = useForm<LoginFormData>({
@@ -146,16 +141,8 @@ const Login = () => {
   }, [isLogin, loginForm, signupForm]);
 
   const onLoginSubmit = async (data: LoginFormData) => {
-   setIsLoading(true);
+    setIsLoading(true);
     
-    // Client-side rate limit check
-    const { allowed, retryAfter } = await checkRateLimit("auth:login");
-    if (!allowed) {
-      setIsLoading(false);
-      toast.error(`Too many attempts. Try again in ${formatLockout(retryAfter)}.`);
-      return;
-    }
-
     // Save or clear remembered email
     if (rememberMe) {
       localStorage.setItem("zivo_remember_me", "true");
@@ -168,51 +155,18 @@ const Login = () => {
     const { error } = await signIn(data.email, data.password);
 
     if (error) {
+      setIsLoading(false);
       const msg = (error.message || "").toLowerCase();
       if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials")) {
-        const lockoutSec = recordAuthFailure("login");
-        setIsLoading(false);
-        if (lockoutSec) {
-          toast.error(`Too many failed attempts. Locked for ${formatLockout(lockoutSec)}.`);
-        } else {
-          toast.error("Incorrect email or password. Please try again.");
-        }
+        toast.error("Incorrect email or password. Please try again.");
       } else if (msg.includes("email not confirmed")) {
-        // Send OTP and redirect to verification page
-        toast.info("Sending verification code...");
-        let otpSent = false;
-        try {
-          const { data: otpData, error: otpError } = await supabase.functions.invoke("send-otp-email", { body: { email: data.email } });
-          if (otpError || !otpData?.success) {
-            const otpMsg = otpData?.error || otpError?.message || "Failed to send code";
-            if (otpData?.retryAfter) {
-              toast.error("Too many attempts. Please wait an hour before trying again.");
-            } else {
-              toast.error(otpMsg);
-            }
-          } else {
-            toast.success("Verification code sent to your email!");
-            otpSent = true;
-          }
-        } catch (err) {
-          console.error("Failed to send OTP:", err);
-          toast.error("Failed to send verification code. Please try again.");
-        }
-        setIsLoading(false);
-        // Only navigate to verify-otp if the code was actually sent
-        if (otpSent) {
-          navigate(withRedirectParam("/verify-otp", redirectTo), {
-            state: { email: data.email, redirectTo },
-          });
-        }
+        toast.error("Please verify your email before signing in.");
+        navigate("/verify-email", { replace: true });
       } else if (msg.includes("too many requests") || msg.includes("rate limit")) {
-        setIsLoading(false);
         toast.error("Too many attempts. Please wait a moment and try again.");
       } else if (msg.includes("user not found")) {
-        setIsLoading(false);
         toast.error("No account found with this email. Please sign up first.");
       } else {
-        setIsLoading(false);
         toast.error(error.message || "Failed to sign in. Please try again.");
       }
       return;
@@ -224,21 +178,14 @@ const Login = () => {
       // Check email verification for email/password users
       if (!user.email_confirmed_at) {
         setIsLoading(false);
-        toast.error("Please verify your email before signing in.");
-        try {
-          await supabase.functions.invoke("send-otp-email", { body: { email: data.email, userId: user.id } });
-          toast.info("Verification code sent to your email.");
-        } catch {}
-        navigate(withRedirectParam("/verify-otp", redirectTo), {
-          state: { email: data.email, userId: user.id, redirectTo },
-        });
+        navigate("/verify-email", { replace: true });
         return;
       }
 
       const { data: profile } = await supabase
         .from("profiles")
         .select("setup_complete")
-        .or(`user_id.eq.${user.id},id.eq.${user.id}`)
+        .eq("user_id", user.id)
         .maybeSingle();
 
       // Check if user is admin for auto-redirect
@@ -247,51 +194,24 @@ const Login = () => {
         _role: "admin",
       });
 
-      clearAuthLockout("login");
       setIsLoading(false);
       toast.success("Welcome back!");
 
       if (isAdminUser) {
         navigate("/admin/analytics", { replace: true });
       } else if (!profile?.setup_complete) {
-        navigate(withRedirectParam("/setup", redirectTo), {
-          replace: true,
-          state: { redirectTo },
-        });
+        navigate("/setup", { replace: true });
       } else {
-        navigate(redirectTo, { replace: true });
+        navigate("/", { replace: true });
       }
     } else {
       setIsLoading(false);
-      navigate(redirectTo, { replace: true });
+      navigate(from, { replace: true });
     }
   };
 
   const onSignupSubmit = async (data: SignupFormData) => {
     setIsLoading(true);
-
-    // Rate limit check
-    const { allowed, retryAfter } = await checkRateLimit("auth:signup");
-    if (!allowed) {
-      setIsLoading(false);
-      toast.error(`Too many attempts. Try again in ${formatLockout(retryAfter)}.`);
-      return;
-    }
-
-    // Check password against known breaches (non-blocking — won't prevent signup on network error)
-    try {
-      const breach = await checkPasswordBreach(data.password);
-      if (breach.breached) {
-        setIsLoading(false);
-        toast.error(
-          `This password was found in ${breach.count.toLocaleString()} data breaches. Please choose a different password.`,
-          { duration: 8000 }
-        );
-        return;
-      }
-    } catch {
-      // Silently continue if breach check fails
-    }
 
     const fullName = `${data.firstName} ${data.lastName}`.trim();
     const { error } = await signUp(data.email, data.password, fullName, data.phone);
@@ -326,24 +246,24 @@ const Login = () => {
 
       if (otpError || !otpResponse?.success) {
         console.error("Failed to send OTP:", otpError || otpResponse?.error);
-        // Fall back to toast message
+        // Fall back to old verification email flow
         setIsLoading(false);
         toast.success("Account created! Please check your email to verify.");
+        navigate("/verify-email");
         return;
       }
     } catch (err) {
       console.error("OTP send error:", err);
-      // Fall back to toast message
+      // Fall back to old verification email flow
       setIsLoading(false);
       toast.success("Account created! Please check your email to verify.");
+      navigate("/verify-email");
       return;
     }
 
     setIsLoading(false);
     toast.success("Verification code sent to your email!");
-    navigate(withRedirectParam("/verify-otp", redirectTo), {
-      state: { email: data.email, userId, redirectTo },
-    });
+    navigate("/verify-otp", { state: { email: data.email, userId } });
   };
 
 
