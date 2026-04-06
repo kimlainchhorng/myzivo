@@ -1,7 +1,11 @@
 /**
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
  * StickerKeyboard — original Zivo chat extras panel (not a third-party clone)
+=======
+ * StickerKeyboard — iMessage-style rich panel (stickers, GIFs, avatar, music, store, memes)
+>>>>>>> Stashed changes
 =======
  * StickerKeyboard — iMessage-style rich panel (stickers, GIFs, avatar, music, store, memes)
 >>>>>>> Stashed changes
@@ -11,6 +15,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 import {
@@ -29,6 +34,9 @@ import {
   Check,
   Rocket,
 } from "lucide-react";
+=======
+import { X, Smile, Image as ImageIcon, UserRound, Music2, Store, Search, Sparkles } from "lucide-react";
+>>>>>>> Stashed changes
 =======
 import { X, Smile, Image as ImageIcon, UserRound, Music2, Store, Search, Sparkles } from "lucide-react";
 >>>>>>> Stashed changes
@@ -185,6 +193,7 @@ function addRecentSticker(sticker: string) {
 }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 function readJsonArray(key: string): string[] {
   try {
     const data = JSON.parse(localStorage.getItem(key) || "[]");
@@ -208,6 +217,8 @@ function formatSeconds(total: number): string {
   return `${minutes}:${seconds}`;
 }
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 type TabKey = "stickers" | "gifs" | "avatar" | "music" | "store" | "memes";
@@ -259,7 +270,10 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
   const [activePack, setActivePack] = useState(0);
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
   const [activeTab, setActiveTab] = useState<TabKey>("stickers");
@@ -333,6 +347,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   useEffect(() => {
     localStorage.setItem(LAST_TAB_KEY, activeTab);
   }, [activeTab]);
@@ -372,12 +387,16 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
 =======
   const handleSendSticker = (sticker: string) => {
 >>>>>>> Stashed changes
+=======
+  const handleSendSticker = (sticker: string) => {
+>>>>>>> Stashed changes
     addRecentSticker(sticker);
     setRecentStickers(getRecentStickers());
     onSendSticker({ text: sticker, messageType: "sticker" });
     onClose();
   };
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
   const quickSend = (text: string, messageType: "gif" | "text" = "text") => {
     onSendSticker({ text, messageType });
@@ -523,6 +542,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
 
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
   const handleQuickSend = (text: string, messageType: "gif" | "text" = "text") => {
     onSendSticker({ text, messageType });
     onClose();
@@ -546,6 +567,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         className="bg-background border-t border-border/40 rounded-t-3xl shadow-xl max-h-[72vh] overflow-y-auto"
       >
         <div className="sticky top-0 bg-background/95 backdrop-blur-xl border-b border-border/20 px-3 pt-3 pb-2 z-10">
@@ -558,11 +580,18 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
         className="bg-background border-t border-border/40 rounded-t-2xl shadow-xl max-h-[72vh] overflow-y-auto"
       >
 >>>>>>> Stashed changes
+=======
+        className="bg-background border-t border-border/40 rounded-t-2xl shadow-xl max-h-[72vh] overflow-y-auto"
+      >
+>>>>>>> Stashed changes
         {/* Header tabs */}
         <div className="sticky top-0 bg-background/95 backdrop-blur-xl border-b border-border/20 px-3 pt-3 pb-2 z-10">
           <div className="w-16 h-1.5 rounded-full bg-muted mx-auto mb-3" />
           <div className="grid grid-cols-6 gap-1 items-start">
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -575,7 +604,10 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
               { key: "memes" as TabKey, label: "Memes", icon: Sparkles },
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
               { key: "future" as TabKey, label: "Future", icon: Rocket },
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -589,8 +621,11 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                 }`}
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 title={tab.label}
                 aria-label={tab.label}
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -625,6 +660,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
               </div>
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
               <div className="flex items-center justify-between mt-2 text-[11px] text-muted-foreground">
                 <span>{activePack === -1 ? recentStickers.length : filteredStickers.length} items</span>
                 <div className="flex items-center gap-1.5">
@@ -648,6 +684,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             </div>
 
             <div className="flex px-2 py-1.5 gap-1 overflow-x-auto scrollbar-none border-b border-border/10">
@@ -660,7 +698,11 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                 >
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                   Recent
+=======
+                  🕐 Recent
+>>>>>>> Stashed changes
 =======
                   🕐 Recent
 >>>>>>> Stashed changes
@@ -686,6 +728,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
               <div className="grid grid-cols-8 gap-0.5">
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 {(activePack === -1 ? recentStickers : filteredStickers).map((sticker, i) => (
                   <button
                     key={`${sticker}-${i}`}
@@ -693,11 +736,16 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
                 {(activePack === -1 ? recentStickers : displayStickers).map((sticker, i) => (
                   <button
                     key={`${sticker}-${i}`}
                     onClick={() => handleSendSticker(sticker)}
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -709,9 +757,12 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
               </div>
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
               {(activePack !== -1 && filteredStickers.length === 0) && (
                 <div className="flex items-center justify-center h-full text-xs text-muted-foreground">No stickers found</div>
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
               {displayStickers.length === 0 && activePack !== -1 && (
@@ -719,6 +770,9 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                   No stickers found
                 </div>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -731,6 +785,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
           <div className="p-4 space-y-3">
             <div className="relative">
               <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
               <input
@@ -761,6 +816,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
               <input placeholder="Search GIFs..." className="w-full h-11 rounded-full bg-muted/30 pl-9 pr-3 text-sm" />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -769,6 +826,9 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                   key={gif.label}
                   onClick={() => handleQuickSend(`${gif.emoji} GIF: ${gif.label}`, "gif")}
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -781,9 +841,12 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
             </div>
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             {filteredGifItems.length === 0 && (
               <p className="text-xs text-muted-foreground text-center py-3">No GIF results</p>
             )}
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -795,6 +858,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
           <div className="p-4">
             <p className="text-sm font-bold text-foreground">Your Avatar Stickers</p>
             <p className="text-xs text-muted-foreground mt-1 mb-4">Tap a mood to send an avatar sticker</p>
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
             <div className="relative mb-3">
@@ -814,12 +878,17 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             <div className="grid grid-cols-4 gap-3">
               {AVATAR_ITEMS.map((item) => (
                 <button
                   key={item.label}
                   onClick={() => handleQuickSend(`${item.emoji} ${item.label}`)}
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -836,6 +905,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
         {activeTab === "music" && (
           <div className="p-4 space-y-3">
             <p className="text-sm font-bold text-foreground">Share a Track</p>
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
             <div className="relative">
@@ -932,6 +1002,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             {TRACKS.map((track) => (
               <div key={track.title} className="rounded-2xl border border-border/30 px-3 py-2.5 flex items-center gap-3">
                 <span className="text-2xl">🎵</span>
@@ -948,6 +1020,9 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
               </div>
             ))}
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -957,6 +1032,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
         {activeTab === "store" && (
           <div className="p-4 space-y-3">
             <p className="text-sm font-bold text-foreground">Sticker Store</p>
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
             <div className="relative">
@@ -994,6 +1070,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             {STORE_PACKS.map((pack) => (
               <div key={pack.name} className="rounded-2xl border border-border/30 px-3 py-3 flex items-center gap-3">
                 <span className="text-3xl">{pack.emoji}</span>
@@ -1010,6 +1088,9 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
               </div>
             ))}
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -1019,6 +1100,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
         {activeTab === "memes" && (
           <div className="p-4 space-y-3">
             <p className="text-sm font-bold text-foreground">Meme Reactions</p>
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
             <p className="text-xs text-muted-foreground">Quick meme-style reactions.</p>
@@ -1061,6 +1143,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
             <p className="text-xs text-muted-foreground">New tab added for quick meme-style reactions.</p>
             <div className="grid grid-cols-2 gap-3">
               {MEME_ITEMS.map((item) => (
@@ -1068,6 +1152,9 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                   key={item.label}
                   onClick={() => handleQuickSend(`${item.emoji} ${item.label}`)}
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
