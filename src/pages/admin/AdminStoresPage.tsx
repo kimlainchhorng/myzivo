@@ -587,6 +587,71 @@ export default function AdminStoresPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Assign Owner Dialog */}
+      <Dialog open={!!ownerDialog} onOpenChange={() => setOwnerDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Owner to "{ownerDialog?.storeName}"</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">Enter the partner's email address. They must have a ZIVO account already.</p>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label>Owner Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="email"
+                  placeholder="partner@business.com"
+                  value={ownerEmail}
+                  onChange={e => setOwnerEmail(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOwnerDialog(null)}>Cancel</Button>
+            <Button onClick={handleAssignOwner} disabled={assigningOwner || !ownerEmail.trim()} className="gap-2">
+              {assigningOwner ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+              {assigningOwner ? "Linking..." : "Link Owner"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite Partner Dialog */}
+      <Dialog open={!!inviteDialog} onOpenChange={() => setInviteDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invite Partner to "{inviteDialog?.storeName}"</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-3 rounded-lg bg-muted/50 border border-border">
+              <p className="text-xs text-muted-foreground mb-1">Store Account ID</p>
+              <p className="font-mono font-bold text-foreground">{inviteDialog?.storeAccountId}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Partner Login Link</Label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={inviteDialog ? `${window.location.origin}/partner-login?store_id=${inviteDialog.storeAccountId}` : ""}
+                  className="text-xs font-mono"
+                />
+                <Button size="sm" variant="outline" onClick={handleCopyInviteLink} className="shrink-0 gap-1.5">
+                  {inviteCopied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                  {inviteCopied ? "Copied" : "Copy"}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Share this link with the partner. They can sign in or create an account using this link.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteDialog(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
