@@ -63,6 +63,14 @@ export default function ServiceBookingPage() {
         .eq("store_id", s.id)
         .eq("is_active", true);
       setServices(p || []);
+      // Auto-select service from URL query param
+      const preselect = searchParams.get("service");
+      if (preselect && p) {
+        const match = p.find((svc: any) => svc.name === preselect);
+        if (match) {
+          setForm(f => ({ ...f, product_id: match.id, service_name: match.name }));
+        }
+      }
       setLoading(false);
     })();
   }, [slug]);
