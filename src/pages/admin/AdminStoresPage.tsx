@@ -246,7 +246,7 @@ export default function AdminStoresPage() {
 
   const handleCopyInviteLink = () => {
     if (!inviteDialog) return;
-    const link = `${window.location.origin}/partner-login?store_id=${inviteDialog.storeAccountId}`;
+    const link = `https://hizivo.com/partner-login?store_id=${inviteDialog.storeAccountId}`;
     navigator.clipboard.writeText(link);
     setInviteCopied(true);
     toast.success("Invite link copied!");
