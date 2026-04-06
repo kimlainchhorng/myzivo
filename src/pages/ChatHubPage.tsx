@@ -860,7 +860,7 @@ export default function ChatHubPage() {
             recipientId={openPersonalChat.id}
             recipientName={openPersonalChat.name}
             recipientAvatar={openPersonalChat.avatar}
-            onClose={() => { setOpenPersonalChat(null); setPendingCall(null); }}
+            onClose={() => { setOpenPersonalChat(null); setPendingCall(null); queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] }); }}
             autoStartCall={pendingCall}
             onCallStarted={() => setPendingCall(null)}
           />
