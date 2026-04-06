@@ -44,6 +44,8 @@ interface PersonalChatProps {
   recipientName: string;
   recipientAvatar?: string | null;
   onClose: () => void;
+  autoStartCall?: "voice" | "video" | null;
+  onCallStarted?: () => void;
 }
 
 interface Message {
