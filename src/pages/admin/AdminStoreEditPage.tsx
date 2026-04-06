@@ -450,6 +450,9 @@ export default function AdminStoreEditPage() {
     latitude: null as number | null, longitude: null as number | null,
     banner_position: 50,
     facebook_url: "",
+    instagram_url: "",
+    telegram_url: "",
+    tiktok_url: "",
     booking_days: [] as string[],
     booking_start_time: "9:00 AM",
     booking_end_time: "5:00 PM",
@@ -482,6 +485,9 @@ export default function AdminStoreEditPage() {
         latitude: (store as any).latitude ?? null,
         longitude: (store as any).longitude ?? null,
         facebook_url: (store as any).facebook_url || "",
+        instagram_url: (store as any).instagram_url || "",
+        telegram_url: (store as any).telegram_url || "",
+        tiktok_url: (store as any).tiktok_url || "",
         booking_days: (store as any).booking_days || [],
         booking_start_time: (store as any).booking_start_time || "9:00 AM",
         booking_end_time: (store as any).booking_end_time || "5:00 PM",
@@ -2593,19 +2599,127 @@ export default function AdminStoreEditPage() {
                   </div>
                 </div>
 
+                {/* Holiday / Special Closed Dates */}
+                <div className="space-y-2 md:col-span-3">
+                  <Label>Holidays & Special Closures</Label>
+                  <div className="border border-border rounded-lg p-3 space-y-2">
+                    <p className="text-xs text-muted-foreground">Add dates when the store will be closed (holidays, maintenance, etc.)</p>
+                    {(() => {
+                      let holidays: { date: string; label: string }[] = [];
+                      try {
+                        const parsed = JSON.parse(form.hours);
+                        holidays = parsed?.holidays || [];
+                      } catch { /* */ }
+                      const addHoliday = (date: Date) => {
+                        try {
+                          const parsed = JSON.parse(form.hours);
+                          const existing = parsed?.holidays || [];
+                          const dateStr = format(date, "yyyy-MM-dd");
+                          if (existing.some((h: any) => h.date === dateStr)) return;
+                          const updated = { ...parsed, holidays: [...existing, { date: dateStr, label: "" }] };
+                          updateField("hours", JSON.stringify(updated));
+                        } catch { /* */ }
+                      };
+                      const removeHoliday = (dateStr: string) => {
+                        try {
+                          const parsed = JSON.parse(form.hours);
+                          const updated = { ...parsed, holidays: (parsed.holidays || []).filter((h: any) => h.date !== dateStr) };
+                          updateField("hours", JSON.stringify(updated));
+                        } catch { /* */ }
+                      };
+                      const updateHolidayLabel = (dateStr: string, label: string) => {
+                        try {
+                          const parsed = JSON.parse(form.hours);
+                          const updated = { ...parsed, holidays: (parsed.holidays || []).map((h: any) => h.date === dateStr ? { ...h, label } : h) };
+                          updateField("hours", JSON.stringify(updated));
+                        } catch { /* */ }
+                      };
+                      return (
+                        <>
+                          <div className="flex flex-wrap gap-2">
+                            {holidays.sort((a, b) => a.date.localeCompare(b.date)).map(h => (
+                              <div key={h.date} className="flex items-center gap-1.5 bg-muted rounded-lg px-2.5 py-1.5 border border-border">
+                                <CalendarIcon className="h-3 w-3 text-muted-foreground" />
+                                <span className="text-xs font-medium">{format(new Date(h.date + "T00:00:00"), "MMM d, yyyy")}</span>
+                                <Input
+                                  value={h.label}
+                                  onChange={e => updateHolidayLabel(h.date, e.target.value)}
+                                  placeholder="e.g. New Year's Day"
+                                  className="h-6 text-xs w-32 bg-background"
+                                />
+                                <button onClick={() => removeHoliday(h.date)} className="text-destructive hover:text-destructive/80">
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                            {holidays.length === 0 && (
+                              <span className="text-xs text-muted-foreground italic">No holidays added</span>
+                            )}
+                          </div>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                                <Plus className="h-3 w-3" /> Add Holiday
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                onSelect={(date) => { if (date) addHoliday(date); }}
+                                disabled={(date) => date < new Date()}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
+
                 {["restaurant", "food-market", "drink", "grocery", "supermarket"].includes(form.category) && (
                   <div className="space-y-2">
                     <Label>{t("admin.store.delivery_min")}</Label>
                     <Input type="number" value={form.delivery_min} onChange={e => updateField("delivery_min", parseInt(e.target.value) || 0)} />
                   </div>
                 )}
-                <div className="space-y-2">
-                  <Label>Facebook URL</Label>
-                  <Input
-                    value={form.facebook_url}
-                    onChange={e => updateField("facebook_url", e.target.value)}
-                    placeholder="https://facebook.com/yourstore"
-                  />
+
+                {/* Social Media Links */}
+                <div className="space-y-3 md:col-span-3">
+                  <Label>Social Media</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Facebook</Label>
+                      <Input
+                        value={form.facebook_url}
+                        onChange={e => updateField("facebook_url", e.target.value)}
+                        placeholder="https://facebook.com/yourstore"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Instagram</Label>
+                      <Input
+                        value={form.instagram_url}
+                        onChange={e => updateField("instagram_url", e.target.value)}
+                        placeholder="https://instagram.com/yourstore"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">TikTok</Label>
+                      <Input
+                        value={form.tiktok_url}
+                        onChange={e => updateField("tiktok_url", e.target.value)}
+                        placeholder="https://tiktok.com/@yourstore"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Telegram</Label>
+                      <Input
+                        value={form.telegram_url}
+                        onChange={e => updateField("telegram_url", e.target.value)}
+                        placeholder="https://t.me/yourstore"
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
