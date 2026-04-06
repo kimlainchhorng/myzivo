@@ -656,7 +656,7 @@ export default function AdminStoresPage() {
               <div className="flex gap-2">
                 <Input
                   readOnly
-                  value={inviteDialog ? `${window.location.origin}/partner-login?store_id=${inviteDialog.storeAccountId}` : ""}
+                  value={inviteDialog ? `https://hizivo.com/partner-login?store_id=${inviteDialog.storeAccountId}` : ""}
                   className="text-xs font-mono"
                 />
                 <Button size="sm" variant="outline" onClick={handleCopyInviteLink} className="shrink-0 gap-1.5">
