@@ -860,7 +860,9 @@ export default function ChatHubPage() {
             recipientId={openPersonalChat.id}
             recipientName={openPersonalChat.name}
             recipientAvatar={openPersonalChat.avatar}
-            onClose={() => setOpenPersonalChat(null)}
+            onClose={() => { setOpenPersonalChat(null); setPendingCall(null); }}
+            autoStartCall={pendingCall}
+            onCallStarted={() => setPendingCall(null)}
           />
         )}
       </AnimatePresence>
