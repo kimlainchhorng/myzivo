@@ -2265,7 +2265,10 @@ export default function AdminStoreEditPage() {
           {isAdmin && (
             <TabsList>
               <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {t("admin.store.profile")}</TabsTrigger>
-              <TabsTrigger value="products" className="gap-1.5"><Package className="h-3.5 w-3.5" /> {t("admin.store.products")} ({products.length})</TabsTrigger>
+              <TabsTrigger value="products" className="gap-1.5">
+                <Package className="h-3.5 w-3.5" />
+                {form.category === "auto-repair" ? "Bookings" : t("admin.store.products")} ({products.length})
+              </TabsTrigger>
               {form.category === "car-dealership" ? (
                 <TabsTrigger value="payment" className="gap-1.5"><CalendarIcon className="h-3.5 w-3.5" /> {t("admin.store.booking_appointment")}</TabsTrigger>
               ) : (
