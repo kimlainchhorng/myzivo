@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const postMeta = await resolvePostMeta(supabase, postId);
+    const postMeta = await resolvePostMeta(supabase as any, postId);
     if (!postMeta) {
       return new Response(JSON.stringify({ error: "Post not found" }), {
         status: 404,
