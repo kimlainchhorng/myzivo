@@ -51,16 +51,15 @@ export default function ServiceBookingPage() {
         .select("id, name, logo_url, address, phone, category")
         .eq("slug", slug)
         .eq("is_active", true)
-        .single();
+        .maybeSingle();
       if (!s) { setLoading(false); return; }
       setStore(s);
 
-      const { data: p } = await supabase
+      const { data: p } = await (supabase
         .from("store_products")
         .select("id, name, price, category, image_url")
         .eq("store_id", s.id)
-        .eq("is_active", true)
-        .order("name") as { data: any[] | null };
+        .eq("is_active", true) as any);
       setServices(p || []);
       setLoading(false);
     })();
