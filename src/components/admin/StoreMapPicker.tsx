@@ -15,9 +15,29 @@ interface StoreMapPickerProps {
   currentAddress: string;
   currentCoords?: { lat: number; lng: number } | null;
   onConfirm: (address: string, lat: number, lng: number) => void;
+  market?: string;
 }
 
-const DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 };
+const MARKET_DEFAULTS: Record<string, { lat: number; lng: number; country: string; label: string }> = {
+  KH: { lat: 11.5564, lng: 104.9282, country: "kh", label: "Cambodia" },
+  US: { lat: 37.0902, lng: -95.7129, country: "us", label: "United States" },
+  VN: { lat: 14.0583, lng: 108.2772, country: "vn", label: "Vietnam" },
+  TH: { lat: 13.7563, lng: 100.5018, country: "th", label: "Thailand" },
+  CN: { lat: 35.8617, lng: 104.1954, country: "cn", label: "China" },
+  KR: { lat: 35.9078, lng: 127.7669, country: "kr", label: "South Korea" },
+  JP: { lat: 36.2048, lng: 138.2529, country: "jp", label: "Japan" },
+  IN: { lat: 20.5937, lng: 78.9629, country: "in", label: "India" },
+  GB: { lat: 55.3781, lng: -3.4360, country: "gb", label: "United Kingdom" },
+  AU: { lat: -25.2744, lng: 133.7751, country: "au", label: "Australia" },
+  SG: { lat: 1.3521, lng: 103.8198, country: "sg", label: "Singapore" },
+  MY: { lat: 4.2105, lng: 101.9758, country: "my", label: "Malaysia" },
+  PH: { lat: 12.8797, lng: 121.7740, country: "ph", label: "Philippines" },
+  ID: { lat: -0.7893, lng: 113.9213, country: "id", label: "Indonesia" },
+  LA: { lat: 19.8563, lng: 102.4955, country: "la", label: "Laos" },
+  MM: { lat: 21.9162, lng: 95.9560, country: "mm", label: "Myanmar" },
+};
+
+const DEFAULT_CENTER = { lat: 37.0902, lng: -95.7129 };
 
 async function getApiKey(): Promise<string> {
   const envKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
@@ -54,7 +74,7 @@ interface Suggestion {
   description: string;
 }
 
-export default function StoreMapPicker({ open, onOpenChange, currentAddress, currentCoords, onConfirm }: StoreMapPickerProps) {
+export default function StoreMapPicker({ open, onOpenChange, currentAddress, currentCoords, onConfirm, market }: StoreMapPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
@@ -71,11 +91,14 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, cur
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
+  const marketConfig = MARKET_DEFAULTS[market || "US"] || MARKET_DEFAULTS.US;
+  const marketCenter = { lat: marketConfig.lat, lng: marketConfig.lng };
+
   useEffect(() => {
     if (!open) return;
     setAddress(currentAddress || "");
     setSearchQuery(currentAddress || "");
-    setCoords(currentCoords ?? DEFAULT_CENTER);
+    setCoords(currentCoords ?? marketCenter);
   }, [open, currentAddress, currentCoords]);
 
   // Reverse geocode
@@ -98,7 +121,7 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, cur
     setSearching(true);
     try {
       const { data, error } = await supabase.functions.invoke("maps-autocomplete", {
-        body: { input: query, proximity: coords, country: "kh" },
+        body: { input: query, proximity: coords, country: marketConfig.country },
       });
       if (!error && data?.suggestions) {
         setSuggestions(data.suggestions.map((p: any) => ({
@@ -131,9 +154,7 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, cur
     setShowSuggestions(false);
     setGeocoding(true);
     try {
-      const searchAddress = /cambodia/i.test(normalizedQuery)
-        ? normalizedQuery
-        : `${normalizedQuery}, Phnom Penh, Cambodia`;
+      const searchAddress = `${normalizedQuery}, ${marketConfig.label}`;
 
       const { data, error } = await supabase.functions.invoke("maps-geocode", {
         body: { address: searchAddress },
@@ -192,7 +213,7 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, cur
       await new Promise((r) => setTimeout(r, 100));
       if (!mapRef.current || cancelled) { setLoading(false); return; }
 
-      const initialPos = currentCoords ?? DEFAULT_CENTER;
+      const initialPos = currentCoords ?? marketCenter;
       const map = new google.maps.Map(mapRef.current, {
         center: initialPos,
         zoom: currentCoords ? 16 : 14,
