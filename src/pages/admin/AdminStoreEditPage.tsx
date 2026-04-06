@@ -3448,7 +3448,180 @@ export default function AdminStoreEditPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Service Name *</Label>
-                  <Input value={productForm.name} onChange={e => updateProductField("name", e.target.value)} placeholder="e.g. Oil Change, Brake Pad Replacement" />
+                  <select
+                    value={productForm.name || ""}
+                    onChange={e => {
+                      const val = e.target.value;
+                      updateProductField("name", val);
+                      // Auto-set category based on selection
+                      const catMap: Record<string, string> = {
+                        "Oil Change - Conventional": "Oil & Fluids",
+                        "Oil Change - Synthetic": "Oil & Fluids",
+                        "Oil Change - Full Synthetic": "Oil & Fluids",
+                        "Transmission Fluid Change": "Oil & Fluids",
+                        "Coolant Flush": "Oil & Fluids",
+                        "Brake Fluid Flush": "Oil & Fluids",
+                        "Power Steering Fluid Flush": "Oil & Fluids",
+                        "Front Brake Pads - Replace": "Brake System",
+                        "Rear Brake Pads - Replace": "Brake System",
+                        "Front Brake Rotors - Replace": "Brake System",
+                        "Rear Brake Rotors - Replace": "Brake System",
+                        "Brake Caliper - Replace": "Brake System",
+                        "Brake Line Repair": "Brake System",
+                        "Engine Tune-Up": "Engine",
+                        "Spark Plug Replacement": "Engine",
+                        "Timing Belt Replacement": "Engine",
+                        "Serpentine Belt Replacement": "Engine",
+                        "Engine Diagnostic": "Engine",
+                        "Head Gasket Repair": "Engine",
+                        "Engine Mount Replacement": "Engine",
+                        "Transmission Repair": "Transmission",
+                        "Transmission Rebuild": "Transmission",
+                        "Clutch Replacement": "Transmission",
+                        "CV Axle Replacement": "Transmission",
+                        "Differential Service": "Transmission",
+                        "Tire Rotation": "Tires & Wheels",
+                        "Tire Balance": "Tires & Wheels",
+                        "Tire Replacement (per tire)": "Tires & Wheels",
+                        "Wheel Alignment - 2 Wheel": "Tires & Wheels",
+                        "Wheel Alignment - 4 Wheel": "Tires & Wheels",
+                        "Flat Tire Repair": "Tires & Wheels",
+                        "Shock Absorber - Replace": "Suspension",
+                        "Strut Assembly - Replace": "Suspension",
+                        "Ball Joint Replacement": "Suspension",
+                        "Control Arm Replacement": "Suspension",
+                        "Tie Rod End Replacement": "Steering",
+                        "Power Steering Pump - Replace": "Steering",
+                        "Steering Rack Replacement": "Steering",
+                        "Battery Replacement": "Battery",
+                        "Alternator Replacement": "Electrical",
+                        "Starter Motor Replacement": "Electrical",
+                        "Headlight Bulb Replacement": "Electrical",
+                        "Fuse Diagnosis & Replace": "Electrical",
+                        "Wiring Repair": "Electrical",
+                        "AC Recharge": "AC / Heating",
+                        "AC Compressor Replacement": "AC / Heating",
+                        "Heater Core Replacement": "AC / Heating",
+                        "Thermostat Replacement": "AC / Heating",
+                        "Radiator Replacement": "AC / Heating",
+                        "Exhaust Pipe Repair": "Exhaust",
+                        "Muffler Replacement": "Exhaust",
+                        "Catalytic Converter Replacement": "Exhaust",
+                        "Windshield Replacement": "Windshield & Glass",
+                        "Windshield Chip Repair": "Windshield & Glass",
+                        "Check Engine Light Diagnostic": "Diagnostics",
+                        "Pre-Purchase Inspection": "Inspection",
+                        "State Inspection": "Inspection",
+                        "Multi-Point Inspection": "Inspection",
+                        "Full Detail - Interior & Exterior": "Detailing",
+                        "Interior Detail": "Detailing",
+                        "Exterior Detail": "Detailing",
+                        "Paint Correction": "Body & Paint",
+                        "Dent Repair (PDR)": "Body & Paint",
+                        "Bumper Repair": "Body & Paint",
+                      };
+                      if (catMap[val]) updateProductField("category", catMap[val]);
+                    }}
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                  >
+                    <option value="">Select a service</option>
+                    <optgroup label="🛢️ Oil & Fluids">
+                      <option value="Oil Change - Conventional">Oil Change - Conventional</option>
+                      <option value="Oil Change - Synthetic">Oil Change - Synthetic</option>
+                      <option value="Oil Change - Full Synthetic">Oil Change - Full Synthetic</option>
+                      <option value="Transmission Fluid Change">Transmission Fluid Change</option>
+                      <option value="Coolant Flush">Coolant Flush</option>
+                      <option value="Brake Fluid Flush">Brake Fluid Flush</option>
+                      <option value="Power Steering Fluid Flush">Power Steering Fluid Flush</option>
+                    </optgroup>
+                    <optgroup label="🛑 Brake System">
+                      <option value="Front Brake Pads - Replace">Front Brake Pads - Replace</option>
+                      <option value="Rear Brake Pads - Replace">Rear Brake Pads - Replace</option>
+                      <option value="Front Brake Rotors - Replace">Front Brake Rotors - Replace</option>
+                      <option value="Rear Brake Rotors - Replace">Rear Brake Rotors - Replace</option>
+                      <option value="Brake Caliper - Replace">Brake Caliper - Replace</option>
+                      <option value="Brake Line Repair">Brake Line Repair</option>
+                    </optgroup>
+                    <optgroup label="⚙️ Engine">
+                      <option value="Engine Tune-Up">Engine Tune-Up</option>
+                      <option value="Spark Plug Replacement">Spark Plug Replacement</option>
+                      <option value="Timing Belt Replacement">Timing Belt Replacement</option>
+                      <option value="Serpentine Belt Replacement">Serpentine Belt Replacement</option>
+                      <option value="Engine Diagnostic">Engine Diagnostic</option>
+                      <option value="Head Gasket Repair">Head Gasket Repair</option>
+                      <option value="Engine Mount Replacement">Engine Mount Replacement</option>
+                    </optgroup>
+                    <optgroup label="🔧 Transmission">
+                      <option value="Transmission Repair">Transmission Repair</option>
+                      <option value="Transmission Rebuild">Transmission Rebuild</option>
+                      <option value="Clutch Replacement">Clutch Replacement</option>
+                      <option value="CV Axle Replacement">CV Axle Replacement</option>
+                      <option value="Differential Service">Differential Service</option>
+                    </optgroup>
+                    <optgroup label="🛞 Tires & Wheels">
+                      <option value="Tire Rotation">Tire Rotation</option>
+                      <option value="Tire Balance">Tire Balance</option>
+                      <option value="Tire Replacement (per tire)">Tire Replacement (per tire)</option>
+                      <option value="Wheel Alignment - 2 Wheel">Wheel Alignment - 2 Wheel</option>
+                      <option value="Wheel Alignment - 4 Wheel">Wheel Alignment - 4 Wheel</option>
+                      <option value="Flat Tire Repair">Flat Tire Repair</option>
+                    </optgroup>
+                    <optgroup label="🔩 Suspension & Steering">
+                      <option value="Shock Absorber - Replace">Shock Absorber - Replace</option>
+                      <option value="Strut Assembly - Replace">Strut Assembly - Replace</option>
+                      <option value="Ball Joint Replacement">Ball Joint Replacement</option>
+                      <option value="Control Arm Replacement">Control Arm Replacement</option>
+                      <option value="Tie Rod End Replacement">Tie Rod End Replacement</option>
+                      <option value="Power Steering Pump - Replace">Power Steering Pump - Replace</option>
+                      <option value="Steering Rack Replacement">Steering Rack Replacement</option>
+                    </optgroup>
+                    <optgroup label="🔋 Electrical & Battery">
+                      <option value="Battery Replacement">Battery Replacement</option>
+                      <option value="Alternator Replacement">Alternator Replacement</option>
+                      <option value="Starter Motor Replacement">Starter Motor Replacement</option>
+                      <option value="Headlight Bulb Replacement">Headlight Bulb Replacement</option>
+                      <option value="Fuse Diagnosis & Replace">Fuse Diagnosis & Replace</option>
+                      <option value="Wiring Repair">Wiring Repair</option>
+                    </optgroup>
+                    <optgroup label="❄️ AC / Heating">
+                      <option value="AC Recharge">AC Recharge</option>
+                      <option value="AC Compressor Replacement">AC Compressor Replacement</option>
+                      <option value="Heater Core Replacement">Heater Core Replacement</option>
+                      <option value="Thermostat Replacement">Thermostat Replacement</option>
+                      <option value="Radiator Replacement">Radiator Replacement</option>
+                    </optgroup>
+                    <optgroup label="💨 Exhaust">
+                      <option value="Exhaust Pipe Repair">Exhaust Pipe Repair</option>
+                      <option value="Muffler Replacement">Muffler Replacement</option>
+                      <option value="Catalytic Converter Replacement">Catalytic Converter Replacement</option>
+                    </optgroup>
+                    <optgroup label="🔍 Diagnostics & Inspection">
+                      <option value="Check Engine Light Diagnostic">Check Engine Light Diagnostic</option>
+                      <option value="Pre-Purchase Inspection">Pre-Purchase Inspection</option>
+                      <option value="State Inspection">State Inspection</option>
+                      <option value="Multi-Point Inspection">Multi-Point Inspection</option>
+                    </optgroup>
+                    <optgroup label="🪟 Windshield & Glass">
+                      <option value="Windshield Replacement">Windshield Replacement</option>
+                      <option value="Windshield Chip Repair">Windshield Chip Repair</option>
+                    </optgroup>
+                    <optgroup label="🎨 Body & Paint">
+                      <option value="Paint Correction">Paint Correction</option>
+                      <option value="Dent Repair (PDR)">Dent Repair (PDR)</option>
+                      <option value="Bumper Repair">Bumper Repair</option>
+                    </optgroup>
+                    <optgroup label="✨ Detailing">
+                      <option value="Full Detail - Interior & Exterior">Full Detail - Interior & Exterior</option>
+                      <option value="Interior Detail">Interior Detail</option>
+                      <option value="Exterior Detail">Exterior Detail</option>
+                    </optgroup>
+                  </select>
+                  <Input
+                    value={productForm.name}
+                    onChange={e => updateProductField("name", e.target.value)}
+                    placeholder="Or type a custom service name..."
+                    className="mt-1.5"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Description</Label>
