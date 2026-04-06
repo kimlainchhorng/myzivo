@@ -3896,7 +3896,7 @@ export default function AdminStoreEditPage() {
               </div>
               <div className="flex items-center gap-3 pt-6">
                 <Switch checked={productForm.in_stock} onCheckedChange={v => updateProductField("in_stock", v)} />
-                <Label>In Stock</Label>
+                <Label>{form.category === "auto-repair" ? "Available" : "In Stock"}</Label>
               </div>
             </div>
           </div>
