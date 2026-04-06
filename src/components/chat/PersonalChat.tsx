@@ -629,7 +629,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 bg-background flex flex-col"
+      className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden"
       initial={{ x: "100%" }}
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
