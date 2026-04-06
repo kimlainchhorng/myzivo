@@ -1,0 +1,267 @@
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { CalendarIcon, ArrowLeft, Wrench, Car, User, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getServiceImage } from "@/config/autoRepairServiceImages";
+
+const TIME_SLOTS = [
+  "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
+  "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM",
+  "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM",
+];
+
+export default function ServiceBookingPage() {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  const [store, setStore] = useState<any>(null);
+  const [services, setServices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [date, setDate] = useState<Date>();
+
+  const [form, setForm] = useState({
+    product_id: "",
+    service_name: "",
+    customer_name: "",
+    customer_email: "",
+    customer_phone: "",
+    vehicle_make: "",
+    vehicle_model: "",
+    vehicle_year: "",
+    preferred_time: "",
+    notes: "",
+  });
+
+  useEffect(() => {
+    if (!slug) return;
+    (async () => {
+      const { data: s } = await supabase
+        .from("store_profiles")
+        .select("id, name, logo_url, address, phone, category")
+        .eq("slug", slug)
+        .eq("is_active", true)
+        .single();
+      if (!s) { setLoading(false); return; }
+      setStore(s);
+
+      const { data: p } = await supabase
+        .from("store_products")
+        .select("id, name, price, category, image_url")
+        .eq("store_id", s.id)
+        .eq("is_active", true)
+        .order("name");
+      setServices(p || []);
+      setLoading(false);
+    })();
+  }, [slug]);
+
+  const update = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!store || !date || !form.preferred_time || !form.service_name) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.from("service_bookings").insert({
+      store_id: store.id,
+      product_id: form.product_id || null,
+      service_name: form.service_name,
+      customer_name: form.customer_name,
+      customer_email: form.customer_email,
+      customer_phone: form.customer_phone,
+      vehicle_make: form.vehicle_make || null,
+      vehicle_model: form.vehicle_model || null,
+      vehicle_year: form.vehicle_year || null,
+      preferred_date: format(date, "yyyy-MM-dd"),
+      preferred_time: form.preferred_time,
+      notes: form.notes || null,
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error("Failed to submit booking. Please try again.");
+      return;
+    }
+    toast.success("Booking submitted! We'll confirm shortly.");
+    navigate(-1);
+  };
+
+  if (loading) return <div className="flex items-center justify-center min-h-screen"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
+  if (!store) return <div className="flex flex-col items-center justify-center min-h-screen gap-4"><p className="text-muted-foreground">Store not found</p><Button onClick={() => navigate(-1)}>Go Back</Button></div>;
+
+  const selectedService = services.find(s => s.id === form.product_id);
+  const serviceImg = selectedService ? (selectedService.image_url || getServiceImage(selectedService.name)) : "";
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="bg-card border-b border-border sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center gap-3">
+            {store.logo_url && <img src={store.logo_url} alt="" className="w-8 h-8 rounded-full object-cover" />}
+            <div>
+              <h1 className="font-semibold text-foreground text-sm">{store.name}</h1>
+              <p className="text-xs text-muted-foreground">Book a Service</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+        {/* Service Selection */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Wrench className="h-4 w-4 text-primary" /> Select Service
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Select
+              value={form.product_id}
+              onValueChange={(val) => {
+                const svc = services.find(s => s.id === val);
+                update("product_id", val);
+                update("service_name", svc?.name || "");
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a service..." />
+              </SelectTrigger>
+              <SelectContent>
+                {services.map(s => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name} — ${s.price?.toFixed(2)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {serviceImg && (
+              <img src={serviceImg} alt={form.service_name} className="w-full h-40 object-cover rounded-lg" />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Date & Time */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" /> Preferred Date & Time
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Date *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal mt-1", !date && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div>
+              <Label>Time *</Label>
+              <Select value={form.preferred_time} onValueChange={(v) => update("preferred_time", v)}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select time slot" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIME_SLOTS.map(t => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Customer Info */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <User className="h-4 w-4 text-primary" /> Your Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label>Full Name *</Label>
+              <Input required value={form.customer_name} onChange={e => update("customer_name", e.target.value)} placeholder="John Doe" className="mt-1" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label>Email *</Label>
+                <Input required type="email" value={form.customer_email} onChange={e => update("customer_email", e.target.value)} placeholder="john@example.com" className="mt-1" />
+              </div>
+              <div>
+                <Label>Phone *</Label>
+                <Input required type="tel" value={form.customer_phone} onChange={e => update("customer_phone", e.target.value)} placeholder="(555) 123-4567" className="mt-1" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Vehicle Info */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Car className="h-4 w-4 text-primary" /> Vehicle Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label>Make</Label>
+                <Input value={form.vehicle_make} onChange={e => update("vehicle_make", e.target.value)} placeholder="Toyota" className="mt-1" />
+              </div>
+              <div>
+                <Label>Model</Label>
+                <Input value={form.vehicle_model} onChange={e => update("vehicle_model", e.target.value)} placeholder="Camry" className="mt-1" />
+              </div>
+              <div>
+                <Label>Year</Label>
+                <Input value={form.vehicle_year} onChange={e => update("vehicle_year", e.target.value)} placeholder="2023" className="mt-1" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Notes */}
+        <Card>
+          <CardContent className="pt-6">
+            <Label>Additional Notes</Label>
+            <Textarea value={form.notes} onChange={e => update("notes", e.target.value)} placeholder="Any specific issues or requests..." className="mt-1" rows={3} />
+          </CardContent>
+        </Card>
+
+        <Button type="submit" className="w-full h-12 text-base" disabled={submitting}>
+          {submitting ? "Submitting..." : "Submit Booking Request"}
+        </Button>
+      </form>
+    </div>
+  );
+}
