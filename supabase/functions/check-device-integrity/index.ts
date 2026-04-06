@@ -1,4 +1,3 @@
-import { corsHeaders } from "https://deno.land/x/supabase_functions_utils@1.4.0/cors.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsH = {
