@@ -338,7 +338,16 @@ export default function ServiceBookingPage() {
               </div>
               <div>
                 <Label>Model</Label>
-                <Input value={form.vehicle_model} onChange={e => update("vehicle_model", e.target.value)} placeholder="Camry" className="mt-1" />
+                <select
+                  value={form.vehicle_model}
+                  onChange={e => update("vehicle_model", e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring mt-1"
+                >
+                  <option value="">Select</option>
+                  {(VEHICLE_MODELS[form.vehicle_make] || []).map(m => (
+                    <option key={m}>{m}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <Label>Year</Label>
