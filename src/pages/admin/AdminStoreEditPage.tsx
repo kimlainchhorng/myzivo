@@ -2914,12 +2914,17 @@ export default function AdminStoreEditPage() {
                         .map((product: any) => (
                         <div key={product.id} className="flex items-center justify-between py-3">
                           <div className="flex items-center gap-3">
-                            {(product.image_url || (form.category === "auto-repair" && getServiceImage(product.name))) ? (
-                              <img src={product.image_url || getServiceImage(product.name)} alt={product.name} className="w-12 h-12 rounded-lg object-cover bg-muted" />
-                            ) : (
-                              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                                <Package className="h-5 w-5 text-muted-foreground/30" />
-                              </div>
+                            {(() => {
+                              const autoImg = form.category === "auto-repair" ? getServiceImage(product.name) : "";
+                              const imgSrc = autoImg || product.image_url;
+                              return imgSrc ? (
+                                <img src={imgSrc} alt={product.name} className="w-12 h-12 rounded-lg object-cover bg-muted" />
+                              ) : (
+                                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                                  <Package className="h-5 w-5 text-muted-foreground/30" />
+                                </div>
+                              );
+                            })()
                             )}
                             <div>
                               <p className="font-medium text-sm text-foreground">{product.name}</p>
