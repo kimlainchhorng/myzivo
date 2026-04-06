@@ -1,14 +1,17 @@
 /**
- * VoiceMessagePlayer — Polished waveform audio player for voice notes
+ * VoiceMessagePlayer — 2026-style waveform audio player with speed control
  */
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Play, Pause } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface VoiceMessagePlayerProps {
   url: string;
   duration?: string;
   isMe: boolean;
 }
+
+const SPEED_OPTIONS = [1, 1.5, 2] as const;
 
 // Generate deterministic pseudo-random waveform from URL hash
 function generateWaveform(url: string, count: number): number[] {
@@ -18,7 +21,6 @@ function generateWaveform(url: string, count: number): number[] {
   }
   return Array.from({ length: count }, (_, i) => {
     const seed = Math.abs(((hash * (i + 1) * 2654435761) >> 16) % 100);
-    // Create natural-looking waveform with peaks in middle
     const positionWeight = 1 - Math.abs((i / count) * 2 - 1) * 0.3;
     return 0.15 + (seed / 100) * 0.85 * positionWeight;
   });
@@ -30,7 +32,8 @@ export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessage
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
-  const barCount = 28;
+  const [speed, setSpeed] = useState<(typeof SPEED_OPTIONS)[number]>(1);
+  const barCount = 32;
   const waveform = generateWaveform(url, barCount);
 
   useEffect(() => {
@@ -72,11 +75,18 @@ export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessage
       audio.pause();
       setPlaying(false);
     } else {
+      audio.playbackRate = speed;
       audio.play().then(() => setPlaying(true)).catch(() => {});
     }
-  }, [playing]);
+  }, [playing, speed]);
 
-  // Seek on bar tap
+  const cycleSpeed = useCallback(() => {
+    const idx = SPEED_OPTIONS.indexOf(speed);
+    const next = SPEED_OPTIONS[(idx + 1) % SPEED_OPTIONS.length];
+    setSpeed(next);
+    if (audioRef.current) audioRef.current.playbackRate = next;
+  }, [speed]);
+
   const handleSeek = useCallback((index: number) => {
     const audio = audioRef.current;
     if (!audio || !audio.duration || !isFinite(audio.duration)) return;
@@ -97,14 +107,19 @@ export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessage
     ? formatTime(currentTime)
     : (duration || formatTime(totalDuration));
 
+  const remaining = totalDuration > 0 && (playing || progress > 0)
+    ? formatTime(totalDuration - currentTime)
+    : null;
+
   return (
-    <div className="flex items-center gap-2.5 min-w-[200px]">
+    <div className="flex items-center gap-2.5 min-w-[220px]">
       <audio ref={audioRef} src={url} preload="metadata" />
 
       {/* Play/Pause button */}
-      <button
+      <motion.button
         onClick={toggle}
-        className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-90 ${
+        whileTap={{ scale: 0.85 }}
+        className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all shadow-sm ${
           isMe
             ? "bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground"
             : "bg-primary/15 hover:bg-primary/25 text-primary"
@@ -115,12 +130,12 @@ export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessage
         ) : (
           <Play className="w-4 h-4 ml-0.5" />
         )}
-      </button>
+      </motion.button>
 
-      <div className="flex-1 flex flex-col gap-1.5">
+      <div className="flex-1 flex flex-col gap-1">
         {/* Waveform bars — tappable for seeking */}
         <div
-          className="flex items-center gap-[1.5px] h-6 cursor-pointer"
+          className="flex items-center gap-[1.5px] h-7 cursor-pointer"
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -131,10 +146,11 @@ export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessage
         >
           {waveform.map((h, i) => {
             const filled = i / barCount <= progress;
+            const isActive = playing && filled;
             return (
-              <div
+              <motion.div
                 key={i}
-                className={`flex-1 rounded-full transition-all duration-150 ${
+                className={`flex-1 rounded-full transition-colors duration-100 ${
                   filled
                     ? isMe ? "bg-primary-foreground" : "bg-primary"
                     : isMe ? "bg-primary-foreground/25" : "bg-primary/20"
@@ -144,17 +160,35 @@ export default function VoiceMessagePlayer({ url, duration, isMe }: VoiceMessage
                   minHeight: "3px",
                   maxHeight: "100%",
                 }}
+                animate={isActive ? { scaleY: [1, 1.15, 1] } : { scaleY: 1 }}
+                transition={isActive ? { repeat: Infinity, duration: 0.5, delay: i * 0.02 } : {}}
               />
             );
           })}
         </div>
 
-        {/* Time */}
-        <span className={`text-[10px] font-medium tabular-nums leading-none ${
-          isMe ? "text-primary-foreground/60" : "text-muted-foreground"
-        }`}>
-          {displayTime}
-        </span>
+        {/* Time + Speed */}
+        <div className="flex items-center justify-between">
+          <span className={`text-[10px] font-medium tabular-nums leading-none ${
+            isMe ? "text-primary-foreground/60" : "text-muted-foreground"
+          }`}>
+            {displayTime}
+            {remaining && <span className="ml-1 opacity-50">/ -{remaining}</span>}
+          </span>
+
+          {/* Speed toggle */}
+          <motion.button
+            whileTap={{ scale: 0.85 }}
+            onClick={cycleSpeed}
+            className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none transition-all ${
+              speed !== 1
+                ? isMe ? "bg-primary-foreground/30 text-primary-foreground" : "bg-primary/20 text-primary"
+                : isMe ? "bg-primary-foreground/15 text-primary-foreground/50" : "bg-primary/10 text-muted-foreground"
+            }`}
+          >
+            {speed}×
+          </motion.button>
+        </div>
       </div>
     </div>
   );
