@@ -2839,9 +2839,9 @@ export default function AdminStoreEditPage() {
           <TabsContent value="products">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base">{t("admin.store.products")}</CardTitle>
+                <CardTitle className="text-base">{form.category === "auto-repair" ? "Bookings" : t("admin.store.products")}</CardTitle>
                 <Button size="sm" onClick={openAddProduct} className="gap-1.5">
-                  <Plus className="h-4 w-4" /> {t("admin.store.add_product")}
+                  <Plus className="h-4 w-4" /> {form.category === "auto-repair" ? "Add Service" : t("admin.store.add_product")}
                 </Button>
               </CardHeader>
               <CardContent>
@@ -2852,9 +2852,9 @@ export default function AdminStoreEditPage() {
                 ) : products.length === 0 ? (
                   <div className="text-center py-12 space-y-3">
                     <Package className="h-10 w-10 text-muted-foreground/20 mx-auto" />
-                    <p className="text-muted-foreground">{t("admin.store.no_products")}</p>
+                    <p className="text-muted-foreground">{form.category === "auto-repair" ? "No bookings yet" : t("admin.store.no_products")}</p>
                     <Button variant="outline" size="sm" onClick={openAddProduct} className="gap-1.5">
-                      <Plus className="h-4 w-4" /> {t("admin.store.add_first_product")}
+                      <Plus className="h-4 w-4" /> {form.category === "auto-repair" ? "Add First Service" : t("admin.store.add_first_product")}
                     </Button>
                   </div>
                 ) : (
