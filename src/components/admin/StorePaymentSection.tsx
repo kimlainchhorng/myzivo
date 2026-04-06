@@ -259,19 +259,19 @@ export default function StorePaymentSection({ storeId, market = "KH" }: { storeI
           {/* Card Payment — All markets */}
           {renderSimpleToggle(
             "card",
-            <CreditCard className="h-3.5 w-3.5 text-primary" />,
+            cardPaymentIcon,
             "Card Payment",
             "Visa, Mastercard & more via Stripe",
-            "bg-primary/10"
+            ""
           )}
 
           {/* Confirmed Payment Order — All markets */}
           {renderSimpleToggle(
             "confirmed_order",
-            <ClipboardCheck className="h-3.5 w-3.5 text-emerald-600" />,
+            confirmedOrderIcon,
             "Confirmed Payment Order",
             "Require payment confirmation before processing orders",
-            "bg-emerald-500/10"
+            ""
           )}
 
           {/* US-specific payment methods */}
@@ -279,26 +279,26 @@ export default function StorePaymentSection({ storeId, market = "KH" }: { storeI
             <>
               {renderSimpleToggle(
                 "bank_transfer",
-                <Landmark className="h-3.5 w-3.5 text-blue-600" />,
+                bankTransferIcon,
                 "Bank Transfer (ACH)",
                 "Accept direct bank transfers & ACH payments",
-                "bg-blue-500/10"
+                ""
               )}
 
               {renderSimpleToggle(
                 "stripe_connect",
-                <Link2 className="h-3.5 w-3.5 text-violet-600" />,
+                stripeConnectIcon,
                 "Stripe Connect",
                 "Connect your Stripe account for direct payouts",
-                "bg-violet-500/10"
+                ""
               )}
 
               {renderSimpleToggle(
                 "invoice",
-                <Banknote className="h-3.5 w-3.5 text-amber-600" />,
+                invoiceIcon,
                 "Invoice Payment",
                 "Send invoices and accept payment on terms",
-                "bg-amber-500/10"
+                ""
               )}
             </>
           )}
