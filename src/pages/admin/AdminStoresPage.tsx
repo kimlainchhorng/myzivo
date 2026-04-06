@@ -175,34 +175,33 @@ export default function AdminStoresPage() {
   const updateField = (field: string, value: any) => setForm(prev => ({ ...prev, [field]: value }));
 
   const handleAssignOwner = async () => {
-    if (!ownerDialog || !ownerEmail.trim()) return;
+    if (!ownerDialog) return;
+
+    const rawEmail = ownerEmail.trim();
+    const normalizedEmail = rawEmail.toLowerCase();
+    if (!normalizedEmail) return;
+
     setAssigningOwner(true);
     try {
-      const { data, error } = await supabase.functions.invoke("lookup-store-id", {
-        body: { email: ownerEmail.trim() },
-      });
-      if (error || data?.error) {
-        toast.error(data?.error || "Could not find user with this email");
-        setAssigningOwner(false);
-        return;
+      let profileData: { id: string | null; user_id: string | null } | null = null;
+
+      for (const email of Array.from(new Set([normalizedEmail, rawEmail]))) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, user_id")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (data) {
+          profileData = data;
+          break;
+        }
       }
-      // Get the user's full_id from the response (the function returns user info)
-      // We need to get the user_id from the lookup - extract from stores data
-      const userId = data?.stores?.[0]?.full_id ? null : null;
-      
-      // Alternative: look up user directly via the edge function response
-      // The lookup-store-id finds the user but returns stores. We need just the user_id.
-      // Let's update the store with the email approach - find user by listing
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id, user_id")
-        .eq("email", ownerEmail.trim().toLowerCase())
-        .maybeSingle();
-      
+
       const targetUserId = profileData?.user_id || profileData?.id;
       if (!targetUserId) {
         toast.error("No user account found with this email. They need to sign up first.");
-        setAssigningOwner(false);
         return;
       }
 
@@ -210,11 +209,11 @@ export default function AdminStoresPage() {
         .from("store_profiles")
         .update({ owner_id: targetUserId })
         .eq("id", ownerDialog.storeId);
-      
+
       if (updateError) throw updateError;
-      
+
       queryClient.invalidateQueries({ queryKey: ["admin-stores"] });
-      toast.success(`Store "${ownerDialog.storeName}" linked to ${ownerEmail}`);
+      toast.success(`Store "${ownerDialog.storeName}" linked to ${normalizedEmail}`);
       setOwnerDialog(null);
       setOwnerEmail("");
     } catch (e: any) {
