@@ -2912,8 +2912,8 @@ export default function AdminStoreEditPage() {
                         .map((product: any) => (
                         <div key={product.id} className="flex items-center justify-between py-3">
                           <div className="flex items-center gap-3">
-                            {product.image_url ? (
-                              <img src={product.image_url} alt={product.name} className="w-12 h-12 rounded-lg object-cover bg-muted" />
+                            {(product.image_url || (isAutoRepair && product.name?.toLowerCase().includes("brake") ? serviceBrakePads : "")) ? (
+                              <img src={product.image_url || serviceBrakePads} alt={product.name} className="w-12 h-12 rounded-lg object-cover bg-muted" />
                             ) : (
                               <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
                                 <Package className="h-5 w-5 text-muted-foreground/30" />
