@@ -2868,8 +2868,8 @@ export default function AdminStoreEditPage() {
                     <p className="text-[11px] text-muted-foreground">Temporarily pause incoming orders</p>
                   </div>
                   <Switch
-                    checked={form.accepts_orders !== false}
-                    onCheckedChange={(v) => updateField("accepts_orders", v)}
+                    checked={(form as any).accepts_orders !== false}
+                    onCheckedChange={(v) => updateField("accepts_orders" as any, v)}
                   />
                 </div>
               </CardContent>
