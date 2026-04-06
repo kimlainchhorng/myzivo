@@ -434,21 +434,13 @@ export default function StorePaymentSection({ storeId, market = "KH" }: { storeI
           })}
 
           {/* Cash on Delivery — All markets */}
-          <div className="rounded-xl border border-border p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">Cash on Delivery</p>
-                <p className="text-xs text-muted-foreground">Customers pay in cash upon receiving their order</p>
-              </div>
-              <Switch
-                checked={getMethod("cash")?.is_enabled ?? false}
-                onCheckedChange={(checked) => handleToggle("cash", checked)}
-              />
-            </div>
-          </div>
+          {renderSimpleToggle(
+            "cash",
+            cashDeliveryIcon,
+            "Cash on Delivery",
+            "Customers pay in cash upon receiving their order",
+            ""
+          )}
         </CardContent>
       </Card>
 
