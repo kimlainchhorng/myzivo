@@ -3502,15 +3502,30 @@ export default function AdminStoreEditPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Service Category</Label>
-                    <ManagedTagDropdown
-                      label="Category"
-                      value={productForm.category}
-                      onChange={(v) => updateProductField("category", v)}
-                      savedItems={savedCategories}
-                      onSaveItem={(item) => setSavedCategories((prev) => [...new Set([...prev, item])])}
-                      onDeleteItem={(item) => setSavedCategories((prev) => prev.filter((c) => c !== item))}
-                      placeholder="e.g. Engine, Brakes, Tires"
-                    />
+                    <select
+                      value={productForm.category || ""}
+                      onChange={e => updateProductField("category", e.target.value)}
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                    >
+                      <option value="">Select category</option>
+                      <option value="Engine">Engine</option>
+                      <option value="Transmission">Transmission</option>
+                      <option value="Brake System">Brake System</option>
+                      <option value="Suspension">Suspension</option>
+                      <option value="Electrical">Electrical</option>
+                      <option value="AC / Heating">AC / Heating</option>
+                      <option value="Exhaust">Exhaust</option>
+                      <option value="Tires & Wheels">Tires & Wheels</option>
+                      <option value="Oil & Fluids">Oil & Fluids</option>
+                      <option value="Steering">Steering</option>
+                      <option value="Body & Paint">Body & Paint</option>
+                      <option value="Windshield & Glass">Windshield & Glass</option>
+                      <option value="Battery">Battery</option>
+                      <option value="Diagnostics">Diagnostics</option>
+                      <option value="Inspection">Inspection</option>
+                      <option value="Detailing">Detailing</option>
+                      <option value="Other">Other</option>
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <Label>Vehicle Types</Label>
