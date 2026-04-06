@@ -55,11 +55,12 @@ export default function ServiceBookingPage() {
       if (!s) { setLoading(false); return; }
       setStore(s);
 
-      const { data: p } = await (supabase
+      // @ts-ignore - deep type instantiation
+      const { data: p } = await supabase
         .from("store_products")
         .select("id, name, price, category, image_url")
         .eq("store_id", s.id)
-        .eq("is_active", true) as any);
+        .eq("is_active", true);
       setServices(p || []);
       setLoading(false);
     })();
