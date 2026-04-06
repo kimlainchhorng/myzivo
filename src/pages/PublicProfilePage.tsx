@@ -519,25 +519,6 @@ export default function PublicProfilePage() {
                   }`}>
                   <friendBtn.icon className="h-4 w-4" />{friendBtn.label}
                 </motion.button>
-                <motion.button whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    if (friendshipStatus === "friends") {
-                      navigate(`/chat`, {
-                        state: {
-                          openChat: {
-                            recipientId: targetUserId,
-                            recipientName: resolvedProfile?.full_name || "User",
-                            recipientAvatar: resolvedProfile?.avatar_url,
-                          },
-                        },
-                      });
-                    } else {
-                      toast("Add as friend to chat");
-                    }
-                  }}
-                  className={`h-11 w-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${friendshipStatus === "friends" ? "bg-primary text-primary-foreground" : "bg-muted border border-border text-muted-foreground opacity-60"}`}>
-                  <MessageCircle className="h-4 w-4" />
-                </motion.button>
                 {/* Voice Call */}
                 <motion.button whileTap={{ scale: 0.95 }}
                   onClick={() => {
