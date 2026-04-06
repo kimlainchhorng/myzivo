@@ -21,13 +21,14 @@ interface StoreOwnerLayoutProps {
   storeId?: string;
   storeName?: string;
   storeLogoUrl?: string;
+  storeCategory?: string;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
   productCount?: number;
   orderCount?: number;
 }
 
-export default function StoreOwnerLayout({ children, title, storeId, storeName, storeLogoUrl, activeTab, onTabChange, productCount, orderCount }: StoreOwnerLayoutProps) {
+export default function StoreOwnerLayout({ children, title, storeId, storeName, storeLogoUrl, storeCategory, activeTab, onTabChange, productCount, orderCount }: StoreOwnerLayoutProps) {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
