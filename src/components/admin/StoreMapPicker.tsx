@@ -213,7 +213,7 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, cur
       await new Promise((r) => setTimeout(r, 100));
       if (!mapRef.current || cancelled) { setLoading(false); return; }
 
-      const initialPos = currentCoords ?? DEFAULT_CENTER;
+      const initialPos = currentCoords ?? marketCenter;
       const map = new google.maps.Map(mapRef.current, {
         center: initialPos,
         zoom: currentCoords ? 16 : 14,
