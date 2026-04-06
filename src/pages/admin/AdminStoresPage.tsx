@@ -340,7 +340,7 @@ export default function AdminStoresPage() {
                         {store.owner_id ? (
                           <p className="text-xs text-primary flex items-center gap-1 mt-0.5"><Check className="h-3 w-3" /> Owner linked</p>
                         ) : (
-                          <p className="text-xs text-amber-500 mt-0.5">No owner assigned</p>
+                          <p className="text-xs text-destructive/70 mt-0.5">No owner assigned</p>
                         )}
                       </div>
                     </div>
