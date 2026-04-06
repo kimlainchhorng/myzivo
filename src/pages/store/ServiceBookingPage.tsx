@@ -24,6 +24,7 @@ const TIME_SLOTS = [
 export default function ServiceBookingPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [store, setStore] = useState<any>(null);
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
