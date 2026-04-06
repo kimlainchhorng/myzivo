@@ -64,12 +64,9 @@ export default function ServiceBookingPage() {
       setServices(p || []);
       // Auto-select service from URL query param
       const preselect = searchParams.get("service");
-      if (preselect && p) {
-        const q = preselect.toLowerCase();
-        const match = p.find((svc: any) => svc.name === preselect || svc.name?.toLowerCase() === q);
-        if (match) {
-          setForm(f => ({ ...f, product_id: match.id, service_name: match.name }));
-        }
+      if (preselect) {
+        const svc = (p || []).find((s: any) => s.name?.toLowerCase() === preselect.toLowerCase());
+        setForm(f => ({ ...f, service_name: preselect, product_id: svc?.id || "" }));
       }
       setLoading(false);
     })();
