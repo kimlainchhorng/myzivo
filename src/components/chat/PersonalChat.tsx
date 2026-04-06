@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { useChatDraft } from "@/hooks/useChatDraft";
+import MessageEffects, { detectMessageEffect, type EffectType } from "./MessageEffects";
 
 interface PersonalChatProps {
   recipientId: string;
