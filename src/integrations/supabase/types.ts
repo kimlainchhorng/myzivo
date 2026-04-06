@@ -3766,6 +3766,39 @@ export type Database = {
           },
         ]
       }
+      avatar_sticker_moods: {
+        Row: {
+          created_at: string
+          emoji: string
+          gradient_from: string
+          gradient_to: string
+          id: string
+          is_active: boolean | null
+          label: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          gradient_from?: string
+          gradient_to?: string
+          id?: string
+          is_active?: boolean | null
+          label: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          gradient_from?: string
+          gradient_to?: string
+          id?: string
+          is_active?: boolean | null
+          label?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
       background_checks: {
         Row: {
           adjudication: string | null
@@ -20879,6 +20912,39 @@ export type Database = {
           id?: string
           source?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      gif_trending: {
+        Row: {
+          category: string
+          created_at: string
+          gif_url: string
+          id: string
+          is_active: boolean | null
+          label: string | null
+          sort_order: number | null
+          source: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          gif_url: string
+          id?: string
+          is_active?: boolean | null
+          label?: string | null
+          sort_order?: number | null
+          source?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          gif_url?: string
+          id?: string
+          is_active?: boolean | null
+          label?: string | null
+          sort_order?: number | null
+          source?: string | null
         }
         Relationships: []
       }
@@ -40485,6 +40551,45 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_music_tracks: {
+        Row: {
+          artist: string
+          cover_emoji: string
+          created_at: string
+          duration: string
+          external_url: string | null
+          id: string
+          is_active: boolean | null
+          preview_url: string | null
+          sort_order: number | null
+          title: string
+        }
+        Insert: {
+          artist: string
+          cover_emoji?: string
+          created_at?: string
+          duration?: string
+          external_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          preview_url?: string | null
+          sort_order?: number | null
+          title: string
+        }
+        Update: {
+          artist?: string
+          cover_emoji?: string
+          created_at?: string
+          duration?: string
+          external_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          preview_url?: string | null
+          sort_order?: number | null
+          title?: string
+        }
+        Relationships: []
+      }
       shift_slots: {
         Row: {
           bonus_amount: number | null
@@ -42095,6 +42200,42 @@ export type Database = {
           preview_url?: string | null
           price_cents?: number | null
           sticker_count?: number | null
+        }
+        Relationships: []
+      }
+      sticker_store_packs: {
+        Row: {
+          category: string | null
+          created_at: string
+          gradient_color: string
+          id: string
+          is_active: boolean | null
+          name: string
+          preview_emoji: string
+          sticker_count: number
+          stickers: Json | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          gradient_color?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          preview_emoji?: string
+          sticker_count?: number
+          stickers?: Json | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          gradient_color?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          preview_emoji?: string
+          sticker_count?: number
+          stickers?: Json | null
         }
         Relationships: []
       }
@@ -47915,6 +48056,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_downloaded_packs: {
+        Row: {
+          created_at: string
+          id: string
+          pack_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pack_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pack_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_downloaded_packs_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "sticker_store_packs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_email_preferences: {
         Row: {
