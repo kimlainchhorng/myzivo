@@ -1,12 +1,13 @@
 /**
  * StickerKeyboard — iMessage 2026-style sticker/emoji panel
  * Tabs: Stickers, GIFs, Avatar, Music, Store
- * Features: drag-to-dismiss, search, horizontal scroll sections, "Done" button
+ * All data fetched from Supabase — no mock/hardcoded data
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Clock, Sparkles, Image, Music, User, Store, Download, Play, Pause, Heart } from "lucide-react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface StickerKeyboardProps {
   open: boolean;
@@ -19,6 +20,39 @@ interface StickerPack {
   name: string;
   emoji_prefix: string;
   stickers: string[];
+}
+
+interface StorePack {
+  id: string;
+  name: string;
+  preview_emoji: string;
+  sticker_count: number;
+  gradient_color: string;
+  category: string;
+  stickers: string[];
+}
+
+interface AvatarMood {
+  id: string;
+  emoji: string;
+  label: string;
+  gradient_from: string;
+  gradient_to: string;
+}
+
+interface MusicTrack {
+  id: string;
+  title: string;
+  artist: string;
+  duration: string;
+  cover_emoji: string;
+}
+
+interface TrendingGif {
+  id: string;
+  gif_url: string;
+  label: string;
+  category: string;
 }
 
 type TabId = "stickers" | "gifs" | "avatar" | "music" | "store";
@@ -42,54 +76,6 @@ const BUILTIN_STICKERS: Record<string, string[]> = {
   "🍔 Food": ["🍔","🍕","🌮","🌯","🥗","🍜","🍝","🍣","🍱","🥘","🍲","🍛","🍙","🍚","🥟","🍤","🍗","🍖","🥩","🌭","🍟","🧇","🥞","🍳","🥚","☕","🧋","🍵","🧃","🍺"],
 };
 
-// Mock GIF data
-const TRENDING_GIFS = [
-  { id: "1", url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcDFkam1xNm1kMzh4ZGE3NHVseXI4NnF5b3l2cGltdGRqZTVyeWZkYyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/VGG8UY1nEl66Y/giphy.gif", label: "Happy" },
-  { id: "2", url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZmV1ZDc0Y2RtdXN5cWl0cW5lYzZ0czU4MzUxbnNnaWM2cHJhYXlhaCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0MYt5jPR6QX5pnqM/giphy.gif", label: "Thumbs Up" },
-  { id: "3", url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExb3NjNjR2M2tqb3RtcTQ3OGR0NTdyZHYyZHg5dW5rdGx4c3NtYjQ0ZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/XreQmk7ETCak0/giphy.gif", label: "LOL" },
-  { id: "4", url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaW5uZm5hYWZyNDkxNXBhMGQzMTVhOGFnZWowcnAzcW4xbzV3cDgwNSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oEjI6SIIHBdRxXI40/giphy.gif", label: "Dancing" },
-];
-
-const GIF_CATEGORIES = ["Trending", "Reactions", "Love", "Happy", "Sad", "Dance", "Anime", "Sports"];
-
-// Mock Avatar Sticker moods
-const AVATAR_MOODS = [
-  { emoji: "😊", label: "Happy", bg: "from-amber-400 to-orange-400" },
-  { emoji: "😂", label: "LOL", bg: "from-yellow-400 to-amber-400" },
-  { emoji: "😍", label: "Love", bg: "from-pink-400 to-rose-400" },
-  { emoji: "😎", label: "Cool", bg: "from-blue-400 to-cyan-400" },
-  { emoji: "🤔", label: "Hmm", bg: "from-purple-400 to-violet-400" },
-  { emoji: "😢", label: "Sad", bg: "from-blue-300 to-indigo-400" },
-  { emoji: "🥳", label: "Party", bg: "from-fuchsia-400 to-pink-400" },
-  { emoji: "😴", label: "Sleepy", bg: "from-indigo-300 to-blue-300" },
-  { emoji: "🤯", label: "Mind Blown", bg: "from-red-400 to-orange-400" },
-  { emoji: "💪", label: "Strong", bg: "from-emerald-400 to-green-400" },
-  { emoji: "🙏", label: "Thanks", bg: "from-teal-400 to-emerald-400" },
-  { emoji: "👋", label: "Hi!", bg: "from-sky-400 to-blue-400" },
-];
-
-// Mock music tracks
-const MOCK_TRACKS = [
-  { id: "1", title: "Blinding Lights", artist: "The Weeknd", duration: "3:20", cover: "🎵" },
-  { id: "2", title: "Levitating", artist: "Dua Lipa", duration: "3:23", cover: "🎶" },
-  { id: "3", title: "Stay", artist: "Kid Laroi & Justin Bieber", duration: "2:21", cover: "🎧" },
-  { id: "4", title: "Heat Waves", artist: "Glass Animals", duration: "3:58", cover: "🔥" },
-  { id: "5", title: "As It Was", artist: "Harry Styles", duration: "2:47", cover: "✨" },
-  { id: "6", title: "Anti-Hero", artist: "Taylor Swift", duration: "3:20", cover: "💜" },
-];
-
-// Mock sticker store packs
-const STORE_PACKS = [
-  { id: "s1", name: "Cute Cats", preview: "🐱", count: 24, downloaded: false, color: "from-amber-400/20 to-orange-400/20" },
-  { id: "s2", name: "Anime Reactions", preview: "⚡", count: 32, downloaded: true, color: "from-purple-400/20 to-pink-400/20" },
-  { id: "s3", name: "Office Vibes", preview: "💼", count: 18, downloaded: false, color: "from-blue-400/20 to-cyan-400/20" },
-  { id: "s4", name: "Food & Drinks", preview: "🍕", count: 28, downloaded: false, color: "from-red-400/20 to-orange-400/20" },
-  { id: "s5", name: "Sport Stars", preview: "⚽", count: 20, downloaded: false, color: "from-green-400/20 to-emerald-400/20" },
-  { id: "s6", name: "Love & Hearts", preview: "💕", count: 22, downloaded: true, color: "from-pink-400/20 to-rose-400/20" },
-  { id: "s7", name: "Travel World", preview: "✈️", count: 26, downloaded: false, color: "from-sky-400/20 to-blue-400/20" },
-  { id: "s8", name: "Retro Gaming", preview: "🎮", count: 30, downloaded: false, color: "from-indigo-400/20 to-purple-400/20" },
-];
-
 function getRecentStickers(): string[] {
   try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]").slice(0, 30); }
   catch { return []; }
@@ -112,13 +98,39 @@ function SectionHeader({ title, icon }: { title: string; icon?: React.ReactNode 
 
 /* ─── GIFs Tab ─── */
 function GifsTab({ onSend, search }: { onSend: (url: string) => void; search: string }) {
-  const [selectedCat, setSelectedCat] = useState("Trending");
+  const [gifs, setGifs] = useState<TrendingGif[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCat, setSelectedCat] = useState("All");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const { data } = await (supabase as any)
+        .from("gif_trending")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (data) {
+        setGifs(data);
+        const cats = ["All", ...new Set(data.map((g: TrendingGif) => g.category))] as string[];
+        setCategories(cats);
+      }
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const filtered = selectedCat === "All" ? gifs : gifs.filter((g) => g.category === selectedCat);
+  const searched = search.trim()
+    ? filtered.filter((g) => g.label?.toLowerCase().includes(search.toLowerCase()))
+    : filtered;
 
   return (
     <div className="pb-4">
       {/* Category chips */}
       <div className="flex gap-1.5 px-3 py-2 overflow-x-auto scrollbar-none">
-        {GIF_CATEGORIES.map((cat) => (
+        {categories.map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCat(cat)}
@@ -133,54 +145,77 @@ function GifsTab({ onSend, search }: { onSend: (url: string) => void; search: st
         ))}
       </div>
 
-      {/* GIF grid */}
-      <div className="grid grid-cols-2 gap-1.5 px-3 pt-2">
-        {TRENDING_GIFS.map((gif) => (
-          <motion.button
-            key={gif.id}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => onSend(gif.url)}
-            className="relative aspect-square rounded-xl overflow-hidden bg-muted/30 group"
-          >
-            <img src={gif.url} alt={gif.label} className="w-full h-full object-cover" loading="lazy" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          </motion.button>
-        ))}
-        {/* Placeholder slots */}
-        {[1,2,3,4].map((i) => (
-          <div key={`ph-${i}`} className="aspect-square rounded-xl bg-muted/20 flex items-center justify-center">
-            <Image className="w-6 h-6 text-muted-foreground/20" />
-          </div>
-        ))}
-      </div>
-
-      {/* API notice */}
-      <div className="mx-3 mt-3 p-3 rounded-xl bg-primary/5 border border-primary/10">
-        <p className="text-[11px] text-muted-foreground/60 text-center leading-relaxed">
-          🔗 Connect a GIF API (Tenor/GIPHY) for full search.
-          <br />
-          <span className="text-primary/60 font-medium">Coming soon!</span>
-        </p>
-      </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-1.5 px-3 pt-2">
+          {searched.map((gif) => (
+            <motion.button
+              key={gif.id}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => onSend(gif.gif_url)}
+              className="relative aspect-square rounded-xl overflow-hidden bg-muted/30 group"
+            >
+              <img src={gif.gif_url} alt={gif.label || "GIF"} className="w-full h-full object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              {gif.label && (
+                <span className="absolute bottom-1 left-1.5 text-[9px] font-semibold text-white/80 drop-shadow">{gif.label}</span>
+              )}
+            </motion.button>
+          ))}
+          {searched.length === 0 && (
+            <div className="col-span-2 py-8 text-center text-muted-foreground/40 text-xs">
+              {search.trim() ? "No GIFs found" : "No GIFs available"}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
 /* ─── Avatar Stickers Tab ─── */
 function AvatarTab({ onSend }: { onSend: (sticker: string) => void }) {
+  const [moods, setMoods] = useState<AvatarMood[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const { data } = await (supabase as any)
+        .from("avatar_sticker_moods")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (data) setMoods(data);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="pb-4">
       <SectionHeader title="Your Avatar Stickers" icon={<User className="w-4 h-4 text-primary/60" />} />
       <p className="text-[11px] text-muted-foreground/50 px-4 -mt-1 mb-3">Tap a mood to send your avatar sticker</p>
       <div className="grid grid-cols-4 gap-2 px-3">
-        {AVATAR_MOODS.map((mood) => (
+        {moods.map((mood) => (
           <motion.button
-            key={mood.label}
+            key={mood.id}
             whileTap={{ scale: 0.85 }}
             onClick={() => onSend(`[avatar:${mood.label.toLowerCase()}]`)}
             className="flex flex-col items-center gap-1.5"
           >
-            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${mood.bg} flex items-center justify-center shadow-sm`}>
+            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-${mood.gradient_from} to-${mood.gradient_to} flex items-center justify-center shadow-sm`}>
               <span className="text-3xl">{mood.emoji}</span>
             </div>
             <span className="text-[10px] font-medium text-muted-foreground/70">{mood.label}</span>
@@ -209,8 +244,24 @@ function AvatarTab({ onSend }: { onSend: (sticker: string) => void }) {
 
 /* ─── Music Tab ─── */
 function MusicTab({ onSend }: { onSend: (sticker: string) => void }) {
+  const [tracks, setTracks] = useState<MusicTrack[]>([]);
+  const [loading, setLoading] = useState(true);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const { data } = await (supabase as any)
+        .from("shared_music_tracks")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (data) setTracks(data);
+      setLoading(false);
+    };
+    load();
+  }, []);
 
   const toggleFav = (id: string) => {
     setFavorites((prev) => {
@@ -220,48 +271,45 @@ function MusicTab({ onSend }: { onSend: (sticker: string) => void }) {
     });
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="pb-4">
       <SectionHeader title="Share a Track" icon={<Music className="w-4 h-4 text-primary/60" />} />
       <p className="text-[11px] text-muted-foreground/50 px-4 -mt-1 mb-3">Send a music clip to your chat</p>
 
       <div className="px-3 space-y-1.5">
-        {MOCK_TRACKS.map((track) => (
+        {tracks.map((track) => (
           <motion.div
             key={track.id}
             whileTap={{ scale: 0.98 }}
-            className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors group"
+            className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
           >
-            {/* Album art */}
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-xl flex-shrink-0">
-              {track.cover}
+              {track.cover_emoji}
             </div>
-
-            {/* Info */}
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-semibold text-foreground truncate">{track.title}</p>
               <p className="text-[11px] text-muted-foreground/60 truncate">{track.artist} · {track.duration}</p>
             </div>
-
-            {/* Actions */}
             <button
               onClick={(e) => { e.stopPropagation(); toggleFav(track.id); }}
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
             >
               <Heart className={`w-4 h-4 ${favorites.has(track.id) ? "fill-rose-500 text-rose-500" : "text-muted-foreground/40"}`} />
             </button>
-
             <button
               onClick={(e) => { e.stopPropagation(); setPlayingId(playingId === track.id ? null : track.id); }}
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
             >
-              {playingId === track.id ? (
-                <Pause className="w-4 h-4 text-primary" />
-              ) : (
-                <Play className="w-4 h-4 text-muted-foreground/50 ml-0.5" />
-              )}
+              {playingId === track.id ? <Pause className="w-4 h-4 text-primary" /> : <Play className="w-4 h-4 text-muted-foreground/50 ml-0.5" />}
             </button>
-
             <button
               onClick={() => onSend(`[music:${track.title} - ${track.artist}]`)}
               className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold hover:bg-primary/90 transition-colors"
@@ -270,15 +318,9 @@ function MusicTab({ onSend }: { onSend: (sticker: string) => void }) {
             </button>
           </motion.div>
         ))}
-      </div>
-
-      {/* API notice */}
-      <div className="mx-3 mt-3 p-3 rounded-xl bg-primary/5 border border-primary/10">
-        <p className="text-[11px] text-muted-foreground/60 text-center leading-relaxed">
-          🎵 Connect Spotify or Apple Music for full library.
-          <br />
-          <span className="text-primary/60 font-medium">Coming soon!</span>
-        </p>
+        {tracks.length === 0 && (
+          <div className="py-8 text-center text-muted-foreground/40 text-xs">No tracks available</div>
+        )}
       </div>
     </div>
   );
@@ -286,17 +328,58 @@ function MusicTab({ onSend }: { onSend: (sticker: string) => void }) {
 
 /* ─── Store Tab ─── */
 function StoreTab() {
-  const [downloaded, setDownloaded] = useState<Set<string>>(
-    new Set(STORE_PACKS.filter((p) => p.downloaded).map((p) => p.id))
-  );
+  const { user } = useAuth();
+  const [packs, setPacks] = useState<StorePack[]>([]);
+  const [downloaded, setDownloaded] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
 
-  const handleDownload = (id: string) => {
-    setDownloaded((prev) => {
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const { data: packsData } = await (supabase as any)
+        .from("sticker_store_packs")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: true });
+
+      if (packsData) {
+        setPacks(packsData.map((p: any) => ({
+          ...p,
+          stickers: typeof p.stickers === "string" ? JSON.parse(p.stickers) : (Array.isArray(p.stickers) ? p.stickers : []),
+        })));
+      }
+
+      if (user?.id) {
+        const { data: dlData } = await (supabase as any)
+          .from("user_downloaded_packs")
+          .select("pack_id")
+          .eq("user_id", user.id);
+        if (dlData) {
+          setDownloaded(new Set(dlData.map((d: any) => d.pack_id)));
+        }
+      }
+      setLoading(false);
+    };
+    load();
+  }, [user?.id]);
+
+  const handleDownload = async (packId: string) => {
+    if (!user?.id) return;
+    const { error } = await (supabase as any)
+      .from("user_downloaded_packs")
+      .insert({ user_id: user.id, pack_id: packId });
+    if (!error) {
+      setDownloaded((prev) => new Set([...prev, packId]));
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="pb-4">
@@ -304,7 +387,7 @@ function StoreTab() {
       <p className="text-[11px] text-muted-foreground/50 px-4 -mt-1 mb-3">Browse & download sticker packs</p>
 
       <div className="px-3 space-y-2">
-        {STORE_PACKS.map((pack) => {
+        {packs.map((pack) => {
           const isDownloaded = downloaded.has(pack.id);
           return (
             <motion.div
@@ -312,18 +395,13 @@ function StoreTab() {
               whileTap={{ scale: 0.98 }}
               className="flex items-center gap-3 p-3 rounded-2xl bg-muted/20 border border-border/10 hover:bg-muted/40 transition-colors"
             >
-              {/* Pack icon */}
-              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${pack.color} flex items-center justify-center text-2xl flex-shrink-0`}>
-                {pack.preview}
+              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${pack.gradient_color} flex items-center justify-center text-2xl flex-shrink-0`}>
+                {pack.preview_emoji}
               </div>
-
-              {/* Info */}
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-bold text-foreground">{pack.name}</p>
-                <p className="text-[11px] text-muted-foreground/50">{pack.count} stickers</p>
+                <p className="text-[11px] text-muted-foreground/50">{pack.sticker_count} stickers</p>
               </div>
-
-              {/* Download button */}
               {isDownloaded ? (
                 <div className="px-3 py-1.5 rounded-full bg-muted/60 text-muted-foreground text-[11px] font-semibold">
                   Added
@@ -341,6 +419,9 @@ function StoreTab() {
             </motion.div>
           );
         })}
+        {packs.length === 0 && (
+          <div className="py-8 text-center text-muted-foreground/40 text-xs">No packs available</div>
+        )}
       </div>
     </div>
   );
