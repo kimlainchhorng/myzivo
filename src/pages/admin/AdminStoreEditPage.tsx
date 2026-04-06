@@ -2851,7 +2851,7 @@ export default function AdminStoreEditPage() {
                 </CardContent>
               </Card>
             ) : (
-              <StorePaymentSection storeId={storeId!} />
+              <StorePaymentSection storeId={storeId!} market={form.market} />
             )}
           </TabsContent>
 
