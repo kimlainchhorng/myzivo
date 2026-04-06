@@ -2913,13 +2913,13 @@ export default function AdminStoreEditPage() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Meta Description</Label>
                   <Textarea
-                    value={form.seo_description || ""}
-                    onChange={e => updateField("seo_description", e.target.value)}
+                    value={(form as any).seo_description || ""}
+                    onChange={e => updateField("seo_description" as any, e.target.value)}
                     placeholder={form.description || "Describe your store for search engines..."}
                     rows={2}
                     maxLength={160}
                   />
-                  <p className="text-[10px] text-muted-foreground">{(form.seo_description || "").length}/160 characters</p>
+                  <p className="text-[10px] text-muted-foreground">{((form as any).seo_description || "").length}/160 characters</p>
                 </div>
               </CardContent>
             </Card>
