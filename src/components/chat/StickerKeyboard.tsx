@@ -1,4 +1,5 @@
 /**
+<<<<<<< Updated upstream
  * StickerKeyboard — iMessage 2026-style sticker/emoji panel
  * Tabs: Stickers, GIFs, Avatar, Music, Store
  * All data fetched from Supabase — no mock/hardcoded data
@@ -6,13 +7,25 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Clock, Sparkles, Image, Music, User, Store, Download, Play, Pause, Heart } from "lucide-react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
+=======
+ * StickerKeyboard — iMessage-style rich panel (stickers, GIFs, avatar, music, store, memes)
+ */
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Smile, Image as ImageIcon, UserRound, Music2, Store, Search, Sparkles } from "lucide-react";
+>>>>>>> Stashed changes
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface StickerKeyboardProps {
   open: boolean;
   onClose: () => void;
-  onSendSticker: (sticker: string) => void;
+  onSendSticker: (payload: StickerSendPayload) => void;
+}
+
+export interface StickerSendPayload {
+  text: string;
+  messageType?: "sticker" | "gif" | "text";
 }
 
 interface StickerPack {
@@ -87,6 +100,7 @@ function addRecentSticker(sticker: string) {
   localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, 30)));
 }
 
+<<<<<<< Updated upstream
 function SectionHeader({ title, icon }: { title: string; icon?: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 px-4 pt-4 pb-2">
@@ -430,6 +444,56 @@ function StoreTab() {
 /* ─── Main StickerKeyboard ─── */
 export default function StickerKeyboard({ open, onClose, onSendSticker }: StickerKeyboardProps) {
   const [packs, setPacks] = useState<StickerPack[]>([]);
+=======
+type TabKey = "stickers" | "gifs" | "avatar" | "music" | "store" | "memes";
+
+const GIF_ITEMS = [
+  { label: "Happy", emoji: "😄" },
+  { label: "Thumbs Up", emoji: "👍" },
+  { label: "Love", emoji: "😍" },
+  { label: "Dance", emoji: "💃" },
+  { label: "Laugh", emoji: "😂" },
+  { label: "Wow", emoji: "😮" },
+];
+
+const AVATAR_ITEMS = [
+  { label: "Happy", emoji: "😊" },
+  { label: "LOL", emoji: "😂" },
+  { label: "Love", emoji: "😍" },
+  { label: "Cool", emoji: "😎" },
+  { label: "Think", emoji: "🤔" },
+  { label: "Sad", emoji: "🥲" },
+  { label: "Party", emoji: "🥳" },
+  { label: "Sleep", emoji: "😴" },
+];
+
+const TRACKS = [
+  { title: "Blinding Lights", artist: "The Weeknd", duration: "3:20" },
+  { title: "Levitating", artist: "Dua Lipa", duration: "3:23" },
+  { title: "Stay", artist: "The Kid LAROI", duration: "2:21" },
+  { title: "As It Was", artist: "Harry Styles", duration: "2:47" },
+];
+
+const STORE_PACKS = [
+  { name: "Cute Cats", count: 24, emoji: "🐱" },
+  { name: "Anime Reactions", count: 32, emoji: "⚡" },
+  { name: "Travel Vibes", count: 18, emoji: "✈️" },
+];
+
+const MEME_ITEMS = [
+  { label: "No Way", emoji: "😱" },
+  { label: "Big Mood", emoji: "🫠" },
+  { label: "Chef's Kiss", emoji: "🤌" },
+  { label: "Legend", emoji: "🫡" },
+  { label: "Plot Twist", emoji: "🌀" },
+  { label: "Mic Drop", emoji: "🎤" },
+];
+
+export default function StickerKeyboard({ open, onClose, onSendSticker }: StickerKeyboardProps) {
+  const [packs, setPacks] = useState<StickerPack[]>([]);
+  const [activePack, setActivePack] = useState(0);
+  const [activeTab, setActiveTab] = useState<TabKey>("stickers");
+>>>>>>> Stashed changes
   const [recentStickers, setRecentStickers] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -457,6 +521,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
     load();
   }, [open]);
 
+<<<<<<< Updated upstream
   const handleSend = useCallback((sticker: string) => {
     addRecentSticker(sticker);
     setRecentStickers(getRecentStickers());
@@ -470,12 +535,32 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
   const handleDragEnd = useCallback((_: any, info: PanInfo) => {
     if (info.offset.y > 100) onClose();
   }, [onClose]);
+=======
+  const handleSendSticker = (sticker: string) => {
+    addRecentSticker(sticker);
+    setRecentStickers(getRecentStickers());
+    onSendSticker({ text: sticker, messageType: "sticker" });
+    onClose();
+  };
+
+  const handleQuickSend = (text: string, messageType: "gif" | "text" = "text") => {
+    onSendSticker({ text, messageType });
+    onClose();
+  };
+
+  const currentPack = packs[activePack];
+  const allStickers = currentPack?.stickers || [];
+  const displayStickers = search
+    ? allStickers.filter((s) => s.toLowerCase().includes(search.toLowerCase()))
+    : allStickers;
+>>>>>>> Stashed changes
 
   if (!open) return null;
 
   const builtinCategories = Object.keys(BUILTIN_STICKERS);
 
   return (
+<<<<<<< Updated upstream
     <motion.div
       initial={{ y: "100%" }}
       animate={{ y: 0 }}
@@ -647,5 +732,210 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
         {activeTab === "store" && <StoreTab />}
       </div>
     </motion.div>
+=======
+    <AnimatePresence>
+      <motion.div
+        initial={{ y: "100%", opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: "100%", opacity: 0 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="bg-background border-t border-border/40 rounded-t-2xl shadow-xl max-h-[72vh] overflow-y-auto"
+      >
+        {/* Header tabs */}
+        <div className="sticky top-0 bg-background/95 backdrop-blur-xl border-b border-border/20 px-3 pt-3 pb-2 z-10">
+          <div className="w-16 h-1.5 rounded-full bg-muted mx-auto mb-3" />
+          <div className="grid grid-cols-6 gap-1 items-start">
+            {[
+              { key: "stickers" as TabKey, label: "Stickers", icon: Smile },
+              { key: "gifs" as TabKey, label: "GIFs", icon: ImageIcon },
+              { key: "avatar" as TabKey, label: "Avatar", icon: UserRound },
+              { key: "music" as TabKey, label: "Music", icon: Music2 },
+              { key: "store" as TabKey, label: "Store", icon: Store },
+              { key: "memes" as TabKey, label: "Memes", icon: Sparkles },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`rounded-2xl px-2 py-2 flex flex-col items-center justify-center gap-1 transition-colors ${
+                  activeTab === tab.key ? "bg-primary/10 text-primary" : "text-muted-foreground"
+                }`}
+              >
+                <tab.icon className="w-5 h-5" />
+                <span className="text-[11px] font-medium">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="mt-2 flex justify-end">
+            <button
+              onClick={onClose}
+              className="text-primary text-sm font-semibold px-2 py-1 rounded-lg hover:bg-primary/10"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+
+        {activeTab === "stickers" && (
+          <>
+            <div className="px-3 py-2 border-b border-border/10">
+              <div className="relative">
+                <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search stickers"
+                  className="w-full h-10 rounded-full bg-muted/30 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground/60"
+                />
+              </div>
+            </div>
+
+            <div className="flex px-2 py-1.5 gap-1 overflow-x-auto scrollbar-none border-b border-border/10">
+              {recentStickers.length > 0 && (
+                <button
+                  onClick={() => setActivePack(-1)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors ${
+                    activePack === -1 ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  🕐 Recent
+                </button>
+              )}
+              {packs.map((pack, i) => (
+                <button
+                  key={pack.id}
+                  onClick={() => setActivePack(i)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors ${
+                    activePack === i ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {pack.emoji_prefix} {pack.name}
+                </button>
+              ))}
+            </div>
+
+            <div className="h-[280px] overflow-y-auto p-2">
+              <div className="grid grid-cols-8 gap-0.5">
+                {(activePack === -1 ? recentStickers : displayStickers).map((sticker, i) => (
+                  <button
+                    key={`${sticker}-${i}`}
+                    onClick={() => handleSendSticker(sticker)}
+                    className="aspect-square flex items-center justify-center text-2xl rounded-lg hover:bg-muted/60 active:scale-90 transition-all"
+                  >
+                    {sticker}
+                  </button>
+                ))}
+              </div>
+              {displayStickers.length === 0 && activePack !== -1 && (
+                <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+                  No stickers found
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {activeTab === "gifs" && (
+          <div className="p-4 space-y-3">
+            <div className="relative">
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+              <input placeholder="Search GIFs..." className="w-full h-11 rounded-full bg-muted/30 pl-9 pr-3 text-sm" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {GIF_ITEMS.map((gif) => (
+                <button
+                  key={gif.label}
+                  onClick={() => handleQuickSend(`${gif.emoji} GIF: ${gif.label}`, "gif")}
+                  className="rounded-2xl border border-border/30 p-3 text-left hover:bg-muted/30"
+                >
+                  <p className="text-2xl">{gif.emoji}</p>
+                  <p className="text-sm font-semibold mt-1">{gif.label}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "avatar" && (
+          <div className="p-4">
+            <p className="text-sm font-bold text-foreground">Your Avatar Stickers</p>
+            <p className="text-xs text-muted-foreground mt-1 mb-4">Tap a mood to send an avatar sticker</p>
+            <div className="grid grid-cols-4 gap-3">
+              {AVATAR_ITEMS.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => handleQuickSend(`${item.emoji} ${item.label}`)}
+                  className="rounded-2xl bg-muted/30 p-3 hover:bg-muted/50"
+                >
+                  <p className="text-3xl">{item.emoji}</p>
+                  <p className="text-xs font-medium mt-2 truncate">{item.label}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "music" && (
+          <div className="p-4 space-y-3">
+            <p className="text-sm font-bold text-foreground">Share a Track</p>
+            {TRACKS.map((track) => (
+              <div key={track.title} className="rounded-2xl border border-border/30 px-3 py-2.5 flex items-center gap-3">
+                <span className="text-2xl">🎵</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold truncate">{track.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">{track.artist} · {track.duration}</p>
+                </div>
+                <button
+                  onClick={() => handleQuickSend(`🎵 ${track.title} — ${track.artist}`)}
+                  className="h-8 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+                >
+                  Send
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === "store" && (
+          <div className="p-4 space-y-3">
+            <p className="text-sm font-bold text-foreground">Sticker Store</p>
+            {STORE_PACKS.map((pack) => (
+              <div key={pack.name} className="rounded-2xl border border-border/30 px-3 py-3 flex items-center gap-3">
+                <span className="text-3xl">{pack.emoji}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold truncate">{pack.name}</p>
+                  <p className="text-xs text-muted-foreground">{pack.count} stickers</p>
+                </div>
+                <button
+                  onClick={() => handleQuickSend(`🛍️ Sticker pack: ${pack.name}`)}
+                  className="h-8 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+                >
+                  Get
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === "memes" && (
+          <div className="p-4 space-y-3">
+            <p className="text-sm font-bold text-foreground">Meme Reactions</p>
+            <p className="text-xs text-muted-foreground">New tab added for quick meme-style reactions.</p>
+            <div className="grid grid-cols-2 gap-3">
+              {MEME_ITEMS.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => handleQuickSend(`${item.emoji} ${item.label}`)}
+                  className="rounded-2xl border border-border/30 p-3 text-left hover:bg-muted/30"
+                >
+                  <p className="text-2xl">{item.emoji}</p>
+                  <p className="text-sm font-semibold mt-1">{item.label}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </motion.div>
+    </AnimatePresence>
+>>>>>>> Stashed changes
   );
 }
