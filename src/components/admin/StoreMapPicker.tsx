@@ -121,7 +121,7 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, cur
     setSearching(true);
     try {
       const { data, error } = await supabase.functions.invoke("maps-autocomplete", {
-        body: { input: query, proximity: coords, country: "kh" },
+        body: { input: query, proximity: coords, country: marketConfig.country },
       });
       if (!error && data?.suggestions) {
         setSuggestions(data.suggestions.map((p: any) => ({
