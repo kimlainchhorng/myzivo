@@ -154,9 +154,7 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, cur
     setShowSuggestions(false);
     setGeocoding(true);
     try {
-      const searchAddress = /cambodia/i.test(normalizedQuery)
-        ? normalizedQuery
-        : `${normalizedQuery}, Phnom Penh, Cambodia`;
+      const searchAddress = `${normalizedQuery}, ${marketConfig.label}`;
 
       const { data, error } = await supabase.functions.invoke("maps-geocode", {
         body: { address: searchAddress },
