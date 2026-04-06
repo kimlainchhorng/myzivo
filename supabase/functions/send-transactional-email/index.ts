@@ -222,50 +222,43 @@ Deno.serve(async (req) => {
       ? template.subject(templateData)
       : template.subject
 
-  // 5. Send the email directly via the Lovable Email API
-  const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')
-  if (!lovableApiKey) {
-    console.error('LOVABLE_API_KEY not set — cannot send email')
+  // 5. Send the email directly via Resend
+  const resendApiKey = Deno.env.get('RESEND_API_KEY')
+  if (!resendApiKey) {
+    console.error('RESEND_API_KEY not set — cannot send email')
     return new Response(
       JSON.stringify({ error: 'Email service not configured' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 
-  const emailPayload = {
-    to: effectiveRecipient,
-    from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-    sender_domain: SENDER_DOMAIN,
-    subject: resolvedSubject,
-    html,
-    text: plainText,
-    purpose: 'transactional',
-    label: templateName,
-    idempotency_key: idempotencyKey,
-  }
-
   try {
-    const callbackUrl = `https://api.lovable.dev/v1/emails/send`
-    const resp = await fetch(callbackUrl, {
+    const resp = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${resendApiKey}`,
       },
-      body: JSON.stringify(emailPayload),
+      body: JSON.stringify({
+        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+        to: [effectiveRecipient],
+        subject: resolvedSubject,
+        html,
+        text: plainText,
+      }),
     })
 
+    const result = await resp.json()
+
     if (!resp.ok) {
-      const errBody = await resp.text()
-      console.error('Lovable Email API error', { status: resp.status, body: errBody })
+      console.error('Resend API error', { status: resp.status, body: result })
       return new Response(
-        JSON.stringify({ error: 'Failed to send email', detail: errBody }),
+        JSON.stringify({ error: 'Failed to send email', detail: result }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const result = await resp.json()
-    console.log('Transactional email sent', { templateName, effectiveRecipient, result })
+    console.log('Transactional email sent', { templateName, effectiveRecipient, id: result.id })
 
     return new Response(
       JSON.stringify({ success: true, sent: true }),
