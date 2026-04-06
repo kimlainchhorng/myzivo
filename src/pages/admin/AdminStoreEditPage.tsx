@@ -3711,8 +3711,9 @@ export default function AdminStoreEditPage() {
                 </div>
               )}
             </div>
+            )}
 
-            {form.category !== "car-dealership" && (
+            {form.category !== "car-dealership" && form.category !== "auto-repair" && (
               <>
                 {/* Unit selector */}
                 <div className="space-y-2">
