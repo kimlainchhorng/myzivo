@@ -66,7 +66,8 @@ export default function ServiceBookingPage() {
       // Auto-select service from URL query param
       const preselect = searchParams.get("service");
       if (preselect && p) {
-        const match = p.find((svc: any) => svc.name === preselect);
+        const q = preselect.toLowerCase();
+        const match = p.find((svc: any) => svc.name === preselect || svc.name?.toLowerCase() === q);
         if (match) {
           setForm(f => ({ ...f, product_id: match.id, service_name: match.name }));
         }
