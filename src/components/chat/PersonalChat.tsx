@@ -1248,6 +1248,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             open={showStickerKeyboard}
             onClose={() => setShowStickerKeyboard(false)}
             onSendSticker={(payload) => { void handleQuickPanelSend(payload); }}
+            onStartVoice={() => voice.startRecording()}
+            onOpenCamera={() => fileInputRef.current?.click()}
           />
         )}
       </AnimatePresence>
