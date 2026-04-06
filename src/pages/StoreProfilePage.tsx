@@ -626,15 +626,122 @@ export default function StoreProfilePage() {
         <div className="flex items-center gap-1.5">
           <Sparkles className="h-3.5 w-3.5 text-primary" />
           <h2 className="text-sm font-bold text-foreground">
-            {selectedCategory ? localizedName(selectedCategory, currentLanguage) : t("store.all_products")}
+            {store.category === "auto-repair"
+              ? (selectedCategory ? localizedName(selectedCategory, currentLanguage) : "All Services")
+              : (selectedCategory ? localizedName(selectedCategory, currentLanguage) : t("store.all_products"))}
           </h2>
         </div>
         <span className="text-[10px] text-muted-foreground font-medium">
-          {products.length} {t("store.items")}
+          {products.length} {store.category === "auto-repair" ? "services" : t("store.items")}
         </span>
       </div>
 
-      {/* ── Products Grid - 3D Holographic Cards ── */}
+      {/* ── Auto Repair Services List ── */}
+      {store.category === "auto-repair" ? (
+        <div className="px-4 pt-1 pb-40 space-y-3">
+          {loadingProducts ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : products.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <Package className="h-12 w-12 text-muted-foreground/20" />
+              <p className="text-sm text-muted-foreground">No services available</p>
+            </div>
+          ) : (
+            (() => {
+              const grouped = !selectedCategory
+                ? categories.reduce<Record<string, typeof products>>((acc, cat) => {
+                    acc[cat] = products.filter((p: any) => p.category === cat);
+                    return acc;
+                  }, {})
+                : { [selectedCategory]: products };
+              if (!selectedCategory) {
+                const uncategorized = products.filter((p: any) => !p.category || !categories.includes(p.category));
+                if (uncategorized.length > 0) grouped["Other"] = uncategorized;
+              }
+              return Object.entries(grouped).map(([cat, catProducts]) => {
+                if (!catProducts.length) return null;
+                return (
+                  <div key={cat} className="space-y-2">
+                    {!selectedCategory && Object.keys(grouped).length > 1 && (
+                      <div className="flex items-center gap-2 pt-2">
+                        <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Package className="h-3 w-3 text-primary" />
+                        </div>
+                        <h3 className="text-xs font-bold text-foreground">{cat}</h3>
+                        <span className="text-[10px] text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded-full">{catProducts.length}</span>
+                        <div className="flex-1 h-px bg-border/30" />
+                      </div>
+                    )}
+                    {catProducts.map((service) => {
+                      const p = service as any;
+                      return (
+                        <motion.div
+                          key={service.id}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden"
+                        >
+                          <div className="flex gap-3 p-3">
+                            {/* Service image */}
+                            {service.image_url ? (
+                              <div className="h-16 w-16 rounded-lg overflow-hidden bg-muted/10 shrink-0">
+                                <img src={service.image_url} alt={service.name} className="h-full w-full object-cover" loading="lazy" />
+                              </div>
+                            ) : (
+                              <div className="h-16 w-16 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                                <Package className="h-6 w-6 text-primary/30" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground leading-tight">{localizedName(service.name, currentLanguage)}</p>
+                              {service.description && (
+                                <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{service.description}</p>
+                              )}
+                              <div className="flex items-center gap-2 mt-1.5">
+                                {p.unit && (
+                                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 gap-0.5">
+                                    <Clock className="h-2.5 w-2.5" />
+                                    {p.unit}
+                                  </Badge>
+                                )}
+                                {p.category && (
+                                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4">
+                                    {p.category}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end justify-between shrink-0">
+                              <div className="text-right">
+                                <p className="text-sm font-bold text-foreground">${service.price.toFixed(2)}</p>
+                                <p className="text-[9px] text-muted-foreground">starting</p>
+                              </div>
+                              <motion.button
+                                whileTap={{ scale: 0.92 }}
+                                onClick={() => {
+                                  handleAddToCart(service);
+                                  toast.success(`${service.name} added to booking`, { icon: "🔧" });
+                                }}
+                                className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-bold shadow-sm"
+                              >
+                                Book
+                              </motion.button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                );
+              });
+            })()
+          )}
+        </div>
+      ) : (
+
+      /* ── Products Grid - 3D Holographic Cards (Grocery) ── */
       <div className="px-3 pt-1 pb-40" style={{ perspective: "1200px" }}>
         {loadingProducts ? (
           <div className="flex items-center justify-center py-12">
@@ -884,6 +991,7 @@ export default function StoreProfilePage() {
           })()
         )}
       </div>
+      )}
 
       {/* ── Floating Cart Bar - Premium 3D ── */}
       <AnimatePresence>
@@ -908,8 +1016,8 @@ export default function StoreProfilePage() {
                     <ShoppingCart className="h-4 w-4" />
                   </div>
                   <div className="text-left">
-                    <p className="text-[13px] font-extrabold">{t("store.view_cart")}</p>
-                    <p className="text-[10px] font-medium opacity-80">{cart.itemCount} {t("store.items")}</p>
+                    <p className="text-[13px] font-extrabold">{store?.category === "auto-repair" ? "View Booking" : t("store.view_cart")}</p>
+                    <p className="text-[10px] font-medium opacity-80">{cart.itemCount} {store?.category === "auto-repair" ? "services" : t("store.items")}</p>
                   </div>
                 </div>
                 {/* Right: price */}
