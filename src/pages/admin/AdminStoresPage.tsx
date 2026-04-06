@@ -149,7 +149,7 @@ export default function AdminStoresPage() {
       category: store.category || "grocery",
       address: store.address || "",
       phone: store.phone || "",
-      hours: store.hours || "",
+      hours: store.hours || JSON.stringify(DEFAULT_SCHEDULE),
       rating: store.rating || 0,
       delivery_min: store.delivery_min || 30,
       is_active: store.is_active ?? true,
