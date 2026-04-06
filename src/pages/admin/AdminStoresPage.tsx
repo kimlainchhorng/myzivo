@@ -2,7 +2,7 @@ import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Store, Plus, Edit, Trash2, Eye, Upload, Loader2, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Store, Plus, Edit, Trash2, Eye, Upload, Loader2, X, ChevronDown, ChevronUp, Mail, UserPlus, Link2, Copy, Check } from "lucide-react";
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
