@@ -19,6 +19,8 @@ import serviceLights from "@/assets/service-lights.jpg";
 import serviceWiper from "@/assets/service-wiper.jpg";
 import serviceGasket from "@/assets/service-gasket.jpg";
 import serviceFuel from "@/assets/service-fuel.jpg";
+import serviceBodyPaint from "@/assets/service-body-paint.jpg";
+import serviceDetailing from "@/assets/service-detailing.jpg";
 
 /**
  * Each entry: [keyword to match in service name (lowercase), image path]
@@ -101,6 +103,25 @@ const SERVICE_IMAGE_RULES: [string, string][] = [
   // Fuel
   ["fuel", serviceFuel],
   ["injector", serviceFuel],
+
+  // Body & Paint
+  ["paint", serviceBodyPaint],
+  ["dent", serviceBodyPaint],
+  ["bumper", serviceBodyPaint],
+  ["body", serviceBodyPaint],
+
+  // Detailing
+  ["detail", serviceDetailing],
+  ["polish", serviceDetailing],
+  ["wax", serviceDetailing],
+
+  // Additional mappings
+  ["cv axle", serviceTransmission],
+  ["differential", serviceTransmission],
+  ["thermostat", serviceCoolant],
+  ["radiator", serviceCoolant],
+  ["wheel bearing", serviceSuspension],
+  ["compressor", serviceAC],
 
   // General engine fallback
   ["engine", serviceEngine],
