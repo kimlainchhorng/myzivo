@@ -74,7 +74,7 @@ interface Suggestion {
   description: string;
 }
 
-export default function StoreMapPicker({ open, onOpenChange, currentAddress, currentCoords, onConfirm }: StoreMapPickerProps) {
+export default function StoreMapPicker({ open, onOpenChange, currentAddress, currentCoords, onConfirm, market }: StoreMapPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
