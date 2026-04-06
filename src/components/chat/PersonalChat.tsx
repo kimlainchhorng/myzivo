@@ -636,7 +636,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-2xl border-b border-border/8 safe-area-top">
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-2xl border-b border-border/5 safe-area-top">
         <div className="px-2 py-2.5 flex items-center gap-3">
           <button onClick={onClose} className="min-h-[44px] min-w-[36px] flex items-center justify-center -ml-1 active:scale-90 transition-transform">
             <ArrowLeft className="h-5 w-5 text-foreground" />
