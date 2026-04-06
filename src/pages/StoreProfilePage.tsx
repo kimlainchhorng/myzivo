@@ -758,8 +758,7 @@ export default function StoreProfilePage() {
                               <motion.button
                                 whileTap={{ scale: 0.92 }}
                                 onClick={() => {
-                                  handleAddToCart(service);
-                                  toast.success(`${service.name} added to booking`, { icon: "🔧" });
+                                  navigate(`/book/${slug}?service=${encodeURIComponent(service.name)}`);
                                 }}
                                 className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-bold shadow-sm"
                               >
