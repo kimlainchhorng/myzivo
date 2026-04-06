@@ -93,7 +93,7 @@ function formatMsgTime(dateStr: string) {
   return format(d, "MMM d, h:mm a");
 }
 
-export default function PersonalChat({ recipientId, recipientName, recipientAvatar, onClose }: PersonalChatProps) {
+export default function PersonalChat({ recipientId, recipientName, recipientAvatar, onClose, autoStartCall, onCallStarted }: PersonalChatProps) {
   const { user } = useAuth();
 
   // Notify global listener that this chat is open
