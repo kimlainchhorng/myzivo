@@ -403,64 +403,81 @@ export default function AdminStoresPage() {
               <Label>Address</Label>
               <Input value={form.address} onChange={e => updateField("address", e.target.value)} placeholder="Store address" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Phone</Label>
-                <div className="flex gap-1">
-                  <span className="flex h-10 items-center rounded-md border border-input bg-muted px-2 text-sm text-muted-foreground whitespace-nowrap">
-                    {{ KH: "+855", US: "+1", VN: "+84", TH: "+66", CN: "+86", KR: "+82", JP: "+81", IN: "+91", GB: "+44", AU: "+61", SG: "+65", MY: "+60", PH: "+63", ID: "+62", LA: "+856", MM: "+95" }[form.market] || "+855"}
-                  </span>
-                  <Input value={form.phone} onChange={e => updateField("phone", e.target.value)} placeholder="23 900 888" className="flex-1" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Hours</Label>
-                <div className="flex items-center gap-1">
-                  <select
-                    value={form.hours?.split("–")[0]?.trim() || "7:00 AM"}
-                    onChange={e => {
-                      const close = form.hours?.split("–")[1]?.trim() || "10:00 PM";
-                      updateField("hours", `${e.target.value}–${close}`);
-                    }}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    {Array.from({ length: 48 }, (_, i) => {
-                      const h = Math.floor(i / 2);
-                      const m = i % 2 === 0 ? "00" : "30";
-                      const ampm = h < 12 ? "AM" : "PM";
-                      const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-                      return `${h12}:${m} ${ampm}`;
-                    }).map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                  <span className="text-muted-foreground text-sm">to</span>
-                  <select
-                    value={form.hours?.split("–")[1]?.trim() || "10:00 PM"}
-                    onChange={e => {
-                      const open = form.hours?.split("–")[0]?.trim() || "7:00 AM";
-                      updateField("hours", `${open}–${e.target.value}`);
-                    }}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    {Array.from({ length: 48 }, (_, i) => {
-                      const h = Math.floor(i / 2);
-                      const m = i % 2 === 0 ? "00" : "30";
-                      const ampm = h < 12 ? "AM" : "PM";
-                      const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-                      return `${h12}:${m} ${ampm}`;
-                    }).map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
+            <div className="space-y-2">
+              <Label>Phone</Label>
+              <div className="flex gap-1">
+                <span className="flex h-10 items-center rounded-md border border-input bg-muted px-2 text-sm text-muted-foreground whitespace-nowrap">
+                  {{ KH: "+855", US: "+1", VN: "+84", TH: "+66", CN: "+86", KR: "+82", JP: "+81", IN: "+91", GB: "+44", AU: "+61", SG: "+65", MY: "+60", PH: "+63", ID: "+62", LA: "+856", MM: "+95" }[form.market] || "+855"}
+                </span>
+                <Input value={form.phone} onChange={e => updateField("phone", e.target.value)} placeholder="23 900 888" className="flex-1" />
               </div>
             </div>
+
+            {/* Weekly Hours Schedule */}
+            <div className="space-y-2">
+              <Label>Operating Hours</Label>
+              <div className="border border-border rounded-lg overflow-hidden">
+                {(() => {
+                  const schedule = parseSchedule(form.hours);
+                  const timeOptions = Array.from({ length: 48 }, (_, i) => {
+                    const h = Math.floor(i / 2);
+                    const m = i % 2 === 0 ? "00" : "30";
+                    const ampm = h < 12 ? "AM" : "PM";
+                    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                    return `${h12}:${m} ${ampm}`;
+                  });
+                  const updateDay = (day: string, field: string, value: any) => {
+                    const updated = { ...schedule, [day]: { ...schedule[day], [field]: value } };
+                    updateField("hours", JSON.stringify(updated));
+                  };
+                  return DAYS_OF_WEEK.map((day, idx) => (
+                    <div key={day} className={`flex items-center gap-2 px-3 py-2 ${idx > 0 ? "border-t border-border" : ""} ${schedule[day]?.closed ? "bg-muted/50" : ""}`}>
+                      <div className="w-16 flex-shrink-0">
+                        <span className="text-xs font-medium">{DAY_LABELS[day].slice(0, 3)}</span>
+                      </div>
+                      <Switch
+                        checked={!schedule[day]?.closed}
+                        onCheckedChange={(open) => updateDay(day, "closed", !open)}
+                        className="scale-75"
+                      />
+                      {schedule[day]?.closed ? (
+                        <span className="text-xs text-muted-foreground italic">Closed</span>
+                      ) : (
+                        <div className="flex items-center gap-1 flex-1">
+                          <select
+                            value={schedule[day]?.open || "8:00 AM"}
+                            onChange={e => updateDay(day, "open", e.target.value)}
+                            className="flex h-8 rounded-md border border-input bg-background px-1.5 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          >
+                            {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                          <span className="text-xs text-muted-foreground">to</span>
+                          <select
+                            value={schedule[day]?.close || "5:00 PM"}
+                            onChange={e => updateDay(day, "close", e.target.value)}
+                            className="flex h-8 rounded-md border border-input bg-background px-1.5 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          >
+                            {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Rating</Label>
                 <Input type="number" step="0.1" min="0" max="5" value={form.rating} onChange={e => updateField("rating", parseFloat(e.target.value) || 0)} />
               </div>
-              <div className="space-y-2">
-                <Label>Delivery Min (minutes)</Label>
-                <Input type="number" value={form.delivery_min} onChange={e => updateField("delivery_min", parseInt(e.target.value) || 0)} />
-              </div>
+              {FOOD_CATEGORIES.includes(form.category) && (
+                <div className="space-y-2">
+                  <Label>Delivery Time (minutes)</Label>
+                  <Input type="number" value={form.delivery_min} onChange={e => updateField("delivery_min", parseInt(e.target.value) || 0)} />
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <Switch checked={form.is_active} onCheckedChange={v => updateField("is_active", v)} />
