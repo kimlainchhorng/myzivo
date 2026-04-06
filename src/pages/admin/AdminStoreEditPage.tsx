@@ -2265,7 +2265,10 @@ export default function AdminStoreEditPage() {
           {isAdmin && (
             <TabsList>
               <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {t("admin.store.profile")}</TabsTrigger>
-              <TabsTrigger value="products" className="gap-1.5"><Package className="h-3.5 w-3.5" /> {t("admin.store.products")} ({products.length})</TabsTrigger>
+              <TabsTrigger value="products" className="gap-1.5">
+                <Package className="h-3.5 w-3.5" />
+                {form.category === "auto-repair" ? "Bookings" : t("admin.store.products")} ({products.length})
+              </TabsTrigger>
               {form.category === "car-dealership" ? (
                 <TabsTrigger value="payment" className="gap-1.5"><CalendarIcon className="h-3.5 w-3.5" /> {t("admin.store.booking_appointment")}</TabsTrigger>
               ) : (
@@ -2836,9 +2839,9 @@ export default function AdminStoreEditPage() {
           <TabsContent value="products">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base">{t("admin.store.products")}</CardTitle>
+                <CardTitle className="text-base">{form.category === "auto-repair" ? "Bookings" : t("admin.store.products")}</CardTitle>
                 <Button size="sm" onClick={openAddProduct} className="gap-1.5">
-                  <Plus className="h-4 w-4" /> {t("admin.store.add_product")}
+                  <Plus className="h-4 w-4" /> {form.category === "auto-repair" ? "Add Service" : t("admin.store.add_product")}
                 </Button>
               </CardHeader>
               <CardContent>
@@ -2849,9 +2852,9 @@ export default function AdminStoreEditPage() {
                 ) : products.length === 0 ? (
                   <div className="text-center py-12 space-y-3">
                     <Package className="h-10 w-10 text-muted-foreground/20 mx-auto" />
-                    <p className="text-muted-foreground">{t("admin.store.no_products")}</p>
+                    <p className="text-muted-foreground">{form.category === "auto-repair" ? "No bookings yet" : t("admin.store.no_products")}</p>
                     <Button variant="outline" size="sm" onClick={openAddProduct} className="gap-1.5">
-                      <Plus className="h-4 w-4" /> {t("admin.store.add_first_product")}
+                      <Plus className="h-4 w-4" /> {form.category === "auto-repair" ? "Add First Service" : t("admin.store.add_first_product")}
                     </Button>
                   </div>
                 ) : (
@@ -3112,7 +3115,7 @@ export default function AdminStoreEditPage() {
       <Dialog open={productDialog} onOpenChange={setProductDialog}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingProduct ? "Edit Product" : "Add Product"}</DialogTitle>
+            <DialogTitle>{editingProduct ? (form.category === "auto-repair" ? "Edit Service" : "Edit Product") : (form.category === "auto-repair" ? "Add Service" : "Add Product")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {form.category !== "car-dealership" && (
