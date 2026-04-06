@@ -3118,7 +3118,7 @@ export default function AdminStoreEditPage() {
             <DialogTitle>{editingProduct ? (form.category === "auto-repair" ? "Edit Service" : "Edit Product") : (form.category === "auto-repair" ? "Add Service" : "Add Product")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            {form.category !== "car-dealership" && (
+            {form.category !== "car-dealership" && form.category !== "auto-repair" && (
               <>
                 <div className="space-y-2">
                   <Label>Product Name *</Label>
