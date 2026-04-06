@@ -695,16 +695,34 @@ export default function StoreSetup() {
               </motion.div>
             </AnimatePresence>
 
+            {/* Auto-save indicator */}
+            {lastSaved && (
+              <p className="text-white/20 text-[10px] text-center mt-4">
+                Draft saved {lastSaved.toLocaleTimeString()}
+              </p>
+            )}
+
             {/* Navigation */}
-            <div className="flex items-center justify-between mt-8 pt-5 border-t border-white/[0.08]">
-              {step > 1 ? (
-                <Button variant="ghost" onClick={() => setStep(s => s - 1)} className="text-white/50 hover:text-white hover:bg-white/[0.08] rounded-xl h-10 px-4 text-[13px]">
-                  <ArrowLeft className="w-4 h-4 mr-1.5" /> Back
+            <div className="flex items-center justify-between mt-6 pt-5 border-t border-white/[0.08]">
+              <div className="flex items-center gap-2">
+                {step > 1 && (
+                  <Button variant="ghost" onClick={() => setStep(s => s - 1)} className="text-white/50 hover:text-white hover:bg-white/[0.08] rounded-xl h-10 px-4 text-[13px]">
+                    <ArrowLeft className="w-4 h-4 mr-1.5" /> Back
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  onClick={handleSaveAndExit}
+                  disabled={savingDraft}
+                  className="text-white/40 hover:text-white hover:bg-white/[0.08] rounded-xl h-10 px-4 text-[13px]"
+                >
+                  {savingDraft ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
+                  Save & Exit
                 </Button>
-              ) : <div />}
+              </div>
 
               {step < 4 ? (
-                <Button onClick={() => setStep(s => s + 1)} disabled={!canProceed()} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-10 px-6 text-[13px] font-semibold shadow-lg shadow-primary/20">
+                <Button onClick={() => goToStep(step + 1)} disabled={!canProceed()} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-10 px-6 text-[13px] font-semibold shadow-lg shadow-primary/20">
                   Next <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
               ) : (
