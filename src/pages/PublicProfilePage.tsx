@@ -498,7 +498,7 @@ export default function PublicProfilePage() {
 
             {/* Actions */}
             {!isOwnProfile && user && (
-              <div className="flex gap-3 mt-5 w-full max-w-xs">
+              <div className="flex gap-2.5 mt-5 w-full max-w-sm px-2">
                 <motion.button whileTap={{ scale: 0.95 }} onClick={() => followMutation.mutate()} disabled={followMutation.isPending}
                   className={`flex-1 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${isFollowing ? "bg-muted text-foreground border border-border" : "bg-primary text-primary-foreground"}`}>
                   <Heart className={`h-4 w-4 ${isFollowing ? "fill-primary text-primary" : ""}`} />
