@@ -118,15 +118,20 @@ export default function ChatHubPage() {
     verify();
   }, [searchParams, user]);
 
-  // Handle deep-link from profile page chat button OR share-to-chat
+  // Handle deep-link from profile page chat button OR share-to-chat OR start call
+  const [pendingCall, setPendingCall] = useState<"voice" | "video" | null>(null);
   useEffect(() => {
     const state = location.state as {
       openChat?: { recipientId: string; recipientName: string; recipientAvatar?: string | null };
+      startCall?: "voice" | "video";
       shareUrl?: string;
       shareText?: string;
     } | null;
     if (state?.openChat) {
       setOpenPersonalChat({ id: state.openChat.recipientId, name: state.openChat.recipientName, avatar: state.openChat.recipientAvatar });
+      if (state.startCall) {
+        setPendingCall(state.startCall);
+      }
       window.history.replaceState({}, document.title);
     }
     if (state?.shareUrl) {
