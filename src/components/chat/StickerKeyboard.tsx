@@ -1,8 +1,13 @@
 /**
+<<<<<<< Updated upstream
  * StickerKeyboard — original Zivo chat extras panel (not a third-party clone)
+=======
+ * StickerKeyboard — iMessage-style rich panel (stickers, GIFs, avatar, music, store, memes)
+>>>>>>> Stashed changes
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+<<<<<<< Updated upstream
 import {
   Smile,
   Image as ImageIcon,
@@ -19,6 +24,9 @@ import {
   Check,
   Rocket,
 } from "lucide-react";
+=======
+import { X, Smile, Image as ImageIcon, UserRound, Music2, Store, Search, Sparkles } from "lucide-react";
+>>>>>>> Stashed changes
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -191,9 +199,58 @@ function formatSeconds(total: number): string {
   return `${minutes}:${seconds}`;
 }
 
+type TabKey = "stickers" | "gifs" | "avatar" | "music" | "store" | "memes";
+
+const GIF_ITEMS = [
+  { label: "Happy", emoji: "😄" },
+  { label: "Thumbs Up", emoji: "👍" },
+  { label: "Love", emoji: "😍" },
+  { label: "Dance", emoji: "💃" },
+  { label: "Laugh", emoji: "😂" },
+  { label: "Wow", emoji: "😮" },
+];
+
+const AVATAR_ITEMS = [
+  { label: "Happy", emoji: "😊" },
+  { label: "LOL", emoji: "😂" },
+  { label: "Love", emoji: "😍" },
+  { label: "Cool", emoji: "😎" },
+  { label: "Think", emoji: "🤔" },
+  { label: "Sad", emoji: "🥲" },
+  { label: "Party", emoji: "🥳" },
+  { label: "Sleep", emoji: "😴" },
+];
+
+const TRACKS = [
+  { title: "Blinding Lights", artist: "The Weeknd", duration: "3:20" },
+  { title: "Levitating", artist: "Dua Lipa", duration: "3:23" },
+  { title: "Stay", artist: "The Kid LAROI", duration: "2:21" },
+  { title: "As It Was", artist: "Harry Styles", duration: "2:47" },
+];
+
+const STORE_PACKS = [
+  { name: "Cute Cats", count: 24, emoji: "🐱" },
+  { name: "Anime Reactions", count: 32, emoji: "⚡" },
+  { name: "Travel Vibes", count: 18, emoji: "✈️" },
+];
+
+const MEME_ITEMS = [
+  { label: "No Way", emoji: "😱" },
+  { label: "Big Mood", emoji: "🫠" },
+  { label: "Chef's Kiss", emoji: "🤌" },
+  { label: "Legend", emoji: "🫡" },
+  { label: "Plot Twist", emoji: "🌀" },
+  { label: "Mic Drop", emoji: "🎤" },
+];
+
 export default function StickerKeyboard({ open, onClose, onSendSticker }: StickerKeyboardProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("stickers");
   const [activePack, setActivePack] = useState(0);
+<<<<<<< Updated upstream
+=======
+  const [activeTab, setActiveTab] = useState<TabKey>("stickers");
+  const [recentStickers, setRecentStickers] = useState<string[]>([]);
+>>>>>>> Stashed changes
   const [search, setSearch] = useState("");
   const [gifSearch, setGifSearch] = useState("");
   const [avatarSearch, setAvatarSearch] = useState("");
@@ -260,6 +317,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
     void loadPacks();
   }, [open]);
 
+<<<<<<< Updated upstream
   useEffect(() => {
     localStorage.setItem(LAST_TAB_KEY, activeTab);
   }, [activeTab]);
@@ -436,6 +494,25 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
       })
       .filter(Boolean) as TrackItem[];
   }, [recentTracks]);
+=======
+  const handleSendSticker = (sticker: string) => {
+    addRecentSticker(sticker);
+    setRecentStickers(getRecentStickers());
+    onSendSticker({ text: sticker, messageType: "sticker" });
+    onClose();
+  };
+
+  const handleQuickSend = (text: string, messageType: "gif" | "text" = "text") => {
+    onSendSticker({ text, messageType });
+    onClose();
+  };
+
+  const currentPack = packs[activePack];
+  const allStickers = currentPack?.stickers || [];
+  const displayStickers = search
+    ? allStickers.filter((s) => s.toLowerCase().includes(search.toLowerCase()))
+    : allStickers;
+>>>>>>> Stashed changes
 
   if (!open) return null;
 
@@ -446,11 +523,20 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: "100%", opacity: 0 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
+<<<<<<< Updated upstream
         className="bg-background border-t border-border/40 rounded-t-3xl shadow-xl max-h-[72vh] overflow-y-auto"
       >
         <div className="sticky top-0 bg-background/95 backdrop-blur-xl border-b border-border/20 px-3 pt-3 pb-2 z-10">
           <div className="w-16 h-1.5 rounded-full bg-muted mx-auto mb-3" />
           <div className="grid grid-cols-7 gap-1 items-start">
+=======
+        className="bg-background border-t border-border/40 rounded-t-2xl shadow-xl max-h-[72vh] overflow-y-auto"
+      >
+        {/* Header tabs */}
+        <div className="sticky top-0 bg-background/95 backdrop-blur-xl border-b border-border/20 px-3 pt-3 pb-2 z-10">
+          <div className="w-16 h-1.5 rounded-full bg-muted mx-auto mb-3" />
+          <div className="grid grid-cols-6 gap-1 items-start">
+>>>>>>> Stashed changes
             {[
               { key: "stickers" as TabKey, label: "Stickers", icon: Smile },
               { key: "gifs" as TabKey, label: "GIFs", icon: ImageIcon },
@@ -458,7 +544,10 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
               { key: "music" as TabKey, label: "Music", icon: Music2 },
               { key: "store" as TabKey, label: "Store", icon: Store },
               { key: "memes" as TabKey, label: "Memes", icon: Sparkles },
+<<<<<<< Updated upstream
               { key: "future" as TabKey, label: "Future", icon: Rocket },
+=======
+>>>>>>> Stashed changes
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -466,8 +555,11 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                 className={`rounded-2xl px-2 py-2 flex flex-col items-center justify-center gap-1 transition-colors ${
                   activeTab === tab.key ? "bg-primary/10 text-primary" : "text-muted-foreground"
                 }`}
+<<<<<<< Updated upstream
                 title={tab.label}
                 aria-label={tab.label}
+=======
+>>>>>>> Stashed changes
               >
                 <tab.icon className="w-5 h-5" />
                 <span className="text-[11px] font-medium">{tab.label}</span>
@@ -496,6 +588,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                   className="w-full h-10 rounded-full bg-muted/30 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground/60"
                 />
               </div>
+<<<<<<< Updated upstream
               <div className="flex items-center justify-between mt-2 text-[11px] text-muted-foreground">
                 <span>{activePack === -1 ? recentStickers.length : filteredStickers.length} items</span>
                 <div className="flex items-center gap-1.5">
@@ -515,6 +608,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                   )}
                 </div>
               </div>
+=======
+>>>>>>> Stashed changes
             </div>
 
             <div className="flex px-2 py-1.5 gap-1 overflow-x-auto scrollbar-none border-b border-border/10">
@@ -525,7 +620,11 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                     activePack === -1 ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
+<<<<<<< Updated upstream
                   Recent
+=======
+                  🕐 Recent
+>>>>>>> Stashed changes
                 </button>
               )}
               {packs.map((pack, i) => (
@@ -543,18 +642,32 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
 
             <div className="h-[280px] overflow-y-auto p-2">
               <div className="grid grid-cols-8 gap-0.5">
+<<<<<<< Updated upstream
                 {(activePack === -1 ? recentStickers : filteredStickers).map((sticker, i) => (
                   <button
                     key={`${sticker}-${i}`}
                     onClick={() => sendSticker(sticker)}
+=======
+                {(activePack === -1 ? recentStickers : displayStickers).map((sticker, i) => (
+                  <button
+                    key={`${sticker}-${i}`}
+                    onClick={() => handleSendSticker(sticker)}
+>>>>>>> Stashed changes
                     className="aspect-square flex items-center justify-center text-2xl rounded-lg hover:bg-muted/60 active:scale-90 transition-all"
                   >
                     {sticker}
                   </button>
                 ))}
               </div>
+<<<<<<< Updated upstream
               {(activePack !== -1 && filteredStickers.length === 0) && (
                 <div className="flex items-center justify-center h-full text-xs text-muted-foreground">No stickers found</div>
+=======
+              {displayStickers.length === 0 && activePack !== -1 && (
+                <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+                  No stickers found
+                </div>
+>>>>>>> Stashed changes
               )}
             </div>
           </>
@@ -564,6 +677,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
           <div className="p-4 space-y-3">
             <div className="relative">
               <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+<<<<<<< Updated upstream
               <input
                 value={gifSearch}
                 onChange={(e) => setGifSearch(e.target.value)}
@@ -589,6 +703,15 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                 <button
                   key={gif.label}
                   onClick={() => quickSend(`${gif.emoji} GIF: ${gif.label}`, "gif")}
+=======
+              <input placeholder="Search GIFs..." className="w-full h-11 rounded-full bg-muted/30 pl-9 pr-3 text-sm" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {GIF_ITEMS.map((gif) => (
+                <button
+                  key={gif.label}
+                  onClick={() => handleQuickSend(`${gif.emoji} GIF: ${gif.label}`, "gif")}
+>>>>>>> Stashed changes
                   className="rounded-2xl border border-border/30 p-3 text-left hover:bg-muted/30"
                 >
                   <p className="text-2xl">{gif.emoji}</p>
@@ -596,9 +719,12 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                 </button>
               ))}
             </div>
+<<<<<<< Updated upstream
             {filteredGifItems.length === 0 && (
               <p className="text-xs text-muted-foreground text-center py-3">No GIF results</p>
             )}
+=======
+>>>>>>> Stashed changes
           </div>
         )}
 
@@ -606,6 +732,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
           <div className="p-4">
             <p className="text-sm font-bold text-foreground">Your Avatar Stickers</p>
             <p className="text-xs text-muted-foreground mt-1 mb-4">Tap a mood to send an avatar sticker</p>
+<<<<<<< Updated upstream
             <div className="relative mb-3">
               <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -620,6 +747,13 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                 <button
                   key={item.label}
                   onClick={() => quickSend(`${item.emoji} ${item.label}`)}
+=======
+            <div className="grid grid-cols-4 gap-3">
+              {AVATAR_ITEMS.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => handleQuickSend(`${item.emoji} ${item.label}`)}
+>>>>>>> Stashed changes
                   className="rounded-2xl bg-muted/30 p-3 hover:bg-muted/50"
                 >
                   <p className="text-3xl">{item.emoji}</p>
@@ -633,6 +767,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
         {activeTab === "music" && (
           <div className="p-4 space-y-3">
             <p className="text-sm font-bold text-foreground">Share a Track</p>
+<<<<<<< Updated upstream
             <div className="relative">
               <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -724,12 +859,30 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                 </button>
               );
             })}
+=======
+            {TRACKS.map((track) => (
+              <div key={track.title} className="rounded-2xl border border-border/30 px-3 py-2.5 flex items-center gap-3">
+                <span className="text-2xl">🎵</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold truncate">{track.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">{track.artist} · {track.duration}</p>
+                </div>
+                <button
+                  onClick={() => handleQuickSend(`🎵 ${track.title} — ${track.artist}`)}
+                  className="h-8 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+                >
+                  Send
+                </button>
+              </div>
+            ))}
+>>>>>>> Stashed changes
           </div>
         )}
 
         {activeTab === "store" && (
           <div className="p-4 space-y-3">
             <p className="text-sm font-bold text-foreground">Sticker Store</p>
+<<<<<<< Updated upstream
             <div className="relative">
               <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -762,12 +915,30 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                 </div>
               );
             })}
+=======
+            {STORE_PACKS.map((pack) => (
+              <div key={pack.name} className="rounded-2xl border border-border/30 px-3 py-3 flex items-center gap-3">
+                <span className="text-3xl">{pack.emoji}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold truncate">{pack.name}</p>
+                  <p className="text-xs text-muted-foreground">{pack.count} stickers</p>
+                </div>
+                <button
+                  onClick={() => handleQuickSend(`🛍️ Sticker pack: ${pack.name}`)}
+                  className="h-8 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold"
+                >
+                  Get
+                </button>
+              </div>
+            ))}
+>>>>>>> Stashed changes
           </div>
         )}
 
         {activeTab === "memes" && (
           <div className="p-4 space-y-3">
             <p className="text-sm font-bold text-foreground">Meme Reactions</p>
+<<<<<<< Updated upstream
             <p className="text-xs text-muted-foreground">Quick meme-style reactions.</p>
             <div className="relative">
               <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
@@ -805,6 +976,14 @@ export default function StickerKeyboard({ open, onClose, onSendSticker }: Sticke
                 <button
                   key={item.label}
                   onClick={() => quickSend(`${item.emoji} ${item.text}`)}
+=======
+            <p className="text-xs text-muted-foreground">New tab added for quick meme-style reactions.</p>
+            <div className="grid grid-cols-2 gap-3">
+              {MEME_ITEMS.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => handleQuickSend(`${item.emoji} ${item.label}`)}
+>>>>>>> Stashed changes
                   className="rounded-2xl border border-border/30 p-3 text-left hover:bg-muted/30"
                 >
                   <p className="text-2xl">{item.emoji}</p>
