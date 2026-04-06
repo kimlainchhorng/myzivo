@@ -2,7 +2,7 @@ import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Store, Plus, Edit, Trash2, Eye, Upload, Loader2, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Store, Plus, Edit, Trash2, Eye, Upload, Loader2, X, ChevronDown, ChevronUp, Mail, UserPlus, Link2, Copy, Check } from "lucide-react";
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +56,13 @@ export default function AdminStoresPage() {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [ownerDialog, setOwnerDialog] = useState<{ storeId: string; storeName: string } | null>(null);
+  const [ownerEmail, setOwnerEmail] = useState("");
+  const [assigningOwner, setAssigningOwner] = useState(false);
+  const [inviteDialog, setInviteDialog] = useState<{ storeId: string; storeName: string; storeAccountId: string } | null>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const [sendingInvite, setSendingInvite] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -167,6 +174,67 @@ export default function AdminStoresPage() {
 
   const updateField = (field: string, value: any) => setForm(prev => ({ ...prev, [field]: value }));
 
+  const handleAssignOwner = async () => {
+    if (!ownerDialog || !ownerEmail.trim()) return;
+    setAssigningOwner(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("lookup-store-id", {
+        body: { email: ownerEmail.trim() },
+      });
+      if (error || data?.error) {
+        toast.error(data?.error || "Could not find user with this email");
+        setAssigningOwner(false);
+        return;
+      }
+      // Get the user's full_id from the response (the function returns user info)
+      // We need to get the user_id from the lookup - extract from stores data
+      const userId = data?.stores?.[0]?.full_id ? null : null;
+      
+      // Alternative: look up user directly via the edge function response
+      // The lookup-store-id finds the user but returns stores. We need just the user_id.
+      // Let's update the store with the email approach - find user by listing
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, user_id")
+        .eq("email", ownerEmail.trim().toLowerCase())
+        .maybeSingle();
+      
+      const targetUserId = profileData?.user_id || profileData?.id;
+      if (!targetUserId) {
+        toast.error("No user account found with this email. They need to sign up first.");
+        setAssigningOwner(false);
+        return;
+      }
+
+      const { error: updateError } = await supabase
+        .from("store_profiles")
+        .update({ owner_id: targetUserId })
+        .eq("id", ownerDialog.storeId);
+      
+      if (updateError) throw updateError;
+      
+      queryClient.invalidateQueries({ queryKey: ["admin-stores"] });
+      toast.success(`Store "${ownerDialog.storeName}" linked to ${ownerEmail}`);
+      setOwnerDialog(null);
+      setOwnerEmail("");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to assign owner");
+    } finally {
+      setAssigningOwner(false);
+    }
+  };
+
+  const handleCopyInviteLink = () => {
+    if (!inviteDialog) return;
+    const link = `${window.location.origin}/partner-login?store_id=${inviteDialog.storeAccountId}`;
+    navigator.clipboard.writeText(link);
+    setInviteCopied(true);
+    toast.success("Invite link copied!");
+    setTimeout(() => setInviteCopied(false), 2000);
+  };
+
+  const getStoreAccountId = (id: string) => `CBD${id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+
   return (
     <AdminLayout title="Store Accounts">
       <div className="space-y-6">
@@ -268,13 +336,24 @@ export default function AdminStoresPage() {
                       <div>
                         <p className="font-medium text-foreground">{store.name}</p>
                         <p className="text-sm text-muted-foreground">{store.market} · {STORE_CATEGORY_OPTIONS.find(o => o.value === store.category)?.label || store.category} · /{store.slug}</p>
-                        <p className="text-xs text-muted-foreground font-mono">ID: CBD{store.id.replace(/-/g, '').slice(0, 8).toUpperCase()}</p>
+                        <p className="text-xs text-muted-foreground font-mono">ID: {getStoreAccountId(store.id)}</p>
+                        {store.owner_id ? (
+                          <p className="text-xs text-primary flex items-center gap-1 mt-0.5"><Check className="h-3 w-3" /> Owner linked</p>
+                        ) : (
+                          <p className="text-xs text-destructive/70 mt-0.5">No owner assigned</p>
+                        )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
                       <Badge variant={store.is_active ? "default" : "secondary"}>
                         {store.is_active ? "Active" : "Inactive"}
                       </Badge>
+                      <Button size="sm" variant="outline" title="Assign Owner Email" onClick={() => { setOwnerDialog({ storeId: store.id, storeName: store.name }); setOwnerEmail(""); }}>
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline" title="Invite Partner" onClick={() => { setInviteDialog({ storeId: store.id, storeName: store.name, storeAccountId: getStoreAccountId(store.id) }); setInviteEmail(""); setInviteCopied(false); }}>
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => navigate(`/admin/stores/${store.id}`)}>
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -505,6 +584,71 @@ export default function AdminStoresPage() {
             <Button variant="destructive" onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm)} disabled={deleteMutation.isPending}>
               {deleteMutation.isPending ? "Deleting..." : "Delete"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Owner Dialog */}
+      <Dialog open={!!ownerDialog} onOpenChange={() => setOwnerDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Owner to "{ownerDialog?.storeName}"</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">Enter the partner's email address. They must have a ZIVO account already.</p>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label>Owner Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="email"
+                  placeholder="partner@business.com"
+                  value={ownerEmail}
+                  onChange={e => setOwnerEmail(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOwnerDialog(null)}>Cancel</Button>
+            <Button onClick={handleAssignOwner} disabled={assigningOwner || !ownerEmail.trim()} className="gap-2">
+              {assigningOwner ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+              {assigningOwner ? "Linking..." : "Link Owner"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite Partner Dialog */}
+      <Dialog open={!!inviteDialog} onOpenChange={() => setInviteDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invite Partner to "{inviteDialog?.storeName}"</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-3 rounded-lg bg-muted/50 border border-border">
+              <p className="text-xs text-muted-foreground mb-1">Store Account ID</p>
+              <p className="font-mono font-bold text-foreground">{inviteDialog?.storeAccountId}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Partner Login Link</Label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={inviteDialog ? `${window.location.origin}/partner-login?store_id=${inviteDialog.storeAccountId}` : ""}
+                  className="text-xs font-mono"
+                />
+                <Button size="sm" variant="outline" onClick={handleCopyInviteLink} className="shrink-0 gap-1.5">
+                  {inviteCopied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                  {inviteCopied ? "Copied" : "Copy"}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Share this link with the partner. They can sign in or create an account using this link.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteDialog(null)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
