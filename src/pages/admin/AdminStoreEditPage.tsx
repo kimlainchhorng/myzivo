@@ -3456,7 +3456,7 @@ export default function AdminStoreEditPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Price ($) *</Label>
+                    <Label>Start Price ($) *</Label>
                     <Input
                       type="text"
                       inputMode="decimal"
