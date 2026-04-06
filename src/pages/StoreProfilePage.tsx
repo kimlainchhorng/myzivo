@@ -569,6 +569,24 @@ export default function StoreProfilePage() {
               </motion.a>
             )}
           </div>
+
+          {/* Book Now button for auto-repair stores */}
+          {store.category === "auto-repair" && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mt-3 pt-3 border-t border-white/[0.06]"
+            >
+              <Button
+                onClick={() => navigate(`/book/${slug}`)}
+                className="w-full h-12 rounded-xl text-sm font-bold gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
+              >
+                <CalendarCheck className="h-4 w-4" />
+                Book a Service
+              </Button>
+            </motion.div>
+          )}
         </motion.div>
       </div>
 
