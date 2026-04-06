@@ -19,6 +19,8 @@ import serviceLights from "@/assets/service-lights.jpg";
 import serviceWiper from "@/assets/service-wiper.jpg";
 import serviceGasket from "@/assets/service-gasket.jpg";
 import serviceFuel from "@/assets/service-fuel.jpg";
+import serviceBodyPaint from "@/assets/service-body-paint.jpg";
+import serviceDetailing from "@/assets/service-detailing.jpg";
 
 /**
  * Each entry: [keyword to match in service name (lowercase), image path]
