@@ -627,6 +627,32 @@ export default function CallScreen({
     });
   }, [callType, duration, isCameraOff, isMuted, minimized]);
 
+  // Flip camera (switch front/back on mobile)
+  const handleFlipCamera = useCallback(async () => {
+    const stream = localStream?.current ?? localStream;
+    if (!stream || !(stream instanceof MediaStream)) return;
+    const videoTrack = stream.getVideoTracks()[0];
+    if (!videoTrack) return;
+    const constraints = videoTrack.getConstraints();
+    const currentFacing = (constraints as any).facingMode;
+    const newFacing = currentFacing === "environment" ? "user" : "environment";
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: newFacing },
+        audio: false,
+      });
+      const newTrack = newStream.getVideoTracks()[0];
+      if (peerConnection?.current) {
+        const sender = peerConnection.current.getSenders().find((s: any) => s.track?.kind === "video");
+        if (sender) await sender.replaceTrack(newTrack);
+      }
+      stream.removeTrack(videoTrack);
+      videoTrack.stop();
+      stream.addTrack(newTrack);
+      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+    } catch { /* not supported */ }
+  }, [localStream, peerConnection]);
+
   if (minimized) {
     return null;
   }
@@ -662,12 +688,6 @@ export default function CallScreen({
   );
 
   // Full-screen video layout
-  // Flip camera (switch front/back on mobile)
-  const handleFlipCamera = useCallback(async () => {
-    const stream = localStream?.current ?? localStream;
-    if (!stream || !(stream instanceof MediaStream)) return;
-    const videoTrack = stream.getVideoTracks()[0];
-    if (!videoTrack) return;
     const constraints = videoTrack.getConstraints();
     const currentFacing = (constraints as any).facingMode;
     const newFacing = currentFacing === "environment" ? "user" : "environment";
