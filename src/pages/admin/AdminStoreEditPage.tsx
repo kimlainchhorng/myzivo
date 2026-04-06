@@ -3115,7 +3115,7 @@ export default function AdminStoreEditPage() {
       <Dialog open={productDialog} onOpenChange={setProductDialog}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingProduct ? "Edit Product" : "Add Product"}</DialogTitle>
+            <DialogTitle>{editingProduct ? (form.category === "auto-repair" ? "Edit Service" : "Edit Product") : (form.category === "auto-repair" ? "Add Service" : "Add Product")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {form.category !== "car-dealership" && (
