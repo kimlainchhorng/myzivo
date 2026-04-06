@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { CreditCard, QrCode, DollarSign, Loader2, Edit, Save, X, ShieldCheck, Upload, ClipboardCheck } from "lucide-react";
+import { CreditCard, QrCode, DollarSign, Loader2, Edit, Save, X, ShieldCheck, Upload, ClipboardCheck, Landmark, Link2, Banknote } from "lucide-react";
 import PaymentVerificationDialog from "./PaymentVerificationDialog";
 
 import abaLogo from "@/assets/payments/aba-logo.png";
@@ -26,7 +26,8 @@ interface PaymentMethod {
   qr_code_url: string;
 }
 
-const PROVIDERS = [
+// Cambodia-specific providers
+const KH_PROVIDERS = [
   {
     key: "aba",
     name: "ABA PayWay",
@@ -34,6 +35,7 @@ const PROVIDERS = [
     logo: abaLogo,
     banner: abaBanner,
     bannerAlt: "ABA KHQR",
+    hasQR: true,
   },
   {
     key: "wing",
@@ -42,6 +44,7 @@ const PROVIDERS = [
     logo: wingLogo,
     banner: wingBanner,
     bannerAlt: "Wing Bank",
+    hasQR: true,
   },
   {
     key: "acleda",
@@ -50,10 +53,11 @@ const PROVIDERS = [
     logo: acledaLogo,
     banner: acledaBanner,
     bannerAlt: "ACLEDA Bank",
+    hasQR: true,
   },
 ];
 
-export default function StorePaymentSection({ storeId }: { storeId: string }) {
+export default function StorePaymentSection({ storeId, market = "KH" }: { storeId: string; market?: string }) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<string | null>(null);
   const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
@@ -61,6 +65,9 @@ export default function StorePaymentSection({ storeId }: { storeId: string }) {
   const [verified, setVerified] = useState(false);
   const [editForms, setEditForms] = useState<Record<string, Partial<PaymentMethod>>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const isUS = market === "US";
+  const isKH = market === "KH";
 
   const { data: paymentMethods, isLoading } = useQuery({
     queryKey: ["store-payment-methods", storeId],
@@ -125,8 +132,7 @@ export default function StorePaymentSection({ storeId }: { storeId: string }) {
       }));
       setPendingEditProvider(null);
     }
-    // Verified lasts for this session
-    setTimeout(() => setVerified(false), 30 * 60 * 1000); // 30 min
+    setTimeout(() => setVerified(false), 30 * 60 * 1000);
   };
 
   const handleSave = async (provider: string) => {
@@ -196,6 +202,35 @@ export default function StorePaymentSection({ storeId }: { storeId: string }) {
     }));
   };
 
+  // Render a simple toggle card (no banner, no QR)
+  const renderSimpleToggle = (
+    key: string,
+    icon: React.ReactNode,
+    name: string,
+    desc: string,
+    iconBg: string
+  ) => {
+    const method = getMethod(key);
+    return (
+      <div key={key} className="rounded-lg border border-border/60 px-3 py-2.5 bg-muted/30">
+        <div className="flex items-center gap-2.5">
+          <div className={`h-7 w-7 rounded-md flex items-center justify-center ${iconBg}`}>
+            {icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-foreground">{name}</p>
+            <p className="text-[10px] text-muted-foreground leading-tight">{desc}</p>
+          </div>
+          <Switch
+            checked={method?.is_enabled ?? false}
+            onCheckedChange={(checked) => handleToggle(key, checked)}
+            className="scale-90"
+          />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <Card>
@@ -210,35 +245,55 @@ export default function StorePaymentSection({ storeId }: { storeId: string }) {
             Manage how this store receives payments from customers and how payouts are processed.
           </p>
 
-          {/* Card / Stripe */}
-          <div className="rounded-lg border border-border/60 px-3 py-2.5 bg-muted/30">
-            <div className="flex items-center gap-2.5">
-              <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
-                <CreditCard className="h-3.5 w-3.5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-foreground">Card Payment</p>
-                <p className="text-[10px] text-muted-foreground leading-tight">Visa, Mastercard & more via Stripe</p>
-              </div>
-              <Switch className="scale-90" />
-            </div>
-          </div>
+          {/* Card Payment — All markets */}
+          {renderSimpleToggle(
+            "card",
+            <CreditCard className="h-3.5 w-3.5 text-primary" />,
+            "Card Payment",
+            "Visa, Mastercard & more via Stripe",
+            "bg-primary/10"
+          )}
 
-          {/* Confirmed Payment Order */}
-          <div className="rounded-lg border border-border/60 px-3 py-2.5 bg-muted/30">
-            <div className="flex items-center gap-2.5">
-              <div className="h-7 w-7 rounded-md bg-emerald-500/10 flex items-center justify-center">
-                <ClipboardCheck className="h-3.5 w-3.5 text-emerald-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-foreground">Confirmed Payment Order</p>
-                <p className="text-[10px] text-muted-foreground leading-tight">Require payment confirmation before processing orders</p>
-              </div>
-              <Switch className="scale-90" />
-            </div>
-          </div>
+          {/* Confirmed Payment Order — All markets */}
+          {renderSimpleToggle(
+            "confirmed_order",
+            <ClipboardCheck className="h-3.5 w-3.5 text-emerald-600" />,
+            "Confirmed Payment Order",
+            "Require payment confirmation before processing orders",
+            "bg-emerald-500/10"
+          )}
 
-          {PROVIDERS.map((prov) => {
+          {/* US-specific payment methods */}
+          {!isKH && (
+            <>
+              {renderSimpleToggle(
+                "bank_transfer",
+                <Landmark className="h-3.5 w-3.5 text-blue-600" />,
+                "Bank Transfer (ACH)",
+                "Accept direct bank transfers & ACH payments",
+                "bg-blue-500/10"
+              )}
+
+              {renderSimpleToggle(
+                "stripe_connect",
+                <Link2 className="h-3.5 w-3.5 text-violet-600" />,
+                "Stripe Connect",
+                "Connect your Stripe account for direct payouts",
+                "bg-violet-500/10"
+              )}
+
+              {renderSimpleToggle(
+                "invoice",
+                <Banknote className="h-3.5 w-3.5 text-amber-600" />,
+                "Invoice Payment",
+                "Send invoices and accept payment on terms",
+                "bg-amber-500/10"
+              )}
+            </>
+          )}
+
+          {/* Cambodia-specific bank providers */}
+          {isKH && KH_PROVIDERS.map((prov) => {
             const method = getMethod(prov.key);
             const isEditing = editing === prov.key;
             const form = editForms[prov.key] || {};
@@ -278,7 +333,6 @@ export default function StorePaymentSection({ storeId }: { storeId: string }) {
                         onChange={(e) => updateEditForm(prov.key, "account_holder_name", e.target.value)}
                       />
 
-                      {/* QR Code Upload */}
                       {form.qr_code_url ? (
                         <div className="relative rounded-lg overflow-hidden border border-border">
                           <img src={form.qr_code_url} alt="QR Code" className="w-full max-h-48 object-contain bg-white" />
@@ -331,7 +385,6 @@ export default function StorePaymentSection({ storeId }: { storeId: string }) {
                     </div>
                   ) : (
                     <div className="space-y-2 pt-1">
-                      {/* Show current data or placeholders */}
                       <div className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-2.5">
                         {method?.account_number || "No account number set"}
                       </div>
@@ -369,7 +422,7 @@ export default function StorePaymentSection({ storeId }: { storeId: string }) {
             );
           })}
 
-          {/* Cash */}
+          {/* Cash on Delivery — All markets */}
           <div className="rounded-xl border border-border p-4">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
@@ -379,7 +432,10 @@ export default function StorePaymentSection({ storeId }: { storeId: string }) {
                 <p className="text-sm font-medium text-foreground">Cash on Delivery</p>
                 <p className="text-xs text-muted-foreground">Customers pay in cash upon receiving their order</p>
               </div>
-              <Switch />
+              <Switch
+                checked={getMethod("cash")?.is_enabled ?? false}
+                onCheckedChange={(checked) => handleToggle("cash", checked)}
+              />
             </div>
           </div>
         </CardContent>
