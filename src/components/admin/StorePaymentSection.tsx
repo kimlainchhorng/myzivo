@@ -211,17 +211,22 @@ export default function StorePaymentSection({ storeId, market = "KH" }: { storeI
   // Render a simple toggle card (no banner, no QR)
   const renderSimpleToggle = (
     key: string,
-    icon: React.ReactNode,
+    icon: React.ReactNode | string,
     name: string,
     desc: string,
     iconBg: string
   ) => {
     const method = getMethod(key);
+    const isImageIcon = typeof icon === "string";
     return (
       <div key={key} className="rounded-lg border border-border/60 px-3 py-2.5 bg-muted/30">
         <div className="flex items-center gap-2.5">
-          <div className={`h-7 w-7 rounded-md flex items-center justify-center ${iconBg}`}>
-            {icon}
+          <div className={`h-9 w-9 rounded-lg flex items-center justify-center overflow-hidden ${isImageIcon ? "" : iconBg}`}>
+            {isImageIcon ? (
+              <img src={icon} alt={name} className="h-full w-full object-contain p-1" loading="lazy" />
+            ) : (
+              icon
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-foreground">{name}</p>
