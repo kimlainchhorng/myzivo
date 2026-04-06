@@ -2522,6 +2522,7 @@ export default function AdminStoreEditPage() {
                       updateField("latitude", lat);
                       updateField("longitude", lng);
                     }}
+                    market={form.market}
                   />
                 </div>
                 <div className="space-y-2">
