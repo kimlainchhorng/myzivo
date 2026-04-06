@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ const TIME_SLOTS = [
 export default function ServiceBookingPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [store, setStore] = useState<any>(null);
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,9 +60,17 @@ export default function ServiceBookingPage() {
       const { data: p } = await supabase
         .from("store_products")
         .select("id, name, price, category, image_url")
-        .eq("store_id", s.id)
-        .eq("is_active", true);
+        .eq("store_id", s.id);
       setServices(p || []);
+      // Auto-select service from URL query param
+      const preselect = searchParams.get("service");
+      if (preselect && p) {
+        const q = preselect.toLowerCase();
+        const match = p.find((svc: any) => svc.name === preselect || svc.name?.toLowerCase() === q);
+        if (match) {
+          setForm(f => ({ ...f, product_id: match.id, service_name: match.name }));
+        }
+      }
       setLoading(false);
     })();
   }, [slug]);

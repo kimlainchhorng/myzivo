@@ -278,7 +278,7 @@ export default function StoreProfilePage() {
                   } catch {}
                   return null;
                 })()}
-                {store.delivery_min && (
+                {store.delivery_min && store.category !== "auto-repair" && (
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/15">
                     {store.delivery_min}m delivery
                   </Badge>
@@ -758,8 +758,7 @@ export default function StoreProfilePage() {
                               <motion.button
                                 whileTap={{ scale: 0.92 }}
                                 onClick={() => {
-                                  handleAddToCart(service);
-                                  toast.success(`${service.name} added to booking`, { icon: "🔧" });
+                                  navigate(`/book/${slug}?service=${encodeURIComponent(service.name)}`);
                                 }}
                                 className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-bold shadow-sm"
                               >
