@@ -44,6 +44,8 @@ interface PersonalChatProps {
   recipientName: string;
   recipientAvatar?: string | null;
   onClose: () => void;
+  autoStartCall?: "voice" | "video" | null;
+  onCallStarted?: () => void;
 }
 
 interface Message {
@@ -91,7 +93,7 @@ function formatMsgTime(dateStr: string) {
   return format(d, "MMM d, h:mm a");
 }
 
-export default function PersonalChat({ recipientId, recipientName, recipientAvatar, onClose }: PersonalChatProps) {
+export default function PersonalChat({ recipientId, recipientName, recipientAvatar, onClose, autoStartCall, onCallStarted }: PersonalChatProps) {
   const { user } = useAuth();
 
   // Notify global listener that this chat is open
@@ -196,10 +198,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   }, []);
 
   const handleStartCall = useCallback(async (type: "voice" | "video") => {
-    // Do not block call start on audio priming; on iOS this can stall UI.
     void primeCallAudio();
     setActiveCall(type);
   }, []);
+
+  // Auto-start call from profile page deep-link
+  const autoStartFiredRef = useRef(false);
+  useEffect(() => {
+    if (autoStartCall && !autoStartFiredRef.current && !loading) {
+      autoStartFiredRef.current = true;
+      void handleStartCall(autoStartCall);
+      onCallStarted?.();
+    }
+  }, [autoStartCall, loading, handleStartCall, onCallStarted]);
 
   const sendChatPush = useCallback(async (messageType: string, messageText: string) => {
     if (!user?.id || !recipientId || recipientId === user.id) return;
