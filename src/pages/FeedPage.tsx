@@ -973,101 +973,118 @@ function SoundOverlay({
         onClick={onClose}
         className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
       />
-      {/* Bottom sheet — responsive width */}
+      {/* Centered modal — responsive */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        transition={{ type: "spring", damping: 26, stiffness: 300 }}
-        className={cn(
-          "fixed inset-0 z-[61] flex items-center justify-center pointer-events-none",
-        )}
+        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 20 }}
+        transition={{ type: "spring", damping: 28, stiffness: 320 }}
+        className="fixed inset-0 z-[61] flex items-center justify-center pointer-events-none p-4"
       >
-        <div className={cn(
-          "pointer-events-auto flex flex-col bg-background rounded-3xl overflow-hidden shadow-2xl",
-          "w-[92%] max-w-[420px] max-h-[70vh]",
-        )}>
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-9 h-1 rounded-full bg-muted-foreground/25" />
-        </div>
-
-        {/* Sound info header */}
-        <div className="px-4 pt-2 pb-3 flex items-center gap-3">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/15 flex items-center justify-center shrink-0 animate-[spin_3s_linear_infinite]">
-            <svg viewBox="0 0 24 24" className="w-7 h-7 fill-primary">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-            </svg>
+        <div className="pointer-events-auto flex flex-col bg-background rounded-3xl overflow-hidden shadow-2xl border border-border/30 w-[94%] max-w-[480px] max-h-[75vh]">
+          {/* Drag handle */}
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-[13px] text-foreground leading-tight line-clamp-2">{soundName}</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              {reelCount} reel{reelCount !== 1 ? "s" : ""} • Tap to watch
-            </p>
-          </div>
-          <button onClick={onClose} className="p-2 -mr-1 rounded-full hover:bg-muted/60 transition-colors">
-            <XIcon className="h-4 w-4 text-muted-foreground" />
-          </button>
-        </div>
 
-        {/* Divider */}
-        <div className="h-px bg-border/40 mx-4" />
-
-        {/* Reels grid */}
-        <div className="flex-1 overflow-y-auto p-2 pb-safe">
-          {isLoading && !isOriginalSound ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          {/* Sound info header */}
+          <div className="px-5 pt-2 pb-3 flex items-center gap-3.5">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10 flex items-center justify-center shrink-0">
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
+                <svg viewBox="0 0 24 24" className="w-7 h-7 fill-primary">
+                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                </svg>
+              </motion.div>
             </div>
-          ) : reelCount === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 gap-2">
-              <div className="w-12 h-12 rounded-full bg-muted/60 flex items-center justify-center">
-                <Play className="h-5 w-5 text-muted-foreground/50" />
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm text-foreground leading-tight line-clamp-2">{soundName}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {reelCount} reel{reelCount !== 1 ? "s" : ""} • Tap to watch
+              </p>
+            </div>
+            <button onClick={onClose} className="p-2 -mr-1 rounded-full hover:bg-muted/60 transition-colors">
+              <XIcon className="h-5 w-5 text-muted-foreground" />
+            </button>
+          </div>
+
+          {/* Use this sound button */}
+          <div className="px-5 pb-3">
+            <button
+              onClick={() => {
+                onClose();
+                toast.success("Sound selected! Create a new reel to use it.");
+              }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-[0.98] transition-all"
+            >
+              <Music className="h-4 w-4" />
+              Use this sound
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-border/40 mx-5" />
+
+          {/* Reels grid */}
+          <div className="flex-1 overflow-y-auto p-3 pb-safe">
+            {isLoading && !isOriginalSound ? (
+              <div className="flex justify-center py-10">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
-              <p className="text-[13px] text-muted-foreground">No reels with this sound yet</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-1 rounded-xl overflow-hidden">
-              {reels.map((reel) => {
-                const thumb = (reel.media_urls || []).map((u: string) => normalizeStorePostMediaUrl(u)).filter(Boolean)[0];
-                return (
-                  <button
-                    key={reel.id}
-                    onClick={() => onNavigateToReel(reel.id)}
-                    className="relative aspect-[9/16] bg-muted/80 overflow-hidden group rounded-lg"
-                  >
-                    {thumb ? (
-                      <>
-                        <img
-                          src={thumb}
-                          alt=""
-                          className="w-full h-full object-cover"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                        />
-                        {reel.media_type === "video" && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <Play className="h-5 w-5 text-white/80 fill-white/80 drop-shadow" />
+            ) : reelCount === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2">
+                <div className="w-12 h-12 rounded-full bg-muted/60 flex items-center justify-center">
+                  <Play className="h-5 w-5 text-muted-foreground/50" />
+                </div>
+                <p className="text-sm text-muted-foreground">No reels with this sound yet</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {reels.map((reel) => {
+                  const thumb = (reel.media_urls || []).map((u: string) => normalizeStorePostMediaUrl(u)).filter(Boolean)[0];
+                  return (
+                    <button
+                      key={reel.id}
+                      onClick={() => onNavigateToReel(reel.id)}
+                      className="relative aspect-[9/16] bg-muted/80 overflow-hidden group rounded-xl"
+                    >
+                      {thumb ? (
+                        <>
+                          <img
+                            src={thumb}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                              <Play className="h-5 w-5 text-white fill-white ml-0.5" />
+                            </div>
                           </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-muted">
-                        <Play className="h-5 w-5 text-muted-foreground/40" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 group-active:bg-black/30 transition-colors" />
-                    {reel.views > 0 && (
-                      <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5 text-white text-[10px] font-medium drop-shadow-lg">
-                        <Play className="h-2.5 w-2.5 fill-white" />
-                        {reel.views > 1000 ? `${(reel.views / 1000).toFixed(1)}K` : reel.views}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-muted">
+                          <Play className="h-5 w-5 text-muted-foreground/40" />
+                        </div>
+                      )}
+                      {/* Gradient overlay at bottom */}
+                      <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/60 to-transparent" />
+                      {reel.views > 0 && (
+                        <div className="absolute bottom-2 left-2 flex items-center gap-1 text-white text-[11px] font-semibold drop-shadow-lg">
+                          <Play className="h-3 w-3 fill-white" />
+                          {reel.views > 1000 ? `${(reel.views / 1000).toFixed(1)}K` : reel.views}
+                        </div>
+                      )}
+                      {reel.author && (
+                        <div className="absolute bottom-2 right-2 text-white text-[9px] font-medium drop-shadow-lg truncate max-w-[60%] text-right">
+                          @{reel.author}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </motion.div>
     </>
