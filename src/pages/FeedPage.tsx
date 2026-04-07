@@ -455,10 +455,13 @@ function ReelCard({
           <span className="text-white font-bold text-sm drop-shadow-lg">{post.store_name}</span>
         </button>
         {post.caption && (
-          <p className="text-white text-sm line-clamp-3 drop-shadow leading-snug">
+          <p className="text-white text-sm line-clamp-2 drop-shadow leading-snug mb-2">
             {post.caption}
           </p>
         )}
+
+        {/* Music ticker */}
+        <MusicTicker name={post.audio_name || `Original Sound - ${post.store_name || "ZIVO"}`} />
       </div>
 
       {/* Right-side action buttons (TikTok-style) */}
