@@ -85,6 +85,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
 
   const moreRef = useRef<HTMLDivElement>(null);
   const socialRef = useRef<HTMLDivElement>(null);
+  const servicesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
