@@ -958,7 +958,7 @@ function SoundOverlay({
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 300 }}
-        className="fixed bottom-0 left-0 right-0 z-[61] max-h-[75vh] flex flex-col bg-background rounded-t-2xl overflow-hidden"
+        className="fixed bottom-0 left-1/2 -translate-x-1/2 z-[61] w-full lg:w-[420px] max-h-[75vh] flex flex-col bg-background rounded-t-2xl overflow-hidden"
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-2 pb-1">
