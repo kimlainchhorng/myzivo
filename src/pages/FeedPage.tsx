@@ -1058,9 +1058,6 @@ export default function FeedPage() {
           >
             <ChevronUp className="w-6 h-6" />
           </button>
-          <div className="text-center text-white/60 text-xs font-medium">
-            {activeIndex + 1}/{posts.length}
-          </div>
           <button
             onClick={() => {
               if (activeIndex < posts.length - 1) {
