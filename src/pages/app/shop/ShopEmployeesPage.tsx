@@ -1,4 +1,4 @@
-import { ArrowLeft, Users, Truck, Clock3, Signal, SignalOff, RefreshCw } from "lucide-react";
+import { ArrowLeft, Users, Truck, Clock3, Signal, WifiOff, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/app/AppLayout";
