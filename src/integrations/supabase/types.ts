@@ -27034,6 +27034,7 @@ export type Database = {
       }
       merchant_referrals: {
         Row: {
+          accepted_at: string | null
           commission_discount_expires_at: string | null
           commission_discount_months: number | null
           commission_discount_percent: number | null
@@ -27043,13 +27044,18 @@ export type Database = {
           referee_restaurant_id: string | null
           referee_reward_cents: number | null
           referee_user_id: string
+          referral_code: string | null
+          referred_email: string | null
+          referred_store_id: string | null
           referrer_restaurant_id: string | null
           referrer_reward_cents: number | null
+          referrer_store_id: string | null
           referrer_user_id: string
           reward_type: string | null
           status: string | null
         }
         Insert: {
+          accepted_at?: string | null
           commission_discount_expires_at?: string | null
           commission_discount_months?: number | null
           commission_discount_percent?: number | null
@@ -27059,13 +27065,18 @@ export type Database = {
           referee_restaurant_id?: string | null
           referee_reward_cents?: number | null
           referee_user_id: string
+          referral_code?: string | null
+          referred_email?: string | null
+          referred_store_id?: string | null
           referrer_restaurant_id?: string | null
           referrer_reward_cents?: number | null
+          referrer_store_id?: string | null
           referrer_user_id: string
           reward_type?: string | null
           status?: string | null
         }
         Update: {
+          accepted_at?: string | null
           commission_discount_expires_at?: string | null
           commission_discount_months?: number | null
           commission_discount_percent?: number | null
@@ -27075,8 +27086,12 @@ export type Database = {
           referee_restaurant_id?: string | null
           referee_reward_cents?: number | null
           referee_user_id?: string
+          referral_code?: string | null
+          referred_email?: string | null
+          referred_store_id?: string | null
           referrer_restaurant_id?: string | null
           referrer_reward_cents?: number | null
+          referrer_store_id?: string | null
           referrer_user_id?: string
           reward_type?: string | null
           status?: string | null
@@ -27111,6 +27126,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "merchant_referrals_referred_store_id_fkey"
+            columns: ["referred_store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "merchant_referrals_referrer_restaurant_id_fkey"
             columns: ["referrer_restaurant_id"]
             isOneToOne: false
@@ -27136,6 +27158,13 @@ export type Database = {
             columns: ["referrer_restaurant_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_referrals_referrer_store_id_fkey"
+            columns: ["referrer_store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -48474,6 +48503,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_interest_tags: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          last_seen_at: string
+          score: number
+          source: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          score?: number
+          source?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          score?: number
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_interests: {
         Row: {
           created_at: string | null
@@ -54598,6 +54657,10 @@ export type Database = {
         }[]
       }
       accept_offer: { Args: { p_offer_id: string }; Returns: Json }
+      accept_shop_referral: {
+        Args: { p_new_store_id: string; p_referral_code: string }
+        Returns: boolean
+      }
       accept_tenant_invitation: { Args: { p_token: string }; Returns: Json }
       acknowledge_reposition: {
         Args: { p_accepted: boolean; p_recommendation_id: string }
@@ -54940,6 +55003,14 @@ export type Database = {
           p_order_id: string
         }
         Returns: Json
+      }
+      credit_referral_wallet_bonus: {
+        Args: {
+          p_referee_id: string
+          p_referral_code: string
+          p_referrer_id: string
+        }
+        Returns: boolean
       }
       customer_can_view_driver: {
         Args: { _driver_id: string }
@@ -55453,6 +55524,16 @@ export type Database = {
       }
       get_tier_from_points: { Args: { lifetime_pts: number }; Returns: string }
       get_today_ad_spend: { Args: { p_ad_id: string }; Returns: number }
+      get_trending_near_user: {
+        Args: { p_limit?: number; p_user_id: string }
+        Returns: {
+          category: string
+          is_featured: boolean
+          relevance_score: number
+          store_id: string
+          store_name: string
+        }[]
+      }
       get_user_role: { Args: { p_user_id?: string }; Returns: string }
       get_user_security_summary: {
         Args: { p_user_id: string }
@@ -55780,6 +55861,15 @@ export type Database = {
           }
       sync_customer_phone_verified: { Args: never; Returns: Json }
       sync_driver_phone_verified: { Args: never; Returns: Json }
+      track_user_interest: {
+        Args: {
+          p_category: string
+          p_source?: string
+          p_user_id: string
+          p_weight?: number
+        }
+        Returns: undefined
+      }
       update_all_driver_performance: { Args: never; Returns: number }
       update_batch_stop_status: {
         Args: { p_driver_id: string; p_status: string; p_stop_id: string }
