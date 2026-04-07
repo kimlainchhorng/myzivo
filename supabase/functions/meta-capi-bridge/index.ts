@@ -232,7 +232,7 @@ async function buildRegistrationEvent(record: Rec): Promise<MetaPayload | null> 
 }
 
 async function upsertShopLivePulse(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   table: string,
   record: Rec,
   eventId: string,
