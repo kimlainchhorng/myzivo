@@ -104,6 +104,7 @@ const SmartSearchPage = lazy(() => import("./pages/SmartSearchPage"));
 const NotificationCenterPage = lazy(() => import("./pages/NotificationCenterPage"));
 const ActivityFeedPage = lazy(() => import("./pages/ActivityFeedPage"));
 const AdminModerationPage = lazy(() => import("./pages/AdminModerationPage"));
+const AdminLaunchDashboard = lazy(() => import("./pages/admin/AdminLaunchDashboard"));
 const ContentSchedulerPage = lazy(() => import("./pages/ContentSchedulerPage"));
 const StoryPollsPage = lazy(() => import("./pages/StoryPollsPage"));
 const WalletDashboardPage = lazy(() => import("./pages/WalletDashboardPage"));
