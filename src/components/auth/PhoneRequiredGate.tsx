@@ -46,12 +46,13 @@ const PhoneRequiredGate = ({ children }: PhoneRequiredGateProps) => {
   // Not logged in — let ProtectedRoute handle redirect
   if (!user) return <>{children}</>;
 
-  // No phone — redirect to profile
+  // No phone — redirect to profile settings (not /setup to avoid loop if setup_complete)
   if (!hasPhone) {
     const redirectTarget = `${location.pathname}${location.search ?? ""}${location.hash ?? ""}`;
+    const destination = profile?.setup_complete ? "/profile" : "/setup";
     return (
       <Navigate
-        to={withRedirectParam("/setup", redirectTarget)}
+        to={withRedirectParam(destination, redirectTarget)}
         state={{ from: location, phoneRequired: true, redirectTo: redirectTarget }}
         replace
       />
