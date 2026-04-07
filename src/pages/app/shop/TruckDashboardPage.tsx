@@ -97,7 +97,7 @@ export default function TruckDashboardPage() {
         const prodMap = new Map((prods || []).map((p: any) => [p.id, p]));
         setInventory(
           (inv || []).map((row: any) => {
-            const prod = prodMap.get(row.product_id);
+            const prod = prodMap.get(row.product_id) as any;
             return {
               ...row,
               product_name: prod?.name || "Unknown",
