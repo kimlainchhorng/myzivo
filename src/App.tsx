@@ -153,10 +153,13 @@ const AdminEmployeesPage = lazy(() => import("./pages/admin/AdminEmployeesPage")
 const AdminSystemHealth = lazy(() => import("./pages/admin/AdminSystemHealth"));
 const AdminAppStoreAssets = lazy(() => import("./pages/admin/AdminAppStoreAssets"));
 const AdminAndroidVerification = lazy(() => import("./pages/admin/AdminAndroidVerification"));
+const AdminGodView = lazy(() => import("./pages/admin/AdminGodView"));
 const AdBoostBidding = lazy(() => import("./pages/app/shop/AdBoostBidding"));
 const MerchantBoostEngine = lazy(() => import("./pages/app/shop/MerchantBoostEngine"));
 const AiCreativeSuite = lazy(() => import("./pages/app/shop/AiCreativeSuite"));
 const AiContentSuite = lazy(() => import("./pages/app/shop/AiContentSuite"));
+const MerchantWalletPage = lazy(() => import("./pages/app/shop/MerchantWalletPage"));
+const MerchantTaxReportPage = lazy(() => import("./pages/app/shop/MerchantTaxReportPage"));
 const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
 const DriverEarningsPage = lazy(() => import("./pages/driver/DriverEarningsPage"));
 const DriverPerformancePage = lazy(() => import("./pages/driver/DriverPerformancePage"));
