@@ -26903,6 +26903,39 @@ export type Database = {
           },
         ]
       }
+      merchant_fee_waivers: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          reason: string
+          referral_id: string | null
+          starts_at: string
+          store_id: string
+          waiver_pct: number
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          reason?: string
+          referral_id?: string | null
+          starts_at?: string
+          store_id: string
+          waiver_pct?: number
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          reason?: string
+          referral_id?: string | null
+          starts_at?: string
+          store_id?: string
+          waiver_pct?: number
+        }
+        Relationships: []
+      }
       merchant_payout_run_items: {
         Row: {
           amount: number
@@ -32294,6 +32327,45 @@ export type Database = {
           name?: string
           rating?: number | null
           review_count?: number | null
+        }
+        Relationships: []
+      }
+      platform_fee_ledger: {
+        Row: {
+          created_at: string
+          fee_amount_cents: number
+          fee_pct: number
+          gross_amount_cents: number
+          id: string
+          merchant_id: string | null
+          order_id: string
+          order_type: string
+          waived: boolean | null
+          waiver_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          fee_amount_cents: number
+          fee_pct?: number
+          gross_amount_cents: number
+          id?: string
+          merchant_id?: string | null
+          order_id: string
+          order_type: string
+          waived?: boolean | null
+          waiver_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          fee_amount_cents?: number
+          fee_pct?: number
+          gross_amount_cents?: number
+          id?: string
+          merchant_id?: string | null
+          order_id?: string
+          order_type?: string
+          waived?: boolean | null
+          waiver_id?: string | null
         }
         Relationships: []
       }
@@ -54743,6 +54815,10 @@ export type Database = {
       accept_shop_referral: {
         Args: { p_new_store_id: string; p_referral_code: string }
         Returns: boolean
+      }
+      accept_shop_referral_v2: {
+        Args: { p_new_store_id: string; p_referral_code: string }
+        Returns: Json
       }
       accept_tenant_invitation: { Args: { p_token: string }; Returns: Json }
       acknowledge_reposition: {

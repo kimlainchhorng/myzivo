@@ -312,6 +312,51 @@ serve(async (req) => {
             });
           }
         }
+        // ──── Record 2% platform fee ────
+        if (session.amount_total && session.amount_total > 0) {
+          try {
+            const merchantId = metadata.merchant_id || metadata.restaurant_id || metadata.store_id || null;
+            const grossCents = session.amount_total;
+            const feePct = 2.00;
+
+            // Check for active fee waiver
+            let waived = false;
+            let waiverId = null;
+            if (merchantId) {
+              const { data: waiver } = await supabase
+                .from("merchant_fee_waivers")
+                .select("id, waiver_pct")
+                .eq("store_id", merchantId)
+                .gte("expires_at", new Date().toISOString())
+                .lte("starts_at", new Date().toISOString())
+                .order("waiver_pct", { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+              if (waiver && waiver.waiver_pct >= 100) {
+                waived = true;
+                waiverId = waiver.id;
+              }
+            }
+
+            const feeAmountCents = waived ? 0 : Math.round(grossCents * feePct / 100);
+
+            await supabase.from("platform_fee_ledger").insert({
+              order_type: metadata.type || "general",
+              order_id: session.id,
+              merchant_id: merchantId,
+              gross_amount_cents: grossCents,
+              fee_pct: waived ? 0 : feePct,
+              fee_amount_cents: feeAmountCents,
+              waived,
+              waiver_id: waiverId,
+            });
+            console.log("[Webhook] Platform fee recorded:", feeAmountCents, "cents", waived ? "(WAIVED)" : "");
+          } catch (feeErr) {
+            console.error("[Webhook] Platform fee recording failed:", feeErr);
+          }
+        }
+
         // ──── Fire Meta CAPI Purchase event ────
         if (session.amount_total && session.amount_total > 0) {
           try {

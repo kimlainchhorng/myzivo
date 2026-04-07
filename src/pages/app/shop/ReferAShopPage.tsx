@@ -112,7 +112,7 @@ export default function ReferAShopPage() {
 
   const shareReferral = (code: string) => {
     const link = `${window.location.origin}/partner-login?ref=${code}`;
-    const text = `Join ZiVo and get 1 month of FREE boosted visibility! Sign up here: ${link}`;
+    const text = `Join ZiVo and we both get 30 days of 0% transaction fees! Sign up here: ${link}`;
     if (navigator.share) {
       navigator.share({ title: "Join ZiVo", text, url: link });
     } else {
@@ -155,9 +155,9 @@ export default function ReferAShopPage() {
                 <CardContent className="p-5 text-center relative">
                   <Sparkles className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <h2 className="text-xl font-black mb-1">Invite a Shop, Both Win!</h2>
-                  <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                    When you refer a new shop owner, you <strong>both</strong> get{" "}
-                    <span className="text-primary font-bold">1 month FREE Boosted</span> visibility on the Map & Reels.
+                   <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                    When you refer a new shop owner and they make their first sale, you <strong>both</strong> get{" "}
+                    <span className="text-primary font-bold">30 days of 0% transaction fees</span> — keeping 100% of your revenue!
                   </p>
                   <div className="flex justify-center gap-6 mt-4">
                     <div className="text-center">
@@ -276,7 +276,7 @@ export default function ReferAShopPage() {
                 {[
                   { step: "1", text: "Enter the shop owner's email and send an invite" },
                   { step: "2", text: "They sign up using your referral link" },
-                  { step: "3", text: "You both get 1 month FREE Boosted on the Map & Reels" },
+                  { step: "3", text: "Once they make their first sale, you both get 30 days of 0% transaction fees" },
                 ].map((item) => (
                   <div key={item.step} className="flex items-start gap-3">
                     <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">

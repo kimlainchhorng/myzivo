@@ -104,6 +104,7 @@ const SmartSearchPage = lazy(() => import("./pages/SmartSearchPage"));
 const NotificationCenterPage = lazy(() => import("./pages/NotificationCenterPage"));
 const ActivityFeedPage = lazy(() => import("./pages/ActivityFeedPage"));
 const AdminModerationPage = lazy(() => import("./pages/AdminModerationPage"));
+const AdminLaunchDashboard = lazy(() => import("./pages/admin/AdminLaunchDashboard"));
 const ContentSchedulerPage = lazy(() => import("./pages/ContentSchedulerPage"));
 const StoryPollsPage = lazy(() => import("./pages/StoryPollsPage"));
 const WalletDashboardPage = lazy(() => import("./pages/WalletDashboardPage"));
@@ -565,6 +566,7 @@ const App = () => (
                 <Route path="/notification-center" element={<ProtectedRoute><NotificationCenterPage /></ProtectedRoute>} />
                 <Route path="/activity" element={<ProtectedRoute><ActivityFeedPage /></ProtectedRoute>} />
                 <Route path="/admin/moderation" element={<ProtectedRoute><AdminModerationPage /></ProtectedRoute>} />
+                <Route path="/admin/launch" element={<ProtectedRoute><AdminLaunchDashboard /></ProtectedRoute>} />
                 <Route path="/content-scheduler" element={<ProtectedRoute><ContentSchedulerPage /></ProtectedRoute>} />
                 <Route path="/story-polls" element={<ProtectedRoute><StoryPollsPage /></ProtectedRoute>} />
                 <Route path="/wallet-dashboard" element={<ProtectedRoute><WalletDashboardPage /></ProtectedRoute>} />
