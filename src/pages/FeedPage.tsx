@@ -1059,6 +1059,7 @@ function SoundOverlay({
             </div>
           )}
         </div>
+        </div>
       </motion.div>
     </>
   );
