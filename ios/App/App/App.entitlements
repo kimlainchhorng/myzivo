@@ -8,5 +8,11 @@
 	<array>
 		<string>Default</string>
 	</array>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:hizovo.com</string>
+		<string>applinks:myzivo.lovable.app</string>
+		<string>webcredentials:hizovo.com</string>
+	</array>
 </dict>
 </plist>

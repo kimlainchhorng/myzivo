@@ -1,0 +1,23 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAM_ID.com.hizovo.app",
+        "paths": [
+          "/reels/*",
+          "/shop/*",
+          "/grocery/shop/*",
+          "/marketplace",
+          "/flights/*",
+          "/p/*"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TEAM_ID.com.hizovo.app"
+    ]
+  }
+}
