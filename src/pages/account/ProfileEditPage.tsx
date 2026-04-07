@@ -135,10 +135,7 @@ function SocialLinksEditor({ profile, updateProfile }: { profile: any; updatePro
 }
 
 // ─── Desktop Sidebar ───
-function DesktopSidebar({ activeSection }: { activeSection: string }) {
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+function DesktopSidebar({ activeSection, onSectionClick }: { activeSection: string; onSectionClick: (id: string) => void }) {
 
   return (
     <aside className="hidden lg:block w-[220px] shrink-0">
