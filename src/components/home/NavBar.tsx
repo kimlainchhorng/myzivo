@@ -98,6 +98,9 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
       if (moreRef.current && !moreRef.current.contains(event.target as Node)) {
         setMoreOpen(false);
       }
+      if (socialRef.current && !socialRef.current.contains(event.target as Node)) {
+        setSocialOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
