@@ -566,6 +566,7 @@ const App = () => (
                 <Route path="/notification-center" element={<ProtectedRoute><NotificationCenterPage /></ProtectedRoute>} />
                 <Route path="/activity" element={<ProtectedRoute><ActivityFeedPage /></ProtectedRoute>} />
                 <Route path="/admin/moderation" element={<ProtectedRoute><AdminModerationPage /></ProtectedRoute>} />
+                <Route path="/admin/launch" element={<ProtectedRoute><AdminLaunchDashboard /></ProtectedRoute>} />
                 <Route path="/content-scheduler" element={<ProtectedRoute><ContentSchedulerPage /></ProtectedRoute>} />
                 <Route path="/story-polls" element={<ProtectedRoute><StoryPollsPage /></ProtectedRoute>} />
                 <Route path="/wallet-dashboard" element={<ProtectedRoute><WalletDashboardPage /></ProtectedRoute>} />
