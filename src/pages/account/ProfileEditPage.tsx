@@ -282,7 +282,10 @@ export default function ProfileEditPage() {
       ) : (
         <div className="max-w-5xl mx-auto px-4 py-6 flex gap-8">
           {/* Sidebar — desktop only */}
-          <DesktopSidebar activeSection={activeSection} />
+          <DesktopSidebar activeSection={activeSection} onSectionClick={(id) => {
+            setActiveSection(id);
+            document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }} />
 
           {/* Main content */}
           <div className="flex-1 max-w-lg mx-auto lg:mx-0 space-y-6">
