@@ -469,18 +469,34 @@ function ReelCard({
         className="absolute right-3 z-30 flex flex-col items-center gap-5"
         style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)" }}
       >
-        {/* Mute/Unmute */}
+        {/* Mute/Unmute with sound wave */}
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); handleMuteToggle(); }}
           className="flex flex-col items-center gap-1"
           aria-label={globalMuted ? "Unmute" : "Mute"}
         >
-          <div className="w-11 h-11 rounded-full bg-black/40 flex items-center justify-center">
-            {globalMuted
-              ? <VolumeX className="w-5 h-5 text-white" />
-              : <Volume2 className="w-5 h-5 text-white" />
-            }
+          <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center relative overflow-hidden border border-white/10">
+            {globalMuted ? (
+              <VolumeX className="w-5 h-5 text-white/70" />
+            ) : (
+              <>
+                <Volume2 className="w-5 h-5 text-white z-10" />
+                {/* Animated sound bars */}
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex items-end gap-[2px]">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="w-[2px] bg-primary rounded-full"
+                      style={{
+                        animation: `soundbar 0.${4 + i}s ease-in-out infinite alternate`,
+                        height: `${4 + i * 2}px`,
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </button>
 
