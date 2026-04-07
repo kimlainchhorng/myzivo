@@ -671,7 +671,12 @@ const Profile = () => {
                           draggable={false}
                         />
                       ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/15 to-accent/20">
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,hsl(var(--primary)/0.25),transparent_70%)]" />
+                          <div className="absolute bottom-3 right-4 text-primary/20 text-[11px] font-medium flex items-center gap-1">
+                            <ImagePlus className="w-3.5 h-3.5" /> Add cover photo
+                          </div>
+                        </div>
                       )}
                       {/* Gradient overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-card/20 to-transparent" />
