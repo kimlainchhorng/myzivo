@@ -17,6 +17,8 @@ interface IncomingMetaEvent {
   source_table?: string;
   source_id?: string;
   payload?: Record<string, unknown>;
+  fbc?: string | null;
+  fbp?: string | null;
 }
 
 const META_GRAPH_VERSION = "v19.0";
@@ -74,6 +76,13 @@ serve(async (req) => {
     const userData: Record<string, unknown> = {};
     if (event.external_id) {
       userData.external_id = await sha256Hex(String(event.external_id));
+    }
+    // fbc and fbp for high match quality (9/10)
+    if (event.fbc) {
+      userData.fbc = event.fbc;
+    }
+    if (event.fbp) {
+      userData.fbp = event.fbp;
     }
 
     const customData: Record<string, unknown> = {

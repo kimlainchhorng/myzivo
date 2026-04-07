@@ -31,6 +31,7 @@ const ShopDashboard = () => {
     { icon: Truck, label: "Delivery", description: "Shipping settings", color: "from-emerald-500 to-green-500", onClick: () => navigate("/shop-dashboard/delivery") },
     { icon: BarChart3, label: "Analytics", description: "Sales & performance", color: "from-purple-500 to-purple-600", onClick: () => navigate("/shop-dashboard/analytics") },
     { icon: Rocket, label: "Sales Attribution", description: "Reel-to-purchase funnel", color: "from-amber-500 to-orange-500", onClick: () => navigate("/shop-dashboard/attribution") },
+    { icon: BarChart3, label: "Merchant ROI", description: "Views, clicks & revenue", color: "from-indigo-500 to-blue-500", onClick: () => navigate("/shop-dashboard/roi") },
     { icon: Truck, label: "Truck Dashboard", description: "GPS inventory & sales", color: "from-teal-500 to-cyan-500", onClick: () => navigate("/shop-dashboard/truck") },
     { icon: TestTube, label: "Sandbox Mode", description: "Test transactions & CAPI", color: "from-yellow-500 to-amber-500", onClick: () => navigate("/shop-dashboard/sandbox") },
     { icon: Settings, label: "Shop Settings", description: "Store profile & config", color: "from-slate-500 to-slate-600", onClick: () => navigate("/shop-dashboard/settings") },

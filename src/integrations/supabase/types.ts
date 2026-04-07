@@ -26541,6 +26541,50 @@ export type Database = {
           },
         ]
       }
+      merchant_boosts: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          featured_until: string
+          id: string
+          paid_via: string
+          payment_ref: string | null
+          status: string
+          store_id: string
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          featured_until?: string
+          id?: string
+          paid_via?: string
+          payment_ref?: string | null
+          status?: string
+          store_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          featured_until?: string
+          id?: string
+          paid_via?: string
+          payment_ref?: string | null
+          status?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_boosts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merchant_coupons: {
         Row: {
           code: string
@@ -55556,6 +55600,7 @@ export type Database = {
         Args: { p_service_name: string }
         Returns: boolean
       }
+      is_store_featured: { Args: { p_store_id: string }; Returns: boolean }
       is_vehicle_owner: { Args: { p_vehicle_id: string }; Returns: boolean }
       is_verified_car_owner: { Args: { user_uuid: string }; Returns: boolean }
       is_verified_renter: { Args: { user_uuid: string }; Returns: boolean }
