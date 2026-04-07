@@ -178,16 +178,33 @@ export default function ShopEmployeesPage() {
 
     setSyncing(true);
     const remaining: OfflineSale[] = [];
+    let syncedCount = 0;
     for (const sale of queue) {
       try {
         await submitSale(sale);
+        syncedCount++;
+        // Fire Meta Purchase event for each synced offline sale
+        try {
+          await sendMetaConversionEvent({
+            eventName: "Purchase",
+            eventId: `offline-sync-${Date.now()}-${syncedCount}`,
+            externalId: sale.driver_user_id,
+            value: sale.total_amount,
+            currency: sale.currency,
+            sourceType: "truck_sale",
+            sourceTable: "truck_sales",
+            payload: { offline_synced: true, truck_label: sale.truck_label },
+          });
+        } catch {
+          // Meta event failure shouldn't block sync
+        }
       } catch {
         remaining.push(sale);
       }
     }
     localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(remaining));
     setSyncing(false);
-    toast.success(remaining.length ? `${queue.length - remaining.length} synced, ${remaining.length} still pending` : "All offline sales synced.");
+    toast.success(remaining.length ? `${syncedCount} synced, ${remaining.length} still pending` : "All offline sales synced.");
     loadData();
   };
 

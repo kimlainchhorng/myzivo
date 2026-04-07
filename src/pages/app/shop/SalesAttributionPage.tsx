@@ -102,6 +102,26 @@ export default function SalesAttributionPage() {
           revenue: totalRevenue,
         });
 
+        // Check for boost success return
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("boost") === "success") {
+          const reelId = params.get("reel") || "";
+          try {
+            await (supabase as any).from("merchant_ad_spend").insert({
+              store_id: store.id,
+              reel_id: reelId,
+              amount_cents: 500,
+              currency: "USD",
+              source: "boost",
+            });
+            toast.success("🚀 Boost activated! Your reel will reach 5,000 more people.");
+          } catch {
+            // silent
+          }
+          // Clean URL
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+
         setReels(
           (posts || []).slice(0, 10).map((p: any) => ({
             id: p.id,
