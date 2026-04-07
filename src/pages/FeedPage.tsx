@@ -991,9 +991,9 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black">
+    <div className="fixed inset-0 bg-black lg:flex lg:flex-col">
       {/* Desktop NavBar */}
-      <div className="hidden lg:block relative z-[1200]">
+      <div className="hidden lg:block relative z-[1200] shrink-0">
         <NavBar />
       </div>
       {/* Search button */}
