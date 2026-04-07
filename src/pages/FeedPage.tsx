@@ -975,10 +975,10 @@ function SoundOverlay({
       />
       {/* Bottom sheet — responsive width */}
       <motion.div
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
-        transition={{ type: "spring", damping: 26, stiffness: 280 }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ type: "spring", damping: 26, stiffness: 300 }}
         className={cn(
           "fixed inset-0 z-[61] flex items-center justify-center pointer-events-none",
         )}
