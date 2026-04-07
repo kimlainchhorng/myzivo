@@ -262,15 +262,6 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                   </PopoverContent>
                 </Popover>
 
-                <CurrencySelector
-                  variant="compact"
-                  className={cn(
-                    "rounded-full transition-all duration-200",
-                    scrolled || !isHomePage
-                      ? "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                      : "text-foreground/85 hover:text-foreground hover:bg-foreground/5"
-                  )}
-                />
 
                 {user ? (
                   <DropdownMenu>
