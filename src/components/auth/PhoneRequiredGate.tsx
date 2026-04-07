@@ -46,12 +46,12 @@ const PhoneRequiredGate = ({ children }: PhoneRequiredGateProps) => {
   // Not logged in — let ProtectedRoute handle redirect
   if (!user) return <>{children}</>;
 
-  // No phone — redirect to profile to add phone number
+  // No phone — redirect to profile edit to add phone number
   if (!hasPhone) {
     const redirectTarget = `${location.pathname}${location.search ?? ""}${location.hash ?? ""}`;
     return (
       <Navigate
-        to={withRedirectParam("/profile", redirectTarget)}
+        to={withRedirectParam("/account/profile-edit", redirectTarget)}
         state={{ from: location, phoneRequired: true, redirectTo: redirectTarget }}
         replace
       />
