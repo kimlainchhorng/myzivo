@@ -33,14 +33,14 @@ import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
 import { withRedirectParam } from "@/lib/authRedirect";
 
 const serviceNavItems = [
-  { label: "Flights", href: "/flights", icon: Plane, cssVar: "var(--flights)", bg: tabFlightsBg },
-  { label: "Hotels", href: "/hotels", icon: Hotel, cssVar: "var(--hotels)", bg: tabHotelsBg },
-  { label: "Cars", href: "/rent-car", icon: CarFront, cssVar: "var(--cars)", bg: tabCarsBg },
-  { label: "Rides", href: "/rides", icon: Car, cssVar: "var(--rides)", bg: tabRidesBg },
-  { label: "Eats", href: "/eats", icon: UtensilsCrossed, cssVar: "var(--eats)", bg: tabEatsBg },
-  { label: "Feed", href: "/feed", icon: Newspaper, cssVar: "var(--flights)", bg: tabFeedBg },
-  { label: "Reel", href: "/reels", icon: Film, cssVar: "var(--eats)", bg: tabReelsBg },
-  { label: "Map", href: "/store-map", icon: MapPin, cssVar: "var(--hotels)", bg: tabMapBg },
+  { label: "Flights", href: "/flights", icon: Plane, cssVar: "var(--flights)" },
+  { label: "Hotels", href: "/hotels", icon: Hotel, cssVar: "var(--hotels)" },
+  { label: "Cars", href: "/rent-car", icon: CarFront, cssVar: "var(--cars)" },
+  { label: "Rides", href: "/rides", icon: Car, cssVar: "var(--rides)" },
+  { label: "Eats", href: "/eats", icon: UtensilsCrossed, cssVar: "var(--eats)" },
+  { label: "Feed", href: "/feed", icon: Newspaper, cssVar: "var(--flights)" },
+  { label: "Reel", href: "/reels", icon: Film, cssVar: "var(--eats)" },
+  { label: "Map", href: "/store-map", icon: MapPin, cssVar: "var(--hotels)" },
 ];
 
 const communityNavItems = [
