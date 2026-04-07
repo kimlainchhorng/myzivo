@@ -38,6 +38,25 @@ interface FeedPost {
   likes_count?: number;
   comments_count?: number;
   view_count?: number;
+  audio_name?: string | null;
+}
+
+/* ── Scrolling music ticker ───────────────────────────────────── */
+function MusicTicker({ name }: { name: string }) {
+  return (
+    <div className="flex items-center gap-2 max-w-[65%] overflow-hidden">
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white/20 to-white/5 border border-white/20 flex items-center justify-center shrink-0 animate-[spin_3s_linear_infinite]">
+        <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white">
+          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+        </svg>
+      </div>
+      <div className="overflow-hidden">
+        <div className="whitespace-nowrap animate-[marquee_8s_linear_infinite] text-white text-xs font-medium drop-shadow">
+          {name} &nbsp;&nbsp; • &nbsp;&nbsp; {name}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function looksPlayableVideoElement(video: HTMLVideoElement) {
@@ -436,10 +455,13 @@ function ReelCard({
           <span className="text-white font-bold text-sm drop-shadow-lg">{post.store_name}</span>
         </button>
         {post.caption && (
-          <p className="text-white text-sm line-clamp-3 drop-shadow leading-snug">
+          <p className="text-white text-sm line-clamp-2 drop-shadow leading-snug mb-2">
             {post.caption}
           </p>
         )}
+
+        {/* Music ticker */}
+        <MusicTicker name={post.audio_name || `Original Sound - ${post.store_name || "ZIVO"}`} />
       </div>
 
       {/* Right-side action buttons (TikTok-style) */}
@@ -447,18 +469,34 @@ function ReelCard({
         className="absolute right-3 z-30 flex flex-col items-center gap-5"
         style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)" }}
       >
-        {/* Mute/Unmute */}
+        {/* Mute/Unmute with sound wave */}
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); handleMuteToggle(); }}
           className="flex flex-col items-center gap-1"
           aria-label={globalMuted ? "Unmute" : "Mute"}
         >
-          <div className="w-11 h-11 rounded-full bg-black/40 flex items-center justify-center">
-            {globalMuted
-              ? <VolumeX className="w-5 h-5 text-white" />
-              : <Volume2 className="w-5 h-5 text-white" />
-            }
+          <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center relative overflow-hidden border border-white/10">
+            {globalMuted ? (
+              <VolumeX className="w-5 h-5 text-white/70" />
+            ) : (
+              <>
+                <Volume2 className="w-5 h-5 text-white z-10" />
+                {/* Animated sound bars */}
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex items-end gap-[2px]">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="w-[2px] bg-primary rounded-full"
+                      style={{
+                        animation: `soundbar 0.${4 + i}s ease-in-out infinite alternate`,
+                        height: `${4 + i * 2}px`,
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </button>
 

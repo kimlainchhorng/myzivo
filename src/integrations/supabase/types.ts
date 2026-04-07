@@ -42927,6 +42927,7 @@ export type Database = {
       }
       store_posts: {
         Row: {
+          audio_name: string | null
           caption: string | null
           comments_count: number | null
           created_at: string
@@ -42945,6 +42946,7 @@ export type Database = {
           view_count: number | null
         }
         Insert: {
+          audio_name?: string | null
           caption?: string | null
           comments_count?: number | null
           created_at?: string
@@ -42963,6 +42965,7 @@ export type Database = {
           view_count?: number | null
         }
         Update: {
+          audio_name?: string | null
           caption?: string | null
           comments_count?: number | null
           created_at?: string
@@ -48946,6 +48949,7 @@ export type Database = {
       }
       user_posts: {
         Row: {
+          audio_name: string | null
           caption: string | null
           comments_count: number | null
           created_at: string | null
@@ -48963,6 +48967,7 @@ export type Database = {
           views_count: number | null
         }
         Insert: {
+          audio_name?: string | null
           caption?: string | null
           comments_count?: number | null
           created_at?: string | null
@@ -48980,6 +48985,7 @@ export type Database = {
           views_count?: number | null
         }
         Update: {
+          audio_name?: string | null
           caption?: string | null
           comments_count?: number | null
           created_at?: string | null
@@ -55146,6 +55152,7 @@ export type Database = {
           _store_id: string
         }
         Returns: {
+          audio_name: string | null
           caption: string | null
           comments_count: number | null
           created_at: string
