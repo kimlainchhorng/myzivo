@@ -107,7 +107,8 @@ export default function CreatePostModal({
   const [tagSearching, setTagSearching] = useState(false);
   const [activeFilter, setActiveFilter] = useState(0);
   const [showEmojis, setShowEmojis] = useState(false);
-  const [audioName, setAudioName] = useState("");
+  const [audioName, setAudioName] = useState(initialAudioName || "");
+  const [showAudioInput, setShowAudioInput] = useState(!!initialAudioName);
   const [showAudioInput, setShowAudioInput] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const captionRef = useRef<HTMLTextAreaElement>(null);
