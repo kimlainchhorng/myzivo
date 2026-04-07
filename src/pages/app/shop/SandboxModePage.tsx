@@ -63,37 +63,48 @@ export default function SandboxModePage() {
     setResults((prev) => [newResult, ...prev]);
 
     try {
-      // 1. Simulate the transaction record
       if (testType === "truck_sale") {
-        // Insert a test truck sale via edge function or directly
-        toast.info("Simulating truck sale...");
-      } else {
-        toast.info("Simulating ride completion...");
-      }
+        toast.info("Inserting test truck sale → triggers Meta bridge...");
+        // Insert a real truck_sales row with completed status — triggers notify_meta_capi_bridge
+        const { data: saleRow, error: saleErr } = await (supabase as any)
+          .from("truck_sales")
+          .insert({
+            store_id: "00000000-0000-0000-0000-000000000000",
+            driver_user_id: user.id,
+            truck_label: "Sandbox Truck",
+            total_amount: value,
+            subtotal: value,
+            currency,
+            status: "completed",
+            is_offline_synced: false,
+          })
+          .select("id")
+          .single();
 
-      // 2. Fire Meta CAPI Purchase event directly
-      await sendMetaConversionEvent({
-        eventName: "Purchase",
-        eventId,
-        externalId: user.id,
-        value,
-        currency,
-        sourceType: testType === "truck_sale" ? "truck_sale" : "trip",
-        sourceTable: testType === "truck_sale" ? "truck_sales" : "trips",
-        sourceId: eventId,
-        payload: {
-          sandbox: true,
-          test_mode: true,
-          transaction_type: testType,
-        },
-      });
+        if (saleErr) throw new Error(saleErr.message);
+        toast.info(`Truck sale inserted (${saleRow?.id}). DB trigger will fire Meta event.`);
+      } else {
+        toast.info("Simulating ride via direct Meta CAPI...");
+        // For rides, fire directly since we may not have a trips table trigger
+        await sendMetaConversionEvent({
+          eventName: "Purchase",
+          eventId,
+          externalId: user.id,
+          value,
+          currency,
+          sourceType: "trip",
+          sourceTable: "trips",
+          sourceId: eventId,
+          payload: { sandbox: true, test_mode: true },
+        });
+      }
 
       setResults((prev) =>
         prev.map((r) => (r.eventId === eventId ? { ...r, status: "sent" as const } : r))
       );
 
       toast.success(
-        `✅ Purchase event sent! Check Meta Events Manager.\nEvent ID: ${eventId}\nValue: ${currency} ${value}`,
+        `✅ ${testType === "truck_sale" ? "Truck sale inserted — DB trigger fires Meta Purchase" : "Ride Purchase event sent directly"}!\nEvent ID: ${eventId}\nValue: ${currency} ${value}`,
         { duration: 8000 }
       );
     } catch (err: any) {
