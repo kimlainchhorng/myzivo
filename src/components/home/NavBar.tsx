@@ -9,7 +9,7 @@ import {
   Plane, Hotel, CarFront, Car, UtensilsCrossed, Package,
   Menu, X, User, ChevronDown, HelpCircle,
   Sparkles, Users, Award, Crown, LogOut, UserCircle, Briefcase, Globe, Check,
-  Newspaper, Film, MapPin, MessageCircle,
+  Newspaper, Film, MapPin, MessageCircle, Rss,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,6 +38,9 @@ const serviceNavItems = [
   { label: "Cars", href: "/rent-car", icon: CarFront, cssVar: "var(--cars)" },
   { label: "Rides", href: "/rides", icon: Car, cssVar: "var(--rides)" },
   { label: "Eats", href: "/eats", icon: UtensilsCrossed, cssVar: "var(--eats)" },
+];
+
+const socialNavItems = [
   { label: "Feed", href: "/feed", icon: Newspaper, cssVar: "var(--flights)" },
   { label: "Reel", href: "/reels", icon: Film, cssVar: "var(--eats)" },
   { label: "Map", href: "/store-map", icon: MapPin, cssVar: "var(--hotels)" },
@@ -71,6 +74,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   const { isActive: isMember } = useMembership();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [socialOpen, setSocialOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const { currentLanguage, changeLanguage, t } = useI18n();
@@ -79,6 +83,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   const currentLangData = activeLanguages.find((l) => l.code === currentLanguage);
 
   const moreRef = useRef<HTMLDivElement>(null);
+  const socialRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -92,6 +97,9 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
     const handleClickOutside = (event: MouseEvent) => {
       if (moreRef.current && !moreRef.current.contains(event.target as Node)) {
         setMoreOpen(false);
+      }
+      if (socialRef.current && !socialRef.current.contains(event.target as Node)) {
+        setSocialOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -187,6 +195,73 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                     </motion.div>
                   );
                 })}
+                {/* Social Popover */}
+                <div ref={socialRef} className="relative">
+                  <motion.button
+                    onClick={() => setSocialOpen(!socialOpen)}
+                    whileHover={{ y: -2, scale: 1.04 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300",
+                      socialOpen || ["/feed", "/reels", "/store-map"].some(p => location.pathname.startsWith(p))
+                        ? "text-primary"
+                        : scrolled || !isHomePage
+                          ? "text-muted-foreground hover:text-foreground"
+                          : "text-foreground/70 hover:text-foreground"
+                    )}
+                    style={{
+                      border: `1.5px solid hsl(var(--primary) / ${socialOpen ? "0.3" : "0.12"})`,
+                      background: socialOpen ? "hsl(var(--primary) / 0.06)" : "transparent",
+                    }}
+                  >
+                    <Rss className="w-4 h-4" />
+                    Social
+                    <ChevronDown className={cn("w-3 h-3 transition-transform duration-300", socialOpen && "rotate-180")} />
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {socialOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                        transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 p-1.5 rounded-2xl"
+                        style={{
+                          background: "hsl(var(--card) / 0.9)",
+                          backdropFilter: "blur(24px)",
+                          border: "1px solid hsl(var(--border) / 0.25)",
+                          boxShadow: "0 12px 40px -8px hsl(var(--foreground) / 0.1)",
+                        }}
+                      >
+                        <div className="flex gap-1">
+                          {socialNavItems.map((item) => {
+                            const isActive = location.pathname.startsWith(item.href);
+                            return (
+                              <Link
+                                key={item.href}
+                                to={item.href}
+                                onClick={() => setSocialOpen(false)}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-200 whitespace-nowrap"
+                                style={{
+                                  background: isActive
+                                    ? `linear-gradient(135deg, hsl(${item.cssVar} / 0.15), hsl(${item.cssVar} / 0.08))`
+                                    : "transparent",
+                                  border: `1.5px solid hsl(${item.cssVar} / ${isActive ? "0.3" : "0.1"})`,
+                                  color: `hsl(${item.cssVar})`,
+                                }}
+                              >
+                                <item.icon className="w-4 h-4" />
+                                {item.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
                 {/* More Dropdown */}
                 <div ref={moreRef} className="relative">
                   <motion.button
