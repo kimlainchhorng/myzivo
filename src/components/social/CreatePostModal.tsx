@@ -823,6 +823,52 @@ export default function CreatePostModal({
           )}
         </AnimatePresence>
 
+        {/* Record/Select video prompt when using a sound */}
+        <AnimatePresence>
+          {showCameraChoice && files.length === 0 && initialAudioName && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden border-t border-border/30"
+            >
+              <div className="px-4 py-4 space-y-2.5">
+                <p className="text-xs text-muted-foreground font-medium text-center">
+                  Create a reel with this sound
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      if (cameraRef.current) {
+                        cameraRef.current.click();
+                      }
+                      setShowCameraChoice(false);
+                    }}
+                    className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-primary/10 hover:bg-primary/15 transition-colors"
+                  >
+                    <Film className="h-6 w-6 text-primary" />
+                    <span className="text-xs font-semibold text-primary">Record Video</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (fileRef.current) {
+                        fileRef.current.accept = "video/*";
+                        fileRef.current.multiple = false;
+                        fileRef.current.click();
+                      }
+                      setShowCameraChoice(false);
+                    }}
+                    className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-muted/60 hover:bg-muted transition-colors"
+                  >
+                    <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-xs font-semibold text-muted-foreground">From Gallery</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Media type selector — bottom toolbar */}
         <div className="px-4 py-3 border-t border-border/30 grid grid-cols-5 gap-1">
           {[
