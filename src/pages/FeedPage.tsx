@@ -1108,12 +1108,23 @@ export default function FeedPage() {
   const [createWithAudio, setCreateWithAudio] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const [userLikedPostIds, setUserLikedPostIds] = useState<Set<string>>(new Set());
 
-  // Get current user
+  // Get current user + profile
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      setUserId(data.user?.id || null);
+      const uid = data.user?.id || null;
+      setUserId(uid);
+      if (uid) {
+        supabase.from("profiles").select("full_name, avatar_url").eq("id", uid).maybeSingle()
+          .then(({ data: p }) => {
+            if (p) setUserProfile({
+              name: (p as any).full_name || "You",
+              avatar: (p as any).avatar_url || null,
+            });
+          });
+      }
     });
   }, []);
 
