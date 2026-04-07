@@ -63,3 +63,6 @@ verify_jwt = false
 [functions.meta-conversion-bridge]
 [functions.meta-conversion-handler]
 verify_jwt = false
+
+[functions.create-reel-boost]
+verify_jwt = false
