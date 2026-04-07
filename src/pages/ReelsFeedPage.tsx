@@ -8,6 +8,7 @@ import UnifiedShareSheet from "@/components/shared/ShareSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import NavBar from "@/components/home/NavBar";
 import TipSheet from "@/components/social/TipSheet";
 import {
   Loader2, Heart, MessageCircle, Share2, Eye, Bookmark,
@@ -435,9 +436,14 @@ export default function ReelsFeedPage() {
   }, [queryClient]);
 
   return (
-    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20">
+    <>
+      {/* Desktop NavBar */}
+      <div className="hidden lg:block relative z-[1200]">
+        <NavBar />
+      </div>
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pt-16">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center justify-between" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 0.625rem)' }}>
+      <div className="sticky top-0 lg:top-16 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center justify-between" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 0.625rem)' }}>
         <h1 className="text-lg font-bold text-foreground">Feed</h1>
         <div className="flex items-center gap-2">
           <button
@@ -686,6 +692,7 @@ export default function ReelsFeedPage() {
 
       <ZivoMobileNav />
     </PullToRefresh>
+    </>
   );
 }
 
