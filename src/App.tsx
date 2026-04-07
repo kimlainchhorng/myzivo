@@ -61,6 +61,8 @@ const SalesAttributionPage = lazy(() => import("./pages/app/shop/SalesAttributio
 const SandboxModePage = lazy(() => import("./pages/app/shop/SandboxModePage"));
 const MerchantROIDashboard = lazy(() => import("./pages/app/shop/MerchantROIDashboard"));
 const ReferAShopPage = lazy(() => import("./pages/app/shop/ReferAShopPage"));
+const ReferAFriendPage = lazy(() => import("./pages/app/ReferAFriendPage"));
+const MetaPrivacyDisclosure = lazy(() => import("./pages/legal/MetaPrivacyDisclosure"));
 const CreateCVPage = lazy(() => import("./pages/app/CreateCVPage"));
 const PersonalEmployeesPage = lazy(() => import("./pages/app/personal/PersonalEmployeesPage"));
 const PersonalSchedulePage = lazy(() => import("./pages/app/personal/PersonalSchedulePage"));
