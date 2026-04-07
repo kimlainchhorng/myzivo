@@ -89,7 +89,7 @@ async function buildUserData(
 /* ───────── Purchase event builders per table ───────── */
 
 async function buildPurchaseEvent(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   table: string,
   record: Rec,
 ): Promise<MetaPayload | null> {
