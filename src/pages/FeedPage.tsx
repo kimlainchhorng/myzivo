@@ -42,9 +42,13 @@ interface FeedPost {
 }
 
 /* ── Scrolling music ticker ───────────────────────────────────── */
-function MusicTicker({ name }: { name: string }) {
+function MusicTicker({ name, onClick }: { name: string; onClick?: () => void }) {
   return (
-    <div className="flex items-center gap-2 max-w-[65%] overflow-hidden">
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+      className="flex items-center gap-2 max-w-[65%] overflow-hidden active:opacity-70"
+    >
       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white/20 to-white/5 border border-white/20 flex items-center justify-center shrink-0 animate-[spin_3s_linear_infinite]">
         <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white">
           <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
@@ -55,7 +59,7 @@ function MusicTicker({ name }: { name: string }) {
           {name} &nbsp;&nbsp; • &nbsp;&nbsp; {name}
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -92,6 +96,7 @@ function ReelCard({
   onOpenComments: (postId: string) => void;
   onOpenShare: (postId: string) => void;
 }) {
+  const reelNavigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
@@ -461,7 +466,13 @@ function ReelCard({
         )}
 
         {/* Music ticker */}
-        <MusicTicker name={post.audio_name || `Original Sound - ${post.store_name || "ZIVO"}`} />
+        <MusicTicker
+          name={post.audio_name || `Original Sound - ${post.store_name || "ZIVO"}`}
+          onClick={() => {
+            const soundLabel = post.audio_name || `Original Sound - ${post.store_name || "ZIVO"}`;
+            reelNavigate(`/sound/${encodeURIComponent(soundLabel)}`);
+          }}
+        />
       </div>
 
       {/* Right-side action buttons (TikTok-style) */}

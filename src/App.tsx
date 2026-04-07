@@ -87,6 +87,7 @@ const DeliveryPage = lazy(() => import("./pages/DeliveryPage"));
 const GroceryMarketplace = lazy(() => import("./pages/GroceryMarketplace"));
 const FeedPage = lazy(() => import("./pages/FeedPage"));
 const ReelsFeedPage = lazy(() => import("./pages/ReelsFeedPage"));
+const SoundPage = lazy(() => import("./pages/SoundPage"));
 const ChatHubPage = lazy(() => import("./pages/ChatHubPage"));
 const ExplorePage = lazy(() => import("./pages/ExplorePage"));
 const BookmarksPage = lazy(() => import("./pages/BookmarksPage"));
@@ -559,6 +560,7 @@ const App = () => (
                 <Route path="/feed" element={<ReelsFeedPage />} />
                 <Route path="/reels" element={<FeedPage />} />
                 <Route path="/reels/:postId" element={<FeedPage />} />
+                <Route path="/sound/:soundName" element={<SoundPage />} />
                 <Route path="/dl/:kind/:id" element={<DeepLinkLandingPage />} />
                 <Route path="/shop/:storeId" element={<StoreProfilePage />} />
                 <Route path="/refer" element={<ProtectedRoute><ReferAFriendPage /></ProtectedRoute>} />
