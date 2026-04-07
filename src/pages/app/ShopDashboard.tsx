@@ -34,6 +34,7 @@ const ShopDashboard = () => {
     { icon: BarChart3, label: "Merchant ROI", description: "Views, clicks & revenue", color: "from-indigo-500 to-blue-500", onClick: () => navigate("/shop-dashboard/roi") },
     { icon: Truck, label: "Truck Dashboard", description: "GPS inventory & sales", color: "from-teal-500 to-cyan-500", onClick: () => navigate("/shop-dashboard/truck") },
     { icon: TestTube, label: "Sandbox Mode", description: "Test transactions & CAPI", color: "from-yellow-500 to-amber-500", onClick: () => navigate("/shop-dashboard/sandbox") },
+    { icon: Users, label: "Refer a Shop", description: "Invite shops, both get boosted", color: "from-pink-500 to-rose-500", onClick: () => navigate("/shop-dashboard/refer") },
     { icon: Settings, label: "Shop Settings", description: "Store profile & config", color: "from-slate-500 to-slate-600", onClick: () => navigate("/shop-dashboard/settings") },
   ];
 

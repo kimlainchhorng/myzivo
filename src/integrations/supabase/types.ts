@@ -27034,6 +27034,7 @@ export type Database = {
       }
       merchant_referrals: {
         Row: {
+          accepted_at: string | null
           commission_discount_expires_at: string | null
           commission_discount_months: number | null
           commission_discount_percent: number | null
@@ -27043,13 +27044,18 @@ export type Database = {
           referee_restaurant_id: string | null
           referee_reward_cents: number | null
           referee_user_id: string
+          referral_code: string | null
+          referred_email: string | null
+          referred_store_id: string | null
           referrer_restaurant_id: string | null
           referrer_reward_cents: number | null
+          referrer_store_id: string | null
           referrer_user_id: string
           reward_type: string | null
           status: string | null
         }
         Insert: {
+          accepted_at?: string | null
           commission_discount_expires_at?: string | null
           commission_discount_months?: number | null
           commission_discount_percent?: number | null
@@ -27059,13 +27065,18 @@ export type Database = {
           referee_restaurant_id?: string | null
           referee_reward_cents?: number | null
           referee_user_id: string
+          referral_code?: string | null
+          referred_email?: string | null
+          referred_store_id?: string | null
           referrer_restaurant_id?: string | null
           referrer_reward_cents?: number | null
+          referrer_store_id?: string | null
           referrer_user_id: string
           reward_type?: string | null
           status?: string | null
         }
         Update: {
+          accepted_at?: string | null
           commission_discount_expires_at?: string | null
           commission_discount_months?: number | null
           commission_discount_percent?: number | null
@@ -27075,8 +27086,12 @@ export type Database = {
           referee_restaurant_id?: string | null
           referee_reward_cents?: number | null
           referee_user_id?: string
+          referral_code?: string | null
+          referred_email?: string | null
+          referred_store_id?: string | null
           referrer_restaurant_id?: string | null
           referrer_reward_cents?: number | null
+          referrer_store_id?: string | null
           referrer_user_id?: string
           reward_type?: string | null
           status?: string | null
@@ -27111,6 +27126,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "merchant_referrals_referred_store_id_fkey"
+            columns: ["referred_store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "merchant_referrals_referrer_restaurant_id_fkey"
             columns: ["referrer_restaurant_id"]
             isOneToOne: false
@@ -27136,6 +27158,13 @@ export type Database = {
             columns: ["referrer_restaurant_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_referrals_referrer_store_id_fkey"
+            columns: ["referrer_store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -54598,6 +54627,10 @@ export type Database = {
         }[]
       }
       accept_offer: { Args: { p_offer_id: string }; Returns: Json }
+      accept_shop_referral: {
+        Args: { p_new_store_id: string; p_referral_code: string }
+        Returns: boolean
+      }
       accept_tenant_invitation: { Args: { p_token: string }; Returns: Json }
       acknowledge_reposition: {
         Args: { p_accepted: boolean; p_recommendation_id: string }
