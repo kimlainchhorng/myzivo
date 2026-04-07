@@ -59,6 +59,7 @@ const ShopEmployeeRulesPage = lazy(() => import("./pages/app/shop/ShopEmployeeRu
 const TruckDashboardPage = lazy(() => import("./pages/app/shop/TruckDashboardPage"));
 const SalesAttributionPage = lazy(() => import("./pages/app/shop/SalesAttributionPage"));
 const SandboxModePage = lazy(() => import("./pages/app/shop/SandboxModePage"));
+const MerchantROIDashboard = lazy(() => import("./pages/app/shop/MerchantROIDashboard"));
 const CreateCVPage = lazy(() => import("./pages/app/CreateCVPage"));
 const PersonalEmployeesPage = lazy(() => import("./pages/app/personal/PersonalEmployeesPage"));
 const PersonalSchedulePage = lazy(() => import("./pages/app/personal/PersonalSchedulePage"));
