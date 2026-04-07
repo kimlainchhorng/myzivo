@@ -996,11 +996,11 @@ export default function FeedPage() {
       <div className="hidden lg:block relative z-[1200] shrink-0">
         <NavBar />
       </div>
-      {/* Search button */}
+      {/* Search button - hide on desktop since NavBar has navigation */}
       <button
         type="button"
         onClick={() => setShowSearch(true)}
-        className="absolute top-3 right-4 z-50 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+        className="absolute top-3 right-4 z-50 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center lg:hidden"
         style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
       >
         <Search className="w-5 h-5 text-white" />
