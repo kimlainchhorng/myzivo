@@ -287,7 +287,7 @@ export default function ProfileEditPage() {
           <Loader2 className="h-8 w-8 text-primary animate-spin" />
         </div>
       ) : (
-        <div className="max-w-5xl mx-auto px-4 py-6 flex gap-8">
+        <div className="max-w-5xl mx-auto px-4 py-6 lg:pt-24 flex gap-8">
           {/* Sidebar — desktop only */}
           <DesktopSidebar activeSection={activeSection} onSectionClick={(id) => {
             setActiveSection(id);
