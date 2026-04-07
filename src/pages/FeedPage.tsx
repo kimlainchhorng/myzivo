@@ -84,6 +84,7 @@ function ReelCard({
   onToggleLike,
   onOpenComments,
   onOpenShare,
+  onOpenSound,
 }: {
   post: FeedPost;
   isActive: boolean;
@@ -95,8 +96,8 @@ function ReelCard({
   onToggleLike: (postId: string, currentlyLiked: boolean) => void;
   onOpenComments: (postId: string) => void;
   onOpenShare: (postId: string) => void;
+  onOpenSound: (soundName: string) => void;
 }) {
-  const reelNavigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
