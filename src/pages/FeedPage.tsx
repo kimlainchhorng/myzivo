@@ -1105,6 +1105,7 @@ export default function FeedPage() {
   const [sharePostId, setSharePostId] = useState<string | null>(null);
   const [soundOverlayName, setSoundOverlayName] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [createWithAudio, setCreateWithAudio] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
   const [userLikedPostIds, setUserLikedPostIds] = useState<Set<string>>(new Set());
