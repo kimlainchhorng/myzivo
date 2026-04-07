@@ -1240,10 +1240,10 @@ export default function FeedPage() {
 
       {/* Snap-scroll reel container */}
       <div
-        className="w-full h-full lg:flex-1 lg:flex lg:items-center lg:justify-center lg:gap-4 relative"
+        className="w-full h-full md:flex-1 md:flex md:items-center md:justify-center md:gap-4 relative"
       >
-        {/* Mobile: full-screen scroll */}
-        <div className="w-full h-full lg:w-[420px] lg:mx-auto lg:rounded-2xl lg:overflow-hidden lg:shadow-2xl lg:border lg:border-white/10 lg:h-[calc(100%-2rem)]">
+        {/* Phone-frame on tablet+ */}
+        <div className="w-full h-full md:w-[420px] md:mx-auto md:rounded-2xl md:overflow-hidden md:shadow-2xl md:border md:border-white/10 md:h-[calc(100%-2rem)]">
           <div
             className="w-full h-full overflow-y-scroll snap-y snap-mandatory"
             style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
