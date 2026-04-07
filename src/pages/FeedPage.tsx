@@ -980,12 +980,13 @@ function SoundOverlay({
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 26, stiffness: 280 }}
         className={cn(
-          "fixed bottom-0 z-[61] flex flex-col bg-background rounded-t-3xl overflow-hidden shadow-2xl",
-          "w-full max-h-[80vh]",
-          "sm:w-[400px] sm:left-1/2 sm:-translate-x-1/2",
-          "md:w-[420px]",
-          "lg:w-[420px] lg:left-1/2 lg:-translate-x-1/2",
+          "fixed inset-0 z-[61] flex items-center justify-center pointer-events-none",
         )}
+      >
+        <div className={cn(
+          "pointer-events-auto flex flex-col bg-background rounded-3xl overflow-hidden shadow-2xl",
+          "w-[92%] max-w-[420px] max-h-[70vh]",
+        )}>
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1">
