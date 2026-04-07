@@ -481,6 +481,9 @@ const AppHome = () => {
           {/* ─── LIVE TRIP TRACKER ─── */}
           <LiveTripTracker />
 
+          {/* ─── TRENDING NEAR YOU (AI) ─── */}
+          <TrendingNearYou />
+
           {/* ─── QUICK REORDER CAROUSEL ─── */}
           <QuickReorderCarousel />
 
