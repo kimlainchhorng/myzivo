@@ -382,6 +382,11 @@ const Profile = () => {
     <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
       <SEOHead title="Profile Settings – ZIVO" description="Manage your ZIVO account, profile, and travel preferences." noIndex={true} />
 
+      {/* Desktop NavBar */}
+      <div className="hidden lg:block">
+        <NavBar />
+      </div>
+
       {/* ── Deep 3D Background with multiple parallax layers ── */}
       <motion.div style={{ y: bgParallax }} className="pointer-events-none fixed inset-0 z-0">
         {/* Base gradient */}
