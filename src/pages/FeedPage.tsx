@@ -943,80 +943,88 @@ function SoundOverlay({
   });
 
   return (
-    <motion.div
-      initial={{ y: "100%" }}
-      animate={{ y: 0 }}
-      exit={{ y: "100%" }}
-      transition={{ type: "spring", damping: 28, stiffness: 300 }}
-      className="fixed inset-0 z-[60] flex flex-col bg-background"
-    >
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border/40 safe-area-top">
-        <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted/50">
-          <ArrowLeft className="h-5 w-5 text-foreground" />
-        </button>
-        <div className="flex-1 min-w-0">
-          <h2 className="text-base font-bold text-foreground truncate">{soundName}</h2>
-          <p className="text-xs text-muted-foreground">
-            {reels.length} reel{reels.length !== 1 ? "s" : ""}
-          </p>
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 z-[60] bg-black/50"
+      />
+      {/* Bottom sheet card */}
+      <motion.div
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 28, stiffness: 300 }}
+        className="fixed bottom-0 left-0 right-0 z-[61] max-h-[75vh] flex flex-col bg-background rounded-t-2xl overflow-hidden"
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-2 pb-1">
+          <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
         </div>
-      </div>
 
-      {/* Sound info */}
-      <div className="px-4 py-4 flex items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center animate-[spin_3s_linear_infinite]">
-          <svg viewBox="0 0 24 24" className="w-7 h-7 fill-primary">
-            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-          </svg>
+        {/* Sound info header */}
+        <div className="px-4 py-3 flex items-center gap-3 border-b border-border/40">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center animate-[spin_3s_linear_infinite]">
+            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-primary">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm text-foreground truncate">{soundName}</p>
+            <p className="text-xs text-muted-foreground">
+              {reels.length} reel{reels.length !== 1 ? "s" : ""} using this sound
+            </p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted/50">
+            <XIcon className="h-5 w-5 text-muted-foreground" />
+          </button>
         </div>
-        <div className="flex-1">
-          <p className="font-bold text-foreground">{soundName}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{reels.length} reels using this sound</p>
-        </div>
-      </div>
 
-      {/* Reels grid */}
-      <div className="flex-1 overflow-y-auto px-0.5 pb-20">
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-7 w-7 animate-spin text-primary" />
-          </div>
-        ) : reels.length === 0 ? (
-          <p className="text-center py-12 text-muted-foreground text-sm">No reels with this sound yet</p>
-        ) : (
-          <div className="grid grid-cols-3 gap-0.5">
-            {reels.map((reel) => {
-              const thumb = (reel.media_urls || []).map((u: string) => normalizeStorePostMediaUrl(u)).filter(Boolean)[0];
-              return (
-                <button
-                  key={reel.id}
-                  onClick={() => onNavigateToReel(reel.id)}
-                  className="relative aspect-[9/16] bg-muted overflow-hidden group"
-                >
-                  {thumb && reel.media_type === "video" ? (
-                    <video src={thumb} muted preload="metadata" className="w-full h-full object-cover" />
-                  ) : thumb ? (
-                    <img src={thumb} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-muted">
-                      <Play className="h-6 w-6 text-muted-foreground/40" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                  {reel.views > 0 && (
-                    <div className="absolute bottom-1 left-1 flex items-center gap-0.5 text-white text-[10px] font-medium drop-shadow">
-                      <Play className="h-2.5 w-2.5 fill-white" />
-                      {reel.views > 1000 ? `${(reel.views / 1000).toFixed(1)}K` : reel.views}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </motion.div>
+        {/* Reels grid */}
+        <div className="flex-1 overflow-y-auto px-0.5 py-2 pb-safe">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : reels.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground text-sm">No reels with this sound yet</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-0.5">
+              {reels.map((reel) => {
+                const thumb = (reel.media_urls || []).map((u: string) => normalizeStorePostMediaUrl(u)).filter(Boolean)[0];
+                return (
+                  <button
+                    key={reel.id}
+                    onClick={() => onNavigateToReel(reel.id)}
+                    className="relative aspect-[9/16] bg-muted overflow-hidden group"
+                  >
+                    {thumb && reel.media_type === "video" ? (
+                      <video src={thumb} muted preload="metadata" className="w-full h-full object-cover" />
+                    ) : thumb ? (
+                      <img src={thumb} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <Play className="h-6 w-6 text-muted-foreground/40" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                    {reel.views > 0 && (
+                      <div className="absolute bottom-1 left-1 flex items-center gap-0.5 text-white text-[10px] font-medium drop-shadow">
+                        <Play className="h-2.5 w-2.5 fill-white" />
+                        {reel.views > 1000 ? `${(reel.views / 1000).toFixed(1)}K` : reel.views}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </>
   );
 }
 
