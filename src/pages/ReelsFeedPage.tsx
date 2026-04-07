@@ -1438,7 +1438,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
             )}
 
             {/* Original post media */}
-            <div ref={containerRef} className={cn("relative w-full", hasMedia ? "aspect-square bg-black" : "")}>
+            <div ref={containerRef} className={cn("relative w-full", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[600px] bg-black rounded-lg overflow-hidden" : "aspect-square bg-black") : "")}>
               {hasMedia ? (
                 item.media_type === "video" ? (
                   <>
