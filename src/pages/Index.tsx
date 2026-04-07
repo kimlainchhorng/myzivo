@@ -40,10 +40,17 @@ const NewsletterSection = lazy(() => lazyRetry(() => import("@/components/home/N
 const VideoAdsSection = lazy(() => lazyRetry(() => import("@/components/home/VideoAdsSection")));
 const ServiceFlowBanner = lazy(() => lazyRetry(() => import("@/components/home/ServiceFlowBanner")));
 
+// Mobile-native power sections — now on desktop too
+const AISmartDeals = lazy(() => lazyRetry(() => import("@/components/home/AISmartDeals")));
+const TrendingNearYou = lazy(() => lazyRetry(() => import("@/components/home/TrendingNearYou")));
+const LiveTripTracker = lazy(() => lazyRetry(() => import("@/components/home/widgets/LiveTripTracker")));
+const PriceAlertsWidget = lazy(() => lazyRetry(() => import("@/components/home/widgets/PriceAlertsWidget")));
+const DesktopHotDeals = lazy(() => lazyRetry(() => import("@/components/home/DesktopHotDeals")));
+
 // Mobile app home
 const AppHome = lazy(() => lazyRetry(() => import("@/pages/app/AppHome")));
 
-// Desktop version - Premium layout with lazy-loaded below-fold sections
+// Desktop version - Premium layout with mobile-app power features
 const DesktopHomePage = () => {
   const { user } = useAuth();
 
@@ -63,7 +70,48 @@ const DesktopHomePage = () => {
         <ServicesShowcase />
         <StatsSection />
 
-        {/* Below-fold: Lazy loaded with content-aware skeletons */}
+        {/* ─── MOBILE-APP POWER SECTIONS (adapted for desktop) ─── */}
+        <LazySection>
+          <Suspense fallback={<div className="h-20" />}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-8">
+              <LiveTripTracker />
+            </div>
+          </Suspense>
+        </LazySection>
+
+        <LazySection>
+          <Suspense fallback={<CardGridSkeleton />}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
+              <TrendingNearYou />
+            </div>
+          </Suspense>
+        </LazySection>
+
+        <LazySection>
+          <Suspense fallback={<CardGridSkeleton />}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
+              <AISmartDeals />
+            </div>
+          </Suspense>
+        </LazySection>
+
+        <LazySection>
+          <Suspense fallback={<CardGridSkeleton />}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
+              <DesktopHotDeals />
+            </div>
+          </Suspense>
+        </LazySection>
+
+        <LazySection>
+          <Suspense fallback={<div className="h-20" />}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
+              <PriceAlertsWidget />
+            </div>
+          </Suspense>
+        </LazySection>
+
+        {/* ─── EXISTING BELOW-FOLD SECTIONS ─── */}
         <LazySection><Suspense fallback={<BannerSkeleton />}><VideoAdsSection /></Suspense></LazySection>
         <LazySection><Suspense fallback={<RoutesSkeleton />}><PopularRoutesSection /></Suspense></LazySection>
         <LazySection><Suspense fallback={<BannerSkeleton />}><ServiceFlowBanner /></Suspense></LazySection>
