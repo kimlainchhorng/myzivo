@@ -61,7 +61,7 @@ export default function FollowSuggestions() {
               <X className="h-3 w-3 text-muted-foreground" />
             </button>
             <Avatar className="h-14 w-14 mx-auto mb-2 cursor-pointer" onClick={() => navigate(`/profile/${s.id}`)}>
-              <AvatarImage src={s.avatar_url} />
+              <AvatarImage src={optimizeAvatar(s.avatar_url, 56)} loading="lazy" />
               <AvatarFallback>{(s.full_name || "U")[0]}</AvatarFallback>
             </Avatar>
             <p className="text-xs font-medium text-foreground truncate mb-2">{s.full_name || "User"}</p>
