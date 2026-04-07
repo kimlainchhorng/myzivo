@@ -135,10 +135,7 @@ function SocialLinksEditor({ profile, updateProfile }: { profile: any; updatePro
 }
 
 // ─── Desktop Sidebar ───
-function DesktopSidebar({ activeSection }: { activeSection: string }) {
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+function DesktopSidebar({ activeSection, onSectionClick }: { activeSection: string; onSectionClick: (id: string) => void }) {
 
   return (
     <aside className="hidden lg:block w-[220px] shrink-0">
@@ -150,7 +147,7 @@ function DesktopSidebar({ activeSection }: { activeSection: string }) {
           return (
             <button
               key={section.id}
-              onClick={() => scrollTo(section.id)}
+              onClick={() => onSectionClick(section.id)}
               className={cn(
                 "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all text-left",
                 isActive
@@ -285,7 +282,10 @@ export default function ProfileEditPage() {
       ) : (
         <div className="max-w-5xl mx-auto px-4 py-6 flex gap-8">
           {/* Sidebar — desktop only */}
-          <DesktopSidebar activeSection={activeSection} />
+          <DesktopSidebar activeSection={activeSection} onSectionClick={(id) => {
+            setActiveSection(id);
+            document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }} />
 
           {/* Main content */}
           <div className="flex-1 max-w-lg mx-auto lg:mx-0 space-y-6">
