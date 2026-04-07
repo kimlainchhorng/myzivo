@@ -41,6 +41,62 @@ async function logPaymentAudit(
   }
 }
 
+async function upsertPurchaseRecord(
+  supabase: any,
+  input: {
+    userId?: string | null;
+    transactionId: string;
+    sourceType: string;
+    amountCents: number;
+    currency: string;
+    status?: string;
+    metadata?: Record<string, any>;
+  }
+) {
+  const payload = {
+    user_id: input.userId || null,
+    transaction_id: input.transactionId,
+    source_type: input.sourceType,
+    amount_cents: input.amountCents,
+    currency: (input.currency || 'USD').toUpperCase(),
+    status: input.status || 'completed',
+    metadata: input.metadata || {},
+  };
+
+  const { error } = await supabase
+    .from('purchase_records')
+    .upsert(payload, { onConflict: 'transaction_id' });
+
+  if (error) {
+    console.error('[Webhook] Failed to upsert purchase record:', error);
+  }
+}
+
+async function upsertShopPulse(
+  supabase: any,
+  storeId: string,
+  transactionId: string,
+) {
+  if (!storeId) return;
+
+  const nowIso = new Date().toISOString();
+  const { error } = await supabase
+    .from('shop_live_pulse')
+    .upsert(
+      {
+        store_id: storeId,
+        last_purchase_at: nowIso,
+        last_event_id: transactionId,
+        updated_at: nowIso,
+      },
+      { onConflict: 'store_id' }
+    );
+
+  if (error) {
+    console.error('[Webhook] Failed to upsert live pulse:', error);
+  }
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
@@ -313,9 +369,10 @@ serve(async (req) => {
           }
         }
         // ──── Record 2% platform fee ────
+        const merchantId = metadata.merchant_id || metadata.restaurant_id || metadata.store_id || null;
+
         if (session.amount_total && session.amount_total > 0) {
           try {
-            const merchantId = metadata.merchant_id || metadata.restaurant_id || metadata.store_id || null;
             const grossCents = session.amount_total;
             const feePct = 2.00;
 
@@ -351,9 +408,52 @@ serve(async (req) => {
               waived,
               waiver_id: waiverId,
             });
+
+            if (feeAmountCents > 0) {
+              await supabase.from("admin_wallet_ledger").upsert(
+                {
+                  source_type: "platform_fee",
+                  source_id: session.id,
+                  transaction_id: session.id,
+                  amount_cents: feeAmountCents,
+                  currency: session.currency?.toUpperCase() || "USD",
+                  metadata: {
+                    order_type: metadata.type || "general",
+                    merchant_id: merchantId,
+                    gross_amount_cents: grossCents,
+                    fee_pct: feePct,
+                  },
+                },
+                { onConflict: "transaction_id,source_type,source_id" }
+              );
+            }
+
             console.log("[Webhook] Platform fee recorded:", feeAmountCents, "cents", waived ? "(WAIVED)" : "");
           } catch (feeErr) {
             console.error("[Webhook] Platform fee recording failed:", feeErr);
+          }
+        }
+
+        if (session.amount_total && session.amount_total > 0) {
+          const userId = metadata.user_id || metadata.customer_id || metadata.rider_id || null;
+          await upsertPurchaseRecord(supabase, {
+            userId,
+            transactionId: session.id,
+            sourceType: metadata.type || 'stripe_checkout',
+            amountCents: session.amount_total,
+            currency: session.currency?.toUpperCase() || 'USD',
+            status: 'completed',
+            metadata: {
+              stripe_event_id: event.id,
+              stripe_payment_intent_id: paymentIntentId,
+              merchant_id: merchantId,
+              checkout_session_id: session.id,
+              meta_event_id: session.id,
+            },
+          });
+
+          if (merchantId) {
+            await upsertShopPulse(supabase, merchantId, session.id);
           }
         }
 
@@ -368,10 +468,14 @@ serve(async (req) => {
               record: {
                 id: session.id,
                 user_id: userId,
+                store_id: merchantId,
                 total_amount: session.amount_total / 100,
                 currency: session.currency?.toUpperCase() || "USD",
                 created_at: new Date().toISOString(),
                 service_type: metadata.type || "general",
+                metadata: {
+                  store_id: merchantId,
+                },
               },
             };
             await fetch(capiUrl, {

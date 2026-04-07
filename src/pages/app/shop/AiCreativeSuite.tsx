@@ -1,69 +1,98 @@
 /**
- * AiCreativeSuite — Merchant AI Video/Music Generator
- * Upload product image → Select mood → Generate suggested Reel
+ * AiCreativeSuite - Merchant Smart Reel Creator
+ * 3 photos + vibe + prompt -> AI video placeholder output
  */
-import { useState, useRef } from "react";
-import { ArrowLeft, Upload, Sparkles, Music, Film, Image, Wand2, Download } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { ArrowLeft, Upload, Sparkles, Film, Image, Wand2, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
-type Mood = "energetic" | "luxury" | "local";
+type Vibe = "modern" | "luxury" | "fun";
 
-const MOODS: { id: Mood; label: string; emoji: string; description: string; color: string }[] = [
-  { id: "energetic", label: "Energetic", emoji: "⚡", description: "Upbeat, fast-paced, vibrant colors", color: "from-orange-500 to-red-500" },
-  { id: "luxury", label: "Luxury", emoji: "✨", description: "Elegant, slow-motion, gold accents", color: "from-amber-500 to-yellow-600" },
-  { id: "local", label: "Local", emoji: "🌿", description: "Warm, authentic, community feel", color: "from-emerald-500 to-teal-600" },
-];
-
-const MUSIC_SUGGESTIONS: Record<Mood, string[]> = {
-  energetic: ["Upbeat Pop", "Electronic Dance", "Hip Hop Beat", "Tropical House"],
-  luxury: ["Ambient Piano", "Jazz Lounge", "Classical Strings", "Cinematic"],
-  local: ["Acoustic Guitar", "World Music", "Folk Melody", "Nature Sounds"],
+type UploadSlot = {
+  id: number;
+  label: string;
+  imageUrl: string | null;
 };
 
-const TEXT_OVERLAYS: Record<Mood, string[]> = {
-  energetic: ["🔥 HOT DEALS", "LIMITED TIME", "DON'T MISS OUT!", "SHOP NOW →"],
-  luxury: ["Premium Collection", "Exclusively Yours", "Crafted with Care", "Discover More"],
-  local: ["Made with Love ❤️", "Support Local", "Fresh & Authentic", "From Our Family"],
+const VIBES: { id: Vibe; label: string; description: string; accent: string }[] = [
+  { id: "modern", label: "Modern", description: "Clean, crisp, editorial product focus", accent: "from-sky-500 to-cyan-500" },
+  { id: "luxury", label: "Luxury", description: "Elegant motion, premium highlights", accent: "from-amber-500 to-yellow-500" },
+  { id: "fun", label: "Fun", description: "Colorful, playful, social-first vibe", accent: "from-pink-500 to-orange-500" },
+];
+
+const DEFAULT_PROMPTS: Record<Vibe, string> = {
+  modern: "Showcase product details with smooth pans, clean typography, and high contrast close-ups.",
+  luxury: "Use slow cinematic movement with premium text treatment and polished transitions.",
+  fun: "Create energetic cuts with bright overlays and upbeat hook text for social reels.",
 };
 
 export default function AiCreativeSuite() {
   const navigate = useNavigate();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
+  const [uploads, setUploads] = useState<UploadSlot[]>([
+    { id: 0, label: "Photo 1", imageUrl: null },
+    { id: 1, label: "Photo 2", imageUrl: null },
+    { id: 2, label: "Photo 3", imageUrl: null },
+  ]);
+  const [selectedVibe, setSelectedVibe] = useState<Vibe | null>(null);
+  const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedPreview, setGeneratedPreview] = useState(false);
+  const [placeholderReady, setPlaceholderReady] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const fileRefs = [
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+  ];
+
+  const uploadedCount = useMemo(() => uploads.filter((u) => !!u.imageUrl).length, [uploads]);
+  const chosenVibe = selectedVibe ? VIBES.find((v) => v.id === selectedVibe) : null;
+
+  const onPickImage = (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       toast.error("Please upload an image file");
       return;
     }
+
     const url = URL.createObjectURL(file);
-    setSelectedImage(url);
-    setGeneratedPreview(false);
+    setUploads((prev) => prev.map((slot, idx) => (idx === slotIndex ? { ...slot, imageUrl: url } : slot)));
+    setPlaceholderReady(false);
   };
 
-  const handleGenerate = async () => {
-    if (!selectedImage || !selectedMood) {
-      toast.error("Please upload an image and select a mood");
+  const fillPromptFromVibe = (vibe: Vibe) => {
+    if (!prompt.trim()) {
+      setPrompt(DEFAULT_PROMPTS[vibe]);
+    }
+  };
+
+  const handleGeneratePlaceholder = async () => {
+    if (uploadedCount < 3) {
+      toast.error("Upload all 3 photos first");
       return;
     }
-    setIsGenerating(true);
-    // Simulate AI generation (in production, this would call the AI Creative edge function)
-    await new Promise(r => setTimeout(r, 3000));
-    setGeneratedPreview(true);
-    setIsGenerating(false);
-    toast.success("Reel preview generated!");
-  };
+    if (!selectedVibe) {
+      toast.error("Select a vibe");
+      return;
+    }
 
-  const mood = selectedMood ? MOODS.find(m => m.id === selectedMood) : null;
+    setIsGenerating(true);
+    setPlaceholderReady(false);
+
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+
+    const newDraftId = `veo-draft-${Date.now()}`;
+    setDraftId(newDraftId);
+    setPlaceholderReady(true);
+    setIsGenerating(false);
+    toast.success("AI video draft placeholder created");
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -75,154 +104,144 @@ export default function AiCreativeSuite() {
           <div>
             <h1 className="text-lg font-bold flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              AI Creative Suite
+              AI Smart-Reel Creator
             </h1>
-            <p className="text-xs text-muted-foreground">Generate professional Reels for your shop</p>
+            <p className="text-xs text-muted-foreground">3 photos, one vibe, and a prompt to draft an AI reel</p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
-        {/* Step 1: Upload Image */}
+      <div className="max-w-xl mx-auto px-4 py-6 space-y-5">
         <Card className="rounded-2xl border-border/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Image className="h-4 w-4 text-primary" />
-              Step 1: Upload Product Image
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-            {selectedImage ? (
-              <div className="relative rounded-2xl overflow-hidden">
-                <img src={selectedImage} alt="Product" className="w-full h-48 object-cover" />
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  className="absolute bottom-2 right-2 px-3 py-1.5 rounded-xl bg-background/90 backdrop-blur text-xs font-medium border border-border/40"
-                >
-                  Change
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => fileRef.current?.click()}
-                className="w-full h-40 rounded-2xl border-2 border-dashed border-border/60 flex flex-col items-center justify-center gap-2 hover:border-primary/50 transition-colors"
-              >
-                <Upload className="h-8 w-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Tap to upload your product photo</p>
-              </button>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Step 2: Select Mood */}
-        <Card className="rounded-2xl border-border/40">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Music className="h-4 w-4 text-primary" />
-              Step 2: Select Mood
+              Step 1: Upload 3 Product Photos
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-2">
-              {MOODS.map(m => (
+              {uploads.map((slot, idx) => (
+                <div key={slot.id} className="space-y-1.5">
+                  <input
+                    ref={fileRefs[idx]}
+                    type="file"
+                    accept="image/*"
+                    title={`${slot.label} upload`}
+                    aria-label={`${slot.label} upload`}
+                    className="hidden"
+                    onChange={(e) => onPickImage(idx, e)}
+                  />
+                  <button
+                    onClick={() => fileRefs[idx].current?.click()}
+                    className="w-full h-28 rounded-xl border-2 border-dashed border-border/60 hover:border-primary/50 transition-colors overflow-hidden"
+                  >
+                    {slot.imageUrl ? (
+                      <img src={slot.imageUrl} alt={slot.label} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center gap-1 text-muted-foreground">
+                        <Upload className="h-4 w-4" />
+                        <span className="text-[11px]">{slot.label}</span>
+                      </div>
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-[11px] text-muted-foreground">Uploaded: {uploadedCount}/3</p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border-border/40">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Wand2 className="h-4 w-4 text-primary" />
+              Step 2: Select Vibe
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-2">
+              {VIBES.map((v) => (
                 <motion.button
-                  key={m.id}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => { setSelectedMood(m.id); setGeneratedPreview(false); }}
-                  className={`rounded-2xl p-3 text-center border-2 transition-all ${
-                    selectedMood === m.id ? "border-primary bg-primary/5" : "border-border/40 bg-card"
+                  key={v.id}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => {
+                    setSelectedVibe(v.id);
+                    setPlaceholderReady(false);
+                    fillPromptFromVibe(v.id);
+                  }}
+                  className={`rounded-xl p-3 text-left border transition-all ${
+                    selectedVibe === v.id ? "border-primary bg-primary/5" : "border-border/40"
                   }`}
                 >
-                  <span className="text-2xl">{m.emoji}</span>
-                  <p className="text-xs font-bold mt-1">{m.label}</p>
-                  <p className="text-[9px] text-muted-foreground mt-0.5 leading-tight">{m.description}</p>
+                  <p className="text-sm font-semibold">{v.label}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1 leading-tight">{v.description}</p>
                 </motion.button>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Generate Button */}
+        <Card className="rounded-2xl border-border/40">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Step 3: Prompt</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              value={prompt}
+              onChange={(e) => {
+                setPrompt(e.target.value);
+                setPlaceholderReady(false);
+              }}
+              placeholder="Describe how the reel should feel, transitions, text style, and call to action..."
+              className="min-h-24 rounded-xl"
+            />
+          </CardContent>
+        </Card>
+
         <Button
-          onClick={handleGenerate}
-          disabled={!selectedImage || !selectedMood || isGenerating}
+          onClick={handleGeneratePlaceholder}
+          disabled={uploadedCount < 3 || !selectedVibe || isGenerating}
           className="w-full h-14 rounded-2xl text-base font-bold gap-2 shadow-lg"
         >
-          <Wand2 className={`h-5 w-5 ${isGenerating ? "animate-spin" : ""}`} />
-          {isGenerating ? "AI is creating your Reel..." : "Generate Suggested Reel"}
+          <Film className={`h-5 w-5 ${isGenerating ? "animate-spin" : ""}`} />
+          {isGenerating ? "Generating AI draft..." : "Generate AI Video (Veo Placeholder)"}
         </Button>
 
-        {/* Generated Preview */}
         <AnimatePresence>
-          {generatedPreview && mood && selectedMood && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
+          {placeholderReady && chosenVibe && (
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Card className="rounded-2xl border-2 border-primary/30 overflow-hidden">
-                <div className="relative">
-                  <img src={selectedImage!} alt="Preview" className="w-full h-64 object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
-
-                  {/* Text Overlays */}
-                  <div className="absolute top-4 left-4">
-                    <span className={`text-xs px-3 py-1 rounded-full text-white font-bold bg-gradient-to-r ${mood.color}`}>
-                      {TEXT_OVERLAYS[selectedMood][0]}
-                    </span>
-                  </div>
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <p className="text-white text-lg font-bold drop-shadow-lg">
-                      {TEXT_OVERLAYS[selectedMood][2]}
-                    </p>
-                    <p className="text-white/80 text-xs mt-1">
-                      {TEXT_OVERLAYS[selectedMood][3]}
-                    </p>
-                  </div>
-
-                  {/* Music indicator */}
-                  <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-black/50 backdrop-blur rounded-full px-3 py-1.5">
-                    <Music className="h-3 w-3 text-white" />
-                    <span className="text-[10px] text-white font-medium">
-                      {MUSIC_SUGGESTIONS[selectedMood][0]}
-                    </span>
-                  </div>
+                <div className="grid grid-cols-3 gap-1 p-1 bg-muted/30">
+                  {uploads.map((slot) => (
+                    <div key={slot.id} className="h-24 rounded-lg overflow-hidden bg-muted">
+                      {slot.imageUrl ? <img src={slot.imageUrl} alt={slot.label} className="w-full h-full object-cover" /> : null}
+                    </div>
+                  ))}
                 </div>
 
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-bold">Suggested Reel Preview</p>
-                      <p className="text-xs text-muted-foreground">{mood.label} mood · 15s · Auto-generated</p>
+                      <p className="text-sm font-bold">AI Video Draft Placeholder</p>
+                      <p className="text-xs text-muted-foreground">Vibe: {chosenVibe.label} | Draft ID: {draftId}</p>
                     </div>
-                    <Film className="h-5 w-5 text-primary" />
+                    <span className={`text-[11px] px-2 py-1 rounded-full text-white bg-gradient-to-r ${chosenVibe.accent}`}>
+                      Veo Pending
+                    </span>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Suggested Music</p>
-                    <div className="flex gap-1.5 flex-wrap">
-                      {MUSIC_SUGGESTIONS[selectedMood].map(track => (
-                        <span key={track} className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">{track}</span>
-                      ))}
-                    </div>
+                  <div className="rounded-xl bg-muted/50 p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">Prompt used</p>
+                    <p className="text-sm">{prompt || DEFAULT_PROMPTS[chosenVibe.id]}</p>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Text Overlays</p>
-                    <div className="flex gap-1.5 flex-wrap">
-                      {TEXT_OVERLAYS[selectedMood].map(text => (
-                        <span key={text} className="text-[10px] bg-muted px-2 py-0.5 rounded-full">{text}</span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <Button variant="outline" className="flex-1 rounded-xl gap-1.5" onClick={() => toast.info("Download coming soon")}>
+                  <div className="flex gap-2 pt-1">
+                    <Button variant="outline" className="flex-1 rounded-xl gap-1.5" onClick={() => toast.info("Draft export is coming soon") }>
                       <Download className="h-4 w-4" /> Save Draft
                     </Button>
-                    <Button className="flex-1 rounded-xl gap-1.5" onClick={() => { navigate("/create-post"); toast.success("Opening Reel editor..."); }}>
-                      <Film className="h-4 w-4" /> Post as Reel
+                    <Button className="flex-1 rounded-xl gap-1.5" onClick={() => { navigate("/create-post"); toast.success("Opening Reel composer"); }}>
+                      <Film className="h-4 w-4" /> Continue to Reel
                     </Button>
                   </div>
                 </CardContent>

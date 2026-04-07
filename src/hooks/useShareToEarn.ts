@@ -6,6 +6,7 @@ import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { buildReelDeepLink } from "@/lib/deepLinks";
 
 const REWARD_POINTS = 100;
 const REWARD_CREDIT_CENTS = 100; // $1.00
@@ -49,7 +50,8 @@ export function useShareToEarn() {
         }
 
         // Build share URL with tracking params
-        const shareUrl = `https://hizovo.com/reels/${postId}?ref=${referralCode}&utm_source=${platform}&utm_medium=share&utm_campaign=share_to_earn`;
+        const shareBase = buildReelDeepLink(postId);
+        const shareUrl = `${shareBase}?ref=${referralCode}&utm_source=${platform}&utm_medium=share&utm_campaign=share_to_earn`;
 
         // Log the share event
         await db.from("referral_shares").insert({

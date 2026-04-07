@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const shareLandingUrl = `${APP_ORIGIN}/reels?post=${encodeURIComponent(postMeta.id)}`;
+    const shareLandingUrl = `${APP_ORIGIN}/dl/reel/${encodeURIComponent(postMeta.id)}`;
     const description = postMeta.caption?.trim() || `Check out this post by ${postMeta.authorName} on ZIVO.`;
 
     if (!SOCIAL_CRAWLER_UA.test(userAgent)) {

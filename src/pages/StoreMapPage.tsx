@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import { trackInitiateCheckout } from "@/services/metaConversion";
+import { buildShopDeepLink } from "@/lib/deepLinks";
 
 const DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 };
 
@@ -222,6 +223,7 @@ export default function StoreMapPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const pulseCirclesRef = useRef<google.maps.Circle[]>([]);
   const userDotRef = useRef<google.maps.Marker | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState(false);
@@ -232,6 +234,7 @@ export default function StoreMapPage() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [liveStoreMap, setLiveStoreMap] = useState<Record<string, string>>({});
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -254,6 +257,33 @@ export default function StoreMapPage() {
   });
 
   const stores = useMemo(() => allStores.filter(s => s.latitude != null && s.longitude != null), [allStores]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadPulse = async () => {
+      const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      const { data } = await (supabase as any)
+        .from("shop_live_pulse")
+        .select("store_id, last_purchase_at")
+        .gte("last_purchase_at", cutoff);
+
+      if (!active) return;
+
+      const next: Record<string, string> = {};
+      for (const row of data || []) {
+        if (row?.store_id) next[String(row.store_id)] = String(row.last_purchase_at || "");
+      }
+      setLiveStoreMap(next);
+    };
+
+    loadPulse();
+    const t = window.setInterval(loadPulse, 60_000);
+    return () => {
+      active = false;
+      window.clearInterval(t);
+    };
+  }, []);
 
   const usedCategories = useMemo(() => {
     const cats = new Set(allStores.map((s) => s.category));
@@ -349,6 +379,8 @@ export default function StoreMapPage() {
     if (!mapReady || !mapRef.current) return;
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
+    pulseCirclesRef.current.forEach((c) => c.setMap(null));
+    pulseCirclesRef.current = [];
     if (!filteredStores.length) return;
 
     const bounds = new google.maps.LatLngBounds();
@@ -390,7 +422,38 @@ export default function StoreMapPage() {
         if (z < 14) mapRef.current?.setZoom(14);
       });
       markersRef.current.push(marker);
+
+      if (liveStoreMap[store.id]) {
+        const pulse = new google.maps.Circle({
+          map: mapRef.current!,
+          center: pos,
+          radius: 40,
+          strokeOpacity: 0,
+          fillColor: "#10b981",
+          fillOpacity: 0.2,
+          zIndex: 50,
+        });
+        pulseCirclesRef.current.push(pulse);
+      }
     });
+
+    if (pulseCirclesRef.current.length) {
+      let tick = 0;
+      const animate = window.setInterval(() => {
+        tick += 1;
+        pulseCirclesRef.current.forEach((c, idx) => {
+          const phase = (tick + idx * 4) % 24;
+          const radius = 30 + phase * 4;
+          const opacity = Math.max(0.04, 0.24 - phase * 0.008);
+          c.setRadius(radius);
+          c.setOptions({ fillOpacity: opacity });
+        });
+      }, 90);
+
+      return () => {
+        window.clearInterval(animate);
+      };
+    }
     if (userLocation) bounds.extend(userLocation);
     if (filteredStores.length > 1) {
       mapRef.current.fitBounds(bounds, { top: 140, bottom: 180, left: 30, right: 30 });
@@ -398,7 +461,7 @@ export default function StoreMapPage() {
       mapRef.current.setCenter({ lat: filteredStores[0].latitude, lng: filteredStores[0].longitude });
       mapRef.current.setZoom(15);
     }
-  }, [mapReady, filteredStores, userLocation]);
+  }, [mapReady, filteredStores, userLocation, liveStoreMap]);
 
   const handleRecenter = useCallback(() => {
     if (!mapRef.current) return;
@@ -630,6 +693,27 @@ export default function StoreMapPage() {
                 >
                   <Store className="w-3.5 h-3.5" /> View Store
                 </button>
+                <div className="w-px bg-border/20" />
+                <button
+                  className="flex-1 py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const shareUrl = buildShopDeepLink(selectedStore.slug);
+                    const shareText = `Check out ${selectedStore.name} on ZiVo`;
+
+                    try {
+                      if (navigator.share) {
+                        await navigator.share({ title: selectedStore.name, text: shareText, url: shareUrl });
+                      } else {
+                        await navigator.clipboard.writeText(shareUrl);
+                      }
+                    } catch {
+                      await navigator.clipboard.writeText(shareUrl);
+                    }
+                  }}
+                >
+                  Share
+                </button>
                 {selectedStore.phone && (
                   <>
                     <div className="w-px bg-border/20" />
@@ -645,6 +729,12 @@ export default function StoreMapPage() {
 
               <div className="border-t border-border/20 px-3 py-3 bg-muted/20">
                 <p className="text-[11px] font-semibold text-muted-foreground mb-2">Social-to-Sale</p>
+                {liveStoreMap[selectedStore.id] && (
+                  <p className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+                    <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Live now: purchase in last 30 minutes
+                  </p>
+                )}
                 {selectedStoreProducts.length > 0 ? (
                   <>
                     <select

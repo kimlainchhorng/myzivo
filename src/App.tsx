@@ -186,6 +186,7 @@ const MorePage = lazy(() => import("./pages/MorePage"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
 const ShareProfileRedirect = lazy(() => import("./pages/ShareProfileRedirect"));
+const DeepLinkLandingPage = lazy(() => import("./pages/DeepLinkLandingPage"));
 
 // Customer Loyalty
 const LoyaltyPage = lazy(() => import("./pages/account/LoyaltyPage"));
@@ -558,6 +559,7 @@ const App = () => (
                 <Route path="/feed" element={<ReelsFeedPage />} />
                 <Route path="/reels" element={<FeedPage />} />
                 <Route path="/reels/:postId" element={<FeedPage />} />
+                <Route path="/dl/:kind/:id" element={<DeepLinkLandingPage />} />
                 <Route path="/shop/:storeId" element={<StoreProfilePage />} />
                 <Route path="/refer" element={<ProtectedRoute><ReferAFriendPage /></ProtectedRoute>} />
                 <Route path="/chat" element={<ChatHubPage />} />

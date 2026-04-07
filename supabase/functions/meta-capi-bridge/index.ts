@@ -231,6 +231,38 @@ async function buildRegistrationEvent(record: Rec): Promise<MetaPayload | null> 
   };
 }
 
+async function upsertShopLivePulse(
+  supabase: ReturnType<typeof createClient>,
+  table: string,
+  record: Rec,
+  eventId: string,
+): Promise<void> {
+  let storeId: string | null = null;
+
+  if (table === "store_orders" || table === "truck_sales") {
+    storeId = str(record.store_id);
+  }
+
+  if (!storeId && table === "transactions") {
+    const metadata = (record.metadata && typeof record.metadata === "object") ? record.metadata as Rec : {};
+    storeId = str(metadata.store_id) ?? str(record.store_id);
+  }
+
+  if (!storeId) return;
+
+  await (supabase as any)
+    .from("shop_live_pulse")
+    .upsert(
+      {
+        store_id: storeId,
+        last_purchase_at: new Date().toISOString(),
+        last_event_id: eventId,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "store_id" },
+    );
+}
+
 /* ───────── Main handler ───────── */
 
 const PURCHASE_TABLES = new Set([
@@ -320,6 +352,10 @@ serve(async (req: Request) => {
     }
 
     console.log("[meta-capi-bridge] Sent", event.event_name, "for", table, "id:", event.event_id);
+
+    if (event.event_name === "Purchase") {
+      await upsertShopLivePulse(supabase, table, record, event.event_id);
+    }
 
     return new Response(
       JSON.stringify({

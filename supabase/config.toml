@@ -61,6 +61,8 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.meta-conversion-bridge]
+verify_jwt = false
+
 [functions.meta-conversion-handler]
 verify_jwt = false
 

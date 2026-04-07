@@ -21,7 +21,7 @@ export function getPublicOrigin(): string {
  * Uses edge function OG endpoint so social crawlers get post-specific previews.
  */
 export function getPostShareUrl(postId: string): string {
-  return `${POST_OG_FUNCTION}?post=${encodeURIComponent(postId)}`;
+  return `${getPublicOrigin()}/dl/reel/${encodeURIComponent(postId)}`;
 }
 
 /**
