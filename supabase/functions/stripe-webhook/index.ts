@@ -312,6 +312,36 @@ serve(async (req) => {
             });
           }
         }
+        // ──── Fire Meta CAPI Purchase event ────
+        if (session.amount_total && session.amount_total > 0) {
+          try {
+            const capiUrl = `${supabaseUrl}/functions/v1/meta-capi-bridge`;
+            const userId = metadata.user_id || metadata.customer_id || metadata.rider_id || null;
+            const capiPayload: Record<string, unknown> = {
+              table: "stripe_checkout",
+              type: "INSERT",
+              record: {
+                id: session.id,
+                user_id: userId,
+                total_amount: session.amount_total / 100,
+                currency: session.currency?.toUpperCase() || "USD",
+                created_at: new Date().toISOString(),
+                service_type: metadata.type || "general",
+              },
+            };
+            await fetch(capiUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${supabaseServiceKey}`,
+              },
+              body: JSON.stringify(capiPayload),
+            });
+            console.log("[Webhook] Meta CAPI Purchase event fired for:", session.id);
+          } catch (capiErr) {
+            console.error("[Webhook] Meta CAPI trigger failed:", capiErr);
+          }
+        }
         break;
       }
 

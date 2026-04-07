@@ -2979,6 +2979,13 @@ export type Database = {
             foreignKeyName: "approvals_approver_user_id_fkey"
             columns: ["approver_user_id"]
             isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_approver_user_id_fkey"
+            columns: ["approver_user_id"]
+            isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
@@ -2994,6 +3001,13 @@ export type Database = {
             columns: ["requested_by_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_requested_by_user_id_fkey"
+            columns: ["requested_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
             referencedColumns: ["id"]
           },
           {
@@ -9230,6 +9244,13 @@ export type Database = {
             foreignKeyName: "company_members_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
@@ -11409,6 +11430,13 @@ export type Database = {
             foreignKeyName: "deliveries_customer_user_id_fkey"
             columns: ["customer_user_id"]
             isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliveries_customer_user_id_fkey"
+            columns: ["customer_user_id"]
+            isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
@@ -11417,6 +11445,13 @@ export type Database = {
             columns: ["driver_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliveries_driver_user_id_fkey"
+            columns: ["driver_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
             referencedColumns: ["id"]
           },
           {
@@ -20087,6 +20122,13 @@ export type Database = {
             columns: ["customer_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_customer_user_id_fkey"
+            columns: ["customer_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
             referencedColumns: ["id"]
           },
           {
@@ -37297,6 +37339,13 @@ export type Database = {
             foreignKeyName: "restaurant_users_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
@@ -47629,6 +47678,13 @@ export type Database = {
             foreignKeyName: "trips_customer_user_id_fkey"
             columns: ["customer_user_id"]
             isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_customer_user_id_fkey"
+            columns: ["customer_user_id"]
+            isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
@@ -53827,6 +53883,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles_public: {
+        Row: {
+          avatar_url: string | null
+          cover_url: string | null
+          full_name: string | null
+          id: string | null
+          is_verified: boolean | null
+          share_code: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          cover_url?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          share_code?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          cover_url?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          share_code?: string | null
+        }
+        Relationships: []
       }
       public_active_airports: {
         Row: {

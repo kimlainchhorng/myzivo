@@ -456,6 +456,13 @@ function PushNotificationsBootstrap() {
   return null;
 }
 
+/** Background geofence check for boosted shops nearby */
+import { useGeofenceNotifications } from "@/hooks/useGeofenceNotifications";
+function GeofenceBootstrap() {
+  useGeofenceNotifications();
+  return null;
+}
+
 const App = () => (
   <ErrorBoundary>
     <HelmetProvider>
@@ -473,6 +480,7 @@ const App = () => (
                 <RoutePrefetcher />
                 <AuthProvider>
                   <PushNotificationsBootstrap />
+                  <GeofenceBootstrap />
                    <RemoteConfigProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
