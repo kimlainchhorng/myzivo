@@ -118,8 +118,15 @@ export default function SalesAttributionPage() {
 
   const handleBoost = async (reelId?: string) => {
     setBoosting(true);
-    // This would integrate with Stripe for $5 payment
-    toast.success("Boost activated! Your Reel will reach 5,000 more people in your neighborhood.", { duration: 5000 });
+    try {
+      const { data, error } = await supabase.functions.invoke("create-reel-boost", {
+        body: { reel_id: reelId || "", store_id: storeId || "" },
+      });
+      if (error || !data?.url) throw new Error(error?.message || "Failed to create boost checkout");
+      window.open(data.url, "_blank");
+    } catch (err: any) {
+      toast.error(err.message || "Boost failed");
+    }
     setBoosting(false);
   };
 
