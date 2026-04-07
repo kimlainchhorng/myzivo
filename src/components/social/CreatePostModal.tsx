@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   X as XIcon, Globe, Users, Lock, FolderPlus, MapPin, Hash,
   ChevronDown, Image as ImageIcon, Play, Film, Radio, Plus, Search, Share2, Loader2,
-  Smile,
+  Smile, Music,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
