@@ -1013,11 +1013,14 @@ export default function FeedPage() {
 
       {/* Snap-scroll reel container */}
       <div
-        className="w-full h-full lg:flex-1 overflow-y-scroll snap-y snap-mandatory lg:flex lg:items-start lg:justify-center"
-        style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+        className="w-full h-full lg:flex-1 lg:flex lg:items-center lg:justify-center lg:gap-4 relative"
       >
-        <div className="w-full lg:w-[420px] lg:mx-auto lg:my-4 lg:rounded-2xl lg:overflow-hidden lg:shadow-2xl lg:border lg:border-white/10 h-full lg:h-[calc(100%-2rem)]">
-          <div className="w-full h-full overflow-y-scroll snap-y snap-mandatory lg-reel-inner" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
+        {/* Mobile: full-screen scroll */}
+        <div className="w-full h-full lg:w-[420px] lg:mx-auto lg:rounded-2xl lg:overflow-hidden lg:shadow-2xl lg:border lg:border-white/10 lg:h-[calc(100%-2rem)]">
+          <div
+            className="w-full h-full overflow-y-scroll snap-y snap-mandatory"
+            style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+          >
             {posts.map((post, index) => (
               <div
                 key={post.id}
@@ -1039,6 +1042,37 @@ export default function FeedPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Desktop up/down navigation buttons */}
+        <div className="hidden lg:flex flex-col gap-3 absolute right-8 top-1/2 -translate-y-1/2 z-50">
+          <button
+            onClick={() => {
+              if (activeIndex > 0) {
+                cardRefs.current[activeIndex - 1]?.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+            disabled={activeIndex === 0}
+            className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Previous reel"
+          >
+            <ChevronUp className="w-6 h-6" />
+          </button>
+          <div className="text-center text-white/60 text-xs font-medium">
+            {activeIndex + 1}/{posts.length}
+          </div>
+          <button
+            onClick={() => {
+              if (activeIndex < posts.length - 1) {
+                cardRefs.current[activeIndex + 1]?.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+            disabled={activeIndex >= posts.length - 1}
+            className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Next reel"
+          >
+            <ChevronDown className="w-6 h-6" />
+          </button>
         </div>
       </div>
 
