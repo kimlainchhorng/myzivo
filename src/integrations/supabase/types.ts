@@ -48503,6 +48503,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_interest_tags: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          last_seen_at: string
+          score: number
+          source: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          score?: number
+          source?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          score?: number
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_interests: {
         Row: {
           created_at: string | null
@@ -54974,6 +55004,14 @@ export type Database = {
         }
         Returns: Json
       }
+      credit_referral_wallet_bonus: {
+        Args: {
+          p_referee_id: string
+          p_referral_code: string
+          p_referrer_id: string
+        }
+        Returns: boolean
+      }
       customer_can_view_driver: {
         Args: { _driver_id: string }
         Returns: boolean
@@ -55486,6 +55524,16 @@ export type Database = {
       }
       get_tier_from_points: { Args: { lifetime_pts: number }; Returns: string }
       get_today_ad_spend: { Args: { p_ad_id: string }; Returns: number }
+      get_trending_near_user: {
+        Args: { p_limit?: number; p_user_id: string }
+        Returns: {
+          category: string
+          is_featured: boolean
+          relevance_score: number
+          store_id: string
+          store_name: string
+        }[]
+      }
       get_user_role: { Args: { p_user_id?: string }; Returns: string }
       get_user_security_summary: {
         Args: { p_user_id: string }
@@ -55813,6 +55861,15 @@ export type Database = {
           }
       sync_customer_phone_verified: { Args: never; Returns: Json }
       sync_driver_phone_verified: { Args: never; Returns: Json }
+      track_user_interest: {
+        Args: {
+          p_category: string
+          p_source?: string
+          p_user_id: string
+          p_weight?: number
+        }
+        Returns: undefined
+      }
       update_all_driver_performance: { Args: never; Returns: number }
       update_batch_stop_status: {
         Args: { p_driver_id: string; p_status: string; p_stop_id: string }

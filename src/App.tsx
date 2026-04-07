@@ -61,6 +61,8 @@ const SalesAttributionPage = lazy(() => import("./pages/app/shop/SalesAttributio
 const SandboxModePage = lazy(() => import("./pages/app/shop/SandboxModePage"));
 const MerchantROIDashboard = lazy(() => import("./pages/app/shop/MerchantROIDashboard"));
 const ReferAShopPage = lazy(() => import("./pages/app/shop/ReferAShopPage"));
+const ReferAFriendPage = lazy(() => import("./pages/app/ReferAFriendPage"));
+const MetaPrivacyDisclosure = lazy(() => import("./pages/legal/MetaPrivacyDisclosure"));
 const CreateCVPage = lazy(() => import("./pages/app/CreateCVPage"));
 const PersonalEmployeesPage = lazy(() => import("./pages/app/personal/PersonalEmployeesPage"));
 const PersonalSchedulePage = lazy(() => import("./pages/app/personal/PersonalSchedulePage"));
@@ -537,6 +539,9 @@ const App = () => (
                 <Route path="/grocery" element={<GroceryMarketplace />} />
                 <Route path="/feed" element={<ReelsFeedPage />} />
                 <Route path="/reels" element={<FeedPage />} />
+                <Route path="/reels/:postId" element={<FeedPage />} />
+                <Route path="/shop/:storeId" element={<StoreProfilePage />} />
+                <Route path="/refer" element={<ProtectedRoute><ReferAFriendPage /></ProtectedRoute>} />
                 <Route path="/chat" element={<ChatHubPage />} />
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
@@ -753,6 +758,7 @@ const App = () => (
                 <Route path="/legal/car-rental-disclaimer" element={<CarRentalDisclaimer />} />
                 <Route path="/legal/insurance-disclaimer" element={<InsuranceDisclaimer />} />
                 <Route path="/legal/damage-policy" element={<DamagePolicy />} />
+                <Route path="/legal/meta-privacy" element={<MetaPrivacyDisclosure />} />
                 <Route path="/legal/*" element={<GenericLegalPage />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
