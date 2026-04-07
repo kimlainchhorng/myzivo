@@ -109,7 +109,7 @@ export default function CreatePostModal({
   const [showEmojis, setShowEmojis] = useState(false);
   const [audioName, setAudioName] = useState(initialAudioName || "");
   const [showAudioInput, setShowAudioInput] = useState(!!initialAudioName);
-  const [showAudioInput, setShowAudioInput] = useState(false);
+  
   const fileRef = useRef<HTMLInputElement>(null);
   const captionRef = useRef<HTMLTextAreaElement>(null);
   const tagTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
