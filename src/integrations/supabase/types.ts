@@ -25232,6 +25232,30 @@ export type Database = {
         }
         Relationships: []
       }
+      map_pin_clicks: {
+        Row: {
+          created_at: string
+          id: string
+          source: string
+          store_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          source?: string
+          store_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          source?: string
+          store_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       marketing_campaign_stats: {
         Row: {
           campaign_id: string | null
@@ -26424,6 +26448,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      merchant_ad_spend: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          id: string
+          reel_id: string | null
+          source: string
+          store_id: string
+          stripe_session_id: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          reel_id?: string | null
+          source?: string
+          store_id: string
+          stripe_session_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          reel_id?: string | null
+          source?: string
+          store_id?: string
+          stripe_session_id?: string | null
+        }
+        Relationships: []
       }
       merchant_balances: {
         Row: {
@@ -47552,6 +47609,83 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      truck_sale_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          quantity: number
+          sale_id: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity?: number
+          sale_id: string
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          sale_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "truck_sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "truck_sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      truck_sales: {
+        Row: {
+          created_at: string
+          currency: string
+          driver_user_id: string | null
+          id: string
+          is_offline_synced: boolean | null
+          status: string
+          store_id: string
+          subtotal: number
+          total_amount: number
+          truck_label: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          driver_user_id?: string | null
+          id?: string
+          is_offline_synced?: boolean | null
+          status?: string
+          store_id: string
+          subtotal?: number
+          total_amount?: number
+          truck_label?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          driver_user_id?: string | null
+          id?: string
+          is_offline_synced?: boolean | null
+          status?: string
+          store_id?: string
+          subtotal?: number
+          total_amount?: number
+          truck_label?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       trust_safety_actions: {
         Row: {

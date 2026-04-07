@@ -67,12 +67,20 @@ export default function SalesAttributionPage() {
           .order("created_at", { ascending: false })
           .limit(50);
 
-        // Get ad clicks for this store
+        // Get map pin clicks for this store (real attribution data)
         const { data: clicks } = await (supabase as any)
-          .from("ad_clicks")
+          .from("map_pin_clicks")
           .select("id, created_at")
-          .eq("restaurant_id", store.id)
+          .eq("store_id", store.id)
           .limit(500);
+
+        // Get ad spend data
+        const { data: adSpend } = await (supabase as any)
+          .from("merchant_ad_spend")
+          .select("amount_cents, created_at")
+          .eq("store_id", store.id);
+
+        const totalAdSpend = (adSpend || []).reduce((s: number, a: any) => s + (a.amount_cents || 0), 0) / 100;
 
         // Get orders/sales
         const { data: orders } = await (supabase as any)
@@ -93,6 +101,26 @@ export default function SalesAttributionPage() {
           purchases: totalPurchases,
           revenue: totalRevenue,
         });
+
+        // Check for boost success return
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("boost") === "success") {
+          const reelId = params.get("reel") || "";
+          try {
+            await (supabase as any).from("merchant_ad_spend").insert({
+              store_id: store.id,
+              reel_id: reelId,
+              amount_cents: 500,
+              currency: "USD",
+              source: "boost",
+            });
+            toast.success("🚀 Boost activated! Your reel will reach 5,000 more people.");
+          } catch {
+            // silent
+          }
+          // Clean URL
+          window.history.replaceState({}, "", window.location.pathname);
+        }
 
         setReels(
           (posts || []).slice(0, 10).map((p: any) => ({
