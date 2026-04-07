@@ -1360,6 +1360,22 @@ export default function FeedPage() {
         )}
       </AnimatePresence>
 
+      {/* Create post modal with pre-filled audio */}
+      <AnimatePresence>
+        {createWithAudio && userId && (
+          <CreatePostModal
+            userId={userId}
+            userProfile={null}
+            onClose={() => setCreateWithAudio(null)}
+            onPostCreated={() => {
+              setCreateWithAudio(null);
+              toast.success("Reel posted with sound!");
+            }}
+            initialAudioName={createWithAudio}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Bottom navigation overlaid on top */}
       <ZivoMobileNav />
     </div>
