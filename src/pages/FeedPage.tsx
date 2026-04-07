@@ -1143,6 +1143,20 @@ export default function FeedPage() {
         />
       )}
 
+      {/* Sound overlay */}
+      <AnimatePresence>
+        {soundOverlayName && (
+          <SoundOverlay
+            soundName={soundOverlayName}
+            onClose={() => setSoundOverlayName(null)}
+            onNavigateToReel={(postId) => {
+              setSoundOverlayName(null);
+              navigate(`/reels/${postId}`);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Bottom navigation overlaid on top */}
       <ZivoMobileNav />
     </div>
