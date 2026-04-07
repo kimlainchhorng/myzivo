@@ -8,6 +8,7 @@ import UnifiedShareSheet from "@/components/shared/ShareSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import NavBar from "@/components/home/NavBar";
 import TipSheet from "@/components/social/TipSheet";
 import {
   Loader2, Heart, MessageCircle, Share2, Eye, Bookmark,
