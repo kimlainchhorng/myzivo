@@ -1,454 +1,341 @@
 import { createClient, serve } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
-declare const Deno: {
-  env: {
-    get(key: string): string | undefined;
-  };
-};
+declare const Deno: { env: { get(key: string): string | undefined } };
 
-type JsonRecord = Record<string, unknown>;
+type Rec = Record<string, unknown>;
 
-type BridgeRequest = {
-  table?: string;
-  schema?: string;
-  operation?: string;
-  record?: JsonRecord;
-};
+const str = (v: unknown): string | null =>
+  typeof v === "string" && v.trim().length ? v.trim() : null;
 
-type MetaUserData = {
-  em?: string[];
-  ph?: string[];
-  client_ip_address?: string;
-  client_user_agent?: string;
-};
-
-type MetaCustomData = {
-  value: number;
-  currency: string;
-  content_name: string;
-  content_category: string;
-};
-
-type MetaEvent = {
-  event_name: "Purchase";
-  event_time: number;
-  event_id: string;
-  action_source: "app";
-  user_data: MetaUserData;
-  custom_data: MetaCustomData;
-};
-
-function asString(value: unknown): string | null {
-  if (typeof value === "string") {
-    const v = value.trim();
-    return v.length ? v : null;
-  }
+const num = (v: unknown): number | null => {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string") { const n = Number(v); return Number.isFinite(n) ? n : null; }
   return null;
-}
+};
 
-function asNumber(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string") {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : null;
-  }
-  return null;
-}
-
-function normalizeCurrency(value: unknown): string {
-  const code = asString(value)?.toUpperCase();
-  return code && code.length <= 5 ? code : "USD";
-}
-
-function getNestedMeta(record: JsonRecord, key: string): unknown {
-  const metadata = record.metadata;
-  if (!metadata || typeof metadata !== "object") return null;
-  return (metadata as JsonRecord)[key];
-}
-
-function inferCategory(table: string, record: JsonRecord): string {
-  if (["trips", "travel_bookings", "flight_bookings", "hotel_bookings", "travel_orders"].includes(table)) {
-    return "Travel";
-  }
-  if (table === "food_orders") return "Food & Beverage";
-  if (["shopping_orders", "store_orders", "marketplace_orders"].includes(table)) return "Retail";
-
-  if (table === "transactions") {
-    if (record.trip_id) return "Travel";
-    if (record.food_order_id) return "Food & Beverage";
-
-    const serviceType = asString(getNestedMeta(record, "service_type"))?.toLowerCase();
-    const vertical = asString(getNestedMeta(record, "vertical"))?.toLowerCase();
-    const moduleName = asString(getNestedMeta(record, "module"))?.toLowerCase();
-
-    const travelTags = ["flight", "flights", "hotel", "hotels", "travel", "ride", "rides", "car", "cars"];
-    const foodTags = ["food", "restaurant", "eats", "grocery"];
-    const retailTags = ["shopping", "store", "marketplace", "retail"];
-
-    const bucket = [serviceType, vertical, moduleName].filter(Boolean).join(" ");
-    if (travelTags.some((tag) => bucket.includes(tag))) return "Travel";
-    if (foodTags.some((tag) => bucket.includes(tag))) return "Food & Beverage";
-    if (retailTags.some((tag) => bucket.includes(tag))) return "Retail";
-  }
-
-  return "General";
-}
-
-function inferContentName(table: string, record: JsonRecord): string {
-  if (table === "trips") {
-    return asString(record.dropoff_address) ?? "Ride booking";
-  }
-  if (table === "food_orders") {
-    return asString(record.restaurant_name) ?? "Food order";
-  }
-  if (table === "flight_bookings") {
-    return asString(record.flight_route_name) ?? "Flight booking";
-  }
-  if (table === "hotel_bookings") {
-    return asString(record.hotel_name) ?? "Hotel booking";
-  }
-  if (table === "travel_bookings") {
-    const serviceType = asString(record.service_type)?.toLowerCase();
-    if (serviceType === "flights") return "Flight booking";
-    if (serviceType === "hotels") return "Hotel booking";
-    if (serviceType === "cars") return "Car booking";
-    return "Travel booking";
-  }
-  if (table === "shopping_orders") {
-    return asString(record.store) ?? "Shopping order";
-  }
-  if (table === "store_orders") {
-    return asString(record.store_name) ?? "Store order";
-  }
-  if (table === "marketplace_orders") {
-    return "Marketplace order";
-  }
-  if (table === "transactions") {
-    return (
-      asString(record.description) ??
-      asString(getNestedMeta(record, "content_name")) ??
-      "ZiVo transaction"
-    );
-  }
-
-  return `${table} purchase`;
-}
-
-function inferValueCurrency(table: string, record: JsonRecord): { value: number; currency: string } | null {
-  if (table === "transactions") {
-    const value = asNumber(record.amount);
-    if (value === null) return null;
-    return { value, currency: normalizeCurrency(record.currency) };
-  }
-  if (table === "trips") {
-    const value = asNumber(record.fare_amount);
-    if (value === null) return null;
-    return { value, currency: normalizeCurrency(getNestedMeta(record, "currency")) };
-  }
-  if (table === "food_orders") {
-    const value = asNumber(record.total_amount);
-    if (value === null) return null;
-    return { value, currency: normalizeCurrency(getNestedMeta(record, "currency") ?? record.currency) };
-  }
-  if (table === "flight_bookings" || table === "hotel_bookings") {
-    const value = asNumber(record.total_amount);
-    if (value === null) return null;
-    return { value, currency: normalizeCurrency(record.currency) };
-  }
-  if (table === "travel_bookings") {
-    const value = asNumber(record.offer_price_amount);
-    if (value === null) return null;
-    return { value, currency: normalizeCurrency(record.offer_price_currency) };
-  }
-  if (table === "shopping_orders") {
-    const value = asNumber(record.total_amount);
-    if (value === null) return null;
-    return { value, currency: normalizeCurrency(record.currency) };
-  }
-  if (table === "store_orders") {
-    const cents = asNumber(record.total_cents);
-    if (cents === null) return null;
-    return { value: cents / 100, currency: normalizeCurrency(record.currency) };
-  }
-  if (table === "marketplace_orders") {
-    const cents = asNumber(record.total_cents);
-    if (cents === null) return null;
-    return { value: cents / 100, currency: normalizeCurrency(record.currency) };
-  }
-
-  return null;
-}
-
-async function sha256Hex(input: string): Promise<string> {
+async function sha256(input: string): Promise<string> {
   const data = new TextEncoder().encode(input.trim().toLowerCase());
   const hash = await crypto.subtle.digest("SHA-256", data);
-  const bytes = Array.from(new Uint8Array(hash));
-  return bytes.map((b) => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-function getUserIdFromRecord(record: JsonRecord): string | null {
-  return (
-    asString(record.user_id) ??
-    asString(record.customer_id) ??
-    asString(record.rider_id) ??
-    asString(record.buyer_id) ??
-    null
-  );
+/* ───────── Meta CAPI sender ───────── */
+
+interface MetaPayload {
+  event_name: string;
+  event_time: number;
+  event_id: string;
+  action_source: string;
+  user_data: Rec;
+  custom_data?: Rec;
 }
 
-async function enrichRecord(
+async function sendToMeta(
+  pixelId: string,
+  accessToken: string,
+  testCode: string | undefined,
+  events: MetaPayload[],
+): Promise<{ ok: boolean; status: number; body: Rec }> {
+  const payload: Rec = { data: events, access_token: accessToken };
+  if (testCode) payload.test_event_code = testCode;
+
+  const res = await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, body };
+}
+
+/* ───────── user data builder ───────── */
+
+async function buildUserData(
   supabase: ReturnType<typeof createClient>,
-  table: string,
-  source: JsonRecord,
-): Promise<JsonRecord> {
-  const record = { ...source };
+  record: Rec,
+): Promise<Rec> {
+  const userId =
+    str(record.user_id) ?? str(record.customer_id) ??
+    str(record.rider_id) ?? str(record.buyer_id) ?? str(record.driver_user_id);
 
-  // Resolve profile email/phone when a user reference exists.
-  const userId = getUserIdFromRecord(record);
-  if (userId) {
-    const { data: profile } = await supabase
+  const ud: Rec = {};
+
+  let email = str(record.email) ?? str(record.customer_email);
+  let phone = str(record.phone) ?? str(record.customer_phone);
+
+  if (userId && (!email || !phone)) {
+    const { data: profile } = await (supabase as any)
       .from("profiles")
       .select("email, phone")
       .eq("user_id", userId)
       .maybeSingle();
-
-    if (!record.email && profile?.email) record.email = profile.email;
-    if (!record.customer_email && profile?.email) record.customer_email = profile.email;
-    if (!record.phone && profile?.phone) record.phone = profile.phone;
-    if (!record.customer_phone && profile?.phone) record.customer_phone = profile.phone;
+    if (!email && profile?.email) email = profile.email;
+    if (!phone && profile?.phone) phone = profile.phone;
   }
 
-  if (table === "food_orders" && record.restaurant_id) {
-    const { data: restaurant } = await supabase
-      .from("restaurants")
-      .select("name")
-      .eq("id", String(record.restaurant_id))
-      .maybeSingle();
-    if (restaurant?.name) record.restaurant_name = restaurant.name;
-  }
+  if (email) ud.em = [await sha256(email)];
+  if (phone) ud.ph = [await sha256(phone)];
 
-  if (table === "flight_bookings" && record.flight_id) {
-    const { data: flight } = await supabase
-      .from("flights")
-      .select("departure_city, arrival_city")
-      .eq("id", String(record.flight_id))
-      .maybeSingle();
-    if (flight?.departure_city && flight?.arrival_city) {
-      record.flight_route_name = `${flight.departure_city} Flight to ${flight.arrival_city}`;
+  const meta = (record.metadata && typeof record.metadata === "object") ? record.metadata as Rec : {};
+  const ip = str(record.client_ip_address) ?? str(meta.client_ip_address as string);
+  const ua = str(record.client_user_agent) ?? str(meta.client_user_agent as string);
+  if (ip) ud.client_ip_address = ip;
+  if (ua) ud.client_user_agent = ua;
+
+  return ud;
+}
+
+/* ───────── Purchase event builders per table ───────── */
+
+async function buildPurchaseEvent(
+  supabase: ReturnType<typeof createClient>,
+  table: string,
+  record: Rec,
+): Promise<MetaPayload | null> {
+  const userData = await buildUserData(supabase, record);
+  const eventId = str(record.id) ?? crypto.randomUUID();
+
+  let value: number | null = null;
+  let currency = "USD";
+  let contentName = "";
+  let contentCategory = "";
+
+  switch (table) {
+    case "trips": {
+      value = num(record.fare_amount);
+      const meta = (record.metadata && typeof record.metadata === "object") ? record.metadata as Rec : {};
+      currency = (str(meta.currency as string) ?? str(record.currency as string) ?? "USD").toUpperCase();
+      contentName = str(record.dropoff_address) ?? "Ride booking";
+      contentCategory = "Travel";
+      break;
     }
+    case "food_orders": {
+      value = num(record.total_amount);
+      currency = (str(record.currency as string) ?? "USD").toUpperCase();
+      if (record.restaurant_id) {
+        const { data: r } = await (supabase as any)
+          .from("restaurants").select("name")
+          .eq("id", String(record.restaurant_id)).maybeSingle();
+        contentName = r?.name ?? "Food order";
+      } else {
+        contentName = "Food order";
+      }
+      contentCategory = "Food & Beverage";
+      break;
+    }
+    case "flight_bookings": {
+      value = num(record.total_amount);
+      currency = (str(record.currency as string) ?? "USD").toUpperCase();
+      if (record.flight_id) {
+        const { data: f } = await (supabase as any)
+          .from("flights").select("departure_city, arrival_city")
+          .eq("id", String(record.flight_id)).maybeSingle();
+        contentName = (f?.departure_city && f?.arrival_city)
+          ? `${f.departure_city} → ${f.arrival_city}` : "Flight booking";
+      } else {
+        contentName = "Flight booking";
+      }
+      contentCategory = "Travel";
+      break;
+    }
+    case "travel_bookings": {
+      value = num(record.offer_price_amount);
+      if (value === null && record.offer_id) {
+        const { data: offer } = await (supabase as any)
+          .from("travel_offers").select("price_amount, price_currency")
+          .eq("id", String(record.offer_id)).maybeSingle();
+        if (offer?.price_amount != null) value = num(offer.price_amount);
+        if (offer?.price_currency) currency = String(offer.price_currency).toUpperCase();
+      }
+      currency = (str(record.offer_price_currency as string) ?? currency).toUpperCase();
+      const svc = str(record.service_type as string)?.toLowerCase();
+      contentName = svc === "flights" ? "Flight booking"
+        : svc === "hotels" ? "Hotel booking"
+        : svc === "cars" ? "Car rental" : "Travel booking";
+      contentCategory = "Travel";
+      break;
+    }
+    case "store_orders": {
+      const cents = num(record.total_cents);
+      const amt = num(record.total_amount);
+      value = cents !== null ? cents / 100 : amt;
+      currency = (str(record.currency as string) ?? "USD").toUpperCase();
+      if (record.store_id) {
+        const { data: store } = await (supabase as any)
+          .from("store_profiles").select("name")
+          .eq("id", String(record.store_id)).maybeSingle();
+        contentName = store?.name ?? "Store order";
+      } else {
+        contentName = "Store order";
+      }
+      contentCategory = "Retail";
+      break;
+    }
+    case "truck_sales": {
+      value = num(record.total_amount);
+      currency = (str(record.currency as string) ?? "USD").toUpperCase();
+      contentName = str(record.truck_label) ? `Truck sale (${record.truck_label})` : "Truck sale";
+      contentCategory = "Retail";
+      break;
+    }
+    case "transactions": {
+      value = num(record.amount);
+      currency = (str(record.currency as string) ?? "USD").toUpperCase();
+      contentName = str(record.description) ?? "ZIVO transaction";
+      const meta = (record.metadata && typeof record.metadata === "object") ? record.metadata as Rec : {};
+      const svcType = (str(meta.service_type as string) ?? "").toLowerCase();
+      contentCategory = ["flight", "hotel", "travel", "ride", "car"].some(t => svcType.includes(t))
+        ? "Travel"
+        : ["food", "restaurant", "grocery"].some(t => svcType.includes(t))
+        ? "Food & Beverage"
+        : ["shopping", "store", "marketplace"].some(t => svcType.includes(t))
+        ? "Retail" : "General";
+      break;
+    }
+    default:
+      return null;
   }
 
-  if (table === "hotel_bookings" && record.hotel_id) {
-    const { data: hotel } = await supabase
-      .from("hotels")
-      .select("name")
-      .eq("id", String(record.hotel_id))
-      .maybeSingle();
-    if (hotel?.name) record.hotel_name = hotel.name;
-  }
+  if (value === null || value <= 0) return null;
 
-  if (table === "travel_bookings" && record.offer_id) {
-    const { data: offer } = await supabase
-      .from("travel_offers")
-      .select("price_amount, price_currency")
-      .eq("id", String(record.offer_id))
-      .maybeSingle();
-
-    if (offer?.price_amount != null) record.offer_price_amount = offer.price_amount;
-    if (offer?.price_currency) record.offer_price_currency = offer.price_currency;
-  }
-
-  if (table === "store_orders" && record.store_id) {
-    const { data: store } = await supabase
-      .from("store_profiles")
-      .select("name")
-      .eq("id", String(record.store_id))
-      .maybeSingle();
-    if (store?.name) record.store_name = store.name;
-  }
-
-  return record;
+  return {
+    event_name: "Purchase",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: eventId,
+    action_source: "website",
+    user_data: userData,
+    custom_data: { value, currency, content_name: contentName, content_category: contentCategory },
+  };
 }
 
-function readEmail(record: JsonRecord): string | null {
-  return (
-    asString(record.email) ??
-    asString(record.customer_email) ??
-    asString(record.guest_email) ??
-    asString(record.holder_email) ??
-    null
-  );
+/* ───────── CompleteRegistration builder ───────── */
+
+async function buildRegistrationEvent(record: Rec): Promise<MetaPayload | null> {
+  const userId = str(record.user_id) ?? str(record.id);
+  if (!userId) return null;
+
+  const ud: Rec = {};
+  const email = str(record.email);
+  const phone = str(record.phone);
+  if (email) ud.em = [await sha256(email)];
+  if (phone) ud.ph = [await sha256(phone)];
+
+  return {
+    event_name: "CompleteRegistration",
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: userId,
+    action_source: "website",
+    user_data: ud,
+    custom_data: { content_name: "ZIVO Account", status: "confirmed" },
+  };
 }
 
-function readPhone(record: JsonRecord): string | null {
-  return (
-    asString(record.phone) ??
-    asString(record.customer_phone) ??
-    asString(record.guest_phone) ??
-    asString(record.holder_phone) ??
-    null
-  );
-}
+/* ───────── Main handler ───────── */
 
-function readClientIp(record: JsonRecord): string | null {
-  return (
-    asString(record.client_ip_address) ??
-    asString(record.ip_address) ??
-    asString(getNestedMeta(record, "client_ip_address")) ??
-    asString(getNestedMeta(record, "ip_address")) ??
-    null
-  );
-}
-
-function readClientUa(record: JsonRecord): string | null {
-  return (
-    asString(record.client_user_agent) ??
-    asString(record.user_agent) ??
-    asString(getNestedMeta(record, "client_user_agent")) ??
-    asString(getNestedMeta(record, "user_agent")) ??
-    null
-  );
-}
-
-function shouldSkip(table: string, record: JsonRecord): boolean {
-  const status = asString(record.status)?.toLowerCase();
-
-  // Accept delivered as completed for store-like flows.
-  if (["store_orders", "shopping_orders"].includes(table)) {
-    return !(status === "completed" || status === "delivered" || status === "payment_confirmed");
-  }
-
-  return status !== "completed";
-}
+const PURCHASE_TABLES = new Set([
+  "trips", "food_orders", "flight_bookings", "travel_bookings",
+  "transactions", "store_orders", "truck_sales",
+]);
 
 serve(async (req: Request) => {
   const cors = getCorsHeaders(req);
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: cors });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
     const pixelId = Deno.env.get("META_PIXEL_ID");
     const accessToken = Deno.env.get("META_ACCESS_TOKEN");
-    const testEventCode = Deno.env.get("META_TEST_EVENT_CODE");
+    const testCode = Deno.env.get("META_TEST_EVENT_CODE") || undefined;
 
     if (!pixelId || !accessToken) {
       return new Response(
-        JSON.stringify({
-          ok: false,
-          error: "META_PIXEL_ID or META_ACCESS_TOKEN is missing",
-        }),
+        JSON.stringify({ ok: false, error: "META_PIXEL_ID or META_ACCESS_TOKEN missing" }),
         { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
 
-    const payload = (await req.json()) as BridgeRequest;
-    const table = (payload.table ?? "").trim();
-    const record = payload.record ?? {};
+    const body = await req.json();
+
+    // DB webhook payload shape: { type, table, schema, record, old_record }
+    const table: string = (body.table ?? body.type ?? "").trim();
+    const record: Rec = body.record ?? {};
+    const operation: string = (body.type ?? body.operation ?? "").toUpperCase();
 
     if (!table || !record || typeof record !== "object") {
-      return new Response(JSON.stringify({ ok: false, error: "Invalid webhook payload" }), {
-        status: 400,
-        headers: { ...cors, "Content-Type": "application/json" },
-      });
-    }
-
-    if (shouldSkip(table, record)) {
-      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "status_not_completed" }), {
-        headers: { ...cors, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ ok: false, error: "Invalid payload" }), {
+        status: 400, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabase = createClient(supabaseUrl, serviceKey);
 
-    const enriched = await enrichRecord(supabase as any, table, record);
+    let event: MetaPayload | null = null;
 
-    const valueCurrency = inferValueCurrency(table, enriched);
-    if (!valueCurrency) {
-      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "missing_value" }), {
+    // ── Purchase path: completed orders ──
+    if (PURCHASE_TABLES.has(table)) {
+      const status = str(record.status)?.toLowerCase();
+      if (status !== "completed" && status !== "delivered" && status !== "payment_confirmed") {
+        return new Response(JSON.stringify({ ok: true, skipped: true, reason: "status_not_completed" }), {
+          headers: { ...cors, "Content-Type": "application/json" },
+        });
+      }
+      event = await buildPurchaseEvent(supabase, table, record);
+    }
+
+    // ── Registration path: new profile row ──
+    if (table === "profiles" && operation === "INSERT") {
+      const verified = record.email_verified;
+      if (verified === false) {
+        return new Response(JSON.stringify({ ok: true, skipped: true, reason: "email_not_verified" }), {
+          headers: { ...cors, "Content-Type": "application/json" },
+        });
+      }
+      event = await buildRegistrationEvent(record);
+    }
+
+    // Also handle profiles UPDATE where email_verified flips to true
+    if (table === "profiles" && operation === "UPDATE") {
+      const oldRecord: Rec = body.old_record ?? {};
+      if (record.email_verified === true && oldRecord.email_verified !== true) {
+        event = await buildRegistrationEvent(record);
+      }
+    }
+
+    if (!event) {
+      return new Response(JSON.stringify({ ok: true, skipped: true, reason: "no_event_mapped" }), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
-    const rawEmail = readEmail(enriched);
-    const rawPhone = readPhone(enriched);
+    const result = await sendToMeta(pixelId, accessToken, testCode, [event]);
 
-    const userData: MetaUserData = {
-      client_ip_address: readClientIp(enriched) ?? undefined,
-      client_user_agent: readClientUa(enriched) ?? undefined,
-    };
-
-    if (rawEmail) userData.em = [await sha256Hex(rawEmail)];
-    if (rawPhone) userData.ph = [await sha256Hex(rawPhone)];
-
-    const eventId = asString(enriched.id) ?? crypto.randomUUID();
-
-    const event: MetaEvent = {
-      event_name: "Purchase",
-      event_time: Math.floor(Date.now() / 1000),
-      event_id: eventId,
-      action_source: "app",
-      user_data: userData,
-      custom_data: {
-        value: valueCurrency.value,
-        currency: valueCurrency.currency,
-        content_name: inferContentName(table, enriched),
-        content_category: inferCategory(table, enriched),
-      },
-    };
-
-    const body: JsonRecord = { data: [event] };
-    if (testEventCode) body.test_event_code = testEventCode;
-
-    const metaUrl = `https://graph.facebook.com/v19.0/${pixelId}/events`;
-    const metaRes = await fetch(metaUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        ...body,
-        access_token: accessToken,
-      }),
-    });
-
-    const metaJson = await metaRes.json().catch(() => ({}));
-
-    if (!metaRes.ok) {
-      console.error("[meta-capi-bridge] Meta API error", {
-        status: metaRes.status,
-        table,
-        eventId,
-        response: metaJson,
-      });
-
+    if (!result.ok) {
+      console.error("[meta-capi-bridge] Meta API error", { status: result.status, table, body: result.body });
       return new Response(
-        JSON.stringify({ ok: false, status: metaRes.status, table, eventId, meta: metaJson }),
+        JSON.stringify({ ok: false, status: result.status, table, meta: result.body }),
         { status: 502, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
 
+    console.log("[meta-capi-bridge] Sent", event.event_name, "for", table, "id:", event.event_id);
+
     return new Response(
       JSON.stringify({
         ok: true,
-        table,
-        event_id: eventId,
         event_name: event.event_name,
-        category: event.custom_data.content_category,
-        meta: metaJson,
+        event_id: event.event_id,
+        table,
+        meta: result.body,
       }),
       { headers: { ...cors, "Content-Type": "application/json" } },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error("[meta-capi-bridge] Unexpected error", message);
-
-    return new Response(JSON.stringify({ ok: false, error: message }), {
-      status: 500,
-      headers: { ...cors, "Content-Type": "application/json" },
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[meta-capi-bridge] Error", msg);
+    return new Response(JSON.stringify({ ok: false, error: msg }), {
+      status: 500, headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 });
