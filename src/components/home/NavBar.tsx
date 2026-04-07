@@ -30,25 +30,17 @@ import CurrencySelector from "@/components/shared/CurrencySelector";
 import { useI18n } from "@/hooks/useI18n";
 import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
 
-import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
-import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
-import tabCarsBg from "@/assets/tab-cars-bg.jpg";
-import tabRidesBg from "@/assets/tab-rides-bg.jpg";
-import tabEatsBg from "@/assets/tab-eats-bg.jpg";
-import tabFeedBg from "@/assets/tab-feed-bg.jpg";
-import tabReelsBg from "@/assets/tab-reels-bg.jpg";
-import tabMapBg from "@/assets/tab-map-bg.jpg";
 import { withRedirectParam } from "@/lib/authRedirect";
 
 const serviceNavItems = [
-  { label: "Flights", href: "/flights", icon: Plane, cssVar: "var(--flights)", bg: tabFlightsBg },
-  { label: "Hotels", href: "/hotels", icon: Hotel, cssVar: "var(--hotels)", bg: tabHotelsBg },
-  { label: "Cars", href: "/rent-car", icon: CarFront, cssVar: "var(--cars)", bg: tabCarsBg },
-  { label: "Rides", href: "/rides", icon: Car, cssVar: "var(--rides)", bg: tabRidesBg },
-  { label: "Eats", href: "/eats", icon: UtensilsCrossed, cssVar: "var(--eats)", bg: tabEatsBg },
-  { label: "Feed", href: "/feed", icon: Newspaper, cssVar: "var(--flights)", bg: tabFeedBg },
-  { label: "Reel", href: "/reels", icon: Film, cssVar: "var(--eats)", bg: tabReelsBg },
-  { label: "Map", href: "/store-map", icon: MapPin, cssVar: "var(--hotels)", bg: tabMapBg },
+  { label: "Flights", href: "/flights", icon: Plane, cssVar: "var(--flights)" },
+  { label: "Hotels", href: "/hotels", icon: Hotel, cssVar: "var(--hotels)" },
+  { label: "Cars", href: "/rent-car", icon: CarFront, cssVar: "var(--cars)" },
+  { label: "Rides", href: "/rides", icon: Car, cssVar: "var(--rides)" },
+  { label: "Eats", href: "/eats", icon: UtensilsCrossed, cssVar: "var(--eats)" },
+  { label: "Feed", href: "/feed", icon: Newspaper, cssVar: "var(--flights)" },
+  { label: "Reel", href: "/reels", icon: Film, cssVar: "var(--eats)" },
+  { label: "Map", href: "/store-map", icon: MapPin, cssVar: "var(--hotels)" },
 ];
 
 const communityNavItems = [
@@ -155,9 +147,9 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 <ZivoLogo size="md" />
               </motion.div>
 
-              {/* Center: 3D Service Tabs with colored pill backgrounds */}
+              {/* Center: Clean service pill tabs */}
               <nav
-                className="hidden lg:flex items-center gap-1.5 px-1 py-1"
+                className="hidden lg:flex items-center gap-1 px-1 py-1"
                 role="tablist"
                 aria-label="Travel services"
                 style={{ transformStyle: "preserve-3d" }}
@@ -167,83 +159,29 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                   return (
                     <motion.div
                       key={item.href}
-                      whileHover={{ y: -3, scale: 1.06 }}
-                      whileTap={{ scale: 0.94 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                      style={{ transformStyle: "preserve-3d" }}
+                      whileHover={{ y: -2, scale: 1.04 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 22 }}
                     >
                       <Link
                         to={item.href}
-                        className="relative flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-bold tracking-wide transition-all duration-300 overflow-hidden"
+                        className="relative flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300"
+                        style={{
+                          background: isActive
+                            ? `linear-gradient(135deg, hsl(${item.cssVar} / 0.15), hsl(${item.cssVar} / 0.08))`
+                            : "transparent",
+                          border: `1.5px solid hsl(${item.cssVar} / ${isActive ? "0.3" : "0.12"})`,
+                          boxShadow: isActive
+                            ? `0 2px 12px -3px hsl(${item.cssVar} / 0.25), inset 0 1px 1px hsl(${item.cssVar} / 0.06)`
+                            : "none",
+                        }}
                       >
-                        {/* Background image */}
-                        <span
-                          className="absolute inset-0 rounded-full overflow-hidden"
-                          style={{
-                            transform: isActive ? "translateZ(8px)" : "translateZ(0)",
-                          }}
-                        >
-                          <img
-                            src={item.bg}
-                            alt=""
-                            className="absolute inset-0 w-full h-full object-cover"
-                            style={{
-                              opacity: isActive ? 0.85 : 0.3,
-                              transition: "opacity 0.3s ease",
-                            }}
-                          />
-                          {/* Color overlay */}
-                          <span
-                            className="absolute inset-0"
-                            style={{
-                              background: isActive
-                                ? `linear-gradient(135deg, hsl(${item.cssVar} / 0.55), hsl(${item.cssVar} / 0.35))`
-                                : `hsl(${item.cssVar} / 0.06)`,
-                              transition: "background 0.3s ease",
-                            }}
-                          />
-                        </span>
-                        {/* Border & shadow */}
-                        <span
-                          className="absolute inset-0 rounded-full pointer-events-none"
-                          style={{
-                            border: `1.5px solid hsl(${item.cssVar} / ${isActive ? "0.5" : "0.2"})`,
-                            boxShadow: isActive
-                              ? [
-                                  `0 4px 16px -2px hsl(${item.cssVar} / 0.4)`,
-                                  `0 8px 28px -6px hsl(${item.cssVar} / 0.2)`,
-                                  `inset 0 1px 2px rgba(255,255,255,0.2)`,
-                                ].join(", ")
-                              : `0 2px 8px -3px hsl(${item.cssVar} / 0.12)`,
-                          }}
+                        <item.icon
+                          className="w-4 h-4"
+                          style={{ color: `hsl(${item.cssVar})` }}
                         />
-                        {/* Top glare */}
-                        {isActive && (
-                          <span
-                            className="absolute inset-0 rounded-full pointer-events-none"
-                            style={{
-                              background: "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 40%)",
-                            }}
-                          />
-                        )}
-                        <span className="relative z-10 flex items-center gap-2">
-                          <item.icon
-                            className="w-4 h-4"
-                            style={{
-                              color: isActive ? "white" : `hsl(${item.cssVar})`,
-                              filter: isActive
-                                ? "drop-shadow(0 1px 3px rgba(0,0,0,0.4))"
-                                : `drop-shadow(0 1px 2px hsl(${item.cssVar} / 0.3))`,
-                            }}
-                          />
-                          <span
-                            style={{
-                              color: isActive ? "white" : `hsl(${item.cssVar})`,
-                              textShadow: isActive ? "0 1px 3px rgba(0,0,0,0.35)" : "none",
-                            }}
-                          >
-                            {item.label}
-                          </span>
+                        <span style={{ color: `hsl(${item.cssVar})` }}>
+                          {item.label}
                         </span>
                       </Link>
                     </motion.div>
