@@ -147,7 +147,7 @@ function DesktopSidebar({ activeSection, onSectionClick }: { activeSection: stri
           return (
             <button
               key={section.id}
-              onClick={() => scrollTo(section.id)}
+              onClick={() => onSectionClick(section.id)}
               className={cn(
                 "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all text-left",
                 isActive
