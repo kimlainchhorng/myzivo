@@ -39,11 +39,8 @@ const serviceNavItems = [
 ];
 
 const directNavItems = [
-  { label: "Rides", href: "/rides", icon: Car, cssVar: "var(--rides)" },
-  { label: "Eats", href: "/eats", icon: UtensilsCrossed, cssVar: "var(--eats)" },
   { label: "Feed", href: "/feed", icon: Newspaper, cssVar: "var(--flights)" },
   { label: "Reel", href: "/reels", icon: Film, cssVar: "var(--eats)" },
-  { label: "Map", href: "/store-map", icon: MapPin, cssVar: "var(--hotels)" },
 ];
 
 const communityNavItems = [
