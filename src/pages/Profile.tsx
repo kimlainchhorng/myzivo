@@ -298,6 +298,13 @@ const Profile = () => {
     }
   };
 
+  // Scroll to top on mount/navigation
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [location.pathname]);
+
   const { scrollYProgress } = useScroll({ container: scrollRef });
   const headerY = useTransform(scrollYProgress, [0, 0.3], [0, -30]);
   const headerScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95]);
