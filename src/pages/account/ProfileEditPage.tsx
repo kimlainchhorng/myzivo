@@ -10,6 +10,8 @@ import {
   Link2, Trash2, ExternalLink, MessageSquare, Heart, Share2, AtSign,
   UserPlus, Globe,
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import NavBar from "@/components/home/NavBar";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
