@@ -34,6 +34,7 @@ import CommentsSheet from "@/components/social/CommentsSheet";
 import FeedStoryRing from "@/components/social/FeedStoryRing";
 import SuggestedUsersCarousel from "@/components/social/SuggestedUsersCarousel";
 import CreatePostModal from "@/components/social/CreatePostModal";
+import FeedSidebar from "@/components/social/FeedSidebar";
 
 interface FeedItem {
   id: string;
@@ -441,257 +442,264 @@ export default function ReelsFeedPage() {
       <div className="hidden lg:block relative z-[1200]">
         <NavBar />
       </div>
-    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pt-16">
-      {/* Header */}
-      <div className="sticky top-0 lg:top-16 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center justify-between" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 0.625rem)' }}>
-        <h1 className="text-lg font-bold text-foreground">Feed</h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowSearch(true)}
-            className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/50 transition-colors"
-          >
-            <Search className="h-4.5 w-4.5 text-foreground" />
-          </button>
-        </div>
-      </div>
 
-      {/* Search overlay */}
-      <AnimatePresence>
-        {showSearch && (
-          <motion.div
-            className="fixed inset-0 z-50 bg-background flex flex-col"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.5rem)' }}>
-              <button onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-                <ChevronLeft className="h-5 w-5 text-foreground" />
+      <div className="lg:flex lg:pt-16">
+        {/* Desktop Sidebar */}
+        <FeedSidebar />
+
+        {/* Main Feed Content */}
+        <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pb-0 flex-1 lg:max-w-2xl lg:mx-auto">
+          {/* Header */}
+          <div className="sticky top-0 lg:top-16 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center justify-between" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 0.625rem)' }}>
+            <h1 className="text-lg font-bold text-foreground">Feed</h1>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowSearch(true)}
+                className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/50 transition-colors"
+              >
+                <Search className="h-4.5 w-4.5 text-foreground" />
               </button>
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  ref={searchInputRef}
-                  value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder="Search people..."
-                  className="w-full pl-9 pr-8 py-2.5 rounded-full bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                />
-                {searchQuery && (
-                  <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <XIcon className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </div>
+
+          {/* Search overlay */}
+          <AnimatePresence>
+            {showSearch && (
+              <motion.div
+                className="fixed inset-0 z-50 bg-background flex flex-col"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center gap-2 px-3 py-2 border-b border-border/30" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.5rem)' }}>
+                  <button onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                    <ChevronLeft className="h-5 w-5 text-foreground" />
                   </button>
-                )}
-              </div>
-            </div>
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      ref={searchInputRef}
+                      value={searchQuery}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      placeholder="Search people..."
+                      className="w-full pl-9 pr-8 py-2.5 rounded-full bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                    {searchQuery && (
+                      <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <XIcon className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    )}
+                  </div>
+                </div>
 
-            <div className="flex-1 overflow-y-auto">
-              {searchLoading ? (
-                <div className="flex items-center justify-center h-32">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <div className="flex-1 overflow-y-auto">
+                  {searchLoading ? (
+                    <div className="flex items-center justify-center h-32">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    </div>
+                  ) : !searchQuery.trim() ? (
+                    <div className="flex flex-col items-center justify-center h-32 text-muted-foreground/50">
+                      <Search className="h-8 w-8 mb-2" />
+                      <p className="text-sm">Search for people by name</p>
+                    </div>
+                  ) : searchResults.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-32 text-muted-foreground/50">
+                      <p className="text-sm">No results found</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border/20">
+                      {searchResults.map((p: any) => (
+                        <button
+                          key={p.id}
+                          onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); navigate(`/user/${p.id}`); }}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
+                        >
+                          <Avatar className="h-11 w-11 border-2 border-border/30">
+                            <AvatarImage src={p.avatar_url || undefined} />
+                            <AvatarFallback className="text-xs font-bold bg-muted text-muted-foreground">
+                              {(p.full_name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="text-left min-w-0">
+                            <p className="text-sm font-semibold text-foreground truncate">{p.full_name || "Unknown"}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ) : !searchQuery.trim() ? (
-                <div className="flex flex-col items-center justify-center h-32 text-muted-foreground/50">
-                  <Search className="h-8 w-8 mb-2" />
-                  <p className="text-sm">Search for people by name</p>
-                </div>
-              ) : searchResults.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-32 text-muted-foreground/50">
-                  <p className="text-sm">No results found</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-border/20">
-                  {searchResults.map((p: any) => (
-                    <button
-                      key={p.id}
-                      onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); navigate(`/user/${p.id}`); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
-                    >
-                      <Avatar className="h-11 w-11 border-2 border-border/30">
-                        <AvatarImage src={p.avatar_url || undefined} />
-                        <AvatarFallback className="text-xs font-bold bg-muted text-muted-foreground">
-                          {(p.full_name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="text-left min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">{p.full_name || "Unknown"}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-
-      {/* Create post prompt (logged in) */}
-      {userId && (
-        <button
-          onClick={() => setShowCreate(true)}
-          className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-border/10 bg-card hover:bg-muted/20 transition-colors"
-        >
-          <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border-2 border-primary/20 shrink-0">
-            {userProfile?.avatar ? (
-              <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center text-muted-foreground/50">
-                <Camera className="h-4 w-4" />
-              </div>
+              </motion.div>
             )}
-          </div>
-          <p className="text-sm text-muted-foreground flex-1 text-left">What's on your mind?</p>
-          <div className="flex gap-1.5">
-            <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
-              <ImageIcon className="h-3.5 w-3.5 text-emerald-600" />
-            </div>
-            <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-              <Film className="h-3.5 w-3.5 text-blue-600" />
-            </div>
-            <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
-              <Camera className="h-3.5 w-3.5 text-orange-600" />
-            </div>
-          </div>
-        </button>
-      )}
+          </AnimatePresence>
 
 
-      {/* Story Rings */}
-      <FeedStoryRing />
-
-      {/* Suggested Users */}
-      <SuggestedUsersCarousel />
-
-
-      {/* Posts */}
-      {isLoading ? (
-        <div className="flex items-center justify-center h-60">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        </div>
-      ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-60 text-center px-6">
-          <div className="text-5xl mb-3">📸</div>
-          <p className="text-base font-bold text-foreground mb-1">No posts yet</p>
-          <p className="text-sm text-muted-foreground mb-4">Be the first to share something amazing!</p>
+          {/* Create post prompt (logged in) */}
           {userId && (
             <button
               onClick={() => setShowCreate(true)}
-              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold active:scale-95 transition-transform shadow-lg shadow-primary/20"
+              className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-border/10 bg-card hover:bg-muted/20 transition-colors"
             >
-              Create Post
+              <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border-2 border-primary/20 shrink-0">
+                {userProfile?.avatar ? (
+                  <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-muted-foreground/50">
+                    <Camera className="h-4 w-4" />
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground flex-1 text-left">What's on your mind?</p>
+              <div className="flex gap-1.5">
+                <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                  <ImageIcon className="h-3.5 w-3.5 text-emerald-600" />
+                </div>
+                <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                  <Film className="h-3.5 w-3.5 text-blue-600" />
+                </div>
+                <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+                  <Camera className="h-3.5 w-3.5 text-orange-600" />
+                </div>
+              </div>
             </button>
           )}
-        </div>
-      ) : (() => {
-        const filteredItems = feedFilter === "all" ? items
-          : feedFilter === "photos" ? items.filter(i => i.media_type === "image" && i.media_urls.length > 0)
-          : feedFilter === "videos" ? items.filter(i => i.media_type === "video")
-          : items.filter(i => !i.media_urls.length || !i.media_urls[0]);
-        return filteredItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
-            <p className="text-sm">No {feedFilter} posts found</p>
-          </div>
-        ) : (
-        <div className="divide-y divide-border/20">
-          {filteredItems.map((item, idx) => (
-            <FeedCard key={item.id} item={item} currentUserId={userId} onOpenFullscreen={() => {
-              if (item.media_type === 'video') {
-                setReelsStartIndex(idx);
-              } else {
-                setFullscreenIndex(idx);
-              }
-            }} />
-          ))}
-        </div>
-        );
-      })()}
 
-      {/* Create Post Modal */}
-      <AnimatePresence>
-        {showCreate && userId && (
-          <CreatePostModal
-            userId={userId}
-            userProfile={userProfile}
-            initialCaption={shareForPost ? shareForPost.shareText : undefined}
-            sharedMediaUrl={shareForPost?.shareMediaUrl}
-            sharedMediaType={shareForPost?.shareMediaType}
-            sharedPostId={shareForPost?.sharePostId}
-            sharedPostAuthorId={shareForPost?.sharePostAuthorId}
-            sharedPostAuthorName={shareForPost?.sharePostAuthorName}
-            commerceLinkDraft={commerceDraft || undefined}
-            onClose={() => { setShowCreate(false); setShareForPost(null); setCommerceDraft(null); }}
-            onCreated={() => {
-              setShowCreate(false);
-              setShareForPost(null);
-              setCommerceDraft(null);
-              queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
-            }}
-          />
-        )}
-      </AnimatePresence>
 
-      {/* TikTok/Reels-style Fullscreen Video Viewer */}
-      <AnimatePresence>
-        {reelsStartIndex !== null && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[100] bg-black"
-          >
-            {/* Snap-scroll container */}
-            <div ref={reelsScrollRef} className="h-full w-full overflow-y-scroll snap-y snap-mandatory">
-              {items.filter((it) => it.media_type === 'video').map((item) => (
-                <ReelSlide
-                  key={item.id}
-                  item={item}
-                  currentUserId={userId}
-                  onClose={() => setReelsStartIndex(null)}
-                />
+          {/* Story Rings */}
+          <FeedStoryRing />
+
+          {/* Suggested Users */}
+          <SuggestedUsersCarousel />
+
+
+          {/* Posts */}
+          {isLoading ? (
+            <div className="flex items-center justify-center h-60">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-60 text-center px-6">
+              <div className="text-5xl mb-3">📸</div>
+              <p className="text-base font-bold text-foreground mb-1">No posts yet</p>
+              <p className="text-sm text-muted-foreground mb-4">Be the first to share something amazing!</p>
+              {userId && (
+                <button
+                  onClick={() => setShowCreate(true)}
+                  className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold active:scale-95 transition-transform shadow-lg shadow-primary/20"
+                >
+                  Create Post
+                </button>
+              )}
+            </div>
+          ) : (() => {
+            const filteredItems = feedFilter === "all" ? items
+              : feedFilter === "photos" ? items.filter(i => i.media_type === "image" && i.media_urls.length > 0)
+              : feedFilter === "videos" ? items.filter(i => i.media_type === "video")
+              : items.filter(i => !i.media_urls.length || !i.media_urls[0]);
+            return filteredItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
+                <p className="text-sm">No {feedFilter} posts found</p>
+              </div>
+            ) : (
+            <div className="divide-y divide-border/20">
+              {filteredItems.map((item, idx) => (
+                <FeedCard key={item.id} item={item} currentUserId={userId} onOpenFullscreen={() => {
+                  if (item.media_type === 'video') {
+                    setReelsStartIndex(idx);
+                  } else {
+                    setFullscreenIndex(idx);
+                  }
+                }} />
               ))}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            );
+          })()}
 
-      {/* Fullscreen Scrollable Post Viewer (images) */}
-      <AnimatePresence>
-        {fullscreenIndex !== null && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-background flex flex-col"
-          >
-            <div className="sticky top-0 z-10 flex items-center gap-3 px-3 py-2 bg-background/95 backdrop-blur-xl border-b border-border/30" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.5rem)' }}>
-              <button
-                onClick={() => setFullscreenIndex(null)}
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+          {/* Create Post Modal */}
+          <AnimatePresence>
+            {showCreate && userId && (
+              <CreatePostModal
+                userId={userId}
+                userProfile={userProfile}
+                initialCaption={shareForPost ? shareForPost.shareText : undefined}
+                sharedMediaUrl={shareForPost?.shareMediaUrl}
+                sharedMediaType={shareForPost?.shareMediaType}
+                sharedPostId={shareForPost?.sharePostId}
+                sharedPostAuthorId={shareForPost?.sharePostAuthorId}
+                sharedPostAuthorName={shareForPost?.sharePostAuthorName}
+                commerceLinkDraft={commerceDraft || undefined}
+                onClose={() => { setShowCreate(false); setShareForPost(null); setCommerceDraft(null); }}
+                onCreated={() => {
+                  setShowCreate(false);
+                  setShareForPost(null);
+                  setCommerceDraft(null);
+                  queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+                }}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* TikTok/Reels-style Fullscreen Video Viewer */}
+          <AnimatePresence>
+            {reelsStartIndex !== null && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-[100] bg-black"
               >
-                <ChevronLeft className="h-5 w-5 text-foreground" />
-              </button>
-              <h2 className="text-base font-semibold text-foreground">Posts</h2>
-            </div>
-            <div
-              ref={fullscreenScrollRef}
-              className="flex-1 overflow-y-auto pb-20"
-              style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 5rem), 5rem)' }}
-            >
-              <div className="divide-y divide-border/20">
-                {items.slice(fullscreenIndex).map((item, idx) => (
-                  <FeedCard key={item.id} item={item} currentUserId={userId} />
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                {/* Snap-scroll container */}
+                <div ref={reelsScrollRef} className="h-full w-full overflow-y-scroll snap-y snap-mandatory">
+                  {items.filter((it) => it.media_type === 'video').map((item) => (
+                    <ReelSlide
+                      key={item.id}
+                      item={item}
+                      currentUserId={userId}
+                      onClose={() => setReelsStartIndex(null)}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-      <ZivoMobileNav />
-    </PullToRefresh>
+          {/* Fullscreen Scrollable Post Viewer (images) */}
+          <AnimatePresence>
+            {fullscreenIndex !== null && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[100] bg-background flex flex-col"
+              >
+                <div className="sticky top-0 z-10 flex items-center gap-3 px-3 py-2 bg-background/95 backdrop-blur-xl border-b border-border/30" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.5rem)' }}>
+                  <button
+                    onClick={() => setFullscreenIndex(null)}
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  >
+                    <ChevronLeft className="h-5 w-5 text-foreground" />
+                  </button>
+                  <h2 className="text-base font-semibold text-foreground">Posts</h2>
+                </div>
+                <div
+                  ref={fullscreenScrollRef}
+                  className="flex-1 overflow-y-auto pb-20"
+                  style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 5rem), 5rem)' }}
+                >
+                  <div className="divide-y divide-border/20">
+                    {items.slice(fullscreenIndex).map((item, idx) => (
+                      <FeedCard key={item.id} item={item} currentUserId={userId} />
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <ZivoMobileNav />
+        </PullToRefresh>
+      </div>
     </>
   );
 }
