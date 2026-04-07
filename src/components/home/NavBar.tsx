@@ -35,6 +35,9 @@ import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
 import tabCarsBg from "@/assets/tab-cars-bg.jpg";
 import tabRidesBg from "@/assets/tab-rides-bg.jpg";
 import tabEatsBg from "@/assets/tab-eats-bg.jpg";
+import tabFeedBg from "@/assets/tab-feed-bg.jpg";
+import tabReelsBg from "@/assets/tab-reels-bg.jpg";
+import tabMapBg from "@/assets/tab-map-bg.jpg";
 import { withRedirectParam } from "@/lib/authRedirect";
 
 const serviceNavItems = [
@@ -43,6 +46,9 @@ const serviceNavItems = [
   { label: "Cars", href: "/rent-car", icon: CarFront, cssVar: "var(--cars)", bg: tabCarsBg },
   { label: "Rides", href: "/rides", icon: Car, cssVar: "var(--rides)", bg: tabRidesBg },
   { label: "Eats", href: "/eats", icon: UtensilsCrossed, cssVar: "var(--eats)", bg: tabEatsBg },
+  { label: "Feed", href: "/feed", icon: Newspaper, cssVar: "var(--flights)", bg: tabFeedBg },
+  { label: "Reel", href: "/reels", icon: Film, cssVar: "var(--eats)", bg: tabReelsBg },
+  { label: "Map", href: "/store-map", icon: MapPin, cssVar: "var(--hotels)", bg: tabMapBg },
 ];
 
 const communityNavItems = [
