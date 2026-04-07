@@ -96,6 +96,7 @@ function ReelCard({
   onOpenComments: (postId: string) => void;
   onOpenShare: (postId: string) => void;
 }) {
+  const reelNavigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
