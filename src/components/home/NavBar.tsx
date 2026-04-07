@@ -74,6 +74,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   const { isActive: isMember } = useMembership();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [socialOpen, setSocialOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const { currentLanguage, changeLanguage, t } = useI18n();
