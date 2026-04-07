@@ -778,19 +778,56 @@ export default function CreatePostModal({
           </div>
         )}
 
+        {/* Audio name input */}
+        <AnimatePresence>
+          {showAudioInput && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden border-t border-border/30"
+            >
+              <div className="px-4 py-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
+                  <Music className="w-4 h-4 text-primary" />
+                </div>
+                <input
+                  type="text"
+                  value={audioName}
+                  onChange={(e) => setAudioName(e.target.value)}
+                  placeholder="Sound name (e.g. Original Sound)"
+                  className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground/50"
+                  maxLength={100}
+                  autoFocus
+                />
+                {audioName && (
+                  <button onClick={() => { setAudioName(""); setShowAudioInput(false); }} className="text-muted-foreground hover:text-foreground">
+                    <XIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Media type selector — bottom toolbar */}
-        <div className="px-4 py-3 border-t border-border/30 grid grid-cols-4 gap-1">
+        <div className="px-4 py-3 border-t border-border/30 grid grid-cols-5 gap-1">
           {[
-            { label: "Photo", icon: ImageIcon, accept: "image/*", color: "text-emerald-500" },
-            { label: "Video", icon: Play, accept: "video/*", color: "text-rose-500" },
-            { label: "Reel", icon: Film, accept: "video/*", color: "text-violet-500" },
-            { label: "Live", icon: Radio, accept: "", color: "text-amber-500" },
+            { label: "Photo", icon: ImageIcon, accept: "image/*", color: "text-emerald-500", action: "file" },
+            { label: "Video", icon: Play, accept: "video/*", color: "text-rose-500", action: "file" },
+            { label: "Reel", icon: Film, accept: "video/*", color: "text-violet-500", action: "file" },
+            { label: "Music", icon: Music, accept: "", color: "text-sky-500", action: "audio" },
+            { label: "Live", icon: Radio, accept: "", color: "text-amber-500", action: "live" },
           ].map((opt) => (
             <button
               key={opt.label}
               onClick={() => {
-                if (opt.label === "Live") {
+                if (opt.action === "live") {
                   toast.info("Live is coming soon!");
+                  return;
+                }
+                if (opt.action === "audio") {
+                  setShowAudioInput((v) => !v);
                   return;
                 }
                 setSelectedType(opt.label as any);
@@ -804,10 +841,12 @@ export default function CreatePostModal({
             >
               <opt.icon className={cn(
                 "h-5 w-5 transition-colors",
+                (opt.action === "audio" && showAudioInput) ? "text-primary" :
                 selectedType === opt.label ? "text-primary" : opt.color
               )} />
               <span className={cn(
                 "text-[10px] font-medium transition-colors",
+                (opt.action === "audio" && showAudioInput) ? "text-primary" :
                 selectedType === opt.label ? "text-primary" : "text-muted-foreground"
               )}>
                 {opt.label}
