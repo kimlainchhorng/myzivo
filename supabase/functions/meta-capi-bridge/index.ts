@@ -94,7 +94,7 @@ async function buildPurchaseEvent(
   record: Rec,
 ): Promise<MetaPayload | null> {
   const userData = await buildUserData(supabase, record);
-  const eventId = str(record.id) ?? crypto.randomUUID();
+  const eventId = str(record.id) ?? str(record.order_id) ?? str(record.transaction_id) ?? `txn_${Date.now()}_${crypto.randomUUID().slice(0,8)}`;
 
   let value: number | null = null;
   let currency = "USD";
@@ -245,7 +245,7 @@ serve(async (req: Request) => {
   try {
     const pixelId = Deno.env.get("META_PIXEL_ID");
     const accessToken = Deno.env.get("META_ACCESS_TOKEN");
-    const testCode = Deno.env.get("META_TEST_EVENT_CODE") || "TEST36758";
+    const testCode = Deno.env.get("META_TEST_EVENT_CODE") || undefined;
 
     if (!pixelId || !accessToken) {
       return new Response(
