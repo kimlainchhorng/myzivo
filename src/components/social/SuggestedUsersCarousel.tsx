@@ -85,7 +85,7 @@ export default function SuggestedUsersCarousel() {
                 <Avatar className="h-16 w-16 mx-auto mb-2">
                   <AvatarImage src={profile.avatar_url} />
                   <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
-                    {profile.display_name?.[0]?.toUpperCase() || "?"}
+                    {profile.full_name?.[0]?.toUpperCase() || "?"}
                   </AvatarFallback>
                 </Avatar>
 
