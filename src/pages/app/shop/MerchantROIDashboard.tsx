@@ -18,6 +18,7 @@ import {
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
 import MerchantBoostModal from "@/components/shop/MerchantBoostModal";
+import MerchantViewerHeatmap from "@/components/shop/MerchantViewerHeatmap";
 
 interface DashboardData {
   reelViews: number;
