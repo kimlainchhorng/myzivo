@@ -10,6 +10,8 @@ import {
   Link2, Trash2, ExternalLink, MessageSquare, Heart, Share2, AtSign,
   UserPlus, Globe,
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import NavBar from "@/components/home/NavBar";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -265,8 +267,13 @@ export default function ProfileEditPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
+      {/* Desktop: full NavBar */}
+      <div className="hidden lg:block">
+        <NavBar />
+      </div>
+
+      {/* Mobile: simple back header */}
+      <div className="lg:hidden sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3 max-w-5xl mx-auto">
           <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
@@ -280,7 +287,7 @@ export default function ProfileEditPage() {
           <Loader2 className="h-8 w-8 text-primary animate-spin" />
         </div>
       ) : (
-        <div className="max-w-5xl mx-auto px-4 py-6 flex gap-8">
+        <div className="max-w-5xl mx-auto px-4 py-6 lg:pt-24 flex gap-8">
           {/* Sidebar — desktop only */}
           <DesktopSidebar activeSection={activeSection} onSectionClick={(id) => {
             setActiveSection(id);
