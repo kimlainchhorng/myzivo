@@ -991,9 +991,9 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black">
+    <div className="fixed inset-0 bg-black lg:flex lg:flex-col">
       {/* Desktop NavBar */}
-      <div className="hidden lg:block relative z-[1200]">
+      <div className="hidden lg:block relative z-[1200] shrink-0">
         <NavBar />
       </div>
       {/* Search button */}
@@ -1013,7 +1013,7 @@ export default function FeedPage() {
 
       {/* Snap-scroll reel container */}
       <div
-        className="w-full h-full overflow-y-scroll snap-y snap-mandatory"
+        className="w-full h-full lg:flex-1 overflow-y-scroll snap-y snap-mandatory"
         style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
       >
         {posts.map((post, index) => (
