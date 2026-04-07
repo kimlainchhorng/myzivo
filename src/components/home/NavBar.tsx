@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useMembership } from "@/hooks/useMembership";
 import { ZivoPlusBadge } from "@/components/premium/ZivoPlusBadge";
 import {
@@ -75,10 +76,24 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const { currentLanguage, changeLanguage, t } = useI18n();
   const { data: supportedLanguages } = useSupportedLanguages(true);
   const activeLanguages = (supportedLanguages || []).filter((l) => l.is_active);
   const currentLangData = activeLanguages.find((l) => l.code === currentLanguage);
+
+  // Fetch user profile avatar
+  useEffect(() => {
+    if (!user?.id) { setAvatarUrl(null); setUserName(null); return; }
+    supabase.from("profiles").select("avatar_url, full_name").or(`id.eq.${user.id},user_id.eq.${user.id}`).limit(1).single()
+      .then(({ data }) => {
+        if (data) {
+          setAvatarUrl(data.avatar_url);
+          setUserName(data.full_name);
+        }
+      });
+  }, [user?.id]);
 
   const moreRef = useRef<HTMLDivElement>(null);
   const socialRef = useRef<HTMLDivElement>(null);
@@ -277,14 +292,20 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       >
                         <div className="relative">
                           <div className={cn(
-                            "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300",
+                            "w-9 h-9 rounded-full overflow-hidden flex items-center justify-center transition-all duration-300",
                             isMember
-                              ? "bg-gradient-to-br from-amber-400/20 to-amber-600/20 border-2 border-amber-400/40"
-                              : "bg-primary/10 border-2 border-primary/20 group-hover:border-primary/40"
+                              ? "border-2 border-amber-400/40"
+                              : "border-2 border-primary/20 group-hover:border-primary/40"
                           )}
                             style={{ boxShadow: isMember ? "0 0 12px hsl(45 90% 50% / 0.15)" : "0 0 8px hsl(var(--primary) / 0.1)" }}
                           >
-                            <User className={cn("h-4 w-4", isMember ? "text-amber-600" : "text-primary")} />
+                            {avatarUrl ? (
+                              <img src={avatarUrl} alt={userName || ""} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className={cn("w-full h-full flex items-center justify-center", isMember ? "bg-gradient-to-br from-amber-400/20 to-amber-600/20" : "bg-primary/10")}>
+                                <User className={cn("h-4 w-4", isMember ? "text-amber-600" : "text-primary")} />
+                              </div>
+                            )}
                           </div>
                           {isMember && (
                             <div className="absolute -top-1 -right-1">
