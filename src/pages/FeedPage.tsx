@@ -471,7 +471,7 @@ function ReelCard({
           name={post.audio_name || `Original Sound - ${post.store_name || "ZIVO"}`}
           onClick={() => {
             const soundLabel = post.audio_name || `Original Sound - ${post.store_name || "ZIVO"}`;
-            reelNavigate(`/sound/${encodeURIComponent(soundLabel)}`);
+            onOpenSound(soundLabel);
           }}
         />
       </div>
