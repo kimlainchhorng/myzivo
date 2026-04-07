@@ -1367,7 +1367,7 @@ export default function FeedPage() {
             userId={userId}
             userProfile={null}
             onClose={() => setCreateWithAudio(null)}
-            onPostCreated={() => {
+            onCreated={() => {
               setCreateWithAudio(null);
               toast.success("Reel posted with sound!");
             }}
