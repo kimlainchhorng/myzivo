@@ -318,6 +318,11 @@ export default function MerchantROIDashboard() {
                 </div>
               </div>
             )}
+
+            {/* Viewer Heatmap */}
+            {storeId && (
+              <MerchantViewerHeatmap storeId={storeId} />
+            )}
           </div>
         )}
       </div>
