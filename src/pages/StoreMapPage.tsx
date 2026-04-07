@@ -10,6 +10,7 @@ import { MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X, Locate
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import NavBar from "@/components/home/NavBar";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import { trackInitiateCheckout } from "@/services/metaConversion";
 import { buildShopDeepLink } from "@/lib/deepLinks";
@@ -485,6 +486,10 @@ export default function StoreMapPage() {
 
   return (
     <div className="fixed inset-0 z-0 bg-background">
+      {/* Desktop NavBar */}
+      <div className="hidden lg:block relative z-[1200]">
+        <NavBar />
+      </div>
 
       {/* ── Header ── */}
       <div className="absolute top-0 left-0 right-0 z-[1100]" style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 12px)" }}>
