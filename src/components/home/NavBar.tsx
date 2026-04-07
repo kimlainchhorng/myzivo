@@ -232,7 +232,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 {/* Social Popover */}
                 <div ref={socialRef} className="relative">
                   <motion.button
-                    onClick={() => setSocialOpen(!socialOpen)}
+                    onClick={() => { setSocialOpen(!socialOpen); setServicesOpen(false); }}
                     whileHover={{ y: -2, scale: 1.04 }}
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: "spring", stiffness: 400, damping: 22 }}
