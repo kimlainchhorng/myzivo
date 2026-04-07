@@ -509,6 +509,7 @@ const App = () => (
                 <Route path="/shop-dashboard/attribution" element={<ProtectedRoute><SalesAttributionPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/sandbox" element={<ProtectedRoute><SandboxModePage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/roi" element={<ProtectedRoute><MerchantROIDashboard /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/refer" element={<ProtectedRoute><ReferAShopPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard" element={<ProtectedRoute><ShopDashboard /></ProtectedRoute>} />
                 <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
 
