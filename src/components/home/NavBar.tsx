@@ -195,12 +195,6 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                     </motion.div>
                   );
                 })}
-                          </span>
-                        </span>
-                      </Link>
-                    </motion.div>
-                  );
-                })}
                 {/* More Dropdown */}
                 <div ref={moreRef} className="relative">
                   <motion.button
