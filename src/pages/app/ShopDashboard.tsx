@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft, Package, ShoppingBag, BarChart3, Settings, Tag, Truck,
   Plus, TrendingUp, DollarSign, Box, Users, Calendar, Clock, Wallet, Shield, ChevronRight,
-  CalendarCheck, GraduationCap, Star, FolderOpen,
+  CalendarCheck, GraduationCap, Star, FolderOpen, TestTube, Rocket,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/app/AppLayout";
@@ -30,6 +30,9 @@ const ShopDashboard = () => {
     { icon: Tag, label: "Promotions", description: "Discounts & deals", color: "from-rose-500 to-pink-500", onClick: () => navigate("/shop-dashboard/promotions") },
     { icon: Truck, label: "Delivery", description: "Shipping settings", color: "from-emerald-500 to-green-500", onClick: () => navigate("/shop-dashboard/delivery") },
     { icon: BarChart3, label: "Analytics", description: "Sales & performance", color: "from-purple-500 to-purple-600", onClick: () => navigate("/shop-dashboard/analytics") },
+    { icon: Rocket, label: "Sales Attribution", description: "Reel-to-purchase funnel", color: "from-amber-500 to-orange-500", onClick: () => navigate("/shop-dashboard/attribution") },
+    { icon: Truck, label: "Truck Dashboard", description: "GPS inventory & sales", color: "from-teal-500 to-cyan-500", onClick: () => navigate("/shop-dashboard/truck") },
+    { icon: TestTube, label: "Sandbox Mode", description: "Test transactions & CAPI", color: "from-yellow-500 to-amber-500", onClick: () => navigate("/shop-dashboard/sandbox") },
     { icon: Settings, label: "Shop Settings", description: "Store profile & config", color: "from-slate-500 to-slate-600", onClick: () => navigate("/shop-dashboard/settings") },
   ];
 

@@ -1,4 +1,4 @@
-import { ArrowLeft, Users, Truck, Clock3, Signal, SignalOff, RefreshCw } from "lucide-react";
+import { ArrowLeft, Users, Truck, Clock3, Signal, WifiOff, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/app/AppLayout";
@@ -290,7 +290,7 @@ export default function ShopEmployeesPage() {
                   <p className="text-sm font-semibold">Driver / Truck Mode</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {isOnline ? <Signal className="w-4 h-4 text-emerald-500" /> : <SignalOff className="w-4 h-4 text-amber-500" />}
+                  {isOnline ? <Signal className="w-4 h-4 text-emerald-500" /> : <WifiOff className="w-4 h-4 text-amber-500" />}
                   <button onClick={syncOfflineSales} className="text-xs px-2 py-1 rounded-md border border-border/40 flex items-center gap-1" disabled={syncing}>
                     <RefreshCw className={`w-3 h-3 ${syncing ? "animate-spin" : ""}`} /> Sync ({pendingOfflineCount})
                   </button>

@@ -28,6 +28,7 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
+import FloatingProductCard from "@/components/reels/FloatingProductCard";
 import CommentsSheet from "@/components/social/CommentsSheet";
 import FeedStoryRing from "@/components/social/FeedStoryRing";
 import SuggestedUsersCarousel from "@/components/social/SuggestedUsersCarousel";
@@ -928,8 +929,30 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
             </div>
           </button>
         )}
+      </div>
 
-        {/* Author avatar with Follow button */}
+      {/* Floating Product Card — "Buy from [Shop] - Xkm away" */}
+      {item.commerce_link && (
+        <div
+          className="absolute left-4 right-20"
+          style={{ bottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 5.5rem), 7rem)' }}
+        >
+          <FloatingProductCard
+            commerceLink={item.commerce_link}
+            shopName={item.author_name}
+            storeSlug={item.store_slug}
+            postId={item.id}
+            currentUserId={currentUserId}
+            onNavigate={onClose}
+          />
+        </div>
+      )}
+
+      {/* Right side continued - Author avatar with Follow button */}
+      <div
+        className="absolute right-3 flex flex-col items-center"
+        style={{ bottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 1.5rem), 2.5rem)' }}
+      >
         <div className="relative">
           <button
             onClick={() => {
