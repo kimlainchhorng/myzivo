@@ -160,46 +160,75 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 <ZivoLogo size="md" />
               </motion.div>
 
-              {/* Center: Clean service pill tabs */}
+              {/* Center: Grouped nav buttons */}
               <nav
-                className="hidden lg:flex items-center gap-1 px-1 py-1"
+                className="hidden lg:flex items-center gap-2 px-1 py-1"
                 role="tablist"
-                aria-label="Travel services"
-                style={{ transformStyle: "preserve-3d" }}
+                aria-label="Navigation"
               >
-                {serviceNavItems.map((item) => {
-                  const isActive = location.pathname.startsWith(item.href);
-                  return (
-                    <motion.div
-                      key={item.href}
-                      whileHover={{ y: -2, scale: 1.04 }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 22 }}
-                    >
-                      <Link
-                        to={item.href}
-                        className="relative flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300"
+                {/* Services Button */}
+                <div ref={servicesRef} className="relative">
+                  <motion.button
+                    onClick={() => { setServicesOpen(!servicesOpen); setSocialOpen(false); }}
+                    whileHover={{ y: -2, scale: 1.04 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300"
+                    )}
+                    style={{
+                      border: `1.5px solid hsl(var(--primary) / ${servicesOpen ? "0.3" : "0.12"})`,
+                      background: servicesOpen ? "hsl(var(--primary) / 0.06)" : "transparent",
+                      color: servicesOpen ? "hsl(var(--primary))" : undefined,
+                    }}
+                  >
+                    <Plane className="w-4 h-4" style={{ color: "hsl(var(--primary))" }} />
+                    <span className={servicesOpen ? "text-primary" : "text-foreground/80"}>Services</span>
+                    <ChevronDown className={cn("w-3 h-3 transition-transform duration-300 text-muted-foreground", servicesOpen && "rotate-180")} />
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {servicesOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                        transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 p-1.5 rounded-2xl"
                         style={{
-                          background: isActive
-                            ? `linear-gradient(135deg, hsl(${item.cssVar} / 0.15), hsl(${item.cssVar} / 0.08))`
-                            : "transparent",
-                          border: `1.5px solid hsl(${item.cssVar} / ${isActive ? "0.3" : "0.12"})`,
-                          boxShadow: isActive
-                            ? `0 2px 12px -3px hsl(${item.cssVar} / 0.25), inset 0 1px 1px hsl(${item.cssVar} / 0.06)`
-                            : "none",
+                          background: "hsl(var(--card) / 0.9)",
+                          backdropFilter: "blur(24px)",
+                          border: "1px solid hsl(var(--border) / 0.25)",
+                          boxShadow: "0 12px 40px -8px hsl(var(--foreground) / 0.1)",
                         }}
                       >
-                        <item.icon
-                          className="w-4 h-4"
-                          style={{ color: `hsl(${item.cssVar})` }}
-                        />
-                        <span style={{ color: `hsl(${item.cssVar})` }}>
-                          {item.label}
-                        </span>
-                      </Link>
-                    </motion.div>
-                  );
-                })}
+                        <div className="flex gap-1">
+                          {serviceNavItems.map((item) => {
+                            const isActive = location.pathname.startsWith(item.href);
+                            return (
+                              <Link
+                                key={item.href}
+                                to={item.href}
+                                onClick={() => setServicesOpen(false)}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-200 whitespace-nowrap"
+                                style={{
+                                  background: isActive
+                                    ? `linear-gradient(135deg, hsl(${item.cssVar} / 0.15), hsl(${item.cssVar} / 0.08))`
+                                    : "transparent",
+                                  border: `1.5px solid hsl(${item.cssVar} / ${isActive ? "0.3" : "0.1"})`,
+                                  color: `hsl(${item.cssVar})`,
+                                }}
+                              >
+                                <item.icon className="w-4 h-4" />
+                                {item.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
                 {/* Social Popover */}
                 <div ref={socialRef} className="relative">
                   <motion.button
