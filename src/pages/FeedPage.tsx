@@ -1015,7 +1015,7 @@ function SoundOverlay({
             <button
               onClick={() => {
                 onClose();
-                toast.success("Sound selected! Create a new reel to use it.");
+                onUseSound();
               }}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-[0.98] transition-all"
             >
