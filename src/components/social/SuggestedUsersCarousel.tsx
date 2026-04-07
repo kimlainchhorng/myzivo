@@ -91,7 +91,7 @@ export default function SuggestedUsersCarousel() {
 
                 <div className="flex items-center justify-center gap-1 mb-0.5">
                   <p className="text-xs font-semibold text-foreground truncate max-w-[100px]">
-                    {profile.display_name || "User"}
+                    {profile.full_name || "User"}
                   </p>
                   {profile.is_verified && <Shield className="h-3 w-3 text-primary shrink-0" />}
                 </div>
