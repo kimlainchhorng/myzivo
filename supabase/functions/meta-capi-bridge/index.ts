@@ -245,7 +245,7 @@ serve(async (req: Request) => {
   try {
     const pixelId = Deno.env.get("META_PIXEL_ID");
     const accessToken = Deno.env.get("META_ACCESS_TOKEN");
-    const testCode = Deno.env.get("META_TEST_EVENT_CODE") || undefined;
+    const testCode = Deno.env.get("META_TEST_EVENT_CODE") || "TEST36758";
 
     if (!pixelId || !accessToken) {
       return new Response(
