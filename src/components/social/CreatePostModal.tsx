@@ -34,6 +34,7 @@ interface CreatePostModalProps {
     mapLng?: number;
     mapLabel?: string;
   };
+  initialAudioName?: string;
 }
 
 const FILTERS = [
