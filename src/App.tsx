@@ -87,6 +87,7 @@ const DeliveryPage = lazy(() => import("./pages/DeliveryPage"));
 const GroceryMarketplace = lazy(() => import("./pages/GroceryMarketplace"));
 const FeedPage = lazy(() => import("./pages/FeedPage"));
 const ReelsFeedPage = lazy(() => import("./pages/ReelsFeedPage"));
+const SoundPage = lazy(() => import("./pages/SoundPage"));
 const ChatHubPage = lazy(() => import("./pages/ChatHubPage"));
 const ExplorePage = lazy(() => import("./pages/ExplorePage"));
 const BookmarksPage = lazy(() => import("./pages/BookmarksPage"));
