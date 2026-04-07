@@ -252,6 +252,7 @@ export default function CreatePostModal({
         is_published: true,
       };
       if (location) insertData.location = location;
+      if (audioName.trim()) insertData.audio_name = audioName.trim();
       if (sharedPostId) insertData.shared_from_post_id = sharedPostId;
       if (sharedPostAuthorId) insertData.shared_from_user_id = sharedPostAuthorId;
 
