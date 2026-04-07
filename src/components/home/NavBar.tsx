@@ -9,7 +9,7 @@ import {
   Plane, Hotel, CarFront, Car, UtensilsCrossed, Package,
   Menu, X, User, ChevronDown, HelpCircle,
   Sparkles, Users, Award, Crown, LogOut, UserCircle, Briefcase, Globe, Check,
-  Newspaper, Film, MapPin, MessageCircle,
+  Newspaper, Film, MapPin, MessageCircle, Rss,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
