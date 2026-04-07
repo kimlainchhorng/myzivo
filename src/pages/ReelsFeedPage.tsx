@@ -692,6 +692,7 @@ export default function ReelsFeedPage() {
 
       <ZivoMobileNav />
     </PullToRefresh>
+    </>
   );
 }
 
