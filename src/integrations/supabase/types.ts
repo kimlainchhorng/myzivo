@@ -27074,6 +27074,42 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_payouts: {
+        Row: {
+          amount_cents: number
+          bank_name: string | null
+          created_at: string
+          id: string
+          merchant_id: string
+          notes: string | null
+          status: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          merchant_id: string
+          notes?: string | null
+          status?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          notes?: string | null
+          status?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       merchant_plans: {
         Row: {
           active: boolean | null
