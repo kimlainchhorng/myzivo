@@ -1013,7 +1013,7 @@ export default function FeedPage() {
 
       {/* Snap-scroll reel container */}
       <div
-        className="w-full h-full overflow-y-scroll snap-y snap-mandatory"
+        className="w-full h-full lg:flex-1 overflow-y-scroll snap-y snap-mandatory"
         style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
       >
         {posts.map((post, index) => (
