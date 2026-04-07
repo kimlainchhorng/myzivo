@@ -1036,10 +1036,20 @@ function SoundOverlay({
                     onClick={() => onNavigateToReel(reel.id)}
                     className="relative aspect-[9/16] bg-muted/80 overflow-hidden group rounded-lg"
                   >
-                    {thumb && reel.media_type === "video" ? (
-                      <video src={thumb} muted preload="metadata" className="w-full h-full object-cover" />
-                    ) : thumb ? (
-                      <img src={thumb} alt="" className="w-full h-full object-cover" />
+                    {thumb ? (
+                      <>
+                        <img
+                          src={thumb}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        {reel.media_type === "video" && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Play className="h-5 w-5 text-white/80 fill-white/80 drop-shadow" />
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-muted">
                         <Play className="h-5 w-5 text-muted-foreground/40" />
