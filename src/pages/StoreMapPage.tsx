@@ -10,6 +10,7 @@ import { MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X, Locate
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import NavBar from "@/components/home/NavBar";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import { trackInitiateCheckout } from "@/services/metaConversion";
 import { buildShopDeepLink } from "@/lib/deepLinks";
