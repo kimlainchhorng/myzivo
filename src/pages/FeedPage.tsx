@@ -465,7 +465,13 @@ function ReelCard({
         )}
 
         {/* Music ticker */}
-        <MusicTicker name={post.audio_name || `Original Sound - ${post.store_name || "ZIVO"}`} />
+        <MusicTicker
+          name={post.audio_name || `Original Sound - ${post.store_name || "ZIVO"}`}
+          onClick={() => {
+            const soundLabel = post.audio_name || `Original Sound - ${post.store_name || "ZIVO"}`;
+            reelNavigate(`/sound/${encodeURIComponent(soundLabel)}`);
+          }}
+        />
       </div>
 
       {/* Right-side action buttons (TikTok-style) */}
