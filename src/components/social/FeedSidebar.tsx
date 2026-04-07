@@ -3,12 +3,24 @@
  * Contains navigation shortcuts: Rides, Eats, Map, Services, More
  */
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { 
   Car, UtensilsCrossed, MapPin, Plane, Hotel, CarFront,
-  Package, MoreHorizontal, Compass, ShoppingBag, Heart, 
-  Users, Bookmark, Clock, Settings, TrendingUp
+  Package, Compass, ShoppingBag, Heart, 
+  Users, Bookmark, Clock, Settings, TrendingUp,
+  ArrowLeftRight, Shield, Store, LayoutDashboard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { optimizeAvatar } from "@/utils/optimizeAvatar";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 const NAV_ITEMS = [
   { label: "Rides", icon: Car, path: "/rides", color: "text-emerald-500" },
@@ -36,10 +48,38 @@ const MORE_ITEMS = [
 
 export default function FeedSidebar() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: profile } = useUserProfile();
+  const [showSwitch, setShowSwitch] = useState(false);
+
+  const avatarUrl = optimizeAvatar(profile?.avatar_url, 80) || profile?.avatar_url || user?.user_metadata?.avatar_url;
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const email = user?.email || "";
+  const isAdmin = email === "chhorngkimlain1@gmail.com";
 
   return (
     <aside className="hidden lg:flex flex-col w-60 shrink-0 sticky top-[4.5rem] h-[calc(100vh-4.5rem)] overflow-y-auto border-r border-border/30 bg-card/30 backdrop-blur-sm">
       <div className="flex flex-col gap-0.5 p-3">
+        {/* Profile card with Switch Account */}
+        {user && (
+          <button
+            onClick={() => setShowSwitch(true)}
+            className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted/50 transition-colors mb-2 group"
+          >
+            <Avatar className="h-10 w-10 border-2 border-primary/20">
+              <AvatarImage src={avatarUrl || undefined} />
+              <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
+                {displayName[0]?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{email}</p>
+            </div>
+            <ArrowLeftRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+          </button>
+        )}
+
         {/* Main nav */}
         <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-2 pb-1">Navigate</p>
         {NAV_ITEMS.map((item) => (
@@ -79,6 +119,62 @@ export default function FeedSidebar() {
           </button>
         ))}
       </div>
+
+      {/* Switch Account Sheet */}
+      <Sheet open={showSwitch} onOpenChange={setShowSwitch}>
+        <SheetContent side="left" className="w-80 p-0">
+          <SheetHeader className="p-4 border-b border-border/30">
+            <SheetTitle className="text-base">Switch Account</SheetTitle>
+          </SheetHeader>
+          <div className="p-3 space-y-1">
+            {/* Current account */}
+            <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-primary/5 border border-primary/10">
+              <Avatar className="h-11 w-11 border-2 border-primary/30">
+                <AvatarImage src={avatarUrl || undefined} />
+                <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                  {displayName[0]?.toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{email}</p>
+              </div>
+              <div className="h-2.5 w-2.5 rounded-full bg-primary shrink-0" />
+            </div>
+
+            {/* Dashboard options */}
+            <div className="pt-3 space-y-1">
+              <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pb-1">Dashboards</p>
+              
+              {isAdmin && (
+                <button
+                  onClick={() => { setShowSwitch(false); navigate("/admin/analytics"); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+                >
+                  <Shield className="h-5 w-5 text-red-500" />
+                  <span>Admin Dashboard</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => { setShowSwitch(false); navigate("/store/dashboard"); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+              >
+                <Store className="h-5 w-5 text-emerald-500" />
+                <span>Shop Dashboard</span>
+              </button>
+
+              <button
+                onClick={() => { setShowSwitch(false); navigate("/more"); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+              >
+                <LayoutDashboard className="h-5 w-5 text-primary" />
+                <span>Account Hub</span>
+              </button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </aside>
   );
 }
