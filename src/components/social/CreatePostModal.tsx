@@ -151,6 +151,14 @@ export default function CreatePostModal({
     if (showAlbumInput) albumInputRef.current?.focus();
   }, [showAlbumInput]);
 
+  // Auto-show camera choice when coming from "Use this sound" with no media
+  useEffect(() => {
+    if (initialAudioName && files.length === 0 && !showCameraChoice) {
+      const timer = setTimeout(() => setShowCameraChoice(true), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [initialAudioName]);
+
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []);
     if (selected.length === 0) return;
