@@ -283,7 +283,7 @@ async function sendVAPIDWebPush(
 
   try {
     // Import web-push dynamically
-    const webpush = await import("npm:web-push@3.6.7");
+    const webpush = await import("https://esm.sh/web-push@3.6.7");
     
     webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
