@@ -809,6 +809,7 @@ export default function StoreMapPage() {
       </AnimatePresence>
 
       <ZivoMobileNav />
+      </div>
     </div>
   );
 }
