@@ -155,9 +155,9 @@ export default function ReferAShopPage() {
                 <CardContent className="p-5 text-center relative">
                   <Sparkles className="h-8 w-8 mx-auto mb-2 text-primary" />
                   <h2 className="text-xl font-black mb-1">Invite a Shop, Both Win!</h2>
-                  <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                    When you refer a new shop owner, you <strong>both</strong> get{" "}
-                    <span className="text-primary font-bold">1 month FREE Boosted</span> visibility on the Map & Reels.
+                   <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                    When you refer a new shop owner and they make their first sale, you <strong>both</strong> get{" "}
+                    <span className="text-primary font-bold">30 days of 0% transaction fees</span> — keeping 100% of your revenue!
                   </p>
                   <div className="flex justify-center gap-6 mt-4">
                     <div className="text-center">
