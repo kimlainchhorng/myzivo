@@ -152,8 +152,11 @@ const ServiceBookingPage = lazy(() => import("./pages/store/ServiceBookingPage")
 const AdminEmployeesPage = lazy(() => import("./pages/admin/AdminEmployeesPage"));
 const AdminSystemHealth = lazy(() => import("./pages/admin/AdminSystemHealth"));
 const AdminAppStoreAssets = lazy(() => import("./pages/admin/AdminAppStoreAssets"));
+const AdminAndroidVerification = lazy(() => import("./pages/admin/AdminAndroidVerification"));
 const AdBoostBidding = lazy(() => import("./pages/app/shop/AdBoostBidding"));
+const MerchantBoostEngine = lazy(() => import("./pages/app/shop/MerchantBoostEngine"));
 const AiCreativeSuite = lazy(() => import("./pages/app/shop/AiCreativeSuite"));
+const AiContentSuite = lazy(() => import("./pages/app/shop/AiContentSuite"));
 const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
 const DriverEarningsPage = lazy(() => import("./pages/driver/DriverEarningsPage"));
 const DriverPerformancePage = lazy(() => import("./pages/driver/DriverPerformancePage"));
@@ -625,8 +628,11 @@ const App = () => (
                 <Route path="/admin/employees" element={<ProtectedRoute><AdminEmployeesPage /></ProtectedRoute>} />
                 <Route path="/admin/system-health" element={<ProtectedRoute><AdminSystemHealth /></ProtectedRoute>} />
                 <Route path="/admin/app-store-assets" element={<ProtectedRoute><AdminAppStoreAssets /></ProtectedRoute>} />
+                <Route path="/admin/android-verification" element={<ProtectedRoute><AdminAndroidVerification /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/boost" element={<ProtectedRoute><AdBoostBidding /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/boost-engine" element={<ProtectedRoute><MerchantBoostEngine /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/ai-creative" element={<ProtectedRoute><AiCreativeSuite /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/ai-content" element={<ProtectedRoute><AiContentSuite /></ProtectedRoute>} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
                 <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
                 <Route path="/insurance" element={<PreserveQueryRedirect to="/travel-insurance" />} />
