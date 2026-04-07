@@ -987,7 +987,6 @@ function SoundOverlay({
           "pointer-events-auto flex flex-col bg-background rounded-3xl overflow-hidden shadow-2xl",
           "w-[92%] max-w-[420px] max-h-[70vh]",
         )}>
-      >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-9 h-1 rounded-full bg-muted-foreground/25" />
