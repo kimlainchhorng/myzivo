@@ -992,6 +992,10 @@ export default function FeedPage() {
 
   return (
     <div className="fixed inset-0 bg-black">
+      {/* Desktop NavBar */}
+      <div className="hidden lg:block relative z-[1200]">
+        <NavBar />
+      </div>
       {/* Search button */}
       <button
         type="button"
