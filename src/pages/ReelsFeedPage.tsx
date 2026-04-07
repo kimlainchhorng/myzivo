@@ -35,6 +35,7 @@ import FeedStoryRing from "@/components/social/FeedStoryRing";
 import SuggestedUsersCarousel from "@/components/social/SuggestedUsersCarousel";
 import CreatePostModal from "@/components/social/CreatePostModal";
 import FeedSidebar from "@/components/social/FeedSidebar";
+import { optimizeAvatar } from "@/utils/optimizeAvatar";
 
 interface FeedItem {
   id: string;
@@ -157,17 +158,32 @@ export default function ReelsFeedPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      const uid = data.user?.id || null;
+      const authUser = data.user;
+      const uid = authUser?.id || null;
       setUserId(uid);
-      if (uid) {
-        supabase.from("profiles").select("full_name, avatar_url").eq("id", uid).maybeSingle()
-          .then(({ data: p }) => {
-            if (p) setUserProfile({
-              name: (p as any).full_name || "You",
-              avatar: (p as any).avatar_url || null,
+      if (!uid) return;
+
+      const metaAvatar = authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || null;
+      const metaName = authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "You";
+      setUserProfile({
+        name: metaName,
+        avatar: optimizeAvatar(metaAvatar, 96) || metaAvatar || null,
+      });
+
+      supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .or(`id.eq.${uid},user_id.eq.${uid}`)
+        .limit(1)
+        .maybeSingle()
+        .then(({ data: p }) => {
+          if (p) {
+            setUserProfile({
+              name: (p as any).full_name || metaName,
+              avatar: optimizeAvatar((p as any).avatar_url, 96) || optimizeAvatar(metaAvatar, 96) || metaAvatar || null,
             });
-          });
-      }
+          }
+        });
     });
   }, []);
 
@@ -313,13 +329,13 @@ export default function ReelsFeedPage() {
               sharedFromSource = "user";
               sharedFromUserId = originalUserPost.user_id;
               sharedFromUserName = sharedProfile?.full_name?.trim() || "Someone";
-              sharedFromUserAvatar = sharedProfile?.avatar_url || null;
+              sharedFromUserAvatar = optimizeAvatar(sharedProfile?.avatar_url, 96) || sharedProfile?.avatar_url || null;
               sharedFromCaption = originalUserPost.caption || null;
             } else if (post.shared_from_user_id) {
               const sharedProfile = profileMap.get(post.shared_from_user_id);
               sharedFromSource = "user";
               sharedFromUserName = sharedProfile?.full_name?.trim() || "Someone";
-              sharedFromUserAvatar = sharedProfile?.avatar_url || null;
+              sharedFromUserAvatar = optimizeAvatar(sharedProfile?.avatar_url, 96) || sharedProfile?.avatar_url || null;
             }
 
             allItems.push({
@@ -333,7 +349,7 @@ export default function ReelsFeedPage() {
               shares_count: post.shares_count || 0,
               views_count: post.views_count || 0,
               author_name: profile?.full_name?.trim() || "User",
-              author_avatar: profile?.avatar_url || null,
+              author_avatar: optimizeAvatar(profile?.avatar_url, 96) || profile?.avatar_url || null,
               author_id: post.user_id,
               created_at: post.created_at,
               shared_from_post_id: post.shared_from_post_id || null,
