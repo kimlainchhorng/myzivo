@@ -996,11 +996,11 @@ export default function FeedPage() {
       <div className="hidden lg:block relative z-[1200] shrink-0">
         <NavBar />
       </div>
-      {/* Search button */}
+      {/* Search button - hide on desktop since NavBar has navigation */}
       <button
         type="button"
         onClick={() => setShowSearch(true)}
-        className="absolute top-3 right-4 z-50 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+        className="absolute top-3 right-4 z-50 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center lg:hidden"
         style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
       >
         <Search className="w-5 h-5 text-white" />
@@ -1013,29 +1013,33 @@ export default function FeedPage() {
 
       {/* Snap-scroll reel container */}
       <div
-        className="w-full h-full lg:flex-1 overflow-y-scroll snap-y snap-mandatory"
+        className="w-full h-full lg:flex-1 overflow-y-scroll snap-y snap-mandatory lg:flex lg:items-start lg:justify-center"
         style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
       >
-        {posts.map((post, index) => (
-          <div
-            key={post.id}
-            ref={(el) => { cardRefs.current[index] = el; }}
-            className="w-full h-[100dvh] snap-start"
-          >
-            <ReelCard
-              post={post}
-              isActive={activeIndex === index}
-              globalMuted={globalMuted}
-              onToggleMute={() => setGlobalMuted((m) => !m)}
-              onNavigate={(slug) => navigate(`/grocery/shop/${slug}`)}
-              userId={userId}
-              userLikedPostIds={userLikedPostIds}
-              onToggleLike={handleToggleLike}
-              onOpenComments={(id) => setCommentPostId(id)}
-              onOpenShare={(id) => setSharePostId(id)}
-            />
+        <div className="w-full lg:w-[420px] lg:mx-auto lg:my-4 lg:rounded-2xl lg:overflow-hidden lg:shadow-2xl lg:border lg:border-white/10 h-full lg:h-[calc(100%-2rem)]">
+          <div className="w-full h-full overflow-y-scroll snap-y snap-mandatory lg-reel-inner" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
+            {posts.map((post, index) => (
+              <div
+                key={post.id}
+                ref={(el) => { cardRefs.current[index] = el; }}
+                className="w-full h-[100dvh] lg:h-full snap-start"
+              >
+                <ReelCard
+                  post={post}
+                  isActive={activeIndex === index}
+                  globalMuted={globalMuted}
+                  onToggleMute={() => setGlobalMuted((m) => !m)}
+                  onNavigate={(slug) => navigate(`/grocery/shop/${slug}`)}
+                  userId={userId}
+                  userLikedPostIds={userLikedPostIds}
+                  onToggleLike={handleToggleLike}
+                  onOpenComments={(id) => setCommentPostId(id)}
+                  onOpenShare={(id) => setSharePostId(id)}
+                />
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Comment sheet */}
