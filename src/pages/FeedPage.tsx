@@ -38,6 +38,25 @@ interface FeedPost {
   likes_count?: number;
   comments_count?: number;
   view_count?: number;
+  audio_name?: string | null;
+}
+
+/* ── Scrolling music ticker ───────────────────────────────────── */
+function MusicTicker({ name }: { name: string }) {
+  return (
+    <div className="flex items-center gap-2 max-w-[65%] overflow-hidden">
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white/20 to-white/5 border border-white/20 flex items-center justify-center shrink-0 animate-[spin_3s_linear_infinite]">
+        <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white">
+          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+        </svg>
+      </div>
+      <div className="overflow-hidden">
+        <div className="whitespace-nowrap animate-[marquee_8s_linear_infinite] text-white text-xs font-medium drop-shadow">
+          {name} &nbsp;&nbsp; • &nbsp;&nbsp; {name}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function looksPlayableVideoElement(video: HTMLVideoElement) {
