@@ -503,6 +503,9 @@ const App = () => (
                 <Route path="/shop-dashboard/employee-schedule" element={<ProtectedRoute><ShopEmployeeSchedulePage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/time-clock" element={<ProtectedRoute><ShopTimeClockPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/employee-rules" element={<ProtectedRoute><ShopEmployeeRulesPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/truck" element={<ProtectedRoute><TruckDashboardPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/attribution" element={<ProtectedRoute><SalesAttributionPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/sandbox" element={<ProtectedRoute><SandboxModePage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard" element={<ProtectedRoute><ShopDashboard /></ProtectedRoute>} />
                 <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
 
