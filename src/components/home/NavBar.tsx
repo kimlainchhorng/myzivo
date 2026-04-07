@@ -269,7 +269,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                         animate={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 12, rotateX: -8, scale: 0.95 }}
                         transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-                        className="absolute top-full right-0 mt-3 w-[280px] p-2 overflow-hidden rounded-2xl"
+                        className="absolute top-full right-0 mt-3 w-[300px] max-h-[70vh] overflow-y-auto p-2 overflow-hidden rounded-2xl"
                         style={{
                           background: "hsl(var(--card) / 0.85)",
                           backdropFilter: "blur(40px) saturate(1.5)",
