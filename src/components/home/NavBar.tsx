@@ -147,7 +147,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
               animation: "shimmer 4s linear infinite",
             }}
           />
-          <div className="container mx-auto px-6">
+          <div className="mx-auto px-2 sm:px-4 max-w-[1400px]">
             <div className="flex items-center justify-between h-[72px]">
               {/* Logo — 3D float */}
               <motion.div
