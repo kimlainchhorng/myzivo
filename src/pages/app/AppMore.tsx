@@ -217,6 +217,38 @@ const AppMore = () => {
           })}
         </div>
 
+        {access?.isStoreOwner && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-4">
+            <h3 className="text-sm font-bold mb-2">Super App Add-ons</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => navigate("/shop-dashboard/employees")}
+                className="rounded-2xl bg-card border border-border/40 shadow-sm p-3 flex items-center gap-2.5 touch-manipulation active:bg-muted/30 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-indigo-500/10">
+                  <Truck className="w-5 h-5 text-indigo-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-[13px] leading-tight">Driver / Truck Mode</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Inventory + Offline Sales</p>
+                </div>
+              </button>
+              <button
+                onClick={() => navigate("/shop-dashboard/payroll")}
+                className="rounded-2xl bg-card border border-border/40 shadow-sm p-3 flex items-center gap-2.5 touch-manipulation active:bg-muted/30 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-emerald-500/10">
+                  <Wallet className="w-5 h-5 text-emerald-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-[13px] leading-tight">Payroll + ROI</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Commission & Ad Return</p>
+                </div>
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         {/* Admin Button */}
         {isAdmin && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-4">
