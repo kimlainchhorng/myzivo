@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { toast } from "sonner";
 import ChatStories from "@/components/chat/ChatStories";
 
@@ -157,7 +158,7 @@ export default function FeedStoryRing() {
               {hasMyStory ? (
                 <div className="h-full w-full rounded-full overflow-hidden bg-card">
                   <Avatar className="h-full w-full">
-                    <AvatarImage src={storyUsers.find((u) => u.userId === user.id)?.avatarUrl} />
+                    <AvatarImage src={optimizeAvatar(storyUsers.find((u) => u.userId === user.id)?.avatarUrl, 64)} loading="lazy" />
                     <AvatarFallback className="text-sm font-bold">{user.email?.[0]}</AvatarFallback>
                   </Avatar>
                 </div>
@@ -196,7 +197,7 @@ export default function FeedStoryRing() {
             )}>
               <div className="h-full w-full rounded-full overflow-hidden bg-card border-2 border-card">
                 <Avatar className="h-full w-full">
-                  <AvatarImage src={su.avatarUrl} />
+                  <AvatarImage src={optimizeAvatar(su.avatarUrl, 64)} loading="lazy" />
                   <AvatarFallback className="text-sm font-bold">{su.userName[0]}</AvatarFallback>
                 </Avatar>
               </div>

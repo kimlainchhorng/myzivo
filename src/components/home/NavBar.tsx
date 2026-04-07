@@ -26,6 +26,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ZivoLogo from "@/components/ZivoLogo";
 import { cn } from "@/lib/utils";
+import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { motion, AnimatePresence } from "framer-motion";
 import CurrencySelector from "@/components/shared/CurrencySelector";
 import { useI18n } from "@/hooks/useI18n";
@@ -307,7 +308,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                             style={{ boxShadow: isMember ? "0 0 12px hsl(45 90% 50% / 0.15)" : "0 0 8px hsl(var(--primary) / 0.1)" }}
                           >
                             {avatarUrl ? (
-                              <img src={avatarUrl} alt={userName || ""} className="w-full h-full object-cover" />
+                              <img src={optimizeAvatar(avatarUrl, 72) || avatarUrl || undefined} alt={userName || ""} className="w-full h-full object-cover" />
                             ) : (
                               <div className={cn("w-full h-full flex items-center justify-center", isMember ? "bg-gradient-to-br from-amber-400/20 to-amber-600/20" : "bg-primary/10")}>
                                 <User className={cn("h-4 w-4", isMember ? "text-amber-600" : "text-primary")} />
