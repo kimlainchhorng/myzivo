@@ -30,14 +30,6 @@ import CurrencySelector from "@/components/shared/CurrencySelector";
 import { useI18n } from "@/hooks/useI18n";
 import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
 
-import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
-import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
-import tabCarsBg from "@/assets/tab-cars-bg.jpg";
-import tabRidesBg from "@/assets/tab-rides-bg.jpg";
-import tabEatsBg from "@/assets/tab-eats-bg.jpg";
-import tabFeedBg from "@/assets/tab-feed-bg.jpg";
-import tabReelsBg from "@/assets/tab-reels-bg.jpg";
-import tabMapBg from "@/assets/tab-map-bg.jpg";
 import { withRedirectParam } from "@/lib/authRedirect";
 
 const serviceNavItems = [
