@@ -23,7 +23,7 @@ export default function SuggestedUsersCarousel() {
       // Get profiles the user doesn't follow yet
       const { data, error } = await (supabase as any)
         .from("profiles")
-        .select("id, display_name, avatar_url, bio, is_verified")
+        .select("id, full_name, avatar_url, bio, is_verified")
         .neq("id", user?.id || "")
         .limit(15);
       if (error) throw error;

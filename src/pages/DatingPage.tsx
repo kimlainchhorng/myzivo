@@ -24,7 +24,7 @@ export default function DatingPage() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("profiles")
-        .select("id, display_name, avatar_url, bio, city, country, is_verified")
+        .select("id, full_name, avatar_url, bio, city, country, is_verified")
         .neq("id", user?.id || "")
         .limit(30);
       if (error) throw error;
