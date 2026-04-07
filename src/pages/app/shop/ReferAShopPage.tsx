@@ -276,7 +276,7 @@ export default function ReferAShopPage() {
                 {[
                   { step: "1", text: "Enter the shop owner's email and send an invite" },
                   { step: "2", text: "They sign up using your referral link" },
-                  { step: "3", text: "You both get 1 month FREE Boosted on the Map & Reels" },
+                  { step: "3", text: "Once they make their first sale, you both get 30 days of 0% transaction fees" },
                 ].map((item) => (
                   <div key={item.step} className="flex items-start gap-3">
                     <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
