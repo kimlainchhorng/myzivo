@@ -281,11 +281,26 @@ export default function ReelsFeedPage() {
           }
 
           const originalUserIds = [...new Set(originalUserPosts.map((p) => p.user_id))] as string[];
-          const allProfileIds = [...new Set([...userIds, ...sharedFromUserIds, ...originalUserIds])];
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("user_id, full_name, avatar_url, comment_control, hide_like_counts, allow_sharing, allow_mentions")
-            .in("user_id", allProfileIds);
+          const allProfileIds = [...new Set([...userIds, ...sharedFromUserIds, ...originalUserIds].filter(Boolean))] as string[];
+          const [
+            { data: publicProfilesById },
+            { data: publicProfilesByUserId },
+            { data: profileSettingsById },
+            { data: profileSettingsByUserId },
+          ] = await Promise.all([
+            allProfileIds.length
+              ? (supabase as any).from("public_profiles").select("id, user_id, full_name, avatar_url").in("id", allProfileIds)
+              : Promise.resolve({ data: [] as any[] }),
+            allProfileIds.length
+              ? (supabase as any).from("public_profiles").select("id, user_id, full_name, avatar_url").in("user_id", allProfileIds)
+              : Promise.resolve({ data: [] as any[] }),
+            allProfileIds.length
+              ? (supabase as any).from("profiles").select("id, user_id, comment_control, hide_like_counts, allow_sharing, allow_mentions").in("id", allProfileIds)
+              : Promise.resolve({ data: [] as any[] }),
+            allProfileIds.length
+              ? (supabase as any).from("profiles").select("id, user_id, comment_control, hide_like_counts, allow_sharing, allow_mentions").in("user_id", allProfileIds)
+              : Promise.resolve({ data: [] as any[] }),
+          ]);
 
           let sharedStores: Array<{ id: string; name: string; logo_url: string | null; slug: string }> = [];
           const sharedStoreIds = [...new Set(originalStorePosts.map((p) => p.store_id))] as string[];
@@ -297,13 +312,25 @@ export default function ReelsFeedPage() {
             sharedStores = (data ?? []) as Array<{ id: string; name: string; logo_url: string | null; slug: string }>;
           }
 
-          const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+          const publicProfileMap = new Map<string, any>();
+          [...(publicProfilesById || []), ...(publicProfilesByUserId || [])].forEach((profile: any) => {
+            if (profile?.id) publicProfileMap.set(profile.id, profile);
+            if (profile?.user_id) publicProfileMap.set(profile.user_id, profile);
+          });
+
+          const profileSettingsMap = new Map<string, any>();
+          [...(profileSettingsById || []), ...(profileSettingsByUserId || [])].forEach((profile: any) => {
+            if (profile?.id) profileSettingsMap.set(profile.id, profile);
+            if (profile?.user_id) profileSettingsMap.set(profile.user_id, profile);
+          });
+
           const originalUserPostMap = new Map(originalUserPosts.map((post) => [post.id, post]));
           const originalStorePostMap = new Map(originalStorePosts.map((post) => [post.id, post]));
           const sharedStoreMap = new Map(sharedStores.map((store) => [store.id, store]));
 
           for (const post of userPosts as any[]) {
-            const profile = profileMap.get(post.user_id);
+            const profileDisplay = publicProfileMap.get(post.user_id);
+            const profileSettings = profileSettingsMap.get(post.user_id);
             if (!post.media_url && !post.caption?.trim()) continue;
             const normalizedMediaType = normalizeUserPostMediaType(post.media_type);
 
@@ -325,14 +352,14 @@ export default function ReelsFeedPage() {
               sharedFromCaption = originalStorePost.caption || null;
               sharedFromStoreSlug = sharedStore?.slug || null;
             } else if (originalUserPost) {
-              const sharedProfile = profileMap.get(originalUserPost.user_id);
+              const sharedProfile = publicProfileMap.get(originalUserPost.user_id);
               sharedFromSource = "user";
               sharedFromUserId = originalUserPost.user_id;
               sharedFromUserName = sharedProfile?.full_name?.trim() || "Someone";
               sharedFromUserAvatar = optimizeAvatar(sharedProfile?.avatar_url, 96) || sharedProfile?.avatar_url || null;
               sharedFromCaption = originalUserPost.caption || null;
             } else if (post.shared_from_user_id) {
-              const sharedProfile = profileMap.get(post.shared_from_user_id);
+              const sharedProfile = publicProfileMap.get(post.shared_from_user_id);
               sharedFromSource = "user";
               sharedFromUserName = sharedProfile?.full_name?.trim() || "Someone";
               sharedFromUserAvatar = optimizeAvatar(sharedProfile?.avatar_url, 96) || sharedProfile?.avatar_url || null;
@@ -348,8 +375,8 @@ export default function ReelsFeedPage() {
               comments_count: post.comments_count || 0,
               shares_count: post.shares_count || 0,
               views_count: post.views_count || 0,
-              author_name: profile?.full_name?.trim() || "User",
-              author_avatar: optimizeAvatar(profile?.avatar_url, 96) || profile?.avatar_url || null,
+              author_name: profileDisplay?.full_name?.trim() || "User",
+              author_avatar: optimizeAvatar(profileDisplay?.avatar_url, 96) || profileDisplay?.avatar_url || null,
               author_id: post.user_id,
               created_at: post.created_at,
               shared_from_post_id: post.shared_from_post_id || null,
@@ -359,10 +386,10 @@ export default function ReelsFeedPage() {
               shared_from_caption: sharedFromCaption,
               shared_from_source: sharedFromSource,
               shared_from_store_slug: sharedFromStoreSlug,
-              comment_control: profile?.comment_control || "everyone",
-              hide_like_counts: profile?.hide_like_counts || false,
-              allow_sharing: profile?.allow_sharing !== false,
-              allow_mentions: profile?.allow_mentions !== false,
+              comment_control: profileSettings?.comment_control ?? "everyone",
+              hide_like_counts: profileSettings?.hide_like_counts ?? false,
+              allow_sharing: profileSettings?.allow_sharing ?? true,
+              allow_mentions: profileSettings?.allow_mentions ?? true,
             });
           }
         }
@@ -924,7 +951,11 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         {/* Like */}
         <button onClick={handleLike} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
           <Heart className={cn("h-7 w-7 drop-shadow-lg transition-all", liked ? "text-red-500 fill-red-500 scale-110" : "text-white")} />
-          {localLikes > 0 && <span className="text-white text-[11px] font-semibold drop-shadow">{localLikes}</span>}
+          {!item.hide_like_counts && (
+            <span className="text-white text-[11px] font-semibold drop-shadow">
+              {localLikes > 999 ? `${(localLikes / 1000).toFixed(1)}k` : localLikes}
+            </span>
+          )}
         </button>
 
         {/* Comment */}
@@ -1679,7 +1710,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
             ) : (
               <Heart className={cn("h-[22px] w-[22px] transition-all", liked ? "text-destructive fill-destructive scale-110" : "text-foreground group-active:scale-125")} />
             )}
-            {localLikes > 0 && !item.hide_like_counts && (
+            {!item.hide_like_counts && (
               <span className={cn("text-[12px] font-semibold", liked || selectedReaction ? "text-destructive" : "text-muted-foreground")}>
                 {localLikes > 999 ? `${(localLikes/1000).toFixed(1)}k` : localLikes}
               </span>
