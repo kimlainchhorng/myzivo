@@ -485,11 +485,12 @@ export default function StoreMapPage() {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-0 bg-background">
+    <div className="fixed inset-0 z-0 bg-background lg:flex lg:flex-col">
       {/* Desktop NavBar */}
-      <div className="hidden lg:block relative z-[1200]">
+      <div className="hidden lg:block relative z-[1200] shrink-0">
         <NavBar />
       </div>
+      <div className="relative lg:flex-1 h-full lg:h-auto">
 
       {/* ── Header ── */}
       <div className="absolute top-0 left-0 right-0 z-[1100]" style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 12px)" }}>
