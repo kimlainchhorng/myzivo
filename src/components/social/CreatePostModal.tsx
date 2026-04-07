@@ -109,8 +109,10 @@ export default function CreatePostModal({
   const [showEmojis, setShowEmojis] = useState(false);
   const [audioName, setAudioName] = useState(initialAudioName || "");
   const [showAudioInput, setShowAudioInput] = useState(!!initialAudioName);
+  const [showCameraChoice, setShowCameraChoice] = useState(false);
   
   const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
   const captionRef = useRef<HTMLTextAreaElement>(null);
   const tagTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const albumInputRef = useRef<HTMLInputElement>(null);
@@ -148,6 +150,14 @@ export default function CreatePostModal({
   useEffect(() => {
     if (showAlbumInput) albumInputRef.current?.focus();
   }, [showAlbumInput]);
+
+  // Auto-show camera choice when coming from "Use this sound" with no media
+  useEffect(() => {
+    if (initialAudioName && files.length === 0 && !showCameraChoice) {
+      const timer = setTimeout(() => setShowCameraChoice(true), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [initialAudioName]);
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []);
@@ -813,6 +823,52 @@ export default function CreatePostModal({
           )}
         </AnimatePresence>
 
+        {/* Record/Select video prompt when using a sound */}
+        <AnimatePresence>
+          {showCameraChoice && files.length === 0 && initialAudioName && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden border-t border-border/30"
+            >
+              <div className="px-4 py-4 space-y-2.5">
+                <p className="text-xs text-muted-foreground font-medium text-center">
+                  Create a reel with this sound
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      if (cameraRef.current) {
+                        cameraRef.current.click();
+                      }
+                      setShowCameraChoice(false);
+                    }}
+                    className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-primary/10 hover:bg-primary/15 transition-colors"
+                  >
+                    <Film className="h-6 w-6 text-primary" />
+                    <span className="text-xs font-semibold text-primary">Record Video</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (fileRef.current) {
+                        fileRef.current.accept = "video/*";
+                        fileRef.current.multiple = false;
+                        fileRef.current.click();
+                      }
+                      setShowCameraChoice(false);
+                    }}
+                    className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-muted/60 hover:bg-muted transition-colors"
+                  >
+                    <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-xs font-semibold text-muted-foreground">From Gallery</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Media type selector — bottom toolbar */}
         <div className="px-4 py-3 border-t border-border/30 grid grid-cols-5 gap-1">
           {[
@@ -882,6 +938,14 @@ export default function CreatePostModal({
           type="file"
           accept="image/*,video/*"
           multiple
+          className="hidden"
+          onChange={handleFiles}
+        />
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="video/*"
+          capture="environment"
           className="hidden"
           onChange={handleFiles}
         />
