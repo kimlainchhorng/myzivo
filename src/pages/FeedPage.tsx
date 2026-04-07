@@ -1376,7 +1376,7 @@ export default function FeedPage() {
         {createWithAudio && userId && (
           <CreatePostModal
             userId={userId}
-            userProfile={null}
+            userProfile={userProfile}
             onClose={() => setCreateWithAudio(null)}
             onCreated={() => {
               setCreateWithAudio(null);
