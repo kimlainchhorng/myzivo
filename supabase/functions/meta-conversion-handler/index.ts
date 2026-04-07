@@ -94,7 +94,7 @@ serve(async (req) => {
       ...(event.payload || {}),
     };
 
-    const capiBody = {
+    const capiBody: Record<string, unknown> = {
       data: [
         {
           event_name: event.event_name,
@@ -105,6 +105,8 @@ serve(async (req) => {
           custom_data: customData,
         },
       ],
+      // TEMPORARY: Test event code for Meta Events Manager verification
+      test_event_code: "TEST36758",
     };
 
     const url = `https://graph.facebook.com/${META_GRAPH_VERSION}/${pixelId}/events?access_token=${encodeURIComponent(accessToken)}`;
