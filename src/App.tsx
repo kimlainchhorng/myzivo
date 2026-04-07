@@ -539,6 +539,9 @@ const App = () => (
                 <Route path="/grocery" element={<GroceryMarketplace />} />
                 <Route path="/feed" element={<ReelsFeedPage />} />
                 <Route path="/reels" element={<FeedPage />} />
+                <Route path="/reels/:postId" element={<FeedPage />} />
+                <Route path="/shop/:storeId" element={<StoreProfilePage />} />
+                <Route path="/refer" element={<ProtectedRoute><ReferAFriendPage /></ProtectedRoute>} />
                 <Route path="/chat" element={<ChatHubPage />} />
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
