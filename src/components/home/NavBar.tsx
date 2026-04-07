@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import {
   Plane, Hotel, CarFront, Car, UtensilsCrossed, Package,
   Menu, X, User, ChevronDown, HelpCircle,
-  Sparkles, Users, Award, Crown, LogOut, UserCircle, Briefcase, Globe, Check
+  Sparkles, Users, Award, Crown, LogOut, UserCircle, Briefcase, Globe, Check,
+  Newspaper, Film, MapPin, MessageCircle,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,6 +43,13 @@ const serviceNavItems = [
   { label: "Cars", href: "/rent-car", icon: CarFront, cssVar: "var(--cars)", bg: tabCarsBg },
   { label: "Rides", href: "/rides", icon: Car, cssVar: "var(--rides)", bg: tabRidesBg },
   { label: "Eats", href: "/eats", icon: UtensilsCrossed, cssVar: "var(--eats)", bg: tabEatsBg },
+];
+
+const communityNavItems = [
+  { label: "Feed", description: "Posts & updates", href: "/feed", icon: Newspaper, color: "text-blue-500" },
+  { label: "Reels", description: "Short videos", href: "/reels", icon: Film, color: "text-pink-500" },
+  { label: "Chat", description: "Messages & conversations", href: "/chat", icon: MessageCircle, color: "text-emerald-500" },
+  { label: "Map", description: "Explore nearby stores", href: "/store-map", icon: MapPin, color: "text-orange-500" },
 ];
 
 const moreItems = [
@@ -261,7 +269,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                         animate={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 12, rotateX: -8, scale: 0.95 }}
                         transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-                        className="absolute top-full right-0 mt-3 w-[280px] p-2 overflow-hidden rounded-2xl"
+                        className="absolute top-full right-0 mt-3 w-[300px] max-h-[70vh] overflow-y-auto p-2 overflow-hidden rounded-2xl"
                         style={{
                           background: "hsl(var(--card) / 0.85)",
                           backdropFilter: "blur(40px) saturate(1.5)",
@@ -274,6 +282,36 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                           transformStyle: "preserve-3d",
                         }}
                       >
+                        <p className="px-3 py-1.5 text-[9px] uppercase tracking-[0.15em] text-muted-foreground/70 font-medium">Community</p>
+                        {communityNavItems.map((item) => (
+                          <Link
+                            key={item.href}
+                            to={item.href}
+                            onClick={() => setMoreOpen(false)}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/80 transition-all duration-200 group"
+                          >
+                            <div
+                              className={cn(
+                                "w-9 h-9 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200",
+                                item.color
+                              )}
+                              style={{
+                                background: "hsl(var(--muted) / 0.6)",
+                                boxShadow: "0 2px 8px -2px hsl(var(--foreground) / 0.06), inset 0 1px 1px hsl(var(--background) / 0.4)",
+                              }}
+                            >
+                              <item.icon className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-[13px]">{item.label}</p>
+                              <p className="text-[11px] text-muted-foreground">{item.description}</p>
+                            </div>
+                          </Link>
+                        ))}
+
+                        <div className="border-t border-border/30 my-1.5" />
+
+                        <p className="px-3 py-1.5 text-[9px] uppercase tracking-[0.15em] text-muted-foreground/70 font-medium">Services</p>
                         {moreItems.map((item) => (
                           <Link
                             key={item.href}
