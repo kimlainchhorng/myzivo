@@ -905,11 +905,13 @@ function SoundOverlay({
   soundName,
   onClose,
   onNavigateToReel,
+  onUseSound,
   currentPosts,
 }: {
   soundName: string;
   onClose: () => void;
   onNavigateToReel: (postId: string) => void;
+  onUseSound: () => void;
   currentPosts: FeedPost[];
 }) {
   // Check if this is a generated "Original Sound" name (not stored in DB)
