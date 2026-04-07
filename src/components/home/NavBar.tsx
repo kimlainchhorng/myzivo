@@ -75,10 +75,24 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const { currentLanguage, changeLanguage, t } = useI18n();
   const { data: supportedLanguages } = useSupportedLanguages(true);
   const activeLanguages = (supportedLanguages || []).filter((l) => l.is_active);
   const currentLangData = activeLanguages.find((l) => l.code === currentLanguage);
+
+  // Fetch user profile avatar
+  useEffect(() => {
+    if (!user?.id) { setAvatarUrl(null); setUserName(null); return; }
+    supabase.from("profiles").select("avatar_url, full_name").or(`id.eq.${user.id},user_id.eq.${user.id}`).limit(1).single()
+      .then(({ data }) => {
+        if (data) {
+          setAvatarUrl(data.avatar_url);
+          setUserName(data.full_name);
+        }
+      });
+  }, [user?.id]);
 
   const moreRef = useRef<HTMLDivElement>(null);
   const socialRef = useRef<HTMLDivElement>(null);
