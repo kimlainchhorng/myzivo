@@ -157,13 +157,20 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 <ZivoLogo size="md" />
               </motion.div>
 
-              {/* Center: Grouped nav buttons */}
+              {/* Center: Page title + nav pills */}
               <nav
-                className="hidden lg:flex items-center gap-2 px-1 py-1"
+                className="hidden lg:flex items-center gap-3 px-1 py-1"
                 role="tablist"
                 aria-label="Navigation"
               >
-                {/* Direct nav pills: Rides, Eats, Feed, Reel, Map */}
+                {/* Page title based on current route */}
+                {(location.pathname.startsWith("/feed") || location.pathname.startsWith("/reels")) && (
+                  <h1 className="text-lg font-bold text-foreground mr-2">
+                    {location.pathname.startsWith("/feed") ? "Feed" : "Reel"}
+                  </h1>
+                )}
+
+                {/* Direct nav pills: Feed, Reel */}
                 {directNavItems.map((item) => {
                   const isActive = location.pathname.startsWith(item.href);
                   return (
