@@ -450,7 +450,7 @@ export default function ReelsFeedPage() {
         {/* Main Feed Content */}
         <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pb-0 flex-1 lg:max-w-2xl lg:mx-auto">
           {/* Header */}
-          <div className="sticky top-0 lg:top-16 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center justify-between" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 0.625rem)' }}>
+          <div className="sticky top-0 lg:hidden z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center justify-between" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 0.625rem)' }}>
             <h1 className="text-lg font-bold text-foreground">Feed</h1>
             <div className="flex items-center gap-2">
               <button
