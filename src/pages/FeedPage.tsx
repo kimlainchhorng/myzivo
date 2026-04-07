@@ -11,6 +11,7 @@ import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import { useI18n } from "@/hooks/useI18n";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import NavBar from "@/components/home/NavBar";
+import CreatePostModal from "@/components/social/CreatePostModal";
 import {
   Loader2, Heart, MessageCircle, Share2, Store,
   Play, Volume2, VolumeX, RefreshCw, Send, X as XIcon, Eye,
@@ -904,11 +905,13 @@ function SoundOverlay({
   soundName,
   onClose,
   onNavigateToReel,
+  onUseSound,
   currentPosts,
 }: {
   soundName: string;
   onClose: () => void;
   onNavigateToReel: (postId: string) => void;
+  onUseSound: () => void;
   currentPosts: FeedPost[];
 }) {
   // Check if this is a generated "Original Sound" name (not stored in DB)
@@ -1012,7 +1015,7 @@ function SoundOverlay({
             <button
               onClick={() => {
                 onClose();
-                toast.success("Sound selected! Create a new reel to use it.");
+                onUseSound();
               }}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-[0.98] transition-all"
             >
@@ -1102,6 +1105,7 @@ export default function FeedPage() {
   const [sharePostId, setSharePostId] = useState<string | null>(null);
   const [soundOverlayName, setSoundOverlayName] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [createWithAudio, setCreateWithAudio] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
   const [userLikedPostIds, setUserLikedPostIds] = useState<Set<string>>(new Set());
@@ -1346,7 +1350,28 @@ export default function FeedPage() {
               setSoundOverlayName(null);
               navigate(`/reels/${postId}`);
             }}
+            onUseSound={() => {
+              const name = soundOverlayName;
+              setSoundOverlayName(null);
+              setCreateWithAudio(name);
+            }}
             currentPosts={posts}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Create post modal with pre-filled audio */}
+      <AnimatePresence>
+        {createWithAudio && userId && (
+          <CreatePostModal
+            userId={userId}
+            userProfile={null}
+            onClose={() => setCreateWithAudio(null)}
+            onCreated={() => {
+              setCreateWithAudio(null);
+              toast.success("Reel posted with sound!");
+            }}
+            initialAudioName={createWithAudio}
           />
         )}
       </AnimatePresence>
