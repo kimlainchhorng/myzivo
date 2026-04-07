@@ -3,6 +3,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserPlus, X, Shield } from "lucide-react";
@@ -23,7 +24,7 @@ export default function SuggestedUsersCarousel() {
       // Get profiles the user doesn't follow yet
       const { data, error } = await (supabase as any)
         .from("profiles")
-        .select("id, display_name, avatar_url, bio, is_verified")
+        .select("id, full_name, avatar_url, bio, is_verified")
         .neq("id", user?.id || "")
         .limit(15);
       if (error) throw error;
@@ -83,15 +84,15 @@ export default function SuggestedUsersCarousel() {
                 className="cursor-pointer"
               >
                 <Avatar className="h-16 w-16 mx-auto mb-2">
-                  <AvatarImage src={profile.avatar_url} />
+                  <AvatarImage src={optimizeAvatar(profile.avatar_url, 64)} loading="lazy" />
                   <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
-                    {profile.display_name?.[0]?.toUpperCase() || "?"}
+                    {profile.full_name?.[0]?.toUpperCase() || "?"}
                   </AvatarFallback>
                 </Avatar>
 
                 <div className="flex items-center justify-center gap-1 mb-0.5">
                   <p className="text-xs font-semibold text-foreground truncate max-w-[100px]">
-                    {profile.display_name || "User"}
+                    {profile.full_name || "User"}
                   </p>
                   {profile.is_verified && <Shield className="h-3 w-3 text-primary shrink-0" />}
                 </div>

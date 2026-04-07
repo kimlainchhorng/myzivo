@@ -24,7 +24,7 @@ export default function DatingPage() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("profiles")
-        .select("id, display_name, avatar_url, bio, city, country, is_verified")
+        .select("id, full_name, avatar_url, bio, city, country, is_verified")
         .neq("id", user?.id || "")
         .limit(30);
       if (error) throw error;
@@ -38,7 +38,7 @@ export default function DatingPage() {
   const handleSwipe = useCallback((dir: "left" | "right") => {
     setDirection(dir);
     if (dir === "right" && currentProfile) {
-      toast.success(`Liked ${currentProfile.display_name}!`, { icon: "❤️" });
+      toast.success(`Liked ${currentProfile.full_name}!`, { icon: "❤️" });
     }
     setTimeout(() => {
       setDirection(null);
@@ -124,7 +124,7 @@ export default function DatingPage() {
                     <Avatar className="h-32 w-32 border-4 border-background shadow-2xl">
                       <AvatarImage src={currentProfile.avatar_url} />
                       <AvatarFallback className="text-4xl bg-primary/10 text-primary font-bold">
-                        {currentProfile.display_name?.[0]?.toUpperCase()}
+                        {currentProfile.full_name?.[0]?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   </div>
@@ -132,7 +132,7 @@ export default function DatingPage() {
                   {/* Info */}
                   <div className="p-5">
                     <div className="flex items-center gap-2 mb-1">
-                      <h2 className="text-xl font-bold text-foreground">{currentProfile.display_name}</h2>
+                      <h2 className="text-xl font-bold text-foreground">{currentProfile.full_name}</h2>
                       {currentProfile.is_verified && (
                         <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
                           <Star className="h-3 w-3 text-primary-foreground" />
