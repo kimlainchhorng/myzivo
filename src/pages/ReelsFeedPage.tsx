@@ -34,6 +34,7 @@ import CommentsSheet from "@/components/social/CommentsSheet";
 import FeedStoryRing from "@/components/social/FeedStoryRing";
 import SuggestedUsersCarousel from "@/components/social/SuggestedUsersCarousel";
 import CreatePostModal from "@/components/social/CreatePostModal";
+import FeedSidebar from "@/components/social/FeedSidebar";
 
 interface FeedItem {
   id: string;
