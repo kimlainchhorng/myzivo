@@ -1088,6 +1088,7 @@ export default function FeedPage() {
                   onToggleLike={handleToggleLike}
                   onOpenComments={(id) => setCommentPostId(id)}
                   onOpenShare={(id) => setSharePostId(id)}
+                  onOpenSound={(name) => setSoundOverlayName(name)}
                 />
               </div>
             ))}
