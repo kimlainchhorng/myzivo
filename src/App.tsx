@@ -624,6 +624,9 @@ const App = () => (
                 <Route path="/store/setup" element={<ProtectedRoute><StoreSetup /></ProtectedRoute>} />
                 <Route path="/admin/employees" element={<ProtectedRoute><AdminEmployeesPage /></ProtectedRoute>} />
                 <Route path="/admin/system-health" element={<ProtectedRoute><AdminSystemHealth /></ProtectedRoute>} />
+                <Route path="/admin/app-store-assets" element={<ProtectedRoute><AdminAppStoreAssets /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/boost" element={<ProtectedRoute><AdBoostBidding /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/ai-creative" element={<ProtectedRoute><AiCreativeSuite /></ProtectedRoute>} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
                 <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
                 <Route path="/insurance" element={<PreserveQueryRedirect to="/travel-insurance" />} />
