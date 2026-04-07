@@ -112,7 +112,7 @@ export default function ReferAShopPage() {
 
   const shareReferral = (code: string) => {
     const link = `${window.location.origin}/partner-login?ref=${code}`;
-    const text = `Join ZiVo and get 1 month of FREE boosted visibility! Sign up here: ${link}`;
+    const text = `Join ZiVo and we both get 30 days of 0% transaction fees! Sign up here: ${link}`;
     if (navigator.share) {
       navigator.share({ title: "Join ZiVo", text, url: link });
     } else {
