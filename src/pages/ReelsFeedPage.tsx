@@ -1544,7 +1544,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
           )}
 
           {/* Media */}
-          <div ref={containerRef} onClick={handleDoubleTap} className={cn("relative w-full", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[600px] bg-black rounded-lg overflow-hidden mx-auto" : "aspect-square bg-black") : "")}>
+          <div ref={containerRef} onClick={handleDoubleTap} className={cn("relative", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] w-auto mx-auto bg-black rounded-xl overflow-hidden" : "aspect-square w-full bg-black") : "")}>
             {hasMedia ? (
               item.media_type === "video" ? (
                 <>
