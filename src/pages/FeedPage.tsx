@@ -1350,6 +1350,11 @@ export default function FeedPage() {
               setSoundOverlayName(null);
               navigate(`/reels/${postId}`);
             }}
+            onUseSound={() => {
+              const name = soundOverlayName;
+              setSoundOverlayName(null);
+              setCreateWithAudio(name);
+            }}
             currentPosts={posts}
           />
         )}
