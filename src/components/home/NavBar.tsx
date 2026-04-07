@@ -163,12 +163,6 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 role="tablist"
                 aria-label="Navigation"
               >
-                {/* Page title based on current route */}
-                {(location.pathname.startsWith("/feed") || location.pathname.startsWith("/reels")) && (
-                  <h1 className="text-lg font-bold text-foreground mr-2">
-                    {location.pathname.startsWith("/feed") ? "Feed" : "Reel"}
-                  </h1>
-                )}
 
                 {/* Direct nav pills: Feed, Reel */}
                 {directNavItems.map((item) => {
