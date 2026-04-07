@@ -758,6 +758,7 @@ const App = () => (
                 <Route path="/legal/car-rental-disclaimer" element={<CarRentalDisclaimer />} />
                 <Route path="/legal/insurance-disclaimer" element={<InsuranceDisclaimer />} />
                 <Route path="/legal/damage-policy" element={<DamagePolicy />} />
+                <Route path="/legal/meta-privacy" element={<MetaPrivacyDisclosure />} />
                 <Route path="/legal/*" element={<GenericLegalPage />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
