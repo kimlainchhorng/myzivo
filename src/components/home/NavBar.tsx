@@ -282,6 +282,36 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                           transformStyle: "preserve-3d",
                         }}
                       >
+                        <p className="px-3 py-1.5 text-[9px] uppercase tracking-[0.15em] text-muted-foreground/70 font-medium">Community</p>
+                        {communityNavItems.map((item) => (
+                          <Link
+                            key={item.href}
+                            to={item.href}
+                            onClick={() => setMoreOpen(false)}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/80 transition-all duration-200 group"
+                          >
+                            <div
+                              className={cn(
+                                "w-9 h-9 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200",
+                                item.color
+                              )}
+                              style={{
+                                background: "hsl(var(--muted) / 0.6)",
+                                boxShadow: "0 2px 8px -2px hsl(var(--foreground) / 0.06), inset 0 1px 1px hsl(var(--background) / 0.4)",
+                              }}
+                            >
+                              <item.icon className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-[13px]">{item.label}</p>
+                              <p className="text-[11px] text-muted-foreground">{item.description}</p>
+                            </div>
+                          </Link>
+                        ))}
+
+                        <div className="border-t border-border/30 my-1.5" />
+
+                        <p className="px-3 py-1.5 text-[9px] uppercase tracking-[0.15em] text-muted-foreground/70 font-medium">Services</p>
                         {moreItems.map((item) => (
                           <Link
                             key={item.href}
