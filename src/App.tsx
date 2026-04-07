@@ -477,6 +477,7 @@ const App = () => (
                 <RoutePrefetcher />
                 <AuthProvider>
                   <PushNotificationsBootstrap />
+                  <GeofenceBootstrap />
                    <RemoteConfigProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
