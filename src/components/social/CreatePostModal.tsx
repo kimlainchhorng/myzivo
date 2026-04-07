@@ -941,6 +941,14 @@ export default function CreatePostModal({
           className="hidden"
           onChange={handleFiles}
         />
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="video/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleFiles}
+        />
       </motion.div>
     </motion.div>
   );
