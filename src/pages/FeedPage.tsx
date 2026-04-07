@@ -898,6 +898,128 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
     </div>
   );
 }
+
+/* ── Sound Overlay (bottom sheet over reels) ─────────────────── */
+function SoundOverlay({
+  soundName,
+  onClose,
+  onNavigateToReel,
+}: {
+  soundName: string;
+  onClose: () => void;
+  onNavigateToReel: (postId: string) => void;
+}) {
+  const { data: reels = [], isLoading } = useQuery({
+    queryKey: ["sound-overlay-reels", soundName],
+    queryFn: async () => {
+      const db = supabase as any;
+      const { data: storePosts } = await db
+        .from("store_posts")
+        .select("id, media_urls, media_type, view_count, store_profiles(store_name)")
+        .eq("is_published", true)
+        .eq("audio_name", soundName)
+        .order("created_at", { ascending: false })
+        .limit(30);
+
+      const { data: userPosts } = await db
+        .from("user_posts")
+        .select("id, media_urls, media_type, profiles(display_name)")
+        .eq("audio_name", soundName)
+        .order("created_at", { ascending: false })
+        .limit(30);
+
+      const results = [
+        ...(storePosts || []).map((p: any) => ({
+          id: p.id, media_urls: p.media_urls || [], media_type: p.media_type,
+          views: p.view_count || 0, author: p.store_profiles?.store_name || "Shop",
+        })),
+        ...(userPosts || []).map((p: any) => ({
+          id: p.id, media_urls: p.media_urls || [], media_type: p.media_type,
+          views: 0, author: p.profiles?.display_name || "User",
+        })),
+      ];
+      return results;
+    },
+  });
+
+  return (
+    <motion.div
+      initial={{ y: "100%" }}
+      animate={{ y: 0 }}
+      exit={{ y: "100%" }}
+      transition={{ type: "spring", damping: 28, stiffness: 300 }}
+      className="fixed inset-0 z-[60] flex flex-col bg-background"
+    >
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border/40 safe-area-top">
+        <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted/50">
+          <ArrowLeft className="h-5 w-5 text-foreground" />
+        </button>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-base font-bold text-foreground truncate">{soundName}</h2>
+          <p className="text-xs text-muted-foreground">
+            {reels.length} reel{reels.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+      </div>
+
+      {/* Sound info */}
+      <div className="px-4 py-4 flex items-center gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center animate-[spin_3s_linear_infinite]">
+          <svg viewBox="0 0 24 24" className="w-7 h-7 fill-primary">
+            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <p className="font-bold text-foreground">{soundName}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{reels.length} reels using this sound</p>
+        </div>
+      </div>
+
+      {/* Reels grid */}
+      <div className="flex-1 overflow-y-auto px-0.5 pb-20">
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-7 w-7 animate-spin text-primary" />
+          </div>
+        ) : reels.length === 0 ? (
+          <p className="text-center py-12 text-muted-foreground text-sm">No reels with this sound yet</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-0.5">
+            {reels.map((reel) => {
+              const thumb = (reel.media_urls || []).map((u: string) => normalizeStorePostMediaUrl(u)).filter(Boolean)[0];
+              return (
+                <button
+                  key={reel.id}
+                  onClick={() => onNavigateToReel(reel.id)}
+                  className="relative aspect-[9/16] bg-muted overflow-hidden group"
+                >
+                  {thumb && reel.media_type === "video" ? (
+                    <video src={thumb} muted preload="metadata" className="w-full h-full object-cover" />
+                  ) : thumb ? (
+                    <img src={thumb} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-muted">
+                      <Play className="h-6 w-6 text-muted-foreground/40" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                  {reel.views > 0 && (
+                    <div className="absolute bottom-1 left-1 flex items-center gap-0.5 text-white text-[10px] font-medium drop-shadow">
+                      <Play className="h-2.5 w-2.5 fill-white" />
+                      {reel.views > 1000 ? `${(reel.views / 1000).toFixed(1)}K` : reel.views}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 export default function FeedPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
