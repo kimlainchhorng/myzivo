@@ -292,14 +292,20 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       >
                         <div className="relative">
                           <div className={cn(
-                            "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300",
+                            "w-9 h-9 rounded-full overflow-hidden flex items-center justify-center transition-all duration-300",
                             isMember
-                              ? "bg-gradient-to-br from-amber-400/20 to-amber-600/20 border-2 border-amber-400/40"
-                              : "bg-primary/10 border-2 border-primary/20 group-hover:border-primary/40"
+                              ? "border-2 border-amber-400/40"
+                              : "border-2 border-primary/20 group-hover:border-primary/40"
                           )}
                             style={{ boxShadow: isMember ? "0 0 12px hsl(45 90% 50% / 0.15)" : "0 0 8px hsl(var(--primary) / 0.1)" }}
                           >
-                            <User className={cn("h-4 w-4", isMember ? "text-amber-600" : "text-primary")} />
+                            {avatarUrl ? (
+                              <img src={avatarUrl} alt={userName || ""} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className={cn("w-full h-full flex items-center justify-center", isMember ? "bg-gradient-to-br from-amber-400/20 to-amber-600/20" : "bg-primary/10")}>
+                                <User className={cn("h-4 w-4", isMember ? "text-amber-600" : "text-primary")} />
+                              </div>
+                            )}
                           </div>
                           {isMember && (
                             <div className="absolute -top-1 -right-1">
