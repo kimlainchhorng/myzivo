@@ -946,9 +946,13 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
             onNavigate={onClose}
           />
         </div>
-      )
+      )}
 
-        {/* Author avatar with Follow button */}
+      {/* Right side continued - Author avatar with Follow button */}
+      <div
+        className="absolute right-3 flex flex-col items-center"
+        style={{ bottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 1.5rem), 2.5rem)' }}
+      >
         <div className="relative">
           <button
             onClick={() => {
