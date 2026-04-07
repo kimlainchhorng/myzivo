@@ -86,11 +86,18 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   // Fetch user profile avatar
   useEffect(() => {
     if (!user?.id) { setAvatarUrl(null); setUserName(null); return; }
+    
+    // Try metadata first as immediate fallback
+    const metaAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+    const metaName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0];
+    if (metaAvatar) setAvatarUrl(metaAvatar);
+    if (metaName) setUserName(metaName);
+
     supabase.from("profiles").select("avatar_url, full_name").or(`id.eq.${user.id},user_id.eq.${user.id}`).limit(1).single()
       .then(({ data }) => {
         if (data) {
-          setAvatarUrl(data.avatar_url);
-          setUserName(data.full_name);
+          if (data.avatar_url) setAvatarUrl(data.avatar_url);
+          if (data.full_name) setUserName(data.full_name);
         }
       });
   }, [user?.id]);
