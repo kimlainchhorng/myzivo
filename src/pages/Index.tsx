@@ -163,6 +163,13 @@ const Index = () => {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    // Redirect desktop users to /feed immediately
+    if (!isMobile) {
+      navigate("/feed", { replace: true });
+    }
+  }, [isMobile, navigate]);
+
   if (isMobile) {
     if (user) {
       return (
@@ -180,7 +187,7 @@ const Index = () => {
     );
   }
 
-  return <DesktopHomePage />;
+  return null;
 };
 
 export default Index;
