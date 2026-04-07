@@ -1273,7 +1273,7 @@ export default function FeedPage() {
         </div>
 
         {/* Desktop up/down navigation buttons */}
-        <div className="hidden lg:flex flex-col gap-3 absolute right-8 top-1/2 -translate-y-1/2 z-50">
+        <div className="hidden md:flex flex-col gap-3 absolute right-8 top-1/2 -translate-y-1/2 z-50">
           <button
             onClick={() => {
               if (activeIndex > 0) {
