@@ -94,7 +94,7 @@ async function buildPurchaseEvent(
   record: Rec,
 ): Promise<MetaPayload | null> {
   const userData = await buildUserData(supabase, record);
-  const eventId = str(record.id) ?? crypto.randomUUID();
+  const eventId = str(record.id) ?? str(record.order_id) ?? str(record.transaction_id) ?? `txn_${Date.now()}_${crypto.randomUUID().slice(0,8)}`;
 
   let value: number | null = null;
   let currency = "USD";
