@@ -267,8 +267,13 @@ export default function ProfileEditPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
+      {/* Desktop: full NavBar */}
+      <div className="hidden lg:block">
+        <NavBar />
+      </div>
+
+      {/* Mobile: simple back header */}
+      <div className="lg:hidden sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3 max-w-5xl mx-auto">
           <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
