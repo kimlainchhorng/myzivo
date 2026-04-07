@@ -1318,6 +1318,7 @@ export default function FeedPage() {
               setSoundOverlayName(null);
               navigate(`/reels/${postId}`);
             }}
+            currentPosts={posts}
           />
         )}
       </AnimatePresence>
