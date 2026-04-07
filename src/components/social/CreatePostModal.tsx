@@ -71,6 +71,7 @@ export default function CreatePostModal({
   sharedPostAuthorId,
   sharedPostAuthorName,
   commerceLinkDraft,
+  initialAudioName,
 }: CreatePostModalProps) {
   // Load draft from localStorage
   const loadDraft = () => {
