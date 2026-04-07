@@ -83,6 +83,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   const currentLangData = activeLanguages.find((l) => l.code === currentLanguage);
 
   const moreRef = useRef<HTMLDivElement>(null);
+  const socialRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
