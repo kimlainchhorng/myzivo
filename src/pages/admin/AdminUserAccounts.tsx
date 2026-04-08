@@ -456,7 +456,7 @@ function ProfileCard({
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [showLinkForm, setShowLinkForm] = useState(false);
-
+  const [editingLink, setEditingLink] = useState<string | null>(null);
   const socialLinks = acc.socialLinks ?? {};
   const addedPlatforms = Object.keys(socialLinks);
   const availablePlatforms = SOCIAL_PLATFORMS.filter((platform) => !addedPlatforms.includes(platform.key));
