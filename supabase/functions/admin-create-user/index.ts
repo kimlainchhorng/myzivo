@@ -37,13 +37,15 @@ Deno.serve(async (req) => {
     }
 
     // Check admin role
-    const { data: isAdmin } = await callerClient.rpc("check_user_role", {
+    const { data: isAdmin, error: roleError } = await callerClient.rpc("check_user_role", {
       _user_id: caller.id,
       _role: "admin",
     });
 
+    console.log("[admin-create-user] caller:", caller.id, "isAdmin:", isAdmin, "roleError:", roleError);
+
     if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Admin access required" }), {
+      return new Response(JSON.stringify({ error: "Admin access required", debug: { callerId: caller.id, isAdmin, roleError: roleError?.message } }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
