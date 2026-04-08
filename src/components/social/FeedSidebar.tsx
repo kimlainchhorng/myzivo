@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { 
   Car, UtensilsCrossed, MapPin, Plane, Hotel, CarFront,
-  Package, Compass, ShoppingBag, Heart, 
+  Package, Compass, ShoppingBag, Heart, MessageCircle,
   Users, Bookmark, Clock, Settings, TrendingUp,
   ArrowLeftRight, Shield, Store, LayoutDashboard,
   Handshake, CarTaxiFront, ChefHat, Building2, Briefcase,
@@ -28,6 +28,7 @@ import {
 const NAV_ITEMS = [
   { label: "Rides", icon: Car, path: "/rides", color: "text-emerald-500" },
   { label: "Eats", icon: UtensilsCrossed, path: "/eats", color: "text-orange-500" },
+  { label: "Chat", icon: MessageCircle, path: "/chat", color: "text-sky-500" },
   { label: "Map", icon: MapPin, path: "/map", color: "text-red-500" },
 ];
 
