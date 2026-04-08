@@ -354,7 +354,7 @@ const Login = () => {
           </div>
 
           {/* Forms */}
-          <div className="relative z-10">
+          <div className="relative z-10" style={{ transform: "translateZ(20px)" }}>
           {isLogin ? (
             <Form {...loginForm}>
               <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-2.5">
