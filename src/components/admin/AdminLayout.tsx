@@ -92,7 +92,7 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
           <div className="h-16 flex items-center justify-between px-5 border-b border-border">
             <div className="flex items-center gap-2.5">
               <img src={zivoLogo} alt="ZIVO" className="w-8 h-8 rounded-lg object-contain" />
-              <span className="text-base font-bold text-foreground">{brandLabel}</span>
+              <span className="text-base font-bold text-foreground">{resolvedBrandLabel}</span>
             </div>
             <Button
               variant="ghost"
