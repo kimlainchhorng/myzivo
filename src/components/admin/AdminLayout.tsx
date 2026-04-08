@@ -57,7 +57,7 @@ export default function AdminLayout({ children, title, brandLabel = "ZIVO Admin"
   return (
     <>
       <Helmet>
-        <title>{title} — ZIVO Admin</title>
+        <title>{title} — {brandLabel}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
