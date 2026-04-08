@@ -84,20 +84,43 @@ export default function AdminEmployeesPage() {
     onError: (e) => toast.error("Failed: " + e.message),
   });
 
-  // Send invite
+  // Send invite — try to assign role directly if user exists
   const sendInvite = useMutation({
     mutationFn: async ({ email, role }: { email: string; role: string }) => {
-      const { error } = await supabase.from("admin_invitations").insert({
-        email,
-        role,
-        status: "pending",
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      });
-      if (error) throw error;
+      // Look up user by email in profiles
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("email", email.trim().toLowerCase())
+        .maybeSingle();
+
+      if (profile?.user_id) {
+        // User exists — assign role directly
+        const { error } = await supabase.from("user_roles").insert({
+          user_id: profile.user_id,
+          role: role as any,
+        });
+        if (error) {
+          if (error.code === "23505") throw new Error("User already has this role");
+          throw error;
+        }
+        return { assigned: true };
+      } else {
+        // User not found — save as pending invitation
+        const { error } = await supabase.from("admin_invitations").insert({
+          email: email.trim().toLowerCase(),
+          role,
+          status: "pending",
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        });
+        if (error) throw error;
+        return { assigned: false };
+      }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["admin-employees"] });
-      toast.success("Invitation sent");
+      queryClient.invalidateQueries({ queryKey: ["admin-invitations"] });
+      toast.success(result?.assigned ? "Role assigned successfully" : "Invitation saved (user not found yet)");
       setInviteOpen(false);
       setInviteEmail("");
     },
