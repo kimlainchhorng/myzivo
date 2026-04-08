@@ -480,7 +480,9 @@ function ProfileCard({
   const [newPostImage, setNewPostImage] = useState<File | null>(null);
   const [newPostImagePreview, setNewPostImagePreview] = useState<string | null>(null);
   const [isPosting, setIsPosting] = useState(false);
+  const [showPostModal, setShowPostModal] = useState(false);
   const postImageRef = useRef<HTMLInputElement>(null);
+  const postCaptionRef = useRef<HTMLTextAreaElement>(null);
   const queryClient = useQueryClient();
 
   const handlePostImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
