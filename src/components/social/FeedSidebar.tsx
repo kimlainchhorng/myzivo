@@ -24,6 +24,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { lazy, Suspense } from "react";
+import { Loader2 } from "lucide-react";
+
+const ChatHubPage = lazy(() => import("@/pages/ChatHubPage"));
 
 const NAV_ITEMS = [
   { label: "Rides", icon: Car, path: "/rides", color: "text-emerald-500" },
