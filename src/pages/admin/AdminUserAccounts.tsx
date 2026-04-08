@@ -439,13 +439,23 @@ export default function AdminUserAccounts() {
 
   const handleSocialLinkChange = (index: number, platform: string, value: string) => {
     setCreatedAccounts((prev) =>
-      prev.map((acc, i) =>
-        i === index
-          ? { ...acc, socialLinks: { ...(acc.socialLinks ?? {}), [platform]: value } }
-          : acc,
-      ),
+      prev.map((acc, i) => {
+        if (i !== index) return acc;
+        const updated = { ...acc, socialLinks: { ...(acc.socialLinks ?? {}), [platform]: value } };
+        // Persist to DB on change (debounced via effect below)
+        return updated;
+      }),
     );
   };
+
+  const persistSocialLinks = useCallback(async (account: CreatedAccount) => {
+    if (!account.userId) return;
+    const links = account.socialLinks ?? {};
+    if (Object.keys(links).length === 0) return;
+    await supabase.functions.invoke("admin-update-profile", {
+      body: { userId: account.userId, socialLinks: links },
+    });
+  }, []);
 
   const removeSocialLink = (index: number, platform: string) => {
     setCreatedAccounts((prev) =>
@@ -453,7 +463,14 @@ export default function AdminUserAccounts() {
         if (i !== index) return acc;
         const updated = { ...(acc.socialLinks ?? {}) };
         delete updated[platform];
-        return { ...acc, socialLinks: updated };
+        const newAcc = { ...acc, socialLinks: updated };
+        // Persist removal
+        if (acc.userId) {
+          supabase.functions.invoke("admin-update-profile", {
+            body: { userId: acc.userId, socialLinks: updated },
+          });
+        }
+        return newAcc;
       }),
     );
   };
