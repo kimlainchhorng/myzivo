@@ -688,22 +688,19 @@ function ProfileCard({
               variant="outline"
               size="sm"
               onClick={async () => {
-              if (acc.userId) {
+                if (acc.userId) {
                   window.open(`/profile/${acc.userId}`, "_blank");
                 } else {
-                  // Fallback: look up user by email in profiles table
+                  // Fallback: look up user by email via admin RPC
                   try {
-                    const { data: profile } = await supabase
-                      .from("profiles")
-                      .select("id, user_id")
-                      .eq("email", acc.email)
-                      .maybeSingle();
-                    const uid = profile?.user_id || profile?.id;
-                    if (uid) {
-                      window.open(`/profile/${uid}`, "_blank");
-                    } else {
+                    const { data: uid, error } = await supabase.rpc("admin_lookup_profile_by_email" as any, {
+                      _email: acc.email,
+                    });
+                    if (error || !uid) {
                       toast({ title: "User not found", description: "Could not find a profile for this account. The user may need to log in first.", variant: "destructive" });
+                      return;
                     }
+                    window.open(`/profile/${uid}`, "_blank");
                   } catch {
                     toast({ title: "Lookup failed", description: "Could not look up user profile.", variant: "destructive" });
                   }
