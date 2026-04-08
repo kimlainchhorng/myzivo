@@ -68,3 +68,6 @@ verify_jwt = false
 
 [functions.create-reel-boost]
 verify_jwt = false
+
+[functions.admin-list-created-users]
+verify_jwt = false
