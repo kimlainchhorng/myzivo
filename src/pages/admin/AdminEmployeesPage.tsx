@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Search, Plus, Mail, Shield, Trash2, UserCheck, UserX } from "lucide-react";
+import { Search, Plus, Mail, Shield, Trash2, UserCheck, UserX, RefreshCw, Pencil } from "lucide-react";
 import { format } from "date-fns";
 
 type Employee = {
@@ -150,6 +150,50 @@ export default function AdminEmployeesPage() {
     onError: (e) => toast.error("Failed: " + e.message),
   });
 
+  // Resend invitation email
+  const resendInvite = useMutation({
+    mutationFn: async (inv: { email: string; role: string }) => {
+      await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "employee-invite",
+          recipientEmail: inv.email,
+          templateData: { email: inv.email, role: inv.role, loginUrl: "https://hizivo.com/auth" },
+        },
+      });
+    },
+    onSuccess: () => toast.success("Invitation resent"),
+    onError: () => toast.error("Failed to resend"),
+  });
+
+  // Delete invitation
+  const deleteInvite = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("admin_invitations").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-invitations"] });
+      toast.success("Invitation deleted");
+    },
+    onError: () => toast.error("Failed to delete invitation"),
+  });
+
+  // Update invitation role
+  const updateInviteRole = useMutation({
+    mutationFn: async ({ id, role }: { id: string; role: string }) => {
+      const { error } = await supabase
+        .from("admin_invitations")
+        .update({ role })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-invitations"] });
+      toast.success("Invitation role updated");
+    },
+    onError: () => toast.error("Failed to update role"),
+  });
+
   // Pending invitations
   const { data: invitations = [] } = useQuery({
     queryKey: ["admin-invitations"],
@@ -280,12 +324,52 @@ export default function AdminEmployeesPage() {
             <CardContent className="p-0">
               <div className="divide-y divide-border">
                 {invitations.map((inv) => (
-                  <div key={inv.id} className="flex items-center justify-between px-4 py-2.5">
-                    <div>
-                      <p className="text-xs font-medium text-foreground">{inv.email}</p>
+                  <div key={inv.id} className="flex items-center justify-between px-4 py-2.5 gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-foreground truncate">{inv.email}</p>
                       <p className="text-[10px] text-muted-foreground capitalize">{inv.role}</p>
                     </div>
-                    <Badge variant="outline" className="text-[10px]">Pending</Badge>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* Update Role */}
+                      <Select
+                        value={inv.role ?? "support"}
+                        onValueChange={(role) => updateInviteRole.mutate({ id: inv.id, role })}
+                      >
+                        <SelectTrigger className="h-7 w-24 text-[10px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STAFF_ROLES.map((r) => (
+                            <SelectItem key={r} value={r} className="capitalize text-xs">{r}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {/* Resend */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        disabled={resendInvite.isPending}
+                        onClick={() => resendInvite.mutate({ email: inv.email, role: inv.role ?? "support" })}
+                        title="Resend invitation"
+                      >
+                        <RefreshCw className={`h-3.5 w-3.5 text-muted-foreground ${resendInvite.isPending ? "animate-spin" : ""}`} />
+                      </Button>
+                      {/* Delete */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => {
+                          if (confirm(`Delete invitation for ${inv.email}?`)) {
+                            deleteInvite.mutate(inv.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                      <Badge variant="outline" className="text-[10px]">Pending</Badge>
+                    </div>
                   </div>
                 ))}
               </div>
