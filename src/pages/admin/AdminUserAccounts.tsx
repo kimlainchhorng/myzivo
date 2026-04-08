@@ -1,7 +1,7 @@
 /**
  * Admin User Accounts — Support staff can create new user accounts with just a username
  */
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -239,22 +239,6 @@ function mergeCreatedAccounts(storedAccounts: CreatedAccount[], remoteAccounts: 
   return Array.from(merged.values()).sort((a, b) => toTimestamp(b.createdAt) - toTimestamp(a.createdAt));
 }
 
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-        return;
-      }
-      reject(new Error("Invalid image data"));
-    };
-
-    reader.onerror = () => reject(new Error("Failed to read file"));
-    reader.readAsDataURL(file);
-  });
-}
 
 export default function AdminUserAccounts() {
   const navigate = useNavigate();
@@ -390,22 +374,48 @@ export default function AdminUserAccounts() {
   };
 
   const handleImageUpload = async (index: number, type: "avatar" | "cover", file: File) => {
-    try {
-      const imageDataUrl = await readFileAsDataUrl(file);
+    const account = createdAccounts[index];
+    if (!account) return;
 
+    try {
+      const bucket = type === "avatar" ? "avatars" : "covers";
+      const userId = account.userId || account.email.replace(/[^a-z0-9]/gi, "_");
+      const ext = file.name.split(".").pop() || "jpg";
+      const filePath = `${userId}/${Date.now()}.${ext}`;
+
+      // Upload to Supabase storage
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(filePath);
+      const publicUrl = publicData?.publicUrl ?? "";
+
+      // Update local state
+      const fieldKey = type === "avatar" ? "avatarUrl" : "coverUrl";
       setCreatedAccounts((prev) =>
         prev.map((acc, i) =>
-          i === index
-            ? { ...acc, [type === "avatar" ? "avatarUrl" : "coverUrl"]: imageDataUrl }
-            : acc,
+          i === index ? { ...acc, [fieldKey]: publicUrl } : acc,
         ),
       );
 
+      // Persist to profile in database
+      if (account.userId) {
+        await supabase.functions.invoke("admin-update-profile", {
+          body: {
+            userId: account.userId,
+            ...(type === "avatar" ? { avatarUrl: publicUrl } : { coverUrl: publicUrl }),
+          },
+        });
+      }
+
       toast({ title: `${type === "avatar" ? "Profile photo" : "Cover photo"} updated` });
-    } catch {
+    } catch (err: any) {
       toast({
         title: "Image upload failed",
-        description: "Please try another image.",
+        description: err.message || "Please try another image.",
         variant: "destructive",
       });
     }
@@ -413,12 +423,25 @@ export default function AdminUserAccounts() {
 
   const handleSocialLinkChange = (index: number, platform: string, value: string) => {
     setCreatedAccounts((prev) =>
-      prev.map((acc, i) =>
-        i === index
-          ? { ...acc, socialLinks: { ...(acc.socialLinks ?? {}), [platform]: value } }
-          : acc,
-      ),
+      prev.map((acc, i) => {
+        if (i !== index) return acc;
+        return { ...acc, socialLinks: { ...(acc.socialLinks ?? {}), [platform]: value } };
+      }),
     );
+  };
+
+  const handleSocialLinkBlur = (index: number) => {
+    const account = createdAccounts[index];
+    if (account) persistSocialLinks(account);
+  };
+
+  const persistSocialLinks = async (account: CreatedAccount) => {
+    if (!account.userId) return;
+    const links = account.socialLinks ?? {};
+    if (Object.keys(links).length === 0) return;
+    await supabase.functions.invoke("admin-update-profile", {
+      body: { userId: account.userId, socialLinks: links },
+    });
   };
 
   const removeSocialLink = (index: number, platform: string) => {
@@ -427,7 +450,14 @@ export default function AdminUserAccounts() {
         if (i !== index) return acc;
         const updated = { ...(acc.socialLinks ?? {}) };
         delete updated[platform];
-        return { ...acc, socialLinks: updated };
+        const newAcc = { ...acc, socialLinks: updated };
+        // Persist removal
+        if (acc.userId) {
+          supabase.functions.invoke("admin-update-profile", {
+            body: { userId: acc.userId, socialLinks: updated },
+          });
+        }
+        return newAcc;
       }),
     );
   };
@@ -536,10 +566,11 @@ export default function AdminUserAccounts() {
                   credText={credText}
                   onCopy={copyToClipboard}
                   onImageUpload={handleImageUpload}
-                  onSocialLinkChange={handleSocialLinkChange}
-                  onRemoveSocialLink={removeSocialLink}
-                  onDelete={handleDeleteAccount}
-                />
+                   onSocialLinkChange={handleSocialLinkChange}
+                   onSocialLinkBlur={handleSocialLinkBlur}
+                   onRemoveSocialLink={removeSocialLink}
+                   onDelete={handleDeleteAccount}
+                 />
               );
             })}
           </div>
@@ -560,6 +591,7 @@ interface ProfileCardProps {
   onCopy: (text: string, id: string) => void;
   onImageUpload: (index: number, type: "avatar" | "cover", file: File) => void;
   onSocialLinkChange: (index: number, platform: string, value: string) => void;
+  onSocialLinkBlur: (index: number) => void;
   onRemoveSocialLink: (index: number, platform: string) => void;
   onDelete: (index: number) => void;
 }
@@ -575,6 +607,7 @@ function ProfileCard({
   onCopy,
   onImageUpload,
   onSocialLinkChange,
+  onSocialLinkBlur,
   onRemoveSocialLink,
   onDelete,
 }: ProfileCardProps) {
@@ -796,9 +829,9 @@ function ProfileCard({
                         placeholder={platform.placeholder}
                         className="h-8 text-xs"
                         autoFocus
-                        onBlur={() => setEditingLink(null)}
+                        onBlur={() => { onSocialLinkBlur(index); setEditingLink(null); }}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") setEditingLink(null);
+                          if (e.key === "Enter") { onSocialLinkBlur(index); setEditingLink(null); }
                         }}
                       />
                       <button
