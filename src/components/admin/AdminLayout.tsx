@@ -49,11 +49,21 @@ interface AdminLayoutProps {
   brandLabel?: string;
 }
 
-export default function AdminLayout({ children, title, brandLabel = "ZIVO Admin" }: AdminLayoutProps) {
+export default function AdminLayout({ children, title, brandLabel }: AdminLayoutProps) {
   const { signOut, user } = useAuth();
+  const { data: access } = useUserAccess(user?.id);
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Auto-detect brand label based on user role
+  const resolvedBrandLabel = brandLabel || (
+    access?.isAdmin ? "ZIVO Admin" :
+    access?.isSupport ? "ZIVO Support" :
+    access?.isModerator ? "ZIVO Moderator" :
+    access?.isOperations ? "ZIVO Operations" :
+    "ZIVO Admin"
+  );
 
   return (
     <>
