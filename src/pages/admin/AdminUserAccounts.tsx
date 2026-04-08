@@ -1,7 +1,9 @@
 /**
  * Admin User Accounts — Support staff can create new user accounts with just a username
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserAccess } from "@/hooks/useUserAccess";
@@ -26,6 +28,10 @@ import {
   Calendar,
   Shield,
   Globe,
+  Heart,
+  MessageCircle,
+  Image as ImageIcon,
+  Play,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -471,6 +477,31 @@ function ProfileCard({
   const addedPlatforms = Object.keys(socialLinks);
   const availablePlatforms = SOCIAL_PLATFORMS.filter((platform) => !addedPlatforms.includes(platform.key));
 
+  // Fetch user posts when card is flipped
+  const { data: userPosts = [], isLoading: postsLoading } = useQuery({
+    queryKey: ["admin-user-posts", acc.userId],
+    queryFn: async () => {
+      if (!acc.userId) return [];
+      const { data } = await (supabase as any)
+        .from("user_posts")
+        .select("id, media_url, media_type, caption, likes_count, comments_count, created_at")
+        .eq("user_id", acc.userId)
+        .eq("is_published", true)
+        .order("created_at", { ascending: false })
+        .limit(6);
+      return (data || []) as Array<{
+        id: string;
+        media_url: string | null;
+        media_type: string | null;
+        caption: string | null;
+        likes_count: number;
+        comments_count: number;
+        created_at: string;
+      }>;
+    },
+    enabled: isFlipped && !!acc.userId,
+  });
+
   return (
     <div className="[perspective:1200px]">
       <div
@@ -783,6 +814,57 @@ function ProfileCard({
               })}
             </div>
           )}
+
+          {/* Posts section */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Posts</p>
+            {postsLoading ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : userPosts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <ImageIcon className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                <p className="text-xs text-muted-foreground">No posts yet</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-1 rounded-lg overflow-hidden">
+                {userPosts.map((post) => (
+                  <div key={post.id} className="relative aspect-square bg-muted/60 group cursor-pointer overflow-hidden">
+                    {post.media_url ? (
+                      post.media_type === "video" ? (
+                        <div className="h-full w-full flex items-center justify-center bg-foreground/5">
+                          <Play className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      ) : (
+                        <img
+                          src={post.media_url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      )
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center p-2">
+                        <p className="text-[10px] text-muted-foreground line-clamp-3 text-center">{post.caption}</p>
+                      </div>
+                    )}
+                    {/* Hover overlay with stats */}
+                    <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                      <span className="flex items-center gap-1 text-background text-xs font-medium">
+                        <Heart className="h-3.5 w-3.5" fill="currentColor" />
+                        {post.likes_count || 0}
+                      </span>
+                      <span className="flex items-center gap-1 text-background text-xs font-medium">
+                        <MessageCircle className="h-3.5 w-3.5" fill="currentColor" />
+                        {post.comments_count || 0}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Open full profile + back button */}
           <div className="flex gap-2 pt-1">
