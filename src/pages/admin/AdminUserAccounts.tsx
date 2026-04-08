@@ -751,7 +751,7 @@ function ProfileCard({
               <span className="truncate">{acc.email.split("+")[0]}...</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
-              <Shield className="h-3.5 w-3.5 text-emerald-500" />
+              <Shield className="h-3.5 w-3.5 text-primary" />
               <span>Active</span>
             </div>
           </div>
