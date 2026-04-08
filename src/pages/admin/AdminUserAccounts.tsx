@@ -28,6 +28,7 @@ import { toast } from "@/hooks/use-toast";
 import AdminLayout from "@/components/admin/AdminLayout";
 
 interface CreatedAccount {
+  userId?: string;
   username: string;
   email: string;
   password: string;
