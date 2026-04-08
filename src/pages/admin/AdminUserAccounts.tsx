@@ -33,6 +33,7 @@ import {
   Image as ImageIcon,
   Play,
   Plus,
+  Film,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -870,7 +871,7 @@ function ProfileCard({
           <input ref={postImageRef} type="file" accept="image/*,video/*" className="hidden" onChange={handlePostImageSelect} />
           <div className="flex items-center gap-3">
             <div
-              className="h-9 w-9 rounded-full shrink-0 flex items-center justify-center text-background text-xs font-bold overflow-hidden"
+              className="h-10 w-10 rounded-full shrink-0 flex items-center justify-center text-background text-xs font-bold overflow-hidden border-2 border-primary/20"
               style={{
                 background: acc.avatarUrl
                   ? `url(${acc.avatarUrl}) center/cover no-repeat`
@@ -887,24 +888,42 @@ function ProfileCard({
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleCreatePost()}
               className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
             />
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => postImageRef.current?.click()}
-                className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted/50 hover:text-primary transition-colors"
+                className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center hover:bg-emerald-500/20 transition-colors"
               >
-                <ImageIcon className="h-4 w-4" />
+                <ImageIcon className="h-3.5 w-3.5 text-emerald-600" />
               </button>
+              <button
+                type="button"
+                onClick={() => postImageRef.current?.click()}
+                className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center hover:bg-blue-500/20 transition-colors"
+              >
+                <Film className="h-3.5 w-3.5 text-blue-600" />
+              </button>
+              <button
+                type="button"
+                onClick={() => postImageRef.current?.click()}
+                className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center hover:bg-orange-500/20 transition-colors"
+              >
+                <Camera className="h-3.5 w-3.5 text-orange-600" />
+              </button>
+            </div>
+          </div>
+          {newPostCaption.trim() || newPostImage ? (
+            <div className="flex justify-end mt-2">
               <button
                 type="button"
                 onClick={handleCreatePost}
                 disabled={isPosting || (!newPostCaption.trim() && !newPostImage)}
-                className="h-8 px-3 rounded-full bg-primary text-primary-foreground text-xs font-medium disabled:opacity-40 hover:opacity-90 transition-opacity flex items-center gap-1"
+                className="h-8 px-4 rounded-full bg-primary text-primary-foreground text-xs font-medium disabled:opacity-40 hover:opacity-90 transition-opacity flex items-center gap-1"
               >
                 {isPosting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Post"}
               </button>
             </div>
-          </div>
+          ) : null}
           {newPostImagePreview && (
             <div className="relative mt-2 rounded-lg overflow-hidden">
               <img src={newPostImagePreview} alt="" className="w-full max-h-32 object-cover rounded-lg" />
