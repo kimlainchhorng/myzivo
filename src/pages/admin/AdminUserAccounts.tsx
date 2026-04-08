@@ -19,6 +19,7 @@ import {
   Facebook,
   Instagram,
   Twitter,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ import { toast } from "@/hooks/use-toast";
 import AdminLayout from "@/components/admin/AdminLayout";
 
 interface CreatedAccount {
+  userId?: string;
   username: string;
   email: string;
   password: string;
@@ -267,6 +269,7 @@ export default function AdminUserAccounts() {
 
       if (data.user) {
         const newAccount: CreatedAccount = {
+          userId: data.user.id,
           username: trimmed,
           email: generatedEmail,
           password: generatedPassword,
@@ -660,24 +663,38 @@ function ProfileCard({
             <p>Password: {acc.password}</p>
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onCopy(credText, `acc-${index}`)}
-          >
-            {isCopied ? (
-              <>
-                <Check className="h-3.5 w-3.5 mr-1.5" />
-                Copied
-              </>
-            ) : (
-              <>
-                <Copy className="h-3.5 w-3.5 mr-1.5" />
-                Copy Credentials
-              </>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onCopy(credText, `acc-${index}`)}
+            >
+              {isCopied ? (
+                <>
+                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5 mr-1.5" />
+                  Copy Credentials
+                </>
+              )}
+            </Button>
+
+            {acc.userId && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(`/profile/${acc.userId}`, "_blank")}
+              >
+                <Eye className="h-3.5 w-3.5 mr-1.5" />
+                Preview
+              </Button>
             )}
-          </Button>
+          </div>
         </div>
       </div>
     </div>
