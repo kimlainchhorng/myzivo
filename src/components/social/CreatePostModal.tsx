@@ -742,7 +742,7 @@ export default function CreatePostModal({
             </div>
 
             {/* Thumbnail grid */}
-            {previews.length > 1 && (
+            {previews.length >= 1 && (
               <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                 {previews.map((p, i) => (
                   <button
