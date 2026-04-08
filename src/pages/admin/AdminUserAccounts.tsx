@@ -849,6 +849,60 @@ function ProfileCard({
           </div>
         </div>
 
+        {/* Post composer */}
+        <div className="mx-3 mt-3 rounded-xl border border-border/30 bg-card p-3">
+          <input ref={postImageRef} type="file" accept="image/*,video/*" className="hidden" onChange={handlePostImageSelect} />
+          <div className="flex items-center gap-3">
+            <div
+              className="h-9 w-9 rounded-full shrink-0 flex items-center justify-center text-background text-xs font-bold overflow-hidden"
+              style={{
+                background: acc.avatarUrl
+                  ? `url(${acc.avatarUrl}) center/cover no-repeat`
+                  : `linear-gradient(145deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))`,
+              }}
+            >
+              {!acc.avatarUrl && initials}
+            </div>
+            <input
+              type="text"
+              placeholder="What's on your mind?"
+              value={newPostCaption}
+              onChange={(e) => setNewPostCaption(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleCreatePost()}
+              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+            />
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => postImageRef.current?.click()}
+                className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted/50 hover:text-primary transition-colors"
+              >
+                <ImageIcon className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleCreatePost}
+                disabled={isPosting || (!newPostCaption.trim() && !newPostImage)}
+                className="h-8 px-3 rounded-full bg-primary text-primary-foreground text-xs font-medium disabled:opacity-40 hover:opacity-90 transition-opacity flex items-center gap-1"
+              >
+                {isPosting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Post"}
+              </button>
+            </div>
+          </div>
+          {newPostImagePreview && (
+            <div className="relative mt-2 rounded-lg overflow-hidden">
+              <img src={newPostImagePreview} alt="" className="w-full max-h-32 object-cover rounded-lg" />
+              <button
+                type="button"
+                onClick={() => { setNewPostImage(null); setNewPostImagePreview(null); }}
+                className="absolute top-1 right-1 h-6 w-6 rounded-full bg-foreground/70 text-background flex items-center justify-center"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Post tabs */}
         <div className="flex items-center border-b border-border/30 mx-3 mt-3">
           {(["all", "photos", "reels"] as const).map((tab) => (
