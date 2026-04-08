@@ -802,8 +802,8 @@ function ProfileCard({
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
         {/* Your Story */}
-        <div className="px-3 pt-3 pb-1">
-          <div className="flex flex-col items-center gap-1">
+        <div className="px-4 pt-3 pb-1">
+          <div className="flex flex-col items-start gap-1 w-fit">
             <div className="relative w-14 h-14">
               <div className="w-full h-full rounded-full border-2 border-dashed border-primary/40 flex items-center justify-center bg-primary/5">
                 <Camera className="h-5 w-5 text-primary/50" />
@@ -812,7 +812,7 @@ function ProfileCard({
                 <Plus className="h-3 w-3 text-primary-foreground" />
               </div>
             </div>
-            <span className="text-[10px] font-medium text-muted-foreground">Your story</span>
+            <span className="text-[10px] font-medium text-muted-foreground w-full text-center">Your story</span>
           </div>
         </div>
 
