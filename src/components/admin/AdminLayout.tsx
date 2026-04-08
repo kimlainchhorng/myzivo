@@ -4,6 +4,7 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserAccess } from "@/hooks/useUserAccess";
 import zivoLogo from "@/assets/zivo-logo.png";
 import {
   BarChart3, Users, ShoppingBag, Settings, LogOut, Shield,
@@ -48,16 +49,26 @@ interface AdminLayoutProps {
   brandLabel?: string;
 }
 
-export default function AdminLayout({ children, title, brandLabel = "ZIVO Admin" }: AdminLayoutProps) {
+export default function AdminLayout({ children, title, brandLabel }: AdminLayoutProps) {
   const { signOut, user } = useAuth();
+  const { data: access } = useUserAccess(user?.id);
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Auto-detect brand label based on user role
+  const resolvedBrandLabel = brandLabel || (
+    access?.isAdmin ? "ZIVO Admin" :
+    access?.isSupport ? "ZIVO Support" :
+    access?.isModerator ? "ZIVO Moderator" :
+    access?.isOperations ? "ZIVO Operations" :
+    "ZIVO Admin"
+  );
+
   return (
     <>
       <Helmet>
-        <title>{title} — {brandLabel}</title>
+        <title>{title} — {resolvedBrandLabel}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
@@ -81,7 +92,7 @@ export default function AdminLayout({ children, title, brandLabel = "ZIVO Admin"
           <div className="h-16 flex items-center justify-between px-5 border-b border-border">
             <div className="flex items-center gap-2.5">
               <img src={zivoLogo} alt="ZIVO" className="w-8 h-8 rounded-lg object-contain" />
-              <span className="text-base font-bold text-foreground">{brandLabel}</span>
+              <span className="text-base font-bold text-foreground">{resolvedBrandLabel}</span>
             </div>
             <Button
               variant="ghost"
