@@ -477,6 +477,31 @@ function ProfileCard({
   const addedPlatforms = Object.keys(socialLinks);
   const availablePlatforms = SOCIAL_PLATFORMS.filter((platform) => !addedPlatforms.includes(platform.key));
 
+  // Fetch user posts when card is flipped
+  const { data: userPosts = [], isLoading: postsLoading } = useQuery({
+    queryKey: ["admin-user-posts", acc.userId],
+    queryFn: async () => {
+      if (!acc.userId) return [];
+      const { data } = await (supabase as any)
+        .from("user_posts")
+        .select("id, media_url, media_type, caption, likes_count, comments_count, created_at")
+        .eq("user_id", acc.userId)
+        .eq("is_published", true)
+        .order("created_at", { ascending: false })
+        .limit(6);
+      return (data || []) as Array<{
+        id: string;
+        media_url: string | null;
+        media_type: string | null;
+        caption: string | null;
+        likes_count: number;
+        comments_count: number;
+        created_at: string;
+      }>;
+    },
+    enabled: isFlipped && !!acc.userId,
+  });
+
   return (
     <div className="[perspective:1200px]">
       <div
