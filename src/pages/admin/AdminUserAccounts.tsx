@@ -796,12 +796,27 @@ function ProfileCard({
       </div>
     </div>
 
-    {/* ===== BACK SIDE (Profile Preview — matches user profile page) ===== */}
+     {/* ===== BACK SIDE (Profile Preview — matches user profile page) ===== */}
     <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm flex flex-col">
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
+        {/* Your Story */}
+        <div className="px-3 pt-3 pb-1">
+          <div className="flex flex-col items-center gap-1">
+            <div className="relative w-14 h-14">
+              <div className="w-full h-full rounded-full border-2 border-dashed border-primary/40 flex items-center justify-center bg-primary/5">
+                <Camera className="h-5 w-5 text-primary/50" />
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                <Plus className="h-3 w-3 text-primary-foreground" />
+              </div>
+            </div>
+            <span className="text-[10px] font-medium text-muted-foreground">Your story</span>
+          </div>
+        </div>
+
         {/* Profile card with gradient cover */}
-        <div className="rounded-xl border border-border/30 overflow-hidden mx-3 mt-3 bg-gradient-to-b from-primary/10 to-card">
+        <div className="rounded-xl border border-border/30 overflow-hidden mx-3 mt-1 bg-gradient-to-b from-primary/10 to-card">
           {/* Cover */}
           <div
             className="h-24 w-full relative"
