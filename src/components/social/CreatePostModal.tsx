@@ -697,59 +697,90 @@ export default function CreatePostModal({
           </AnimatePresence>
         </div>
 
-        {/* Media carousel preview */}
+        {/* Media preview — grid layout like Facebook */}
         {previews.length > 0 && (
-          <div className="relative mx-4 mb-3 rounded-xl overflow-hidden bg-black aspect-square">
-            {mediaType === "video" ? (
-              <video
-                src={previews[currentPreview]}
-                className="h-full w-full object-cover"
-                style={{ filter: FILTERS[activeFilter]?.css || "none" }}
-                controls
-                muted
-              />
-            ) : (
-              <img
-                src={previews[currentPreview]}
-                alt=""
-                className="h-full w-full object-cover"
-                style={{ filter: FILTERS[activeFilter]?.css || "none" }}
-              />
-            )}
+          <div className="mx-4 mb-3">
+            {/* Main preview */}
+            <div className="relative rounded-xl overflow-hidden bg-black aspect-square mb-2">
+              {(files[currentPreview]?.type?.startsWith("video") || (currentPreview === 0 && mediaType === "video" && files.length === 0)) ? (
+                <video
+                  src={previews[currentPreview]}
+                  className="h-full w-full object-cover"
+                  style={{ filter: FILTERS[activeFilter]?.css || "none" }}
+                  controls
+                  muted
+                />
+              ) : (
+                <img
+                  src={previews[currentPreview]}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  style={{ filter: FILTERS[activeFilter]?.css || "none" }}
+                />
+              )}
 
+              {files.length > 0 && (
+                <button
+                  onClick={() => removeMedia(currentPreview)}
+                  className="absolute top-2 left-2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center active:scale-90 transition-transform"
+                >
+                  <XIcon className="h-4 w-4 text-white" />
+                </button>
+              )}
+
+              {previews.length > 1 && (
+                <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white">
+                  {currentPreview + 1}/{previews.length}
+                </div>
+              )}
+
+              {sharedMediaUrl && files.length === 0 && (
+                <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white uppercase tracking-wider flex items-center gap-1">
+                  <Share2 className="h-3 w-3" /> Shared
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnail grid */}
             {previews.length > 1 && (
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                {previews.map((_, i) => (
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {previews.map((p, i) => (
                   <button
                     key={i}
                     onClick={() => setCurrentPreview(i)}
                     className={cn(
-                      "h-1.5 rounded-full transition-all",
-                      i === currentPreview ? "w-4 bg-white" : "w-1.5 bg-white/50"
+                      "relative shrink-0 h-14 w-14 rounded-lg overflow-hidden border-2 transition-all",
+                      i === currentPreview ? "border-primary ring-1 ring-primary/30 scale-105" : "border-border/30 opacity-70 hover:opacity-100"
                     )}
-                  />
+                  >
+                    {files[i]?.type?.startsWith("video") ? (
+                      <video src={p} className="h-full w-full object-cover" muted />
+                    ) : (
+                      <img src={p} alt="" className="h-full w-full object-cover" />
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeMedia(i); }}
+                      className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-destructive flex items-center justify-center"
+                    >
+                      <XIcon className="h-2.5 w-2.5 text-destructive-foreground" />
+                    </button>
+                  </button>
                 ))}
-              </div>
-            )}
-
-            {previews.length > 1 && (
-              <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white">
-                {currentPreview + 1}/{previews.length}
-              </div>
-            )}
-
-            {files.length > 0 && (
-              <button
-                onClick={() => removeMedia(currentPreview)}
-                className="absolute top-2 left-2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center active:scale-90 transition-transform"
-              >
-                <XIcon className="h-4 w-4 text-white" />
-              </button>
-            )}
-
-            {sharedMediaUrl && files.length === 0 && (
-              <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white uppercase tracking-wider flex items-center gap-1">
-                <Share2 className="h-3 w-3" /> Shared
+                {/* Add more inline */}
+                {files.length < 10 && (
+                  <button
+                    onClick={() => {
+                      if (fileRef.current) {
+                        fileRef.current.accept = "image/*,video/*";
+                        fileRef.current.multiple = true;
+                        fileRef.current.click();
+                      }
+                    }}
+                    className="shrink-0 h-14 w-14 rounded-lg border-2 border-dashed border-border/40 flex items-center justify-center hover:bg-muted/30 transition-colors"
+                  >
+                    <Plus className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                )}
               </div>
             )}
           </div>
