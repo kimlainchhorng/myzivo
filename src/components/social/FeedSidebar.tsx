@@ -10,6 +10,7 @@ import {
   Users, Bookmark, Clock, Settings, TrendingUp,
   ArrowLeftRight, Shield, Store, LayoutDashboard,
   Handshake, CarTaxiFront, ChefHat, Building2, Briefcase,
+  Headphones, Eye, Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
