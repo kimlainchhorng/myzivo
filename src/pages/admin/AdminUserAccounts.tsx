@@ -663,25 +663,38 @@ function ProfileCard({
             <p>Password: {acc.password}</p>
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onCopy(credText, `acc-${index}`)}
-          >
-            {isCopied ? (
-              <>
-                <Check className="h-3.5 w-3.5 mr-1.5" />
-                Copied
-              </>
-            ) : (
-              <>
-                <Copy className="h-3.5 w-3.5 mr-1.5" />
-                Copy Credentials
-              </>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onCopy(credText, `acc-${index}`)}
+            >
+              {isCopied ? (
+                <>
+                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5 mr-1.5" />
+                  Copy Credentials
+                </>
+              )}
+            </Button>
+
+            {acc.userId && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(`/profile/${acc.userId}`, "_blank")}
+              >
+                <Eye className="h-3.5 w-3.5 mr-1.5" />
+                Preview
+              </Button>
             )}
-          </Button>
-        </div>
+          </div>
       </div>
     </div>
   );
