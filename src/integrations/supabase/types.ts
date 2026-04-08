@@ -55008,6 +55008,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_lookup_profile_by_email: {
+        Args: { _email: string }
+        Returns: string
+      }
       admin_moderate_review: {
         Args: { p_action: string; p_reason?: string; p_review_id: string }
         Returns: Json
