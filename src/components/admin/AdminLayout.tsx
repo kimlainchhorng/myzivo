@@ -4,6 +4,7 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import zivoLogo from "@/assets/zivo-logo.png";
 import {
   BarChart3, Users, ShoppingBag, Settings, LogOut, Shield,
   ChevronLeft, ChevronDown, Menu, Home, Activity, DollarSign, Plane,
@@ -44,9 +45,10 @@ const navEntries: NavEntry[] = [
 interface AdminLayoutProps {
   children: ReactNode;
   title: string;
+  brandLabel?: string;
 }
 
-export default function AdminLayout({ children, title }: AdminLayoutProps) {
+export default function AdminLayout({ children, title, brandLabel = "ZIVO Admin" }: AdminLayoutProps) {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -55,7 +57,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   return (
     <>
       <Helmet>
-        <title>{title} — ZIVO Admin</title>
+        <title>{title} — {brandLabel}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
@@ -78,10 +80,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           {/* Logo */}
           <div className="h-16 flex items-center justify-between px-5 border-b border-border">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Shield className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="text-base font-bold text-foreground">ZIVO Admin</span>
+              <img src={zivoLogo} alt="ZIVO" className="w-8 h-8 rounded-lg object-contain" />
+              <span className="text-base font-bold text-foreground">{brandLabel}</span>
             </div>
             <Button
               variant="ghost"
