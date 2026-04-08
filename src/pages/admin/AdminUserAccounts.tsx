@@ -270,38 +270,30 @@ export default function AdminUserAccounts() {
     const generatedPassword = generatePassword();
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: generatedEmail,
-        password: generatedPassword,
-        options: {
-          data: {
-            full_name: trimmed,
-            username: trimmed,
-          },
-        },
+      const { data, error } = await supabase.functions.invoke("admin-create-user", {
+        body: { email: generatedEmail, password: generatedPassword, username: trimmed },
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-      if (data.user) {
-        const newAccount: CreatedAccount = {
-          userId: data.user.id,
-          username: trimmed,
-          email: generatedEmail,
-          password: generatedPassword,
-          createdAt: new Date().toLocaleString(),
-          avatarUrl: null,
-          coverUrl: null,
-          socialLinks: {},
-        };
+      const newAccount: CreatedAccount = {
+        userId: data.user?.id ?? "",
+        username: trimmed,
+        email: generatedEmail,
+        password: generatedPassword,
+        createdAt: new Date().toLocaleString(),
+        avatarUrl: null,
+        coverUrl: null,
+        socialLinks: {},
+      };
 
-        setCreatedAccounts((prev) => [newAccount, ...prev]);
-        toast({
-          title: "Account created!",
-          description: `Account "${trimmed}" is ready. Share the credentials below.`,
-        });
-        setUsername("");
-      }
+      setCreatedAccounts((prev) => [newAccount, ...prev]);
+      toast({
+        title: "Account created!",
+        description: `Account "${trimmed}" is ready. Share the credentials below.`,
+      });
+      setUsername("");
     } catch (err: any) {
       toast({
         title: "Failed to create account",
