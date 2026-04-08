@@ -145,6 +145,7 @@ function generatePassword() {
 
 function normalizeCreatedAccount(account: Partial<CreatedAccount>): CreatedAccount {
   return {
+    userId: account.userId,
     username: account.username ?? "",
     email: account.email ?? "",
     password: account.password ?? "",
