@@ -568,7 +568,7 @@ function ProfileCard({
         }}
       >
         {/* ===== FRONT SIDE ===== */}
-        <div className="[backface-visibility:hidden] rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm">
+        <div className={`[backface-visibility:hidden] rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm ${isFlipped ? "hidden" : ""}`}>
       <input
         ref={coverInputRef}
         type="file"
