@@ -563,7 +563,10 @@ function ProfileCard({
     <div className="[perspective:1200px]">
       <div
         className="relative transition-transform duration-700 [transform-style:preserve-3d]"
-        style={{ transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
+        style={{
+          transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+          minHeight: isFlipped ? "600px" : undefined,
+        }}
       >
         {/* ===== FRONT SIDE ===== */}
         <div className="[backface-visibility:hidden] rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm">
