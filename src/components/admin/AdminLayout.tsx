@@ -9,7 +9,8 @@ import zivoLogo from "@/assets/zivo-logo.png";
 import {
   BarChart3, Users, ShoppingBag, Settings, LogOut, Shield,
   ChevronLeft, ChevronDown, Menu, Home, Activity, DollarSign, Plane,
-  Search as SearchIcon, Server, Bell, Store
+  Search as SearchIcon, Server, Bell, Store, Headphones, MessageSquare,
+  AlertTriangle, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
