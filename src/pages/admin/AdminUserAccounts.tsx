@@ -375,23 +375,35 @@ export default function AdminUserAccounts() {
 
   const handleImageUpload = async (index: number, type: "avatar" | "cover", file: File) => {
     const account = createdAccounts[index];
-    if (!account) return;
+    if (!account || !account.userId) return;
 
     try {
       const bucket = type === "avatar" ? "avatars" : "covers";
-      const userId = account.userId || account.email.replace(/[^a-z0-9]/gi, "_");
-      const ext = file.name.split(".").pop() || "jpg";
-      const filePath = `${userId}/${Date.now()}.${ext}`;
 
-      // Upload to Supabase storage
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, { upsert: true });
+      // Convert file to base64
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
 
-      if (uploadError) throw uploadError;
+      const { data, error } = await supabase.functions.invoke("admin-update-profile", {
+        body: {
+          userId: account.userId,
+          uploadFile: {
+            base64,
+            bucket,
+            contentType: file.type || "image/jpeg",
+          },
+        },
+      });
 
-      const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(filePath);
-      const publicUrl = publicData?.publicUrl ?? "";
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const publicUrl = data?.uploadedUrl ?? "";
 
       // Update local state
       const fieldKey = type === "avatar" ? "avatarUrl" : "coverUrl";
@@ -400,16 +412,6 @@ export default function AdminUserAccounts() {
           i === index ? { ...acc, [fieldKey]: publicUrl } : acc,
         ),
       );
-
-      // Persist to profile in database
-      if (account.userId) {
-        await supabase.functions.invoke("admin-update-profile", {
-          body: {
-            userId: account.userId,
-            ...(type === "avatar" ? { avatarUrl: publicUrl } : { coverUrl: publicUrl }),
-          },
-        });
-      }
 
       toast({ title: `${type === "avatar" ? "Profile photo" : "Cover photo"} updated` });
     } catch (err: any) {
