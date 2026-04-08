@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Search, Plus, Mail, Shield, Trash2, UserCheck, UserX } from "lucide-react";
+import { Search, Plus, Mail, Shield, Trash2, UserCheck, UserX, RefreshCw, Pencil } from "lucide-react";
 import { format } from "date-fns";
 
 type Employee = {
