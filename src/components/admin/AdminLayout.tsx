@@ -65,6 +65,7 @@ const adminNavEntries: NavEntry[] = [
 
 const supportNavEntries: NavEntry[] = [
   { label: "Support Home", icon: Headphones, path: "/admin/support#overview" },
+  { label: "User Accounts", icon: UserPlus, path: "/admin/user-accounts" },
   { label: "Conversations", icon: MessageSquare, path: "/admin/support#conversations" },
   { label: "Alerts", icon: AlertTriangle, path: "/admin/support#alerts" },
 ];

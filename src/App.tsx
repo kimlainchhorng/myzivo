@@ -640,6 +640,7 @@ const App = () => (
                 <Route path="/admin/app-store-assets" element={<ProtectedRoute><AdminAppStoreAssets /></ProtectedRoute>} />
                 <Route path="/admin/android-verification" element={<ProtectedRoute><AdminAndroidVerification /></ProtectedRoute>} />
                 <Route path="/admin/support" element={<ProtectedRoute><AdminSupportDashboard /></ProtectedRoute>} />
+                <Route path="/admin/user-accounts" element={<ProtectedRoute><AdminUserAccounts /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/boost" element={<ProtectedRoute><AdBoostBidding /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/boost-engine" element={<ProtectedRoute><MerchantBoostEngine /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/ai-creative" element={<ProtectedRoute><AiCreativeSuite /></ProtectedRoute>} />
