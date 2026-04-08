@@ -36,6 +36,7 @@ import {
   Film,
   MapPin,
 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -431,6 +432,34 @@ export default function AdminUserAccounts() {
     );
   };
 
+  const handleDeleteAccount = async (index: number) => {
+    const account = createdAccounts[index];
+    if (!account) return;
+
+    try {
+      // Try to delete from Supabase if we have a userId
+      if (account.userId) {
+        const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+          body: { userId: account.userId },
+        });
+
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+      }
+
+      // Remove from local state
+      setCreatedAccounts((prev) => prev.filter((_, i) => i !== index));
+      queryClient.invalidateQueries({ queryKey: ["admin-created-accounts"] });
+      toast({ title: "Account deleted", description: `${account.username} has been removed.` });
+    } catch (err: any) {
+      toast({
+        title: "Failed to delete account",
+        description: err.message || "Something went wrong.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <AdminLayout title="User Accounts" brandLabel="ZIVO Support">
       <div className="max-w-2xl space-y-8">
@@ -509,6 +538,7 @@ export default function AdminUserAccounts() {
                   onImageUpload={handleImageUpload}
                   onSocialLinkChange={handleSocialLinkChange}
                   onRemoveSocialLink={removeSocialLink}
+                  onDelete={handleDeleteAccount}
                 />
               );
             })}
@@ -531,6 +561,7 @@ interface ProfileCardProps {
   onImageUpload: (index: number, type: "avatar" | "cover", file: File) => void;
   onSocialLinkChange: (index: number, platform: string, value: string) => void;
   onRemoveSocialLink: (index: number, platform: string) => void;
+  onDelete: (index: number) => void;
 }
 
 function ProfileCard({
@@ -545,12 +576,15 @@ function ProfileCard({
   onImageUpload,
   onSocialLinkChange,
   onRemoveSocialLink,
+  onDelete,
 }: ProfileCardProps) {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [showLinkForm, setShowLinkForm] = useState(false);
   const [editingLink, setEditingLink] = useState<string | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [postTab, setPostTab] = useState<"all" | "photos" | "reels">("all");
   const [newPostCaption, setNewPostCaption] = useState("");
   const [newPostImage, setNewPostImage] = useState<File | null>(null);
@@ -908,6 +942,43 @@ function ProfileCard({
               <Eye className="h-3.5 w-3.5 mr-1.5" />
               Preview
             </Button>
+
+            {!confirmDelete ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                Delete
+              </Button>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  disabled={deleting}
+                  onClick={async () => {
+                    setDeleting(true);
+                    onDelete(index);
+                  }}
+                >
+                  {deleting ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 mr-1.5" />}
+                  Confirm Delete
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setConfirmDelete(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
