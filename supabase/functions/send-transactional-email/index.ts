@@ -316,15 +316,11 @@ Deno.serve(async (req) => {
   })
 
   try {
-    const GATEWAY_URL = 'https://connector-gateway.lovable.dev/resend'
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')
-
-    const emailResponse = await fetch(`${GATEWAY_URL}/emails`, {
+    const emailResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'X-Connection-Api-Key': resendApiKey,
+        'Authorization': `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
         from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
