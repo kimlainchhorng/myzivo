@@ -764,6 +764,7 @@ const App = () => (
                 <Route path="/legal/social-media-policy" element={<SocialMediaPolicy />} />
                 <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
                 <Route path="/legal/data-retention" element={<DataRetentionPolicy />} />
+                <Route path="/unsubscribe" element={<UnsubscribePage />} />
                 <Route path="/legal/dmca" element={<DMCACopyrightPolicy />} />
                 <Route path="/legal/dispute-resolution" element={<DisputeResolution />} />
                 <Route path="/legal/limitation-of-liability" element={<LimitationOfLiability />} />
