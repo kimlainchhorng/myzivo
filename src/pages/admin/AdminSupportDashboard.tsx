@@ -94,7 +94,7 @@ export default function AdminSupportDashboard() {
   ];
 
   return (
-    <AdminLayout title="Support Dashboard">
+    <AdminLayout title="Support Dashboard" brandLabel="ZIVO Support">
       <div className="space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
