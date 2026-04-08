@@ -28,6 +28,7 @@ import {
   Headphones,
   MessageSquare,
   AlertTriangle,
+  UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -64,6 +65,7 @@ const adminNavEntries: NavEntry[] = [
 
 const supportNavEntries: NavEntry[] = [
   { label: "Support Home", icon: Headphones, path: "/admin/support#overview" },
+  { label: "User Accounts", icon: UserPlus, path: "/admin/user-accounts" },
   { label: "Conversations", icon: MessageSquare, path: "/admin/support#conversations" },
   { label: "Alerts", icon: AlertTriangle, path: "/admin/support#alerts" },
 ];
