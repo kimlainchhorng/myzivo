@@ -1270,12 +1270,12 @@ function ProfileCard({
               </div>
 
               {/* Text area */}
-              <div className="px-5 py-3">
+              <div className="px-5 py-3 flex-1 sm:flex-none">
                 <textarea
                   placeholder={`What's on your mind, ${acc.username.split(/[\s_]/)[0]}?`}
                   value={newPostCaption}
                   onChange={(e) => setNewPostCaption(e.target.value)}
-                  className="w-full min-h-[120px] bg-transparent text-foreground text-sm placeholder:text-muted-foreground outline-none resize-none"
+                  className="w-full min-h-[120px] sm:min-h-[120px] h-full sm:h-auto bg-transparent text-foreground text-sm placeholder:text-muted-foreground outline-none resize-none"
                   autoFocus
                 />
               </div>
