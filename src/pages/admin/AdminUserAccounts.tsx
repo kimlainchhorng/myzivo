@@ -608,15 +608,19 @@ function ProfileCard({
       {/* Centered avatar + name + stats */}
       <div className="flex flex-col items-center -mt-10 pb-4 px-4">
         <div
-          className="h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-background text-xl font-bold shadow-md relative group cursor-pointer overflow-hidden"
+          className="h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-background text-xl font-bold shadow-md relative group cursor-pointer overflow-hidden bg-card"
           onClick={() => avatarInputRef.current?.click()}
           style={{
             background: acc.avatarUrl
-              ? `url(${acc.avatarUrl}) center/cover no-repeat`
+              ? "hsl(var(--card))"
               : `linear-gradient(145deg, hsl(${hue} 65% 50%), hsl(${(hue + 30) % 360} 55% 40%))`,
           }}
         >
-          {!acc.avatarUrl && initials}
+          {acc.avatarUrl ? (
+            <img src={acc.avatarUrl} alt={`${acc.username} avatar`} className="h-full w-full object-cover object-top" loading="lazy" />
+          ) : (
+            initials
+          )}
           <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center rounded-full">
             <Camera className="h-4 w-4 text-background opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
