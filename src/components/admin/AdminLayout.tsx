@@ -26,7 +26,7 @@ type NavEntry = NavItem | NavGroup;
 
 const isGroup = (entry: NavEntry): entry is NavGroup => "children" in entry;
 
-const navEntries: NavEntry[] = [
+const adminNavEntries: NavEntry[] = [
   { label: "Overview", icon: BarChart3, path: "/admin/analytics" },
   { label: "Users", icon: Users, path: "/admin/users" },
   { label: "Orders", icon: ShoppingBag, path: "/admin/shopping-orders" },
@@ -42,6 +42,12 @@ const navEntries: NavEntry[] = [
   { label: "Employees", icon: Users, path: "/admin/employees" },
   { label: "Pricing", icon: DollarSign, path: "/admin/pricing" },
   { label: "System Health", icon: Activity, path: "/admin/system-health" },
+];
+
+const supportNavEntries: NavEntry[] = [
+  { label: "Support Home", icon: Headphones, path: "/admin/support" },
+  { label: "Conversations", icon: MessageSquare, path: "/admin/support" },
+  { label: "Alerts", icon: AlertTriangle, path: "/admin/support" },
 ];
 
 interface AdminLayoutProps {
