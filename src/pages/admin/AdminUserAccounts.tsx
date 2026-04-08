@@ -390,22 +390,48 @@ export default function AdminUserAccounts() {
   };
 
   const handleImageUpload = async (index: number, type: "avatar" | "cover", file: File) => {
-    try {
-      const imageDataUrl = await readFileAsDataUrl(file);
+    const account = createdAccounts[index];
+    if (!account) return;
 
+    try {
+      const bucket = type === "avatar" ? "avatars" : "covers";
+      const userId = account.userId || account.email.replace(/[^a-z0-9]/gi, "_");
+      const ext = file.name.split(".").pop() || "jpg";
+      const filePath = `${userId}/${Date.now()}.${ext}`;
+
+      // Upload to Supabase storage
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(filePath);
+      const publicUrl = publicData?.publicUrl ?? "";
+
+      // Update local state
+      const fieldKey = type === "avatar" ? "avatarUrl" : "coverUrl";
       setCreatedAccounts((prev) =>
         prev.map((acc, i) =>
-          i === index
-            ? { ...acc, [type === "avatar" ? "avatarUrl" : "coverUrl"]: imageDataUrl }
-            : acc,
+          i === index ? { ...acc, [fieldKey]: publicUrl } : acc,
         ),
       );
 
+      // Persist to profile in database
+      if (account.userId) {
+        await supabase.functions.invoke("admin-update-profile", {
+          body: {
+            userId: account.userId,
+            ...(type === "avatar" ? { avatarUrl: publicUrl } : { coverUrl: publicUrl }),
+          },
+        });
+      }
+
       toast({ title: `${type === "avatar" ? "Profile photo" : "Cover photo"} updated` });
-    } catch {
+    } catch (err: any) {
       toast({
         title: "Image upload failed",
-        description: "Please try another image.",
+        description: err.message || "Please try another image.",
         variant: "destructive",
       });
     }
