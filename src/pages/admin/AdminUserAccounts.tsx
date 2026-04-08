@@ -591,6 +591,7 @@ interface ProfileCardProps {
   onCopy: (text: string, id: string) => void;
   onImageUpload: (index: number, type: "avatar" | "cover", file: File) => void;
   onSocialLinkChange: (index: number, platform: string, value: string) => void;
+  onSocialLinkBlur: (index: number) => void;
   onRemoveSocialLink: (index: number, platform: string) => void;
   onDelete: (index: number) => void;
 }
