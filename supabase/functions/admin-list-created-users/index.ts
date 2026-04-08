@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
     const { data: profiles } = userIds.length
       ? await adminClient
           .from("profiles")
-          .select("user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram, social_links")
+          .select("user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram")
           .in("user_id", userIds)
       : {
           data: [] as Array<{
@@ -117,7 +117,6 @@ Deno.serve(async (req) => {
             social_x: string | null;
             social_linkedin: string | null;
             social_telegram: string | null;
-            social_links: Record<string, unknown> | null;
           }>,
         };
 
