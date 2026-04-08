@@ -19,13 +19,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify the caller is an admin
+    // Verify the caller can manage accounts
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     const callerClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
+    });
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
     });
 
     const { data: { user: caller }, error: callerError } = await callerClient.auth.getUser();
@@ -36,16 +40,22 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check admin role
-    const { data: isAdmin, error: roleError } = await callerClient.rpc("check_user_role", {
-      _user_id: caller.id,
-      _role: "admin",
-    });
+    const allowedRoles = ["admin", "super_admin", "support"];
+    const allowedRoleSet = new Set(allowedRoles);
 
-    console.log("[admin-create-user] caller:", caller.id, "isAdmin:", isAdmin, "roleError:", roleError);
+    const { data: roleRows, error: roleError } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", caller.id)
+      .in("role", allowedRoles);
 
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Admin access required", debug: { callerId: caller.id, isAdmin, roleError: roleError?.message } }), {
+    const callerRoles = (roleRows ?? []).map(({ role }) => role);
+    const canManageAccounts = callerRoles.some((role) => allowedRoleSet.has(role));
+
+    console.log("[admin-create-user] caller:", caller.id, "roles:", callerRoles, "canManageAccounts:", canManageAccounts, "roleError:", roleError);
+
+    if (!canManageAccounts) {
+      return new Response(JSON.stringify({ error: "Admin access required", debug: { callerId: caller.id, callerRoles, canManageAccounts, roleError: roleError?.message } }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -59,11 +69,6 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // Use service role to create user without affecting caller's session
-    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
 
     const { data, error } = await adminClient.auth.admin.createUser({
       email,
