@@ -474,6 +474,60 @@ function ProfileCard({
   const [editingLink, setEditingLink] = useState<string | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
   const [postTab, setPostTab] = useState<"all" | "photos" | "reels">("all");
+  const [newPostCaption, setNewPostCaption] = useState("");
+  const [newPostImage, setNewPostImage] = useState<File | null>(null);
+  const [newPostImagePreview, setNewPostImagePreview] = useState<string | null>(null);
+  const [isPosting, setIsPosting] = useState(false);
+  const postImageRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+
+  const handlePostImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewPostImage(file);
+      setNewPostImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleCreatePost = async () => {
+    if (!acc.userId || (!newPostCaption.trim() && !newPostImage)) return;
+    setIsPosting(true);
+    try {
+      let mediaUrl: string | null = null;
+      let mediaType: string | null = null;
+
+      if (newPostImage) {
+        const ext = newPostImage.name.split(".").pop() || "jpg";
+        const path = `${acc.userId}/post_${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("post-media")
+          .upload(path, newPostImage, { upsert: true });
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from("post-media").getPublicUrl(path);
+          mediaUrl = urlData.publicUrl;
+          mediaType = newPostImage.type.startsWith("video") ? "video" : "image";
+        }
+      }
+
+      await (supabase as any).from("user_posts").insert({
+        user_id: acc.userId,
+        caption: newPostCaption.trim() || null,
+        media_url: mediaUrl,
+        media_type: mediaType,
+        is_published: true,
+      });
+
+      setNewPostCaption("");
+      setNewPostImage(null);
+      setNewPostImagePreview(null);
+      queryClient.invalidateQueries({ queryKey: ["admin-user-posts", acc.userId] });
+      toast({ title: "Post created", description: `Posted as ${acc.username}` });
+    } catch {
+      toast({ title: "Failed to post", variant: "destructive" });
+    } finally {
+      setIsPosting(false);
+    }
+  };
   const socialLinks = acc.socialLinks ?? {};
   const addedPlatforms = Object.keys(socialLinks);
   const availablePlatforms = SOCIAL_PLATFORMS.filter((platform) => !addedPlatforms.includes(platform.key));
