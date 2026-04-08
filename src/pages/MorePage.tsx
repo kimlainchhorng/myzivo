@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import SEOHead from "@/components/SEOHead";
 import FeedSidebar from "@/components/social/FeedSidebar";
-import NavBar from "@/components/NavBar";
+import NavBar from "@/components/home/NavBar";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
