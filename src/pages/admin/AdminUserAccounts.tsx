@@ -28,6 +28,10 @@ import {
   Calendar,
   Shield,
   Globe,
+  Heart,
+  MessageCircle,
+  Image as ImageIcon,
+  Play,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
