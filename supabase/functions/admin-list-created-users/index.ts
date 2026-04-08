@@ -129,7 +129,6 @@ Deno.serve(async (req) => {
       const profile = profileMap.get(user.id);
       const emailPrefix = user.email.split("@")[0]?.split("+")[0] ?? "user";
       const socialLinks = {
-        ...(profile?.social_links && typeof profile.social_links === "object" ? profile.social_links : {}),
         ...(profile?.social_facebook ? { facebook: profile.social_facebook } : {}),
         ...(profile?.social_instagram ? { instagram: profile.social_instagram } : {}),
         ...(profile?.social_tiktok ? { tiktok: profile.social_tiktok } : {}),
