@@ -96,7 +96,10 @@ function loadStoredCreatedAccounts(): CreatedAccount[] {
   if (typeof window === "undefined") return [];
 
   try {
-    const stored = window.sessionStorage.getItem(CREATED_ACCOUNTS_STORAGE_KEY);
+    const stored =
+      window.localStorage.getItem(CREATED_ACCOUNTS_STORAGE_KEY) ??
+      window.sessionStorage.getItem(CREATED_ACCOUNTS_STORAGE_KEY);
+
     if (!stored) return [];
 
     const parsed = JSON.parse(stored);
@@ -107,6 +110,24 @@ function loadStoredCreatedAccounts(): CreatedAccount[] {
       .filter((item) => item.username && item.email);
   } catch {
     return [];
+  }
+}
+
+function persistCreatedAccounts(accounts: CreatedAccount[]) {
+  if (typeof window === "undefined") return;
+
+  try {
+    if (accounts.length === 0) {
+      window.localStorage.removeItem(CREATED_ACCOUNTS_STORAGE_KEY);
+      window.sessionStorage.removeItem(CREATED_ACCOUNTS_STORAGE_KEY);
+      return;
+    }
+
+    const serialized = JSON.stringify(accounts);
+    window.localStorage.setItem(CREATED_ACCOUNTS_STORAGE_KEY, serialized);
+    window.sessionStorage.removeItem(CREATED_ACCOUNTS_STORAGE_KEY);
+  } catch {
+    // Ignore storage quota errors silently to avoid breaking account creation UI.
   }
 }
 
@@ -141,21 +162,7 @@ export default function AdminUserAccounts() {
     access?.isSupport || access?.isAdmin || user?.email === "chhorngkimlain1@gmail.com";
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    try {
-      if (createdAccounts.length === 0) {
-        window.sessionStorage.removeItem(CREATED_ACCOUNTS_STORAGE_KEY);
-        return;
-      }
-
-      window.sessionStorage.setItem(
-        CREATED_ACCOUNTS_STORAGE_KEY,
-        JSON.stringify(createdAccounts),
-      );
-    } catch {
-      // Ignore storage quota errors silently to avoid breaking account creation UI.
-    }
+    persistCreatedAccounts(createdAccounts);
   }, [createdAccounts]);
 
   if (!isAuthorized) {
