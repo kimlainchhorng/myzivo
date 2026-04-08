@@ -77,6 +77,7 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
     access?.isSupport ? supportNavEntries : 
     adminNavEntries;
 
+  return (
     <>
       <Helmet>
         <title>{title} — {resolvedBrandLabel}</title>
