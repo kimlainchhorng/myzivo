@@ -45,9 +45,10 @@ const navEntries: NavEntry[] = [
 interface AdminLayoutProps {
   children: ReactNode;
   title: string;
+  brandLabel?: string;
 }
 
-export default function AdminLayout({ children, title }: AdminLayoutProps) {
+export default function AdminLayout({ children, title, brandLabel = "ZIVO Admin" }: AdminLayoutProps) {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
