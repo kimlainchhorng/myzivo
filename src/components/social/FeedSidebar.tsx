@@ -24,6 +24,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { lazy, Suspense } from "react";
+import { Loader2 } from "lucide-react";
+
+const ChatHubPage = lazy(() => import("@/pages/ChatHubPage"));
 
 const NAV_ITEMS = [
   { label: "Rides", icon: Car, path: "/rides", color: "text-emerald-500" },
@@ -55,6 +59,7 @@ export default function FeedSidebar() {
   const { data: profile } = useUserProfile();
   const { data: access } = useUserAccess(user?.id);
   const [showSwitch, setShowSwitch] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   const avatarUrl = optimizeAvatar(profile?.avatar_url, 80) || profile?.avatar_url || user?.user_metadata?.avatar_url;
   const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
@@ -107,9 +112,9 @@ export default function FeedSidebar() {
             <span>{item.label}</span>
           </button>
         ))}
-        {/* Chat button */}
+        {/* Chat button — opens slide panel */}
         <button
-          onClick={() => navigate("/chat")}
+          onClick={() => setShowChat(true)}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
         >
           <MessageCircle className="h-5 w-5 text-sky-500" />
@@ -300,6 +305,26 @@ export default function FeedSidebar() {
                 </button>
               </div>
             )}
+          </div>
+        </SheetContent>
+      </Sheet>
+      {/* Chat Slide Panel */}
+      <Sheet open={showChat} onOpenChange={setShowChat}>
+        <SheetContent side="left" className="w-[400px] sm:w-[440px] p-0 flex flex-col">
+          <SheetHeader className="p-4 border-b border-border/30 flex-row items-center justify-between">
+            <SheetTitle className="text-base flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-sky-500" />
+              Chat
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto">
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            }>
+              <ChatHubPage />
+            </Suspense>
           </div>
         </SheetContent>
       </Sheet>
