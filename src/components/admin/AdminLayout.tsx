@@ -68,7 +68,7 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
   return (
     <>
       <Helmet>
-        <title>{title} — {brandLabel}</title>
+        <title>{title} — {resolvedBrandLabel}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
