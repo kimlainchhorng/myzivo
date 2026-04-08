@@ -28,6 +28,7 @@ import {
 const NAV_ITEMS = [
   { label: "Rides", icon: Car, path: "/rides", color: "text-emerald-500" },
   { label: "Eats", icon: UtensilsCrossed, path: "/eats", color: "text-orange-500" },
+  { label: "Chat", icon: MessageCircle, path: "/chat", color: "text-sky-500" },
   { label: "Map", icon: MapPin, path: "/map", color: "text-red-500" },
 ];
 
