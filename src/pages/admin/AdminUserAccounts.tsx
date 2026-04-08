@@ -473,6 +473,7 @@ function ProfileCard({
   const [showLinkForm, setShowLinkForm] = useState(false);
   const [editingLink, setEditingLink] = useState<string | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [postTab, setPostTab] = useState<"all" | "photos" | "reels">("all");
   const socialLinks = acc.socialLinks ?? {};
   const addedPlatforms = Object.keys(socialLinks);
   const availablePlatforms = SOCIAL_PLATFORMS.filter((platform) => !addedPlatforms.includes(platform.key));
@@ -741,95 +742,98 @@ function ProfileCard({
       </div>
     </div>
 
-    {/* ===== BACK SIDE (Profile Preview) ===== */}
-    <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm">
-      {/* Cover */}
-      <div
-        className="h-32 w-full"
-        style={{
-          background: acc.coverUrl
-            ? `url(${acc.coverUrl}) center/cover no-repeat`
-            : `linear-gradient(135deg, hsl(${hue} 70% 55%), hsl(${(hue + 40) % 360} 60% 45%))`,
-        }}
-      />
+    {/* ===== BACK SIDE (Profile Preview — matches user profile page) ===== */}
+    <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm flex flex-col">
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Profile card with gradient cover */}
+        <div className="rounded-xl border border-border/30 overflow-hidden mx-3 mt-3 bg-gradient-to-b from-primary/10 to-card">
+          {/* Cover */}
+          <div
+            className="h-24 w-full relative"
+            style={{
+              background: acc.coverUrl
+                ? `url(${acc.coverUrl}) center/cover no-repeat`
+                : `linear-gradient(180deg, hsl(var(--primary) / 0.2) 0%, hsl(var(--primary) / 0.05) 100%)`,
+            }}
+          />
 
-      {/* Profile content */}
-      <div className="px-5 pb-5 -mt-10">
-        <div
-          className="h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-background text-xl font-bold shadow-md overflow-hidden"
-          style={{
-            background: acc.avatarUrl
-              ? `url(${acc.avatarUrl}) center/cover no-repeat`
-              : `linear-gradient(145deg, hsl(${hue} 65% 50%), hsl(${(hue + 30) % 360} 55% 40%))`,
-          }}
-        >
-          {!acc.avatarUrl && initials}
+          {/* Centered avatar + name */}
+          <div className="flex flex-col items-center -mt-10 pb-4 px-4">
+            <div
+              className="h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-background text-xl font-bold shadow-md overflow-hidden"
+              style={{
+                background: acc.avatarUrl
+                  ? `url(${acc.avatarUrl}) center/cover no-repeat`
+                  : `linear-gradient(145deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))`,
+              }}
+            >
+              {!acc.avatarUrl && initials}
+            </div>
+
+            <h3 className="text-base font-bold text-foreground mt-2">{acc.username}</h3>
+            <span className="inline-flex items-center gap-1 mt-1 px-3 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
+              <Shield className="h-2.5 w-2.5" />
+              active
+            </span>
+
+            {/* Stats row */}
+            <div className="flex items-center gap-6 mt-3">
+              <div className="text-center">
+                <p className="text-sm font-bold text-foreground">0</p>
+                <p className="text-[10px] text-muted-foreground">Friends</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-bold text-foreground">0</p>
+                <p className="text-[10px] text-muted-foreground">Followers</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-bold text-foreground">0</p>
+                <p className="text-[10px] text-muted-foreground">Following</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-3 space-y-4">
-          <div>
-            <h3 className="text-lg font-bold text-foreground">{acc.username}</h3>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              Joined {acc.createdAt}
-            </p>
-          </div>
+        {/* Post tabs */}
+        <div className="flex items-center border-b border-border/30 mx-3 mt-3">
+          {(["all", "photos", "reels"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setPostTab(tab)}
+              className={`flex-1 py-2 text-xs font-medium text-center transition-colors border-b-2 ${
+                postTab === tab
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab === "all" && "⊞ All"}
+              {tab === "photos" && "📷 Photos"}
+              {tab === "reels" && "🎬 Reels"}
+            </button>
+          ))}
+        </div>
 
-          {/* Profile details grid */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
-              <Mail className="h-3.5 w-3.5 text-primary" />
-              <span className="truncate">{acc.email.split("+")[0]}...</span>
+        {/* Posts grid */}
+        <div className="px-3 py-3">
+          {postsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
-              <Shield className="h-3.5 w-3.5 text-primary" />
-              <span>Active</span>
-            </div>
-          </div>
-
-          {/* Social links preview */}
-          {addedPlatforms.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {addedPlatforms.map((key) => {
-                const platform = SOCIAL_PLATFORMS.find((item) => item.key === key);
-                if (!platform) return null;
-                const linkValue = socialLinks[key] || "";
-                return (
-                  <a
-                    key={key}
-                    href={linkValue.startsWith("http") ? linkValue : `https://${linkValue}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/40 border border-border/40 hover:border-primary/40 transition-colors"
-                  >
-                    <span
-                      className="h-4 w-4 rounded-full flex items-center justify-center text-background text-[9px] font-bold"
-                      style={{ backgroundColor: platform.color }}
-                    >
-                      {platform.icon}
-                    </span>
-                    {platform.label}
-                  </a>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Posts section */}
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Posts</p>
-            {postsLoading ? (
-              <div className="flex items-center justify-center py-6">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              </div>
-            ) : userPosts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-6 text-center">
-                <ImageIcon className="h-8 w-8 text-muted-foreground/30 mb-2" />
+          ) : (() => {
+            const filtered = userPosts.filter((post) => {
+              if (postTab === "photos") return post.media_type !== "video" && post.media_url;
+              if (postTab === "reels") return post.media_type === "video";
+              return true;
+            });
+            return filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <ImageIcon className="h-10 w-10 text-muted-foreground/20 mb-2" />
                 <p className="text-xs text-muted-foreground">No posts yet</p>
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-1 rounded-lg overflow-hidden">
-                {userPosts.map((post) => (
+                {filtered.map((post) => (
                   <div key={post.id} className="relative aspect-square bg-muted/60 group cursor-pointer overflow-hidden">
                     {post.media_url ? (
                       post.media_type === "video" ? (
@@ -837,19 +841,13 @@ function ProfileCard({
                           <Play className="h-5 w-5 text-muted-foreground" />
                         </div>
                       ) : (
-                        <img
-                          src={post.media_url}
-                          alt=""
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
+                        <img src={post.media_url} alt="" className="h-full w-full object-cover" loading="lazy" />
                       )
                     ) : (
                       <div className="h-full w-full flex items-center justify-center p-2">
                         <p className="text-[10px] text-muted-foreground line-clamp-3 text-center">{post.caption}</p>
                       </div>
                     )}
-                    {/* Hover overlay with stats */}
                     <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                       <span className="flex items-center gap-1 text-background text-xs font-medium">
                         <Heart className="h-3.5 w-3.5" fill="currentColor" />
@@ -863,50 +861,40 @@ function ProfileCard({
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-
-          {/* Open full profile + back button */}
-          <div className="flex gap-2 pt-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsFlipped(false)}
-              className="gap-1.5"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              Back
-            </Button>
-            <Button
-              type="button"
-              variant="default"
-              size="sm"
-              onClick={async () => {
-                if (acc.userId) {
-                  window.open(`/user/${acc.userId}`, "_blank");
-                } else {
-                  try {
-                    const { data: uid, error } = await supabase.rpc("admin_lookup_profile_by_email" as any, {
-                      _email: acc.email,
-                    });
-                    if (error || !uid) {
-                      toast({ title: "User not found", description: "Could not find a profile for this account.", variant: "destructive" });
-                      return;
-                    }
-                    window.open(`/user/${uid}`, "_blank");
-                  } catch {
-                    toast({ title: "Lookup failed", description: "Could not look up user profile.", variant: "destructive" });
-                  }
-                }
-              }}
-              className="gap-1.5"
-            >
-              <Globe className="h-3.5 w-3.5" />
-              Open Full Profile
-            </Button>
-          </div>
+            );
+          })()}
         </div>
+      </div>
+
+      {/* Action buttons — sticky bottom */}
+      <div className="flex gap-2 p-3 border-t border-border/30 bg-card shrink-0">
+        <Button type="button" variant="outline" size="sm" onClick={() => setIsFlipped(false)} className="gap-1.5">
+          <RotateCcw className="h-3.5 w-3.5" /> Back
+        </Button>
+        <Button
+          type="button"
+          variant="default"
+          size="sm"
+          onClick={async () => {
+            if (acc.userId) {
+              window.open(`/user/${acc.userId}`, "_blank");
+            } else {
+              try {
+                const { data: uid, error } = await supabase.rpc("admin_lookup_profile_by_email" as any, { _email: acc.email });
+                if (error || !uid) {
+                  toast({ title: "User not found", description: "Could not find a profile for this account.", variant: "destructive" });
+                  return;
+                }
+                window.open(`/user/${uid}`, "_blank");
+              } catch {
+                toast({ title: "Lookup failed", description: "Could not look up user profile.", variant: "destructive" });
+              }
+            }
+          }}
+          className="gap-1.5"
+        >
+          <Globe className="h-3.5 w-3.5" /> Open Full Profile
+        </Button>
       </div>
     </div>
 
