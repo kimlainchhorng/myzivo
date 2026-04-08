@@ -683,17 +683,21 @@ function ProfileCard({
               )}
             </Button>
 
-            {acc.userId && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(`/profile/${acc.userId}`, "_blank")}
-              >
-                <Eye className="h-3.5 w-3.5 mr-1.5" />
-                Preview
-              </Button>
-            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (acc.userId) {
+                  window.open(`/profile/${acc.userId}`, "_blank");
+                } else {
+                  toast({ title: "No user ID available", description: "This account was created before preview support was added. Create a new account to use Preview.", variant: "destructive" });
+                }
+              }}
+            >
+              <Eye className="h-3.5 w-3.5 mr-1.5" />
+              Preview
+            </Button>
           </div>
         </div>
       </div>
