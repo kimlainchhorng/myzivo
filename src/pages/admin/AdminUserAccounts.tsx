@@ -591,8 +591,9 @@ function ProfileCard({
         }}
       />
 
+      {/* Cover */}
       <div
-        className="h-32 w-full relative group cursor-pointer"
+        className="h-28 w-full relative group cursor-pointer"
         onClick={() => coverInputRef.current?.click()}
         style={{
           background: acc.coverUrl
@@ -605,7 +606,8 @@ function ProfileCard({
         </div>
       </div>
 
-      <div className="px-5 pb-5 -mt-10">
+      {/* Centered avatar + name + stats */}
+      <div className="flex flex-col items-center -mt-10 pb-4 px-4">
         <div
           className="h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-background text-xl font-bold shadow-md relative group cursor-pointer overflow-hidden"
           onClick={() => avatarInputRef.current?.click()}
@@ -621,11 +623,32 @@ function ProfileCard({
           </div>
         </div>
 
-        <div className="mt-3 space-y-4">
-          <div>
-            <h3 className="text-lg font-bold text-foreground">{acc.username}</h3>
-            <p className="text-xs text-muted-foreground">Created {acc.createdAt}</p>
+        <h3 className="text-lg font-bold text-foreground mt-2">{acc.username}</h3>
+        <p className="text-[10px] text-muted-foreground">Created {acc.createdAt}</p>
+        <span className="inline-flex items-center gap-1 mt-1.5 px-3 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
+          <Shield className="h-2.5 w-2.5" />
+          active
+        </span>
+
+        {/* Stats row */}
+        <div className="flex items-center gap-6 mt-3">
+          <div className="text-center">
+            <p className="text-sm font-bold text-foreground">0</p>
+            <p className="text-[10px] text-muted-foreground">Friends</p>
           </div>
+          <div className="text-center">
+            <p className="text-sm font-bold text-foreground">0</p>
+            <p className="text-[10px] text-muted-foreground">Followers</p>
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-bold text-foreground">0</p>
+            <p className="text-[10px] text-muted-foreground">Following</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 pb-5 space-y-4">
+
 
           <div className="space-y-2">
             {addedPlatforms.map((key) => {
