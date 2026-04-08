@@ -103,9 +103,23 @@ Deno.serve(async (req) => {
     const { data: profiles } = userIds.length
       ? await adminClient
           .from("profiles")
-          .select("user_id, avatar_url, cover_url")
+          .select("user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram, social_links")
           .in("user_id", userIds)
-      : { data: [] as Array<{ user_id: string; avatar_url: string | null; cover_url: string | null }> };
+      : {
+          data: [] as Array<{
+            user_id: string;
+            avatar_url: string | null;
+            cover_url: string | null;
+            social_facebook: string | null;
+            social_instagram: string | null;
+            social_tiktok: string | null;
+            social_snapchat: string | null;
+            social_x: string | null;
+            social_linkedin: string | null;
+            social_telegram: string | null;
+            social_links: Record<string, unknown> | null;
+          }>,
+        };
 
     const profileMap = new Map(
       (profiles ?? []).map((profile) => [profile.user_id, profile]),
@@ -115,6 +129,16 @@ Deno.serve(async (req) => {
       const metadata = user.user_metadata ?? {};
       const profile = profileMap.get(user.id);
       const emailPrefix = user.email.split("@")[0]?.split("+")[0] ?? "user";
+      const socialLinks = {
+        ...(profile?.social_links && typeof profile.social_links === "object" ? profile.social_links : {}),
+        ...(profile?.social_facebook ? { facebook: profile.social_facebook } : {}),
+        ...(profile?.social_instagram ? { instagram: profile.social_instagram } : {}),
+        ...(profile?.social_tiktok ? { tiktok: profile.social_tiktok } : {}),
+        ...(profile?.social_snapchat ? { snapchat: profile.social_snapchat } : {}),
+        ...(profile?.social_x ? { x: profile.social_x } : {}),
+        ...(profile?.social_linkedin ? { linkedin: profile.social_linkedin } : {}),
+        ...(profile?.social_telegram ? { telegram: profile.social_telegram } : {}),
+      };
 
       return {
         userId: user.id,
@@ -127,7 +151,7 @@ Deno.serve(async (req) => {
         createdAt: user.created_at ?? new Date().toISOString(),
         avatarUrl: profile?.avatar_url ?? null,
         coverUrl: profile?.cover_url ?? null,
-        socialLinks: {},
+        socialLinks,
       };
     });
 
