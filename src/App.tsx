@@ -155,6 +155,7 @@ const AdminEmployeesPage = lazy(() => import("./pages/admin/AdminEmployeesPage")
 const AdminSystemHealth = lazy(() => import("./pages/admin/AdminSystemHealth"));
 const AdminAppStoreAssets = lazy(() => import("./pages/admin/AdminAppStoreAssets"));
 const AdminAndroidVerification = lazy(() => import("./pages/admin/AdminAndroidVerification"));
+const AdminSupportDashboard = lazy(() => import("./pages/admin/AdminSupportDashboard"));
 const AdminGodView = lazy(() => import("./pages/admin/AdminGodView"));
 const AdBoostBidding = lazy(() => import("./pages/app/shop/AdBoostBidding"));
 const MerchantBoostEngine = lazy(() => import("./pages/app/shop/MerchantBoostEngine"));
@@ -637,6 +638,7 @@ const App = () => (
                 <Route path="/admin/system-health" element={<ProtectedRoute><AdminSystemHealth /></ProtectedRoute>} />
                 <Route path="/admin/app-store-assets" element={<ProtectedRoute><AdminAppStoreAssets /></ProtectedRoute>} />
                 <Route path="/admin/android-verification" element={<ProtectedRoute><AdminAndroidVerification /></ProtectedRoute>} />
+                <Route path="/admin/support" element={<ProtectedRoute><AdminSupportDashboard /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/boost" element={<ProtectedRoute><AdBoostBidding /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/boost-engine" element={<ProtectedRoute><MerchantBoostEngine /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/ai-creative" element={<ProtectedRoute><AiCreativeSuite /></ProtectedRoute>} />
