@@ -112,9 +112,9 @@ export default function FeedSidebar() {
             <span>{item.label}</span>
           </button>
         ))}
-        {/* Chat button */}
+        {/* Chat button — opens slide panel */}
         <button
-          onClick={() => navigate("/chat")}
+          onClick={() => setShowChat(true)}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
         >
           <MessageCircle className="h-5 w-5 text-sky-500" />
