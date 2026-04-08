@@ -269,6 +269,7 @@ export default function AdminUserAccounts() {
 
       if (data.user) {
         const newAccount: CreatedAccount = {
+          userId: data.user.id,
           username: trimmed,
           email: generatedEmail,
           password: generatedPassword,
