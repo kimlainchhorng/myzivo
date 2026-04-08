@@ -744,14 +744,6 @@ export default function ReelsFeedPage() {
         </PullToRefresh>
       </div>
 
-      {/* Floating Chat Button — bottom right */}
-      <button
-        onClick={() => navigate("/chat")}
-        className="fixed bottom-24 lg:bottom-8 right-5 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
-        aria-label="Chat"
-      >
-        <MessageCircle className="h-6 w-6" />
-      </button>
     </>
   );
 }

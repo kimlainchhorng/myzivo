@@ -96,16 +96,7 @@ export default function FeedSidebar() {
         )}
 
         {/* Main nav */}
-        <div className="flex items-center justify-between px-3 pt-2 pb-1">
-          <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Navigate</p>
-          <button
-            onClick={() => navigate("/chat")}
-            className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-primary/10 transition-colors group"
-            title="Chat"
-          >
-            <MessageCircle className="h-4.5 w-4.5 text-sky-500 group-hover:text-primary transition-colors" />
-          </button>
-        </div>
+        <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-2 pb-1">Navigate</p>
         {NAV_ITEMS.map((item) => (
           <button
             key={item.label}
@@ -116,6 +107,14 @@ export default function FeedSidebar() {
             <span>{item.label}</span>
           </button>
         ))}
+        {/* Chat button */}
+        <button
+          onClick={() => navigate("/chat")}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
+        >
+          <MessageCircle className="h-5 w-5 text-sky-500" />
+          <span>Chat</span>
+        </button>
 
         {/* Services */}
         <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-4 pb-1">Services</p>
