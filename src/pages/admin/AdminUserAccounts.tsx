@@ -16,6 +16,9 @@ import {
   Camera,
   Link2,
   X,
+  Facebook,
+  Instagram,
+  Twitter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
