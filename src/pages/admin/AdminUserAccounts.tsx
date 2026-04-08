@@ -466,12 +466,19 @@ function ProfileCard({
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [showLinkForm, setShowLinkForm] = useState(false);
   const [editingLink, setEditingLink] = useState<string | null>(null);
+  const [isFlipped, setIsFlipped] = useState(false);
   const socialLinks = acc.socialLinks ?? {};
   const addedPlatforms = Object.keys(socialLinks);
   const availablePlatforms = SOCIAL_PLATFORMS.filter((platform) => !addedPlatforms.includes(platform.key));
 
   return (
-    <div className="rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm">
+    <div className="[perspective:1200px]">
+      <div
+        className="relative transition-transform duration-700 [transform-style:preserve-3d]"
+        style={{ transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
+      >
+        {/* ===== FRONT SIDE ===== */}
+        <div className="[backface-visibility:hidden] rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm">
       <input
         ref={coverInputRef}
         type="file"
