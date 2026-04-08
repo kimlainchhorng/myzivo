@@ -34,6 +34,7 @@ import {
   Play,
   Plus,
   Film,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -480,7 +481,9 @@ function ProfileCard({
   const [newPostImage, setNewPostImage] = useState<File | null>(null);
   const [newPostImagePreview, setNewPostImagePreview] = useState<string | null>(null);
   const [isPosting, setIsPosting] = useState(false);
+  const [showPostModal, setShowPostModal] = useState(false);
   const postImageRef = useRef<HTMLInputElement>(null);
+  const postCaptionRef = useRef<HTMLTextAreaElement>(null);
   const queryClient = useQueryClient();
 
   const handlePostImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -900,8 +903,11 @@ function ProfileCard({
           </div>
         </div>
 
-        {/* Post composer */}
-        <div className="mx-3 mt-3 rounded-xl border border-border/30 bg-card p-3">
+        {/* Post composer trigger — click to open modal */}
+        <div
+          className="mx-3 mt-3 rounded-xl border border-border/30 bg-card p-3 cursor-pointer hover:bg-muted/30 transition-colors"
+          onClick={() => { setShowPostModal(true); setTimeout(() => postCaptionRef.current?.focus(), 100); }}
+        >
           <input ref={postImageRef} type="file" accept="image/*,video/*" className="hidden" onChange={handlePostImageSelect} />
           <div className="flex items-center gap-3">
             <div
@@ -913,73 +919,151 @@ function ProfileCard({
               }}
             >
               {acc.avatarUrl ? (
-                <img
-                  src={acc.avatarUrl}
-                  alt={`${acc.username} avatar`}
-                  className="h-full w-full object-cover object-top"
-                  loading="lazy"
-                />
+                <img src={acc.avatarUrl} alt={`${acc.username} avatar`} className="h-full w-full object-cover object-top" loading="lazy" />
               ) : (
                 initials
               )}
             </div>
-            <input
-              type="text"
-              placeholder="What's on your mind?"
-              value={newPostCaption}
-              onChange={(e) => setNewPostCaption(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleCreatePost()}
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-            />
+            <span className="flex-1 text-sm text-muted-foreground">What's on your mind?</span>
             <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => postImageRef.current?.click()}
-                className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center hover:bg-emerald-500/20 transition-colors"
-              >
+              <span className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
                 <ImageIcon className="h-3.5 w-3.5 text-emerald-600" />
-              </button>
-              <button
-                type="button"
-                onClick={() => postImageRef.current?.click()}
-                className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center hover:bg-blue-500/20 transition-colors"
-              >
+              </span>
+              <span className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
                 <Film className="h-3.5 w-3.5 text-blue-600" />
-              </button>
-              <button
-                type="button"
-                onClick={() => postImageRef.current?.click()}
-                className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center hover:bg-orange-500/20 transition-colors"
-              >
+              </span>
+              <span className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
                 <Camera className="h-3.5 w-3.5 text-orange-600" />
-              </button>
+              </span>
             </div>
           </div>
-          {newPostCaption.trim() || newPostImage ? (
-            <div className="flex justify-end mt-2">
-              <button
-                type="button"
-                onClick={handleCreatePost}
-                disabled={isPosting || (!newPostCaption.trim() && !newPostImage)}
-                className="h-8 px-4 rounded-full bg-primary text-primary-foreground text-xs font-medium disabled:opacity-40 hover:opacity-90 transition-opacity flex items-center gap-1"
-              >
-                {isPosting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Post"}
-              </button>
-            </div>
-          ) : null}
-          {newPostImagePreview && (
-            <div className="relative mt-2 rounded-lg overflow-hidden">
-              <img src={newPostImagePreview} alt="" className="w-full max-h-32 object-cover rounded-lg" />
-              <button
-                type="button"
-                onClick={() => { setNewPostImage(null); setNewPostImagePreview(null); }}
-                className="absolute top-1 right-1 h-6 w-6 rounded-full bg-foreground/70 text-background flex items-center justify-center"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          )}
         </div>
+
+        {/* ===== Facebook-style Create Post Modal ===== */}
+        {showPostModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 backdrop-blur-sm" onClick={() => setShowPostModal(false)}>
+            <div
+              className="w-full max-w-lg mx-4 rounded-2xl border border-border/40 bg-card shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal header */}
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/30">
+                <h3 className="text-base font-bold text-foreground">Create Post</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowPostModal(false)}
+                  className="h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+                >
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </div>
+
+              {/* User row */}
+              <div className="flex items-center gap-3 px-5 pt-4">
+                <div
+                  className="h-10 w-10 rounded-full shrink-0 flex items-center justify-center text-background text-xs font-bold overflow-hidden border-2 border-primary/20 bg-card"
+                  style={{
+                    background: acc.avatarUrl
+                      ? "hsl(var(--card))"
+                      : `linear-gradient(145deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))`,
+                  }}
+                >
+                  {acc.avatarUrl ? (
+                    <img src={acc.avatarUrl} alt={`${acc.username} avatar`} className="h-full w-full object-cover object-top" loading="lazy" />
+                  ) : (
+                    initials
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">{acc.username}</p>
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <Globe className="h-2.5 w-2.5" /> Public
+                  </span>
+                </div>
+              </div>
+
+              {/* Text area */}
+              <div className="px-5 py-3">
+                <textarea
+                  ref={postCaptionRef}
+                  placeholder={`What's on your mind, ${acc.username.split(/[\s_]/)[0]}?`}
+                  value={newPostCaption}
+                  onChange={(e) => setNewPostCaption(e.target.value)}
+                  className="w-full min-h-[120px] bg-transparent text-foreground text-sm placeholder:text-muted-foreground outline-none resize-none"
+                />
+              </div>
+
+              {/* Image preview */}
+              {newPostImagePreview && (
+                <div className="px-5 pb-3">
+                  <div className="relative rounded-xl overflow-hidden border border-border/30">
+                    <img src={newPostImagePreview} alt="" className="w-full max-h-48 object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => { setNewPostImage(null); setNewPostImagePreview(null); }}
+                      className="absolute top-2 right-2 h-7 w-7 rounded-full bg-foreground/70 text-background flex items-center justify-center hover:bg-foreground/90 transition-colors"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Add to post options */}
+              <div className="mx-5 mb-4 rounded-xl border border-border/30 p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-foreground">Add to your post</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => postImageRef.current?.click()}
+                      className="h-9 w-9 rounded-full hover:bg-emerald-500/10 flex items-center justify-center transition-colors"
+                      title="Photo"
+                    >
+                      <ImageIcon className="h-5 w-5 text-emerald-500" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => postImageRef.current?.click()}
+                      className="h-9 w-9 rounded-full hover:bg-blue-500/10 flex items-center justify-center transition-colors"
+                      title="Video"
+                    >
+                      <Film className="h-5 w-5 text-blue-500" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => postImageRef.current?.click()}
+                      className="h-9 w-9 rounded-full hover:bg-orange-500/10 flex items-center justify-center transition-colors"
+                      title="Camera"
+                    >
+                      <Camera className="h-5 w-5 text-orange-500" />
+                    </button>
+                    <button
+                      type="button"
+                      className="h-9 w-9 rounded-full hover:bg-red-500/10 flex items-center justify-center transition-colors"
+                      title="Location"
+                      onClick={() => toast({ title: "Coming soon", description: "Location tagging coming soon" })}
+                    >
+                      <MapPin className="h-5 w-5 text-red-500" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Post button */}
+              <div className="px-5 pb-4">
+                <button
+                  type="button"
+                  onClick={() => { handleCreatePost(); setShowPostModal(false); }}
+                  disabled={isPosting || (!newPostCaption.trim() && !newPostImage)}
+                  className="w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-bold disabled:opacity-40 hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                >
+                  {isPosting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Post"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Post tabs */}
         <div className="flex items-center border-b border-border/30 mx-3 mt-3">
