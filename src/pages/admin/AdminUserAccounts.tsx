@@ -145,6 +145,7 @@ function generatePassword() {
 
 function normalizeCreatedAccount(account: Partial<CreatedAccount>): CreatedAccount {
   return {
+    userId: account.userId,
     username: account.username ?? "",
     email: account.email ?? "",
     password: account.password ?? "",
@@ -495,7 +496,7 @@ function ProfileCard({
   };
 
   const handleCreatePost = async () => {
-    if (!acc.userId || (!newPostCaption.trim() && !newPostImage)) return;
+    if (!acc.userId || (!newPostCaption.trim() && !newPostImage)) return false;
     setIsPosting(true);
     try {
       let mediaUrl: string | null = null;
@@ -507,14 +508,18 @@ function ProfileCard({
         const { error: uploadError } = await supabase.storage
           .from("post-media")
           .upload(path, newPostImage, { upsert: true });
-        if (!uploadError) {
-          const { data: urlData } = supabase.storage.from("post-media").getPublicUrl(path);
-          mediaUrl = urlData.publicUrl;
-          mediaType = newPostImage.type.startsWith("video") ? "video" : "image";
+
+        if (uploadError) {
+          toast({ title: "Failed to upload media", description: uploadError.message, variant: "destructive" });
+          return false;
         }
+
+        const { data: urlData } = supabase.storage.from("post-media").getPublicUrl(path);
+        mediaUrl = urlData.publicUrl;
+        mediaType = newPostImage.type.startsWith("video") ? "video" : "image";
       }
 
-      await (supabase as any).from("user_posts").insert({
+      const { error: insertError } = await (supabase as any).from("user_posts").insert({
         user_id: acc.userId,
         caption: newPostCaption.trim() || null,
         media_url: mediaUrl,
@@ -522,13 +527,20 @@ function ProfileCard({
         is_published: true,
       });
 
+      if (insertError) {
+        toast({ title: "Failed to post", description: insertError.message, variant: "destructive" });
+        return false;
+      }
+
       setNewPostCaption("");
       setNewPostImage(null);
       setNewPostImagePreview(null);
       queryClient.invalidateQueries({ queryKey: ["admin-user-posts", acc.userId] });
       toast({ title: "Post created", description: `Posted as ${acc.username}` });
+      return true;
     } catch {
       toast({ title: "Failed to post", variant: "destructive" });
+      return false;
     } finally {
       setIsPosting(false);
     }
@@ -1054,7 +1066,10 @@ function ProfileCard({
               <div className="px-5 pb-4">
                 <button
                   type="button"
-                  onClick={() => { handleCreatePost(); setShowPostModal(false); }}
+                  onClick={async () => {
+                    const didPost = await handleCreatePost();
+                    if (didPost) setShowPostModal(false);
+                  }}
                   disabled={isPosting || (!newPostCaption.trim() && !newPostImage)}
                   className="w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-bold disabled:opacity-40 hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 >
