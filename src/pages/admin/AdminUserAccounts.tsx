@@ -700,31 +700,134 @@ function ProfileCard({
               type="button"
               variant="outline"
               size="sm"
-              onClick={async () => {
-                if (acc.userId) {
-                  window.open(`/profile/${acc.userId}`, "_blank");
-                } else {
-                  // Fallback: look up user by email via admin RPC
-                  try {
-                    const { data: uid, error } = await supabase.rpc("admin_lookup_profile_by_email" as any, {
-                      _email: acc.email,
-                    });
-                    if (error || !uid) {
-                      toast({ title: "User not found", description: "Could not find a profile for this account. The user may need to log in first.", variant: "destructive" });
-                      return;
-                    }
-                    window.open(`/profile/${uid}`, "_blank");
-                  } catch {
-                    toast({ title: "Lookup failed", description: "Could not look up user profile.", variant: "destructive" });
-                  }
-                }
-              }}
+              onClick={() => setIsFlipped(true)}
             >
               <Eye className="h-3.5 w-3.5 mr-1.5" />
               Preview
             </Button>
           </div>
         </div>
+      </div>
+    </div>
+
+    {/* ===== BACK SIDE (Profile Preview) ===== */}
+    <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm">
+      {/* Cover */}
+      <div
+        className="h-32 w-full"
+        style={{
+          background: acc.coverUrl
+            ? `url(${acc.coverUrl}) center/cover no-repeat`
+            : `linear-gradient(135deg, hsl(${hue} 70% 55%), hsl(${(hue + 40) % 360} 60% 45%))`,
+        }}
+      />
+
+      {/* Profile content */}
+      <div className="px-5 pb-5 -mt-10">
+        <div
+          className="h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-background text-xl font-bold shadow-md overflow-hidden"
+          style={{
+            background: acc.avatarUrl
+              ? `url(${acc.avatarUrl}) center/cover no-repeat`
+              : `linear-gradient(145deg, hsl(${hue} 65% 50%), hsl(${(hue + 30) % 360} 55% 40%))`,
+          }}
+        >
+          {!acc.avatarUrl && initials}
+        </div>
+
+        <div className="mt-3 space-y-4">
+          <div>
+            <h3 className="text-lg font-bold text-foreground">{acc.username}</h3>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              Joined {acc.createdAt}
+            </p>
+          </div>
+
+          {/* Profile details grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
+              <Mail className="h-3.5 w-3.5 text-primary" />
+              <span className="truncate">{acc.email.split("+")[0]}...</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
+              <Shield className="h-3.5 w-3.5 text-emerald-500" />
+              <span>Active</span>
+            </div>
+          </div>
+
+          {/* Social links preview */}
+          {addedPlatforms.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {addedPlatforms.map((key) => {
+                const platform = SOCIAL_PLATFORMS.find((item) => item.key === key);
+                if (!platform) return null;
+                const linkValue = socialLinks[key] || "";
+                return (
+                  <a
+                    key={key}
+                    href={linkValue.startsWith("http") ? linkValue : `https://${linkValue}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/40 border border-border/40 hover:border-primary/40 transition-colors"
+                  >
+                    <span
+                      className="h-4 w-4 rounded-full flex items-center justify-center text-background text-[9px] font-bold"
+                      style={{ backgroundColor: platform.color }}
+                    >
+                      {platform.icon}
+                    </span>
+                    {platform.label}
+                  </a>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Open full profile + back button */}
+          <div className="flex gap-2 pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsFlipped(false)}
+              className="gap-1.5"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Back
+            </Button>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={async () => {
+                if (acc.userId) {
+                  window.open(`/user/${acc.userId}`, "_blank");
+                } else {
+                  try {
+                    const { data: uid, error } = await supabase.rpc("admin_lookup_profile_by_email" as any, {
+                      _email: acc.email,
+                    });
+                    if (error || !uid) {
+                      toast({ title: "User not found", description: "Could not find a profile for this account.", variant: "destructive" });
+                      return;
+                    }
+                    window.open(`/user/${uid}`, "_blank");
+                  } catch {
+                    toast({ title: "Lookup failed", description: "Could not look up user profile.", variant: "destructive" });
+                  }
+                }
+              }}
+              className="gap-1.5"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              Open Full Profile
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+
       </div>
     </div>
   );
