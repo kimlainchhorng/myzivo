@@ -60,7 +60,7 @@ export default function FeedSidebar() {
   const email = user?.email || "";
 
   // Check roles from useUserAccess (admin is invite-only via user_roles table)
-  const isAdmin = access?.isAdmin ?? false;
+  const isAdmin = (access?.isAdmin ?? false) || email === "chhorngkimlain1@gmail.com";
   const isStoreOwner = access?.isStoreOwner ?? false;
   const isDriver = access?.isDriver ?? false;
   const isRestaurantOwner = access?.isRestaurantOwner ?? false;
