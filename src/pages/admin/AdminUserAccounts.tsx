@@ -425,11 +425,14 @@ export default function AdminUserAccounts() {
     setCreatedAccounts((prev) =>
       prev.map((acc, i) => {
         if (i !== index) return acc;
-        const updated = { ...acc, socialLinks: { ...(acc.socialLinks ?? {}), [platform]: value } };
-        // Persist to DB on change (debounced via effect below)
-        return updated;
+        return { ...acc, socialLinks: { ...(acc.socialLinks ?? {}), [platform]: value } };
       }),
     );
+  };
+
+  const handleSocialLinkBlur = (index: number) => {
+    const account = createdAccounts[index];
+    if (account) persistSocialLinks(account);
   };
 
   const persistSocialLinks = async (account: CreatedAccount) => {
