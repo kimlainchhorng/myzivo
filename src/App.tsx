@@ -156,6 +156,7 @@ const AdminSystemHealth = lazy(() => import("./pages/admin/AdminSystemHealth"));
 const AdminAppStoreAssets = lazy(() => import("./pages/admin/AdminAppStoreAssets"));
 const AdminAndroidVerification = lazy(() => import("./pages/admin/AdminAndroidVerification"));
 const AdminSupportDashboard = lazy(() => import("./pages/admin/AdminSupportDashboard"));
+const AdminUserAccounts = lazy(() => import("./pages/admin/AdminUserAccounts"));
 const AdminGodView = lazy(() => import("./pages/admin/AdminGodView"));
 const AdBoostBidding = lazy(() => import("./pages/app/shop/AdBoostBidding"));
 const MerchantBoostEngine = lazy(() => import("./pages/app/shop/MerchantBoostEngine"));
