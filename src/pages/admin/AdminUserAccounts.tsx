@@ -566,10 +566,11 @@ export default function AdminUserAccounts() {
                   credText={credText}
                   onCopy={copyToClipboard}
                   onImageUpload={handleImageUpload}
-                  onSocialLinkChange={handleSocialLinkChange}
-                  onRemoveSocialLink={removeSocialLink}
-                  onDelete={handleDeleteAccount}
-                />
+                   onSocialLinkChange={handleSocialLinkChange}
+                   onSocialLinkBlur={handleSocialLinkBlur}
+                   onRemoveSocialLink={removeSocialLink}
+                   onDelete={handleDeleteAccount}
+                 />
               );
             })}
           </div>
