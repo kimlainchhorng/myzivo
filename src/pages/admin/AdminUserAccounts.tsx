@@ -1228,9 +1228,9 @@ function ProfileCard({
 
         {/* ===== Facebook-style Create Post Modal ===== */}
         {showPostModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 backdrop-blur-sm" onClick={() => setShowPostModal(false)}>
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-foreground/50 backdrop-blur-sm" onClick={() => setShowPostModal(false)}>
             <div
-              className="w-full max-w-lg mx-4 rounded-2xl border border-border/40 bg-card shadow-2xl overflow-hidden"
+              className="w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:mx-4 sm:rounded-2xl border-0 sm:border border-border/40 bg-card shadow-2xl overflow-y-auto flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal header */}
