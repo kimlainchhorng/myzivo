@@ -232,6 +232,7 @@ export default function FeedSidebar() {
                   </button>
                 )}
 
+                {isHotelOwner && (
                   <button
                     onClick={() => { setShowSwitch(false); navigate("/hotel/dashboard"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
