@@ -822,7 +822,6 @@ function ProfileCard({
           </div>
         </div>
       </div>
-    </div>
 
      {/* ===== BACK SIDE (Profile Preview — matches user profile page) ===== */}
     <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm flex flex-col">
