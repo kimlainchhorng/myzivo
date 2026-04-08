@@ -1066,7 +1066,10 @@ function ProfileCard({
               <div className="px-5 pb-4">
                 <button
                   type="button"
-                  onClick={() => { handleCreatePost(); setShowPostModal(false); }}
+                  onClick={async () => {
+                    const didPost = await handleCreatePost();
+                    if (didPost) setShowPostModal(false);
+                  }}
                   disabled={isPosting || (!newPostCaption.trim() && !newPostImage)}
                   className="w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-bold disabled:opacity-40 hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 >
