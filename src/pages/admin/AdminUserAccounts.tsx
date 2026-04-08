@@ -157,6 +157,19 @@ function normalizeCreatedAccount(account: Partial<CreatedAccount>): CreatedAccou
   };
 }
 
+async function fileToBase64(file: File) {
+  const arrayBuffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+  let binary = "";
+  const chunkSize = 0x8000;
+
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...Array.from(bytes.subarray(i, i + chunkSize)));
+  }
+
+  return btoa(binary);
+}
+
 function loadStoredCreatedAccounts(): CreatedAccount[] {
   if (typeof window === "undefined") return [];
 
@@ -622,72 +635,129 @@ function ProfileCard({
   const [deleting, setDeleting] = useState(false);
   const [postTab, setPostTab] = useState<"all" | "photos" | "reels">("all");
   const [newPostCaption, setNewPostCaption] = useState("");
-  const [newPostImage, setNewPostImage] = useState<File | null>(null);
-  const [newPostImagePreview, setNewPostImagePreview] = useState<string | null>(null);
+  const [newPostMedia, setNewPostMedia] = useState<File[]>([]);
+  const [newPostPreviews, setNewPostPreviews] = useState<string[]>([]);
+  const [activePreviewIndex, setActivePreviewIndex] = useState(0);
   const [isPosting, setIsPosting] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
-  const postImageRef = useRef<HTMLInputElement>(null);
-  const postCaptionRef = useRef<HTMLTextAreaElement>(null);
+  const postMediaRef = useRef<HTMLInputElement>(null);
+  const previewUrlsRef = useRef<string[]>([]);
   const queryClient = useQueryClient();
 
-  const handlePostImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setNewPostImage(file);
-      setNewPostImagePreview(URL.createObjectURL(file));
+  useEffect(() => {
+    previewUrlsRef.current = newPostPreviews;
+  }, [newPostPreviews]);
+
+  useEffect(() => {
+    return () => {
+      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
+
+  const handlePostMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
+
+    const availableSlots = Math.max(0, 10 - newPostMedia.length);
+    if (availableSlots === 0) {
+      toast({
+        title: "Media limit reached",
+        description: "You can add up to 10 files per post.",
+        variant: "destructive",
+      });
+      e.target.value = "";
+      return;
+    }
+
+    const nextFiles = selectedFiles.slice(0, availableSlots);
+    const nextPreviews = nextFiles.map((file) => URL.createObjectURL(file));
+
+    if (selectedFiles.length > availableSlots) {
+      toast({
+        title: "Only 10 files allowed",
+        description: "Extra files were skipped.",
+      });
+    }
+
+    setNewPostMedia((prev) => [...prev, ...nextFiles]);
+    setNewPostPreviews((prev) => [...prev, ...nextPreviews]);
+
+    if (newPostMedia.length === 0) {
+      setActivePreviewIndex(0);
+    }
+
+    e.target.value = "";
+  };
+
+  const removePostMedia = (index: number) => {
+    const removedPreview = newPostPreviews[index];
+    if (removedPreview) {
+      URL.revokeObjectURL(removedPreview);
+    }
+
+    setNewPostMedia((prev) => prev.filter((_, i) => i !== index));
+    setNewPostPreviews((prev) => prev.filter((_, i) => i !== index));
+    setActivePreviewIndex((current) => {
+      const nextLength = newPostPreviews.length - 1;
+      if (nextLength <= 0) return 0;
+      if (current > index) return current - 1;
+      return Math.min(current, nextLength - 1);
+    });
+  };
+
+  const resetPostComposer = () => {
+    previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    previewUrlsRef.current = [];
+    setNewPostCaption("");
+    setNewPostMedia([]);
+    setNewPostPreviews([]);
+    setActivePreviewIndex(0);
+
+    if (postMediaRef.current) {
+      postMediaRef.current.value = "";
     }
   };
 
   const handleCreatePost = async () => {
-    if (!acc.userId || (!newPostCaption.trim() && !newPostImage)) return false;
+    if (!acc.userId || (!newPostCaption.trim() && newPostMedia.length === 0)) return false;
     setIsPosting(true);
+
     try {
-      let mediaUrl: string | null = null;
-      let mediaType: string | null = null;
+      const files = await Promise.all(
+        newPostMedia.map(async (file) => ({
+          base64: await fileToBase64(file),
+          name: file.name,
+          contentType: file.type || "application/octet-stream",
+        })),
+      );
 
-      if (newPostImage) {
-        const ext = newPostImage.name.split(".").pop() || "jpg";
-        const path = `${acc.userId}/post_${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("post-media")
-          .upload(path, newPostImage, { upsert: true });
-
-        if (uploadError) {
-          toast({ title: "Failed to upload media", description: uploadError.message, variant: "destructive" });
-          return false;
-        }
-
-        const { data: urlData } = supabase.storage.from("post-media").getPublicUrl(path);
-        mediaUrl = urlData.publicUrl;
-        mediaType = newPostImage.type.startsWith("video") ? "video" : "image";
-      }
-
-      const { error: insertError } = await (supabase as any).from("user_posts").insert({
-        user_id: acc.userId,
-        caption: newPostCaption.trim() || null,
-        media_url: mediaUrl,
-        media_type: mediaType,
-        is_published: true,
+      const { data, error } = await supabase.functions.invoke("admin-create-user-post", {
+        body: {
+          userId: acc.userId,
+          caption: newPostCaption.trim() || null,
+          files,
+        },
       });
 
-      if (insertError) {
-        toast({ title: "Failed to post", description: insertError.message, variant: "destructive" });
-        return false;
-      }
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-      setNewPostCaption("");
-      setNewPostImage(null);
-      setNewPostImagePreview(null);
-      queryClient.invalidateQueries({ queryKey: ["admin-user-posts", acc.userId] });
+      resetPostComposer();
+      await queryClient.invalidateQueries({ queryKey: ["admin-user-posts", acc.userId] });
       toast({ title: "Post created", description: `Posted as ${acc.username}` });
       return true;
-    } catch {
-      toast({ title: "Failed to post", variant: "destructive" });
+    } catch (err: any) {
+      toast({
+        title: "Failed to post",
+        description: err.message || "Please try again.",
+        variant: "destructive",
+      });
       return false;
     } finally {
       setIsPosting(false);
     }
   };
+
   const socialLinks = acc.socialLinks ?? {};
   const addedPlatforms = Object.keys(socialLinks);
   const availablePlatforms = SOCIAL_PLATFORMS.filter((platform) => !addedPlatforms.includes(platform.key));
@@ -697,14 +767,18 @@ function ProfileCard({
     queryKey: ["admin-user-posts", acc.userId],
     queryFn: async () => {
       if (!acc.userId) return [];
-      const { data } = await (supabase as any)
+
+      const { data, error } = await (supabase as any)
         .from("user_posts")
         .select("id, media_url, media_type, caption, likes_count, comments_count, created_at")
         .eq("user_id", acc.userId)
         .eq("is_published", true)
         .order("created_at", { ascending: false })
         .limit(6);
-      return (data || []) as Array<{
+
+      if (error) throw error;
+
+      const posts = (data || []) as Array<{
         id: string;
         media_url: string | null;
         media_type: string | null;
@@ -713,6 +787,27 @@ function ProfileCard({
         comments_count: number;
         created_at: string;
       }>;
+
+      if (posts.length === 0) {
+        return [];
+      }
+
+      const { data: mediaRows, error: mediaError } = await (supabase as any)
+        .from("post_media")
+        .select("post_id")
+        .in("post_id", posts.map((post) => post.id));
+
+      if (mediaError) throw mediaError;
+
+      const mediaCountByPostId = new Map<string, number>();
+      (mediaRows || []).forEach((row: { post_id: string }) => {
+        mediaCountByPostId.set(row.post_id, (mediaCountByPostId.get(row.post_id) ?? 0) + 1);
+      });
+
+      return posts.map((post) => ({
+        ...post,
+        mediaCount: Math.max(mediaCountByPostId.get(post.id) ?? 0, post.media_url ? 1 : 0),
+      }));
     },
     enabled: isFlipped && !!acc.userId,
   });
@@ -1098,9 +1193,9 @@ function ProfileCard({
         {/* Post composer trigger — click to open modal */}
         <div
           className="mx-3 mt-3 rounded-xl border border-border/30 bg-card p-3 cursor-pointer hover:bg-muted/30 transition-colors"
-          onClick={() => { setShowPostModal(true); setTimeout(() => postCaptionRef.current?.focus(), 100); }}
+          onClick={() => setShowPostModal(true)}
         >
-          <input ref={postImageRef} type="file" accept="image/*,video/*" className="hidden" onChange={handlePostImageSelect} />
+          <input ref={postMediaRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handlePostMediaSelect} />
           <div className="flex items-center gap-3">
             <div
               className="h-10 w-10 rounded-full shrink-0 flex items-center justify-center text-background text-xs font-bold overflow-hidden border-2 border-primary/20 bg-card"
@@ -1177,28 +1272,66 @@ function ProfileCard({
               {/* Text area */}
               <div className="px-5 py-3">
                 <textarea
-                  ref={postCaptionRef}
                   placeholder={`What's on your mind, ${acc.username.split(/[\s_]/)[0]}?`}
                   value={newPostCaption}
                   onChange={(e) => setNewPostCaption(e.target.value)}
                   className="w-full min-h-[120px] bg-transparent text-foreground text-sm placeholder:text-muted-foreground outline-none resize-none"
+                  autoFocus
                 />
               </div>
 
-              {/* Image preview */}
-              {newPostImagePreview && (
-                <div className="px-5 pb-3">
-                  <div className="relative rounded-xl overflow-hidden border border-border/30">
-                    <img src={newPostImagePreview} alt="" className="w-full max-h-48 object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => { setNewPostImage(null); setNewPostImagePreview(null); }}
-                      className="absolute top-2 right-2 h-7 w-7 rounded-full bg-foreground/70 text-background flex items-center justify-center hover:bg-foreground/90 transition-colors"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </div>
+               {/* Media preview */}
+               {newPostPreviews.length > 0 && (
+                 <div className="px-5 pb-3 space-y-3">
+                   <div className="relative aspect-square overflow-hidden rounded-xl border border-border/30 bg-muted/30">
+                     {newPostMedia[activePreviewIndex]?.type?.startsWith("video") ? (
+                       <video src={newPostPreviews[activePreviewIndex]} className="h-full w-full object-cover" controls muted />
+                     ) : (
+                       <img src={newPostPreviews[activePreviewIndex]} alt="" className="h-full w-full object-cover" />
+                     )}
+
+                     <button
+                       type="button"
+                       onClick={() => removePostMedia(activePreviewIndex)}
+                       className="absolute top-2 left-2 h-7 w-7 rounded-full bg-foreground/70 text-background flex items-center justify-center hover:bg-foreground/90 transition-colors"
+                     >
+                       <X className="h-3.5 w-3.5" />
+                     </button>
+
+                     {newPostPreviews.length > 1 && (
+                       <div className="absolute top-2 right-2 rounded-full bg-foreground/70 px-2 py-1 text-[10px] font-semibold text-background">
+                         {activePreviewIndex + 1}/{newPostPreviews.length}
+                       </div>
+                     )}
+                   </div>
+
+                   <div className="flex gap-2 overflow-x-auto pb-1">
+                     {newPostPreviews.map((preview, previewIndex) => (
+                       <button
+                         key={`${preview}-${previewIndex}`}
+                         type="button"
+                         onClick={() => setActivePreviewIndex(previewIndex)}
+                         className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${previewIndex === activePreviewIndex ? "border-primary ring-1 ring-primary/30" : "border-border/30 opacity-70 hover:opacity-100"}`}
+                       >
+                         {newPostMedia[previewIndex]?.type?.startsWith("video") ? (
+                           <video src={preview} className="h-full w-full object-cover" muted />
+                         ) : (
+                           <img src={preview} alt="" className="h-full w-full object-cover" />
+                         )}
+                       </button>
+                     ))}
+
+                     {newPostMedia.length < 10 && (
+                       <button
+                         type="button"
+                         onClick={() => postMediaRef.current?.click()}
+                         className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-border/40 text-muted-foreground transition-colors hover:bg-muted/30"
+                       >
+                         <Plus className="h-4 w-4" />
+                       </button>
+                     )}
+                   </div>
+                 </div>
               )}
 
               {/* Add to post options */}
@@ -1208,7 +1341,7 @@ function ProfileCard({
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
-                      onClick={() => postImageRef.current?.click()}
+                      onClick={() => postMediaRef.current?.click()}
                       className="h-9 w-9 rounded-full hover:bg-emerald-500/10 flex items-center justify-center transition-colors"
                       title="Photo"
                     >
@@ -1216,7 +1349,7 @@ function ProfileCard({
                     </button>
                     <button
                       type="button"
-                      onClick={() => postImageRef.current?.click()}
+                      onClick={() => postMediaRef.current?.click()}
                       className="h-9 w-9 rounded-full hover:bg-blue-500/10 flex items-center justify-center transition-colors"
                       title="Video"
                     >
@@ -1224,7 +1357,7 @@ function ProfileCard({
                     </button>
                     <button
                       type="button"
-                      onClick={() => postImageRef.current?.click()}
+                      onClick={() => postMediaRef.current?.click()}
                       className="h-9 w-9 rounded-full hover:bg-orange-500/10 flex items-center justify-center transition-colors"
                       title="Camera"
                     >
@@ -1250,7 +1383,7 @@ function ProfileCard({
                     const didPost = await handleCreatePost();
                     if (didPost) setShowPostModal(false);
                   }}
-                  disabled={isPosting || (!newPostCaption.trim() && !newPostImage)}
+                  disabled={isPosting || (!newPostCaption.trim() && newPostMedia.length === 0)}
                   className="w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-bold disabled:opacity-40 hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 >
                   {isPosting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Post"}
@@ -1311,6 +1444,12 @@ function ProfileCard({
                     ) : (
                       <div className="h-full w-full flex items-center justify-center p-2">
                         <p className="text-[10px] text-muted-foreground line-clamp-3 text-center">{post.caption}</p>
+                      </div>
+                    )}
+                    {post.mediaCount > 1 && (
+                      <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-foreground/70 px-1.5 py-0.5 text-[10px] font-semibold text-background">
+                        <ImageIcon className="h-3 w-3" />
+                        {post.mediaCount}
                       </div>
                     )}
                     <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">

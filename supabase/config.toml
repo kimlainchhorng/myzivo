@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.admin-list-created-users]
 verify_jwt = false
+
+[functions.admin-create-user-post]
+verify_jwt = false
