@@ -280,7 +280,8 @@ function ProfileCard({
   const [showLinkForm, setShowLinkForm] = useState(false);
   const [activePlatform, setActivePlatform] = useState<string | null>(null);
 
-  const addedPlatforms = Object.keys(acc.socialLinks);
+  const socialLinks = acc.socialLinks || {};
+  const addedPlatforms = Object.keys(socialLinks);
   const availablePlatforms = SOCIAL_PLATFORMS.filter((p) => !addedPlatforms.includes(p.key));
 
   return (
