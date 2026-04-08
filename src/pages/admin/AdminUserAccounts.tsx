@@ -456,7 +456,7 @@ function ProfileCard({
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [showLinkForm, setShowLinkForm] = useState(false);
-
+  const [editingLink, setEditingLink] = useState<string | null>(null);
   const socialLinks = acc.socialLinks ?? {};
   const addedPlatforms = Object.keys(socialLinks);
   const availablePlatforms = SOCIAL_PLATFORMS.filter((platform) => !addedPlatforms.includes(platform.key));
@@ -524,28 +524,54 @@ function ProfileCard({
             {addedPlatforms.map((key) => {
               const platform = SOCIAL_PLATFORMS.find((item) => item.key === key);
               if (!platform) return null;
+              const linkValue = socialLinks[key] || "";
+              const isEditing = editingLink === key;
 
               return (
                 <div key={key} className="flex items-center gap-2">
-                  <span
-                    className="h-7 w-7 rounded-full flex items-center justify-center text-background text-xs font-bold shrink-0"
-                    style={{ backgroundColor: platform.color }}
-                  >
-                    {platform.icon}
-                  </span>
-                  <Input
-                    value={socialLinks[key] || ""}
-                    onChange={(e) => onSocialLinkChange(index, key, e.target.value)}
-                    placeholder={platform.placeholder}
-                    className="h-8 text-xs"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => onRemoveSocialLink(index, key)}
-                    className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
+                  {isEditing ? (
+                    <>
+                      <span
+                        className="h-7 w-7 rounded-full flex items-center justify-center text-background text-xs font-bold shrink-0"
+                        style={{ backgroundColor: platform.color }}
+                      >
+                        {platform.icon}
+                      </span>
+                      <Input
+                        value={linkValue}
+                        onChange={(e) => onSocialLinkChange(index, key, e.target.value)}
+                        placeholder={platform.placeholder}
+                        className="h-8 text-xs"
+                        autoFocus
+                        onBlur={() => setEditingLink(null)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") setEditingLink(null);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => onRemoveSocialLink(index, key)}
+                        className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEditingLink(key)}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-card border border-border/60 hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                    >
+                      <span
+                        className="h-5 w-5 rounded-full flex items-center justify-center text-background text-[10px] font-bold"
+                        style={{ backgroundColor: platform.color }}
+                      >
+                        {platform.icon}
+                      </span>
+                      {linkValue ? platform.label : `Add ${platform.label}`}
+                      {linkValue && <Check className="h-3 w-3 text-primary" />}
+                    </button>
+                  )}
                 </div>
               );
             })}
