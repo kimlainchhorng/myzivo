@@ -823,9 +823,9 @@ function ProfileCard({
       </div>
 
      {/* ===== BACK SIDE (Profile Preview — matches user profile page) ===== */}
-    <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm flex flex-col">
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto">
+    <div className={`[backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm ${isFlipped ? "" : "hidden"}`}>
+      {/* Content */}
+      <div>
         {/* Your Story */}
         <div className="px-4 pt-3 pb-1">
           <div className="flex flex-col items-start gap-1 w-fit">
