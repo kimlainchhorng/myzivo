@@ -150,6 +150,50 @@ export default function AdminEmployeesPage() {
     onError: (e) => toast.error("Failed: " + e.message),
   });
 
+  // Resend invitation email
+  const resendInvite = useMutation({
+    mutationFn: async (inv: { email: string; role: string }) => {
+      await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "employee-invite",
+          recipientEmail: inv.email,
+          templateData: { email: inv.email, role: inv.role, loginUrl: "https://hizivo.com/auth" },
+        },
+      });
+    },
+    onSuccess: () => toast.success("Invitation resent"),
+    onError: () => toast.error("Failed to resend"),
+  });
+
+  // Delete invitation
+  const deleteInvite = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("admin_invitations").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-invitations"] });
+      toast.success("Invitation deleted");
+    },
+    onError: () => toast.error("Failed to delete invitation"),
+  });
+
+  // Update invitation role
+  const updateInviteRole = useMutation({
+    mutationFn: async ({ id, role }: { id: string; role: string }) => {
+      const { error } = await supabase
+        .from("admin_invitations")
+        .update({ role })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-invitations"] });
+      toast.success("Invitation role updated");
+    },
+    onError: () => toast.error("Failed to update role"),
+  });
+
   // Pending invitations
   const { data: invitations = [] } = useQuery({
     queryKey: ["admin-invitations"],
