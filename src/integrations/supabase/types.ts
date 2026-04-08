@@ -34170,6 +34170,7 @@ export type Database = {
           social_facebook: string | null
           social_instagram: string | null
           social_linkedin: string | null
+          social_links: Json | null
           social_links_visible: boolean | null
           social_snapchat: string | null
           social_telegram: string | null
@@ -34228,6 +34229,7 @@ export type Database = {
           social_facebook?: string | null
           social_instagram?: string | null
           social_linkedin?: string | null
+          social_links?: Json | null
           social_links_visible?: boolean | null
           social_snapchat?: string | null
           social_telegram?: string | null
@@ -34286,6 +34288,7 @@ export type Database = {
           social_facebook?: string | null
           social_instagram?: string | null
           social_linkedin?: string | null
+          social_links?: Json | null
           social_links_visible?: boolean | null
           social_snapchat?: string | null
           social_telegram?: string | null
