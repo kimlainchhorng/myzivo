@@ -687,11 +687,26 @@ function ProfileCard({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => {
-                if (acc.userId) {
+              onClick={async () => {
+              if (acc.userId) {
                   window.open(`/profile/${acc.userId}`, "_blank");
                 } else {
-                  toast({ title: "No user ID available", description: "This account was created before preview support was added. Create a new account to use Preview.", variant: "destructive" });
+                  // Fallback: look up user by email in profiles table
+                  try {
+                    const { data: profile } = await supabase
+                      .from("profiles")
+                      .select("id, user_id")
+                      .eq("email", acc.email)
+                      .maybeSingle();
+                    const uid = profile?.user_id || profile?.id;
+                    if (uid) {
+                      window.open(`/profile/${uid}`, "_blank");
+                    } else {
+                      toast({ title: "User not found", description: "Could not find a profile for this account. The user may need to log in first.", variant: "destructive" });
+                    }
+                  } catch {
+                    toast({ title: "Lookup failed", description: "Could not look up user profile.", variant: "destructive" });
+                  }
                 }
               }}
             >
