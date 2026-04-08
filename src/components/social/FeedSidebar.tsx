@@ -59,6 +59,7 @@ export default function FeedSidebar() {
   const { data: profile } = useUserProfile();
   const { data: access } = useUserAccess(user?.id);
   const [showSwitch, setShowSwitch] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   const avatarUrl = optimizeAvatar(profile?.avatar_url, 80) || profile?.avatar_url || user?.user_metadata?.avatar_url;
   const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
