@@ -202,7 +202,36 @@ export default function FeedSidebar() {
                   </button>
                 )}
 
-                {isHotelOwner && (
+                {isSupport && (
+                  <button
+                    onClick={() => { setShowSwitch(false); navigate("/admin/support"); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Headphones className="h-5 w-5 text-blue-500" />
+                    <span>Support Dashboard</span>
+                  </button>
+                )}
+
+                {isModerator && (
+                  <button
+                    onClick={() => { setShowSwitch(false); navigate("/admin/moderation"); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Eye className="h-5 w-5 text-purple-500" />
+                    <span>Moderator Dashboard</span>
+                  </button>
+                )}
+
+                {isOperations && (
+                  <button
+                    onClick={() => { setShowSwitch(false); navigate("/admin/operations"); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    <Wrench className="h-5 w-5 text-slate-500" />
+                    <span>Operations Dashboard</span>
+                  </button>
+                )}
+
                   <button
                     onClick={() => { setShowSwitch(false); navigate("/hotel/dashboard"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
