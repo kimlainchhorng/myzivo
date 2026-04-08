@@ -324,12 +324,52 @@ export default function AdminEmployeesPage() {
             <CardContent className="p-0">
               <div className="divide-y divide-border">
                 {invitations.map((inv) => (
-                  <div key={inv.id} className="flex items-center justify-between px-4 py-2.5">
-                    <div>
-                      <p className="text-xs font-medium text-foreground">{inv.email}</p>
+                  <div key={inv.id} className="flex items-center justify-between px-4 py-2.5 gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-foreground truncate">{inv.email}</p>
                       <p className="text-[10px] text-muted-foreground capitalize">{inv.role}</p>
                     </div>
-                    <Badge variant="outline" className="text-[10px]">Pending</Badge>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* Update Role */}
+                      <Select
+                        value={inv.role ?? "support"}
+                        onValueChange={(role) => updateInviteRole.mutate({ id: inv.id, role })}
+                      >
+                        <SelectTrigger className="h-7 w-24 text-[10px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STAFF_ROLES.map((r) => (
+                            <SelectItem key={r} value={r} className="capitalize text-xs">{r}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {/* Resend */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        disabled={resendInvite.isPending}
+                        onClick={() => resendInvite.mutate({ email: inv.email, role: inv.role ?? "support" })}
+                        title="Resend invitation"
+                      >
+                        <RefreshCw className={`h-3.5 w-3.5 text-muted-foreground ${resendInvite.isPending ? "animate-spin" : ""}`} />
+                      </Button>
+                      {/* Delete */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => {
+                          if (confirm(`Delete invitation for ${inv.email}?`)) {
+                            deleteInvite.mutate(inv.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                      <Badge variant="outline" className="text-[10px]">Pending</Badge>
+                    </div>
                   </div>
                 ))}
               </div>
