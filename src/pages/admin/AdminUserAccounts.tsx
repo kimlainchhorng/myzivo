@@ -448,14 +448,14 @@ export default function AdminUserAccounts() {
     );
   };
 
-  const persistSocialLinks = useCallback(async (account: CreatedAccount) => {
+  const persistSocialLinks = async (account: CreatedAccount) => {
     if (!account.userId) return;
     const links = account.socialLinks ?? {};
     if (Object.keys(links).length === 0) return;
     await supabase.functions.invoke("admin-update-profile", {
       body: { userId: account.userId, socialLinks: links },
     });
-  }, []);
+  };
 
   const removeSocialLink = (index: number, platform: string) => {
     setCreatedAccounts((prev) =>
