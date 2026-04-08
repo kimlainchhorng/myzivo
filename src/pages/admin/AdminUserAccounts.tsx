@@ -695,6 +695,7 @@ function ProfileCard({
               </Button>
             )}
           </div>
+        </div>
       </div>
     </div>
   );
