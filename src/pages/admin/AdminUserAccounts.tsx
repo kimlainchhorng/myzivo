@@ -691,22 +691,16 @@ function ProfileCard({
                 if (acc.userId) {
                   window.open(`/profile/${acc.userId}`, "_blank");
                 } else {
-                  // Fallback: try signing in with the stored credentials to get user ID
+                  // Fallback: look up user by email via admin RPC
                   try {
-                    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-                      email: acc.email,
-                      password: acc.password,
+                    const { data: uid, error } = await supabase.rpc("admin_lookup_profile_by_email" as any, {
+                      _email: acc.email,
                     });
-                    if (signInError || !signInData.user) {
-                      toast({ title: "Preview unavailable", description: "Could not verify this account. Try creating a new one.", variant: "destructive" });
+                    if (error || !uid) {
+                      toast({ title: "User not found", description: "Could not find a profile for this account. The user may need to log in first.", variant: "destructive" });
                       return;
                     }
-                    const uid = signInData.user.id;
-                    // Sign back out immediately — we only needed the ID
-                    await supabase.auth.signOut();
-                    // Re-sign in as admin (page will reload via auth listener)
                     window.open(`/profile/${uid}`, "_blank");
-                    toast({ title: "Signed out", description: "You were signed out to look up the user. Please sign back in.", variant: "default" });
                   } catch {
                     toast({ title: "Lookup failed", description: "Could not look up user profile.", variant: "destructive" });
                   }
