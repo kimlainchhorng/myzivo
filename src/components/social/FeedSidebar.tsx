@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { 
   Car, UtensilsCrossed, MapPin, Plane, Hotel, CarFront,
-  Package, Compass, ShoppingBag, Heart, 
+  Package, Compass, ShoppingBag, Heart, MessageCircle,
   Users, Bookmark, Clock, Settings, TrendingUp,
   ArrowLeftRight, Shield, Store, LayoutDashboard,
   Handshake, CarTaxiFront, ChefHat, Building2, Briefcase,
