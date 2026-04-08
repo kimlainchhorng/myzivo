@@ -924,9 +924,6 @@ function ProfileCard({
               </button>
             </div>
           ) : null}
-              </button>
-            </div>
-          </div>
           {newPostImagePreview && (
             <div className="relative mt-2 rounded-lg overflow-hidden">
               <img src={newPostImagePreview} alt="" className="w-full max-h-32 object-cover rounded-lg" />
