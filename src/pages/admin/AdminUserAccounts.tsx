@@ -560,15 +560,12 @@ function ProfileCard({
   });
 
   return (
-    <div className="[perspective:1200px]">
+    <div>
       <div
-        className="relative transition-transform duration-700 [transform-style:preserve-3d]"
-        style={{
-          transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-        }}
+        className="relative"
       >
         {/* ===== FRONT SIDE ===== */}
-        <div className={`[backface-visibility:hidden] rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm ${isFlipped ? "hidden" : ""}`}>
+        <div className={`rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm ${isFlipped ? "hidden" : ""}`}>
       <input
         ref={coverInputRef}
         type="file"
@@ -827,7 +824,7 @@ function ProfileCard({
       </div>
 
      {/* ===== BACK SIDE (Profile Preview — matches user profile page) ===== */}
-    <div className={`[backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm ${isFlipped ? "" : "hidden"}`}>
+    <div className={`rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm ${isFlipped ? "" : "hidden"}`}>
       {/* Content */}
       <div>
         {/* Your Story */}
