@@ -473,6 +473,9 @@ function ProfileCard({
   const [showLinkForm, setShowLinkForm] = useState(false);
   const [editingLink, setEditingLink] = useState<string | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [postTab, setPostTab] = useState<"all" | "photos" | "reels">("all");
+  const [editingLink, setEditingLink] = useState<string | null>(null);
+  const [isFlipped, setIsFlipped] = useState(false);
   const socialLinks = acc.socialLinks ?? {};
   const addedPlatforms = Object.keys(socialLinks);
   const availablePlatforms = SOCIAL_PLATFORMS.filter((platform) => !addedPlatforms.includes(platform.key));
