@@ -9,7 +9,8 @@ import zivoLogo from "@/assets/zivo-logo.png";
 import {
   BarChart3, Users, ShoppingBag, Settings, LogOut, Shield,
   ChevronLeft, ChevronDown, Menu, Home, Activity, DollarSign, Plane,
-  Search as SearchIcon, Server, Bell, Store
+  Search as SearchIcon, Server, Bell, Store, Headphones, MessageSquare,
+  AlertTriangle, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -25,7 +26,7 @@ type NavEntry = NavItem | NavGroup;
 
 const isGroup = (entry: NavEntry): entry is NavGroup => "children" in entry;
 
-const navEntries: NavEntry[] = [
+const adminNavEntries: NavEntry[] = [
   { label: "Overview", icon: BarChart3, path: "/admin/analytics" },
   { label: "Users", icon: Users, path: "/admin/users" },
   { label: "Orders", icon: ShoppingBag, path: "/admin/shopping-orders" },
@@ -41,6 +42,12 @@ const navEntries: NavEntry[] = [
   { label: "Employees", icon: Users, path: "/admin/employees" },
   { label: "Pricing", icon: DollarSign, path: "/admin/pricing" },
   { label: "System Health", icon: Activity, path: "/admin/system-health" },
+];
+
+const supportNavEntries: NavEntry[] = [
+  { label: "Support Home", icon: Headphones, path: "/admin/support" },
+  { label: "Conversations", icon: MessageSquare, path: "/admin/support" },
+  { label: "Alerts", icon: AlertTriangle, path: "/admin/support" },
 ];
 
 interface AdminLayoutProps {
@@ -65,7 +72,11 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
     "ZIVO Admin"
   );
 
-  return (
+  // Role-based navigation
+  const navEntries = access?.isAdmin ? adminNavEntries : 
+    access?.isSupport ? supportNavEntries : 
+    adminNavEntries;
+
     <>
       <Helmet>
         <title>{title} — {resolvedBrandLabel}</title>
