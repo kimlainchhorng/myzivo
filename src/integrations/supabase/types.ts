@@ -55377,6 +55377,10 @@ export type Database = {
       }
       driver_mark_arrived: { Args: { p_job_id: string }; Returns: Json }
       driver_start_trip: { Args: { p_job_id: string }; Returns: Json }
+      enqueue_email: {
+        Args: { payload: Json; queue_name: string }
+        Returns: undefined
+      }
       ensure_job_otp: {
         Args: {
           p_digits?: number
