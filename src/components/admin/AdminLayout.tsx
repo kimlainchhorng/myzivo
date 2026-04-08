@@ -4,6 +4,7 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserAccess } from "@/hooks/useUserAccess";
 import zivoLogo from "@/assets/zivo-logo.png";
 import {
   BarChart3, Users, ShoppingBag, Settings, LogOut, Shield,
