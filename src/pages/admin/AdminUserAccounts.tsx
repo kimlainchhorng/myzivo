@@ -829,9 +829,9 @@ function ProfileCard({
                         placeholder={platform.placeholder}
                         className="h-8 text-xs"
                         autoFocus
-                        onBlur={() => setEditingLink(null)}
+                        onBlur={() => { onSocialLinkBlur(index); setEditingLink(null); }}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") setEditingLink(null);
+                          if (e.key === "Enter") { onSocialLinkBlur(index); setEditingLink(null); }
                         }}
                       />
                       <button
