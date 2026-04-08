@@ -607,6 +607,7 @@ function ProfileCard({
   onCopy,
   onImageUpload,
   onSocialLinkChange,
+  onSocialLinkBlur,
   onRemoveSocialLink,
   onDelete,
 }: ProfileCardProps) {
