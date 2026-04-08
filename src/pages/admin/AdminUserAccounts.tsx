@@ -565,7 +565,7 @@ function ProfileCard({
         className="relative transition-transform duration-700 [transform-style:preserve-3d]"
         style={{
           transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-          minHeight: isFlipped ? "600px" : undefined,
+          minHeight: isFlipped ? "820px" : undefined,
         }}
       >
         {/* ===== FRONT SIDE ===== */}
