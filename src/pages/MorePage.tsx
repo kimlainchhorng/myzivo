@@ -13,6 +13,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import SEOHead from "@/components/SEOHead";
+import FeedSidebar from "@/components/social/FeedSidebar";
+import NavBar from "@/components/NavBar";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
@@ -45,71 +47,81 @@ export default function MorePage() {
     <div className="min-h-[100dvh] flex flex-col bg-background safe-area-top safe-area-bottom">
       <SEOHead title="More – ZIVO" description="Quick access to ZIVO settings and features." noIndex />
 
-      {/* Content */}
-      <main className="flex-1 flex flex-col justify-center px-5 pb-28 pt-8">
-        <h2 className="font-bold text-lg mb-4">Quick Access</h2>
+      {/* Desktop NavBar */}
+      <div className="hidden lg:block">
+        <NavBar />
+      </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          {quickLinks.map((link, i) => {
-            const isPartner = link.href === "#partner";
-            const card = (
-              <motion.div
-                key={link.label}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04, duration: 0.3 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={isPartner ? () => setShowPartnerSheet(true) : undefined}
-                className="rounded-2xl bg-card border border-border/40 shadow-sm p-3.5 flex items-center gap-3 touch-manipulation cursor-pointer active:bg-muted/30 transition-colors"
+      <div className="flex-1 lg:flex lg:pt-16">
+        {/* Desktop Sidebar */}
+        <FeedSidebar />
+
+        {/* Content */}
+        <main className="flex-1 flex flex-col justify-center px-5 pb-28 pt-8 lg:pb-8 lg:max-w-3xl lg:mx-auto">
+          <h2 className="font-bold text-lg mb-4">Quick Access</h2>
+
+          <div className="grid grid-cols-2 gap-3">
+            {quickLinks.map((link, i) => {
+              const isPartner = link.href === "#partner";
+              const card = (
+                <motion.div
+                  key={link.label}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04, duration: 0.3 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={isPartner ? () => setShowPartnerSheet(true) : undefined}
+                  className="rounded-2xl bg-card border border-border/40 shadow-sm p-3.5 flex items-center gap-3 touch-manipulation cursor-pointer active:bg-muted/30 transition-colors"
+                >
+                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", link.iconBg)}>
+                    <link.icon className={cn("w-5 h-5", link.iconColor)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm leading-tight truncate">{link.label}</p>
+                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">{link.description}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                </motion.div>
+              );
+
+              if (isPartner) return <Fragment key={link.label}>{card}</Fragment>;
+              return <Link key={link.label} to={link.href} className="contents">{card}</Link>;
+            })}
+          </div>
+
+          {/* Admin Button */}
+          {isAdmin && (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-4">
+              <Link to="/admin" className="contents">
+                <div className="w-full py-3.5 rounded-2xl border border-primary/20 bg-primary/5 text-primary font-bold text-sm touch-manipulation active:scale-[0.98] transition-all shadow-sm flex items-center justify-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  Admin Dashboard
+                </div>
+              </Link>
+            </motion.div>
+          )}
+          {user && (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-6">
+              <button
+                onClick={() => signOut()}
+                className="w-full py-3.5 rounded-2xl border border-border/60 bg-card text-foreground font-bold text-sm touch-manipulation active:scale-[0.98] transition-all shadow-sm"
               >
-                <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", link.iconBg)}>
-                  <link.icon className={cn("w-5 h-5", link.iconColor)} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm leading-tight truncate">{link.label}</p>
-                  <p className="text-[10px] text-muted-foreground truncate mt-0.5">{link.description}</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
-              </motion.div>
-            );
+                Sign out
+              </button>
+            </motion.div>
+          )}
 
-            if (isPartner) return <Fragment key={link.label}>{card}</Fragment>;
-            return <Link key={link.label} to={link.href} className="contents">{card}</Link>;
-          })}
-        </div>
-
-        {/* Admin Button */}
-        {isAdmin && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-4">
-            <Link to="/admin" className="contents">
-              <div className="w-full py-3.5 rounded-2xl border border-primary/20 bg-primary/5 text-primary font-bold text-sm touch-manipulation active:scale-[0.98] transition-all shadow-sm flex items-center justify-center gap-2">
-                <Shield className="w-4 h-4" />
-                Admin Dashboard
-              </div>
-            </Link>
-          </motion.div>
-        )}
-        {user && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-6">
+          {/* Close - mobile only */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} className="mt-3 text-center lg:hidden">
             <button
-              onClick={() => signOut()}
-              className="w-full py-3.5 rounded-2xl border border-border/60 bg-card text-foreground font-bold text-sm touch-manipulation active:scale-[0.98] transition-all shadow-sm"
+              onClick={() => navigate(-1)}
+              className="text-muted-foreground text-sm font-medium touch-manipulation"
             >
-              Sign out
+              Close
             </button>
           </motion.div>
-        )}
-
-        {/* Close */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} className="mt-3 text-center">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-muted-foreground text-sm font-medium touch-manipulation"
-          >
-            Close
-          </button>
-        </motion.div>
-      </main>
+        </main>
+      </div>
 
       {/* Partner Sheet */}
       <Sheet open={showPartnerSheet} onOpenChange={setShowPartnerSheet}>
