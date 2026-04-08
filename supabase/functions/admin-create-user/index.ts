@@ -74,7 +74,12 @@ Deno.serve(async (req) => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { full_name: username, username },
+      user_metadata: {
+        full_name: username,
+        username,
+        created_via: "admin_user_accounts",
+        created_by: caller.id,
+      },
     });
 
     if (error) {

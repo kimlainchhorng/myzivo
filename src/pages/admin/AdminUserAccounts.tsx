@@ -195,6 +195,49 @@ function persistCreatedAccounts(accounts: CreatedAccount[]) {
   }
 }
 
+function toTimestamp(value: string): number {
+  const parsed = new Date(value).getTime();
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function mergeCreatedAccounts(storedAccounts: CreatedAccount[], remoteAccounts: CreatedAccount[]): CreatedAccount[] {
+  const merged = new Map<string, CreatedAccount>();
+
+  remoteAccounts.forEach((account) => {
+    const normalized = normalizeCreatedAccount(account);
+    if (!normalized.email) return;
+    merged.set(normalized.email.toLowerCase(), normalized);
+  });
+
+  storedAccounts.forEach((account) => {
+    const normalized = normalizeCreatedAccount(account);
+    if (!normalized.email) return;
+
+    const key = normalized.email.toLowerCase();
+    const existing = merged.get(key);
+
+    merged.set(
+      key,
+      existing
+        ? {
+            ...existing,
+            ...normalized,
+            userId: normalized.userId || existing.userId,
+            password: normalized.password || existing.password,
+            avatarUrl: normalized.avatarUrl ?? existing.avatarUrl,
+            coverUrl: normalized.coverUrl ?? existing.coverUrl,
+            socialLinks: Object.keys(normalized.socialLinks ?? {}).length
+              ? normalized.socialLinks
+              : existing.socialLinks,
+            createdAt: normalized.createdAt || existing.createdAt,
+          }
+        : normalized,
+    );
+  });
+
+  return Array.from(merged.values()).sort((a, b) => toTimestamp(b.createdAt) - toTimestamp(a.createdAt));
+}
+
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -214,20 +257,52 @@ function readFileAsDataUrl(file: File): Promise<string> {
 
 export default function AdminUserAccounts() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { data: access } = useUserAccess(user?.id);
+  const { user, isLoading: authLoading } = useAuth();
+  const { data: access, isLoading: accessLoading } = useUserAccess(user?.id);
+  const queryClient = useQueryClient();
 
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [createdAccounts, setCreatedAccounts] = useState<CreatedAccount[]>(() => loadStoredCreatedAccounts());
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  const isPrivilegedEmail = user?.email === "chhorngkimlain1@gmail.com";
+
   const isAuthorized =
-    access?.isSupport || access?.isAdmin || user?.email === "chhorngkimlain1@gmail.com";
+    access?.isSupport || access?.isAdmin || isPrivilegedEmail;
+
+  const { data: remoteCreatedAccounts = [] } = useQuery({
+    queryKey: ["admin-created-accounts", user?.id],
+    enabled: !!user && !!isAuthorized,
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("admin-list-created-users");
+
+      if (error) throw error;
+
+      const accounts = Array.isArray(data?.accounts) ? (data.accounts as Partial<CreatedAccount>[]) : [];
+      return accounts.map((account) => normalizeCreatedAccount(account));
+    },
+  });
 
   useEffect(() => {
     persistCreatedAccounts(createdAccounts);
   }, [createdAccounts]);
+
+  useEffect(() => {
+    if (remoteCreatedAccounts.length === 0) return;
+    setCreatedAccounts((prev) => mergeCreatedAccounts(prev, remoteCreatedAccounts));
+  }, [remoteCreatedAccounts]);
+
+  if (authLoading || (!!user && !isPrivilegedEmail && accessLoading)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading accounts...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthorized) {
     return (
@@ -289,6 +364,7 @@ export default function AdminUserAccounts() {
       };
 
       setCreatedAccounts((prev) => [newAccount, ...prev]);
+      queryClient.invalidateQueries({ queryKey: ["admin-created-accounts"] });
       toast({
         title: "Account created!",
         description: `Account "${trimmed}" is ready. Share the credentials below.`,
@@ -407,7 +483,10 @@ export default function AdminUserAccounts() {
             </h2>
             {createdAccounts.map((account, i) => {
               const acc = normalizeCreatedAccount(account);
-              const credText = `Username: ${acc.username}\nEmail: ${acc.email}\nPassword: ${acc.password}`;
+              const hasPassword = Boolean(acc.password);
+              const credText = hasPassword
+                ? `Username: ${acc.username}\nEmail: ${acc.email}\nPassword: ${acc.password}`
+                : `Username: ${acc.username}\nEmail: ${acc.email}`;
               const isCopied = copiedId === `acc-${i}`;
               const initials = acc.username
                 .split(/[\s_]+/)
@@ -424,6 +503,7 @@ export default function AdminUserAccounts() {
                   initials={initials}
                   hue={hue}
                   isCopied={isCopied}
+                  hasPassword={hasPassword}
                   credText={credText}
                   onCopy={copyToClipboard}
                   onImageUpload={handleImageUpload}
@@ -445,6 +525,7 @@ interface ProfileCardProps {
   initials: string;
   hue: number;
   isCopied: boolean;
+  hasPassword: boolean;
   credText: string;
   onCopy: (text: string, id: string) => void;
   onImageUpload: (index: number, type: "avatar" | "cover", file: File) => void;
@@ -458,6 +539,7 @@ function ProfileCard({
   initials,
   hue,
   isCopied,
+  hasPassword,
   credText,
   onCopy,
   onImageUpload,
@@ -794,7 +876,7 @@ function ProfileCard({
 
           <div className="bg-muted/40 rounded-xl p-3 space-y-1 font-mono text-xs text-muted-foreground">
             <p>Email: {acc.email}</p>
-            <p>Password: {acc.password}</p>
+            <p>Password: {acc.password || "Only available right after creation on this device"}</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -812,7 +894,7 @@ function ProfileCard({
               ) : (
                 <>
                   <Copy className="h-3.5 w-3.5 mr-1.5" />
-                  Copy Credentials
+                  {hasPassword ? "Copy Credentials" : "Copy Account Details"}
                 </>
               )}
             </Button>
