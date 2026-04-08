@@ -1,23 +1,41 @@
 /**
  * Admin Layout - Responsive sidebar layout for admin dashboard
  */
-import { ReactNode } from "react";
+/**
+ * Admin Layout - Responsive sidebar layout for admin dashboard
+ */
+import { ReactNode, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import zivoLogo from "@/assets/zivo-logo.png";
 import {
-  BarChart3, Users, ShoppingBag, Settings, LogOut, Shield,
-  ChevronLeft, ChevronDown, Menu, Home, Activity, DollarSign, Plane,
-  Search as SearchIcon, Server, Bell, Store, Headphones, MessageSquare,
-  AlertTriangle, Clock,
+  BarChart3,
+  Users,
+  ShoppingBag,
+  LogOut,
+  ChevronLeft,
+  ChevronDown,
+  Menu,
+  Home,
+  Activity,
+  DollarSign,
+  Plane,
+  Search as SearchIcon,
+  Server,
+  Bell,
+  Store,
+  Headphones,
+  MessageSquare,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import {
-  Collapsible, CollapsibleContent, CollapsibleTrigger,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
 type NavItem = { label: string; icon: any; path: string };
@@ -45,9 +63,9 @@ const adminNavEntries: NavEntry[] = [
 ];
 
 const supportNavEntries: NavEntry[] = [
-  { label: "Support Home", icon: Headphones, path: "/admin/support" },
-  { label: "Conversations", icon: MessageSquare, path: "/admin/support" },
-  { label: "Alerts", icon: AlertTriangle, path: "/admin/support" },
+  { label: "Support Home", icon: Headphones, path: "/admin/support#overview" },
+  { label: "Conversations", icon: MessageSquare, path: "/admin/support#conversations" },
+  { label: "Alerts", icon: AlertTriangle, path: "/admin/support#alerts" },
 ];
 
 interface AdminLayoutProps {
@@ -63,7 +81,6 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Auto-detect brand label based on user role
   const resolvedBrandLabel = brandLabel || (
     access?.isAdmin ? "ZIVO Admin" :
     access?.isSupport ? "ZIVO Support" :
@@ -72,10 +89,27 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
     "ZIVO Admin"
   );
 
-  // Role-based navigation
-  const navEntries = access?.isAdmin ? adminNavEntries : 
-    access?.isSupport ? supportNavEntries : 
+  const navEntries = access?.isAdmin ? adminNavEntries :
+    access?.isSupport ? supportNavEntries :
     adminNavEntries;
+
+  const isPathActive = (path: string) => {
+    const [pathname, hashFragment] = path.split("#");
+
+    if (location.pathname !== pathname) {
+      return false;
+    }
+
+    if (!hashFragment) {
+      return true;
+    }
+
+    if (hashFragment === "overview") {
+      return !location.hash || location.hash === "#overview";
+    }
+
+    return location.hash === `#${hashFragment}`;
+  };
 
   return (
     <>
@@ -85,7 +119,6 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
       </Helmet>
 
       <div className="min-h-screen bg-background flex">
-        {/* Mobile overlay */}
         {sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -93,14 +126,12 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
           />
         )}
 
-        {/* Sidebar */}
         <aside
           className={cn(
             "fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-card border-r border-border flex flex-col transition-transform duration-300",
             sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           )}
         >
-          {/* Logo */}
           <div className="h-16 flex items-center justify-between px-5 border-b border-border">
             <div className="flex items-center gap-2.5">
               <img src={zivoLogo} alt="ZIVO" className="w-8 h-8 rounded-lg object-contain" />
@@ -116,11 +147,10 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
             </Button>
           </div>
 
-          {/* Nav */}
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             {navEntries.map((entry) => {
               if (isGroup(entry)) {
-                const isGroupActive = entry.children.some((c) => location.pathname === c.path);
+                const isGroupActive = entry.children.some((child) => isPathActive(child.path));
                 return (
                   <Collapsible key={entry.label} defaultOpen={isGroupActive}>
                     <CollapsibleTrigger className={cn(
@@ -135,7 +165,7 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pl-4 space-y-0.5 mt-0.5">
                       {entry.children.map((child) => {
-                        const isActive = location.pathname === child.path;
+                        const isActive = isPathActive(child.path);
                         return (
                           <button
                             key={child.path}
@@ -154,8 +184,10 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
                   </Collapsible>
                 );
               }
+
               const item = entry as NavItem;
-              const isActive = location.pathname === item.path;
+              const isActive = isPathActive(item.path);
+
               return (
                 <button
                   key={item.path}
@@ -172,7 +204,6 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
             })}
           </nav>
 
-          {/* Footer */}
           <div className="border-t border-border p-3 space-y-1">
             <button
               onClick={() => navigate("/")}
@@ -190,16 +221,13 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
             </button>
           </div>
 
-          {/* User info */}
           <div className="border-t border-border px-4 py-3">
             <p className="text-xs font-medium text-foreground truncate">{user?.email}</p>
             <p className="text-[10px] text-muted-foreground">Administrator</p>
           </div>
         </aside>
 
-        {/* Main content */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Top bar */}
           <header className="safe-area-top min-h-16 bg-card border-b border-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <Button
@@ -214,7 +242,6 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
             </div>
           </header>
 
-          {/* Page content */}
           <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
             {children}
           </main>

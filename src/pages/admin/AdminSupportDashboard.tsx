@@ -1,8 +1,8 @@
 /**
  * Admin Support Dashboard — For support staff to manage tickets and user issues
  */
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,9 +18,22 @@ import AdminLayout from "@/components/admin/AdminLayout";
 
 export default function AdminSupportDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { data: access } = useUserAccess(user?.id);
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const sectionId = location.hash.slice(1);
+    if (!sectionId) return;
+
+    const target = document.getElementById(sectionId);
+    if (!target) return;
+
+    requestAnimationFrame(() => {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [location.hash]);
 
   const isAuthorized = access?.isSupport || access?.isAdmin || user?.email === "chhorngkimlain1@gmail.com";
 
@@ -95,7 +108,7 @@ export default function AdminSupportDashboard() {
 
   return (
     <AdminLayout title="Support Dashboard" brandLabel="ZIVO Support">
-      <div className="space-y-6">
+      <div id="overview" className="space-y-6 scroll-mt-24">
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat) => (
@@ -124,7 +137,7 @@ export default function AdminSupportDashboard() {
 
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Recent Conversations */}
-          <div className="bg-card rounded-2xl border border-border/40 p-5">
+          <div id="conversations" className="bg-card rounded-2xl border border-border/40 p-5 scroll-mt-24">
             <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-blue-500" />
               Recent AI Conversations
@@ -157,7 +170,7 @@ export default function AdminSupportDashboard() {
           </div>
 
           {/* Security Alerts */}
-          <div className="bg-card rounded-2xl border border-border/40 p-5">
+          <div id="alerts" className="bg-card rounded-2xl border border-border/40 p-5 scroll-mt-24">
             <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-red-500" />
               Open Security Alerts
