@@ -104,6 +104,7 @@ const AudioSpacesPage = lazy(() => import("./pages/AudioSpacesPage"));
 const SmartSearchPage = lazy(() => import("./pages/SmartSearchPage"));
 const NotificationCenterPage = lazy(() => import("./pages/NotificationCenterPage"));
 const ActivityFeedPage = lazy(() => import("./pages/ActivityFeedPage"));
+const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const AdminModerationPage = lazy(() => import("./pages/AdminModerationPage"));
 const AdminLaunchDashboard = lazy(() => import("./pages/admin/AdminLaunchDashboard"));
 const ContentSchedulerPage = lazy(() => import("./pages/ContentSchedulerPage"));
