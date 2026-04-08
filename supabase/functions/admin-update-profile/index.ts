@@ -64,6 +64,15 @@ Deno.serve(async (req) => {
       });
     }
 
+    const normalizedSocialLinks =
+      socialLinks && typeof socialLinks === "object" && !Array.isArray(socialLinks)
+        ? Object.fromEntries(
+            Object.entries(socialLinks as Record<string, unknown>)
+              .filter(([key]) => typeof key === "string")
+              .map(([key, value]) => [key, typeof value === "string" ? value.trim() : ""]),
+          )
+        : null;
+
     // Handle file upload if provided
     let uploadedUrl: string | null = null;
     if (uploadFile && typeof uploadFile === "object") {
@@ -98,34 +107,67 @@ Deno.serve(async (req) => {
       uploadedUrl = publicData?.publicUrl ?? null;
     }
 
+    const socialFieldUpdates: Record<string, string | null> = {};
+    if (normalizedSocialLinks) {
+      const getLink = (key: string) => {
+        const value = normalizedSocialLinks[key];
+        return typeof value === "string" && value.length > 0 ? value : null;
+      };
+
+      socialFieldUpdates.social_facebook = getLink("facebook");
+      socialFieldUpdates.social_instagram = getLink("instagram");
+      socialFieldUpdates.social_tiktok = getLink("tiktok");
+      socialFieldUpdates.social_x = getLink("x");
+      socialFieldUpdates.social_linkedin = getLink("linkedin");
+      socialFieldUpdates.social_telegram = getLink("telegram");
+      socialFieldUpdates.social_snapchat = getLink("snapchat");
+    }
+
     // Build update object
-    const updates: Record<string, unknown> = {};
+    const updates: Record<string, unknown> = {
+      ...socialFieldUpdates,
+    };
+    if (normalizedSocialLinks) updates.social_links = normalizedSocialLinks;
     if (uploadedUrl && body.uploadFile?.bucket === "avatars") updates.avatar_url = uploadedUrl;
     if (uploadedUrl && body.uploadFile?.bucket === "covers") updates.cover_url = uploadedUrl;
     if (typeof avatarUrl === "string") updates.avatar_url = avatarUrl;
     if (typeof coverUrl === "string") updates.cover_url = coverUrl;
-    if (socialLinks && typeof socialLinks === "object") updates.social_links = socialLinks;
 
     if (Object.keys(updates).length > 0) {
-      // Try updating by user_id first, then by id
-      const { error: updateError1 } = await adminClient
-        .from("profiles")
-        .update(updates)
-        .eq("user_id", userId);
-
-      if (updateError1) {
-        const { error: updateError2 } = await adminClient
+      const updateProfile = async (column: "user_id" | "id", payload: Record<string, unknown>) =>
+        adminClient
           .from("profiles")
-          .update(updates)
-          .eq("id", userId);
+          .update(payload)
+          .eq(column, userId);
 
-        if (updateError2) {
-          console.error("[admin-update-profile] update error:", updateError2);
-          return new Response(JSON.stringify({ error: updateError2.message }), {
-            status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+      const runUpdate = async (payload: Record<string, unknown>) => {
+        let { error } = await updateProfile("user_id", payload);
+        if (error) {
+          const fallback = await updateProfile("id", payload);
+          error = fallback.error;
         }
+        return error;
+      };
+
+      let updateError = await runUpdate(updates);
+
+      if (
+        updateError &&
+        "social_links" in updates &&
+        updateError.message.includes("social_links") &&
+        updateError.message.includes("schema cache")
+      ) {
+        const fallbackUpdates = { ...updates };
+        delete fallbackUpdates.social_links;
+        updateError = await runUpdate(fallbackUpdates);
+      }
+
+      if (updateError) {
+        console.error("[admin-update-profile] update error:", updateError);
+        return new Response(JSON.stringify({ error: updateError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
     }
 
