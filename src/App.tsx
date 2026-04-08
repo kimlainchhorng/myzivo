@@ -104,6 +104,7 @@ const AudioSpacesPage = lazy(() => import("./pages/AudioSpacesPage"));
 const SmartSearchPage = lazy(() => import("./pages/SmartSearchPage"));
 const NotificationCenterPage = lazy(() => import("./pages/NotificationCenterPage"));
 const ActivityFeedPage = lazy(() => import("./pages/ActivityFeedPage"));
+const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const AdminModerationPage = lazy(() => import("./pages/AdminModerationPage"));
 const AdminLaunchDashboard = lazy(() => import("./pages/admin/AdminLaunchDashboard"));
 const ContentSchedulerPage = lazy(() => import("./pages/ContentSchedulerPage"));
@@ -763,6 +764,7 @@ const App = () => (
                 <Route path="/legal/social-media-policy" element={<SocialMediaPolicy />} />
                 <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
                 <Route path="/legal/data-retention" element={<DataRetentionPolicy />} />
+                <Route path="/unsubscribe" element={<UnsubscribePage />} />
                 <Route path="/legal/dmca" element={<DMCACopyrightPolicy />} />
                 <Route path="/legal/dispute-resolution" element={<DisputeResolution />} />
                 <Route path="/legal/limitation-of-liability" element={<LimitationOfLiability />} />

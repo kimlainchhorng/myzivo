@@ -84,14 +84,16 @@ export default function AdminEmployeesPage() {
     onError: (e) => toast.error("Failed: " + e.message),
   });
 
-  // Send invite — try to assign role directly if user exists
+  // Send invite — assign role if user exists, otherwise save pending + send email
   const sendInvite = useMutation({
     mutationFn: async ({ email, role }: { email: string; role: string }) => {
+      const normalizedEmail = email.trim().toLowerCase();
+      
       // Look up user by email in profiles
       const { data: profile } = await supabase
         .from("profiles")
         .select("user_id")
-        .eq("email", email.trim().toLowerCase())
+        .eq("email", normalizedEmail)
         .maybeSingle();
 
       if (profile?.user_id) {
@@ -104,23 +106,44 @@ export default function AdminEmployeesPage() {
           if (error.code === "23505") throw new Error("User already has this role");
           throw error;
         }
-        return { assigned: true };
       } else {
         // User not found — save as pending invitation
         const { error } = await supabase.from("admin_invitations").insert({
-          email: email.trim().toLowerCase(),
+          email: normalizedEmail,
           role,
           status: "pending",
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         });
         if (error) throw error;
-        return { assigned: false };
       }
+
+      // Send invite email regardless
+      try {
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "employee-invite",
+            recipientEmail: normalizedEmail,
+            templateData: {
+              email: normalizedEmail,
+              role,
+              loginUrl: "https://hizivo.com/auth",
+            },
+          },
+        });
+      } catch (emailErr) {
+        console.warn("Email send failed (role still assigned):", emailErr);
+      }
+
+      return { assigned: !!profile?.user_id };
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["admin-employees"] });
       queryClient.invalidateQueries({ queryKey: ["admin-invitations"] });
-      toast.success(result?.assigned ? "Role assigned successfully" : "Invitation saved (user not found yet)");
+      toast.success(
+        result?.assigned
+          ? "Role assigned & invitation email sent"
+          : "Invitation email sent (role will be assigned on sign-up)"
+      );
       setInviteOpen(false);
       setInviteEmail("");
     },
