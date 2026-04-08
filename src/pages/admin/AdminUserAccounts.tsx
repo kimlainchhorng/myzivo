@@ -36,6 +36,71 @@ interface CreatedAccount {
   socialLinks: Record<string, string>;
 }
 
+/* Inline SVG icons for platforms not in Lucide */
+const ThreadsIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.27 3.238-.928 1.135-2.256 1.738-3.95 1.795h-.113c-1.234-.04-2.27-.465-2.995-1.232-.645-.683-1.004-1.578-1.037-2.587-.066-2.08 1.462-3.564 3.87-3.756.894-.07 1.727-.03 2.482.118-.094-.528-.266-.98-.516-1.353-.443-.662-1.132-1.006-2.05-1.024h-.063c-.72.013-1.32.237-1.837.684l-1.352-1.56c.79-.684 1.81-1.074 2.95-1.128l.127-.003c1.524.022 2.71.592 3.527 1.696.72.97 1.122 2.252 1.205 3.834l.01.267c.917.456 1.68 1.1 2.25 1.912.87 1.239 1.176 2.757.886 4.392-.398 2.243-1.725 3.986-3.834 5.037C17.16 23.436 14.862 23.98 12.186 24zm-.09-9.792c-1.458.112-2.248.783-2.218 1.755.014.48.15.853.407 1.107.36.355.883.539 1.55.56h.076c1.07-.038 1.878-.396 2.474-1.095.326-.382.58-.874.774-1.484-.67-.186-1.387-.296-2.122-.328l-.138-.005-.003-.51z" />
+  </svg>
+);
+
+const TikTokIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.73a8.19 8.19 0 004.77 1.53V6.79a4.85 4.85 0 01-1-.1z" />
+  </svg>
+);
+
+const XIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
+
+type SocialPlatform = {
+  key: string;
+  label: string;
+  icon: React.ReactNode;
+  color: string;
+  placeholder: string;
+};
+
+const SOCIAL_PLATFORMS: SocialPlatform[] = [
+  {
+    key: "facebook",
+    label: "Facebook",
+    icon: <Facebook className="h-3.5 w-3.5" />,
+    color: "hsl(221 83% 53%)",
+    placeholder: "https://facebook.com/username",
+  },
+  {
+    key: "instagram",
+    label: "Instagram",
+    icon: <Instagram className="h-3.5 w-3.5" />,
+    color: "hsl(339 78% 55%)",
+    placeholder: "https://instagram.com/username",
+  },
+  {
+    key: "threads",
+    label: "Threads",
+    icon: <ThreadsIcon className="h-3.5 w-3.5" />,
+    color: "hsl(0 0% 10%)",
+    placeholder: "https://threads.net/@username",
+  },
+  {
+    key: "tiktok",
+    label: "TikTok",
+    icon: <TikTokIcon className="h-3.5 w-3.5" />,
+    color: "hsl(0 0% 10%)",
+    placeholder: "https://tiktok.com/@username",
+  },
+  {
+    key: "x",
+    label: "X",
+    icon: <XIcon className="h-3.5 w-3.5" />,
+    color: "hsl(0 0% 10%)",
+    placeholder: "https://x.com/username",
+  },
+];
+
 const CREATED_ACCOUNTS_STORAGE_KEY = "admin-user-accounts-session";
 
 const SOCIAL_PLATFORMS = [
