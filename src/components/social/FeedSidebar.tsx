@@ -308,6 +308,26 @@ export default function FeedSidebar() {
           </div>
         </SheetContent>
       </Sheet>
+      {/* Chat Slide Panel */}
+      <Sheet open={showChat} onOpenChange={setShowChat}>
+        <SheetContent side="left" className="w-[400px] sm:w-[440px] p-0 flex flex-col">
+          <SheetHeader className="p-4 border-b border-border/30 flex-row items-center justify-between">
+            <SheetTitle className="text-base flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-sky-500" />
+              Chat
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto">
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            }>
+              <ChatHubPage />
+            </Suspense>
+          </div>
+        </SheetContent>
+      </Sheet>
     </aside>
   );
 }
