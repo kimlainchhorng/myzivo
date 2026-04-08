@@ -361,7 +361,7 @@ function ProfileCard({
                     {platform.icon}
                   </span>
                   <Input
-                    value={acc.socialLinks[key] || ""}
+                    value={socialLinks[key] || ""}
                     onChange={(e) => onSocialLinkChange(index, key, e.target.value)}
                     placeholder={platform.placeholder}
                     className="h-8 text-xs"
