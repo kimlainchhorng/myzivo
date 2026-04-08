@@ -72,7 +72,11 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
     "ZIVO Admin"
   );
 
-  return (
+  // Role-based navigation
+  const navEntries = access?.isAdmin ? adminNavEntries : 
+    access?.isSupport ? supportNavEntries : 
+    adminNavEntries;
+
     <>
       <Helmet>
         <title>{title} — {resolvedBrandLabel}</title>
