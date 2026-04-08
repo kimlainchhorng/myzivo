@@ -605,8 +605,8 @@ function ProfileCard({
         </div>
       </div>
 
-      {/* Centered avatar + name + stats */}
-      <div className="flex flex-col items-center -mt-10 pb-4 px-4">
+      {/* Left-aligned avatar + name + stats */}
+      <div className="flex flex-col items-start -mt-10 pb-4 px-4">
         <div
           className="h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-background text-xl font-bold shadow-md relative group cursor-pointer overflow-hidden bg-card"
           onClick={() => avatarInputRef.current?.click()}
@@ -857,8 +857,8 @@ function ProfileCard({
             }}
           />
 
-          {/* Centered avatar + name */}
-          <div className="flex flex-col items-center -mt-10 pb-4 px-4 relative z-10">
+          {/* Left-aligned avatar + name */}
+          <div className="flex flex-col items-start -mt-10 pb-4 px-4 relative z-10">
             <div
               className="h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-background text-xl font-bold shadow-md overflow-hidden bg-card"
               style={{
