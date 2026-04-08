@@ -824,7 +824,7 @@ function ProfileCard({
       </div>
 
      {/* ===== BACK SIDE (Profile Preview — matches user profile page) ===== */}
-    <div className={`[backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm ${isFlipped ? "" : "hidden"}`}>
+    <div className={`rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm ${isFlipped ? "" : "hidden"}`}>
       {/* Content */}
       <div>
         {/* Your Story */}
