@@ -103,43 +103,6 @@ const SOCIAL_PLATFORMS: SocialPlatform[] = [
 
 const CREATED_ACCOUNTS_STORAGE_KEY = "admin-user-accounts-session";
 
-const SOCIAL_PLATFORMS = [
-  {
-    key: "facebook",
-    label: "Facebook",
-    icon: "f",
-    color: "hsl(221 83% 53%)",
-    placeholder: "https://facebook.com/username",
-  },
-  {
-    key: "instagram",
-    label: "Instagram",
-    icon: "📷",
-    color: "hsl(339 78% 55%)",
-    placeholder: "https://instagram.com/username",
-  },
-  {
-    key: "threads",
-    label: "Threads",
-    icon: "@",
-    color: "hsl(0 0% 10%)",
-    placeholder: "https://threads.net/@username",
-  },
-  {
-    key: "tiktok",
-    label: "TikTok",
-    icon: "♪",
-    color: "hsl(0 0% 10%)",
-    placeholder: "https://tiktok.com/@username",
-  },
-  {
-    key: "x",
-    label: "X",
-    icon: "𝕏",
-    color: "hsl(0 0% 10%)",
-    placeholder: "https://x.com/username",
-  },
-] as const;
 
 function generatePassword() {
   const lower = "abcdefghijkmnpqrstuvwxyz";
