@@ -74,10 +74,25 @@ const SOCIAL_PLATFORMS = [
 ] as const;
 
 function generatePassword() {
-  const chars = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$";
+  const lower = "abcdefghijkmnpqrstuvwxyz";
+  const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const digits = "23456789";
+  const special = "!@#$";
+  const all = lower + upper + digits + special;
+
+  // Guarantee at least one from each required set
   let pw = "";
-  for (let i = 0; i < 12; i++) pw += chars[Math.floor(Math.random() * chars.length)];
-  return pw;
+  pw += lower[Math.floor(Math.random() * lower.length)];
+  pw += upper[Math.floor(Math.random() * upper.length)];
+  pw += digits[Math.floor(Math.random() * digits.length)];
+  pw += special[Math.floor(Math.random() * special.length)];
+
+  for (let i = pw.length; i < 14; i++) {
+    pw += all[Math.floor(Math.random() * all.length)];
+  }
+
+  // Shuffle
+  return pw.split("").sort(() => Math.random() - 0.5).join("");
 }
 
 function normalizeCreatedAccount(account: Partial<CreatedAccount>): CreatedAccount {
