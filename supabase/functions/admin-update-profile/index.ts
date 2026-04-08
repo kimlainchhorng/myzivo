@@ -127,22 +127,39 @@ Deno.serve(async (req) => {
     const updates: Record<string, unknown> = {
       ...socialFieldUpdates,
     };
+    if (normalizedSocialLinks) updates.social_links = normalizedSocialLinks;
     if (uploadedUrl && body.uploadFile?.bucket === "avatars") updates.avatar_url = uploadedUrl;
     if (uploadedUrl && body.uploadFile?.bucket === "covers") updates.cover_url = uploadedUrl;
     if (typeof avatarUrl === "string") updates.avatar_url = avatarUrl;
     if (typeof coverUrl === "string") updates.cover_url = coverUrl;
 
     if (Object.keys(updates).length > 0) {
-      const updateProfile = async (column: "user_id" | "id") =>
+      const updateProfile = async (column: "user_id" | "id", payload: Record<string, unknown>) =>
         adminClient
           .from("profiles")
-          .update(updates)
+          .update(payload)
           .eq(column, userId);
 
-      let { error: updateError } = await updateProfile("user_id");
-      if (updateError) {
-        const fallback = await updateProfile("id");
-        updateError = fallback.error;
+      const runUpdate = async (payload: Record<string, unknown>) => {
+        let { error } = await updateProfile("user_id", payload);
+        if (error) {
+          const fallback = await updateProfile("id", payload);
+          error = fallback.error;
+        }
+        return error;
+      };
+
+      let updateError = await runUpdate(updates);
+
+      if (
+        updateError &&
+        "social_links" in updates &&
+        updateError.message.includes("social_links") &&
+        updateError.message.includes("schema cache")
+      ) {
+        const fallbackUpdates = { ...updates };
+        delete fallbackUpdates.social_links;
+        updateError = await runUpdate(fallbackUpdates);
       }
 
       if (updateError) {

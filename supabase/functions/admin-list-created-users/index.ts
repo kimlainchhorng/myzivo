@@ -100,25 +100,51 @@ Deno.serve(async (req) => {
       .slice(0, 100);
 
     const userIds = uniqueUsers.map((user) => user.id);
-    const { data: profiles } = userIds.length
-      ? await adminClient
-          .from("profiles")
-          .select("user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram")
-          .in("user_id", userIds)
-      : {
-          data: [] as Array<{
-            user_id: string;
-            avatar_url: string | null;
-            cover_url: string | null;
-            social_facebook: string | null;
-            social_instagram: string | null;
-            social_tiktok: string | null;
-            social_snapchat: string | null;
-            social_x: string | null;
-            social_linkedin: string | null;
-            social_telegram: string | null;
-          }>,
-        };
+    let profiles: Array<{
+      user_id: string;
+      avatar_url: string | null;
+      cover_url: string | null;
+      social_facebook: string | null;
+      social_instagram: string | null;
+      social_tiktok: string | null;
+      social_snapchat: string | null;
+      social_x: string | null;
+      social_linkedin: string | null;
+      social_telegram: string | null;
+      social_links: Record<string, unknown> | null;
+    }> = [];
+
+    if (userIds.length) {
+      const primaryQuery = await adminClient
+        .from("profiles")
+        .select("user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram, social_links")
+        .in("user_id", userIds);
+
+      if (primaryQuery.error) {
+        if (
+          primaryQuery.error.message.includes("social_links") &&
+          primaryQuery.error.message.includes("schema cache")
+        ) {
+          const fallbackQuery = await adminClient
+            .from("profiles")
+            .select("user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram")
+            .in("user_id", userIds);
+
+          if (fallbackQuery.error) {
+            throw fallbackQuery.error;
+          }
+
+          profiles = (fallbackQuery.data ?? []).map((profile) => ({
+            ...profile,
+            social_links: null,
+          }));
+        } else {
+          throw primaryQuery.error;
+        }
+      } else {
+        profiles = (primaryQuery.data ?? []) as typeof profiles;
+      }
+    }
 
     const profileMap = new Map(
       (profiles ?? []).map((profile) => [profile.user_id, profile]),
@@ -129,6 +155,7 @@ Deno.serve(async (req) => {
       const profile = profileMap.get(user.id);
       const emailPrefix = user.email.split("@")[0]?.split("+")[0] ?? "user";
       const socialLinks = {
+        ...(profile?.social_links && typeof profile.social_links === "object" ? profile.social_links : {}),
         ...(profile?.social_facebook ? { facebook: profile.social_facebook } : {}),
         ...(profile?.social_instagram ? { instagram: profile.social_instagram } : {}),
         ...(profile?.social_tiktok ? { tiktok: profile.social_tiktok } : {}),
