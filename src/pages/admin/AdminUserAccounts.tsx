@@ -608,15 +608,19 @@ function ProfileCard({
       {/* Centered avatar + name + stats */}
       <div className="flex flex-col items-center -mt-10 pb-4 px-4">
         <div
-          className="h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-background text-xl font-bold shadow-md relative group cursor-pointer overflow-hidden"
+          className="h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-background text-xl font-bold shadow-md relative group cursor-pointer overflow-hidden bg-card"
           onClick={() => avatarInputRef.current?.click()}
           style={{
             background: acc.avatarUrl
-              ? `url(${acc.avatarUrl}) center/cover no-repeat`
+              ? "hsl(var(--card))"
               : `linear-gradient(145deg, hsl(${hue} 65% 50%), hsl(${(hue + 30) % 360} 55% 40%))`,
           }}
         >
-          {!acc.avatarUrl && initials}
+          {acc.avatarUrl ? (
+            <img src={acc.avatarUrl} alt={`${acc.username} avatar`} className="h-full w-full object-cover object-top" loading="lazy" />
+          ) : (
+            initials
+          )}
           <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-colors flex items-center justify-center rounded-full">
             <Camera className="h-4 w-4 text-background opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
@@ -854,16 +858,25 @@ function ProfileCard({
           />
 
           {/* Centered avatar + name */}
-          <div className="flex flex-col items-center -mt-10 pb-4 px-4">
+          <div className="flex flex-col items-center -mt-10 pb-4 px-4 relative z-10">
             <div
-              className="h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-background text-xl font-bold shadow-md overflow-hidden"
+              className="h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-background text-xl font-bold shadow-md overflow-hidden bg-card"
               style={{
                 background: acc.avatarUrl
-                  ? `url(${acc.avatarUrl}) center/cover no-repeat`
+                  ? "hsl(var(--card))"
                   : `linear-gradient(145deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))`,
               }}
             >
-              {!acc.avatarUrl && initials}
+              {acc.avatarUrl ? (
+                <img
+                  src={acc.avatarUrl}
+                  alt={`${acc.username} avatar`}
+                  className="h-full w-full object-cover object-top"
+                  loading="lazy"
+                />
+              ) : (
+                initials
+              )}
             </div>
 
             <h3 className="text-base font-bold text-foreground mt-2">{acc.username}</h3>
@@ -895,14 +908,23 @@ function ProfileCard({
           <input ref={postImageRef} type="file" accept="image/*,video/*" className="hidden" onChange={handlePostImageSelect} />
           <div className="flex items-center gap-3">
             <div
-              className="h-10 w-10 rounded-full shrink-0 flex items-center justify-center text-background text-xs font-bold overflow-hidden border-2 border-primary/20"
+              className="h-10 w-10 rounded-full shrink-0 flex items-center justify-center text-background text-xs font-bold overflow-hidden border-2 border-primary/20 bg-card"
               style={{
                 background: acc.avatarUrl
-                  ? `url(${acc.avatarUrl}) center/cover no-repeat`
+                  ? "hsl(var(--card))"
                   : `linear-gradient(145deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))`,
               }}
             >
-              {!acc.avatarUrl && initials}
+              {acc.avatarUrl ? (
+                <img
+                  src={acc.avatarUrl}
+                  alt={`${acc.username} avatar`}
+                  className="h-full w-full object-cover object-top"
+                  loading="lazy"
+                />
+              ) : (
+                initials
+              )}
             </div>
             <input
               type="text"
