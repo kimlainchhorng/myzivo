@@ -169,46 +169,76 @@ export default function AdminUserAccounts() {
           </form>
         </div>
 
-        {/* Recently Created */}
+        {/* Recently Created — Profile Cards */}
         {createdAccounts.length > 0 && (
-          <div className="bg-card rounded-2xl border border-border/40 p-6">
-            <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+          <div className="space-y-6">
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
               Created Accounts — Save these credentials!
             </h2>
-            <div className="space-y-4">
-              {createdAccounts.map((acc, i) => {
-                const credText = `Username: ${acc.username}\nEmail: ${acc.email}\nPassword: ${acc.password}`;
-                const isCopied = copiedId === `acc-${i}`;
-                return (
+            {createdAccounts.map((acc, i) => {
+              const credText = `Username: ${acc.username}\nEmail: ${acc.email}\nPassword: ${acc.password}`;
+              const isCopied = copiedId === `acc-${i}`;
+              const initials = acc.username
+                .split(/[\s_]+/)
+                .map((w) => w[0]?.toUpperCase())
+                .join("")
+                .slice(0, 2);
+              const hue = acc.username.split("").reduce((s, c) => s + c.charCodeAt(0), 0) % 360;
+
+              return (
+                <div
+                  key={i}
+                  className="rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm"
+                >
+                  {/* Cover */}
                   <div
-                    key={i}
-                    className="p-4 rounded-xl bg-muted/30 border border-border/30 space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-foreground">{acc.username}</span>
-                      <span className="text-[10px] text-muted-foreground">{acc.createdAt}</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground space-y-0.5 font-mono">
-                      <p>Email: {acc.email}</p>
-                      <p>Password: {acc.password}</p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-1"
-                      onClick={() => copyToClipboard(credText, `acc-${i}`)}
+                    className="h-28 w-full"
+                    style={{
+                      background: `linear-gradient(135deg, hsl(${hue}, 70%, 55%), hsl(${(hue + 40) % 360}, 60%, 45%))`,
+                    }}
+                  />
+
+                  {/* Profile section */}
+                  <div className="px-5 pb-5 -mt-10">
+                    {/* Avatar */}
+                    <div
+                      className="h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-white text-xl font-bold shadow-md"
+                      style={{
+                        background: `linear-gradient(145deg, hsl(${hue}, 65%, 50%), hsl(${(hue + 30) % 360}, 55%, 40%))`,
+                      }}
                     >
-                      {isCopied ? (
-                        <><Check className="h-3.5 w-3.5 mr-1.5" /> Copied</>
-                      ) : (
-                        <><Copy className="h-3.5 w-3.5 mr-1.5" /> Copy Credentials</>
-                      )}
-                    </Button>
+                      {initials}
+                    </div>
+
+                    <div className="mt-3 space-y-3">
+                      <div>
+                        <h3 className="text-lg font-bold text-foreground">{acc.username}</h3>
+                        <p className="text-xs text-muted-foreground">Created {acc.createdAt}</p>
+                      </div>
+
+                      {/* Credentials */}
+                      <div className="bg-muted/40 rounded-xl p-3 space-y-1 font-mono text-xs text-muted-foreground">
+                        <p>Email: {acc.email}</p>
+                        <p>Password: {acc.password}</p>
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(credText, `acc-${i}`)}
+                      >
+                        {isCopied ? (
+                          <><Check className="h-3.5 w-3.5 mr-1.5" /> Copied</>
+                        ) : (
+                          <><Copy className="h-3.5 w-3.5 mr-1.5" /> Copy Credentials</>
+                        )}
+                      </Button>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
