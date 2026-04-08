@@ -28,7 +28,6 @@ import {
 const NAV_ITEMS = [
   { label: "Rides", icon: Car, path: "/rides", color: "text-emerald-500" },
   { label: "Eats", icon: UtensilsCrossed, path: "/eats", color: "text-orange-500" },
-  { label: "Chat", icon: MessageCircle, path: "/chat", color: "text-sky-500" },
   { label: "Map", icon: MapPin, path: "/map", color: "text-red-500" },
 ];
 
@@ -97,7 +96,16 @@ export default function FeedSidebar() {
         )}
 
         {/* Main nav */}
-        <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-2 pb-1">Navigate</p>
+        <div className="flex items-center justify-between px-3 pt-2 pb-1">
+          <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Navigate</p>
+          <button
+            onClick={() => navigate("/chat")}
+            className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-primary/10 transition-colors group"
+            title="Chat"
+          >
+            <MessageCircle className="h-4.5 w-4.5 text-sky-500 group-hover:text-primary transition-colors" />
+          </button>
+        </div>
         {NAV_ITEMS.map((item) => (
           <button
             key={item.label}
