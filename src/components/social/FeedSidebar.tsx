@@ -66,8 +66,11 @@ export default function FeedSidebar() {
   const isDriver = access?.isDriver ?? false;
   const isRestaurantOwner = access?.isRestaurantOwner ?? false;
   const isHotelOwner = access?.isHotelOwner ?? false;
+  const isSupport = access?.isSupport ?? false;
+  const isModerator = access?.isModerator ?? false;
+  const isOperations = access?.isOperations ?? false;
 
-  const hasDashboard = isAdmin || isStoreOwner || isDriver || isRestaurantOwner || isHotelOwner;
+  const hasDashboard = isAdmin || isStoreOwner || isDriver || isRestaurantOwner || isHotelOwner || isSupport || isModerator || isOperations;
 
   return (
     <aside className="hidden lg:flex flex-col w-60 shrink-0 sticky top-[4.5rem] h-[calc(100vh-4.5rem)] overflow-y-auto border-r border-border/30 bg-card/30 backdrop-blur-sm">
