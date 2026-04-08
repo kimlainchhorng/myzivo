@@ -688,7 +688,7 @@ function ProfileCard({
               variant="outline"
               size="sm"
               onClick={async () => {
-                if (acc.userId) {
+              if (acc.userId) {
                   window.open(`/profile/${acc.userId}`, "_blank");
                 } else {
                   // Fallback: look up user by email in profiles table
@@ -700,10 +700,6 @@ function ProfileCard({
                       .maybeSingle();
                     const uid = profile?.user_id || profile?.id;
                     if (uid) {
-                      // Cache it for next time
-                      setCreatedAccounts((prev) =>
-                        prev.map((a) => a.email === acc.email ? { ...a, userId: uid } : a)
-                      );
                       window.open(`/profile/${uid}`, "_blank");
                     } else {
                       toast({ title: "User not found", description: "Could not find a profile for this account. The user may need to log in first.", variant: "destructive" });
