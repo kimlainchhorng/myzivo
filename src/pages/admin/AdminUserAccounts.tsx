@@ -556,6 +556,39 @@ function ProfileCard({
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </>
+                  ) : linkValue ? (
+                    <div className="flex items-center gap-1.5">
+                      <a
+                        href={linkValue.startsWith("http") ? linkValue : `https://${linkValue}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-card border border-border/60 hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                      >
+                        <span
+                          className="h-5 w-5 rounded-full flex items-center justify-center text-background text-[10px] font-bold"
+                          style={{ backgroundColor: platform.color }}
+                        >
+                          {platform.icon}
+                        </span>
+                        {platform.label}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setEditingLink(key)}
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        title="Edit link"
+                      >
+                        <Link2 className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onRemoveSocialLink(index, key)}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        title="Remove"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
                   ) : (
                     <button
                       type="button"
@@ -568,8 +601,7 @@ function ProfileCard({
                       >
                         {platform.icon}
                       </span>
-                      {linkValue ? platform.label : `Add ${platform.label}`}
-                      {linkValue && <Check className="h-3 w-3 text-primary" />}
+                      Add {platform.label}
                     </button>
                   )}
                 </div>
