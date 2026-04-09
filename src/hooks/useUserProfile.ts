@@ -14,6 +14,7 @@ export type UserProfile = {
   cover_url: string | null;
   cover_position: number | null;
   status: string | null;
+  bio: string | null;
   // Social links
   social_facebook: string | null;
   social_instagram: string | null;
@@ -50,7 +51,7 @@ export const useUserProfile = () => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as UserProfile | null;
+      return data as unknown as UserProfile | null;
     },
     enabled: !!user?.id,
   });
@@ -61,7 +62,7 @@ export const useUpdateUserProfile = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (updates: Partial<Pick<UserProfile, "full_name" | "phone" | "avatar_url" | "cover_url" | "cover_position" | "comment_control" | "hide_like_counts" | "allow_mentions" | "allow_sharing" | "allow_friend_requests" | "hide_from_drivers" | "profile_visibility" | "social_facebook" | "social_instagram" | "social_tiktok" | "social_snapchat" | "social_x" | "social_linkedin" | "social_telegram" | "social_links_visible">>) => {
+    mutationFn: async (updates: Partial<Pick<UserProfile, "full_name" | "phone" | "avatar_url" | "cover_url" | "cover_position" | "bio" | "comment_control" | "hide_like_counts" | "allow_mentions" | "allow_sharing" | "allow_friend_requests" | "hide_from_drivers" | "profile_visibility" | "social_facebook" | "social_instagram" | "social_tiktok" | "social_snapchat" | "social_x" | "social_linkedin" | "social_telegram" | "social_links_visible">>) => {
       if (!user?.id) throw new Error("Not authenticated");
 
       const { data: existing, error: existingError } = await supabase
