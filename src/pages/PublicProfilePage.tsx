@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import CommentsSheet from "@/components/social/CommentsSheet";
+import ReelThumbnail from "@/components/social/ReelThumbnail";
 import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolveSharedOrigins";
 import { toUserPostInteractionId } from "@/lib/social/postInteraction";
 
@@ -879,18 +880,24 @@ export default function PublicProfilePage() {
 
                           {/* Media */}
                           {post.media_url && (
-                            <div className="relative w-full aspect-square bg-muted overflow-hidden" onClick={() => setSelectedPost(post)}>
+                            <div
+                              className={`relative w-full bg-muted overflow-hidden ${post.media_type === "video" ? "flex justify-center" : ""}`}
+                              onClick={() => {
+                                if (post.media_type === "video") {
+                                  navigate(`/reels/${post.id}`);
+                                } else {
+                                  setSelectedPost(post);
+                                }
+                              }}
+                            >
                               {post.media_type === "video" ? (
-                                <>
-                                  <video src={post.media_url} className="w-full h-full object-cover" muted preload="metadata" />
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                                      <Play className="h-5 w-5 text-white fill-white ml-0.5" />
-                                    </div>
-                                  </div>
-                                </>
+                                <div className="relative w-full max-w-md mx-auto aspect-[9/16] max-h-[500px] rounded-xl overflow-hidden bg-black">
+                                  <ReelThumbnail url={post.media_url} />
+                                </div>
                               ) : (
-                                <img src={post.media_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                <div className="relative w-full aspect-square">
+                                  <img src={post.media_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                </div>
                               )}
                             </div>
                           )}
@@ -927,18 +934,31 @@ export default function PublicProfilePage() {
                 </div>
               ) : (
                 /* Grid view for Photos/Videos tabs */
-                <div className="grid grid-cols-3 gap-0.5 mt-0.5 px-0.5 max-w-3xl mx-auto">
+                <div className={`grid gap-1 mt-0.5 px-1 max-w-3xl mx-auto ${postTab === "videos" ? "grid-cols-2" : "grid-cols-3"}`}>
                   {filteredPosts.map((post: any) => (
-                    <motion.button key={post.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => setSelectedPost(post)}
-                      className="relative aspect-square overflow-hidden bg-muted group">
+                    <motion.button
+                      key={post.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      onClick={() => {
+                        if (post.media_type === "video") {
+                          navigate(`/reels/${post.id}`);
+                        } else {
+                          setSelectedPost(post);
+                        }
+                      }}
+                      className={`relative overflow-hidden bg-muted group ${postTab === "videos" ? "aspect-[9/16] rounded-lg" : "aspect-square"}`}
+                    >
                       {post.media_type === "video" ? (
-                        <>
-                          <video src={post.media_url} className="w-full h-full object-cover" muted preload="metadata" />
-                          <div className="absolute top-1.5 right-1.5"><Film className="h-3.5 w-3.5 text-white drop-shadow" /></div>
-                          {post.views_count > 0 && <div className="absolute bottom-1 left-1.5 flex items-center gap-0.5"><Eye className="h-3 w-3 text-white drop-shadow" /><span className="text-[10px] text-white font-semibold drop-shadow">{post.views_count}</span></div>}
-                        </>
+                        <ReelThumbnail url={post.media_url} />
                       ) : (
                         <img src={post.media_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      )}
+                      {post.views_count > 0 && (
+                        <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5 z-10">
+                          <Eye className="h-3 w-3 text-white drop-shadow" />
+                          <span className="text-[10px] text-white font-semibold drop-shadow">{post.views_count}</span>
+                        </div>
                       )}
                     </motion.button>
                   ))}
