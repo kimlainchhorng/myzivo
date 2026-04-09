@@ -776,7 +776,7 @@ export default function ReelsFeedPage() {
                     className="flex-1 overflow-y-auto pb-20"
                     style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 5rem), 5rem)' }}
                   >
-                    <FeedCard key={post.id} item={post} currentUserId={userId} />
+                    <FeedCard key={post.id} item={post} currentUserId={userId} detailMode />
                   </div>
                 </motion.div>
               );
@@ -1207,7 +1207,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
 /* ── Individual Feed Card (IG/FB style) ──────────────────────────── */
 
-function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void; autoPlayVideo?: boolean }) {
+function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detailMode }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void; autoPlayVideo?: boolean; detailMode?: boolean }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [liked, setLiked] = useState(false);
@@ -1793,6 +1793,20 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                     </button>
                   )}
                 </>
+              ) : detailMode ? (
+                /* Detail mode — show ALL images full width, scrollable */
+                <div className="flex flex-col gap-0.5 w-full">
+                  {item.media_urls.map((url, i) => (
+                    <div key={i} className="relative w-full bg-black">
+                      <img
+                        src={url}
+                        alt={item.caption || "Post"}
+                        className="w-full object-contain max-h-[80vh]"
+                        loading="lazy"
+                      />
+                    </div>
+                  ))}
+                </div>
               ) : item.media_urls.length === 1 ? (
                 /* Single image */
                 <div className="relative aspect-square md:aspect-[4/3] w-full bg-black max-h-[70vh]">
