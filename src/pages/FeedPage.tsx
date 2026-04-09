@@ -40,6 +40,10 @@ interface FeedPost {
   comments_count?: number;
   view_count?: number;
   audio_name?: string | null;
+  source?: "store" | "user";
+  author_id?: string;
+  author_name?: string;
+  author_avatar?: string | null;
 }
 
 /* ── Scrolling music ticker ───────────────────────────────────── */
@@ -447,19 +451,27 @@ function ReelCard({
       >
         <button
           type="button"
-          onClick={() => post.store_slug && onNavigate(post.store_slug)}
+          onClick={() => {
+            if (post.source === "user" && post.author_id) {
+              onNavigate(`__user__${post.author_id}`);
+            } else if (post.store_slug) {
+              onNavigate(post.store_slug);
+            }
+          }}
           className="flex items-center gap-2.5 mb-2.5 active:opacity-70"
         >
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/80 bg-black/40 flex-shrink-0">
-            {post.store_logo ? (
-              <img src={post.store_logo} alt="" className="w-full h-full object-cover" />
+            {(post.source === "user" ? post.author_avatar : post.store_logo) ? (
+              <img src={(post.source === "user" ? post.author_avatar : post.store_logo)!} alt="" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <Store className="w-5 h-5 text-white" />
               </div>
             )}
           </div>
-          <span className="text-white font-bold text-sm drop-shadow-lg">{post.store_name}</span>
+          <span className="text-white font-bold text-sm drop-shadow-lg">
+            {post.source === "user" ? post.author_name : post.store_name}
+          </span>
         </button>
         {post.caption && (
           <p className="text-white text-sm line-clamp-2 drop-shadow leading-snug mb-2">
@@ -469,9 +481,9 @@ function ReelCard({
 
         {/* Music ticker */}
         <MusicTicker
-          name={post.audio_name || `Original Sound - ${post.store_name || "ZIVO"}`}
+          name={post.audio_name || `Original Sound - ${post.source === "user" ? post.author_name || "ZIVO" : post.store_name || "ZIVO"}`}
           onClick={() => {
-            const soundLabel = post.audio_name || `Original Sound - ${post.store_name || "ZIVO"}`;
+            const soundLabel = post.audio_name || `Original Sound - ${post.source === "user" ? post.author_name || "ZIVO" : post.store_name || "ZIVO"}`;
             onOpenSound(soundLabel);
           }}
         />
@@ -1131,33 +1143,85 @@ export default function FeedPage() {
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["customer-feed"],
     queryFn: async () => {
-      const { data: postsData, error } = await supabase
-        .from("store_posts")
-        .select("*")
-        .eq("is_published", true)
-        .order("created_at", { ascending: false })
-        .limit(50);
+      // Fetch store posts and user video posts in parallel
+      const [{ data: postsData, error }, { data: userVideos }] = await Promise.all([
+        supabase
+          .from("store_posts")
+          .select("*")
+          .eq("is_published", true)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        (supabase as any)
+          .from("user_posts")
+          .select("id, user_id, media_url, media_urls, media_type, caption, likes_count, comments_count, views_count, created_at, audio_name")
+          .eq("is_published", true)
+          .in("media_type", ["video", "reel"])
+          .order("created_at", { ascending: false })
+          .limit(30),
+      ]);
       if (error) throw error;
 
       const storeIds = [...new Set((postsData || []).map((p: any) => p.store_id))];
-      if (storeIds.length === 0) return [];
+      const userIds = [...new Set((userVideos || []).map((p: any) => p.user_id))];
 
-      const { data: stores } = await supabase
-        .from("store_profiles")
-        .select("id, name, logo_url, slug")
-        .in("id", storeIds);
+      const [{ data: stores }, { data: profiles }] = await Promise.all([
+        storeIds.length
+          ? supabase.from("store_profiles").select("id, name, logo_url, slug").in("id", storeIds)
+          : Promise.resolve({ data: [] as any[] }),
+        userIds.length
+          ? supabase.from("profiles").select("id, user_id, full_name, avatar_url").in("id", userIds as string[])
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
 
       const storeMap = new Map((stores || []).map((s: any) => [s.id, s]));
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      // Also map by user_id
+      (profiles || []).forEach((p: any) => { if (p.user_id) profileMap.set(p.user_id, p); });
 
-      return (postsData || []).map((post: any) => {
+      const allPosts: FeedPost[] = [];
+
+      // Store posts
+      for (const post of postsData || []) {
         const store = storeMap.get(post.store_id);
-        return {
+        allPosts.push({
           ...post,
+          source: "store",
           store_name: store?.name || "Store",
           store_logo: store?.logo_url,
           store_slug: store?.slug,
-        } as FeedPost;
-      });
+        });
+      }
+
+      // User video posts
+      for (const post of userVideos || []) {
+        const profile = profileMap.get(post.user_id);
+        const urls: string[] = Array.isArray(post.media_urls) && post.media_urls.length > 0
+          ? post.media_urls
+          : post.media_url ? [post.media_url] : [];
+        if (!urls.length) continue;
+        allPosts.push({
+          id: `u-${post.id}`,
+          store_id: "",
+          caption: post.caption,
+          media_urls: urls,
+          media_type: "video",
+          is_published: true,
+          created_at: post.created_at,
+          likes_count: post.likes_count || 0,
+          comments_count: post.comments_count || 0,
+          view_count: post.views_count || 0,
+          audio_name: post.audio_name || null,
+          source: "user",
+          author_id: post.user_id,
+          author_name: profile?.full_name || "User",
+          author_avatar: profile?.avatar_url || null,
+        });
+      }
+
+      // Sort by created_at descending
+      allPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      return allPosts;
     },
   });
 
@@ -1291,7 +1355,7 @@ export default function FeedPage() {
                   isActive={activeIndex === index}
                   globalMuted={globalMuted}
                   onToggleMute={() => setGlobalMuted((m) => !m)}
-                  onNavigate={(slug) => navigate(`/grocery/shop/${slug}`)}
+                  onNavigate={(slug) => slug.startsWith("__user__") ? navigate(`/user/${slug.replace("__user__", "")}`) : navigate(`/grocery/shop/${slug}`)}
                   userId={userId}
                   userLikedPostIds={userLikedPostIds}
                   onToggleLike={handleToggleLike}
