@@ -40,6 +40,10 @@ interface FeedPost {
   comments_count?: number;
   view_count?: number;
   audio_name?: string | null;
+  source?: "store" | "user";
+  author_id?: string;
+  author_name?: string;
+  author_avatar?: string | null;
 }
 
 /* ── Scrolling music ticker ───────────────────────────────────── */
