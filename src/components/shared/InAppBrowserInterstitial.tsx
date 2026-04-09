@@ -70,11 +70,11 @@ export default function InAppBrowserInterstitial() {
             className="max-w-sm w-full text-center space-y-8"
           >
             {/* Logo */}
-            <div className="w-24 h-24 mx-auto bg-black rounded-[22%] p-4 shadow-2xl flex items-center justify-center">
+            <div className="w-24 h-24 mx-auto bg-black rounded-[22%] overflow-hidden shadow-2xl flex items-center justify-center">
               <img
                 src={zivoLogo}
                 alt="ZIVO"
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover"
               />
             </div>
 
