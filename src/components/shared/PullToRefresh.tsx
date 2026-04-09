@@ -110,7 +110,7 @@ export default function PullToRefresh({ onRefresh, children, className, enabled 
       <motion.div
         ref={containerRef}
         style={{ y: refreshing ? 60 : spinnerY }}
-        className="h-full overflow-y-auto"
+        className="min-h-full"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
