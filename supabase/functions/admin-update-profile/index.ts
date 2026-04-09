@@ -139,10 +139,25 @@ Deno.serve(async (req) => {
           .select("id, user_id, avatar_url, cover_url, updated_at")
           .or(`user_id.eq.${userId},id.eq.${userId}`)
           .order("updated_at", { ascending: false, nullsFirst: false })
-          .limit(1);
+          .limit(10);
 
         if (error) return { profile: null, error };
-        return { profile: data?.[0] ?? null, error: null };
+
+        const profile =
+          data?.find((candidate) => candidate.user_id === userId) ??
+          data?.find((candidate) => candidate.id === userId) ??
+          data?.[0] ??
+          null;
+
+        return { profile, error: null };
+      };
+
+      const readPersistedProfile = async (profileId: string) => {
+        return await adminClient
+          .from("profiles")
+          .select("id, user_id, avatar_url, cover_url")
+          .eq("id", profileId)
+          .maybeSingle();
       };
 
       const persistUpdates = async (payload: Record<string, unknown>) => {
@@ -151,17 +166,49 @@ Deno.serve(async (req) => {
           return { data: null, error: resolveError };
         }
 
-        const targetProfileId = profile?.id ?? userId;
+        const mutationPayload = {
+          ...payload,
+          user_id: userId,
+          updated_at: new Date().toISOString(),
+        };
+
+        if (profile?.id) {
+          const updateById = await adminClient
+            .from("profiles")
+            .update(mutationPayload)
+            .eq("id", profile.id)
+            .select("id, user_id, avatar_url, cover_url")
+            .maybeSingle();
+
+          if (!updateById.error) {
+            if (updateById.data) return updateById;
+            return await readPersistedProfile(profile.id);
+          }
+
+          const updateByUserId = await adminClient
+            .from("profiles")
+            .update(mutationPayload)
+            .eq("user_id", userId)
+            .select("id, user_id, avatar_url, cover_url")
+            .maybeSingle();
+
+          if (!updateByUserId.error) {
+            if (updateByUserId.data) return updateByUserId;
+            return await readPersistedProfile(profile.id);
+          }
+
+          return {
+            data: updateByUserId.data ?? updateById.data ?? null,
+            error: updateByUserId.error ?? updateById.error,
+          };
+        }
+
         return await adminClient
           .from("profiles")
-          .upsert(
-            {
-              id: targetProfileId,
-              user_id: userId,
-              ...payload,
-            },
-            { onConflict: "id" },
-          )
+          .insert({
+            id: userId,
+            ...mutationPayload,
+          })
           .select("id, user_id, avatar_url, cover_url")
           .single();
       };
