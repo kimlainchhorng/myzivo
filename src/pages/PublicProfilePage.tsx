@@ -561,7 +561,6 @@ export default function PublicProfilePage() {
       toast.success("Post link copied!");
     }
   };
-  };
 
   const handleLike = (postId: string) => {
     setLikedPosts((prev) => {
