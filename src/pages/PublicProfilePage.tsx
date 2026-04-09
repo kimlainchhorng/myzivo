@@ -507,26 +507,57 @@ export default function PublicProfilePage() {
 
   const handleShare = async () => {
     const url = buildShareUrl();
-    if (navigator.share) {
-      try { await navigator.share({ title: `${resolvedProfile?.full_name || "User"} on ZIVO`, url }); } catch {}
-    } else {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${resolvedProfile?.full_name || "User"} on ZIVO`, url });
+        return;
+      }
+    } catch (e: any) {
+      if (e?.name === "AbortError") return; // user cancelled
+    }
+    try {
       await navigator.clipboard.writeText(url);
+      toast.success("Profile link copied!");
+    } catch {
+      // Final fallback for restricted contexts
+      const ta = document.createElement("textarea");
+      ta.value = url;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
       toast.success("Profile link copied!");
     }
   };
 
   const handleSharePost = async (post: any) => {
     const url = buildShareUrl(post?.id);
-    if (navigator.share) {
-      try {
+    try {
+      if (navigator.share) {
         await navigator.share({
           title: `${resolvedProfile?.full_name || "User"} on ZIVO`,
           text: post?.caption || "Check out this post on ZIVO",
           url,
         });
-      } catch {}
-    } else {
+        return;
+      }
+    } catch (e: any) {
+      if (e?.name === "AbortError") return;
+    }
+    try {
       await navigator.clipboard.writeText(url);
+      toast.success("Post link copied!");
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = url;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
       toast.success("Post link copied!");
     }
   };
