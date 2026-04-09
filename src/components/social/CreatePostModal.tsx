@@ -224,12 +224,15 @@ export default function CreatePostModal({
 
   const hasSharedLink = !!initialCaption || !!sharedMediaUrl;
 
+  const [uploadStatus, setUploadStatus] = useState("");
+
   const handlePost = async () => {
     if (files.length === 0 && !hasSharedLink && !caption.trim()) {
       toast.error("Please add a photo, video, or write something");
       return;
     }
     setUploading(true);
+    setUploadStatus("");
     try {
       let mediaUrl: string | null = null;
       let finalMediaType = mediaType;
@@ -237,7 +240,10 @@ export default function CreatePostModal({
       // Upload all files (first one is primary media_url)
       if (files.length > 0) {
         const uploadedUrls: string[] = [];
-        for (const file of files) {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const sizeMB = (file.size / (1024 * 1024)).toFixed(0);
+          setUploadStatus(`Uploading ${file.name} (${sizeMB} MB)...`);
           const ext = file.name.split(".").pop() || "jpg";
           const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
           const { error: uploadErr } = await supabase.storage
@@ -255,6 +261,8 @@ export default function CreatePostModal({
       } else {
         finalMediaType = "image";
       }
+
+      setUploadStatus("Creating post...");
 
       const insertData: any = {
         user_id: userId,
@@ -302,6 +310,7 @@ export default function CreatePostModal({
       toast.error(err.message || "Failed to create post");
     } finally {
       setUploading(false);
+      setUploadStatus("");
     }
   };
 
