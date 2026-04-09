@@ -14,6 +14,7 @@ export type UserProfile = {
   cover_url: string | null;
   cover_position: number | null;
   status: string | null;
+  bio: string | null;
   // Social links
   social_facebook: string | null;
   social_instagram: string | null;
