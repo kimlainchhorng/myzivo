@@ -335,7 +335,7 @@ export default function PublicProfilePage() {
       if (!targetUserId) return [];
       const { data } = await (supabase as any)
         .from("user_posts")
-        .select("id, media_url, media_type, caption, likes_count, comments_count, views_count, shares_count, created_at, shared_from_post_id, shared_from_user_id")
+        .select("id, media_url, media_urls, media_type, caption, likes_count, comments_count, views_count, shares_count, created_at, shared_from_post_id, shared_from_user_id")
         .eq("user_id", targetUserId)
         .eq("is_published", true)
         .order("created_at", { ascending: false });
