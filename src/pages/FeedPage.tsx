@@ -1355,7 +1355,7 @@ export default function FeedPage() {
                   isActive={activeIndex === index}
                   globalMuted={globalMuted}
                   onToggleMute={() => setGlobalMuted((m) => !m)}
-                  onNavigate={(slug) => navigate(`/grocery/shop/${slug}`)}
+                  onNavigate={(slug) => slug.startsWith("__user__") ? navigate(`/user/${slug.replace("__user__", "")}`) : navigate(`/grocery/shop/${slug}`)}
                   userId={userId}
                   userLikedPostIds={userLikedPostIds}
                   onToggleLike={handleToggleLike}
