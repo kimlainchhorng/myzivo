@@ -550,7 +550,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               >
                 {hasMedia ? (
                   item.type === "reel" ? (
-                    <video src={item.url ? `${item.url}#t=0.1` : undefined} className="absolute inset-0 w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} muted playsInline preload="metadata" />
+                    <VideoThumbnail url={item.url!} filterCss={item.filterCss} />
                   ) : (
                     <img src={item.url || undefined} alt={item.caption || "Post"} className="absolute inset-0 w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} loading="lazy" />
                   )
