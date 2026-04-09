@@ -525,15 +525,22 @@ export default function ReelsFeedPage() {
         {/* Main Feed Content */}
         <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pb-0 flex-1 lg:max-w-2xl lg:mx-auto">
           {/* Header */}
-          <div className="sticky top-0 lg:hidden z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center justify-between" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 0.625rem)' }}>
-            <h1 className="text-lg font-bold text-foreground">Feed</h1>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowSearch(true)}
-                className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted/50 transition-colors"
-              >
-                <Search className="h-4.5 w-4.5 text-foreground" />
-              </button>
+          <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center gap-3 lg:pt-3" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 0.625rem)' }}>
+            <h1 className="text-lg font-bold text-foreground shrink-0 lg:hidden">Feed</h1>
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <input
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onFocus={() => setShowSearch(true)}
+                placeholder="Search people..."
+                className="w-full pl-9 pr-8 py-2 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
+              />
+              {searchQuery && (
+                <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <XIcon className="h-4 w-4 text-muted-foreground" />
+                </button>
+              )}
             </div>
           </div>
 
