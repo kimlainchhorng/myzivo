@@ -55,6 +55,17 @@ interface CreatedAccount {
   socialLinks: Record<string, string>;
 }
 
+interface AccountPreviewPost {
+  id: string;
+  media_url: string | null;
+  media_type: string | null;
+  caption: string | null;
+  likes_count: number;
+  comments_count: number;
+  created_at: string;
+  mediaCount: number;
+}
+
 /* Inline SVG icons for platforms not in Lucide */
 const ThreadsIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -656,6 +667,7 @@ function ProfileCard({
   const [activePreviewIndex, setActivePreviewIndex] = useState(0);
   const [isPosting, setIsPosting] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<AccountPreviewPost | null>(null);
   const postMediaRef = useRef<HTMLInputElement>(null);
   const previewUrlsRef = useRef<string[]>([]);
   const queryClient = useQueryClient();
@@ -669,6 +681,12 @@ function ProfileCard({
       previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
+
+  useEffect(() => {
+    if (!isFlipped) {
+      setSelectedPost(null);
+    }
+  }, [isFlipped]);
 
   const handlePostMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -808,15 +826,7 @@ function ProfileCard({
 
       if (error) throw error;
 
-      const posts = (data || []) as Array<{
-        id: string;
-        media_url: string | null;
-        media_type: string | null;
-        caption: string | null;
-        likes_count: number;
-        comments_count: number;
-        created_at: string;
-      }>;
+      const posts = (data || []) as Array<Omit<AccountPreviewPost, "mediaCount">>;
 
       if (posts.length === 0) {
         return [];
@@ -1461,9 +1471,15 @@ function ProfileCard({
                 <p className="text-xs text-muted-foreground">No posts yet</p>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-1 rounded-lg overflow-hidden">
+               <div className="grid grid-cols-3 gap-1 rounded-lg overflow-hidden">
                 {filtered.map((post) => (
-                  <div key={post.id} className="relative aspect-square bg-muted/60 group cursor-pointer overflow-hidden">
+                   <button
+                     key={post.id}
+                     type="button"
+                     onClick={() => setSelectedPost(post)}
+                     className="relative aspect-square overflow-hidden bg-muted/60 text-left cursor-pointer border-0 p-0 group"
+                     aria-label={`Open post preview for ${acc.username}`}
+                   >
                     {post.media_url ? (
                       post.media_type === "video" ? (
                         <div className="h-full w-full flex items-center justify-center bg-foreground/5">
@@ -1483,7 +1499,7 @@ function ProfileCard({
                         {post.mediaCount}
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                     <div className="pointer-events-none absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                       <span className="flex items-center gap-1 text-background text-xs font-medium">
                         <Heart className="h-3.5 w-3.5" fill="currentColor" />
                         {post.likes_count || 0}
@@ -1493,12 +1509,105 @@ function ProfileCard({
                         {post.comments_count || 0}
                       </span>
                     </div>
-                  </div>
+                   </button>
                 ))}
               </div>
             );
           })()}
         </div>
+
+        {selectedPost && typeof document !== "undefined" && createPortal(
+          <div
+            className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-foreground/70 backdrop-blur-sm"
+            onClick={() => setSelectedPost(null)}
+          >
+            <div
+              className="w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-4xl bg-card border-0 sm:border border-border/40 sm:rounded-2xl overflow-hidden flex flex-col sm:flex-row shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex min-h-[45vh] flex-1 items-center justify-center bg-foreground/95">
+                {selectedPost.media_url ? (
+                  selectedPost.media_type === "video" ? (
+                    <video
+                      src={selectedPost.media_url}
+                      className="max-h-full max-w-full"
+                      controls
+                      playsInline
+                    />
+                  ) : (
+                    <img
+                      src={selectedPost.media_url}
+                      alt={selectedPost.caption || `${acc.username} post`}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  )
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center p-8 text-center">
+                    <p className="max-w-md text-sm text-background/90">{selectedPost.caption || "No media attached to this post."}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex w-full shrink-0 flex-col bg-card sm:max-w-sm">
+                <div className="flex items-center gap-3 border-b border-border/30 px-4 py-3">
+                  <div
+                    className="h-10 w-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden border border-border/40 bg-card text-background text-xs font-bold"
+                    style={{
+                      background: acc.avatarUrl
+                        ? "hsl(var(--card))"
+                        : `linear-gradient(145deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))`,
+                    }}
+                  >
+                    {acc.avatarUrl ? (
+                      <img src={acc.avatarUrl} alt={`${acc.username} avatar`} className="h-full w-full object-cover object-top" loading="lazy" />
+                    ) : (
+                      initials
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-foreground">{acc.username}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {formatDistanceToNow(new Date(selectedPost.created_at), { addSuffix: true })}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPost(null)}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-muted/50 transition-colors hover:bg-muted"
+                    aria-label="Close post preview"
+                  >
+                    <X className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </div>
+
+                <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+                  {selectedPost.caption?.trim() ? (
+                    <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">{selectedPost.caption}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No caption</p>
+                  )}
+
+                  <div className="flex items-center gap-4 border-t border-border/30 pt-4 text-sm">
+                    <span className="flex items-center gap-1.5 font-medium text-foreground">
+                      <Heart className="h-4 w-4" />
+                      {selectedPost.likes_count || 0}
+                    </span>
+                    <span className="flex items-center gap-1.5 font-medium text-foreground">
+                      <MessageCircle className="h-4 w-4" />
+                      {selectedPost.comments_count || 0}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {selectedPost.mediaCount} {selectedPost.mediaCount === 1 ? "file" : "files"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
       </div>
 
       {/* Action buttons — sticky bottom */}
