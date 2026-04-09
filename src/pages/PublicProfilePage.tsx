@@ -569,7 +569,7 @@ export default function PublicProfilePage() {
           ) : (
             <>
               {/* Content Tabs */}
-              <div className="border-b border-border/30">
+              <div className="border-b border-border/30 max-w-3xl mx-auto">
                 <div className="flex">
                   {([
                     { key: "all" as PostTab, icon: Grid3X3, label: "Posts", count: posts.length },
