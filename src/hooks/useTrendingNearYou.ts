@@ -10,6 +10,7 @@ export interface TrendingStore {
   store_id: string;
   store_name: string;
   category: string;
+  logo_url: string | null;
   relevance_score: number;
   is_featured: boolean;
 }

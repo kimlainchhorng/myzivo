@@ -68,32 +68,47 @@ function TrendingCard({ store, index }: { store: TrendingStore; index: number })
       transition={{ delay: index * 0.05 }}
       onClick={() => navigate(`/store-map`)}
       className={cn(
-        "shrink-0 w-[140px] rounded-xl border border-border/40 bg-card p-3 text-left",
+        "shrink-0 w-[140px] rounded-xl border border-border/40 bg-card overflow-hidden text-left",
         "hover:border-primary/30 hover:shadow-md transition-all",
         store.is_featured && "border-primary/40 bg-primary/5"
       )}
     >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-2xl">{emoji}</span>
-        {store.is_featured && (
-          <Badge variant="secondary" className="text-[8px] px-1.5 py-0 bg-amber-500/15 text-amber-600">
-            <Star className="h-2.5 w-2.5 mr-0.5" /> Boosted
-          </Badge>
+      {/* Store Logo / Cover */}
+      <div className="w-full h-20 bg-muted/30 flex items-center justify-center overflow-hidden">
+        {store.logo_url ? (
+          <img
+            src={store.logo_url}
+            alt={store.store_name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <Store className="h-8 w-8 text-muted-foreground/40" />
         )}
       </div>
-      <p className="text-xs font-semibold truncate">{store.store_name}</p>
-      <div className="flex items-center gap-1 mt-1">
-        <MapPin className="h-3 w-3 text-muted-foreground" />
-        <span className="text-[10px] text-muted-foreground capitalize">
-          {store.category?.replace(/_/g, " ") || "Local"}
-        </span>
-      </div>
-      {store.relevance_score > 10 && (
-        <div className="flex items-center gap-1 mt-1.5">
-          <TrendingUp className="h-3 w-3 text-emerald-500" />
-          <span className="text-[9px] text-emerald-600 font-medium">Popular pick</span>
+
+      <div className="p-2.5">
+        <div className="flex items-center justify-between mb-1">
+          {store.is_featured && (
+            <Badge variant="secondary" className="text-[8px] px-1.5 py-0 bg-amber-500/15 text-amber-600">
+              <Star className="h-2.5 w-2.5 mr-0.5" /> Boosted
+            </Badge>
+          )}
         </div>
-      )}
+        <p className="text-xs font-semibold truncate">{store.store_name}</p>
+        <div className="flex items-center gap-1 mt-1">
+          <MapPin className="h-3 w-3 text-muted-foreground" />
+          <span className="text-[10px] text-muted-foreground capitalize">
+            {store.category?.replace(/_/g, " ") || "Local"}
+          </span>
+        </div>
+        {store.relevance_score > 10 && (
+          <div className="flex items-center gap-1 mt-1.5">
+            <TrendingUp className="h-3 w-3 text-emerald-500" />
+            <span className="text-[9px] text-emerald-600 font-medium">Popular pick</span>
+          </div>
+        )}
+      </div>
     </motion.button>
   );
 }
