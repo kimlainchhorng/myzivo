@@ -476,7 +476,7 @@ export default function PublicProfilePage() {
           </div>
 
           {/* Profile Info */}
-          <div className="flex flex-col items-center pt-16 pb-4 px-4">
+          <div className="flex flex-col items-center pt-16 sm:pt-20 pb-4 px-4 max-w-3xl mx-auto">
             <h2 className="text-xl font-bold text-foreground">{resolvedProfile.full_name}</h2>
 
             {!isLocked ? (
