@@ -134,31 +134,47 @@ Deno.serve(async (req) => {
     if (typeof coverUrl === "string") updates.cover_url = coverUrl;
 
     if (Object.keys(updates).length > 0) {
-      const updateProfile = async (column: "user_id" | "id", payload: Record<string, unknown>) =>
-        adminClient
+      const resolveProfile = async () => {
+        const { data, error } = await adminClient
           .from("profiles")
-          .update(payload)
-          .eq(column, userId)
-          .select("id")
+          .select("id, user_id")
+          .or(`user_id.eq.${userId},id.eq.${userId}`)
           .maybeSingle();
 
-      const runUpdate = async (payload: Record<string, unknown>) => {
-        // Try user_id first; if no row matched (data is null & no error), fall back to id
-        const { data: matched, error } = await updateProfile("user_id", payload);
-        if (error) {
-          // Real error on user_id attempt — try id fallback
-          const fallback = await updateProfile("id", payload);
-          return fallback.error;
-        }
-        if (!matched) {
-          // No row matched by user_id — try by id
-          const fallback = await updateProfile("id", payload);
-          return fallback.error;
-        }
-        return null;
+        if (error) return { profile: null, error };
+        return { profile: data, error: null };
       };
 
-      let updateError = await runUpdate(updates);
+      const { profile, error: resolveError } = await resolveProfile();
+      if (resolveError) {
+        console.error("[admin-update-profile] resolve error:", resolveError);
+        return new Response(JSON.stringify({ error: resolveError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      let updateError: { message: string } | null = null;
+
+      if (profile?.id) {
+        const result = await adminClient
+          .from("profiles")
+          .update({
+            ...updates,
+            user_id: profile.user_id ?? userId,
+          })
+          .eq("id", profile.id);
+        updateError = result.error;
+      } else {
+        const result = await adminClient
+          .from("profiles")
+          .insert({
+            id: userId,
+            user_id: userId,
+            ...updates,
+          });
+        updateError = result.error;
+      }
 
       if (
         updateError &&
@@ -168,7 +184,26 @@ Deno.serve(async (req) => {
       ) {
         const fallbackUpdates = { ...updates };
         delete fallbackUpdates.social_links;
-        updateError = await runUpdate(fallbackUpdates);
+
+        if (profile?.id) {
+          const fallback = await adminClient
+            .from("profiles")
+            .update({
+              ...fallbackUpdates,
+              user_id: profile.user_id ?? userId,
+            })
+            .eq("id", profile.id);
+          updateError = fallback.error;
+        } else {
+          const fallback = await adminClient
+            .from("profiles")
+            .insert({
+              id: userId,
+              user_id: userId,
+              ...fallbackUpdates,
+            });
+          updateError = fallback.error;
+        }
       }
 
       if (updateError) {

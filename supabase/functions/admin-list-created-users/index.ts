@@ -115,7 +115,8 @@ Deno.serve(async (req) => {
 
     const userIds = uniqueUsers.map((user) => user.id);
     let profiles: Array<{
-      user_id: string;
+      id?: string;
+      user_id: string | null;
       avatar_url: string | null;
       cover_url: string | null;
       social_facebook: string | null;
@@ -132,9 +133,9 @@ Deno.serve(async (req) => {
       const primaryQuery = await adminClient
         .from("profiles")
         .select(
-          "user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram, social_links",
+          "id, user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram, social_links",
         )
-        .in("user_id", userIds);
+        .or(userIds.map((id) => `user_id.eq.${id},id.eq.${id}`).join(","));
 
       if (primaryQuery.error) {
         if (
@@ -144,9 +145,9 @@ Deno.serve(async (req) => {
           const fallbackQuery = await adminClient
             .from("profiles")
             .select(
-              "user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram",
+              "id, user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram",
             )
-            .in("user_id", userIds);
+            .or(userIds.map((id) => `user_id.eq.${id},id.eq.${id}`).join(","));
 
           if (fallbackQuery.error) {
             throw fallbackQuery.error;
@@ -164,9 +165,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    const profileMap = new Map(
-      (profiles ?? []).map((profile) => [profile.user_id, profile]),
-    );
+    const profileMap = new Map<string, typeof profiles[number]>();
+    (profiles ?? []).forEach((profile) => {
+      if (profile.user_id) profileMap.set(profile.user_id, profile);
+      if (profile.id) profileMap.set(profile.id, profile);
+    });
 
     const accounts = uniqueUsers.map((user) => {
       const metadata = user.user_metadata ?? {};
