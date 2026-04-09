@@ -3,7 +3,6 @@
  */
 import { motion } from "framer-motion";
 import { Plane, Bell, Shield, Star, Download, Hotel, CarFront, UtensilsCrossed } from "lucide-react";
-import { toast } from "sonner";
 
 const features = [
   { icon: Plane, text: "Book flights, hotels & cars on the go", colorVar: "--flights" },
@@ -12,10 +11,9 @@ const features = [
   { icon: Star, text: "Exclusive app-only deals & rewards", colorVar: "--hotels" },
 ];
 
+const APP_STORE_URL = "https://apps.apple.com/us/app/zivo-customer/id6759480121";
+
 export default function DownloadAppSection() {
-  const handleAppStore = (store: string) => {
-    toast("Coming soon!", { description: `The ZIVO ${store} app is launching soon. Stay tuned!`, duration: 3000 });
-  };
 
   return (
     <section className="py-16 sm:py-24 relative overflow-hidden" aria-label="Download ZIVO app">
@@ -33,7 +31,7 @@ export default function DownloadAppSection() {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
               <Download className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Coming Soon</span>
+              <span className="text-sm font-medium text-primary">Download Now</span>
             </div>
 
             <h2 className="text-3xl sm:text-4xl font-bold mb-5 tracking-tight">
@@ -68,13 +66,15 @@ export default function DownloadAppSection() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => handleAppStore("App Store")}
+              <a
+                href={APP_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-foreground text-background font-semibold text-sm hover:opacity-90 active:scale-[0.97] transition-all touch-manipulation min-h-[48px]"
               >
                 <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
                 App Store
-              </button>
+              </a>
             </div>
           </motion.div>
 
