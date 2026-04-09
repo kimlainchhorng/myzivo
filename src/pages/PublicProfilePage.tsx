@@ -335,7 +335,7 @@ export default function PublicProfilePage() {
       if (!targetUserId) return [];
       const { data } = await (supabase as any)
         .from("user_posts")
-        .select("id, media_url, media_type, caption, likes_count, comments_count, views_count, shares_count, created_at, shared_from_post_id, shared_from_user_id")
+        .select("id, media_url, media_urls, media_type, caption, likes_count, comments_count, views_count, shares_count, created_at, shared_from_post_id, shared_from_user_id")
         .eq("user_id", targetUserId)
         .eq("is_published", true)
         .order("created_at", { ascending: false });
@@ -611,6 +611,62 @@ export default function PublicProfilePage() {
     try { return formatDistanceToNow(new Date(dateStr), { addSuffix: true }); } catch { return ""; }
   };
 
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  const renderImageGrid = (urls: string[], post: any) => {
+    const openViewer = (idx: number) => {
+      setSelectedImageIndex(idx);
+      setSelectedPost(post);
+    };
+    if (urls.length === 1) {
+      return (
+        <div className="relative w-full aspect-square cursor-pointer" onClick={() => openViewer(0)}>
+          <img src={urls[0]} alt="" className="w-full h-full object-cover" loading="lazy" />
+        </div>
+      );
+    }
+    if (urls.length === 2) {
+      return (
+        <div className="grid grid-cols-2 gap-0.5 w-full" style={{ aspectRatio: "2/1" }}>
+          {urls.map((u, i) => (
+            <div key={i} className="relative bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(i)}>
+              <img src={u} alt="" className="w-full h-full object-cover" loading="lazy" />
+            </div>
+          ))}
+        </div>
+      );
+    }
+    if (urls.length === 3) {
+      return (
+        <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full" style={{ aspectRatio: "1" }}>
+          <div className="relative row-span-2 bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(0)}>
+            <img src={urls[0]} alt="" className="h-full w-full object-cover" loading="lazy" />
+          </div>
+          <div className="relative bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(1)}>
+            <img src={urls[1]} alt="" className="h-full w-full object-cover" loading="lazy" />
+          </div>
+          <div className="relative bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(2)}>
+            <img src={urls[2]} alt="" className="h-full w-full object-cover" loading="lazy" />
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="grid grid-cols-2 gap-0.5 w-full" style={{ aspectRatio: "1" }}>
+        {urls.slice(0, 4).map((u, i) => (
+          <div key={i} className="relative bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(i)}>
+            <img src={u} alt="" className="w-full h-full object-cover" loading="lazy" />
+            {i === 3 && urls.length > 4 && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <span className="text-white text-2xl font-bold">+{urls.length - 4}</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20">
       {/* Desktop NavBar */}
@@ -831,28 +887,24 @@ export default function PublicProfilePage() {
                             )}
 
                             {/* Original post media */}
-                            {post.media_url && (
-                              <div
-                                className={`relative w-full bg-muted overflow-hidden ${post.media_type === "video" ? "flex justify-center" : ""}`}
-                                onClick={() => {
-                                  if (post.media_type === "video") {
-                                    navigate(`/reels/${post.id}`);
-                                  } else {
-                                    setSelectedPost(post);
-                                  }
-                                }}
-                              >
-                                {post.media_type === "video" ? (
-                                  <div className="relative w-full max-w-md mx-auto aspect-[9/16] max-h-[500px] rounded-xl overflow-hidden bg-black">
-                                    <ReelThumbnail url={post.media_url} />
+                            {(() => {
+                              const urls = post.media_urls?.length ? post.media_urls : post.media_url ? [post.media_url] : [];
+                              if (!urls.length) return null;
+                              if (post.media_type === "video") {
+                                return (
+                                  <div className="relative w-full flex justify-center bg-muted overflow-hidden" onClick={() => navigate(`/reels/${post.id}`)}>
+                                    <div className="relative w-full max-w-md mx-auto aspect-[9/16] max-h-[500px] rounded-xl overflow-hidden bg-black">
+                                      <ReelThumbnail url={urls[0]} />
+                                    </div>
                                   </div>
-                                ) : (
-                                  <div className="relative w-full aspect-square">
-                                    <img src={post.media_url} alt="" className="w-full h-full object-cover" loading="lazy" />
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                                );
+                              }
+                              return (
+                                <div className="w-full bg-muted overflow-hidden">
+                                  {renderImageGrid(urls, post)}
+                                </div>
+                              );
+                            })()}
                           </div>
                         </>
                       ) : (
@@ -885,28 +937,24 @@ export default function PublicProfilePage() {
                           )}
 
                           {/* Media */}
-                          {post.media_url && (
-                            <div
-                              className={`relative w-full bg-muted overflow-hidden ${post.media_type === "video" ? "flex justify-center" : ""}`}
-                              onClick={() => {
-                                if (post.media_type === "video") {
-                                  navigate(`/reels/${post.id}`);
-                                } else {
-                                  setSelectedPost(post);
-                                }
-                              }}
-                            >
-                              {post.media_type === "video" ? (
-                                <div className="relative w-full max-w-md mx-auto aspect-[9/16] max-h-[500px] rounded-xl overflow-hidden bg-black">
-                                  <ReelThumbnail url={post.media_url} />
+                          {(() => {
+                            const urls = post.media_urls?.length ? post.media_urls : post.media_url ? [post.media_url] : [];
+                            if (!urls.length) return null;
+                            if (post.media_type === "video") {
+                              return (
+                                <div className="relative w-full flex justify-center bg-muted overflow-hidden" onClick={() => navigate(`/reels/${post.id}`)}>
+                                  <div className="relative w-full max-w-md mx-auto aspect-[9/16] max-h-[500px] rounded-xl overflow-hidden bg-black">
+                                    <ReelThumbnail url={urls[0]} />
+                                  </div>
                                 </div>
-                              ) : (
-                                <div className="relative w-full aspect-square">
-                                  <img src={post.media_url} alt="" className="w-full h-full object-cover" loading="lazy" />
-                                </div>
-                              )}
-                            </div>
-                          )}
+                              );
+                            }
+                            return (
+                              <div className="w-full bg-muted overflow-hidden">
+                                {renderImageGrid(urls, post)}
+                              </div>
+                            );
+                          })()}
                         </>
                       )}
 
@@ -958,7 +1006,12 @@ export default function PublicProfilePage() {
                       {post.media_type === "video" ? (
                         <ReelThumbnail url={post.media_url} />
                       ) : (
-                        <img src={post.media_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                        <img src={(post.media_urls?.length ? post.media_urls[0] : post.media_url) || ""} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      )}
+                      {post.media_urls?.length > 1 && post.media_type !== "video" && (
+                        <div className="absolute top-1.5 right-1.5 bg-black/60 rounded px-1.5 py-0.5 z-10">
+                          <span className="text-[10px] text-white font-semibold">{post.media_urls.length}</span>
+                        </div>
                       )}
                       {post.views_count > 0 && (
                         <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5 z-10">
@@ -1000,21 +1053,22 @@ export default function PublicProfilePage() {
 
                     {/* Media — fills width, auto height */}
                     <div className="w-full bg-black">
-                      {selectedPost.media_type === "video" ? (
-                        <video
-                          src={selectedPost.media_url}
-                          controls
-                          autoPlay
-                          playsInline
-                          className="w-full max-h-[75vh] object-contain"
-                        />
-                      ) : (
-                        <img
-                          src={selectedPost.media_url}
-                          alt=""
-                          className="w-full max-h-[75vh] object-contain"
-                        />
-                      )}
+                      {(() => {
+                        const urls = selectedPost.media_urls?.length ? selectedPost.media_urls : selectedPost.media_url ? [selectedPost.media_url] : [];
+                        if (selectedPost.media_type === "video") {
+                          return <video src={urls[0]} controls autoPlay playsInline className="w-full max-h-[75vh] object-contain" />;
+                        }
+                        if (urls.length <= 1) {
+                          return <img src={urls[0] || ""} alt="" className="w-full max-h-[75vh] object-contain" />;
+                        }
+                        return (
+                          <div className="flex flex-col gap-1">
+                            {urls.map((u: string, i: number) => (
+                              <img key={i} src={u} alt="" className="w-full max-h-[75vh] object-contain" loading="lazy" />
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Action bar */}
