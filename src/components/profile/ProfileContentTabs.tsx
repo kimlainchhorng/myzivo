@@ -551,7 +551,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               >
                 {hasMedia ? (
                   item.type === "reel" ? (
-                    <VideoThumbnail url={item.url!} filterCss={item.filterCss} />
+                    <ReelThumbnail url={item.url!} filterCss={item.filterCss} />
                   ) : (
                     <img src={item.url || undefined} alt={item.caption || "Post"} className="absolute inset-0 w-full h-full object-cover" style={{ filter: item.filterCss || "none" }} loading="lazy" />
                   )
