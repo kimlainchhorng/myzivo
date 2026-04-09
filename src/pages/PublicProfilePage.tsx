@@ -678,7 +678,7 @@ export default function PublicProfilePage() {
 
     if (urls.length === 3) {
       return (
-        <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full aspect-square">
+        <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full aspect-square md:aspect-[3/2]">
           <div className="relative row-span-2 bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(0)}>
             <img src={urls[0]} alt="" className="h-full w-full object-cover" loading="lazy" />
           </div>
@@ -693,7 +693,7 @@ export default function PublicProfilePage() {
     }
 
     return (
-      <div className="grid grid-cols-2 gap-0.5 w-full aspect-square">
+      <div className="grid grid-cols-2 gap-0.5 w-full">
         {urls.slice(0, 4).map((u, i) => (
           <div key={i} className="relative bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(i)}>
             <img src={u} alt="" className="w-full h-full object-cover" loading="lazy" />
