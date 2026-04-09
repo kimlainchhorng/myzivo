@@ -365,7 +365,7 @@ export default function ReelsFeedPage() {
               sharedFromUserAvatar = optimizeAvatar(sharedProfile?.avatar_url, 96) || sharedProfile?.avatar_url || null;
             }
 
-            const postMediaUrls: string[] = Array.isArray(post.media_urls) && post.media_urls.length > 0
+            let postMediaUrls: string[] = Array.isArray(post.media_urls) && post.media_urls.length > 0
               ? post.media_urls
               : post.media_url ? [post.media_url] : [];
 
@@ -397,6 +397,34 @@ export default function ReelsFeedPage() {
             });
           }
         }
+
+        // Enrich with post_media table for multi-image posts
+        try {
+          const userItemIds = allItems.filter((i) => i.source === "user" && i.media_urls.length <= 1).map((i) => i.id.replace(/^u-/, ""));
+          if (userItemIds.length) {
+            const { data: postMediaRows } = await (supabase as any)
+              .from("post_media")
+              .select("post_id, media_url, sort_order")
+              .in("post_id", userItemIds);
+            if (postMediaRows?.length) {
+              const mediaMap = new Map<string, string[]>();
+              (postMediaRows as any[])
+                .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+                .forEach((row: any) => {
+                  if (!mediaMap.has(row.post_id)) mediaMap.set(row.post_id, []);
+                  if (row.media_url) mediaMap.get(row.post_id)!.push(row.media_url);
+                });
+              allItems.forEach((item) => {
+                if (item.source !== "user") return;
+                const rawId = item.id.replace(/^u-/, "");
+                const extra = mediaMap.get(rawId);
+                if (extra && extra.length > item.media_urls.length) {
+                  item.media_urls = extra;
+                }
+              });
+            }
+          }
+        } catch {}
       } catch {}
 
       try {
@@ -1609,13 +1637,13 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                     </button>
                   </>
                 ) : item.media_urls.length === 1 ? (
-                  <div className="relative aspect-square w-full bg-black">
+                  <div className="relative aspect-square md:aspect-[4/3] w-full bg-black max-h-[70vh]">
                     <img src={mediaUrl} alt={item.caption || "Shared post"} className="h-full w-full object-cover cursor-pointer" loading="lazy" onClick={() => onOpenFullscreen?.()} />
                   </div>
                 ) : item.media_urls.length === 2 ? (
-                  <div className="grid grid-cols-2 gap-0.5 w-full">
+                  <div className="grid grid-cols-2 gap-0.5 w-full aspect-square md:aspect-[2/1]">
                     {item.media_urls.map((url, i) => (
-                      <div key={i} className="relative aspect-square bg-black overflow-hidden">
+                      <div key={i} className="relative bg-black overflow-hidden">
                         <img src={url} alt="" className="h-full w-full object-cover cursor-pointer" loading="lazy" onClick={() => { setCurrentMedia(i); onOpenFullscreen?.(); }} />
                       </div>
                     ))}
@@ -1759,7 +1787,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 </>
               ) : item.media_urls.length === 1 ? (
                 /* Single image */
-                <div className="relative aspect-square w-full bg-black">
+                <div className="relative aspect-square md:aspect-[4/3] w-full bg-black max-h-[70vh]">
                   <img
                     src={mediaUrl}
                     alt={item.caption || "Post"}
@@ -1770,9 +1798,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 </div>
               ) : item.media_urls.length === 2 ? (
                 /* 2 images — side by side */
-                <div className="grid grid-cols-2 gap-0.5 w-full">
+                <div className="grid grid-cols-2 gap-0.5 w-full aspect-square md:aspect-[2/1]">
                   {item.media_urls.map((url, i) => (
-                    <div key={i} className="relative aspect-square bg-black overflow-hidden">
+                    <div key={i} className="relative bg-black overflow-hidden">
                       <img
                         src={url}
                         alt=""
