@@ -4,6 +4,7 @@ type ProfileCandidate = {
   id?: string;
   user_id: string | null;
   avatar_url: string | null;
+  bio: string | null;
   cover_url: string | null;
   social_facebook: string | null;
   social_instagram: string | null;
@@ -64,6 +65,7 @@ function resolveProfile(candidates: ProfileCandidate[], requestedId: string): Pr
     ...base,
     user_id: (pickFirstPresent(ranked, (candidate) => candidate.user_id) as string | null) ?? base.id ?? null,
     avatar_url: (pickFirstPresent(ranked, (candidate) => candidate.avatar_url) as string | null) ?? null,
+    bio: (pickFirstPresent(ranked, (candidate) => candidate.bio) as string | null) ?? null,
     cover_url: (pickFirstPresent(ranked, (candidate) => candidate.cover_url) as string | null) ?? null,
     social_facebook: (pickFirstPresent(ranked, (candidate) => candidate.social_facebook) as string | null) ?? null,
     social_instagram: (pickFirstPresent(ranked, (candidate) => candidate.social_instagram) as string | null) ?? null,
@@ -196,7 +198,7 @@ Deno.serve(async (req) => {
       const primaryQuery = await adminClient
         .from("profiles")
         .select(
-            "id, user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram, social_links, updated_at",
+            "id, user_id, avatar_url, bio, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram, social_links, updated_at",
         )
         .or(userIds.map((id) => `user_id.eq.${id},id.eq.${id}`).join(","));
 
@@ -208,7 +210,7 @@ Deno.serve(async (req) => {
           const fallbackQuery = await adminClient
             .from("profiles")
             .select(
-              "id, user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram, updated_at",
+              "id, user_id, avatar_url, bio, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram, updated_at",
             )
             .or(userIds.map((id) => `user_id.eq.${id},id.eq.${id}`).join(","));
 
@@ -272,6 +274,7 @@ Deno.serve(async (req) => {
         password: "",
         createdAt: user.created_at ?? new Date().toISOString(),
         avatarUrl: profile?.avatar_url ?? null,
+        bio: profile?.bio ?? "",
         coverUrl: profile?.cover_url ?? null,
         socialLinks,
       };
