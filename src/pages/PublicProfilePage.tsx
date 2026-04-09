@@ -184,15 +184,15 @@ export default function PublicProfilePage() {
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
 
-  // Fetch profile with cover photo
+  // Fetch profile with cover photo + bio
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["public-profile", userId],
     queryFn: async () => {
       if (!userId) return null;
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("profiles")
-        .select("id, user_id, full_name, avatar_url, cover_url, cover_position, profile_visibility, is_verified, share_code, updated_at")
+        .select("id, user_id, full_name, avatar_url, bio, cover_url, cover_position, profile_visibility, is_verified, share_code, updated_at")
         .or(`id.eq.${userId},user_id.eq.${userId}`)
         .limit(10);
 
@@ -201,7 +201,12 @@ export default function PublicProfilePage() {
       }
 
       const resolvedFullProfile = resolveFullProfile((data ?? []) as FullProfileCandidate[], userId);
-      if (resolvedFullProfile) return resolvedFullProfile;
+      if (resolvedFullProfile) {
+        return {
+          ...resolvedFullProfile,
+          bio: (pickFirstPresent((data ?? []) as any[], (candidate: any) => candidate.bio) as string | null) ?? null,
+        };
+      }
 
       // Fallback for logged-out viewers when profiles table is protected by RLS.
       const { data: publicProfiles, error: publicProfileError } = await (supabase as any)
@@ -223,6 +228,7 @@ export default function PublicProfilePage() {
         user_id: publicProfile.user_id || publicProfile.id,
         full_name: publicProfile.full_name,
         avatar_url: publicProfile.avatar_url,
+        bio: null,
         cover_url: null,
         cover_position: null,
         profile_visibility: "public",
@@ -254,6 +260,7 @@ export default function PublicProfilePage() {
       if (pub) {
         return {
           ...pub,
+          bio: null,
           cover_url: null,
           cover_position: null,
           profile_visibility: "public",
@@ -276,6 +283,7 @@ export default function PublicProfilePage() {
 
         return {
           ...fp,
+          bio: fp?.bio ?? null,
           cover_position: null,
           profile_visibility: "public",
           is_verified: false,
@@ -302,6 +310,7 @@ export default function PublicProfilePage() {
       user_id: baseProfile?.user_id || userId || "",
       full_name: baseProfile?.full_name || localAdminCreatedAccount?.full_name || "User",
       avatar_url: baseProfile?.avatar_url || localAdminCreatedAccount?.avatar_url || null,
+      bio: baseProfile?.bio || null,
       cover_url: baseProfile?.cover_url || localAdminCreatedAccount?.cover_url || null,
       cover_position: baseProfile?.cover_position ?? 50,
       profile_visibility: baseProfile?.profile_visibility || "public",
@@ -759,6 +768,11 @@ export default function PublicProfilePage() {
           {/* Profile Info */}
           <div className="flex flex-col items-center pt-16 sm:pt-20 pb-4 px-4 max-w-3xl mx-auto">
             <h2 className="text-xl font-bold text-foreground">{resolvedProfile.full_name}</h2>
+            {resolvedProfile.bio && (
+              <p className="mt-2 max-w-md text-center text-sm text-muted-foreground whitespace-pre-wrap break-words">
+                {resolvedProfile.bio}
+              </p>
+            )}
 
             {!isLocked ? (
               <div className="flex gap-6 mt-4">
