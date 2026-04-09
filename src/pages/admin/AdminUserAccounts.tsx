@@ -759,17 +759,17 @@ function ProfileCard({
     if (!selectedPost || !newComment.trim() || !acc.userId) return;
     setSubmittingComment(true);
     try {
-      const { data, error } = await (supabase as any)
-        .from("post_comments")
-        .insert({
-          post_id: selectedPost.id,
-          user_id: acc.userId,
+      const { data, error } = await supabase.functions.invoke("admin-post-comment", {
+        body: {
+          postId: selectedPost.id,
+          userId: acc.userId,
           content: newComment.trim(),
-        })
-        .select("id, user_id, content, created_at")
-        .single();
+        },
+      });
       if (error) throw error;
-      setPostComments((prev) => [...prev, { ...data, display_name: acc.username, avatar_url: acc.avatarUrl }]);
+      if (data?.error) throw new Error(data.error);
+      const comment = data?.comment;
+      setPostComments((prev) => [...prev, { ...comment, display_name: acc.username, avatar_url: acc.avatarUrl }]);
       setNewComment("");
       // Update comment count in selectedPost
       setSelectedPost((prev) => prev ? { ...prev, comments_count: (prev.comments_count || 0) + 1 } : prev);
