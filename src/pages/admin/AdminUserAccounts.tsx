@@ -38,6 +38,7 @@ import {
   Plus,
   Film,
   MapPin,
+  Move,
 } from "lucide-react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,7 @@ interface CreatedAccount {
   createdAt: string;
   avatarUrl: string | null;
   coverUrl: string | null;
+  coverPosition: number;
   socialLinks: Record<string, string>;
 }
 
@@ -167,6 +169,7 @@ function normalizeCreatedAccount(account: Partial<CreatedAccount>): CreatedAccou
     createdAt: account.createdAt ?? new Date().toLocaleString(),
     avatarUrl: account.avatarUrl ?? null,
     coverUrl: account.coverUrl ?? null,
+    coverPosition: account.coverPosition ?? 50,
     socialLinks: account.socialLinks ?? {},
   };
 }
