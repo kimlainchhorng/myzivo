@@ -25,6 +25,7 @@ import LiveChatWidget from "./components/shared/LiveChatWidget";
 
 import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
 import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
+import InAppBrowserInterstitial from "./components/shared/InAppBrowserInterstitial";
 import { ScrollToTopButton } from "./components/shared/ScrollToTopButton";
 import { SkipToContent } from "./components/shared/SkipToContent";
 import RoutePrefetcher from "./components/shared/RoutePrefetcher";
@@ -904,6 +905,7 @@ const App = () => (
           <CookieConsent />
           <PWAUpdatePrompt />
           <PWAInstallBanner />
+          <InAppBrowserInterstitial />
           {/* ScrollToTopButton removed */}
           {/* LiveChatWidget removed */}
           <SpatialCursor />
