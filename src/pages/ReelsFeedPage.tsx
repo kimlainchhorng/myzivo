@@ -1616,8 +1616,15 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
             </div>
           )}
 
-          {/* Media */}
-          <div ref={containerRef} onClick={handleDoubleTap} className={cn("relative", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] w-auto mx-auto bg-black rounded-xl overflow-hidden" : "aspect-square w-full bg-black") : "")}>
+           {/* Media */}
+          <div
+            ref={containerRef}
+            onClick={handleDoubleTap}
+            onTouchStart={item.media_urls.length > 1 ? handleTouchStart : undefined}
+            onTouchMove={item.media_urls.length > 1 ? handleTouchMove : undefined}
+            onTouchEnd={item.media_urls.length > 1 ? handleTouchEnd : undefined}
+            className={cn("relative overflow-hidden", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] w-auto mx-auto bg-black rounded-xl" : "aspect-square w-full bg-black") : "")}
+          >
             {hasMedia ? (
               item.media_type === "video" ? (
                 <>
@@ -1652,33 +1659,56 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                   )}
                 </>
               ) : (
-                <img
-                  src={mediaUrl}
-                  alt={item.caption || "Post"}
-                  className="h-full w-full object-cover cursor-pointer"
-                  loading="lazy"
-                  onClick={() => onOpenFullscreen?.()}
-                />
+                <div className="relative h-full w-full">
+                  <img
+                    src={mediaUrl}
+                    alt={item.caption || "Post"}
+                    className="h-full w-full object-cover cursor-pointer transition-opacity duration-200"
+                    loading="lazy"
+                    onClick={() => onOpenFullscreen?.()}
+                  />
+
+                  {/* Desktop left/right arrows for multi-image */}
+                  {item.media_urls.length > 1 && currentMedia > 0 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setCurrentMedia(currentMedia - 1); }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white transition-colors hidden sm:flex"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                  )}
+                  {item.media_urls.length > 1 && currentMedia < item.media_urls.length - 1 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setCurrentMedia(currentMedia + 1); }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white transition-colors hidden sm:flex"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
               )
             ) : null}
 
-            {/* Multi-image indicator */}
+            {/* Multi-image counter & dots */}
             {hasMedia && item.media_urls.length > 1 && (
               <>
-                <div className="absolute top-3 right-3 bg-black/50 px-2 py-0.5 rounded-full text-[10px] text-white font-medium">
+                <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-full text-[11px] text-white font-semibold shadow-lg">
                   {currentMedia + 1}/{item.media_urls.length}
                 </div>
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                   {item.media_urls.map((_, i) => (
                     <button
                       key={i}
-                      onClick={() => setCurrentMedia(i)}
-                      className={cn("h-1.5 rounded-full transition-all", i === currentMedia ? "w-4 bg-primary" : "w-1.5 bg-white/60")}
+                      onClick={(e) => { e.stopPropagation(); setCurrentMedia(i); }}
+                      className={cn(
+                        "rounded-full transition-all duration-300",
+                        i === currentMedia ? "w-5 h-2 bg-primary shadow-md" : "w-2 h-2 bg-white/50 hover:bg-white/80"
+                      )}
                     />
                   ))}
                 </div>
               </>
-             )}
+            )}
 
             {/* Double-tap heart animation */}
             <AnimatePresence>
