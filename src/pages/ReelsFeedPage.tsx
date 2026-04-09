@@ -1168,6 +1168,27 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   const [tipTarget, setTipTarget] = useState<{ id: string; name: string } | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef(0);
+  const touchDeltaX = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchDeltaX.current = 0;
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+  };
+  const handleTouchEnd = () => {
+    if (item.media_urls.length <= 1) return;
+    if (Math.abs(touchDeltaX.current) > 50) {
+      if (touchDeltaX.current < 0 && currentMedia < item.media_urls.length - 1) {
+        setCurrentMedia(currentMedia + 1);
+      } else if (touchDeltaX.current > 0 && currentMedia > 0) {
+        setCurrentMedia(currentMedia - 1);
+      }
+    }
+    touchDeltaX.current = 0;
+  };
   const lastTapRef = useRef(0);
 
   const isOwner = currentUserId && item.author_id === currentUserId;
