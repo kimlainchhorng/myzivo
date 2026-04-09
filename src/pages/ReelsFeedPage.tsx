@@ -81,6 +81,8 @@ const normalizeUserPostMediaType = (mediaType: string | null | undefined): "imag
   mediaType === "video" || mediaType === "reel" ? "video" : "image";
 
 const getReelsSharePostId = (item: FeedItem): string => item.id.replace(/^u-/, "");
+const getFeedInteractionPostId = (item: FeedItem): string => item.source === "user" ? item.id.replace(/^u-/, "") : item.id;
+const getFeedLikesTable = (item: FeedItem): "post_likes" | "store_post_likes" => item.source === "user" ? "post_likes" : "store_post_likes";
 
 export default function ReelsFeedPage() {
   const navigate = useNavigate();
@@ -1226,6 +1228,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
   const [commentSetting, setCommentSetting] = useState<"everyone" | "friends" | "off">(item.comment_control || "everyone");
   const [showCommentSettings, setShowCommentSettings] = useState(false);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
+  const [localComments, setLocalComments] = useState(item.comments_count);
   const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
@@ -1260,7 +1263,40 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
   };
   const lastTapRef = useRef(0);
 
-  const isOwner = currentUserId && item.author_id === currentUserId;
+  const isOwner = Boolean(currentUserId && item.author_id === currentUserId);
+  const interactionPostId = getFeedInteractionPostId(item);
+  const likesTable = getFeedLikesTable(item);
+
+  useEffect(() => {
+    setLocalLikes(item.likes_count);
+  }, [item.likes_count]);
+
+  useEffect(() => {
+    setLocalComments(item.comments_count);
+  }, [item.comments_count]);
+
+  useEffect(() => {
+    if (!currentUserId) {
+      setLiked(false);
+      return;
+    }
+
+    let alive = true;
+    (supabase as any)
+      .from(likesTable)
+      .select("id")
+      .eq("post_id", interactionPostId)
+      .eq("user_id", currentUserId)
+      .maybeSingle()
+      .then(({ data, error }: any) => {
+        if (!alive || error) return;
+        setLiked(Boolean(data));
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [currentUserId, interactionPostId, likesTable]);
 
   // Check follow status
   useEffect(() => {
@@ -1341,16 +1377,31 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       toast.error("Please sign in to like posts");
       return;
     }
+
     const newLiked = !liked;
     setLiked(newLiked);
-    setLocalLikes((prev) => prev + (newLiked ? 1 : -1));
-    // Persist like to DB
-    if (item.source === "store") {
+    setLocalLikes((prev) => Math.max(0, prev + (newLiked ? 1 : -1)));
+
+    try {
       if (newLiked) {
-        await supabase.from("store_post_likes").insert({ post_id: item.id, user_id: currentUserId }).then(() => {});
+        const { error } = await (supabase as any)
+          .from(likesTable)
+          .insert({ post_id: interactionPostId, user_id: currentUserId });
+        if (error) throw error;
       } else {
-        await supabase.from("store_post_likes").delete().eq("post_id", item.id).eq("user_id", currentUserId);
+        const { error } = await (supabase as any)
+          .from(likesTable)
+          .delete()
+          .eq("post_id", interactionPostId)
+          .eq("user_id", currentUserId);
+        if (error) throw error;
       }
+
+      await queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+    } catch {
+      setLiked(!newLiked);
+      setLocalLikes((prev) => Math.max(0, prev - (newLiked ? 1 : -1)));
+      toast.error("Failed to update like");
     }
   };
 
@@ -1985,9 +2036,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           {commentSetting !== "off" && (
             <button onClick={handleComment} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
               <MessageCircle className="h-[22px] w-[22px]" />
-              {item.comments_count > 0 && (
+              {localComments > 0 && (
                 <span className="text-[12px] text-muted-foreground font-semibold">
-                  {item.comments_count > 999 ? `${(item.comments_count/1000).toFixed(1)}k` : item.comments_count}
+                  {localComments > 999 ? `${(localComments/1000).toFixed(1)}k` : localComments}
                 </span>
               )}
             </button>
@@ -2027,10 +2078,10 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           <MessageSquareOff className="h-3.5 w-3.5 text-muted-foreground/60" />
           <p className="text-[12px] text-muted-foreground/60">Comments are turned off</p>
         </div>
-      ) : item.comments_count > 0 ? (
+      ) : localComments > 0 ? (
         <button onClick={handleComment} className="px-3 pb-2">
           <p className="text-[12px] text-muted-foreground">
-            View all {item.comments_count} comments
+            View all {localComments} comments
           </p>
         </button>
       ) : null}
@@ -2038,11 +2089,15 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       {/* Comments Sheet */}
       <CommentsSheet
         open={showComments}
-        onClose={() => setShowComments(false)}
-        postId={item.id}
+        onClose={() => {
+          setShowComments(false);
+          void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+        }}
+        postId={interactionPostId}
         postSource={item.source}
         currentUserId={currentUserId}
-        commentsCount={item.comments_count}
+        commentsCount={localComments}
+        onCommentsCountChange={setLocalComments}
       />
 
       {/* Views */}
