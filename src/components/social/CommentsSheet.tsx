@@ -20,11 +20,12 @@ interface CommentsSheetProps {
   postSource: "user" | "store";
   currentUserId: string | null;
   commentsCount: number;
+  onCommentsCountChange?: (count: number) => void;
   dark?: boolean; // for fullscreen reels mode
 }
 
 export default function CommentsSheet({
-  open, onClose, postId, postSource, currentUserId, commentsCount, dark = false,
+  open, onClose, postId, postSource, currentUserId, commentsCount, onCommentsCountChange, dark = false,
 }: CommentsSheetProps) {
   const { comments, loading, submitting, addComment, deleteComment, toggleReaction } = usePostComments({
     postId, postSource, currentUserId,
@@ -53,6 +54,10 @@ export default function CommentsSheet({
   const border = dark ? "border-white/10" : "border-border";
   const mutedText = dark ? "text-white/50" : "text-muted-foreground";
   const inputBg = dark ? "bg-white/10 text-white placeholder:text-white/40" : "bg-muted text-foreground placeholder:text-muted-foreground";
+
+  useEffect(() => {
+    if (open && !loading) onCommentsCountChange?.(totalComments);
+  }, [open, loading, totalComments, onCommentsCountChange]);
 
   if (!open) return null;
 
