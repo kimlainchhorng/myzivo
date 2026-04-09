@@ -347,7 +347,12 @@ export default function CreatePostModal({
                 : "bg-muted text-muted-foreground"
             )}
           >
-            {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Share"}
+            {uploading ? (
+              <span className="flex items-center gap-1.5">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {uploadStatus || "Posting..."}
+              </span>
+            ) : "Share"}
           </button>
         </div>
 
