@@ -34134,6 +34134,7 @@ export type Database = {
           avatar_url: string | null
           background_check_reason: string | null
           background_check_status: string
+          bio: string | null
           comment_control: string
           cover_position: number | null
           cover_url: string | null
@@ -34193,6 +34194,7 @@ export type Database = {
           avatar_url?: string | null
           background_check_reason?: string | null
           background_check_status?: string
+          bio?: string | null
           comment_control?: string
           cover_position?: number | null
           cover_url?: string | null
@@ -34252,6 +34254,7 @@ export type Database = {
           avatar_url?: string | null
           background_check_reason?: string | null
           background_check_status?: string
+          bio?: string | null
           comment_control?: string
           cover_position?: number | null
           cover_url?: string | null
