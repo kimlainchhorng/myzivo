@@ -1173,7 +1173,106 @@ function SoundOverlay({
   );
 }
 
-export default function FeedPage() {
+// ── Discover People Overlay ─────────────────────────────────────────────────
+function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; onNavigate: (path: string) => void }) {
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id || null));
+  }, []);
+
+  const { data: profiles = [], isLoading } = useQuery({
+    queryKey: ["discover-people-reel", userId],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("profiles")
+        .select("id, full_name, avatar_url, bio, is_verified")
+        .neq("id", userId || "")
+        .limit(20);
+      return (data || []).sort(() => Math.random() - 0.5);
+    },
+    enabled: !!userId,
+  });
+
+  const handleFollow = async (profileId: string) => {
+    if (!userId) return;
+    try {
+      await (supabase as any).from("user_followers").insert({
+        follower_id: userId,
+        following_id: profileId,
+      });
+      setFollowingIds((prev) => new Set([...prev, profileId]));
+    } catch {}
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[70] bg-background flex flex-col"
+    >
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border/30" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 0.75rem)' }}>
+        <button onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
+          <ArrowLeft className="w-5 h-5 text-foreground" />
+        </button>
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Discover People</h2>
+          <p className="text-xs text-muted-foreground">Find people to follow on ZIVO</p>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        {isLoading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {profiles.map((profile: any) => (
+              <motion.div
+                key={profile.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card rounded-2xl border border-border/30 p-4 text-center"
+              >
+                <div onClick={() => { onClose(); onNavigate(`/user/${profile.id}`); }} className="cursor-pointer">
+                  <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden bg-muted ring-2 ring-primary/10">
+                    {profile.avatar_url ? (
+                      <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-primary font-bold text-xl bg-primary/10">
+                        {profile.full_name?.[0]?.toUpperCase() || "?"}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm font-semibold text-foreground truncate">{profile.full_name || "User"}</p>
+                  {profile.bio && (
+                    <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5 leading-tight">{profile.bio}</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleFollow(profile.id)}
+                  disabled={followingIds.has(profile.id)}
+                  className={`w-full mt-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    followingIds.has(profile.id)
+                      ? "bg-muted text-muted-foreground"
+                      : "bg-primary text-primary-foreground"
+                  }`}
+                >
+                  {followingIds.has(profile.id) ? "Following" : "Follow"}
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+
   const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
