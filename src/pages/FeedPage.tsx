@@ -483,30 +483,63 @@ function ReelCard({
         className="absolute bottom-0 left-0 right-16 z-30 px-4"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
       >
-        <button
-          type="button"
-          onClick={() => {
-            if (post.source === "user" && post.author_id) {
-              onNavigate(`__user__${post.author_id}`);
-            } else if (post.store_slug) {
-              onNavigate(post.store_slug);
-            }
-          }}
-          className="flex items-center gap-2.5 mb-2.5 active:opacity-70"
-        >
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/80 bg-black/40 flex-shrink-0">
-            {(post.source === "user" ? post.author_avatar : post.store_logo) ? (
-              <img src={(post.source === "user" ? post.author_avatar : post.store_logo)!} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Store className="w-5 h-5 text-white" />
+        <div className="flex items-center gap-2.5 mb-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              if (post.source === "user" && post.author_id) {
+                onNavigate(`__user__${post.author_id}`);
+              } else if (post.store_slug) {
+                onNavigate(post.store_slug);
+              }
+            }}
+            className="flex items-center gap-2.5 active:opacity-70"
+          >
+            <div className="relative flex-shrink-0">
+              <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-white/80 bg-black/40">
+                {(post.source === "user" ? post.author_avatar : post.store_logo) ? (
+                  <img src={(post.source === "user" ? post.author_avatar : post.store_logo)!} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Store className="w-5 h-5 text-white" />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <span className="text-white font-bold text-sm drop-shadow-lg">
-            {post.source === "user" ? post.author_name : post.store_name}
-          </span>
-        </button>
+              {/* TikTok-style + badge on avatar */}
+              {authorId && !isSelf && !isFollowing && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary flex items-center justify-center border-2 border-black">
+                  <span className="text-primary-foreground text-[10px] font-bold leading-none">+</span>
+                </div>
+              )}
+            </div>
+            <span className="text-white font-bold text-sm drop-shadow-lg">
+              {post.source === "user" ? post.author_name : post.store_name}
+            </span>
+          </button>
+
+          {/* Follow / Following button */}
+          {authorId && !isSelf && (
+            <button
+              type="button"
+              onClick={handleFollow}
+              disabled={followLoading}
+              className={cn(
+                "px-3.5 py-1 rounded-md text-xs font-semibold transition-all active:scale-95 border backdrop-blur-sm",
+                isFollowing
+                  ? "bg-white/10 border-white/30 text-white"
+                  : "bg-primary border-primary text-primary-foreground"
+              )}
+            >
+              {followLoading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : isFollowing ? (
+                <span className="flex items-center gap-1"><UserCheck className="w-3.5 h-3.5" /> Following</span>
+              ) : (
+                "Follow"
+              )}
+            </button>
+          )}
+        </div>
         {post.caption && (
           <p className="text-white text-sm line-clamp-2 drop-shadow leading-snug mb-2">
             {post.caption}
