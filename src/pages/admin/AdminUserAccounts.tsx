@@ -865,12 +865,40 @@ function ProfileCard({
         targetUserId = uid as string;
       }
 
+      const DIRECT_UPLOAD_THRESHOLD = 4 * 1024 * 1024; // 4 MB — use direct storage upload above this
+
       const files = await Promise.all(
-        newPostMedia.map(async (file) => ({
-          base64: await fileToBase64(file),
-          name: file.name,
-          contentType: file.type || "application/octet-stream",
-        })),
+        newPostMedia.map(async (file, index) => {
+          if (file.size > DIRECT_UPLOAD_THRESHOLD) {
+            // Upload directly to Supabase Storage to avoid edge function payload limit
+            const ext = file.name.split(".").pop()?.toLowerCase() || "mp4";
+            const filePath = `${targetUserId}/post_${Date.now()}_${index}_${crypto.randomUUID()}.${ext}`;
+
+            const { error: uploadError } = await supabase.storage
+              .from("user-posts")
+              .upload(filePath, file, {
+                contentType: file.type || "application/octet-stream",
+                upsert: false,
+              });
+
+            if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+
+            const { data: publicUrlData } = supabase.storage.from("user-posts").getPublicUrl(filePath);
+
+            return {
+              storageUrl: publicUrlData.publicUrl,
+              name: file.name,
+              contentType: file.type || "application/octet-stream",
+            };
+          }
+
+          // Small files: send as base64 (original flow)
+          return {
+            base64: await fileToBase64(file),
+            name: file.name,
+            contentType: file.type || "application/octet-stream",
+          };
+        }),
       );
 
       const { data, error } = await supabase.functions.invoke("admin-create-user-post", {
