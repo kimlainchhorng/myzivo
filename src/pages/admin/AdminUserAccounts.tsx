@@ -38,6 +38,7 @@ import {
   Plus,
   Film,
   MapPin,
+  Move,
 } from "lucide-react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,7 @@ interface CreatedAccount {
   createdAt: string;
   avatarUrl: string | null;
   coverUrl: string | null;
+  coverPosition: number;
   socialLinks: Record<string, string>;
 }
 
@@ -167,6 +169,7 @@ function normalizeCreatedAccount(account: Partial<CreatedAccount>): CreatedAccou
     createdAt: account.createdAt ?? new Date().toLocaleString(),
     avatarUrl: account.avatarUrl ?? null,
     coverUrl: account.coverUrl ?? null,
+    coverPosition: account.coverPosition ?? 50,
     socialLinks: account.socialLinks ?? {},
   };
 }
@@ -387,6 +390,7 @@ export default function AdminUserAccounts() {
         createdAt: new Date().toLocaleString(),
         avatarUrl: null,
         coverUrl: null,
+        coverPosition: 50,
         socialLinks: {},
       };
 
@@ -451,7 +455,7 @@ export default function AdminUserAccounts() {
       const fieldKey = type === "avatar" ? "avatarUrl" : "coverUrl";
       setCreatedAccounts((prev) =>
         prev.map((acc, i) =>
-          i === index ? { ...acc, [fieldKey]: publicUrl } : acc,
+          i === index ? { ...acc, [fieldKey]: publicUrl, ...(type === "cover" ? { coverPosition: 50 } : {}) } : acc,
         ),
       );
       queryClient.invalidateQueries({ queryKey: ["admin-created-accounts"] });
@@ -609,8 +613,20 @@ export default function AdminUserAccounts() {
                   isCopied={isCopied}
                   hasPassword={hasPassword}
                   credText={credText}
-                  onCopy={copyToClipboard}
-                  onImageUpload={handleImageUpload}
+                   onCopy={copyToClipboard}
+                   onImageUpload={handleImageUpload}
+                   onCoverPositionChange={(idx, pos) => {
+                     setCreatedAccounts((prev) =>
+                       prev.map((a, j) => j === idx ? { ...a, coverPosition: pos } : a)
+                     );
+                     // Also save to DB
+                     const target = createdAccounts[idx];
+                     if (target?.userId) {
+                       supabase.from("profiles").update({ cover_position: Math.round(pos) } as any)
+                         .or(`id.eq.${target.userId},user_id.eq.${target.userId}`)
+                         .then(() => {});
+                     }
+                   }}
                    onSocialLinkChange={handleSocialLinkChange}
                    onSocialLinkBlur={handleSocialLinkBlur}
                    onRemoveSocialLink={removeSocialLink}
@@ -635,6 +651,7 @@ interface ProfileCardProps {
   credText: string;
   onCopy: (text: string, id: string) => void;
   onImageUpload: (index: number, type: "avatar" | "cover", file: File) => void;
+  onCoverPositionChange: (index: number, position: number) => void;
   onSocialLinkChange: (index: number, platform: string, value: string) => void;
   onSocialLinkBlur: (index: number) => void;
   onRemoveSocialLink: (index: number, platform: string) => void;
@@ -651,6 +668,7 @@ function ProfileCard({
   credText,
   onCopy,
   onImageUpload,
+  onCoverPositionChange,
   onSocialLinkChange,
   onSocialLinkBlur,
   onRemoveSocialLink,
@@ -680,6 +698,31 @@ function ProfileCard({
   const [loadingComments, setLoadingComments] = useState(false);
   const previewUrlsRef = useRef<string[]>([]);
   const queryClient = useQueryClient();
+
+  // Cover repositioning
+  const [coverRepositioning, setCoverRepositioning] = useState(false);
+  const [localCoverPos, setLocalCoverPos] = useState(acc.coverPosition);
+  const coverDragRef = useRef<{ startY: number; startPos: number } | null>(null);
+
+  useEffect(() => {
+    setLocalCoverPos(acc.coverPosition);
+  }, [acc.coverPosition]);
+
+  const handleCoverDragStart = (clientY: number) => {
+    coverDragRef.current = { startY: clientY, startPos: localCoverPos };
+  };
+  const handleCoverDragMove = (clientY: number) => {
+    if (!coverDragRef.current) return;
+    const delta = clientY - coverDragRef.current.startY;
+    const newPos = Math.max(0, Math.min(100, coverDragRef.current.startPos + delta * 0.3));
+    setLocalCoverPos(newPos);
+  };
+  const handleCoverDragEnd = () => { coverDragRef.current = null; };
+  const saveCoverPosition = () => {
+    onCoverPositionChange(index, Math.round(localCoverPos));
+    setCoverRepositioning(false);
+    toast({ title: "Cover position saved!" });
+  };
 
   useEffect(() => {
     previewUrlsRef.current = newPostPreviews;
@@ -1008,17 +1051,66 @@ function ProfileCard({
 
       {/* Cover */}
       <div
-        className="h-28 w-full relative group cursor-pointer"
-        onClick={() => coverInputRef.current?.click()}
-        style={{
-          background: acc.coverUrl
-            ? `url(${acc.coverUrl}) center/cover no-repeat`
-            : `linear-gradient(135deg, hsl(${hue} 70% 55%), hsl(${(hue + 40) % 360} 60% 45%))`,
-        }}
+        className={`h-28 w-full relative group overflow-hidden ${coverRepositioning ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"}`}
+        onClick={coverRepositioning ? undefined : () => coverInputRef.current?.click()}
+        onMouseDown={coverRepositioning ? (e) => { e.preventDefault(); handleCoverDragStart(e.clientY); } : undefined}
+        onMouseMove={coverRepositioning ? (e) => handleCoverDragMove(e.clientY) : undefined}
+        onMouseUp={coverRepositioning ? handleCoverDragEnd : undefined}
+        onMouseLeave={coverRepositioning ? handleCoverDragEnd : undefined}
+        onTouchStart={coverRepositioning ? (e) => handleCoverDragStart(e.touches[0].clientY) : undefined}
+        onTouchMove={coverRepositioning ? (e) => handleCoverDragMove(e.touches[0].clientY) : undefined}
+        onTouchEnd={coverRepositioning ? handleCoverDragEnd : undefined}
       >
-        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/30 transition-colors flex items-center justify-center">
-          <Camera className="h-6 w-6 text-background opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
+        {acc.coverUrl ? (
+          <img
+            src={acc.coverUrl}
+            alt="Cover"
+            className="w-full h-full object-cover select-none"
+            style={{ objectPosition: `center ${localCoverPos}%` }}
+            draggable={false}
+          />
+        ) : (
+          <div
+            className="w-full h-full"
+            style={{ background: `linear-gradient(135deg, hsl(${hue} 70% 55%), hsl(${(hue + 40) % 360} 60% 45%))` }}
+          />
+        )}
+        {!coverRepositioning && (
+          <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/30 transition-colors flex items-center justify-center">
+            <Camera className="h-6 w-6 text-background opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+        )}
+        {coverRepositioning && (
+          <div className="absolute inset-0 bg-foreground/20 flex items-center justify-center">
+            <span className="text-background text-xs font-semibold bg-foreground/50 rounded-full px-3 py-1">
+              Drag up / down to reposition
+            </span>
+          </div>
+        )}
+        {acc.coverUrl && !coverRepositioning && (
+          <button
+            className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full border border-border/40 bg-card/90 px-2 py-1 text-[10px] font-semibold text-foreground shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            onClick={(e) => { e.stopPropagation(); setCoverRepositioning(true); }}
+          >
+            <Move className="h-3 w-3" /> Reposition
+          </button>
+        )}
+        {coverRepositioning && (
+          <div className="absolute bottom-2 right-2 flex gap-1.5 z-10">
+            <button
+              className="rounded-full bg-card px-3 py-1 text-[10px] font-semibold text-foreground border border-border/40 shadow-sm"
+              onClick={(e) => { e.stopPropagation(); setLocalCoverPos(acc.coverPosition); setCoverRepositioning(false); }}
+            >
+              Cancel
+            </button>
+            <button
+              className="rounded-full bg-primary px-3 py-1 text-[10px] font-semibold text-primary-foreground shadow-sm"
+              onClick={(e) => { e.stopPropagation(); saveCoverPosition(); }}
+            >
+              Save
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Left-aligned avatar + name + stats */}
@@ -1302,23 +1394,22 @@ function ProfileCard({
         <div className="rounded-xl border border-border/30 overflow-hidden mx-3 mt-1 bg-gradient-to-b from-primary/10 to-card">
           {/* Cover */}
           <div
-            className="h-24 w-full relative group cursor-pointer"
+            className="h-24 w-full relative group cursor-pointer overflow-hidden"
             onClick={() => coverInputRef.current?.click()}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                coverInputRef.current?.click();
-              }
-            }}
             role="button"
             tabIndex={0}
             aria-label={acc.coverUrl ? "Change cover photo" : "Add cover photo"}
-            style={{
-              background: acc.coverUrl
-                ? `url(${acc.coverUrl}) center/cover no-repeat`
-                : `linear-gradient(180deg, hsl(var(--primary) / 0.2) 0%, hsl(var(--primary) / 0.05) 100%)`,
-            }}
           >
+            {acc.coverUrl ? (
+              <img
+                src={acc.coverUrl}
+                alt="Cover"
+                className="w-full h-full object-cover"
+                style={{ objectPosition: `center ${localCoverPos}%` }}
+              />
+            ) : (
+              <div className="w-full h-full" style={{ background: `linear-gradient(180deg, hsl(var(--primary) / 0.2) 0%, hsl(var(--primary) / 0.05) 100%)` }} />
+            )}
             <div className="absolute inset-0 bg-foreground/0 transition-colors group-hover:bg-foreground/20" />
             <div className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-border/40 bg-card/90 px-2 py-1 text-[10px] font-semibold text-foreground shadow-sm">
               <Camera className="h-3 w-3" />
