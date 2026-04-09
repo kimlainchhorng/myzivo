@@ -3,7 +3,6 @@
  */
 import { motion } from "framer-motion";
 import { Plane, Bell, Shield, Star, Download, Hotel, CarFront, UtensilsCrossed } from "lucide-react";
-import { toast } from "sonner";
 
 const features = [
   { icon: Plane, text: "Book flights, hotels & cars on the go", colorVar: "--flights" },
@@ -32,7 +31,7 @@ export default function DownloadAppSection() {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
               <Download className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Coming Soon</span>
+              <span className="text-sm font-medium text-primary">Download Now</span>
             </div>
 
             <h2 className="text-3xl sm:text-4xl font-bold mb-5 tracking-tight">
