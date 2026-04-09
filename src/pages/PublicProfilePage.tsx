@@ -455,7 +455,7 @@ export default function PublicProfilePage() {
       } else if (action === "cancel" || action === "unfriend") {
         await supabase.from("friendships").delete().or(`and(user_id.eq.${user.id},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${user.id})`).throwOnError();
       } else if (action === "accept") {
-        if (!isFollowing) await supabase.from("followers").insert({ follower_id: user.id, following_id: targetUserId }).throwOnError();
+        if (!isFollowing) await (supabase as any).from("user_followers").insert({ follower_id: user.id, following_id: targetUserId }).throwOnError();
         await supabase.from("friendships").update({ status: "accepted", accepted_at: new Date().toISOString() }).eq("user_id", targetUserId).eq("friend_id", user.id).throwOnError();
       }
     },
