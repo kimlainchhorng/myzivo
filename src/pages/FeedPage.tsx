@@ -115,7 +115,39 @@ function ReelCard({
   const [hasLoadedFrame, setHasLoadedFrame] = useState(false);
   const viewTracked = useRef(false);
 
-  const liked = userLikedPostIds.has(post.id);
+  // Follow state
+  const authorId = post.source === "user" ? post.author_id : null;
+  const isSelf = !!userId && userId === authorId;
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  // Check follow status on mount
+  useEffect(() => {
+    if (!userId || !authorId || isSelf) return;
+    supabase.rpc("is_following" as any, { target_user_id: authorId })
+      .then(({ data }: any) => { if (typeof data === "boolean") setIsFollowing(data); });
+  }, [userId, authorId, isSelf]);
+
+  const handleFollow = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!userId || !authorId || followLoading) return;
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await supabase.from("user_followers" as any).delete()
+          .eq("follower_id", userId).eq("following_id", authorId);
+        setIsFollowing(false);
+      } else {
+        await (supabase as any).from("user_followers").insert({
+          follower_id: userId,
+          following_id: authorId,
+        });
+        setIsFollowing(true);
+      }
+    } catch { /* ignore */ } finally {
+      setFollowLoading(false);
+    }
+  };
 
   const normalizedUrls = useMemo(
     () => (post.media_urls || []).map((u) => normalizeStorePostMediaUrl(u)).filter(Boolean),
