@@ -613,8 +613,20 @@ export default function AdminUserAccounts() {
                   isCopied={isCopied}
                   hasPassword={hasPassword}
                   credText={credText}
-                  onCopy={copyToClipboard}
-                  onImageUpload={handleImageUpload}
+                   onCopy={copyToClipboard}
+                   onImageUpload={handleImageUpload}
+                   onCoverPositionChange={(idx, pos) => {
+                     setCreatedAccounts((prev) =>
+                       prev.map((a, j) => j === idx ? { ...a, coverPosition: pos } : a)
+                     );
+                     // Also save to DB
+                     const target = createdAccounts[idx];
+                     if (target?.userId) {
+                       supabase.from("profiles").update({ cover_position: Math.round(pos) } as any)
+                         .or(`id.eq.${target.userId},user_id.eq.${target.userId}`)
+                         .then(() => {});
+                     }
+                   }}
                    onSocialLinkChange={handleSocialLinkChange}
                    onSocialLinkBlur={handleSocialLinkBlur}
                    onRemoveSocialLink={removeSocialLink}
@@ -656,6 +668,7 @@ function ProfileCard({
   credText,
   onCopy,
   onImageUpload,
+  onCoverPositionChange,
   onSocialLinkChange,
   onSocialLinkBlur,
   onRemoveSocialLink,
@@ -685,6 +698,31 @@ function ProfileCard({
   const [loadingComments, setLoadingComments] = useState(false);
   const previewUrlsRef = useRef<string[]>([]);
   const queryClient = useQueryClient();
+
+  // Cover repositioning
+  const [coverRepositioning, setCoverRepositioning] = useState(false);
+  const [localCoverPos, setLocalCoverPos] = useState(acc.coverPosition);
+  const coverDragRef = useRef<{ startY: number; startPos: number } | null>(null);
+
+  useEffect(() => {
+    setLocalCoverPos(acc.coverPosition);
+  }, [acc.coverPosition]);
+
+  const handleCoverDragStart = (clientY: number) => {
+    coverDragRef.current = { startY: clientY, startPos: localCoverPos };
+  };
+  const handleCoverDragMove = (clientY: number) => {
+    if (!coverDragRef.current) return;
+    const delta = clientY - coverDragRef.current.startY;
+    const newPos = Math.max(0, Math.min(100, coverDragRef.current.startPos + delta * 0.3));
+    setLocalCoverPos(newPos);
+  };
+  const handleCoverDragEnd = () => { coverDragRef.current = null; };
+  const saveCoverPosition = () => {
+    onCoverPositionChange(index, Math.round(localCoverPos));
+    setCoverRepositioning(false);
+    toast({ title: "Cover position saved!" });
+  };
 
   useEffect(() => {
     previewUrlsRef.current = newPostPreviews;
