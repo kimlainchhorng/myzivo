@@ -592,7 +592,7 @@ export default function PublicProfilePage() {
                 </div>
               ) : postTab === "all" ? (
                 /* Feed-style view for "All" tab */
-                <div className="divide-y divide-border/30">
+                <div className="divide-y divide-border/30 max-w-3xl mx-auto">
                   {filteredPosts.map((post: any) => (
                     <motion.div key={post.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card">
                       {post.sharedOrigin ? (
