@@ -397,6 +397,34 @@ export default function ReelsFeedPage() {
             });
           }
         }
+
+        // Enrich with post_media table for multi-image posts
+        try {
+          const userItemIds = allItems.filter((i) => i.source === "user" && i.media_urls.length <= 1).map((i) => i.id.replace(/^u-/, ""));
+          if (userItemIds.length) {
+            const { data: postMediaRows } = await (supabase as any)
+              .from("post_media")
+              .select("post_id, media_url, sort_order")
+              .in("post_id", userItemIds);
+            if (postMediaRows?.length) {
+              const mediaMap = new Map<string, string[]>();
+              (postMediaRows as any[])
+                .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+                .forEach((row: any) => {
+                  if (!mediaMap.has(row.post_id)) mediaMap.set(row.post_id, []);
+                  if (row.media_url) mediaMap.get(row.post_id)!.push(row.media_url);
+                });
+              allItems.forEach((item) => {
+                if (item.source !== "user") return;
+                const rawId = item.id.replace(/^u-/, "");
+                const extra = mediaMap.get(rawId);
+                if (extra && extra.length > item.media_urls.length) {
+                  item.media_urls = extra;
+                }
+              });
+            }
+          }
+        } catch {}
       } catch {}
 
       try {
