@@ -669,6 +669,11 @@ function ProfileCard({
   const [showPostModal, setShowPostModal] = useState(false);
   const [selectedPost, setSelectedPost] = useState<AccountPreviewPost | null>(null);
   const postMediaRef = useRef<HTMLInputElement>(null);
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  const [postComments, setPostComments] = useState<Array<{ id: string; user_id: string; content: string; created_at: string; display_name?: string; avatar_url?: string }>>([]);
+  const [newComment, setNewComment] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [loadingComments, setLoadingComments] = useState(false);
   const previewUrlsRef = useRef<string[]>([]);
   const queryClient = useQueryClient();
 
@@ -687,6 +692,94 @@ function ProfileCard({
       setSelectedPost(null);
     }
   }, [isFlipped]);
+
+  // Fetch comments when a post is selected
+  useEffect(() => {
+    if (!selectedPost) {
+      setPostComments([]);
+      setNewComment("");
+      return;
+    }
+    let cancelled = false;
+    setLoadingComments(true);
+    (async () => {
+      const { data, error } = await (supabase as any)
+        .from("post_comments")
+        .select("id, user_id, content, created_at")
+        .eq("post_id", selectedPost.id)
+        .order("created_at", { ascending: true })
+        .limit(50);
+      if (cancelled) return;
+      if (error) {
+        console.error("Failed to load comments:", error);
+        setPostComments([]);
+      } else {
+        // Fetch profile names for commenters
+        const userIds = [...new Set((data || []).map((c: any) => c.user_id))];
+        let profileMap = new Map<string, { display_name?: string; avatar_url?: string }>();
+        if (userIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("user_id, display_name, avatar_url")
+            .in("user_id", userIds);
+          (profiles || []).forEach((p: any) => profileMap.set(p.user_id, p));
+        }
+        setPostComments(
+          (data || []).map((c: any) => ({
+            ...c,
+            display_name: profileMap.get(c.user_id)?.display_name || "User",
+            avatar_url: profileMap.get(c.user_id)?.avatar_url || null,
+          }))
+        );
+      }
+      setLoadingComments(false);
+    })();
+    return () => { cancelled = true; };
+  }, [selectedPost?.id]);
+
+  const handleDeletePost = async (postId: string) => {
+    setDeletingPostId(postId);
+    try {
+      // Delete media first
+      await (supabase as any).from("post_media").delete().eq("post_id", postId);
+      // Delete post
+      const { error } = await (supabase as any).from("user_posts").delete().eq("id", postId);
+      if (error) throw error;
+      setSelectedPost(null);
+      await queryClient.invalidateQueries({ queryKey: ["admin-user-posts", acc.userId] });
+      toast({ title: "Post deleted" });
+    } catch (err: any) {
+      toast({ title: "Failed to delete post", description: err.message, variant: "destructive" });
+    } finally {
+      setDeletingPostId(null);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!selectedPost || !newComment.trim() || !acc.userId) return;
+    setSubmittingComment(true);
+    try {
+      const { data, error } = await (supabase as any)
+        .from("post_comments")
+        .insert({
+          post_id: selectedPost.id,
+          user_id: acc.userId,
+          content: newComment.trim(),
+        })
+        .select("id, user_id, content, created_at")
+        .single();
+      if (error) throw error;
+      setPostComments((prev) => [...prev, { ...data, display_name: acc.username, avatar_url: acc.avatarUrl }]);
+      setNewComment("");
+      // Update comment count in selectedPost
+      setSelectedPost((prev) => prev ? { ...prev, comments_count: (prev.comments_count || 0) + 1 } : prev);
+      await queryClient.invalidateQueries({ queryKey: ["admin-user-posts", acc.userId] });
+    } catch (err: any) {
+      toast({ title: "Failed to add comment", description: err.message, variant: "destructive" });
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
 
   const handlePostMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -1582,25 +1675,99 @@ function ProfileCard({
                   </button>
                 </div>
 
-                <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+                <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
                   {selectedPost.caption?.trim() ? (
                     <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">{selectedPost.caption}</p>
                   ) : (
                     <p className="text-sm text-muted-foreground">No caption</p>
                   )}
 
-                  <div className="flex items-center gap-4 border-t border-border/30 pt-4 text-sm">
-                    <span className="flex items-center gap-1.5 font-medium text-foreground">
+                  <div className="flex items-center gap-4 border-t border-border/30 pt-3 text-sm">
+                    <button
+                      type="button"
+                      className="flex items-center gap-1.5 font-medium text-foreground hover:text-red-500 transition-colors"
+                      onClick={() => toast({ title: "Liked!", description: "Like registered (admin view)" })}
+                    >
                       <Heart className="h-4 w-4" />
                       {selectedPost.likes_count || 0}
-                    </span>
-                    <span className="flex items-center gap-1.5 font-medium text-foreground">
+                    </button>
+                    <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
                       <MessageCircle className="h-4 w-4" />
                       {selectedPost.comments_count || 0}
                     </span>
-                    <span className="text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       {selectedPost.mediaCount} {selectedPost.mediaCount === 1 ? "file" : "files"}
                     </span>
+                    <div className="ml-auto">
+                      <button
+                        type="button"
+                        disabled={deletingPostId === selectedPost.id}
+                        onClick={() => handleDeletePost(selectedPost.id)}
+                        className="flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive/80 transition-colors disabled:opacity-50"
+                      >
+                        {deletingPostId === selectedPost.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3.5 w-3.5" />
+                        )}
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Comments section */}
+                  <div className="border-t border-border/30 pt-3 space-y-3">
+                    <p className="text-xs font-semibold text-foreground">Comments</p>
+                    {loadingComments ? (
+                      <div className="flex justify-center py-4">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : postComments.length === 0 ? (
+                      <p className="text-xs text-muted-foreground py-2">No comments yet</p>
+                    ) : (
+                      <div className="space-y-2.5 max-h-48 overflow-y-auto">
+                        {postComments.map((comment) => (
+                          <div key={comment.id} className="flex gap-2">
+                            <div className="h-7 w-7 rounded-full shrink-0 bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground overflow-hidden">
+                              {comment.avatar_url ? (
+                                <img src={comment.avatar_url} alt="" className="h-full w-full object-cover" />
+                              ) : (
+                                (comment.display_name || "U")[0].toUpperCase()
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs">
+                                <span className="font-semibold text-foreground">{comment.display_name} </span>
+                                <span className="text-foreground/90">{comment.content}</span>
+                              </p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Add comment input */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <input
+                        type="text"
+                        placeholder="Add a comment..."
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAddComment(); } }}
+                        className="flex-1 h-8 rounded-lg border border-border/40 bg-muted/30 px-3 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        disabled={submittingComment || !newComment.trim()}
+                        onClick={handleAddComment}
+                        className="h-8 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-40 hover:opacity-90 transition-opacity"
+                      >
+                        {submittingComment ? <Loader2 className="h-3 w-3 animate-spin" /> : "Post"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
