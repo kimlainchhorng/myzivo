@@ -1161,7 +1161,7 @@ export default function FeedPage() {
           ? supabase.from("store_profiles").select("id, name, logo_url, slug").in("id", storeIds)
           : Promise.resolve({ data: [] as any[] }),
         userIds.length
-          ? supabase.from("profiles").select("id, user_id, full_name, avatar_url").in("id", userIds)
+          ? supabase.from("profiles").select("id, user_id, full_name, avatar_url").in("id", userIds as string[])
           : Promise.resolve({ data: [] as any[] }),
       ]);
 
