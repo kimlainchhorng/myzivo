@@ -1,5 +1,81 @@
 import { createClient } from "npm:@supabase/supabase-js@2.49.4";
 
+type ProfileCandidate = {
+  id?: string;
+  user_id: string | null;
+  avatar_url: string | null;
+  cover_url: string | null;
+  social_facebook: string | null;
+  social_instagram: string | null;
+  social_tiktok: string | null;
+  social_snapchat: string | null;
+  social_x: string | null;
+  social_linkedin: string | null;
+  social_telegram: string | null;
+  social_links: Record<string, unknown> | null;
+  updated_at: string | null;
+};
+
+function rankProfileCandidate(candidate: ProfileCandidate, requestedId: string) {
+  let score = 0;
+
+  if (candidate.user_id === requestedId) score += 8;
+  if (candidate.id === requestedId) score += 6;
+  if (candidate.cover_url) score += 4;
+  if (candidate.avatar_url) score += 2;
+  if (candidate.user_id) score += 1;
+  if (candidate.social_links && Object.keys(candidate.social_links).length > 0) score += 1;
+
+  return score;
+}
+
+function sortProfileCandidates(candidates: ProfileCandidate[], requestedId: string) {
+  return [...candidates].sort((a, b) => {
+    const scoreDiff = rankProfileCandidate(b, requestedId) - rankProfileCandidate(a, requestedId);
+    if (scoreDiff !== 0) return scoreDiff;
+
+    const aTime = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+    const bTime = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+    return bTime - aTime;
+  });
+}
+
+function pickFirstPresent<T>(candidates: ProfileCandidate[], getter: (candidate: ProfileCandidate) => T | null | undefined | "") {
+  for (const candidate of candidates) {
+    const value = getter(candidate);
+    if (value !== null && value !== undefined && value !== "") {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+function resolveProfile(candidates: ProfileCandidate[], requestedId: string): ProfileCandidate | null {
+  if (!candidates.length) return null;
+
+  const ranked = sortProfileCandidates(candidates, requestedId);
+  const base = ranked[0];
+  const resolvedSocialLinks = ranked.find(
+    (candidate) => candidate.social_links && Object.keys(candidate.social_links).length > 0,
+  )?.social_links ?? null;
+
+  return {
+    ...base,
+    user_id: (pickFirstPresent(ranked, (candidate) => candidate.user_id) as string | null) ?? base.id ?? null,
+    avatar_url: (pickFirstPresent(ranked, (candidate) => candidate.avatar_url) as string | null) ?? null,
+    cover_url: (pickFirstPresent(ranked, (candidate) => candidate.cover_url) as string | null) ?? null,
+    social_facebook: (pickFirstPresent(ranked, (candidate) => candidate.social_facebook) as string | null) ?? null,
+    social_instagram: (pickFirstPresent(ranked, (candidate) => candidate.social_instagram) as string | null) ?? null,
+    social_tiktok: (pickFirstPresent(ranked, (candidate) => candidate.social_tiktok) as string | null) ?? null,
+    social_snapchat: (pickFirstPresent(ranked, (candidate) => candidate.social_snapchat) as string | null) ?? null,
+    social_x: (pickFirstPresent(ranked, (candidate) => candidate.social_x) as string | null) ?? null,
+    social_linkedin: (pickFirstPresent(ranked, (candidate) => candidate.social_linkedin) as string | null) ?? null,
+    social_telegram: (pickFirstPresent(ranked, (candidate) => candidate.social_telegram) as string | null) ?? null,
+    social_links: resolvedSocialLinks,
+  };
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -114,26 +190,13 @@ Deno.serve(async (req) => {
       .slice(0, 100);
 
     const userIds = uniqueUsers.map((user) => user.id);
-    let profiles: Array<{
-      id?: string;
-      user_id: string | null;
-      avatar_url: string | null;
-      cover_url: string | null;
-      social_facebook: string | null;
-      social_instagram: string | null;
-      social_tiktok: string | null;
-      social_snapchat: string | null;
-      social_x: string | null;
-      social_linkedin: string | null;
-      social_telegram: string | null;
-      social_links: Record<string, unknown> | null;
-    }> = [];
+    let profiles: ProfileCandidate[] = [];
 
     if (userIds.length) {
       const primaryQuery = await adminClient
         .from("profiles")
         .select(
-          "id, user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram, social_links",
+            "id, user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram, social_links, updated_at",
         )
         .or(userIds.map((id) => `user_id.eq.${id},id.eq.${id}`).join(","));
 
@@ -145,7 +208,7 @@ Deno.serve(async (req) => {
           const fallbackQuery = await adminClient
             .from("profiles")
             .select(
-              "id, user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram",
+              "id, user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram, updated_at",
             )
             .or(userIds.map((id) => `user_id.eq.${id},id.eq.${id}`).join(","));
 
@@ -156,24 +219,21 @@ Deno.serve(async (req) => {
           profiles = (fallbackQuery.data ?? []).map((profile) => ({
             ...profile,
             social_links: null,
-          }));
+          })) as ProfileCandidate[];
         } else {
           throw primaryQuery.error;
         }
       } else {
-        profiles = (primaryQuery.data ?? []) as typeof profiles;
+        profiles = (primaryQuery.data ?? []) as ProfileCandidate[];
       }
     }
 
-    const profileMap = new Map<string, typeof profiles[number]>();
-    (profiles ?? []).forEach((profile) => {
-      if (profile.user_id) profileMap.set(profile.user_id, profile);
-      if (profile.id) profileMap.set(profile.id, profile);
-    });
-
     const accounts = uniqueUsers.map((user) => {
       const metadata = user.user_metadata ?? {};
-      const profile = profileMap.get(user.id);
+      const profile = resolveProfile(
+        profiles.filter((candidate) => candidate.user_id === user.id || candidate.id === user.id),
+        user.id,
+      );
       const emailPrefix =
         user.email.split("@")[0]?.split("+")[0] ?? "user";
       const socialLinks = {

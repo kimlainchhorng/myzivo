@@ -452,6 +452,7 @@ export default function AdminUserAccounts() {
           i === index ? { ...acc, [fieldKey]: publicUrl } : acc,
         ),
       );
+      queryClient.invalidateQueries({ queryKey: ["admin-created-accounts"] });
 
       toast({ title: `${type === "avatar" ? "Profile photo" : "Cover photo"} updated` });
     } catch (err: any) {
@@ -1269,18 +1270,44 @@ function ProfileCard({
         <div className="rounded-xl border border-border/30 overflow-hidden mx-3 mt-1 bg-gradient-to-b from-primary/10 to-card">
           {/* Cover */}
           <div
-            className="h-24 w-full relative"
+            className="h-24 w-full relative group cursor-pointer"
+            onClick={() => coverInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                coverInputRef.current?.click();
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label={acc.coverUrl ? "Change cover photo" : "Add cover photo"}
             style={{
               background: acc.coverUrl
                 ? `url(${acc.coverUrl}) center/cover no-repeat`
                 : `linear-gradient(180deg, hsl(var(--primary) / 0.2) 0%, hsl(var(--primary) / 0.05) 100%)`,
             }}
-          />
+          >
+            <div className="absolute inset-0 bg-foreground/0 transition-colors group-hover:bg-foreground/20" />
+            <div className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-border/40 bg-card/90 px-2 py-1 text-[10px] font-semibold text-foreground shadow-sm">
+              <Camera className="h-3 w-3" />
+              {acc.coverUrl ? "Change cover" : "Add cover"}
+            </div>
+          </div>
 
           {/* Left-aligned avatar + name */}
           <div className="flex flex-col items-start -mt-10 pb-4 px-4 relative z-10">
             <div
-              className="h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-background text-xl font-bold shadow-md overflow-hidden bg-card"
+              className="relative h-20 w-20 rounded-full border-4 border-card flex items-center justify-center text-background text-xl font-bold shadow-md overflow-hidden bg-card group cursor-pointer"
+              onClick={() => avatarInputRef.current?.click()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  avatarInputRef.current?.click();
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={acc.avatarUrl ? "Change profile photo" : "Add profile photo"}
               style={{
                 background: acc.avatarUrl
                   ? "hsl(var(--card))"
@@ -1297,6 +1324,10 @@ function ProfileCard({
               ) : (
                 initials
               )}
+              <div className="absolute inset-0 rounded-full bg-foreground/0 transition-colors group-hover:bg-foreground/20" />
+              <div className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-full border border-border/40 bg-card text-foreground shadow-sm">
+                <Camera className="h-3 w-3" />
+              </div>
             </div>
 
             <h3 className="text-base font-bold text-foreground mt-2">{acc.username}</h3>
