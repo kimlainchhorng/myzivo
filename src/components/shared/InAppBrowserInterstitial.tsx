@@ -87,24 +87,23 @@ export default function InAppBrowserInterstitial({ children }: { children: React
 
         {/* CTA */}
         <div className="space-y-3 pt-1">
-          <Button
-            size="lg"
-            className="w-full rounded-2xl h-14 font-bold text-[15px] shadow-xl shadow-primary/20 active:scale-[0.98] transition-transform"
-            onClick={() => window.location.assign(storeUrl)}
+          <a
+            href={storeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center w-full rounded-2xl h-14 font-bold text-[15px] shadow-xl shadow-primary/20 active:scale-[0.98] transition-transform bg-primary text-primary-foreground"
           >
             <Download className="w-5 h-5 mr-2.5" />
             Download ZIVO App
-          </Button>
+          </a>
 
-          <Button
-            variant="ghost"
-            size="lg"
-            className="w-full rounded-2xl h-12 font-semibold text-muted-foreground text-[13px]"
+          <button
             onClick={handleDismiss}
+            className="flex items-center justify-center w-full rounded-2xl h-12 font-semibold text-muted-foreground text-[13px]"
           >
             <ExternalLink className="w-4 h-4 mr-2" />
             Continue on Web
-          </Button>
+          </button>
         </div>
 
         <p className="text-[11px] text-muted-foreground/60 text-center">
