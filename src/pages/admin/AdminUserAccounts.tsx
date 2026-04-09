@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
+import ReelThumbnail from "@/components/social/ReelThumbnail";
 import {
   UserPlus,
   AlertTriangle,
@@ -1631,20 +1632,20 @@ function ProfileCard({
                 <p className="text-xs text-muted-foreground">No posts yet</p>
               </div>
             ) : (
-               <div className="grid grid-cols-3 gap-1 rounded-lg overflow-hidden">
-                {filtered.map((post) => (
+               <div className={`grid gap-1 rounded-lg overflow-hidden ${postTab === "reels" ? "grid-cols-2" : "grid-cols-3"}`}>
+                {filtered.map((post) => {
+                  const isVideo = post.media_type === "video";
+                  return (
                    <button
                      key={post.id}
                      type="button"
                      onClick={() => setSelectedPost(post)}
-                     className="relative aspect-square overflow-hidden bg-muted/60 text-left cursor-pointer border-0 p-0 group"
+                     className={`relative overflow-hidden bg-muted/60 text-left cursor-pointer border-0 p-0 group ${isVideo ? "aspect-[9/14]" : "aspect-square"}`}
                      aria-label={`Open post preview for ${acc.username}`}
                    >
                     {post.media_url ? (
-                      post.media_type === "video" ? (
-                        <div className="h-full w-full flex items-center justify-center bg-foreground/5">
-                          <Play className="h-5 w-5 text-muted-foreground" />
-                        </div>
+                      isVideo ? (
+                        <ReelThumbnail url={post.media_url} />
                       ) : (
                         <img src={post.media_url} alt="" className="h-full w-full object-cover" loading="lazy" />
                       )
@@ -1670,7 +1671,8 @@ function ProfileCard({
                       </span>
                     </div>
                    </button>
-                ))}
+                 );
+               })}
               </div>
             );
           })()}
