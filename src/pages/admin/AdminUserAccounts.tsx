@@ -740,11 +740,11 @@ function ProfileCard({
   const handleDeletePost = async (postId: string) => {
     setDeletingPostId(postId);
     try {
-      // Delete media first
-      await (supabase as any).from("post_media").delete().eq("post_id", postId);
-      // Delete post
-      const { error } = await (supabase as any).from("user_posts").delete().eq("id", postId);
+      const { data, error } = await supabase.functions.invoke("admin-delete-user-post", {
+        body: { postId },
+      });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       setSelectedPost(null);
       await queryClient.invalidateQueries({ queryKey: ["admin-user-posts", acc.userId] });
       toast({ title: "Post deleted" });
@@ -759,17 +759,17 @@ function ProfileCard({
     if (!selectedPost || !newComment.trim() || !acc.userId) return;
     setSubmittingComment(true);
     try {
-      const { data, error } = await (supabase as any)
-        .from("post_comments")
-        .insert({
-          post_id: selectedPost.id,
-          user_id: acc.userId,
+      const { data, error } = await supabase.functions.invoke("admin-post-comment", {
+        body: {
+          postId: selectedPost.id,
+          userId: acc.userId,
           content: newComment.trim(),
-        })
-        .select("id, user_id, content, created_at")
-        .single();
+        },
+      });
       if (error) throw error;
-      setPostComments((prev) => [...prev, { ...data, display_name: acc.username, avatar_url: acc.avatarUrl }]);
+      if (data?.error) throw new Error(data.error);
+      const comment = data?.comment;
+      setPostComments((prev) => [...prev, { ...comment, display_name: acc.username, avatar_url: acc.avatarUrl }]);
       setNewComment("");
       // Update comment count in selectedPost
       setSelectedPost((prev) => prev ? { ...prev, comments_count: (prev.comments_count || 0) + 1 } : prev);
