@@ -481,9 +481,9 @@ function ReelCard({
 
         {/* Music ticker */}
         <MusicTicker
-          name={post.audio_name || `Original Sound - ${post.store_name || "ZIVO"}`}
+          name={post.audio_name || `Original Sound - ${post.source === "user" ? post.author_name || "ZIVO" : post.store_name || "ZIVO"}`}
           onClick={() => {
-            const soundLabel = post.audio_name || `Original Sound - ${post.store_name || "ZIVO"}`;
+            const soundLabel = post.audio_name || `Original Sound - ${post.source === "user" ? post.author_name || "ZIVO" : post.store_name || "ZIVO"}`;
             onOpenSound(soundLabel);
           }}
         />
