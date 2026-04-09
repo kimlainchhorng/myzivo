@@ -1394,23 +1394,22 @@ function ProfileCard({
         <div className="rounded-xl border border-border/30 overflow-hidden mx-3 mt-1 bg-gradient-to-b from-primary/10 to-card">
           {/* Cover */}
           <div
-            className="h-24 w-full relative group cursor-pointer"
+            className="h-24 w-full relative group cursor-pointer overflow-hidden"
             onClick={() => coverInputRef.current?.click()}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                coverInputRef.current?.click();
-              }
-            }}
             role="button"
             tabIndex={0}
             aria-label={acc.coverUrl ? "Change cover photo" : "Add cover photo"}
-            style={{
-              background: acc.coverUrl
-                ? `url(${acc.coverUrl}) center/cover no-repeat`
-                : `linear-gradient(180deg, hsl(var(--primary) / 0.2) 0%, hsl(var(--primary) / 0.05) 100%)`,
-            }}
           >
+            {acc.coverUrl ? (
+              <img
+                src={acc.coverUrl}
+                alt="Cover"
+                className="w-full h-full object-cover"
+                style={{ objectPosition: `center ${localCoverPos}%` }}
+              />
+            ) : (
+              <div className="w-full h-full" style={{ background: `linear-gradient(180deg, hsl(var(--primary) / 0.2) 0%, hsl(var(--primary) / 0.05) 100%)` }} />
+            )}
             <div className="absolute inset-0 bg-foreground/0 transition-colors group-hover:bg-foreground/20" />
             <div className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-border/40 bg-card/90 px-2 py-1 text-[10px] font-semibold text-foreground shadow-sm">
               <Camera className="h-3 w-3" />
