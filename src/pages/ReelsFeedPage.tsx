@@ -1794,18 +1794,48 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                   )}
                 </>
               ) : detailMode ? (
-                /* Detail mode — show ALL images full width, scrollable */
-                <div className="flex flex-col gap-0.5 w-full">
-                  {item.media_urls.map((url, i) => (
-                    <div key={i} className="relative w-full bg-black">
-                      <img
-                        src={url}
-                        alt={item.caption || "Post"}
-                        className="w-full object-contain max-h-[80vh]"
-                        loading="lazy"
-                      />
+                /* Detail mode — horizontal swipeable carousel with dots */
+                <div className="relative w-full">
+                  <div
+                    className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide w-full"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+                    onScroll={(e) => {
+                      const el = e.currentTarget;
+                      const idx = Math.round(el.scrollLeft / el.clientWidth);
+                      setCurrentMedia(idx);
+                    }}
+                  >
+                    {item.media_urls.map((url, i) => (
+                      <div key={i} className="flex-shrink-0 w-full snap-center bg-black aspect-square flex items-center justify-center">
+                        <img
+                          src={url}
+                          alt={item.caption || "Post"}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {/* Dots indicator */}
+                  {item.media_urls.length > 1 && (
+                    <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                      {item.media_urls.map((_, i) => (
+                        <div
+                          key={i}
+                          className={cn(
+                            "rounded-full transition-all duration-200",
+                            currentMedia === i ? "w-2 h-2 bg-primary" : "w-1.5 h-1.5 bg-white/50"
+                          )}
+                        />
+                      ))}
                     </div>
-                  ))}
+                  )}
+                  {/* Image count badge */}
+                  {item.media_urls.length > 1 && (
+                    <div className="absolute top-3 right-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full font-medium">
+                      {currentMedia + 1}/{item.media_urls.length}
+                    </div>
+                  )}
                 </div>
               ) : item.media_urls.length === 1 ? (
                 /* Single image */
