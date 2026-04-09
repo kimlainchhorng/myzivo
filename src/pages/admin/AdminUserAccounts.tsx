@@ -57,6 +57,7 @@ interface CreatedAccount {
   coverUrl: string | null;
   coverPosition: number;
   socialLinks: Record<string, string>;
+  bio: string;
 }
 
 interface AccountPreviewPost {
@@ -171,6 +172,7 @@ function normalizeCreatedAccount(account: Partial<CreatedAccount>): CreatedAccou
     coverUrl: account.coverUrl ?? null,
     coverPosition: account.coverPosition ?? 50,
     socialLinks: account.socialLinks ?? {},
+    bio: account.bio ?? "",
   };
 }
 
@@ -1456,6 +1458,10 @@ function ProfileCard({
             </div>
 
             <h3 className="text-base font-bold text-foreground mt-2">{acc.username}</h3>
+
+            {/* Bio */}
+            <BioEditor acc={acc} index={index} setCreatedAccounts={undefined as any} />
+
             <span className="inline-flex items-center gap-1 mt-1 px-3 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
               <Shield className="h-2.5 w-2.5" />
               active
