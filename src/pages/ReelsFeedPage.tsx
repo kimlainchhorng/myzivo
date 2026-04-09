@@ -16,7 +16,7 @@ import {
   Plus, Camera, X as XIcon, Send, Film, Radio,
   Globe, Users, Lock, FolderPlus, MapPin, Hash, ChevronDown,
   Flag, Bell, BellOff, Link2, EyeOff, AlertTriangle, ShieldAlert,
-  UserX, Ban, Skull, HelpCircle, ChevronLeft, MessageSquareOff,
+  UserX, Ban, Skull, HelpCircle, ChevronLeft, ChevronRight, MessageSquareOff,
   MessageSquare, UserCheck, Settings2, Search, Trash2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
