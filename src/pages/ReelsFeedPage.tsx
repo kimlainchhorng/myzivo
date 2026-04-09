@@ -678,13 +678,17 @@ export default function ReelsFeedPage() {
             ) : (
             <div className="divide-y divide-border/20">
               {filteredItems.map((item, idx) => (
-                <FeedCard key={item.id} item={item} currentUserId={userId} onOpenFullscreen={() => {
-                  if (item.media_type === 'video') {
-                    setReelsStartIndex(idx);
-                  } else {
-                    setFullscreenIndex(idx);
-                  }
-                }} />
+                <div key={item.id}>
+                  <FeedCard item={item} currentUserId={userId} onOpenFullscreen={() => {
+                    if (item.media_type === 'video') {
+                      setReelsStartIndex(idx);
+                    } else {
+                      setFullscreenIndex(idx);
+                    }
+                  }} />
+                  {/* Inject suggested users after 3rd post */}
+                  {idx === 2 && <SuggestedUsersCarousel variant="inline" />}
+                </div>
               ))}
             </div>
             );
