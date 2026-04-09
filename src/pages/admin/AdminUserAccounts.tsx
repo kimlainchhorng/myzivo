@@ -589,6 +589,7 @@ export default function AdminUserAccounts() {
               <CheckCircle2 className="h-4 w-4 text-primary" />
               Created Accounts — Save these credentials!
             </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {createdAccounts.map((account, i) => {
               const acc = normalizeCreatedAccount(account);
               const hasPassword = Boolean(acc.password);
@@ -634,6 +635,7 @@ export default function AdminUserAccounts() {
                  />
               );
             })}
+            </div>
           </div>
         )}
       </div>
