@@ -53,8 +53,8 @@ export default function InAppBrowserInterstitial({ children }: { children: React
         {/* App Icon */}
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
-            <div className="w-24 h-24 rounded-[28px] bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg shadow-primary/10 overflow-hidden">
-              <img src={zivoLogo} alt="ZIVO" className="w-full h-full object-contain p-2" />
+            <div className="w-24 h-24 rounded-[28px] overflow-hidden shadow-xl shadow-black/20 border border-border/30">
+              <img src={zivoLogo} alt="ZIVO" className="w-full h-full object-cover" />
             </div>
             <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-destructive flex items-center justify-center shadow-md">
               <span className="text-[11px] font-bold text-destructive-foreground">1</span>
