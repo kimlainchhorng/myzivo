@@ -1410,6 +1410,13 @@ export default function FeedPage() {
         <FeedSearchOverlay onClose={() => setShowSearch(false)} onNavigate={navigate} />
       )}
 
+      {/* Discover People overlay */}
+      <AnimatePresence>
+        {showDiscover && (
+          <DiscoverPeopleOverlay onClose={() => setShowDiscover(false)} onNavigate={navigate} />
+        )}
+      </AnimatePresence>
+
       {/* Snap-scroll reel container */}
       <div
         className="w-full h-full md:flex-1 md:flex md:items-center md:justify-center md:gap-4 relative"
