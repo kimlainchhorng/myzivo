@@ -4,7 +4,7 @@ const APP_SCHEME = "com.hizovo.app://";
 
 export const IOS_STORE_URL =
   import.meta.env.VITE_IOS_APP_STORE_URL?.trim() ||
-  "https://apps.apple.com/us/app/zivo-customer/id6759480121";
+  "https://apps.apple.com/app/id0000000000";
 
 export const ANDROID_STORE_URL =
   import.meta.env.VITE_ANDROID_PLAY_STORE_URL?.trim() ||

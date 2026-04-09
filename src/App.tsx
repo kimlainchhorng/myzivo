@@ -24,7 +24,6 @@ import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import LiveChatWidget from "./components/shared/LiveChatWidget";
 
 import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
-import InAppBrowserInterstitial from "./components/shared/InAppBrowserInterstitial";
 import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
 import { ScrollToTopButton } from "./components/shared/ScrollToTopButton";
 import { SkipToContent } from "./components/shared/SkipToContent";
@@ -491,7 +490,6 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <InAppBrowserInterstitial>
                 <PageViewTracker />
                 <GeoDetector />
                 <RoutePrefetcher />
@@ -916,7 +914,6 @@ const App = () => (
         </ZivoPlusProvider>
         </RemoteConfigProvider>
         </AuthProvider>
-      </InAppBrowserInterstitial>
       </BrowserRouter>
     </TooltipProvider>
   </BrandProvider>
