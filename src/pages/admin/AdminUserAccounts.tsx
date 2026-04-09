@@ -635,6 +635,11 @@ export default function AdminUserAccounts() {
                    onSocialLinkBlur={handleSocialLinkBlur}
                    onRemoveSocialLink={removeSocialLink}
                    onDelete={handleDeleteAccount}
+                   onBioChange={(idx, bio) => {
+                     setCreatedAccounts((prev) =>
+                       prev.map((a, j) => j === idx ? { ...a, bio } : a)
+                     );
+                   }}
                  />
               );
             })}
