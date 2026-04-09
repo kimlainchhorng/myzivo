@@ -1793,6 +1793,20 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                     </button>
                   )}
                 </>
+              ) : detailMode ? (
+                /* Detail mode — show ALL images full width, scrollable */
+                <div className="flex flex-col gap-0.5 w-full">
+                  {item.media_urls.map((url, i) => (
+                    <div key={i} className="relative w-full bg-black">
+                      <img
+                        src={url}
+                        alt={item.caption || "Post"}
+                        className="w-full object-contain max-h-[80vh]"
+                        loading="lazy"
+                      />
+                    </div>
+                  ))}
+                </div>
               ) : item.media_urls.length === 1 ? (
                 /* Single image */
                 <div className="relative aspect-square md:aspect-[4/3] w-full bg-black max-h-[70vh]">
