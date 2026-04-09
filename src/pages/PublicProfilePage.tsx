@@ -37,6 +37,7 @@ type FullProfileCandidate = {
   user_id: string | null;
   full_name: string | null;
   avatar_url: string | null;
+  bio: string | null;
   cover_url: string | null;
   cover_position: number | null;
   profile_visibility: string | null;
@@ -65,6 +66,7 @@ type LocalAdminCreatedAccount = {
   userId?: string;
   username?: string;
   avatarUrl?: string | null;
+  bio?: string | null;
   coverUrl?: string | null;
 };
 
@@ -116,6 +118,7 @@ function resolveFullProfile(candidates: FullProfileCandidate[], requestedId: str
     user_id: (pickFirstPresent(ranked, (candidate) => candidate.user_id) as string | null) ?? base.id,
     full_name: (pickFirstPresent(ranked, (candidate) => candidate.full_name) as string | null) ?? null,
     avatar_url: (pickFirstPresent(ranked, (candidate) => candidate.avatar_url) as string | null) ?? null,
+    bio: (pickFirstPresent(ranked, (candidate) => candidate.bio) as string | null) ?? null,
     cover_url: (pickFirstPresent(ranked, (candidate) => candidate.cover_url) as string | null) ?? null,
     cover_position: (pickFirstPresent(ranked, (candidate) => candidate.cover_position) as number | null) ?? null,
     profile_visibility: (pickFirstPresent(ranked, (candidate) => candidate.profile_visibility) as string | null) ?? "public",
@@ -162,6 +165,7 @@ function readLocalAdminCreatedAccount(userId: string) {
     return {
       full_name: account.username?.trim() || null,
       avatar_url: account.avatarUrl?.trim() || null,
+      bio: account.bio?.trim() || null,
       cover_url: account.coverUrl?.trim() || null,
     };
   } catch {
@@ -202,10 +206,7 @@ export default function PublicProfilePage() {
 
       const resolvedFullProfile = resolveFullProfile((data ?? []) as FullProfileCandidate[], userId);
       if (resolvedFullProfile) {
-        return {
-          ...resolvedFullProfile,
-          bio: (pickFirstPresent((data ?? []) as any[], (candidate: any) => candidate.bio) as string | null) ?? null,
-        };
+        return resolvedFullProfile;
       }
 
       // Fallback for logged-out viewers when profiles table is protected by RLS.
@@ -310,7 +311,7 @@ export default function PublicProfilePage() {
       user_id: baseProfile?.user_id || userId || "",
       full_name: baseProfile?.full_name || localAdminCreatedAccount?.full_name || "User",
       avatar_url: baseProfile?.avatar_url || localAdminCreatedAccount?.avatar_url || null,
-      bio: baseProfile?.bio || null,
+      bio: baseProfile?.bio ?? localAdminCreatedAccount?.bio ?? null,
       cover_url: baseProfile?.cover_url || localAdminCreatedAccount?.cover_url || null,
       cover_position: baseProfile?.cover_position ?? 50,
       profile_visibility: baseProfile?.profile_visibility || "public",

@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { userId, avatarUrl, coverUrl, socialLinks, uploadFile } = body;
+    const { userId, avatarUrl, coverUrl, socialLinks, uploadFile, bio } = body;
 
     if (!userId || typeof userId !== "string") {
       return new Response(JSON.stringify({ error: "Missing userId" }), {
@@ -131,6 +131,8 @@ Deno.serve(async (req) => {
     if (uploadedUrl && uploadFile?.bucket === "covers") updates.cover_url = uploadedUrl;
     if (typeof avatarUrl === "string") updates.avatar_url = avatarUrl.trim() || null;
     if (typeof coverUrl === "string") updates.cover_url = coverUrl.trim() || null;
+    if (typeof bio === "string") updates.bio = bio.trim() || null;
+    if (bio === null) updates.bio = null;
 
     if (Object.keys(updates).length > 0) {
       const resolveProfile = async () => {
