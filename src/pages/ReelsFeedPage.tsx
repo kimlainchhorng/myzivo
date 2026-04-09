@@ -81,6 +81,8 @@ const normalizeUserPostMediaType = (mediaType: string | null | undefined): "imag
   mediaType === "video" || mediaType === "reel" ? "video" : "image";
 
 const getReelsSharePostId = (item: FeedItem): string => item.id.replace(/^u-/, "");
+const getFeedInteractionPostId = (item: FeedItem): string => item.source === "user" ? item.id.replace(/^u-/, "") : item.id;
+const getFeedLikesTable = (item: FeedItem): "post_likes" | "store_post_likes" => item.source === "user" ? "post_likes" : "store_post_likes";
 
 export default function ReelsFeedPage() {
   const navigate = useNavigate();
