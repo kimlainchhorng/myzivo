@@ -3,7 +3,8 @@ import { decode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 type UploadFileInput = {
-  base64: string;
+  base64?: string;
+  storageUrl?: string;
   contentType?: string;
   name?: string;
 };
@@ -80,7 +81,7 @@ Deno.serve(async (req) => {
     const userId = typeof body?.userId === "string" ? body.userId : "";
     const caption = typeof body?.caption === "string" ? body.caption.trim() : "";
     const files = Array.isArray(body?.files)
-      ? (body.files as UploadFileInput[]).filter((file) => !!file?.base64)
+      ? (body.files as UploadFileInput[]).filter((file) => !!file?.base64 || !!file?.storageUrl)
       : [];
 
     if (!userId) {
@@ -98,9 +99,20 @@ Deno.serve(async (req) => {
     const uploadedMedia: Array<{ mediaType: string; mediaUrl: string; sortOrder: number }> = [];
 
     for (const [index, file] of files.entries()) {
+      // If the client already uploaded to storage, just use the URL directly
+      if (file.storageUrl) {
+        uploadedMedia.push({
+          mediaType: getMediaType(file),
+          mediaUrl: file.storageUrl,
+          sortOrder: index,
+        });
+        continue;
+      }
+
+      // Otherwise handle base64 upload (small files)
       const extension = getFileExtension(file);
       const filePath = `${userId}/post_${Date.now()}_${index}_${crypto.randomUUID()}.${extension}`;
-      const fileBytes = decode(file.base64);
+      const fileBytes = decode(file.base64!);
 
       const { error: uploadError } = await adminClient.storage
         .from("user-posts")
