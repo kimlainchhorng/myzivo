@@ -454,17 +454,17 @@ export default function PublicProfilePage() {
       ) : (
         <>
           {/* Cover + Avatar */}
-          <div className="relative">
-            <div className="w-full h-36 bg-gradient-to-br from-primary/20 via-primary/10 to-muted overflow-hidden">
+          <div className="relative max-w-3xl mx-auto">
+            <div className="w-full h-36 sm:h-48 md:h-56 bg-gradient-to-br from-primary/20 via-primary/10 to-muted overflow-hidden">
               {resolvedProfile.cover_url && (
                 <img src={resolvedProfile.cover_url} alt="Cover" className="w-full h-full object-cover" style={{ objectPosition: `center ${resolvedProfile.cover_position ?? 50}%` }} />
               )}
             </div>
-            <div className="absolute left-1/2 -translate-x-1/2 -bottom-14">
+            <div className="absolute left-1/2 -translate-x-1/2 -bottom-14 sm:-bottom-16">
               <div className="relative">
-                <Avatar className="h-28 w-28 border-4 border-background shadow-lg">
+                <Avatar className="h-28 w-28 sm:h-32 sm:w-32 border-4 border-background shadow-lg">
                   <AvatarImage src={resolvedProfile.avatar_url || undefined} />
-                  <AvatarFallback className="text-3xl font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
+                  <AvatarFallback className="text-3xl sm:text-4xl font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
                 </Avatar>
                 {resolvedProfile.is_verified && (
                   <div className="absolute bottom-1 right-1 h-6 w-6 rounded-full bg-background flex items-center justify-center">
