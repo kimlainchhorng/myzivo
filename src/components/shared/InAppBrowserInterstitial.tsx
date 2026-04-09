@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { isInAppBrowser, getInAppBrowserName } from "@/lib/isInAppBrowser";
 import { IOS_STORE_URL, ANDROID_STORE_URL } from "@/lib/deepLinks";
 import { Download, ExternalLink, X, Zap, Gift, Bell, Heart } from "lucide-react";
+import zivoLogo from "@/assets/ZIVO_LOGO.png";
 import { Button } from "@/components/ui/button";
 
 function isIOS(): boolean {
@@ -52,10 +53,9 @@ export default function InAppBrowserInterstitial({ children }: { children: React
         {/* App Icon */}
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
-            <div className="w-24 h-24 rounded-[28px] bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg shadow-primary/10">
-              <span className="text-4xl font-black text-primary tracking-tighter">Z</span>
+            <div className="w-24 h-24 rounded-[28px] bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-lg shadow-primary/10 overflow-hidden">
+              <img src={zivoLogo} alt="ZIVO" className="w-full h-full object-contain p-2" />
             </div>
-            {/* Notification badge */}
             <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-destructive flex items-center justify-center shadow-md">
               <span className="text-[11px] font-bold text-destructive-foreground">1</span>
             </div>
