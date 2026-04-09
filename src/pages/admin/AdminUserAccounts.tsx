@@ -715,14 +715,14 @@ function ProfileCard({
         setPostComments([]);
       } else {
         // Fetch profile names for commenters
-        const userIds = [...new Set((data || []).map((c: any) => c.user_id))];
+        const userIds = [...new Set((data || []).map((c: any) => c.user_id))] as string[];
         let profileMap = new Map<string, { display_name?: string; avatar_url?: string }>();
         if (userIds.length > 0) {
           const { data: profiles } = await supabase
             .from("profiles")
             .select("user_id, display_name, avatar_url")
             .in("user_id", userIds);
-          (profiles || []).forEach((p: any) => profileMap.set(p.user_id, p));
+          (profiles || []).forEach((p) => profileMap.set(p.user_id, p));
         }
         setPostComments(
           (data || []).map((c: any) => ({
