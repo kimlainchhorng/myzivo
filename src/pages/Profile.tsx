@@ -182,6 +182,7 @@ const Profile = () => {
   const [coverRepositioning, setCoverRepositioning] = useState(false);
   const [coverPosition, setCoverPosition] = useState<number>(profile?.cover_position ?? 50);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [bioDraft, setBioDraft] = useState("");
   const coverDragRef = useRef<{ startY: number; startPos: number } | null>(null);
 
   const profileTilt = use3DTilt(profileCardRef);
@@ -227,6 +228,10 @@ const Profile = () => {
     };
     load();
   }, [user?.id]);
+
+  useEffect(() => {
+    setBioDraft(profile?.bio ?? "");
+  }, [profile?.bio]);
 
   const handleAddFriend = async () => {
     if (!user?.id) return;
@@ -784,11 +789,27 @@ const Profile = () => {
                       </div>
 
                       {/* Bio */}
-                      {profile?.bio && (
-                        <p className="text-sm text-muted-foreground mt-2 px-4 text-center max-w-xs mx-auto">
-                          {profile.bio}
-                        </p>
-                      )}
+                      <div className="mt-3 px-4 max-w-sm mx-auto">
+                        <textarea
+                          value={bioDraft}
+                          onChange={(e) => setBioDraft(e.target.value)}
+                          placeholder="Add bio..."
+                          maxLength={160}
+                          rows={2}
+                          className="w-full rounded-2xl border border-border/50 bg-background/80 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground resize-none outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+                        />
+                        <div className="mt-2 flex justify-center">
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => updateProfile.mutate({ bio: bioDraft.trim() || null })}
+                            disabled={updateProfile.isPending}
+                            className="rounded-full px-4"
+                          >
+                            {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : (bioDraft?.trim() ? "Save bio" : "Add bio")}
+                          </Button>
+                        </div>
+                      </div>
 
                       {/* Friend, Follower & Following stats — Facebook/TikTok style */}
                       <div className="flex items-center justify-center gap-0 mt-4 mb-1">
