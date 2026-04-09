@@ -1649,7 +1649,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                     ))}
                   </div>
                 ) : item.media_urls.length === 3 ? (
-                  <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full" style={{ aspectRatio: "1" }}>
+                  <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full aspect-square md:aspect-[3/2]">
                     <div className="relative row-span-2 bg-black overflow-hidden">
                       <img src={item.media_urls[0]} alt="" className="h-full w-full object-cover cursor-pointer" loading="lazy" onClick={() => { setCurrentMedia(0); onOpenFullscreen?.(); }} />
                     </div>
@@ -1663,7 +1663,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 ) : (
                   <div className="grid grid-cols-2 gap-0.5 w-full">
                     {item.media_urls.slice(0, 4).map((url, i) => (
-                      <div key={i} className="relative aspect-square bg-black overflow-hidden">
+                      <div key={i} className="relative aspect-[4/3] bg-black overflow-hidden">
                         <img src={url} alt="" className="h-full w-full object-cover cursor-pointer" loading="lazy" onClick={() => { setCurrentMedia(i); onOpenFullscreen?.(); }} />
                         {i === 3 && item.media_urls.length > 4 && (
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer" onClick={() => { setCurrentMedia(3); onOpenFullscreen?.(); }}>
@@ -1813,7 +1813,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 </div>
               ) : item.media_urls.length === 3 ? (
                 /* 3 images — 1 large left, 2 stacked right */
-                <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full" style={{ aspectRatio: "1" }}>
+                <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full aspect-square md:aspect-[3/2]">
                   <div className="relative row-span-2 bg-black overflow-hidden">
                     <img
                       src={item.media_urls[0]}
@@ -1846,7 +1846,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 /* 4+ images — 2x2 grid with +N overlay */
                 <div className="grid grid-cols-2 gap-0.5 w-full">
                   {item.media_urls.slice(0, 4).map((url, i) => (
-                    <div key={i} className="relative aspect-square bg-black overflow-hidden">
+                    <div key={i} className="relative aspect-[4/3] bg-black overflow-hidden">
                       <img
                         src={url}
                         alt=""
