@@ -550,7 +550,7 @@ export default function PublicProfilePage() {
 
           {/* Locked */}
           {isLocked ? (
-            <div className="px-4 mt-2">
+            <div className="px-4 mt-2 max-w-3xl mx-auto">
               <div className="flex flex-col items-center justify-center py-16 px-6 rounded-2xl bg-muted/30 border border-border/40">
                 {(() => { const p = getPrivacyInfo(); return (<>
                   <div className="h-16 w-16 rounded-full bg-muted/60 flex items-center justify-center mb-4"><p.icon className="h-7 w-7 text-muted-foreground" /></div>
