@@ -661,6 +661,7 @@ interface ProfileCardProps {
   onSocialLinkBlur: (index: number) => void;
   onRemoveSocialLink: (index: number, platform: string) => void;
   onDelete: (index: number) => void;
+  onBioChange: (index: number, bio: string) => void;
 }
 
 function ProfileCard({
@@ -678,6 +679,7 @@ function ProfileCard({
   onSocialLinkBlur,
   onRemoveSocialLink,
   onDelete,
+  onBioChange,
 }: ProfileCardProps) {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -1461,7 +1463,22 @@ function ProfileCard({
             <h3 className="text-base font-bold text-foreground mt-2">{acc.username}</h3>
 
             {/* Bio */}
-            <BioEditor acc={acc} index={index} setCreatedAccounts={undefined as any} />
+            <div className="w-full mt-1 px-2">
+              <textarea
+                className="w-full text-xs text-muted-foreground bg-transparent border border-transparent hover:border-border/40 focus:border-primary/40 rounded-lg px-2 py-1 resize-none outline-none transition-colors placeholder:text-muted-foreground/50"
+                placeholder="Add bio..."
+                rows={2}
+                maxLength={160}
+                value={acc.bio}
+                onChange={(e) => onBioChange(index, e.target.value)}
+                onBlur={async () => {
+                  if (!acc.userId) return;
+                  await supabase.functions.invoke("admin-update-profile", {
+                    body: { userId: acc.userId, bio: acc.bio },
+                  });
+                }}
+              />
+            </div>
 
             <span className="inline-flex items-center gap-1 mt-1 px-3 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
               <Shield className="h-2.5 w-2.5" />
