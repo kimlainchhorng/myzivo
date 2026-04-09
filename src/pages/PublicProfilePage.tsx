@@ -31,6 +31,105 @@ import { toUserPostInteractionId } from "@/lib/social/postInteraction";
 
 type PostTab = "all" | "photos" | "videos";
 
+type FullProfileCandidate = {
+  id: string;
+  user_id: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  cover_url: string | null;
+  cover_position: number | null;
+  profile_visibility: string | null;
+  is_verified: boolean | null;
+  share_code: string | null;
+  updated_at: string | null;
+};
+
+type PublicProfileCandidate = {
+  id: string;
+  user_id: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+};
+
+type ProfileCandidateBase = {
+  id: string;
+  user_id: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  cover_url?: string | null;
+  updated_at?: string | null;
+};
+
+function rankProfileCandidate(candidate: ProfileCandidateBase, requestedId: string) {
+  let score = 0;
+
+  if (candidate.user_id === requestedId) score += 8;
+  if (candidate.id === requestedId) score += 6;
+  if (candidate.cover_url) score += 4;
+  if (candidate.avatar_url) score += 2;
+  if (candidate.full_name) score += 1;
+  if (candidate.user_id) score += 1;
+
+  return score;
+}
+
+function sortProfileCandidates<T extends ProfileCandidateBase>(candidates: T[], requestedId: string) {
+  return [...candidates].sort((a, b) => {
+    const scoreDiff = rankProfileCandidate(b, requestedId) - rankProfileCandidate(a, requestedId);
+    if (scoreDiff !== 0) return scoreDiff;
+
+    const aTime = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+    const bTime = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+    return bTime - aTime;
+  });
+}
+
+function pickFirstPresent<T>(candidates: T[], getter: (candidate: T) => unknown) {
+  for (const candidate of candidates) {
+    const value = getter(candidate);
+    if (value !== null && value !== undefined && value !== "") {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+function resolveFullProfile(candidates: FullProfileCandidate[], requestedId: string) {
+  if (!candidates.length) return null;
+
+  const ranked = sortProfileCandidates(candidates, requestedId);
+  const base = ranked[0];
+
+  return {
+    id: base.id,
+    user_id: (pickFirstPresent(ranked, (candidate) => candidate.user_id) as string | null) ?? base.id,
+    full_name: (pickFirstPresent(ranked, (candidate) => candidate.full_name) as string | null) ?? null,
+    avatar_url: (pickFirstPresent(ranked, (candidate) => candidate.avatar_url) as string | null) ?? null,
+    cover_url: (pickFirstPresent(ranked, (candidate) => candidate.cover_url) as string | null) ?? null,
+    cover_position: (pickFirstPresent(ranked, (candidate) => candidate.cover_position) as number | null) ?? null,
+    profile_visibility: (pickFirstPresent(ranked, (candidate) => candidate.profile_visibility) as string | null) ?? "public",
+    is_verified: ranked.some((candidate) => candidate.is_verified === true)
+      ? true
+      : ((pickFirstPresent(ranked, (candidate) => candidate.is_verified) as boolean | null) ?? false),
+    share_code: (pickFirstPresent(ranked, (candidate) => candidate.share_code) as string | null) ?? null,
+  };
+}
+
+function resolvePublicProfile(candidates: PublicProfileCandidate[], requestedId: string) {
+  if (!candidates.length) return null;
+
+  const ranked = sortProfileCandidates(candidates, requestedId);
+  const base = ranked[0];
+
+  return {
+    id: base.id,
+    user_id: (pickFirstPresent(ranked, (candidate) => candidate.user_id) as string | null) ?? base.id,
+    full_name: (pickFirstPresent(ranked, (candidate) => candidate.full_name) as string | null) ?? null,
+    avatar_url: (pickFirstPresent(ranked, (candidate) => candidate.avatar_url) as string | null) ?? null,
+  };
+}
+
 export default function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
   const [searchParams] = useSearchParams();
@@ -51,20 +150,32 @@ export default function PublicProfilePage() {
     queryKey: ["public-profile", userId],
     queryFn: async () => {
       if (!userId) return null;
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, user_id, full_name, avatar_url, cover_url, cover_position, profile_visibility, is_verified, share_code")
-        .or(`id.eq.${userId},user_id.eq.${userId}`)
-        .maybeSingle();
 
-      if (data) return data;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, user_id, full_name, avatar_url, cover_url, cover_position, profile_visibility, is_verified, share_code, updated_at")
+        .or(`id.eq.${userId},user_id.eq.${userId}`)
+        .limit(10);
+
+      if (error) {
+        console.error("Error loading public profile:", error);
+      }
+
+      const resolvedFullProfile = resolveFullProfile((data ?? []) as FullProfileCandidate[], userId);
+      if (resolvedFullProfile) return resolvedFullProfile;
 
       // Fallback for logged-out viewers when profiles table is protected by RLS.
-      const { data: publicProfile } = await (supabase as any)
+      const { data: publicProfiles, error: publicProfileError } = await (supabase as any)
         .from("public_profiles")
         .select("id, user_id, full_name, avatar_url")
         .or(`id.eq.${userId},user_id.eq.${userId}`)
-        .maybeSingle();
+        .limit(10);
+
+      if (publicProfileError) {
+        console.error("Error loading public profile fallback:", publicProfileError);
+      }
+
+      const publicProfile = resolvePublicProfile((publicProfiles ?? []) as PublicProfileCandidate[], userId);
 
       if (!publicProfile) return null;
 
@@ -89,11 +200,17 @@ export default function PublicProfilePage() {
     queryFn: async () => {
       if (!userId) return null;
 
-      const { data: pub } = await (supabase as any)
+      const { data: publicProfiles, error: publicProfileError } = await (supabase as any)
         .from("public_profiles")
         .select("id, user_id, full_name, avatar_url")
         .or(`id.eq.${userId},user_id.eq.${userId}`)
-        .maybeSingle();
+        .limit(10);
+
+      if (publicProfileError) {
+        console.error("Error loading public profile fallback cache:", publicProfileError);
+      }
+
+      const pub = resolvePublicProfile((publicProfiles ?? []) as PublicProfileCandidate[], userId);
 
       if (pub) {
         return {
