@@ -1051,17 +1051,66 @@ function ProfileCard({
 
       {/* Cover */}
       <div
-        className="h-28 w-full relative group cursor-pointer"
-        onClick={() => coverInputRef.current?.click()}
-        style={{
-          background: acc.coverUrl
-            ? `url(${acc.coverUrl}) center/cover no-repeat`
-            : `linear-gradient(135deg, hsl(${hue} 70% 55%), hsl(${(hue + 40) % 360} 60% 45%))`,
-        }}
+        className={`h-28 w-full relative group overflow-hidden ${coverRepositioning ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"}`}
+        onClick={coverRepositioning ? undefined : () => coverInputRef.current?.click()}
+        onMouseDown={coverRepositioning ? (e) => { e.preventDefault(); handleCoverDragStart(e.clientY); } : undefined}
+        onMouseMove={coverRepositioning ? (e) => handleCoverDragMove(e.clientY) : undefined}
+        onMouseUp={coverRepositioning ? handleCoverDragEnd : undefined}
+        onMouseLeave={coverRepositioning ? handleCoverDragEnd : undefined}
+        onTouchStart={coverRepositioning ? (e) => handleCoverDragStart(e.touches[0].clientY) : undefined}
+        onTouchMove={coverRepositioning ? (e) => handleCoverDragMove(e.touches[0].clientY) : undefined}
+        onTouchEnd={coverRepositioning ? handleCoverDragEnd : undefined}
       >
-        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/30 transition-colors flex items-center justify-center">
-          <Camera className="h-6 w-6 text-background opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
+        {acc.coverUrl ? (
+          <img
+            src={acc.coverUrl}
+            alt="Cover"
+            className="w-full h-full object-cover select-none"
+            style={{ objectPosition: `center ${localCoverPos}%` }}
+            draggable={false}
+          />
+        ) : (
+          <div
+            className="w-full h-full"
+            style={{ background: `linear-gradient(135deg, hsl(${hue} 70% 55%), hsl(${(hue + 40) % 360} 60% 45%))` }}
+          />
+        )}
+        {!coverRepositioning && (
+          <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/30 transition-colors flex items-center justify-center">
+            <Camera className="h-6 w-6 text-background opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+        )}
+        {coverRepositioning && (
+          <div className="absolute inset-0 bg-foreground/20 flex items-center justify-center">
+            <span className="text-background text-xs font-semibold bg-foreground/50 rounded-full px-3 py-1">
+              Drag up / down to reposition
+            </span>
+          </div>
+        )}
+        {acc.coverUrl && !coverRepositioning && (
+          <button
+            className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full border border-border/40 bg-card/90 px-2 py-1 text-[10px] font-semibold text-foreground shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            onClick={(e) => { e.stopPropagation(); setCoverRepositioning(true); }}
+          >
+            <Move className="h-3 w-3" /> Reposition
+          </button>
+        )}
+        {coverRepositioning && (
+          <div className="absolute bottom-2 right-2 flex gap-1.5 z-10">
+            <button
+              className="rounded-full bg-card px-3 py-1 text-[10px] font-semibold text-foreground border border-border/40 shadow-sm"
+              onClick={(e) => { e.stopPropagation(); setLocalCoverPos(acc.coverPosition); setCoverRepositioning(false); }}
+            >
+              Cancel
+            </button>
+            <button
+              className="rounded-full bg-primary px-3 py-1 text-[10px] font-semibold text-primary-foreground shadow-sm"
+              onClick={(e) => { e.stopPropagation(); saveCoverPosition(); }}
+            >
+              Save
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Left-aligned avatar + name + stats */}
