@@ -1586,7 +1586,12 @@ function ProfileCard({
                   disabled={isPosting || (!newPostCaption.trim() && newPostMedia.length === 0)}
                   className="w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-bold disabled:opacity-40 hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 >
-                  {isPosting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Post"}
+                  {isPosting ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {uploadProgress || "Processing..."}
+                    </span>
+                  ) : "Post"}
                 </button>
               </div>
             </div>
