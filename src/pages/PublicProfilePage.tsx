@@ -20,7 +20,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -59,6 +59,15 @@ type ProfileCandidateBase = {
   cover_url?: string | null;
   updated_at?: string | null;
 };
+
+type LocalAdminCreatedAccount = {
+  userId?: string;
+  username?: string;
+  avatarUrl?: string | null;
+  coverUrl?: string | null;
+};
+
+const ADMIN_CREATED_ACCOUNTS_STORAGE_KEY = "admin-user-accounts-session";
 
 function rankProfileCandidate(candidate: ProfileCandidateBase, requestedId: string) {
   let score = 0;
@@ -128,6 +137,35 @@ function resolvePublicProfile(candidates: PublicProfileCandidate[], requestedId:
     full_name: (pickFirstPresent(ranked, (candidate) => candidate.full_name) as string | null) ?? null,
     avatar_url: (pickFirstPresent(ranked, (candidate) => candidate.avatar_url) as string | null) ?? null,
   };
+}
+
+function readLocalAdminCreatedAccount(userId: string) {
+  if (typeof window === "undefined" || !userId) return null;
+
+  try {
+    const stored =
+      window.localStorage.getItem(ADMIN_CREATED_ACCOUNTS_STORAGE_KEY) ??
+      window.sessionStorage.getItem(ADMIN_CREATED_ACCOUNTS_STORAGE_KEY);
+
+    if (!stored) return null;
+
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) return null;
+
+    const account = (parsed as LocalAdminCreatedAccount[]).find(
+      (candidate) => candidate?.userId === userId,
+    );
+
+    if (!account) return null;
+
+    return {
+      full_name: account.username?.trim() || null,
+      avatar_url: account.avatarUrl?.trim() || null,
+      cover_url: account.coverUrl?.trim() || null,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export default function PublicProfilePage() {
@@ -248,7 +286,29 @@ export default function PublicProfilePage() {
     enabled: !!userId && !profile,
   });
 
-  const resolvedProfile: any = profile || fallbackProfile;
+  const localAdminCreatedAccount = useMemo(
+    () => (userId ? readLocalAdminCreatedAccount(userId) : null),
+    [userId],
+  );
+
+  const resolvedProfile: any = useMemo(() => {
+    const baseProfile = profile || fallbackProfile;
+
+    if (!baseProfile && !localAdminCreatedAccount) return null;
+
+    return {
+      id: baseProfile?.id || userId || "",
+      user_id: baseProfile?.user_id || userId || "",
+      full_name: baseProfile?.full_name || localAdminCreatedAccount?.full_name || "User",
+      avatar_url: baseProfile?.avatar_url || localAdminCreatedAccount?.avatar_url || null,
+      cover_url: baseProfile?.cover_url || localAdminCreatedAccount?.cover_url || null,
+      cover_position: baseProfile?.cover_position ?? 50,
+      profile_visibility: baseProfile?.profile_visibility || "public",
+      is_verified: baseProfile?.is_verified || false,
+      share_code: baseProfile?.share_code || null,
+    };
+  }, [fallbackProfile, localAdminCreatedAccount, profile, userId]);
+
   const targetUserId = resolvedProfile?.user_id || resolvedProfile?.id || userId || "";
   const isOwnProfile = !!user?.id && !!targetUserId && user.id === targetUserId;
 
