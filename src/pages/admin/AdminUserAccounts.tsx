@@ -869,41 +869,35 @@ function ProfileCard({
 
       const DIRECT_UPLOAD_THRESHOLD = 4 * 1024 * 1024; // 4 MB
 
-      const files = await Promise.all(
-        newPostMedia.map(async (file, index) => {
-          if (file.size > DIRECT_UPLOAD_THRESHOLD) {
-            const ext = file.name.split(".").pop()?.toLowerCase() || "mp4";
-            const filePath = `${targetUserId}/post_${Date.now()}_${index}_${crypto.randomUUID()}.${ext}`;
-            const sizeMB = (file.size / (1024 * 1024)).toFixed(0);
-            setUploadProgress(`Uploading ${file.name} (${sizeMB} MB)...`);
+      const uploadedFiles: Array<{ storageUrl?: string; base64?: string; name: string; contentType: string }> = [];
+      for (let index = 0; index < newPostMedia.length; index++) {
+        const file = newPostMedia[index];
+        if (file.size > DIRECT_UPLOAD_THRESHOLD) {
+          const ext = file.name.split(".").pop()?.toLowerCase() || "mp4";
+          const filePath = `${targetUserId}/post_${Date.now()}_${index}_${crypto.randomUUID()}.${ext}`;
+          const sizeMB = (file.size / (1024 * 1024)).toFixed(0);
+          setUploadProgress(`Uploading ${file.name} (${sizeMB} MB) — 0%`);
 
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from("user-posts")
-              .upload(filePath, file, {
-                contentType: file.type || "application/octet-stream",
-                upsert: false,
-              });
+          const publicUrl = await uploadWithProgress("user-posts", filePath, file, (pct) => {
+            setUploadProgress(`Uploading ${file.name} (${sizeMB} MB) — ${pct}%`);
+          });
 
-            if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+          setUploadProgress(`Uploaded ${file.name} ✓`);
 
-            const { data: publicUrlData } = supabase.storage.from("user-posts").getPublicUrl(filePath);
-
-            setUploadProgress(`Uploaded ${file.name} ✓`);
-
-            return {
-              storageUrl: publicUrlData.publicUrl,
-              name: file.name,
-              contentType: file.type || "application/octet-stream",
-            };
-          }
-
-          return {
+          uploadedFiles.push({
+            storageUrl: publicUrl,
+            name: file.name,
+            contentType: file.type || "application/octet-stream",
+          });
+        } else {
+          uploadedFiles.push({
             base64: await fileToBase64(file),
             name: file.name,
             contentType: file.type || "application/octet-stream",
-          };
-        }),
-      );
+          });
+        }
+      }
+      const files = uploadedFiles;
 
       setUploadProgress("Creating post...");
 
