@@ -744,7 +744,7 @@ const Profile = () => {
                           transition={{ type: "spring", stiffness: 300 }}
                         >
                           <div className="absolute -inset-2 bg-gradient-to-r from-primary via-primary/50 to-primary rounded-full blur-xl opacity-20 group-hover/avatar:opacity-40 transition-opacity" />
-                          <Avatar className="relative h-24 w-24 ring-4 ring-card shadow-2xl shadow-primary/20">
+                          <Avatar className="relative h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32 ring-4 ring-card shadow-2xl shadow-primary/20">
                             <AvatarImage src={avatarPreview || profile?.avatar_url || undefined} alt="Profile" />
                             <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-2xl font-bold">
                               {getInitials()}
