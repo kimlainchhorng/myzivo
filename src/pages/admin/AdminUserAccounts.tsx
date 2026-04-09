@@ -2,6 +2,7 @@
  * Admin User Accounts — Support staff can create new user accounts with just a username
  */
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -1226,9 +1227,9 @@ function ProfileCard({
           </div>
         </div>
 
-        {/* ===== Facebook-style Create Post Modal ===== */}
-        {showPostModal && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-foreground/50 backdrop-blur-sm" onClick={() => setShowPostModal(false)}>
+        {/* ===== Facebook-style Create Post Modal (portaled to body) ===== */}
+        {showPostModal && createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-foreground/50 backdrop-blur-sm" onClick={() => setShowPostModal(false)}>
             <div
               className="w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:mx-4 sm:rounded-2xl border-0 sm:border border-border/40 bg-card shadow-2xl overflow-y-auto flex flex-col"
               onClick={(e) => e.stopPropagation()}
@@ -1390,7 +1391,8 @@ function ProfileCard({
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* Post tabs */}
