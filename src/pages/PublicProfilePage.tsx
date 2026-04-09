@@ -355,6 +355,11 @@ export default function PublicProfilePage() {
 
       return data.map((post: any) => ({
         ...post,
+        media_urls: Array.isArray(post.media_urls) && post.media_urls.length > 0
+          ? post.media_urls
+          : post.media_url
+            ? [post.media_url]
+            : [],
         sharedOrigin: (post.shared_from_post_id ? originByPostId[post.shared_from_post_id] || null : null) ||
           (post.shared_from_user_id ? originByUserId[post.shared_from_user_id] || null : null) as SharedOriginInfo | null,
       }));
@@ -613,11 +618,22 @@ export default function PublicProfilePage() {
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  const renderImageGrid = (urls: string[], post: any) => {
+  const renderImageGrid = (urlsInput: any, post: any) => {
+    const urls: string[] = Array.isArray(urlsInput)
+      ? urlsInput.filter(Boolean)
+      : typeof urlsInput === "string" && urlsInput.trim()
+        ? [urlsInput]
+        : post?.media_url
+          ? [post.media_url]
+          : [];
+
     const openViewer = (idx: number) => {
       setSelectedImageIndex(idx);
       setSelectedPost(post);
     };
+
+    if (urls.length === 0) return null;
+
     if (urls.length === 1) {
       return (
         <div className="relative w-full aspect-square cursor-pointer" onClick={() => openViewer(0)}>
@@ -625,9 +641,10 @@ export default function PublicProfilePage() {
         </div>
       );
     }
+
     if (urls.length === 2) {
       return (
-        <div className="grid grid-cols-2 gap-0.5 w-full" style={{ aspectRatio: "2/1" }}>
+        <div className="grid grid-cols-2 gap-0.5 w-full aspect-square">
           {urls.map((u, i) => (
             <div key={i} className="relative bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(i)}>
               <img src={u} alt="" className="w-full h-full object-cover" loading="lazy" />
@@ -636,9 +653,10 @@ export default function PublicProfilePage() {
         </div>
       );
     }
+
     if (urls.length === 3) {
       return (
-        <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full" style={{ aspectRatio: "1" }}>
+        <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full aspect-square">
           <div className="relative row-span-2 bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(0)}>
             <img src={urls[0]} alt="" className="h-full w-full object-cover" loading="lazy" />
           </div>
@@ -651,8 +669,9 @@ export default function PublicProfilePage() {
         </div>
       );
     }
+
     return (
-      <div className="grid grid-cols-2 gap-0.5 w-full" style={{ aspectRatio: "1" }}>
+      <div className="grid grid-cols-2 gap-0.5 w-full aspect-square">
         {urls.slice(0, 4).map((u, i) => (
           <div key={i} className="relative bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(i)}>
             <img src={u} alt="" className="w-full h-full object-cover" loading="lazy" />
@@ -888,7 +907,11 @@ export default function PublicProfilePage() {
 
                             {/* Original post media */}
                             {(() => {
-                              const urls = post.media_urls?.length ? post.media_urls : post.media_url ? [post.media_url] : [];
+                              const urls = Array.isArray(post.media_urls) && post.media_urls.length > 0
+                                ? post.media_urls
+                                : post.media_url
+                                  ? [post.media_url]
+                                  : [];
                               if (!urls.length) return null;
                               if (post.media_type === "video") {
                                 return (
@@ -938,7 +961,11 @@ export default function PublicProfilePage() {
 
                           {/* Media */}
                           {(() => {
-                            const urls = post.media_urls?.length ? post.media_urls : post.media_url ? [post.media_url] : [];
+                            const urls = Array.isArray(post.media_urls) && post.media_urls.length > 0
+                              ? post.media_urls
+                              : post.media_url
+                                ? [post.media_url]
+                                : [];
                             if (!urls.length) return null;
                             if (post.media_type === "video") {
                               return (
