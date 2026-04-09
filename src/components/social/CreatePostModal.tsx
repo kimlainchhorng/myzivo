@@ -236,6 +236,7 @@ export default function CreatePostModal({
     setUploadStatus("");
     try {
       let mediaUrl: string | null = null;
+      let allMediaUrls: string[] = [];
       let finalMediaType = mediaType;
 
       // Upload all files (first one is primary media_url)
@@ -244,18 +245,20 @@ export default function CreatePostModal({
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const sizeMB = (file.size / (1024 * 1024)).toFixed(0);
-          setUploadStatus(`Uploading ${file.name} (${sizeMB} MB) — 0%`);
+          setUploadStatus(`Uploading ${i + 1}/${files.length} — ${file.name} (${sizeMB} MB) — 0%`);
           const ext = file.name.split(".").pop() || "jpg";
           const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
           const publicUrl = await uploadWithProgress("user-posts", path, file, (pct) => {
-            setUploadStatus(`Uploading ${file.name} (${sizeMB} MB) — ${pct}%`);
+            setUploadStatus(`Uploading ${i + 1}/${files.length} — ${file.name} (${sizeMB} MB) — ${pct}%`);
           });
           uploadedUrls.push(publicUrl);
         }
         mediaUrl = uploadedUrls[0];
+        allMediaUrls = uploadedUrls;
         if (files[0].type.startsWith("video")) finalMediaType = "video";
       } else if (sharedMediaUrl) {
         mediaUrl = sharedMediaUrl;
+        allMediaUrls = [sharedMediaUrl];
         finalMediaType = sharedMediaType || "image";
       } else {
         finalMediaType = "image";
@@ -267,6 +270,7 @@ export default function CreatePostModal({
         user_id: userId,
         media_type: finalMediaType,
         media_url: mediaUrl,
+        media_urls: allMediaUrls,
         caption: caption.trim() || null,
         filter_css: FILTERS[activeFilter]?.css || null,
         is_published: true,

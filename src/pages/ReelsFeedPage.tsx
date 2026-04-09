@@ -16,7 +16,7 @@ import {
   Plus, Camera, X as XIcon, Send, Film, Radio,
   Globe, Users, Lock, FolderPlus, MapPin, Hash, ChevronDown,
   Flag, Bell, BellOff, Link2, EyeOff, AlertTriangle, ShieldAlert,
-  UserX, Ban, Skull, HelpCircle, ChevronLeft, MessageSquareOff,
+  UserX, Ban, Skull, HelpCircle, ChevronLeft, ChevronRight, MessageSquareOff,
   MessageSquare, UserCheck, Settings2, Search, Trash2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -257,7 +257,7 @@ export default function ReelsFeedPage() {
       try {
         const { data: userPosts } = await (supabase as any)
           .from("user_posts")
-          .select("id, media_url, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, user_id, shared_from_post_id, shared_from_user_id")
+          .select("id, media_url, media_urls, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, user_id, shared_from_post_id, shared_from_user_id")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
           .limit(50);
@@ -365,10 +365,14 @@ export default function ReelsFeedPage() {
               sharedFromUserAvatar = optimizeAvatar(sharedProfile?.avatar_url, 96) || sharedProfile?.avatar_url || null;
             }
 
+            const postMediaUrls: string[] = Array.isArray(post.media_urls) && post.media_urls.length > 0
+              ? post.media_urls
+              : post.media_url ? [post.media_url] : [];
+
             allItems.push({
               id: `u-${post.id}`,
               source: "user",
-              media_urls: post.media_url ? [post.media_url] : [],
+              media_urls: postMediaUrls,
               media_type: normalizedMediaType,
               caption: post.caption,
               likes_count: post.likes_count || 0,
@@ -1164,6 +1168,27 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   const [tipTarget, setTipTarget] = useState<{ id: string; name: string } | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef(0);
+  const touchDeltaX = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchDeltaX.current = 0;
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+  };
+  const handleTouchEnd = () => {
+    if (item.media_urls.length <= 1) return;
+    if (Math.abs(touchDeltaX.current) > 50) {
+      if (touchDeltaX.current < 0 && currentMedia < item.media_urls.length - 1) {
+        setCurrentMedia(currentMedia + 1);
+      } else if (touchDeltaX.current > 0 && currentMedia > 0) {
+        setCurrentMedia(currentMedia - 1);
+      }
+    }
+    touchDeltaX.current = 0;
+  };
   const lastTapRef = useRef(0);
 
   const isOwner = currentUserId && item.author_id === currentUserId;
@@ -1591,8 +1616,15 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
             </div>
           )}
 
-          {/* Media */}
-          <div ref={containerRef} onClick={handleDoubleTap} className={cn("relative", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] w-auto mx-auto bg-black rounded-xl overflow-hidden" : "aspect-square w-full bg-black") : "")}>
+           {/* Media */}
+          <div
+            ref={containerRef}
+            onClick={handleDoubleTap}
+            onTouchStart={item.media_urls.length > 1 ? handleTouchStart : undefined}
+            onTouchMove={item.media_urls.length > 1 ? handleTouchMove : undefined}
+            onTouchEnd={item.media_urls.length > 1 ? handleTouchEnd : undefined}
+            className={cn("relative overflow-hidden", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] w-auto mx-auto bg-black rounded-xl" : "aspect-square w-full bg-black") : "")}
+          >
             {hasMedia ? (
               item.media_type === "video" ? (
                 <>
@@ -1627,33 +1659,56 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                   )}
                 </>
               ) : (
-                <img
-                  src={mediaUrl}
-                  alt={item.caption || "Post"}
-                  className="h-full w-full object-cover cursor-pointer"
-                  loading="lazy"
-                  onClick={() => onOpenFullscreen?.()}
-                />
+                <div className="relative h-full w-full">
+                  <img
+                    src={mediaUrl}
+                    alt={item.caption || "Post"}
+                    className="h-full w-full object-cover cursor-pointer transition-opacity duration-200"
+                    loading="lazy"
+                    onClick={() => onOpenFullscreen?.()}
+                  />
+
+                  {/* Desktop left/right arrows for multi-image */}
+                  {item.media_urls.length > 1 && currentMedia > 0 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setCurrentMedia(currentMedia - 1); }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white transition-colors hidden sm:flex"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                  )}
+                  {item.media_urls.length > 1 && currentMedia < item.media_urls.length - 1 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setCurrentMedia(currentMedia + 1); }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white transition-colors hidden sm:flex"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
               )
             ) : null}
 
-            {/* Multi-image indicator */}
+            {/* Multi-image counter & dots */}
             {hasMedia && item.media_urls.length > 1 && (
               <>
-                <div className="absolute top-3 right-3 bg-black/50 px-2 py-0.5 rounded-full text-[10px] text-white font-medium">
+                <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-full text-[11px] text-white font-semibold shadow-lg">
                   {currentMedia + 1}/{item.media_urls.length}
                 </div>
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                   {item.media_urls.map((_, i) => (
                     <button
                       key={i}
-                      onClick={() => setCurrentMedia(i)}
-                      className={cn("h-1.5 rounded-full transition-all", i === currentMedia ? "w-4 bg-primary" : "w-1.5 bg-white/60")}
+                      onClick={(e) => { e.stopPropagation(); setCurrentMedia(i); }}
+                      className={cn(
+                        "rounded-full transition-all duration-300",
+                        i === currentMedia ? "w-5 h-2 bg-primary shadow-md" : "w-2 h-2 bg-white/50 hover:bg-white/80"
+                      )}
                     />
                   ))}
                 </div>
               </>
-             )}
+            )}
 
             {/* Double-tap heart animation */}
             <AnimatePresence>
