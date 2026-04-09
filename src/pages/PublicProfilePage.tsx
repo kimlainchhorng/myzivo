@@ -973,7 +973,7 @@ export default function PublicProfilePage() {
 
               {/* Post detail overlay — Instagram-style */}
               <AnimatePresence>
-                {selectedPost && (
+                {selectedPost && selectedPost.media_type !== "video" && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
