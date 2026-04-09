@@ -1207,7 +1207,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
 /* ── Individual Feed Card (IG/FB style) ──────────────────────────── */
 
-function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void; autoPlayVideo?: boolean }) {
+function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detailMode }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void; autoPlayVideo?: boolean; detailMode?: boolean }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [liked, setLiked] = useState(false);
