@@ -394,6 +394,7 @@ export default function AdminUserAccounts() {
         coverUrl: null,
         coverPosition: 50,
         socialLinks: {},
+        bio: "",
       };
 
       setCreatedAccounts((prev) => [newAccount, ...prev]);
