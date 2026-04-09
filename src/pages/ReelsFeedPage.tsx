@@ -775,11 +775,12 @@ export default function ReelsFeedPage() {
                   </div>
                   <div
                     ref={fullscreenScrollRef}
-                    className="flex-1 overflow-y-auto pb-20"
-                    style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 5rem), 5rem)' }}
+                    className="flex-1 overflow-y-auto"
+                    style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 6rem)' }}
                   >
                     <FeedCard key={post.id} item={post} currentUserId={userId} detailMode />
                   </div>
+                  <ZivoMobileNav />
                 </motion.div>
               );
             })()}
