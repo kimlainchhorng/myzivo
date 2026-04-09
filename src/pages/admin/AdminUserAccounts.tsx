@@ -455,7 +455,7 @@ export default function AdminUserAccounts() {
       const fieldKey = type === "avatar" ? "avatarUrl" : "coverUrl";
       setCreatedAccounts((prev) =>
         prev.map((acc, i) =>
-          i === index ? { ...acc, [fieldKey]: publicUrl } : acc,
+          i === index ? { ...acc, [fieldKey]: publicUrl, ...(type === "cover" ? { coverPosition: 50 } : {}) } : acc,
         ),
       );
       queryClient.invalidateQueries({ queryKey: ["admin-created-accounts"] });
