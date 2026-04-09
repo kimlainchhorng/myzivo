@@ -51,7 +51,7 @@ export default function PullToRefresh({ onRefresh, children, className, enabled 
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!enabled || !isPulling.current || refreshing) return;
-    const scrollTop = containerRef.current?.scrollTop ?? 0;
+    const scrollTop = window.scrollY;
     if (scrollTop > 0) {
       isPulling.current = false;
       pullY.set(0);
