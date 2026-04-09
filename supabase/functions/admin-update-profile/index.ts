@@ -73,7 +73,6 @@ Deno.serve(async (req) => {
           )
         : null;
 
-    // Handle file upload if provided
     let uploadedUrl: string | null = null;
     if (uploadFile && typeof uploadFile === "object") {
       const { base64, bucket, contentType } = uploadFile;
@@ -123,87 +122,63 @@ Deno.serve(async (req) => {
       socialFieldUpdates.social_snapchat = getLink("snapchat");
     }
 
-    // Build update object
     const updates: Record<string, unknown> = {
       ...socialFieldUpdates,
     };
+
     if (normalizedSocialLinks) updates.social_links = normalizedSocialLinks;
-    if (uploadedUrl && body.uploadFile?.bucket === "avatars") updates.avatar_url = uploadedUrl;
-    if (uploadedUrl && body.uploadFile?.bucket === "covers") updates.cover_url = uploadedUrl;
-    if (typeof avatarUrl === "string") updates.avatar_url = avatarUrl;
-    if (typeof coverUrl === "string") updates.cover_url = coverUrl;
+    if (uploadedUrl && uploadFile?.bucket === "avatars") updates.avatar_url = uploadedUrl;
+    if (uploadedUrl && uploadFile?.bucket === "covers") updates.cover_url = uploadedUrl;
+    if (typeof avatarUrl === "string") updates.avatar_url = avatarUrl.trim() || null;
+    if (typeof coverUrl === "string") updates.cover_url = coverUrl.trim() || null;
 
     if (Object.keys(updates).length > 0) {
       const resolveProfile = async () => {
         const { data, error } = await adminClient
           .from("profiles")
-          .select("id, user_id")
+          .select("id, user_id, avatar_url, cover_url, updated_at")
           .or(`user_id.eq.${userId},id.eq.${userId}`)
-          .maybeSingle();
+          .order("updated_at", { ascending: false, nullsFirst: false })
+          .limit(1);
 
         if (error) return { profile: null, error };
-        return { profile: data, error: null };
+        return { profile: data?.[0] ?? null, error: null };
       };
 
-      const { profile, error: resolveError } = await resolveProfile();
-      if (resolveError) {
-        console.error("[admin-update-profile] resolve error:", resolveError);
-        return new Response(JSON.stringify({ error: resolveError.message }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      const persistUpdates = async (payload: Record<string, unknown>) => {
+        const { profile, error: resolveError } = await resolveProfile();
+        if (resolveError) {
+          return { data: null, error: resolveError };
+        }
 
-      let updateError: { message: string } | null = null;
+        const targetProfileId = profile?.id ?? userId;
+        return await adminClient
+          .from("profiles")
+          .upsert(
+            {
+              id: targetProfileId,
+              user_id: userId,
+              ...payload,
+            },
+            { onConflict: "id" },
+          )
+          .select("id, user_id, avatar_url, cover_url")
+          .single();
+      };
 
-      if (profile?.id) {
-        const result = await adminClient
-          .from("profiles")
-          .update({
-            ...updates,
-            user_id: profile.user_id ?? userId,
-          })
-          .eq("id", profile.id);
-        updateError = result.error;
-      } else {
-        const result = await adminClient
-          .from("profiles")
-          .insert({
-            id: userId,
-            user_id: userId,
-            ...updates,
-          });
-        updateError = result.error;
-      }
+      let persistPayload = { ...updates };
+      let { data: savedProfile, error: updateError } = await persistUpdates(persistPayload);
 
       if (
         updateError &&
-        "social_links" in updates &&
+        "social_links" in persistPayload &&
         updateError.message.includes("social_links") &&
         updateError.message.includes("schema cache")
       ) {
-        const fallbackUpdates = { ...updates };
-        delete fallbackUpdates.social_links;
-
-        if (profile?.id) {
-          const fallback = await adminClient
-            .from("profiles")
-            .update({
-              ...fallbackUpdates,
-              user_id: profile.user_id ?? userId,
-            })
-            .eq("id", profile.id);
-          updateError = fallback.error;
-        } else {
-          const fallback = await adminClient
-            .from("profiles")
-            .insert({
-              id: userId,
-              user_id: userId,
-              ...fallbackUpdates,
-            });
-          updateError = fallback.error;
-        }
+        const fallbackPayload = { ...persistPayload };
+        delete fallbackPayload.social_links;
+        persistPayload = fallbackPayload;
+        ({ data: savedProfile, error: updateError } = await persistUpdates(persistPayload));
       }
 
       if (updateError) {
@@ -213,9 +188,46 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+
+      const expectedAvatarUrl = typeof persistPayload.avatar_url === "string" ? persistPayload.avatar_url : null;
+      const expectedCoverUrl = typeof persistPayload.cover_url === "string" ? persistPayload.cover_url : null;
+      const avatarPersisted = !expectedAvatarUrl || savedProfile?.avatar_url === expectedAvatarUrl;
+      const coverPersisted = !expectedCoverUrl || savedProfile?.cover_url === expectedCoverUrl;
+      const userLinked = savedProfile?.user_id === userId;
+
+      if (!avatarPersisted || !coverPersisted || !userLinked) {
+        const { profile: verifiedProfile, error: verifyError } = await resolveProfile();
+
+        if (verifyError) {
+          console.error("[admin-update-profile] verification read error:", verifyError);
+          return new Response(JSON.stringify({ error: verifyError.message }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const avatarVerified = !expectedAvatarUrl || verifiedProfile?.avatar_url === expectedAvatarUrl;
+        const coverVerified = !expectedCoverUrl || verifiedProfile?.cover_url === expectedCoverUrl;
+        const userVerified = verifiedProfile?.user_id === userId;
+
+        if (!avatarVerified || !coverVerified || !userVerified) {
+          console.error("[admin-update-profile] verification failed:", {
+            userId,
+            expectedAvatarUrl,
+            expectedCoverUrl,
+            savedProfile,
+            verifiedProfile,
+          });
+
+          return new Response(JSON.stringify({ error: "Profile update verification failed" }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
     }
 
-    console.log("[admin-update-profile] Updated profile for:", userId, "by:", caller.id);
+    console.log("[admin-update-profile] Updated profile for:", userId, "by:", caller.id, "uploadedUrl:", uploadedUrl);
 
     return new Response(JSON.stringify({ success: true, uploadedUrl }), {
       status: 200,
