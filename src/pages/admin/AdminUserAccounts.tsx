@@ -270,7 +270,10 @@ export default function AdminUserAccounts() {
   const isAuthorized =
     access?.isSupport || access?.isAdmin || isPrivilegedEmail;
 
-  const { data: remoteCreatedAccounts = [] } = useQuery({
+  const {
+    data: remoteCreatedAccounts = [],
+    isSuccess: hasLoadedRemoteCreatedAccounts,
+  } = useQuery({
     queryKey: ["admin-created-accounts", user?.id],
     enabled: !!user && !!isAuthorized,
     queryFn: async () => {
@@ -288,9 +291,21 @@ export default function AdminUserAccounts() {
   }, [createdAccounts]);
 
   useEffect(() => {
-    if (remoteCreatedAccounts.length === 0) return;
-    setCreatedAccounts((prev) => mergeCreatedAccounts(prev, remoteCreatedAccounts));
-  }, [remoteCreatedAccounts]);
+    if (!hasLoadedRemoteCreatedAccounts) return;
+
+    const liveEmails = new Set(
+      remoteCreatedAccounts
+        .map((account) => account.email.trim().toLowerCase())
+        .filter(Boolean),
+    );
+
+    setCreatedAccounts((prev) =>
+      mergeCreatedAccounts(
+        prev.filter((account) => liveEmails.has(account.email.trim().toLowerCase())),
+        remoteCreatedAccounts,
+      ),
+    );
+  }, [hasLoadedRemoteCreatedAccounts, remoteCreatedAccounts]);
 
   if (authLoading || (!!user && !isPrivilegedEmail && accessLoading)) {
     return (
