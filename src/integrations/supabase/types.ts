@@ -55862,6 +55862,7 @@ export type Database = {
         Returns: {
           category: string
           is_featured: boolean
+          logo_url: string
           relevance_score: number
           store_id: string
           store_name: string
