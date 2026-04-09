@@ -42,7 +42,7 @@ export default function PullToRefresh({ onRefresh, children, className, enabled 
     if (!enabled || refreshing) return;
     const target = e.target as HTMLElement | null;
     if (target?.closest(INTERACTIVE_SELECTOR)) return;
-    const scrollTop = containerRef.current?.scrollTop ?? 0;
+    const scrollTop = window.scrollY;
     if (scrollTop <= 0) {
       touchStartY.current = e.touches[0].clientY;
       isPulling.current = true;
@@ -51,7 +51,7 @@ export default function PullToRefresh({ onRefresh, children, className, enabled 
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!enabled || !isPulling.current || refreshing) return;
-    const scrollTop = containerRef.current?.scrollTop ?? 0;
+    const scrollTop = window.scrollY;
     if (scrollTop > 0) {
       isPulling.current = false;
       pullY.set(0);
@@ -84,7 +84,7 @@ export default function PullToRefresh({ onRefresh, children, className, enabled 
   }, [enabled, pullY, refreshing, onRefresh]);
 
   return (
-    <div className={className} style={{ position: "relative", overflow: "hidden" }}>
+    <div className={className} style={{ position: "relative" }}>
       {/* Spinner indicator */}
       <motion.div
         className="absolute left-1/2 -translate-x-1/2 z-50 flex items-center justify-center"
@@ -110,7 +110,7 @@ export default function PullToRefresh({ onRefresh, children, className, enabled 
       <motion.div
         ref={containerRef}
         style={{ y: refreshing ? 60 : spinnerY }}
-        className="h-full overflow-y-auto"
+        className="min-h-full"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
