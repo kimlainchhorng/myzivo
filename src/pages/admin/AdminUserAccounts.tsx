@@ -720,10 +720,24 @@ function ProfileCard({
   };
 
   const handleCreatePost = async () => {
-    if (!acc.userId || (!newPostCaption.trim() && newPostMedia.length === 0)) return false;
+    if (!newPostCaption.trim() && newPostMedia.length === 0) return false;
     setIsPosting(true);
 
     try {
+      let targetUserId = acc.userId;
+
+      if (!targetUserId) {
+        const { data: uid, error: lookupError } = await supabase.rpc("admin_lookup_profile_by_email" as any, {
+          _email: acc.email,
+        });
+
+        if (lookupError || !uid) {
+          throw new Error("Could not find this account user ID. Please refresh the account list and try again.");
+        }
+
+        targetUserId = uid as string;
+      }
+
       const files = await Promise.all(
         newPostMedia.map(async (file) => ({
           base64: await fileToBase64(file),
@@ -734,7 +748,7 @@ function ProfileCard({
 
       const { data, error } = await supabase.functions.invoke("admin-create-user-post", {
         body: {
-          userId: acc.userId,
+          userId: targetUserId,
           caption: newPostCaption.trim() || null,
           files,
         },
@@ -744,7 +758,7 @@ function ProfileCard({
       if (data?.error) throw new Error(data.error);
 
       resetPostComposer();
-      await queryClient.invalidateQueries({ queryKey: ["admin-user-posts", acc.userId] });
+      await queryClient.invalidateQueries({ queryKey: ["admin-user-posts", targetUserId] });
       toast({ title: "Post created", description: `Posted as ${acc.username}` });
       return true;
     } catch (err: any) {
