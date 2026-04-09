@@ -365,7 +365,7 @@ export default function ReelsFeedPage() {
               sharedFromUserAvatar = optimizeAvatar(sharedProfile?.avatar_url, 96) || sharedProfile?.avatar_url || null;
             }
 
-            const postMediaUrls: string[] = Array.isArray(post.media_urls) && post.media_urls.length > 0
+            let postMediaUrls: string[] = Array.isArray(post.media_urls) && post.media_urls.length > 0
               ? post.media_urls
               : post.media_url ? [post.media_url] : [];
 
