@@ -776,7 +776,7 @@ export default function ReelsFeedPage() {
                     className="flex-1 overflow-y-auto pb-20"
                     style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 5rem), 5rem)' }}
                   >
-                    <FeedCard key={post.id} item={post} currentUserId={userId} />
+                    <FeedCard key={post.id} item={post} currentUserId={userId} detailMode />
                   </div>
                 </motion.div>
               );
