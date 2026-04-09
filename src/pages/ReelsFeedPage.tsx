@@ -1621,7 +1621,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                     ))}
                   </div>
                 ) : item.media_urls.length === 3 ? (
-                  <div className="grid grid-cols-2 gap-0.5 w-full" style={{ aspectRatio: "1" }}>
+                  <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full" style={{ aspectRatio: "1" }}>
                     <div className="relative row-span-2 bg-black overflow-hidden">
                       <img src={item.media_urls[0]} alt="" className="h-full w-full object-cover cursor-pointer" loading="lazy" onClick={() => { setCurrentMedia(0); onOpenFullscreen?.(); }} />
                     </div>
@@ -1785,7 +1785,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 </div>
               ) : item.media_urls.length === 3 ? (
                 /* 3 images — 1 large left, 2 stacked right */
-                <div className="grid grid-cols-2 gap-0.5 w-full" style={{ aspectRatio: "1" }}>
+                <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full" style={{ aspectRatio: "1" }}>
                   <div className="relative row-span-2 bg-black overflow-hidden">
                     <img
                       src={item.media_urls[0]}
