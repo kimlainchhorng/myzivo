@@ -105,7 +105,7 @@ export default function ReelThumbnail({
   }, [url]);
 
   return (
-    <>
+    <div className="absolute inset-0">
       {poster && !useVideoFallback ? (
         <img
           src={poster}
@@ -121,15 +121,19 @@ export default function ReelThumbnail({
           style={{ filter: filterCss || "none" }}
           muted
           playsInline
-          preload="metadata"
+          preload="auto"
         />
       )}
 
+      {/* Gradient overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+
+      {/* Play button */}
       <div className={cn("absolute inset-0 flex items-center justify-center", overlayClassName)}>
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-foreground/55 backdrop-blur-sm">
-          <Play className={cn("ml-0.5 h-5 w-5 fill-background text-background", iconClassName)} />
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 backdrop-blur-md border border-white/20 shadow-lg">
+          <Play className={cn("ml-0.5 h-5 w-5 fill-white text-white", iconClassName)} />
         </div>
       </div>
-    </>
+    </div>
   );
 }
