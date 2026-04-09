@@ -9,7 +9,7 @@ import {
   Plane, Hotel, CarFront, Car, UtensilsCrossed, Package,
   Menu, X, User, ChevronDown, HelpCircle,
   Sparkles, Users, Award, Crown, LogOut, UserCircle, Briefcase, Globe, Check,
-  Newspaper, Film, MapPin, MessageCircle, Rss,
+  Newspaper, Film, MapPin, MessageCircle, Rss, Search,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -218,6 +218,17 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                   );
                 })}
               </nav>
+
+              {/* Search Bar */}
+              <div className="hidden lg:flex flex-1 max-w-xs mx-4 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <input
+                  placeholder="Search people..."
+                  className="w-full pl-9 pr-4 py-2 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
+                  onFocus={() => navigate("/feed")}
+                  readOnly
+                />
+              </div>
 
               {/* Right: Language, Currency, Auth */}
               <div className="hidden md:flex items-center gap-2" style={{ transformStyle: "preserve-3d" }}>
