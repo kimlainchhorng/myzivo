@@ -51,7 +51,7 @@ export const useUserProfile = () => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as UserProfile | null;
+      return data as unknown as UserProfile | null;
     },
     enabled: !!user?.id,
   });
