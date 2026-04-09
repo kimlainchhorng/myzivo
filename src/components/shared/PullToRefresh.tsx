@@ -42,7 +42,7 @@ export default function PullToRefresh({ onRefresh, children, className, enabled 
     if (!enabled || refreshing) return;
     const target = e.target as HTMLElement | null;
     if (target?.closest(INTERACTIVE_SELECTOR)) return;
-    const scrollTop = containerRef.current?.scrollTop ?? 0;
+    const scrollTop = window.scrollY;
     if (scrollTop <= 0) {
       touchStartY.current = e.touches[0].clientY;
       isPulling.current = true;
