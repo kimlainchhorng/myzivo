@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
+import ReelThumbnail from "@/components/social/ReelThumbnail";
 import {
   UserPlus,
   AlertTriangle,

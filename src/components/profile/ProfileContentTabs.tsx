@@ -3,6 +3,7 @@ import ProfileFeedCard from "./ProfileFeedCard";
 import UnifiedShareSheet from "@/components/shared/ShareSheet";
 import CreatePostModal from "@/components/social/CreatePostModal";
 import CommentsSheet from "@/components/social/CommentsSheet";
+import ReelThumbnail from "@/components/social/ReelThumbnail";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
