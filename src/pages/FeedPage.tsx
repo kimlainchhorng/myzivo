@@ -453,7 +453,7 @@ function ReelCard({
           type="button"
           onClick={() => {
             if (post.source === "user" && post.author_id) {
-              navigate(`/user/${post.author_id}`);
+              onNavigate(`__user__${post.author_id}`);
             } else if (post.store_slug) {
               onNavigate(post.store_slug);
             }
