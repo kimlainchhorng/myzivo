@@ -9,7 +9,7 @@
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Permissions-Policy" content="camera=(self), microphone=(), geolocation=(self)" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://maps.googleapis.com https://emrld.ltd https://js.hcaptcha.com https://bolt.new https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co https://*.stripe.com https://maps.googleapis.com https://maps.gstatic.com https://*.google.com https://*.googleusercontent.com https://assets.duffel.com https://pics.avs.io https://ui-avatars.com https://www.facebook.com; media-src 'self' blob: data: https://*.supabase.co; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://maps.googleapis.com https://api.duffel.com https://emrld.ltd https://sentry.avs.io https://tpo.li https://tp.media https://www.travelpayouts.com https://connect.facebook.net https://www.facebook.com; frame-src https://js.stripe.com https://hooks.stripe.com https://newassets.hcaptcha.com; worker-src 'self' blob:;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://maps.googleapis.com https://emrld.ltd https://js.hcaptcha.com https://bolt.new https://connect.facebook.net https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co https://*.stripe.com https://maps.googleapis.com https://maps.gstatic.com https://*.google.com https://*.googleusercontent.com https://assets.duffel.com https://pics.avs.io https://ui-avatars.com https://www.facebook.com https://www.google-analytics.com; media-src 'self' blob: data: https://*.supabase.co; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://maps.googleapis.com https://api.duffel.com https://emrld.ltd https://sentry.avs.io https://tpo.li https://tp.media https://www.travelpayouts.com https://connect.facebook.net https://www.facebook.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; frame-src https://js.stripe.com https://hooks.stripe.com https://newassets.hcaptcha.com; worker-src 'self' blob:;" />
 
     <!-- Meta Pixel Code -->
     <script>
@@ -25,6 +25,15 @@
     fbq('track', 'PageView');
     </script>
     <!-- End Meta Pixel Code -->
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VVH8W5PW3E"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-VVH8W5PW3E');
+    </script>
     
     <!-- Preconnect to critical origins for faster resource loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
