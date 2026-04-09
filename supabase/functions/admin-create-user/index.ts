@@ -89,6 +89,17 @@ Deno.serve(async (req) => {
       });
     }
 
+    await adminClient
+      .from("profiles")
+      .upsert({
+        id: data.user.id,
+        user_id: data.user.id,
+        full_name: username,
+        email: data.user.email,
+      }, {
+        onConflict: "id",
+      });
+
     return new Response(JSON.stringify({ user: { id: data.user.id, email: data.user.email } }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
