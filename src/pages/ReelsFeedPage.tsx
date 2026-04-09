@@ -1637,13 +1637,13 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                     </button>
                   </>
                 ) : item.media_urls.length === 1 ? (
-                  <div className="relative aspect-square w-full bg-black">
+                  <div className="relative aspect-square md:aspect-[4/3] w-full bg-black max-h-[70vh]">
                     <img src={mediaUrl} alt={item.caption || "Shared post"} className="h-full w-full object-cover cursor-pointer" loading="lazy" onClick={() => onOpenFullscreen?.()} />
                   </div>
                 ) : item.media_urls.length === 2 ? (
-                  <div className="grid grid-cols-2 gap-0.5 w-full">
+                  <div className="grid grid-cols-2 gap-0.5 w-full aspect-square md:aspect-[2/1]">
                     {item.media_urls.map((url, i) => (
-                      <div key={i} className="relative aspect-square bg-black overflow-hidden">
+                      <div key={i} className="relative bg-black overflow-hidden">
                         <img src={url} alt="" className="h-full w-full object-cover cursor-pointer" loading="lazy" onClick={() => { setCurrentMedia(i); onOpenFullscreen?.(); }} />
                       </div>
                     ))}
@@ -1787,7 +1787,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 </>
               ) : item.media_urls.length === 1 ? (
                 /* Single image */
-                <div className="relative aspect-square w-full bg-black">
+                <div className="relative aspect-square md:aspect-[4/3] w-full bg-black max-h-[70vh]">
                   <img
                     src={mediaUrl}
                     alt={item.caption || "Post"}
@@ -1798,9 +1798,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 </div>
               ) : item.media_urls.length === 2 ? (
                 /* 2 images — side by side */
-                <div className="grid grid-cols-2 gap-0.5 w-full">
+                <div className="grid grid-cols-2 gap-0.5 w-full aspect-square md:aspect-[2/1]">
                   {item.media_urls.map((url, i) => (
-                    <div key={i} className="relative aspect-square bg-black overflow-hidden">
+                    <div key={i} className="relative bg-black overflow-hidden">
                       <img
                         src={url}
                         alt=""
