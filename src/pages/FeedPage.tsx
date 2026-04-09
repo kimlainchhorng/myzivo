@@ -1273,6 +1273,7 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
 }
 
 
+export default function FeedPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
