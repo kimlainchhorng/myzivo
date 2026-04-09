@@ -734,9 +734,9 @@ export default function PublicProfilePage() {
     }
 
     return (
-      <div className="grid grid-cols-2 gap-0.5 w-full">
+      <div className="grid grid-cols-2 gap-[3px] w-full aspect-square overflow-hidden rounded-lg">
         {urls.slice(0, 4).map((u, i) => (
-          <div key={i} className="relative bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(i)}>
+          <div key={i} className="relative bg-muted overflow-hidden cursor-pointer" onClick={() => openViewer(i)}>
             <img src={u} alt="" className="w-full h-full object-cover" loading="lazy" />
             {i === 3 && urls.length > 4 && (
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
