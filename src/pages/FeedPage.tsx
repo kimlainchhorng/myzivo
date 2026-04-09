@@ -149,6 +149,8 @@ function ReelCard({
     }
   };
 
+  const liked = userLikedPostIds.has(post.id);
+
   const normalizedUrls = useMemo(
     () => (post.media_urls || []).map((u) => normalizeStorePostMediaUrl(u)).filter(Boolean),
     [post.media_urls],
