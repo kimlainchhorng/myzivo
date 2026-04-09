@@ -1708,10 +1708,10 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
           <div
             ref={containerRef}
             onClick={handleDoubleTap}
-            onTouchStart={item.media_urls.length > 1 ? handleTouchStart : undefined}
-            onTouchMove={item.media_urls.length > 1 ? handleTouchMove : undefined}
-            onTouchEnd={item.media_urls.length > 1 ? handleTouchEnd : undefined}
-            className={cn("relative overflow-hidden", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] w-auto mx-auto bg-black rounded-xl" : "aspect-square w-full bg-black") : "")}
+            onTouchStart={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchStart : undefined)}
+            onTouchMove={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchMove : undefined)}
+            onTouchEnd={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchEnd : undefined)}
+            className={cn("relative overflow-hidden", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] w-auto mx-auto bg-black rounded-xl" : "") : "")}
           >
             {hasMedia ? (
               item.media_type === "video" ? (
@@ -1746,57 +1746,88 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                     </button>
                   )}
                 </>
-              ) : (
-                <div className="relative h-full w-full">
+              ) : item.media_urls.length === 1 ? (
+                /* Single image */
+                <div className="relative aspect-square w-full bg-black">
                   <img
                     src={mediaUrl}
                     alt={item.caption || "Post"}
-                    className="h-full w-full object-cover cursor-pointer transition-opacity duration-200"
+                    className="h-full w-full object-cover cursor-pointer"
                     loading="lazy"
                     onClick={() => onOpenFullscreen?.()}
                   />
-
-                  {/* Desktop left/right arrows for multi-image */}
-                  {item.media_urls.length > 1 && currentMedia > 0 && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setCurrentMedia(currentMedia - 1); }}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white transition-colors hidden sm:flex"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
-                  )}
-                  {item.media_urls.length > 1 && currentMedia < item.media_urls.length - 1 && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setCurrentMedia(currentMedia + 1); }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white transition-colors hidden sm:flex"
-                    >
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
-                  )}
+                </div>
+              ) : item.media_urls.length === 2 ? (
+                /* 2 images — side by side */
+                <div className="grid grid-cols-2 gap-0.5 w-full">
+                  {item.media_urls.map((url, i) => (
+                    <div key={i} className="relative aspect-square bg-black overflow-hidden">
+                      <img
+                        src={url}
+                        alt=""
+                        className="h-full w-full object-cover cursor-pointer"
+                        loading="lazy"
+                        onClick={() => { setCurrentMedia(i); onOpenFullscreen?.(); }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : item.media_urls.length === 3 ? (
+                /* 3 images — 1 large left, 2 stacked right */
+                <div className="grid grid-cols-2 gap-0.5 w-full" style={{ aspectRatio: "1" }}>
+                  <div className="relative row-span-2 bg-black overflow-hidden">
+                    <img
+                      src={item.media_urls[0]}
+                      alt=""
+                      className="h-full w-full object-cover cursor-pointer"
+                      loading="lazy"
+                      onClick={() => { setCurrentMedia(0); onOpenFullscreen?.(); }}
+                    />
+                  </div>
+                  <div className="relative bg-black overflow-hidden">
+                    <img
+                      src={item.media_urls[1]}
+                      alt=""
+                      className="h-full w-full object-cover cursor-pointer"
+                      loading="lazy"
+                      onClick={() => { setCurrentMedia(1); onOpenFullscreen?.(); }}
+                    />
+                  </div>
+                  <div className="relative bg-black overflow-hidden">
+                    <img
+                      src={item.media_urls[2]}
+                      alt=""
+                      className="h-full w-full object-cover cursor-pointer"
+                      loading="lazy"
+                      onClick={() => { setCurrentMedia(2); onOpenFullscreen?.(); }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                /* 4+ images — 2x2 grid with +N overlay */
+                <div className="grid grid-cols-2 gap-0.5 w-full">
+                  {item.media_urls.slice(0, 4).map((url, i) => (
+                    <div key={i} className="relative aspect-square bg-black overflow-hidden">
+                      <img
+                        src={url}
+                        alt=""
+                        className="h-full w-full object-cover cursor-pointer"
+                        loading="lazy"
+                        onClick={() => { setCurrentMedia(i); onOpenFullscreen?.(); }}
+                      />
+                      {i === 3 && item.media_urls.length > 4 && (
+                        <div
+                          className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer"
+                          onClick={() => { setCurrentMedia(3); onOpenFullscreen?.(); }}
+                        >
+                          <span className="text-white text-2xl font-bold">+{item.media_urls.length - 4}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )
             ) : null}
-
-            {/* Multi-image counter & dots */}
-            {hasMedia && item.media_urls.length > 1 && (
-              <>
-                <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-full text-[11px] text-white font-semibold shadow-lg">
-                  {currentMedia + 1}/{item.media_urls.length}
-                </div>
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                  {item.media_urls.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={(e) => { e.stopPropagation(); setCurrentMedia(i); }}
-                      className={cn(
-                        "rounded-full transition-all duration-300",
-                        i === currentMedia ? "w-5 h-2 bg-primary shadow-md" : "w-2 h-2 bg-white/50 hover:bg-white/80"
-                      )}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
 
             {/* Double-tap heart animation */}
             <AnimatePresence>
