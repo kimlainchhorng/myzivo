@@ -347,19 +347,41 @@ export default function PublicProfilePage() {
       const sharedUserIds = data
         .map((post: any) => post.shared_from_user_id)
         .filter(Boolean) as string[];
+      const postIds = data.map((post: any) => post.id).filter(Boolean) as string[];
 
-      const { originByPostId, originByUserId } = await resolveSharedOrigins({
-        sharedPostIds,
-        sharedUserIds,
+      const [
+        { originByPostId, originByUserId },
+        { data: postMediaRows },
+      ] = await Promise.all([
+        resolveSharedOrigins({
+          sharedPostIds,
+          sharedUserIds,
+        }),
+        postIds.length
+          ? (supabase as any)
+              .from("post_media")
+              .select("post_id, media_url, sort_order")
+              .in("post_id", postIds)
+              .order("sort_order", { ascending: true })
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
+      const postMediaMap = new Map<string, string[]>();
+      (postMediaRows || []).forEach((row: any) => {
+        if (!row?.post_id || !row?.media_url) return;
+        const existing = postMediaMap.get(row.post_id) || [];
+        existing.push(row.media_url);
+        postMediaMap.set(row.post_id, existing);
       });
 
       return data.map((post: any) => ({
         ...post,
-        media_urls: Array.isArray(post.media_urls) && post.media_urls.length > 0
-          ? post.media_urls
-          : post.media_url
-            ? [post.media_url]
-            : [],
+        media_urls: (postMediaMap.get(post.id)?.length ? postMediaMap.get(post.id) : null) ||
+          (Array.isArray(post.media_urls) && post.media_urls.length > 0
+            ? post.media_urls
+            : post.media_url
+              ? [post.media_url]
+              : []),
         sharedOrigin: (post.shared_from_post_id ? originByPostId[post.shared_from_post_id] || null : null) ||
           (post.shared_from_user_id ? originByUserId[post.shared_from_user_id] || null : null) as SharedOriginInfo | null,
       }));
