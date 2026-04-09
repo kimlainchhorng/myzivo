@@ -1,8 +1,9 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { createClient } from "npm:@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 Deno.serve(async (req) => {
@@ -31,7 +32,10 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const { data: { user: caller }, error: callerError } = await callerClient.auth.getUser();
+    const {
+      data: { user: caller },
+      error: callerError,
+    } = await callerClient.auth.getUser();
     if (callerError || !caller) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -50,10 +54,13 @@ Deno.serve(async (req) => {
     const canManageAccounts = (roleRows ?? []).length > 0;
 
     if (!canManageAccounts) {
-      return new Response(JSON.stringify({ error: "Admin access required" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Admin access required" }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const matchedUsers: Array<{
@@ -79,7 +86,8 @@ Deno.serve(async (req) => {
       for (const user of users) {
         const email = user.email?.toLowerCase() ?? "";
         const metadata = (user.user_metadata ?? {}) as Record<string, unknown>;
-        const createdViaAdmin = metadata.created_via === "admin_user_accounts";
+        const createdViaAdmin =
+          metadata.created_via === "admin_user_accounts";
         const isGeneratedZivoAccount = email.endsWith("@zivo.app");
 
         if (email && (createdViaAdmin || isGeneratedZivoAccount)) {
@@ -95,8 +103,14 @@ Deno.serve(async (req) => {
       if (users.length < 1000) break;
     }
 
-    const uniqueUsers = Array.from(new Map(matchedUsers.map((user) => [user.id, user])).values())
-      .sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime())
+    const uniqueUsers = Array.from(
+      new Map(matchedUsers.map((user) => [user.id, user])).values(),
+    )
+      .sort(
+        (a, b) =>
+          new Date(b.created_at ?? 0).getTime() -
+          new Date(a.created_at ?? 0).getTime(),
+      )
       .slice(0, 100);
 
     const userIds = uniqueUsers.map((user) => user.id);
@@ -117,7 +131,9 @@ Deno.serve(async (req) => {
     if (userIds.length) {
       const primaryQuery = await adminClient
         .from("profiles")
-        .select("user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram, social_links")
+        .select(
+          "user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram, social_links",
+        )
         .in("user_id", userIds);
 
       if (primaryQuery.error) {
@@ -127,7 +143,9 @@ Deno.serve(async (req) => {
         ) {
           const fallbackQuery = await adminClient
             .from("profiles")
-            .select("user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram")
+            .select(
+              "user_id, avatar_url, cover_url, social_facebook, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram",
+            )
             .in("user_id", userIds);
 
           if (fallbackQuery.error) {
@@ -153,16 +171,32 @@ Deno.serve(async (req) => {
     const accounts = uniqueUsers.map((user) => {
       const metadata = user.user_metadata ?? {};
       const profile = profileMap.get(user.id);
-      const emailPrefix = user.email.split("@")[0]?.split("+")[0] ?? "user";
+      const emailPrefix =
+        user.email.split("@")[0]?.split("+")[0] ?? "user";
       const socialLinks = {
-        ...(profile?.social_links && typeof profile.social_links === "object" ? profile.social_links : {}),
-        ...(profile?.social_facebook ? { facebook: profile.social_facebook } : {}),
-        ...(profile?.social_instagram ? { instagram: profile.social_instagram } : {}),
-        ...(profile?.social_tiktok ? { tiktok: profile.social_tiktok } : {}),
-        ...(profile?.social_snapchat ? { snapchat: profile.social_snapchat } : {}),
+        ...(profile?.social_links &&
+        typeof profile.social_links === "object"
+          ? profile.social_links
+          : {}),
+        ...(profile?.social_facebook
+          ? { facebook: profile.social_facebook }
+          : {}),
+        ...(profile?.social_instagram
+          ? { instagram: profile.social_instagram }
+          : {}),
+        ...(profile?.social_tiktok
+          ? { tiktok: profile.social_tiktok }
+          : {}),
+        ...(profile?.social_snapchat
+          ? { snapchat: profile.social_snapchat }
+          : {}),
         ...(profile?.social_x ? { x: profile.social_x } : {}),
-        ...(profile?.social_linkedin ? { linkedin: profile.social_linkedin } : {}),
-        ...(profile?.social_telegram ? { telegram: profile.social_telegram } : {}),
+        ...(profile?.social_linkedin
+          ? { linkedin: profile.social_linkedin }
+          : {}),
+        ...(profile?.social_telegram
+          ? { telegram: profile.social_telegram }
+          : {}),
       };
 
       return {
@@ -186,6 +220,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    console.error("admin-list-created-users error:", message);
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
