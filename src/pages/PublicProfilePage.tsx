@@ -831,28 +831,24 @@ export default function PublicProfilePage() {
                             )}
 
                             {/* Original post media */}
-                            {post.media_url && (
-                              <div
-                                className={`relative w-full bg-muted overflow-hidden ${post.media_type === "video" ? "flex justify-center" : ""}`}
-                                onClick={() => {
-                                  if (post.media_type === "video") {
-                                    navigate(`/reels/${post.id}`);
-                                  } else {
-                                    setSelectedPost(post);
-                                  }
-                                }}
-                              >
-                                {post.media_type === "video" ? (
-                                  <div className="relative w-full max-w-md mx-auto aspect-[9/16] max-h-[500px] rounded-xl overflow-hidden bg-black">
-                                    <ReelThumbnail url={post.media_url} />
+                            {(() => {
+                              const urls = post.media_urls?.length ? post.media_urls : post.media_url ? [post.media_url] : [];
+                              if (!urls.length) return null;
+                              if (post.media_type === "video") {
+                                return (
+                                  <div className="relative w-full flex justify-center bg-muted overflow-hidden" onClick={() => navigate(`/reels/${post.id}`)}>
+                                    <div className="relative w-full max-w-md mx-auto aspect-[9/16] max-h-[500px] rounded-xl overflow-hidden bg-black">
+                                      <ReelThumbnail url={urls[0]} />
+                                    </div>
                                   </div>
-                                ) : (
-                                  <div className="relative w-full aspect-square">
-                                    <img src={post.media_url} alt="" className="w-full h-full object-cover" loading="lazy" />
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                                );
+                              }
+                              return (
+                                <div className="w-full bg-muted overflow-hidden">
+                                  {renderImageGrid(urls, post)}
+                                </div>
+                              );
+                            })()}
                           </div>
                         </>
                       ) : (
@@ -885,28 +881,24 @@ export default function PublicProfilePage() {
                           )}
 
                           {/* Media */}
-                          {post.media_url && (
-                            <div
-                              className={`relative w-full bg-muted overflow-hidden ${post.media_type === "video" ? "flex justify-center" : ""}`}
-                              onClick={() => {
-                                if (post.media_type === "video") {
-                                  navigate(`/reels/${post.id}`);
-                                } else {
-                                  setSelectedPost(post);
-                                }
-                              }}
-                            >
-                              {post.media_type === "video" ? (
-                                <div className="relative w-full max-w-md mx-auto aspect-[9/16] max-h-[500px] rounded-xl overflow-hidden bg-black">
-                                  <ReelThumbnail url={post.media_url} />
+                          {(() => {
+                            const urls = post.media_urls?.length ? post.media_urls : post.media_url ? [post.media_url] : [];
+                            if (!urls.length) return null;
+                            if (post.media_type === "video") {
+                              return (
+                                <div className="relative w-full flex justify-center bg-muted overflow-hidden" onClick={() => navigate(`/reels/${post.id}`)}>
+                                  <div className="relative w-full max-w-md mx-auto aspect-[9/16] max-h-[500px] rounded-xl overflow-hidden bg-black">
+                                    <ReelThumbnail url={urls[0]} />
+                                  </div>
                                 </div>
-                              ) : (
-                                <div className="relative w-full aspect-square">
-                                  <img src={post.media_url} alt="" className="w-full h-full object-cover" loading="lazy" />
-                                </div>
-                              )}
-                            </div>
-                          )}
+                              );
+                            }
+                            return (
+                              <div className="w-full bg-muted overflow-hidden">
+                                {renderImageGrid(urls, post)}
+                              </div>
+                            );
+                          })()}
                         </>
                       )}
 
