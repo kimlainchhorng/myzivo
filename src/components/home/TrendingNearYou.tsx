@@ -48,7 +48,7 @@ export default function TrendingNearYou() {
         </button>
       </div>
 
-      <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {stores.map((store, i) => (
           <TrendingCard key={store.store_id} store={store} index={i} />
         ))}
@@ -68,22 +68,22 @@ function TrendingCard({ store, index }: { store: TrendingStore; index: number })
       transition={{ delay: index * 0.05 }}
       onClick={() => navigate(`/store-map`)}
       className={cn(
-        "shrink-0 w-[140px] rounded-xl border border-border/40 bg-card overflow-hidden text-left",
+        "shrink-0 w-[160px] rounded-xl border border-border/40 bg-card overflow-hidden text-left",
         "hover:border-primary/30 hover:shadow-md transition-all",
         store.is_featured && "border-primary/40 bg-primary/5"
       )}
     >
       {/* Store Logo / Cover */}
-      <div className="w-full h-20 bg-muted/30 flex items-center justify-center overflow-hidden">
+      <div className="w-full h-24 bg-muted/30 flex items-center justify-center overflow-hidden">
         {store.logo_url ? (
           <img
             src={store.logo_url}
             alt={store.store_name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain p-3"
             loading="lazy"
           />
         ) : (
-          <Store className="h-8 w-8 text-muted-foreground/40" />
+          <Store className="h-10 w-10 text-muted-foreground/40" />
         )}
       </div>
 
