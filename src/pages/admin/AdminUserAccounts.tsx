@@ -667,6 +667,7 @@ function ProfileCard({
   const [newPostPreviews, setNewPostPreviews] = useState<string[]>([]);
   const [activePreviewIndex, setActivePreviewIndex] = useState(0);
   const [isPosting, setIsPosting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
   const [showPostModal, setShowPostModal] = useState(false);
   const [selectedPost, setSelectedPost] = useState<AccountPreviewPost | null>(null);
   const postMediaRef = useRef<HTMLInputElement>(null);
