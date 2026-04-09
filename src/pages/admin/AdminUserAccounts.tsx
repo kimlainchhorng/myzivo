@@ -850,6 +850,7 @@ function ProfileCard({
   const handleCreatePost = async () => {
     if (!newPostCaption.trim() && newPostMedia.length === 0) return false;
     setIsPosting(true);
+    setUploadProgress("");
 
     try {
       let targetUserId = acc.userId;
@@ -866,16 +867,17 @@ function ProfileCard({
         targetUserId = uid as string;
       }
 
-      const DIRECT_UPLOAD_THRESHOLD = 4 * 1024 * 1024; // 4 MB — use direct storage upload above this
+      const DIRECT_UPLOAD_THRESHOLD = 4 * 1024 * 1024; // 4 MB
 
       const files = await Promise.all(
         newPostMedia.map(async (file, index) => {
           if (file.size > DIRECT_UPLOAD_THRESHOLD) {
-            // Upload directly to Supabase Storage to avoid edge function payload limit
             const ext = file.name.split(".").pop()?.toLowerCase() || "mp4";
             const filePath = `${targetUserId}/post_${Date.now()}_${index}_${crypto.randomUUID()}.${ext}`;
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(0);
+            setUploadProgress(`Uploading ${file.name} (${sizeMB} MB)...`);
 
-            const { error: uploadError } = await supabase.storage
+            const { data: uploadData, error: uploadError } = await supabase.storage
               .from("user-posts")
               .upload(filePath, file, {
                 contentType: file.type || "application/octet-stream",
@@ -886,6 +888,8 @@ function ProfileCard({
 
             const { data: publicUrlData } = supabase.storage.from("user-posts").getPublicUrl(filePath);
 
+            setUploadProgress(`Uploaded ${file.name} ✓`);
+
             return {
               storageUrl: publicUrlData.publicUrl,
               name: file.name,
@@ -893,7 +897,6 @@ function ProfileCard({
             };
           }
 
-          // Small files: send as base64 (original flow)
           return {
             base64: await fileToBase64(file),
             name: file.name,
@@ -901,6 +904,8 @@ function ProfileCard({
           };
         }),
       );
+
+      setUploadProgress("Creating post...");
 
       const { data, error } = await supabase.functions.invoke("admin-create-user-post", {
         body: {
@@ -914,6 +919,7 @@ function ProfileCard({
       if (data?.error) throw new Error(data.error);
 
       resetPostComposer();
+      setUploadProgress("");
       await queryClient.invalidateQueries({ queryKey: ["admin-user-posts", targetUserId] });
       toast({ title: "Post created", description: `Posted as ${acc.username}` });
       return true;
@@ -926,6 +932,7 @@ function ProfileCard({
       return false;
     } finally {
       setIsPosting(false);
+      setUploadProgress("");
     }
   };
 
