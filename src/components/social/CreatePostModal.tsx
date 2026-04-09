@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadWithProgress } from "@/utils/uploadWithProgress";
 
 interface CreatePostModalProps {
   userId: string;

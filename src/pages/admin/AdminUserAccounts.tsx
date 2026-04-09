@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadWithProgress } from "@/utils/uploadWithProgress";
 import {
   UserPlus,
   AlertTriangle,
