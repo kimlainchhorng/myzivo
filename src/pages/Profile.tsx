@@ -411,7 +411,7 @@ const Profile = () => {
 
       {/* ── Scrollable content ── */}
       <div ref={scrollRef} className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
-        <div className="px-4 pt-4 max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto">
+        <div className="px-4 pt-4 lg:pt-20 max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto">
 
           {/* ── Header with 3D parallax ── */}
 
