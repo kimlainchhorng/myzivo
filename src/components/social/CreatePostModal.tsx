@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadWithProgress } from "@/utils/uploadWithProgress";
 
 interface CreatePostModalProps {
   userId: string;
@@ -243,15 +244,13 @@ export default function CreatePostModal({
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const sizeMB = (file.size / (1024 * 1024)).toFixed(0);
-          setUploadStatus(`Uploading ${file.name} (${sizeMB} MB)...`);
+          setUploadStatus(`Uploading ${file.name} (${sizeMB} MB) — 0%`);
           const ext = file.name.split(".").pop() || "jpg";
           const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
-          const { error: uploadErr } = await supabase.storage
-            .from("user-posts")
-            .upload(path, file, { contentType: file.type });
-          if (uploadErr) throw uploadErr;
-          const { data: urlData } = supabase.storage.from("user-posts").getPublicUrl(path);
-          uploadedUrls.push(urlData.publicUrl);
+          const publicUrl = await uploadWithProgress("user-posts", path, file, (pct) => {
+            setUploadStatus(`Uploading ${file.name} (${sizeMB} MB) — ${pct}%`);
+          });
+          uploadedUrls.push(publicUrl);
         }
         mediaUrl = uploadedUrls[0];
         if (files[0].type.startsWith("video")) finalMediaType = "video";
