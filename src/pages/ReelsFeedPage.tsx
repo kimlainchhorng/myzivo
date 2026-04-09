@@ -1582,7 +1582,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
             )}
 
             {/* Original post media */}
-            <div ref={containerRef} className={cn("relative", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] w-auto mx-auto bg-black rounded-xl overflow-hidden" : "aspect-square w-full bg-black") : "")}>
+            <div ref={containerRef} className={cn("relative overflow-hidden", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] w-auto mx-auto bg-black rounded-xl" : "") : "")}>
               {hasMedia ? (
                 item.media_type === "video" ? (
                   <>
@@ -1608,34 +1608,45 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                       {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
                     </button>
                   </>
-                ) : (
-                  <img
-                    src={mediaUrl}
-                    alt={item.caption || "Shared post"}
-                    className="h-full w-full object-cover cursor-pointer"
-                    loading="lazy"
-                    onClick={() => onOpenFullscreen?.()}
-                  />
-                )
-              ) : null}
-
-              {/* Multi-image indicator */}
-              {hasMedia && item.media_urls.length > 1 && (
-                <>
-                  <div className="absolute top-3 right-3 bg-black/50 px-2 py-0.5 rounded-full text-[10px] text-white font-medium">
-                    {currentMedia + 1}/{item.media_urls.length}
+                ) : item.media_urls.length === 1 ? (
+                  <div className="relative aspect-square w-full bg-black">
+                    <img src={mediaUrl} alt={item.caption || "Shared post"} className="h-full w-full object-cover cursor-pointer" loading="lazy" onClick={() => onOpenFullscreen?.()} />
                   </div>
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
-                    {item.media_urls.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setCurrentMedia(i)}
-                        className={cn("h-1.5 rounded-full transition-all", i === currentMedia ? "w-4 bg-primary" : "w-1.5 bg-white/60")}
-                      />
+                ) : item.media_urls.length === 2 ? (
+                  <div className="grid grid-cols-2 gap-0.5 w-full">
+                    {item.media_urls.map((url, i) => (
+                      <div key={i} className="relative aspect-square bg-black overflow-hidden">
+                        <img src={url} alt="" className="h-full w-full object-cover cursor-pointer" loading="lazy" onClick={() => { setCurrentMedia(i); onOpenFullscreen?.(); }} />
+                      </div>
                     ))}
                   </div>
-                </>
-              )}
+                ) : item.media_urls.length === 3 ? (
+                  <div className="grid grid-cols-2 gap-0.5 w-full" style={{ aspectRatio: "1" }}>
+                    <div className="relative row-span-2 bg-black overflow-hidden">
+                      <img src={item.media_urls[0]} alt="" className="h-full w-full object-cover cursor-pointer" loading="lazy" onClick={() => { setCurrentMedia(0); onOpenFullscreen?.(); }} />
+                    </div>
+                    <div className="relative bg-black overflow-hidden">
+                      <img src={item.media_urls[1]} alt="" className="h-full w-full object-cover cursor-pointer" loading="lazy" onClick={() => { setCurrentMedia(1); onOpenFullscreen?.(); }} />
+                    </div>
+                    <div className="relative bg-black overflow-hidden">
+                      <img src={item.media_urls[2]} alt="" className="h-full w-full object-cover cursor-pointer" loading="lazy" onClick={() => { setCurrentMedia(2); onOpenFullscreen?.(); }} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-0.5 w-full">
+                    {item.media_urls.slice(0, 4).map((url, i) => (
+                      <div key={i} className="relative aspect-square bg-black overflow-hidden">
+                        <img src={url} alt="" className="h-full w-full object-cover cursor-pointer" loading="lazy" onClick={() => { setCurrentMedia(i); onOpenFullscreen?.(); }} />
+                        {i === 3 && item.media_urls.length > 4 && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer" onClick={() => { setCurrentMedia(3); onOpenFullscreen?.(); }}>
+                            <span className="text-white text-2xl font-bold">+{item.media_urls.length - 4}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : null}
             </div>
           </div>
         </>
