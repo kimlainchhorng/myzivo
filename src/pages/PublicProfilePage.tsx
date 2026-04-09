@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import NavBar from "@/components/home/NavBar";
 import {
   ArrowLeft, Loader2, User, ImageIcon, Film, Grid3X3, UserPlus, UserCheck, UserX,
   Heart, MessageCircle, Lock, ShieldCheck, Users, Share2, Play, Eye, Bookmark, Globe,
