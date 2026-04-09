@@ -740,11 +740,11 @@ function ProfileCard({
   const handleDeletePost = async (postId: string) => {
     setDeletingPostId(postId);
     try {
-      // Delete media first
-      await (supabase as any).from("post_media").delete().eq("post_id", postId);
-      // Delete post
-      const { error } = await (supabase as any).from("user_posts").delete().eq("id", postId);
+      const { data, error } = await supabase.functions.invoke("admin-delete-user-post", {
+        body: { postId },
+      });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       setSelectedPost(null);
       await queryClient.invalidateQueries({ queryKey: ["admin-user-posts", acc.userId] });
       toast({ title: "Post deleted" });
