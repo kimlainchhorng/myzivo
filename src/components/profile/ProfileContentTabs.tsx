@@ -74,60 +74,6 @@ const demoFeed: FeedItem[] = [];
 
 type TabFilter = "all" | "photo" | "reel";
 
-
-/** Generates a thumbnail from a video URL by drawing a frame to canvas */
-function VideoThumbnail({ url, filterCss }: { url: string; filterCss?: string | null }) {
-  const [poster, setPoster] = useState<string | null>(null);
-  const attempted = useRef(false);
-
-  useEffect(() => {
-    if (attempted.current) return;
-    attempted.current = true;
-    const video = document.createElement("video");
-    video.crossOrigin = "anonymous";
-    video.muted = true;
-    video.preload = "auto";
-    video.playsInline = true;
-    video.src = url;
-
-    const handleSeeked = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth || 320;
-        canvas.height = video.videoHeight || 480;
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          setPoster(canvas.toDataURL("image/jpeg", 0.7));
-        }
-      } catch { /* cross-origin fallback */ }
-      video.removeAttribute("src");
-      video.load();
-    };
-
-    video.addEventListener("seeked", handleSeeked, { once: true });
-    video.addEventListener("loadeddata", () => { video.currentTime = 0.5; }, { once: true });
-    video.addEventListener("error", () => { /* fallback to video element */ }, { once: true });
-
-    return () => { video.removeEventListener("seeked", handleSeeked); };
-  }, [url]);
-
-  return (
-    <>
-      {poster ? (
-        <img src={poster} alt="Video thumbnail" className="absolute inset-0 w-full h-full object-cover" style={{ filter: filterCss || "none" }} />
-      ) : (
-        <video src={`${url}#t=0.5`} className="absolute inset-0 w-full h-full object-cover" style={{ filter: filterCss || "none" }} muted playsInline preload="auto" />
-      )}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
-          <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-        </div>
-      </div>
-    </>
-  );
-}
-
 const TABS: { id: TabFilter; label: string; icon: typeof Grid3X3 }[] = [
   { id: "all", label: "All", icon: Grid3X3 },
   { id: "photo", label: "Photos", icon: Image },
