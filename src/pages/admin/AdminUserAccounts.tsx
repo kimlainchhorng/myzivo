@@ -951,8 +951,6 @@ function ProfileCard({
       <div
         className="relative"
       >
-        {/* ===== FRONT SIDE ===== */}
-        <div className={`rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm ${isFlipped ? "hidden" : ""}`}>
       <input
         ref={coverInputRef}
         type="file"
@@ -973,6 +971,8 @@ function ProfileCard({
           if (file) onImageUpload(index, "avatar", file);
         }}
       />
+        {/* ===== FRONT SIDE ===== */}
+        <div className={`rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm ${isFlipped ? "hidden" : ""}`}>
 
       {/* Cover */}
       <div
