@@ -138,15 +138,24 @@ Deno.serve(async (req) => {
         adminClient
           .from("profiles")
           .update(payload)
-          .eq(column, userId);
+          .eq(column, userId)
+          .select("id")
+          .maybeSingle();
 
       const runUpdate = async (payload: Record<string, unknown>) => {
-        let { error } = await updateProfile("user_id", payload);
+        // Try user_id first; if no row matched (data is null & no error), fall back to id
+        const { data: matched, error } = await updateProfile("user_id", payload);
         if (error) {
+          // Real error on user_id attempt — try id fallback
           const fallback = await updateProfile("id", payload);
-          error = fallback.error;
+          return fallback.error;
         }
-        return error;
+        if (!matched) {
+          // No row matched by user_id — try by id
+          const fallback = await updateProfile("id", payload);
+          return fallback.error;
+        }
+        return null;
       };
 
       let updateError = await runUpdate(updates);
