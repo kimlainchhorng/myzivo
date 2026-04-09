@@ -1195,6 +1195,34 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
 
   const isOwner = currentUserId && item.author_id === currentUserId;
 
+  // Check follow status
+  useEffect(() => {
+    if (!currentUserId || !item.author_id || isOwner) return;
+    supabase.rpc("is_following" as any, { target_user_id: item.author_id })
+      .then(({ data }: any) => { if (typeof data === "boolean") setIsFollowingAuthor(data); });
+  }, [currentUserId, item.author_id, isOwner]);
+
+  const handleFollowToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!currentUserId || !item.author_id || followLoading) return;
+    setFollowLoading(true);
+    try {
+      if (isFollowingAuthor) {
+        await supabase.from("user_followers" as any).delete()
+          .eq("follower_id", currentUserId).eq("following_id", item.author_id);
+        setIsFollowingAuthor(false);
+      } else {
+        await (supabase as any).from("user_followers").insert({
+          follower_id: currentUserId,
+          following_id: item.author_id,
+        });
+        setIsFollowingAuthor(true);
+      }
+    } catch { /* ignore */ } finally {
+      setFollowLoading(false);
+    }
+  };
+
   const timeAgo = (() => {
     try {
       return formatDistanceToNow(new Date(item.created_at), { addSuffix: true });
