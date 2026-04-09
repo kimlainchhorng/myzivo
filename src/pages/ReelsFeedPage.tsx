@@ -1628,6 +1628,23 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
               </div>
             </button>
+            {/* Follow button */}
+            {!isOwner && item.author_id && currentUserId && (
+              <button
+                onClick={handleFollowToggle}
+                disabled={followLoading}
+                className={cn(
+                  "text-[12px] font-semibold px-3 py-1 rounded-md transition-all active:scale-95",
+                  isFollowingAuthor
+                    ? "text-muted-foreground"
+                    : "text-primary"
+                )}
+              >
+                {followLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : isFollowingAuthor ? "Following" : "Follow"}
+              </button>
+            )}
             <button
               onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
               className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
