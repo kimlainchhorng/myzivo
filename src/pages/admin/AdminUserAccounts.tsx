@@ -2,6 +2,7 @@
  * Admin User Accounts — Support staff can create new user accounts with just a username
  */
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
