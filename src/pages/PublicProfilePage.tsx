@@ -436,7 +436,7 @@ export default function PublicProfilePage() {
     <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
-        <div className="px-4 py-2.5 flex items-center gap-3">
+        <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
