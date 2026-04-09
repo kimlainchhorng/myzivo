@@ -451,19 +451,27 @@ function ReelCard({
       >
         <button
           type="button"
-          onClick={() => post.store_slug && onNavigate(post.store_slug)}
+          onClick={() => {
+            if (post.source === "user" && post.author_id) {
+              navigate(`/user/${post.author_id}`);
+            } else if (post.store_slug) {
+              onNavigate(post.store_slug);
+            }
+          }}
           className="flex items-center gap-2.5 mb-2.5 active:opacity-70"
         >
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/80 bg-black/40 flex-shrink-0">
-            {post.store_logo ? (
-              <img src={post.store_logo} alt="" className="w-full h-full object-cover" />
+            {(post.source === "user" ? post.author_avatar : post.store_logo) ? (
+              <img src={(post.source === "user" ? post.author_avatar : post.store_logo)!} alt="" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <Store className="w-5 h-5 text-white" />
               </div>
             )}
           </div>
-          <span className="text-white font-bold text-sm drop-shadow-lg">{post.store_name}</span>
+          <span className="text-white font-bold text-sm drop-shadow-lg">
+            {post.source === "user" ? post.author_name : post.store_name}
+          </span>
         </button>
         {post.caption && (
           <p className="text-white text-sm line-clamp-2 drop-shadow leading-snug mb-2">
