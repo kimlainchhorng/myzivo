@@ -436,7 +436,7 @@ export default function PublicProfilePage() {
     <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
-        <div className="px-4 py-2.5 flex items-center gap-3">
+        <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
@@ -454,17 +454,17 @@ export default function PublicProfilePage() {
       ) : (
         <>
           {/* Cover + Avatar */}
-          <div className="relative">
-            <div className="w-full h-36 bg-gradient-to-br from-primary/20 via-primary/10 to-muted overflow-hidden">
+          <div className="relative max-w-3xl mx-auto">
+            <div className="w-full h-36 sm:h-48 md:h-56 bg-gradient-to-br from-primary/20 via-primary/10 to-muted overflow-hidden">
               {resolvedProfile.cover_url && (
                 <img src={resolvedProfile.cover_url} alt="Cover" className="w-full h-full object-cover" style={{ objectPosition: `center ${resolvedProfile.cover_position ?? 50}%` }} />
               )}
             </div>
-            <div className="absolute left-1/2 -translate-x-1/2 -bottom-14">
+            <div className="absolute left-1/2 -translate-x-1/2 -bottom-14 sm:-bottom-16">
               <div className="relative">
-                <Avatar className="h-28 w-28 border-4 border-background shadow-lg">
+                <Avatar className="h-28 w-28 sm:h-32 sm:w-32 border-4 border-background shadow-lg">
                   <AvatarImage src={resolvedProfile.avatar_url || undefined} />
-                  <AvatarFallback className="text-3xl font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
+                  <AvatarFallback className="text-3xl sm:text-4xl font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
                 </Avatar>
                 {resolvedProfile.is_verified && (
                   <div className="absolute bottom-1 right-1 h-6 w-6 rounded-full bg-background flex items-center justify-center">
@@ -476,7 +476,7 @@ export default function PublicProfilePage() {
           </div>
 
           {/* Profile Info */}
-          <div className="flex flex-col items-center pt-16 pb-4 px-4">
+          <div className="flex flex-col items-center pt-16 sm:pt-20 pb-4 px-4 max-w-3xl mx-auto">
             <h2 className="text-xl font-bold text-foreground">{resolvedProfile.full_name}</h2>
 
             {!isLocked ? (
@@ -550,7 +550,7 @@ export default function PublicProfilePage() {
 
           {/* Locked */}
           {isLocked ? (
-            <div className="px-4 mt-2">
+            <div className="px-4 mt-2 max-w-3xl mx-auto">
               <div className="flex flex-col items-center justify-center py-16 px-6 rounded-2xl bg-muted/30 border border-border/40">
                 {(() => { const p = getPrivacyInfo(); return (<>
                   <div className="h-16 w-16 rounded-full bg-muted/60 flex items-center justify-center mb-4"><p.icon className="h-7 w-7 text-muted-foreground" /></div>
@@ -569,7 +569,7 @@ export default function PublicProfilePage() {
           ) : (
             <>
               {/* Content Tabs */}
-              <div className="border-b border-border/30">
+              <div className="border-b border-border/30 max-w-3xl mx-auto">
                 <div className="flex">
                   {([
                     { key: "all" as PostTab, icon: Grid3X3, label: "Posts", count: posts.length },
@@ -592,7 +592,7 @@ export default function PublicProfilePage() {
                 </div>
               ) : postTab === "all" ? (
                 /* Feed-style view for "All" tab */
-                <div className="divide-y divide-border/30">
+                <div className="divide-y divide-border/30 max-w-3xl mx-auto">
                   {filteredPosts.map((post: any) => (
                     <motion.div key={post.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card">
                       {post.sharedOrigin ? (
@@ -744,7 +744,7 @@ export default function PublicProfilePage() {
                 </div>
               ) : (
                 /* Grid view for Photos/Videos tabs */
-                <div className="grid grid-cols-3 gap-0.5 mt-0.5 px-0.5">
+                <div className="grid grid-cols-3 gap-0.5 mt-0.5 px-0.5 max-w-3xl mx-auto">
                   {filteredPosts.map((post: any) => (
                     <motion.button key={post.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => setSelectedPost(post)}
                       className="relative aspect-square overflow-hidden bg-muted group">
