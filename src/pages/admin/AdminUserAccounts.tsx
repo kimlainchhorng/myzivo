@@ -390,6 +390,7 @@ export default function AdminUserAccounts() {
         createdAt: new Date().toLocaleString(),
         avatarUrl: null,
         coverUrl: null,
+        coverPosition: 50,
         socialLinks: {},
       };
 
