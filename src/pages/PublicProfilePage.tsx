@@ -658,7 +658,7 @@ export default function PublicProfilePage() {
 
     if (urls.length === 1) {
       return (
-        <div className="relative w-full aspect-square cursor-pointer" onClick={() => openViewer(0)}>
+        <div className="relative w-full aspect-square cursor-pointer max-h-[70vh] mx-auto" onClick={() => openViewer(0)}>
           <img src={urls[0]} alt="" className="w-full h-full object-cover" loading="lazy" />
         </div>
       );
@@ -666,7 +666,7 @@ export default function PublicProfilePage() {
 
     if (urls.length === 2) {
       return (
-        <div className="grid grid-cols-2 gap-0.5 w-full aspect-square">
+        <div className="grid grid-cols-2 gap-0.5 w-full aspect-[2/1] max-h-[60vh] mx-auto">
           {urls.map((u, i) => (
             <div key={i} className="relative bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(i)}>
               <img src={u} alt="" className="w-full h-full object-cover" loading="lazy" />
@@ -1080,7 +1080,7 @@ export default function PublicProfilePage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 bg-background flex flex-col overflow-y-auto"
+                    className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col overflow-y-auto"
                   >
                     {/* Header bar */}
                     <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-2 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top">
@@ -1100,8 +1100,8 @@ export default function PublicProfilePage() {
                       </button>
                     </div>
 
-                    {/* Media — fills width, auto height */}
-                    <div className="w-full bg-black">
+                    {/* Media — constrained on larger screens */}
+                    <div className="w-full max-w-3xl mx-auto bg-black">
                       {(() => {
                         const urls = selectedPost.media_urls?.length ? selectedPost.media_urls : selectedPost.media_url ? [selectedPost.media_url] : [];
                         if (selectedPost.media_type === "video") {
@@ -1111,9 +1111,9 @@ export default function PublicProfilePage() {
                           return <img src={urls[0] || ""} alt="" className="w-full max-h-[75vh] object-contain" />;
                         }
                         return (
-                          <div className="flex flex-col gap-1">
+                          <div className="grid grid-cols-2 gap-0.5">
                             {urls.map((u: string, i: number) => (
-                              <img key={i} src={u} alt="" className="w-full max-h-[75vh] object-contain" loading="lazy" />
+                              <img key={i} src={u} alt="" className="w-full aspect-square object-cover" loading="lazy" />
                             ))}
                           </div>
                         );
