@@ -783,6 +783,13 @@ const Profile = () => {
                         )}
                       </div>
 
+                      {/* Bio */}
+                      {profile?.bio && (
+                        <p className="text-sm text-muted-foreground mt-2 px-4 text-center max-w-xs mx-auto">
+                          {profile.bio}
+                        </p>
+                      )}
+
                       {/* Friend, Follower & Following stats — Facebook/TikTok style */}
                       <div className="flex items-center justify-center gap-0 mt-4 mb-1">
                         <button className="flex-1 text-center py-1 group" onClick={() => setSocialModal({ open: true, tab: "friends" })}>
