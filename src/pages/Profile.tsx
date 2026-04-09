@@ -411,7 +411,7 @@ const Profile = () => {
 
       {/* ── Scrollable content ── */}
       <div ref={scrollRef} className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
-        <div className="px-4 pt-4 max-w-lg mx-auto">
+        <div className="px-4 pt-4 max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto">
 
           {/* ── Header with 3D parallax ── */}
 
@@ -663,7 +663,7 @@ const Profile = () => {
                   <GlassCard3D glow className="shadow-2xl shadow-primary/[0.08] overflow-hidden">
                     {/* Cover Photo */}
                     <div
-                      className="relative h-44 w-full overflow-hidden select-none"
+                      className="relative h-44 sm:h-52 md:h-60 w-full overflow-hidden select-none"
                       onMouseDown={coverRepositioning ? (e) => { e.preventDefault(); handleCoverDragStart(e.clientY); } : undefined}
                       onMouseMove={coverRepositioning ? (e) => handleCoverDragMove(e.clientY) : undefined}
                       onMouseUp={coverRepositioning ? handleCoverDragEnd : undefined}
