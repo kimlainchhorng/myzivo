@@ -84,7 +84,7 @@ export default function PullToRefresh({ onRefresh, children, className, enabled 
   }, [enabled, pullY, refreshing, onRefresh]);
 
   return (
-    <div className={className} style={{ position: "relative", overflow: "hidden" }}>
+    <div className={className} style={{ position: "relative" }}>
       {/* Spinner indicator */}
       <motion.div
         className="absolute left-1/2 -translate-x-1/2 z-50 flex items-center justify-center"
