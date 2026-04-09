@@ -1747,10 +1747,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
           {/* Caption before media for normal posts */}
           {item.caption && (
             <div className="px-3 pb-2">
-              <p className="text-[13px] text-foreground">
-                <span className="font-semibold mr-1">{item.author_name}</span>
-                {item.caption}
-              </p>
+              <p className="text-[13px] text-foreground">{item.caption}</p>
             </div>
           )}
 
