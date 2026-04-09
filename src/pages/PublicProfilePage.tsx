@@ -1006,7 +1006,12 @@ export default function PublicProfilePage() {
                       {post.media_type === "video" ? (
                         <ReelThumbnail url={post.media_url} />
                       ) : (
-                        <img src={post.media_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                        <img src={(post.media_urls?.length ? post.media_urls[0] : post.media_url) || ""} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      )}
+                      {post.media_urls?.length > 1 && post.media_type !== "video" && (
+                        <div className="absolute top-1.5 right-1.5 bg-black/60 rounded px-1.5 py-0.5 z-10">
+                          <span className="text-[10px] text-white font-semibold">{post.media_urls.length}</span>
+                        </div>
                       )}
                       {post.views_count > 0 && (
                         <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5 z-10">
@@ -1048,21 +1053,22 @@ export default function PublicProfilePage() {
 
                     {/* Media — fills width, auto height */}
                     <div className="w-full bg-black">
-                      {selectedPost.media_type === "video" ? (
-                        <video
-                          src={selectedPost.media_url}
-                          controls
-                          autoPlay
-                          playsInline
-                          className="w-full max-h-[75vh] object-contain"
-                        />
-                      ) : (
-                        <img
-                          src={selectedPost.media_url}
-                          alt=""
-                          className="w-full max-h-[75vh] object-contain"
-                        />
-                      )}
+                      {(() => {
+                        const urls = selectedPost.media_urls?.length ? selectedPost.media_urls : selectedPost.media_url ? [selectedPost.media_url] : [];
+                        if (selectedPost.media_type === "video") {
+                          return <video src={urls[0]} controls autoPlay playsInline className="w-full max-h-[75vh] object-contain" />;
+                        }
+                        if (urls.length <= 1) {
+                          return <img src={urls[0] || ""} alt="" className="w-full max-h-[75vh] object-contain" />;
+                        }
+                        return (
+                          <div className="flex flex-col gap-1">
+                            {urls.map((u: string, i: number) => (
+                              <img key={i} src={u} alt="" className="w-full max-h-[75vh] object-contain" loading="lazy" />
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Action bar */}
