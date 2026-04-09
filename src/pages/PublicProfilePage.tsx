@@ -190,7 +190,7 @@ export default function PublicProfilePage() {
     queryFn: async () => {
       if (!userId) return null;
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("profiles")
         .select("id, user_id, full_name, avatar_url, bio, cover_url, cover_position, profile_visibility, is_verified, share_code, updated_at")
         .or(`id.eq.${userId},user_id.eq.${userId}`)
@@ -768,6 +768,11 @@ export default function PublicProfilePage() {
           {/* Profile Info */}
           <div className="flex flex-col items-center pt-16 sm:pt-20 pb-4 px-4 max-w-3xl mx-auto">
             <h2 className="text-xl font-bold text-foreground">{resolvedProfile.full_name}</h2>
+            {resolvedProfile.bio && (
+              <p className="mt-2 max-w-md text-center text-sm text-muted-foreground whitespace-pre-wrap break-words">
+                {resolvedProfile.bio}
+              </p>
+            )}
 
             {!isLocked ? (
               <div className="flex gap-6 mt-4">
