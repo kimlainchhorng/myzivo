@@ -1166,6 +1166,8 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   const [editCaptionText, setEditCaptionText] = useState(item.caption || "");
   const [editSaving, setEditSaving] = useState(false);
   const [tipTarget, setTipTarget] = useState<{ id: string; name: string } | null>(null);
+  const [isFollowingAuthor, setIsFollowingAuthor] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
@@ -1192,6 +1194,34 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
   const lastTapRef = useRef(0);
 
   const isOwner = currentUserId && item.author_id === currentUserId;
+
+  // Check follow status
+  useEffect(() => {
+    if (!currentUserId || !item.author_id || isOwner) return;
+    supabase.rpc("is_following" as any, { target_user_id: item.author_id })
+      .then(({ data }: any) => { if (typeof data === "boolean") setIsFollowingAuthor(data); });
+  }, [currentUserId, item.author_id, isOwner]);
+
+  const handleFollowToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!currentUserId || !item.author_id || followLoading) return;
+    setFollowLoading(true);
+    try {
+      if (isFollowingAuthor) {
+        await supabase.from("user_followers" as any).delete()
+          .eq("follower_id", currentUserId).eq("following_id", item.author_id);
+        setIsFollowingAuthor(false);
+      } else {
+        await (supabase as any).from("user_followers").insert({
+          follower_id: currentUserId,
+          following_id: item.author_id,
+        });
+        setIsFollowingAuthor(true);
+      }
+    } catch { /* ignore */ } finally {
+      setFollowLoading(false);
+    }
+  };
 
   const timeAgo = (() => {
     try {
@@ -1441,6 +1471,19 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 </div>
               </div>
             </button>
+            {/* Follow button */}
+            {!isOwner && item.author_id && currentUserId && (
+              <button
+                onClick={handleFollowToggle}
+                disabled={followLoading}
+                className={cn(
+                  "text-[12px] font-semibold px-3 py-1 rounded-md transition-all active:scale-95",
+                  isFollowingAuthor ? "text-muted-foreground" : "text-primary"
+                )}
+              >
+                {followLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isFollowingAuthor ? "Following" : "Follow"}
+              </button>
+            )}
             <button
               onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
               className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
@@ -1598,6 +1641,23 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo }: { it
                 <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
               </div>
             </button>
+            {/* Follow button */}
+            {!isOwner && item.author_id && currentUserId && (
+              <button
+                onClick={handleFollowToggle}
+                disabled={followLoading}
+                className={cn(
+                  "text-[12px] font-semibold px-3 py-1 rounded-md transition-all active:scale-95",
+                  isFollowingAuthor
+                    ? "text-muted-foreground"
+                    : "text-primary"
+                )}
+              >
+                {followLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : isFollowingAuthor ? "Following" : "Follow"}
+              </button>
+            )}
             <button
               onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
               className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
