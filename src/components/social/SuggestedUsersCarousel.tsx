@@ -36,7 +36,7 @@ export default function SuggestedUsersCarousel() {
   const handleFollow = async (profileId: string) => {
     if (!user) return;
     try {
-      const { error } = await (supabase as any).from("follows").insert({
+      const { error } = await (supabase as any).from("user_followers").insert({
         follower_id: user.id,
         following_id: profileId,
       });
