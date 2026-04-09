@@ -744,7 +744,7 @@ export default function PublicProfilePage() {
                 </div>
               ) : (
                 /* Grid view for Photos/Videos tabs */
-                <div className="grid grid-cols-3 gap-0.5 mt-0.5 px-0.5">
+                <div className="grid grid-cols-3 gap-0.5 mt-0.5 px-0.5 max-w-3xl mx-auto">
                   {filteredPosts.map((post: any) => (
                     <motion.button key={post.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => setSelectedPost(post)}
                       className="relative aspect-square overflow-hidden bg-muted group">
