@@ -128,7 +128,7 @@ function ReelCard({
       .then(({ data }: any) => { if (typeof data === "boolean") setIsFollowing(data); });
   }, [userId, authorId, isSelf]);
 
-  const handleFollow = async (e: React.MouseEvent) => {
+  const liked = userLikedPostIds.has(post.id);
     e.stopPropagation();
     if (!userId || !authorId || followLoading) return;
     setFollowLoading(true);
