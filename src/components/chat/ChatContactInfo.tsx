@@ -114,11 +114,11 @@ export default function ChatContactInfo({
       // Get my followers/following
       const [{ data: myFollowing }, { data: theirFollowing }] = await Promise.all([
         (supabase as any)
-          .from("user_follows")
+          .from("user_followers")
           .select("following_id")
           .eq("follower_id", user!.id),
         (supabase as any)
-          .from("user_follows")
+          .from("user_followers")
           .select("following_id")
           .eq("follower_id", recipientId),
       ]);

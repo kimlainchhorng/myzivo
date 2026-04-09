@@ -766,8 +766,36 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   const [localLikes, setLocalLikes] = useState(item.likes_count);
   const [showCaption, setShowCaption] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+
+  // Check follow status on mount
+  useEffect(() => {
+    if (!currentUserId || !item.author_id || item.author_id === currentUserId) return;
+    supabase.rpc("is_following", { target_user_id: item.author_id })
+      .then(({ data }) => { if (typeof data === "boolean") setIsFollowing(data); });
+  }, [currentUserId, item.author_id]);
+
+  const handleReelFollow = async () => {
+    if (!currentUserId || !item.author_id || followLoading) return;
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await (supabase as any).from("user_followers").delete()
+          .eq("follower_id", currentUserId).eq("following_id", item.author_id);
+        setIsFollowing(false);
+      } else {
+        await (supabase as any).from("user_followers").insert({
+          follower_id: currentUserId,
+          following_id: item.author_id,
+        });
+        setIsFollowing(true);
+      }
+    } catch { /* ignore */ } finally {
+      setFollowLoading(false);
+    }
+  };
    const [showComments, setShowComments] = useState(false);
 
   const mediaUrl = item.media_urls[0];
@@ -1043,15 +1071,15 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           </button>
           {/* Follow button */}
           {currentUserId && item.author_id !== currentUserId && (
-            <button
-              onClick={() => {
-                setIsFollowing(!isFollowing);
-                toast.success(isFollowing ? `Unfollowed ${item.author_name}` : `Following ${item.author_name}`);
-              }}
+             <button
+              onClick={handleReelFollow}
+              disabled={followLoading}
               className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full flex items-center justify-center shadow-lg"
               style={{ backgroundColor: isFollowing ? 'hsl(var(--muted))' : 'hsl(var(--primary))' }}
             >
-              {isFollowing ? (
+              {followLoading ? (
+                <Loader2 className="h-2.5 w-2.5 animate-spin text-primary-foreground" />
+              ) : isFollowing ? (
                 <UserCheck className="h-2.5 w-2.5 text-primary-foreground" />
               ) : (
                 <Plus className="h-3 w-3 text-primary-foreground" />

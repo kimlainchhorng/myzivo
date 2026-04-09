@@ -389,9 +389,9 @@ export default function PublicProfilePage() {
     mutationFn: async () => {
       if (!user || !targetUserId || user.id === targetUserId) throw new Error("Invalid");
       if (isFollowing) {
-        await supabase.from("followers").delete().eq("follower_id", user.id).eq("following_id", targetUserId).throwOnError();
+        await (supabase as any).from("user_followers").delete().eq("follower_id", user.id).eq("following_id", targetUserId).throwOnError();
       } else {
-        await supabase.from("followers").insert({ follower_id: user.id, following_id: targetUserId }).throwOnError();
+        await (supabase as any).from("user_followers").insert({ follower_id: user.id, following_id: targetUserId }).throwOnError();
       }
     },
     onSuccess: () => {
@@ -407,7 +407,7 @@ export default function PublicProfilePage() {
     mutationFn: async (action: "add" | "cancel" | "accept" | "unfriend") => {
       if (!user || !targetUserId || user.id === targetUserId) throw new Error("Invalid");
       if (action === "add") {
-        if (!isFollowing) await supabase.from("followers").insert({ follower_id: user.id, following_id: targetUserId }).throwOnError();
+        if (!isFollowing) await (supabase as any).from("user_followers").insert({ follower_id: user.id, following_id: targetUserId }).throwOnError();
         await supabase.from("friendships").insert({ user_id: user.id, friend_id: targetUserId, status: "pending" }).throwOnError();
         try {
           const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).single();

@@ -22,7 +22,7 @@ export default function FollowSuggestions() {
       if (!user) return [];
       // Get profiles excluding self and already-followed
       const { data: following } = await (supabase as any)
-        .from("follows")
+        .from("user_followers")
         .select("following_id")
         .eq("follower_id", user.id);
       const followingIds = (following || []).map((f: any) => f.following_id);
@@ -40,7 +40,7 @@ export default function FollowSuggestions() {
 
   const followUser = async (targetId: string) => {
     if (!user) return;
-    await (supabase as any).from("follows").insert({ follower_id: user.id, following_id: targetId });
+    await (supabase as any).from("user_followers").insert({ follower_id: user.id, following_id: targetId });
     toast.success("Following!");
     setDismissed((p) => [...p, targetId]);
   };
