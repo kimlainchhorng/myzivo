@@ -611,6 +611,62 @@ export default function PublicProfilePage() {
     try { return formatDistanceToNow(new Date(dateStr), { addSuffix: true }); } catch { return ""; }
   };
 
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  const renderImageGrid = (urls: string[], post: any) => {
+    const openViewer = (idx: number) => {
+      setSelectedImageIndex(idx);
+      setSelectedPost(post);
+    };
+    if (urls.length === 1) {
+      return (
+        <div className="relative w-full aspect-square cursor-pointer" onClick={() => openViewer(0)}>
+          <img src={urls[0]} alt="" className="w-full h-full object-cover" loading="lazy" />
+        </div>
+      );
+    }
+    if (urls.length === 2) {
+      return (
+        <div className="grid grid-cols-2 gap-0.5 w-full" style={{ aspectRatio: "2/1" }}>
+          {urls.map((u, i) => (
+            <div key={i} className="relative bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(i)}>
+              <img src={u} alt="" className="w-full h-full object-cover" loading="lazy" />
+            </div>
+          ))}
+        </div>
+      );
+    }
+    if (urls.length === 3) {
+      return (
+        <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full" style={{ aspectRatio: "1" }}>
+          <div className="relative row-span-2 bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(0)}>
+            <img src={urls[0]} alt="" className="h-full w-full object-cover" loading="lazy" />
+          </div>
+          <div className="relative bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(1)}>
+            <img src={urls[1]} alt="" className="h-full w-full object-cover" loading="lazy" />
+          </div>
+          <div className="relative bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(2)}>
+            <img src={urls[2]} alt="" className="h-full w-full object-cover" loading="lazy" />
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="grid grid-cols-2 gap-0.5 w-full" style={{ aspectRatio: "1" }}>
+        {urls.slice(0, 4).map((u, i) => (
+          <div key={i} className="relative bg-black overflow-hidden cursor-pointer" onClick={() => openViewer(i)}>
+            <img src={u} alt="" className="w-full h-full object-cover" loading="lazy" />
+            {i === 3 && urls.length > 4 && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <span className="text-white text-2xl font-bold">+{urls.length - 4}</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20">
       {/* Desktop NavBar */}
