@@ -978,6 +978,18 @@ export default function PublicProfilePage() {
                                   </div>
                                 </div>
                               </div>
+                              {post.sharedOrigin?.userId && post.sharedOrigin.userId !== user?.id && post.sharedOrigin.userId !== targetUserId && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/user/${post.sharedOrigin.userId}`);
+                                  }}
+                                  className="text-primary text-[13px] font-semibold ml-2 shrink-0"
+                                >
+                                  Follow
+                                </button>
+                              )}
                             </div>
 
                             {/* Original post caption */}
