@@ -719,7 +719,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   return (
     <motion.div
       className={inline
-        ? "flex flex-col overflow-hidden h-full w-full bg-background"
+        ? "absolute inset-0 z-50 flex flex-col overflow-hidden h-full w-full bg-background"
         : "fixed inset-0 z-[1300] bg-background flex flex-col overflow-hidden"
       }
       initial={inline ? { opacity: 0 } : { x: "100%" }}
