@@ -137,7 +137,7 @@ const Profile = () => {
   const { user, signOut, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
-  const { unreadCount: notifUnreadCount } = useNotifications(20);
+  const { unreadCount: notifUnreadCount, notifications } = useNotifications(20);
   
   // Count pending friend requests + new followers
   const [socialCount, setSocialCount] = useState(0);
