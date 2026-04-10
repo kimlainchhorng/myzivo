@@ -95,7 +95,7 @@ function formatMsgTime(dateStr: string) {
   return format(d, "MMM d, h:mm a");
 }
 
-export default function PersonalChat({ recipientId, recipientName, recipientAvatar, onClose, autoStartCall, onCallStarted }: PersonalChatProps) {
+export default function PersonalChat({ recipientId, recipientName, recipientAvatar, onClose, autoStartCall, onCallStarted, inline = false }: PersonalChatProps) {
   const { user } = useAuth();
 
   // Notify global listener that this chat is open
@@ -698,11 +698,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   return (
     <motion.div
-      className="fixed inset-0 z-[1300] bg-background flex flex-col overflow-hidden"
-      initial={{ x: "100%" }}
-      animate={{ x: 0 }}
-      exit={{ x: "100%" }}
-      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+      className={inline
+        ? "flex flex-col overflow-hidden h-full w-full bg-background"
+        : "fixed inset-0 z-[1300] bg-background flex flex-col overflow-hidden"
+      }
+      initial={inline ? { opacity: 0 } : { x: "100%" }}
+      animate={inline ? { opacity: 1 } : { x: 0 }}
+      exit={inline ? { opacity: 0 } : { x: "100%" }}
+      transition={inline ? { duration: 0.15 } : { type: "spring", damping: 25, stiffness: 300 }}
     >
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-2xl border-b border-border/5 safe-area-top">
