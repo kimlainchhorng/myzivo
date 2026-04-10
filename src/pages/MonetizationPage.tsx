@@ -42,7 +42,7 @@ const monetizationPrograms: Program[] = [
   { icon: Lock, label: "Locked Media", description: "Monetize exclusive photos and videos with pay-to-unlock content in chat.", status: "join", href: "/creator-dashboard", color: "text-indigo-500", bg: "bg-indigo-500/10" },
   { icon: PenTool, label: "Digital Products", description: "Sell e-books, courses, templates, presets, and digital bundles.", status: "join", badge: "New", href: "/digital-products", color: "text-fuchsia-500", bg: "bg-fuchsia-500/10" },
   { icon: Target, label: "Affiliate Marketing", description: "Earn commissions by promoting ZIVO services and partner products.", status: "join", href: "/affiliate-hub", color: "text-teal-500", bg: "bg-teal-500/10" },
-  { icon: Radio, label: "Audio Spaces Monetization", description: "Monetize live audio rooms with tickets, tips, and paid Q&A sessions.", status: "explore", href: "/audio-spaces", color: "text-violet-500", bg: "bg-violet-500/10" },
+  { icon: Radio, label: "Audio Spaces Monetization", description: "Monetize live audio rooms with tickets, tips, and paid Q&A sessions.", status: "explore", href: "/spaces", color: "text-violet-500", bg: "bg-violet-500/10" },
   { icon: Calendar, label: "Paid Events", description: "Host and sell tickets to virtual and in-person events on ZIVO.", status: "explore", badge: "Coming Soon", href: "/events", color: "text-sky-500", bg: "bg-sky-500/10" },
   { icon: BookOpen, label: "Course Builder", description: "Create and sell structured courses with chapters, quizzes, and certificates.", status: "join", href: "/digital-products", color: "text-cyan-500", bg: "bg-cyan-500/10" },
   { icon: Palette, label: "Creator Marketplace", description: "Offer freelance services — design, video editing, consulting — directly on ZIVO.", status: "explore", href: "/marketplace", color: "text-rose-500", bg: "bg-rose-500/10" },
@@ -254,7 +254,7 @@ export default function MonetizationPage() {
 
         {/* Verification & Guidelines CTAs */}
         {[
-          { icon: BadgeCheck, title: "Get Verified", desc: "Verify your identity to unlock payouts and build trust with your audience.", href: "/account/verify", color: "text-blue-500", bg: "bg-blue-500/10" },
+          { icon: BadgeCheck, title: "Get Verified", desc: "Verify your identity to unlock payouts and build trust with your audience.", href: "/account/verification", color: "text-blue-500", bg: "bg-blue-500/10" },
           { icon: ShieldCheck, title: "Community Guidelines", desc: "Understand the rules and standards for creating on ZIVO.", href: "/monetization/articles", color: "text-emerald-500", bg: "bg-emerald-500/10" },
           { icon: Award, title: "Creator Academy", desc: "500+ articles, guides, and tutorials to help you grow on ZIVO.", href: "/monetization/articles", color: "text-orange-500", bg: "bg-orange-500/10" },
           { icon: Globe, title: "ZIVO Partner Program", desc: "Apply for exclusive partner benefits, higher commissions, and priority support.", href: "/affiliate-hub", color: "text-violet-500", bg: "bg-violet-500/10" },
