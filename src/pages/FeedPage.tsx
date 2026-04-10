@@ -1549,7 +1549,7 @@ export default function FeedPage() {
               <div
                 key={post.id}
                 ref={(el) => { cardRefs.current[index] = el; }}
-                className="w-full h-[100dvh] md:h-full snap-start"
+                className="w-full h-[100dvh] md:h-full snap-start lg:h-full"
               >
                 <ReelCard
                   post={post}
