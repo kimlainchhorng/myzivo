@@ -578,6 +578,7 @@ const App = () => (
                 <Route path="/creator-dashboard" element={<ProtectedRoute><CreatorDashboardPage /></ProtectedRoute>} />
                 <Route path="/monetization" element={<ProtectedRoute><MonetizationPage /></ProtectedRoute>} />
                 <Route path="/monetization/articles" element={<ProtectedRoute><MonetizationArticlesPage /></ProtectedRoute>} />
+                <Route path="/monetization/articles/:slug" element={<ProtectedRoute><MonetizationArticleDetailPage /></ProtectedRoute>} />
                 <Route path="/events" element={<EventsPage />} />
                 <Route path="/communities" element={<CommunitiesPage />} />
                 <Route path="/marketplace" element={<MarketplacePage />} />
