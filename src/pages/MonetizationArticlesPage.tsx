@@ -265,6 +265,27 @@ const TOOLS_SECTIONS: Section[] = [
       { title: "Capturing your spontaneous moments with ZIVO Stories", description: "ZIVO is all about storytelling, but Stories let you share raw, unfiltered moments...", views: "25.5K views", icon: Camera, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
       { title: "Flip Story: ZIVO's interactive stories feature", description: "Flip Story, exclusively on ZIVO Stories, is an interactive way to engage your audience...", views: "63.9K views", icon: PlayCircle, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
       { title: "Engaging your followers with the bulletin board feature", description: "The bulletin board feature is a fun and interactive way to communicate with your community...", views: "19.9K views", icon: Bell, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Polls and Q&A: engaging your audience in real-time", description: "Use interactive polls and Q&A features to boost engagement and understand your audience...", views: "156.3K views", icon: MessageCircle, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Duets and Stitches: collaborating with content", description: "React to, remix, and collaborate with other creators' content using Duet and Stitch features...", views: "2.4M views", icon: Video, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "Using green screen effects creatively", description: "Transform any image or video into your backdrop for immersive content creation...", views: "890.5K views", icon: Wand2, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+    ],
+  },
+  {
+    heading: "LIVE Streaming Tools",
+    articles: [
+      { title: "Setting up your first LIVE stream", description: "Everything you need to know to go LIVE for the first time. Equipment, settings, and tips...", views: "3.4M views", icon: Video, iconBg: "bg-red-500/10", iconColor: "text-red-500" },
+      { title: "LIVE moderation tools for creators", description: "Keep your LIVE chat clean and positive with powerful moderation features...", views: "234.5K views", icon: ShieldCheck, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Adding overlays and effects to your LIVE", description: "Make your LIVE streams visually stunning with custom overlays, filters, and effects...", views: "445.2K views", icon: Palette, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+      { title: "LIVE analytics: understanding your stream performance", description: "After every LIVE, dive into detailed analytics to understand what worked and what didn't...", views: "178.9K views", icon: BarChart3, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Scheduling LIVE events", description: "Build anticipation by scheduling your LIVE streams in advance and notifying followers...", views: "123.4K views", icon: Bell, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+    ],
+  },
+  {
+    heading: "Accessibility Features",
+    articles: [
+      { title: "Adding captions and subtitles to your videos", description: "Make your content accessible to everyone by adding accurate captions and subtitles...", views: "1.8M views", icon: MessageCircle, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Auto-translate: reaching a global audience", description: "Break language barriers with ZIVO's auto-translate feature for captions and descriptions...", views: "567.8K views", icon: Globe, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Text-to-speech narration tools", description: "Add professional voiceover to your content using ZIVO's built-in text-to-speech engine...", views: "345.2K views", icon: Mic, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
     ],
   },
 ];
