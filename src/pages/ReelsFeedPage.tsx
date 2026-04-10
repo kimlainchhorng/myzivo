@@ -886,6 +886,13 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           following_id: item.author_id,
         });
         setIsFollowing(true);
+        // Notify new follower
+        try {
+          const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", currentUserId).single();
+          await supabase.functions.invoke("send-push-notification", {
+            body: { user_id: item.author_id, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: currentUserId, avatar_url: sp?.avatar_url, action_url: `/user/${currentUserId}` } },
+          });
+        } catch {}
       }
     } catch { /* ignore */ } finally {
       setFollowLoading(false);

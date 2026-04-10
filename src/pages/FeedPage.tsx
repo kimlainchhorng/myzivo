@@ -143,6 +143,13 @@ function ReelCard({
           following_id: authorId,
         });
         setIsFollowing(true);
+        // Notify new follower
+        try {
+          const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", userId).single();
+          await supabase.functions.invoke("send-push-notification", {
+            body: { user_id: authorId, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: userId, avatar_url: sp?.avatar_url, action_url: `/user/${userId}` } },
+          });
+        } catch {}
       }
     } catch { /* ignore */ } finally {
       setFollowLoading(false);
