@@ -1921,7 +1921,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                       playsInline
                       preload="metadata"
                       onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
-                      className="h-full w-full object-cover cursor-pointer"
+                      className="h-full w-full object-contain cursor-pointer"
                     />
                     {!isPlaying && (
                       <button onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
@@ -1936,8 +1936,8 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                     </button>
                   </>
                 ) : item.media_urls.length === 1 ? (
-                  <div className="relative aspect-square md:aspect-[4/3] w-full bg-black max-h-[70vh]">
-                    <img src={mediaUrl} alt={item.caption || "Shared post"} className="h-full w-full object-cover cursor-pointer" loading="lazy" onClick={() => onOpenFullscreen?.()} />
+                  <div className="relative w-full bg-black max-h-[70vh] flex items-center justify-center overflow-hidden">
+                    <img src={mediaUrl} alt={item.caption || "Shared post"} className="max-h-[70vh] h-auto w-auto max-w-full object-contain cursor-pointer" loading="lazy" onClick={() => onOpenFullscreen?.()} />
                   </div>
                 ) : item.media_urls.length === 2 ? (
                   <div className="grid grid-cols-2 gap-0.5 w-full aspect-square md:aspect-[2/1]">
@@ -2059,7 +2059,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                     playsInline
                     preload="metadata"
                     onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
-                    className="h-full w-full object-cover cursor-pointer"
+                    className="h-full w-full object-contain cursor-pointer"
                   />
                   {!isPlaying && (
                     <button onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
@@ -2127,11 +2127,11 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                 </div>
               ) : item.media_urls.length === 1 ? (
                 /* Single image */
-                <div className="relative aspect-square md:aspect-[4/3] w-full bg-black max-h-[70vh]">
+                <div className="relative w-full bg-black max-h-[70vh] flex items-center justify-center overflow-hidden">
                   <img
                     src={mediaUrl}
                     alt={item.caption || "Post"}
-                    className="h-full w-full object-cover cursor-pointer"
+                    className="max-h-[70vh] h-auto w-auto max-w-full object-contain cursor-pointer"
                     loading="lazy"
                     onClick={() => onOpenFullscreen?.()}
                   />
