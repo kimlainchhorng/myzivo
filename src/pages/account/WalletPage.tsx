@@ -7,8 +7,12 @@ import {
   ArrowLeft, Wallet, CreditCard, Star, Trash2, Plus, Shield,
   Users, Gift, Trophy,
   Clock, DollarSign, ChevronRight, Eye, EyeOff,
-  TrendingUp, Zap
+  TrendingUp, Zap, Banknote, Building2, Send, AlertCircle
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,15 +42,28 @@ function brandLabel(brand: string) {
 
 const TAB_ITEMS = [
   { key: "cards", label: "Cards", icon: CreditCard },
+  { key: "cashout", label: "Cash Out", icon: Banknote },
   { key: "history", label: "History", icon: Clock },
   { key: "credits", label: "Credits", icon: Gift },
 ] as const;
+
+const CASHOUT_METHODS = [
+  { id: "bank_transfer", label: "Bank Transfer", icon: Building2, desc: "Transfer to your bank account" },
+  { id: "aba", label: "ABA / KHQR", icon: Banknote, desc: "Withdraw via ABA PayWay" },
+] as const;
+
+const QUICK_AMOUNTS = [5, 10, 25, 50, 100];
 
 export default function WalletPage() {
   const navigate = useNavigate();
   const [showAddCard, setShowAddCard] = useState(false);
   const [balanceHidden, setBalanceHidden] = useState(false);
-  const [activeTab, setActiveTab] = useState<"cards" | "history" | "credits">("cards");
+  const [activeTab, setActiveTab] = useState<"cards" | "cashout" | "history" | "credits">("cards");
+  const [cashoutAmount, setCashoutAmount] = useState("");
+  const [cashoutMethod, setCashoutMethod] = useState<string>("bank_transfer");
+  const [cashoutNote, setCashoutNote] = useState("");
+  const [cashoutSubmitting, setCashoutSubmitting] = useState(false);
+  const { user } = useAuth();
 
   const { balanceDollars, lifetimeEarnedDollars, isLoading: walletLoading } = useCustomerWallet();
   const { data: stripeCards = [], isLoading: cardsLoading } = useStripePaymentMethods();
@@ -271,6 +288,178 @@ export default function WalletPage() {
                   ))}
                 </div>
               )}
+            </motion.div>
+          )}
+
+          {activeTab === "cashout" && (
+            <motion.div key="cashout" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} className="space-y-4">
+              {/* Available to withdraw */}
+              <div className="rounded-2xl bg-emerald-500/[0.06] border border-emerald-500/15 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Available to Withdraw</p>
+                    <p className="text-2xl font-bold text-emerald-600 mt-1">
+                      {walletLoading ? "..." : `$${balanceDollars.toFixed(2)}`}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+                    <Banknote className="w-6 h-6 text-emerald-500" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Method selection */}
+              <div>
+                <h3 className="font-bold text-[13px] mb-2.5">Withdrawal Method</h3>
+                <div className="space-y-2">
+                  {CASHOUT_METHODS.map(({ id, label, icon: Icon, desc }) => (
+                    <button
+                      key={id}
+                      onClick={() => setCashoutMethod(id)}
+                      className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all text-left active:scale-[0.98] ${
+                        cashoutMethod === id
+                          ? "border-emerald-500/40 bg-emerald-500/[0.04]"
+                          : "border-border/40 bg-card"
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                        cashoutMethod === id ? "bg-emerald-500/15" : "bg-muted/60"
+                      }`}>
+                        <Icon className={`w-5 h-5 ${cashoutMethod === id ? "text-emerald-500" : "text-muted-foreground"}`} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-[13px]">{label}</p>
+                        <p className="text-[11px] text-muted-foreground">{desc}</p>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        cashoutMethod === id ? "border-emerald-500" : "border-muted-foreground/30"
+                      }`}>
+                        {cashoutMethod === id && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Amount */}
+              <div>
+                <h3 className="font-bold text-[13px] mb-2.5">Amount</h3>
+                <div className="flex gap-2 flex-wrap mb-3">
+                  {QUICK_AMOUNTS.filter(a => a <= balanceDollars).map((amt) => (
+                    <button
+                      key={amt}
+                      onClick={() => setCashoutAmount(String(amt))}
+                      className={`px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all ${
+                        cashoutAmount === String(amt)
+                          ? "bg-emerald-500 text-white"
+                          : "bg-muted/50 text-foreground border border-border/40"
+                      }`}
+                    >
+                      ${amt}
+                    </button>
+                  ))}
+                  {balanceDollars >= 5 && (
+                    <button
+                      onClick={() => setCashoutAmount(balanceDollars.toFixed(2))}
+                      className={`px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all ${
+                        cashoutAmount === balanceDollars.toFixed(2)
+                          ? "bg-emerald-500 text-white"
+                          : "bg-muted/50 text-foreground border border-border/40"
+                      }`}
+                    >
+                      All (${balanceDollars.toFixed(2)})
+                    </button>
+                  )}
+                </div>
+                <Input
+                  type="number"
+                  placeholder="Enter custom amount"
+                  value={cashoutAmount}
+                  onChange={(e) => setCashoutAmount(e.target.value)}
+                  className="rounded-xl h-11"
+                  min="5"
+                  max={balanceDollars}
+                />
+                {Number(cashoutAmount) > 0 && Number(cashoutAmount) < 5 && (
+                  <p className="text-[11px] text-destructive mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> Minimum withdrawal is $5.00
+                  </p>
+                )}
+              </div>
+
+              {/* Note */}
+              <div>
+                <h3 className="font-bold text-[13px] mb-2.5">Note (optional)</h3>
+                <Input
+                  placeholder="Account number, reference, etc."
+                  value={cashoutNote}
+                  onChange={(e) => setCashoutNote(e.target.value)}
+                  className="rounded-xl h-11"
+                />
+              </div>
+
+              {/* Submit */}
+              <Button
+                className="w-full h-12 rounded-2xl font-bold text-[15px] gap-2 bg-emerald-500 hover:bg-emerald-600 text-white"
+                disabled={
+                  cashoutSubmitting ||
+                  !cashoutAmount ||
+                  Number(cashoutAmount) < 5 ||
+                  Number(cashoutAmount) > balanceDollars
+                }
+                onClick={async () => {
+                  if (!user) { toast.error("Please sign in"); return; }
+                  setCashoutSubmitting(true);
+                  try {
+                    const amountCents = Math.round(Number(cashoutAmount) * 100);
+                    // Record withdrawal request as a transaction
+                    const { error } = await supabase
+                      .from("customer_wallet_transactions")
+                      .insert({
+                        wallet_id: (await supabase.from("customer_wallets").select("id").eq("user_id", user.id).single()).data?.id,
+                        user_id: user.id,
+                        amount_cents: -amountCents,
+                        type: "withdrawal",
+                        description: `Cash out via ${cashoutMethod === "aba" ? "ABA / KHQR" : "Bank Transfer"}${cashoutNote ? ` — ${cashoutNote}` : ""}`,
+                      } as any);
+                    if (error) throw error;
+
+                    // Deduct balance
+                    const { data: wallet } = await supabase
+                      .from("customer_wallets")
+                      .select("balance_cents")
+                      .eq("user_id", user.id)
+                      .single();
+                    if (wallet) {
+                      await supabase
+                        .from("customer_wallets")
+                        .update({ balance_cents: wallet.balance_cents - amountCents, updated_at: new Date().toISOString() })
+                        .eq("user_id", user.id);
+                    }
+
+                    toast.success(`Withdrawal of $${Number(cashoutAmount).toFixed(2)} submitted!`, {
+                      description: "Processing usually takes 1-3 business days.",
+                    });
+                    setCashoutAmount("");
+                    setCashoutNote("");
+                  } catch (err: any) {
+                    toast.error(err?.message || "Withdrawal failed");
+                  } finally {
+                    setCashoutSubmitting(false);
+                  }
+                }}
+              >
+                <Send className="w-4.5 h-4.5" />
+                {cashoutSubmitting ? "Processing..." : `Withdraw $${Number(cashoutAmount || 0).toFixed(2)}`}
+              </Button>
+
+              {/* Info */}
+              <div className="text-[11px] text-muted-foreground/60 space-y-0.5">
+                <p>• Minimum withdrawal: $5.00</p>
+                <p>• Processing time: 1-3 business days</p>
+                <p>• Bank Transfer available worldwide</p>
+                <p>• ABA / KHQR for Cambodia accounts</p>
+              </div>
             </motion.div>
           )}
 
