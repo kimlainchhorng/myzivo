@@ -40,6 +40,8 @@ export default function ShareSheet({
   sharePostId,
   sharePostAuthorId,
   sharePostAuthorName,
+  onVisitProfile,
+  visitProfileLabel,
 }: ShareSheetProps) {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [sharingToProfile, setSharingToProfile] = useState(false);
