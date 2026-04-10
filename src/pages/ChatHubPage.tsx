@@ -558,31 +558,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   </button>
                 </div>
               </div>
-            ) : (
-              <div className="px-4 pt-4 pb-3">
-                <div className="flex items-center gap-3 rounded-3xl border border-border/20 bg-card/70 px-4 py-3 shadow-sm">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
-                    <MessageCircle className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h1 className="text-sm font-semibold text-foreground">Messages</h1>
-                    <p className="text-[11px] text-muted-foreground">Clean desktop chat that stays separate from your feed.</p>
-                  </div>
-                  {active === "personal" && (
-                    <button
-                      onClick={() => setShowCreateGroup(true)}
-                      className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-muted/70 text-muted-foreground transition-all hover:bg-muted active:scale-95"
-                      aria-label="New group"
-                    >
-                      <Users className="w-4.5 h-4.5" />
-                      <Plus className="w-2.5 h-2.5 text-primary absolute bottom-2 right-2" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
+            ) : null}
 
-            <div className={cn("px-5 pb-3", embedded && "px-4 pb-3")}>
+            <div className={cn("px-5 pb-3", embedded && "px-3 pb-2")}>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <input
@@ -592,7 +570,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   onChange={(e) => setSearch(e.target.value)}
                   className={cn(
                     "w-full pl-9 pr-4 bg-muted/60 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground transition-all",
-                    embedded ? "py-3" : "py-2.5"
+                    embedded ? "py-2 text-xs" : "py-2.5"
                   )}
                 />
                 {search && (
@@ -603,7 +581,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               </div>
             </div>
 
-            <div className={cn("flex px-5 gap-2 pb-3 overflow-x-auto scrollbar-hide", embedded && "px-4 gap-2 pb-4")}>
+            <div className={cn("flex px-5 gap-2 pb-3 overflow-x-auto scrollbar-hide", embedded && "px-3 gap-1.5 pb-2")}>
               {categories.map((cat) => {
                 const isActive = active === cat.id;
                 const unread = unreadMap[cat.id];
@@ -616,7 +594,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       isActive
                         ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
                         : "bg-muted/60 text-muted-foreground hover:bg-muted",
-                      embedded && "px-3.5 py-2 text-[11px]"
+                      embedded && "px-3 py-1.5 text-[11px]"
                     )}
                   >
                     <cat.icon className="w-3.5 h-3.5" />
@@ -657,7 +635,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
           {!embedded && <ChatStories />}
 
-          <div className={cn("flex-1 min-h-0", embedded ? "overflow-y-auto px-2 pb-2" : "") }>
+          <div className={cn("flex-1 min-h-0", embedded ? "overflow-y-auto" : "") }>
             <AnimatePresence mode="wait">
               <motion.div
                 key={active}
@@ -675,7 +653,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 ) : displayList.length === 0 ? (
                   <div className={cn(
                     "flex flex-col items-center justify-center text-center",
-                    embedded ? "min-h-[260px] rounded-[28px] border border-dashed border-border/30 bg-card/40 px-6 py-12" : "py-16"
+                    embedded ? "py-12" : "py-16"
                   )}>
                     <div className="text-5xl mb-4">{currentCategory.emptyIcon}</div>
                     <p className="text-base font-bold text-foreground mb-1.5">
@@ -696,7 +674,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     )}
                   </div>
                 ) : (
-                  <div className={cn("space-y-2 px-1", embedded && "space-y-2 px-0") }>
+                  <div className={cn("space-y-2 px-1", embedded && "space-y-1.5 px-1") }>
                     {displayList.map((chat: any, idx: number) => (
                       <motion.div
                         key={chat.id}
@@ -719,7 +697,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                           className={cn(
                             "w-full flex items-center gap-3 text-left relative z-10 transition-all",
                             embedded
-                              ? "p-3 rounded-[24px] bg-card/75 border border-border/25 shadow-sm hover:border-border/40 hover:bg-card"
+                              ? "p-2.5 rounded-xl bg-card border border-border/30 hover:border-border/50 hover:bg-card/90 gap-2.5"
                               : "p-3 rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-md hover:border-border/60",
                             "active:scale-[0.98] active:shadow-none",
                             canDelete && swipedId === chat.id && "-translate-x-16",
@@ -763,7 +741,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                           <div className="relative flex-shrink-0">
                             <div className={cn(
                               "flex items-center justify-center overflow-hidden ring-2 ring-border/30",
-                              embedded ? "h-[48px] w-[48px] rounded-2xl" : "w-[50px] h-[50px] rounded-2xl",
+                              embedded ? "h-[44px] w-[44px] rounded-xl" : "w-[50px] h-[50px] rounded-2xl",
                               (chat as any).isGroup ? "bg-primary/10" : "bg-muted"
                             )}>
                               {chat.avatar ? (
