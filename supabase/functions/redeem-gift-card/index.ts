@@ -157,6 +157,23 @@ serve(async (req) => {
       notes: `Redeemed by user ${user.id}`,
     });
 
+    // Notify user: gift card redeemed and wallet credited
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+      await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
+        body: JSON.stringify({
+          user_id: user.id,
+          notification_type: "gift_card_redeemed",
+          title: "Gift Card Redeemed! 🎁",
+          body: `$${giftCard.current_balance.toFixed(2)} has been added to your wallet`,
+          data: { type: "gift_card_redeemed", amount_dollars: giftCard.current_balance, action_url: "/wallet" },
+        }),
+      });
+    } catch (e) { console.error("[redeem-gift-card] Push notify error:", e); }
+
     return new Response(
       JSON.stringify({
         success: true,

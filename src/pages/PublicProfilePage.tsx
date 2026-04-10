@@ -429,6 +429,13 @@ export default function PublicProfilePage() {
         await (supabase as any).from("user_followers").delete().eq("follower_id", user.id).eq("following_id", targetUserId).throwOnError();
       } else {
         await (supabase as any).from("user_followers").insert({ follower_id: user.id, following_id: targetUserId }).throwOnError();
+        // Notify the user they got a new follower
+        try {
+          const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).single();
+          await supabase.functions.invoke("send-push-notification", {
+            body: { user_id: targetUserId, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: user.id, avatar_url: sp?.avatar_url, action_url: `/user/${user.id}` } },
+          });
+        } catch {}
       }
     },
     onSuccess: () => {
