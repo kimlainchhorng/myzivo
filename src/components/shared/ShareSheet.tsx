@@ -130,6 +130,16 @@ export default function ShareSheet({
         }
       }
 
+      // Push notification to original post author about the share
+      if (sharePostAuthorId && sharePostAuthorId !== data.user.id) {
+        try {
+          const { data: sp } = await supabase.from("profiles").select("full_name").eq("user_id", data.user.id).single();
+          await supabase.functions.invoke("send-push-notification", {
+            body: { user_id: sharePostAuthorId, notification_type: "post_shared", title: "Post Shared 🔄", body: `${sp?.full_name || "Someone"} shared your post`, data: { type: "post_shared", post_id: sharePostId, sharer_id: data.user.id, action_url: `/reels?post=${sharePostId}` } },
+          });
+        } catch {}
+      }
+
       onClose();
       window.dispatchEvent(new CustomEvent("zivo-feed-refresh"));
       navigate("/reels", { replace: false });
