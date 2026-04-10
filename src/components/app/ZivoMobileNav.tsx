@@ -48,7 +48,7 @@ const ZivoMobileNav = () => {
     if (path.startsWith("/feed")) return "reel";
     if (path.startsWith("/store-map") || path.startsWith("/map")) return "map";
     if (path.startsWith("/chat")) return "chat";
-    if (path.startsWith("/account") || path.startsWith("/profile") || path.startsWith("/more") || path.startsWith("/personal-dashboard") || path.startsWith("/personal/") || path.startsWith("/shop-dashboard")) return "account";
+    if (path.startsWith("/account") || path.startsWith("/profile") || path.startsWith("/user/") || path.startsWith("/more") || path.startsWith("/personal-dashboard") || path.startsWith("/personal/") || path.startsWith("/shop-dashboard")) return "account";
     return "home";
   };
 
