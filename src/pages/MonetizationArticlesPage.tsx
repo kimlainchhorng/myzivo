@@ -86,12 +86,26 @@ const RECOMMENDED_SECTIONS: Section[] = [
       { title: "Going LIVE!", description: "ZIVO LIVE is where the party's at – it's all about real-time fun, self-expression, and connecting...", views: "5.7M views", icon: Video, iconBg: "bg-red-500/10", iconColor: "text-red-500" },
       { title: "Unlocking LIVE monetization", description: "Get more from your LIVEs! Explore all the ways you can monetize your streams and increase earnings...", views: "5.7M views", icon: DollarSign, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
       { title: "Scaled LIVE rewards: Supercharging your LIVE journey", description: "We understand the dedication and effort you put into every LIVE session...", views: "544.7K views", icon: TrendingUp, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+      { title: "LIVE battles and competitions", description: "Compete with other creators in real-time LIVE battles. Win prizes and grow your audience...", views: "1.2M views", icon: Star, iconBg: "bg-orange-500/10", iconColor: "text-orange-500" },
+      { title: "Multi-guest LIVE streaming", description: "Invite up to 4 guests to your LIVE for panel discussions, debates, and collaborations...", views: "345.6K views", icon: Users, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "LIVE scheduling and promotion", description: "Build anticipation for your LIVE by scheduling in advance and promoting to your audience...", views: "223.1K views", icon: Bell, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
     ],
   },
   {
     heading: "Shop",
     articles: [
       { title: "ZIVO Shop", description: "With ZIVO Shop, you can drive your audience from content to commerce seamlessly...", views: "6.8M views", icon: Store, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Setting up your first ZIVO Shop product", description: "Step by step guide to listing your first product and making your first sale...", views: "2.1M views", icon: Store, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Shipping and fulfillment on ZIVO Shop", description: "Everything you need to know about getting products to your customers efficiently...", views: "445.3K views", icon: Globe, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "ZIVO Shop analytics and optimization", description: "Track sales, conversion rates, and optimize your shop for maximum revenue...", views: "312.7K views", icon: BarChart3, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+    ],
+  },
+  {
+    heading: "Creator Safety",
+    articles: [
+      { title: "Protecting your intellectual property on ZIVO", description: "Learn about copyright, content ownership, and how to protect your original work...", views: "567.8K views", icon: Shield, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Dealing with trolls and negative comments", description: "Every creator faces negativity. Here are proven strategies for handling it gracefully...", views: "892.3K views", icon: ShieldCheck, iconBg: "bg-red-500/10", iconColor: "text-red-500" },
+      { title: "Creator burnout: prevention and recovery", description: "Creating content is rewarding but can be exhausting. Learn how to maintain your wellbeing...", views: "1.3M views", icon: Heart, iconBg: "bg-rose-500/10", iconColor: "text-rose-500" },
     ],
   },
 ];
@@ -105,6 +119,10 @@ const GETTING_STARTED_SECTIONS: Section[] = [
       { title: "Getting started on ZIVO", description: "Are you looking for a place where you can share your passion and connect with others?", views: "1.8M views", icon: Users, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
       { title: "8 tips for becoming a successful ZIVO creator", description: "Endless laughs, jaw-dropping storytimes, and content that inspires millions...", views: "1.6M views", icon: Sparkles, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
       { title: "Kickstarting your ZIVO journey with content ideas", description: "Have you ever watched your favorite creators and wondered how they come up with ideas?", views: "419.6K views", icon: BookOpen, iconBg: "bg-rose-500/10", iconColor: "text-rose-500" },
+      { title: "Finding your niche on ZIVO", description: "The most successful creators focus on a niche. Discover which content category fits you best...", views: "892.3K views", icon: Target, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Your first 30 days on ZIVO", description: "A complete day-by-day guide to building your presence during your crucial first month...", views: "2.3M views", icon: Compass, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Understanding ZIVO's creator tiers", description: "From Rising Star to Elite Creator, learn about the tier system and how to level up...", views: "567.8K views", icon: TrendingUp, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+      { title: "Setting up your creator workspace", description: "You don't need a professional studio to create great content. Here's how to set up at home...", views: "334.2K views", icon: Camera, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
     ],
   },
   {
@@ -114,6 +132,27 @@ const GETTING_STARTED_SECTIONS: Section[] = [
       { title: "Verification 101: how to get the Blue Check", description: "Ever noticed that little blue check mark next to some profiles? Learn how to get yours...", views: "775.2K views", icon: BadgeCheck, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
       { title: "Choosing the right account: Business vs. Personal", description: "Joining the ZIVO community can open up a world of possibilities...", views: "1.0M views", icon: Settings, iconBg: "bg-muted", iconColor: "text-muted-foreground" },
       { title: "Troubleshooting issues with Account check", description: "If something's up with your ZIVO account, Account check can help diagnose and fix it...", views: "113.9K views", icon: AlertTriangle, iconBg: "bg-orange-500/10", iconColor: "text-orange-500" },
+      { title: "Managing multiple ZIVO accounts", description: "Whether you have a personal and business account, learn the best practices for managing both...", views: "245.7K views", icon: Settings, iconBg: "bg-muted", iconColor: "text-muted-foreground" },
+      { title: "Securing your account with two-factor authentication", description: "Protect your account from unauthorized access with 2FA. Here's how to set it up...", views: "189.4K views", icon: Shield, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Understanding your ZIVO notifications", description: "Master your notification settings so you never miss important updates...", views: "156.8K views", icon: Bell, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+    ],
+  },
+  {
+    heading: "Profile Optimization",
+    articles: [
+      { title: "Crafting the perfect ZIVO bio", description: "Your bio is your first impression. Learn how to write one that converts visitors into followers...", views: "1.4M views", icon: PenTool, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+      { title: "Choosing a profile photo that stands out", description: "Your profile picture is your brand identity. Make it memorable and professional...", views: "678.3K views", icon: Camera, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Linking your other social accounts", description: "Cross-promote your presence by connecting your ZIVO profile to other platforms...", views: "234.5K views", icon: Globe, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Setting up your creator portfolio", description: "Showcase your best work with a curated portfolio that brands and followers will love...", views: "312.9K views", icon: Layers, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+    ],
+  },
+  {
+    heading: "Privacy & Safety",
+    articles: [
+      { title: "Privacy settings for creators", description: "Control who sees your content, who can comment, and how your data is handled...", views: "445.6K views", icon: Lock, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Blocking and reporting users", description: "Keep your community safe by learning how to block and report problematic users...", views: "567.2K views", icon: ShieldCheck, iconBg: "bg-red-500/10", iconColor: "text-red-500" },
+      { title: "Managing comment filters", description: "Automatically filter out spam and offensive comments to maintain a positive community...", views: "234.8K views", icon: MessageCircle, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Data download and account portability", description: "Learn how to download all your ZIVO data and understand your data rights...", views: "89.3K views", icon: Settings, iconBg: "bg-muted", iconColor: "text-muted-foreground" },
     ],
   },
 ];
@@ -226,6 +265,27 @@ const TOOLS_SECTIONS: Section[] = [
       { title: "Capturing your spontaneous moments with ZIVO Stories", description: "ZIVO is all about storytelling, but Stories let you share raw, unfiltered moments...", views: "25.5K views", icon: Camera, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
       { title: "Flip Story: ZIVO's interactive stories feature", description: "Flip Story, exclusively on ZIVO Stories, is an interactive way to engage your audience...", views: "63.9K views", icon: PlayCircle, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
       { title: "Engaging your followers with the bulletin board feature", description: "The bulletin board feature is a fun and interactive way to communicate with your community...", views: "19.9K views", icon: Bell, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Polls and Q&A: engaging your audience in real-time", description: "Use interactive polls and Q&A features to boost engagement and understand your audience...", views: "156.3K views", icon: MessageCircle, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Duets and Stitches: collaborating with content", description: "React to, remix, and collaborate with other creators' content using Duet and Stitch features...", views: "2.4M views", icon: Video, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "Using green screen effects creatively", description: "Transform any image or video into your backdrop for immersive content creation...", views: "890.5K views", icon: Wand2, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+    ],
+  },
+  {
+    heading: "LIVE Streaming Tools",
+    articles: [
+      { title: "Setting up your first LIVE stream", description: "Everything you need to know to go LIVE for the first time. Equipment, settings, and tips...", views: "3.4M views", icon: Video, iconBg: "bg-red-500/10", iconColor: "text-red-500" },
+      { title: "LIVE moderation tools for creators", description: "Keep your LIVE chat clean and positive with powerful moderation features...", views: "234.5K views", icon: ShieldCheck, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Adding overlays and effects to your LIVE", description: "Make your LIVE streams visually stunning with custom overlays, filters, and effects...", views: "445.2K views", icon: Palette, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+      { title: "LIVE analytics: understanding your stream performance", description: "After every LIVE, dive into detailed analytics to understand what worked and what didn't...", views: "178.9K views", icon: BarChart3, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Scheduling LIVE events", description: "Build anticipation by scheduling your LIVE streams in advance and notifying followers...", views: "123.4K views", icon: Bell, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+    ],
+  },
+  {
+    heading: "Accessibility Features",
+    articles: [
+      { title: "Adding captions and subtitles to your videos", description: "Make your content accessible to everyone by adding accurate captions and subtitles...", views: "1.8M views", icon: MessageCircle, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Auto-translate: reaching a global audience", description: "Break language barriers with ZIVO's auto-translate feature for captions and descriptions...", views: "567.8K views", icon: Globe, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Text-to-speech narration tools", description: "Add professional voiceover to your content using ZIVO's built-in text-to-speech engine...", views: "345.2K views", icon: Mic, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
     ],
   },
 ];
@@ -407,7 +467,23 @@ const TAB_DATA: Record<string, { hero?: { title: string; description: string }; 
 export default function MonetizationArticlesPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("recommended");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const tabData = TAB_DATA[activeTab];
+
+  // Filter articles by search query
+  const filteredSections = searchQuery.trim()
+    ? tabData.sections
+        .map((section) => ({
+          ...section,
+          articles: section.articles.filter(
+            (a) =>
+              a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              a.description.toLowerCase().includes(searchQuery.toLowerCase())
+          ),
+        }))
+        .filter((s) => s.articles.length > 0)
+    : tabData.sections;
 
   return (
     <div className="min-h-dvh bg-background pb-24">
@@ -419,8 +495,22 @@ export default function MonetizationArticlesPage() {
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-base font-bold flex-1 text-center">Articles</h1>
-          <button className="p-2 -mr-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          {searchOpen ? (
+            <input
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search articles..."
+              className="flex-1 text-sm bg-transparent outline-none placeholder:text-muted-foreground/50"
+              onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
+            />
+          ) : (
+            <h1 className="text-base font-bold flex-1 text-center">Articles</h1>
+          )}
+          <button
+            onClick={() => { setSearchOpen(!searchOpen); setSearchQuery(""); }}
+            className="p-2 -mr-2 rounded-full hover:bg-muted/50 touch-manipulation"
+          >
             <Search className="h-5 w-5" />
           </button>
         </div>
@@ -480,7 +570,12 @@ export default function MonetizationArticlesPage() {
 
           {/* Sections */}
           <div className="space-y-6">
-            {tabData.sections.map((section) => (
+            {filteredSections.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-sm text-muted-foreground">No articles found for "{searchQuery}"</p>
+              </div>
+            )}
+            {filteredSections.map((section) => (
               <div key={section.heading}>
                 <h3 className="font-bold text-base mb-3">{section.heading}</h3>
                 <div className="rounded-2xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
@@ -490,6 +585,7 @@ export default function MonetizationArticlesPage() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: ai * 0.02 }}
+                      onClick={() => navigate(`/monetization/articles/${article.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "")}`)}
                       className="w-full flex items-start gap-3 p-4 text-left touch-manipulation active:bg-muted/20 transition-colors"
                     >
                       <div className="flex-1 min-w-0">

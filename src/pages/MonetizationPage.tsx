@@ -2,6 +2,7 @@
  * MonetizationPage — Full monetization hub for ZIVO creators
  * Programs, earnings overview, and learning resources
  */
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -131,6 +132,7 @@ const resourceTabs = ["Recommended", "Subscription", "LIVE rewards", "Creator Re
 export default function MonetizationPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [activeResTab, setActiveResTab] = useState(0);
 
   return (
     <div className="min-h-dvh bg-background pb-24">
@@ -251,8 +253,9 @@ export default function MonetizationPage() {
             {resourceTabs.map((tab, i) => (
               <button
                 key={tab}
+                onClick={() => setActiveResTab(i)}
                 className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                  i === 0
+                  i === activeResTab
                     ? "bg-foreground text-background"
                     : "bg-muted/60 text-muted-foreground"
                 }`}
@@ -287,11 +290,12 @@ export default function MonetizationPage() {
         </div>
 
         {/* Verification CTA */}
-        <motion.div
+        <motion.button
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="rounded-2xl border border-border/40 bg-card p-4 flex items-center gap-3"
+          onClick={() => navigate("/account/settings")}
+          className="w-full rounded-2xl border border-border/40 bg-card p-4 flex items-center gap-3 text-left touch-manipulation active:scale-[0.98] transition-transform"
         >
           <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
             <BadgeCheck className="h-5 w-5 text-blue-500" />
@@ -301,7 +305,7 @@ export default function MonetizationPage() {
             <p className="text-[11px] text-muted-foreground">Verify your identity to unlock payouts and build trust with your audience.</p>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
-        </motion.div>
+        </motion.button>
 
         {/* Community Guidelines */}
         <motion.button
