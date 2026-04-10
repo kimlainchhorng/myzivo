@@ -979,6 +979,15 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           .from(likesTable)
           .insert({ post_id: interactionPostId, user_id: currentUserId });
         if (error) throw error;
+        // Push notification to post author
+        if (item.author_id && item.author_id !== currentUserId) {
+          try {
+            const { data: sp } = await supabase.from("profiles").select("full_name").eq("user_id", currentUserId).single();
+            await supabase.functions.invoke("send-push-notification", {
+              body: { user_id: item.author_id, notification_type: "post_liked", title: "New Like ❤️", body: `${sp?.full_name || "Someone"} liked your post`, data: { type: "post_liked", post_id: item.id, liker_id: currentUserId, action_url: `/reels?post=${item.id}` } },
+            });
+          } catch {}
+        }
       } else {
         const { error } = await (supabase as any)
           .from(likesTable)
@@ -1506,6 +1515,15 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           .from(likesTable)
           .insert({ post_id: interactionPostId, user_id: currentUserId });
         if (error) throw error;
+        // Push notification to post author
+        if (item.author_id && item.author_id !== currentUserId) {
+          try {
+            const { data: sp } = await supabase.from("profiles").select("full_name").eq("user_id", currentUserId).single();
+            await supabase.functions.invoke("send-push-notification", {
+              body: { user_id: item.author_id, notification_type: "post_liked", title: "New Like ❤️", body: `${sp?.full_name || "Someone"} liked your post`, data: { type: "post_liked", post_id: item.id, liker_id: currentUserId, action_url: `/reels?post=${item.id}` } },
+            });
+          } catch {}
+        }
       } else {
         const { error } = await (supabase as any)
           .from(likesTable)
