@@ -358,14 +358,14 @@ export default function FeedSidebar() {
               </button>
             </div>
             {/* Chat content */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden">
+            <div className="flex-1 overflow-hidden flex flex-col">
               <Suspense fallback={
                 <div className="flex flex-col items-center justify-center h-64 gap-3">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   <span className="text-xs text-muted-foreground">Loading chats…</span>
                 </div>
               }>
-                <ChatHubPage />
+                <ChatHubPage embedded />
               </Suspense>
             </div>
           </div>
