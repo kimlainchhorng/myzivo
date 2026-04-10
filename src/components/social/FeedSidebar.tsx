@@ -324,30 +324,42 @@ export default function FeedSidebar() {
     </aside>
       {/* Inline Chat Panel — right side, responsive */}
       {showChat && (
-        <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[380px] md:w-[400px] lg:w-[380px] xl:w-[400px] 2xl:w-[420px] lg:top-[4.5rem] bg-background border-l border-border/40 shadow-xl z-[1300] flex flex-col">
-          <div className="px-4 py-3 border-b border-border/30 flex items-center gap-2.5 shrink-0" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 0.75rem)' }}>
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <MessageCircle className="h-4 w-4 text-primary" />
-            </div>
-            <span className="text-[15px] font-semibold text-foreground flex-1">Chat</span>
-            <button
-              onClick={() => setShowChat(false)}
-              className="h-8 w-8 rounded-full hover:bg-muted/60 flex items-center justify-center transition-colors"
+        <>
+          {/* Backdrop for mobile/tablet */}
+          <div
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[1290] lg:hidden"
+            onClick={() => setShowChat(false)}
+          />
+          <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[400px] md:w-[420px] lg:top-[4.5rem] lg:w-[360px] xl:w-[380px] 2xl:w-[400px] bg-background lg:border-l lg:border-border/30 shadow-2xl z-[1300] flex flex-col lg:rounded-none rounded-l-2xl sm:rounded-l-2xl">
+            {/* Header */}
+            <div
+              className="px-5 py-3.5 border-b border-border/20 flex items-center gap-3 shrink-0 bg-background/80 backdrop-blur-xl"
+              style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.875rem), 0.875rem)' }}
             >
-              <XIcon className="h-4 w-4 text-muted-foreground" />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto overflow-x-hidden">
-            <Suspense fallback={
-              <div className="flex flex-col items-center justify-center h-64 gap-3">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Loading chats…</span>
+              <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                <MessageCircle className="h-[18px] w-[18px] text-primary" />
               </div>
-            }>
-              <ChatHubPage />
-            </Suspense>
+              <span className="text-base font-semibold text-foreground flex-1">Messages</span>
+              <button
+                onClick={() => setShowChat(false)}
+                className="h-8 w-8 rounded-lg hover:bg-muted/60 flex items-center justify-center transition-colors"
+              >
+                <XIcon className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
+            {/* Chat content */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden">
+              <Suspense fallback={
+                <div className="flex flex-col items-center justify-center h-64 gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Loading chats…</span>
+                </div>
+              }>
+                <ChatHubPage />
+              </Suspense>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );
