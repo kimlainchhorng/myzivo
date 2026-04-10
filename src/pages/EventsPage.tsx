@@ -96,7 +96,7 @@ export default function EventsPage() {
   return (
     <div className="min-h-dvh bg-background pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/30">
+      <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center gap-3 px-4 py-3">
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50">
             <ArrowLeft className="h-5 w-5" />
