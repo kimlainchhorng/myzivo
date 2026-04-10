@@ -137,7 +137,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   return (
     <>
       {/* 3D Perspective wrapper */}
-      <div className="fixed top-0 left-0 right-0 z-50 overflow-x-clip" style={{ perspective: "1200px" }}>
+      <div className="fixed top-0 left-0 right-0 z-50 overflow-x-clip safe-area-top" style={{ perspective: "1200px" }}>
         <motion.header
           ref={ref}
           initial={{ rotateX: -3, y: -10, opacity: 0 }}
