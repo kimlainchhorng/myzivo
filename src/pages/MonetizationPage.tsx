@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import SEOHead from "@/components/seo/SEOHead";
+import SEOHead from "@/components/SEOHead";
 
 const monetizationPrograms = [
   {
