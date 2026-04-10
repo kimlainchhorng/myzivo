@@ -2,8 +2,8 @@
  * ZIVO Wallet — Premium 2026 redesign
  * Real Supabase/Stripe data throughout
  */
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import {
   ArrowLeft, Wallet, CreditCard, Star, Trash2, Plus, Shield,
   Users, Gift, Trophy,
