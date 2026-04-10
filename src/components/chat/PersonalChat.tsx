@@ -176,7 +176,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   const scrollToBottom = useCallback((force?: boolean) => {
     if (!force && !isNearBottomRef.current) return;
-    setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
+    // Use multiple attempts to ensure DOM is rendered
+    const doScroll = () => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    };
+    // Immediate + deferred to catch both fast and slow renders
+    requestAnimationFrame(() => {
+      doScroll();
+      setTimeout(doScroll, 100);
+      setTimeout(doScroll, 300);
+    });
   }, []);
 
   const handleScroll = useCallback(() => {
