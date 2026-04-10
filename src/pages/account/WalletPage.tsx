@@ -3,6 +3,7 @@
  * Real Supabase/Stripe data throughout
  */
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Wallet, CreditCard, Star, Trash2, Plus, Shield,
   Users, Gift, Trophy,
