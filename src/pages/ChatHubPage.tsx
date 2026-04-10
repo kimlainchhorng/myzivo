@@ -936,7 +936,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   );
 
   if (embedded) {
-    return <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-background">{shell}</div>;
+    return <div className="relative flex flex-col flex-1 h-full w-full overflow-hidden bg-background">{shell}</div>;
   }
 
   return (
