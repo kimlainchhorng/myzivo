@@ -74,7 +74,7 @@ function getMessagePreviewIcon(message: string) {
   return null;
 }
 
-export default function ChatHubPage() {
+export default function ChatHubPage({ embedded = false }: { embedded?: boolean } = {}) {
   const [active, setActive] = useState<ChatCategory>("personal");
   const [search, setSearch] = useState("");
   const { user } = useAuth();
