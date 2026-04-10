@@ -1251,7 +1251,24 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         </div>
       </div>
 
-      {/* Bottom overlay - Author + Caption */}
+      {/* Floating Product Card — "Buy from [Shop] - Xkm away" */}
+      {item.commerce_link && (
+        <div
+          className="absolute left-4 right-20"
+          style={{ bottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 5.5rem), 7rem)' }}
+        >
+          <FloatingProductCard
+            commerceLink={item.commerce_link}
+            shopName={item.author_name}
+            storeSlug={item.store_slug}
+            postId={item.id}
+            currentUserId={currentUserId}
+            onNavigate={onClose}
+          />
+        </div>
+      )}
+
+
       <div
         className="absolute left-0 right-16 bottom-0 px-4"
         style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 2rem)' }}
