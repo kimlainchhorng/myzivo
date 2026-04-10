@@ -20,6 +20,10 @@ import {
   MessageSquare, UserCheck, Settings2, Search, Trash2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -871,6 +875,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   const [showCaption, setShowCaption] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const interactionPostId = getFeedInteractionPostId(item);
@@ -885,30 +890,40 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
   const handleReelFollow = async () => {
     if (!currentUserId || !item.author_id || followLoading) return;
+    if (isFollowing) {
+      setShowUnfollowConfirm(true);
+      return;
+    }
     setFollowLoading(true);
     try {
-      if (isFollowing) {
-        await (supabase as any).from("user_followers").delete()
-          .eq("follower_id", currentUserId).eq("following_id", item.author_id);
-        setIsFollowing(false);
-      } else {
-        await (supabase as any).from("user_followers").insert({
-          follower_id: currentUserId,
-          following_id: item.author_id,
+      await (supabase as any).from("user_followers").insert({
+        follower_id: currentUserId,
+        following_id: item.author_id,
+      });
+      setIsFollowing(true);
+      try {
+        const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", currentUserId).single();
+        await supabase.functions.invoke("send-push-notification", {
+          body: { user_id: item.author_id, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: currentUserId, avatar_url: sp?.avatar_url, action_url: `/user/${currentUserId}` } },
         });
-        setIsFollowing(true);
-        // Notify new follower
-        try {
-          const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", currentUserId).single();
-          await supabase.functions.invoke("send-push-notification", {
-            body: { user_id: item.author_id, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: currentUserId, avatar_url: sp?.avatar_url, action_url: `/user/${currentUserId}` } },
-          });
-        } catch {}
-      }
+      } catch {}
     } catch { /* ignore */ } finally {
       setFollowLoading(false);
     }
   };
+
+  const executeReelUnfollow = async () => {
+    if (!currentUserId || !item.author_id) return;
+    setFollowLoading(true);
+    try {
+      await (supabase as any).from("user_followers").delete()
+        .eq("follower_id", currentUserId).eq("following_id", item.author_id);
+      setIsFollowing(false);
+    } catch { /* ignore */ } finally {
+      setFollowLoading(false);
+    }
+  };
+
   const [showComments, setShowComments] = useState(false);
 
   useEffect(() => {
@@ -1335,6 +1350,19 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           />
         )}
       </AnimatePresence>
+      {/* Unfollow confirm dialog */}
+      <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unfollow?</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to unfollow {item.author_name}?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { executeReelUnfollow(); setShowUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -1370,6 +1398,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
   const [tipTarget, setTipTarget] = useState<{ id: string; name: string } | null>(null);
   const [isFollowingAuthor, setIsFollowingAuthor] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
@@ -1440,25 +1469,35 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
   const handleFollowToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!currentUserId || !item.author_id || followLoading) return;
+    if (isFollowingAuthor) {
+      setShowUnfollowConfirm(true);
+      return;
+    }
     setFollowLoading(true);
     try {
-      if (isFollowingAuthor) {
-        await supabase.from("user_followers" as any).delete()
-          .eq("follower_id", currentUserId).eq("following_id", item.author_id);
-        setIsFollowingAuthor(false);
-      } else {
-        await (supabase as any).from("user_followers").insert({
-          follower_id: currentUserId,
-          following_id: item.author_id,
+      await (supabase as any).from("user_followers").insert({
+        follower_id: currentUserId,
+        following_id: item.author_id,
+      });
+      setIsFollowingAuthor(true);
+      try {
+        const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", currentUserId).single();
+        await supabase.functions.invoke("send-push-notification", {
+          body: { user_id: item.author_id, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: currentUserId, avatar_url: sp?.avatar_url, action_url: `/user/${currentUserId}` } },
         });
-        setIsFollowingAuthor(true);
-        try {
-          const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", currentUserId).single();
-          await supabase.functions.invoke("send-push-notification", {
-            body: { user_id: item.author_id, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: currentUserId, avatar_url: sp?.avatar_url, action_url: `/user/${currentUserId}` } },
-          });
-        } catch {}
-      }
+      } catch {}
+    } catch { /* ignore */ } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const executeFeedUnfollow = async () => {
+    if (!currentUserId || !item.author_id) return;
+    setFollowLoading(true);
+    try {
+      await supabase.from("user_followers" as any).delete()
+        .eq("follower_id", currentUserId).eq("following_id", item.author_id);
+      setIsFollowingAuthor(false);
     } catch { /* ignore */ } finally {
       setFollowLoading(false);
     }
@@ -2613,6 +2652,19 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
         creatorName={tipTarget?.name || ""}
       />
 
+      {/* Unfollow confirm dialog */}
+      <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unfollow?</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to unfollow {item.author_name}?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { executeFeedUnfollow(); setShowUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
