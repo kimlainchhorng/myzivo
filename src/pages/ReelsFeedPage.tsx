@@ -1496,8 +1496,10 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
   const [editSaving, setEditSaving] = useState(false);
   const [tipTarget, setTipTarget] = useState<{ id: string; name: string } | null>(null);
   const [isFollowingAuthor, setIsFollowingAuthor] = useState(false);
+  const [isFollowingSharedAuthor, setIsFollowingSharedAuthor] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
+  const [showSharedUnfollowConfirm, setShowSharedUnfollowConfirm] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
@@ -1524,6 +1526,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
   const lastTapRef = useRef(0);
 
   const isOwner = Boolean(currentUserId && item.author_id === currentUserId);
+  const sharedAuthorId = item.shared_from_source === "user" ? item.shared_from_user_id || null : null;
+  const sharedAuthorName = item.shared_from_user_name || "this creator";
+  const isSharedAuthorOwner = Boolean(currentUserId && sharedAuthorId === currentUserId);
   const interactionPostId = getFeedInteractionPostId(item);
   const likesTable = getFeedLikesTable(item);
 
@@ -1565,27 +1570,88 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       .then(({ data }: any) => { if (typeof data === "boolean") setIsFollowingAuthor(data); });
   }, [currentUserId, item.author_id, isOwner]);
 
+  useEffect(() => {
+    if (!currentUserId || !sharedAuthorId || isSharedAuthorOwner) {
+      setIsFollowingSharedAuthor(false);
+      return;
+    }
+    supabase.rpc("is_following" as any, { target_user_id: sharedAuthorId })
+      .then(({ data }: any) => { if (typeof data === "boolean") setIsFollowingSharedAuthor(data); });
+  }, [currentUserId, sharedAuthorId, isSharedAuthorOwner]);
+
+  const sendFollowNotification = async (targetUserId: string) => {
+    try {
+      const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", currentUserId).single();
+      await supabase.functions.invoke("send-push-notification", {
+        body: {
+          user_id: targetUserId,
+          notification_type: "new_follower",
+          title: "New Follower 🔔",
+          body: `${sp?.full_name || "Someone"} started following you`,
+          data: {
+            type: "new_follower",
+            follower_id: currentUserId,
+            avatar_url: sp?.avatar_url,
+            action_url: `/user/${currentUserId}`,
+          },
+        },
+      });
+    } catch {
+      // ignore notification failures
+    }
+  };
+
   const handleFollowToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!currentUserId || !item.author_id || followLoading) return;
+    if (!item.author_id || followLoading) return;
+    if (!currentUserId) {
+      toast.error("Please sign in to follow");
+      return;
+    }
     if (isFollowingAuthor) {
       setShowUnfollowConfirm(true);
       return;
     }
     setFollowLoading(true);
     try {
-      await (supabase as any).from("user_followers").insert({
+      const { error } = await (supabase as any).from("user_followers").insert({
         follower_id: currentUserId,
         following_id: item.author_id,
       });
+      if (error) throw error;
       setIsFollowingAuthor(true);
-      try {
-        const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", currentUserId).single();
-        await supabase.functions.invoke("send-push-notification", {
-          body: { user_id: item.author_id, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: currentUserId, avatar_url: sp?.avatar_url, action_url: `/user/${currentUserId}` } },
-        });
-      } catch {}
-    } catch { /* ignore */ } finally {
+      await sendFollowNotification(item.author_id);
+    } catch {
+      toast.error("Failed to update follow");
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const handleSharedAuthorFollowToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!sharedAuthorId || followLoading) return;
+    if (!currentUserId) {
+      toast.error("Please sign in to follow");
+      return;
+    }
+    if (sharedAuthorId === currentUserId) return;
+    if (isFollowingSharedAuthor) {
+      setShowSharedUnfollowConfirm(true);
+      return;
+    }
+    setFollowLoading(true);
+    try {
+      const { error } = await (supabase as any).from("user_followers").insert({
+        follower_id: currentUserId,
+        following_id: sharedAuthorId,
+      });
+      if (error) throw error;
+      setIsFollowingSharedAuthor(true);
+      await sendFollowNotification(sharedAuthorId);
+    } catch {
+      toast.error("Failed to update follow");
+    } finally {
       setFollowLoading(false);
     }
   };
@@ -1597,6 +1663,18 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       await supabase.from("user_followers" as any).delete()
         .eq("follower_id", currentUserId).eq("following_id", item.author_id);
       setIsFollowingAuthor(false);
+    } catch { /* ignore */ } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const executeSharedFeedUnfollow = async () => {
+    if (!currentUserId || !sharedAuthorId) return;
+    setFollowLoading(true);
+    try {
+      await supabase.from("user_followers" as any).delete()
+        .eq("follower_id", currentUserId).eq("following_id", sharedAuthorId);
+      setIsFollowingSharedAuthor(false);
     } catch { /* ignore */ } finally {
       setFollowLoading(false);
     }
@@ -1936,15 +2014,16 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                 </div>
               </button>
               {/* Follow button */}
-              {item.shared_from_user_id && item.shared_from_user_id !== currentUserId && (
+              {sharedAuthorId && !isSharedAuthorOwner && (
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toast.success(`Following ${item.shared_from_user_name || "user"}`);
-                  }}
-                  className="text-[12px] font-semibold text-primary px-2 py-1 active:opacity-70"
+                  onClick={handleSharedAuthorFollowToggle}
+                  disabled={followLoading}
+                  className={cn(
+                    "text-[12px] font-semibold px-2 py-1 rounded-md transition-all active:scale-95",
+                    isFollowingSharedAuthor ? "text-muted-foreground" : "text-primary"
+                  )}
                 >
-                  Follow
+                  {followLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isFollowingSharedAuthor ? "Following" : "Follow"}
                 </button>
               )}
             </div>
@@ -2761,6 +2840,18 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => { executeFeedUnfollow(); setShowUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={showSharedUnfollowConfirm} onOpenChange={setShowSharedUnfollowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unfollow?</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to unfollow {sharedAuthorName}?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { executeSharedFeedUnfollow(); setShowSharedUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
