@@ -75,7 +75,7 @@ const PersonalSettingsPage = lazy(() => import("./pages/app/personal/PersonalSet
 const ServicesPage = lazy(() => import("./pages/app/ServicesPage"));
 const UnifiedDashboard = lazy(() => import("./pages/app/UnifiedDashboard"));
 const MyTripsPage = lazy(() => import("./pages/app/MyTripsPage"));
-const WalletPage = lazy(() => import("./pages/app/WalletPage"));
+
 const SupportCenterPage = lazy(() => import("./pages/app/SupportCenterPage"));
 const RideTrackingPage = lazy(() => import("./pages/app/RideTrackingPage"));
 const RideHubPage = lazy(() => import("./pages/app/RideHubPage"));
@@ -110,7 +110,7 @@ const AdminModerationPage = lazy(() => import("./pages/AdminModerationPage"));
 const AdminLaunchDashboard = lazy(() => import("./pages/admin/AdminLaunchDashboard"));
 const ContentSchedulerPage = lazy(() => import("./pages/ContentSchedulerPage"));
 const StoryPollsPage = lazy(() => import("./pages/StoryPollsPage"));
-const WalletDashboardPage = lazy(() => import("./pages/WalletDashboardPage"));
+
 const BadgesPage = lazy(() => import("./pages/BadgesPage"));
 const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
 const AppSettingsPage = lazy(() => import("./pages/AppSettingsPage"));
@@ -586,7 +586,7 @@ const App = () => (
                 <Route path="/admin/launch" element={<ProtectedRoute><AdminLaunchDashboard /></ProtectedRoute>} />
                 <Route path="/content-scheduler" element={<ProtectedRoute><ContentSchedulerPage /></ProtectedRoute>} />
                 <Route path="/story-polls" element={<ProtectedRoute><StoryPollsPage /></ProtectedRoute>} />
-                <Route path="/wallet-dashboard" element={<ProtectedRoute><WalletDashboardPage /></ProtectedRoute>} />
+                
                 <Route path="/badges" element={<BadgesPage />} />
                 <Route path="/leaderboard" element={<LeaderboardPage />} />
                 <Route path="/settings" element={<ProtectedRoute><AppSettingsPage /></ProtectedRoute>} />
