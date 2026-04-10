@@ -48,6 +48,12 @@ export default function SuggestedUsersCarousel({ variant = "default" }: Suggeste
       if (error && !error.message?.includes("duplicate")) throw error;
       setFollowing((prev) => new Set([...prev, profileId]));
       toast.success("Following!");
+      try {
+        const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).single();
+        await supabase.functions.invoke("send-push-notification", {
+          body: { user_id: profileId, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: user.id, avatar_url: sp?.avatar_url, action_url: `/user/${user.id}` } },
+        });
+      } catch {}
     } catch {
       toast.error("Failed to follow");
     }
