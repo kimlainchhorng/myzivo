@@ -96,6 +96,7 @@ const PrivacySettingsPage = lazy(() => import("./pages/account/PrivacySettingsPa
 const CreatorDashboardPage = lazy(() => import("./pages/CreatorDashboardPage"));
 const MonetizationPage = lazy(() => import("./pages/MonetizationPage"));
 const MonetizationArticlesPage = lazy(() => import("./pages/MonetizationArticlesPage"));
+const MonetizationArticleDetailPage = lazy(() => import("./pages/MonetizationArticleDetailPage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
 const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
 const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
