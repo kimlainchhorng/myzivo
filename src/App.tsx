@@ -576,6 +576,7 @@ const App = () => (
                 <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
                 <Route path="/creator-dashboard" element={<ProtectedRoute><CreatorDashboardPage /></ProtectedRoute>} />
                 <Route path="/monetization" element={<ProtectedRoute><MonetizationPage /></ProtectedRoute>} />
+                <Route path="/monetization/articles" element={<ProtectedRoute><MonetizationArticlesPage /></ProtectedRoute>} />
                 <Route path="/events" element={<EventsPage />} />
                 <Route path="/communities" element={<CommunitiesPage />} />
                 <Route path="/marketplace" element={<MarketplacePage />} />
