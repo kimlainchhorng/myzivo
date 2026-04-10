@@ -63,9 +63,14 @@ export default function FeedSidebar() {
 
   // Listen for global "open chat" event from NavBar
   useEffect(() => {
-    const handler = () => setShowChat(true);
-    window.addEventListener("zivo-open-chat", handler);
-    return () => window.removeEventListener("zivo-open-chat", handler);
+    const handleOpen = () => setShowChat(true);
+    const handleToggle = () => setShowChat((prev) => !prev);
+    window.addEventListener("zivo-open-chat", handleOpen);
+    window.addEventListener("zivo-toggle-chat", handleToggle);
+    return () => {
+      window.removeEventListener("zivo-open-chat", handleOpen);
+      window.removeEventListener("zivo-toggle-chat", handleToggle);
+    };
   }, []);
 
   const avatarUrl = optimizeAvatar(profile?.avatar_url, 80) || profile?.avatar_url || user?.user_metadata?.avatar_url;
