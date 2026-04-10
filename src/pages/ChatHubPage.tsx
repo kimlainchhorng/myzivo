@@ -671,7 +671,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               )}
             </div>
           ) : (
-            <div className="space-y-2 px-1">
+            <div className={cn("space-y-2 px-1", embedded && "space-y-1.5 px-0.5")}>
               {displayList.map((chat: any, idx: number) => (
                 <motion.div
                   key={chat.id}
