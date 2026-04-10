@@ -429,8 +429,9 @@ export default function WalletPage() {
                     });
                     setCashoutAmount("");
                     setCashoutNote("");
-                    // Refresh wallet data
-                    window.location.reload();
+                    queryClient.invalidateQueries({ queryKey: ["customer-wallet"] });
+                    queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+                    queryClient.invalidateQueries({ queryKey: ["wallet-summary"] });
                   } catch (err: any) {
                     toast.error(err?.message || "Withdrawal failed");
                   } finally {
