@@ -584,7 +584,7 @@ export default function ReelsFeedPage() {
 
       <div className={cn(
         "lg:flex lg:pt-16 transition-all duration-300",
-        chatOpen && "lg:pr-[360px] xl:pr-[380px] 2xl:pr-[400px]"
+        chatOpen && "lg:pr-[480px] xl:pr-[540px] 2xl:pr-[580px]"
       )}>
         {/* Desktop Sidebar */}
         <FeedSidebar />
