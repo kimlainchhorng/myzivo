@@ -64,6 +64,16 @@ export default function WalletPage() {
   const [cashoutMethod, setCashoutMethod] = useState<string>("bank_transfer");
   const [cashoutNote, setCashoutNote] = useState("");
   const [cashoutSubmitting, setCashoutSubmitting] = useState(false);
+  const [showAddPayout, setShowAddPayout] = useState(false);
+  const [payoutForm, setPayoutForm] = useState({
+    method_type: "bank_transfer" as "bank_transfer" | "aba",
+    label: "",
+    bank_name: "",
+    account_number: "",
+    account_holder_name: "",
+    aba_account_id: "",
+  });
+  const [selectedPayoutId, setSelectedPayoutId] = useState<string | null>(null);
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -75,6 +85,72 @@ export default function WalletPage() {
   const { data: walletCredits = [], isLoading: creditsLoading } = useWalletCredits();
   const { data: summary, isLoading: summaryLoading } = useWalletSummary();
   const { points, isLoading: pointsLoading } = useLoyaltyPoints();
+
+  // Payout methods
+  const { data: payoutMethods = [], isLoading: payoutsLoading } = useQuery({
+    queryKey: ["payout-methods", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await (supabase as any)
+        .from("customer_payout_methods")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  const addPayoutMethod = useMutation({
+    mutationFn: async (form: typeof payoutForm) => {
+      if (!user) throw new Error("Not authenticated");
+      const { error } = await (supabase as any)
+        .from("customer_payout_methods")
+        .insert({
+          user_id: user.id,
+          method_type: form.method_type,
+          label: form.label || (form.method_type === "aba" ? "ABA Account" : "Bank Account"),
+          bank_name: form.bank_name || null,
+          account_number: form.account_number || null,
+          account_holder_name: form.account_holder_name || null,
+          aba_account_id: form.aba_account_id || null,
+          is_default: payoutMethods.length === 0,
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payout-methods"] });
+      setShowAddPayout(false);
+      setPayoutForm({ method_type: "bank_transfer", label: "", bank_name: "", account_number: "", account_holder_name: "", aba_account_id: "" });
+      toast.success("Payout method added!");
+    },
+    onError: (err: any) => toast.error(err?.message || "Failed to add"),
+  });
+
+  const deletePayoutMethod = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any)
+        .from("customer_payout_methods")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payout-methods"] });
+      if (selectedPayoutId) setSelectedPayoutId(null);
+      toast.success("Payout method removed");
+    },
+  });
+
+  // Auto-select first payout method or default
+  useEffect(() => {
+    if (payoutMethods.length > 0 && !selectedPayoutId) {
+      const def = payoutMethods.find((p: any) => p.is_default) || payoutMethods[0];
+      setSelectedPayoutId(def.id);
+      setCashoutMethod(def.method_type);
+    }
+  }, [payoutMethods, selectedPayoutId]);
 
   const totalSpent = summary?.totalSpent ?? 0;
   const txCount = summary?.transactionCount ?? 0;
