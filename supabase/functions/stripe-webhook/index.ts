@@ -830,6 +830,16 @@ serve(async (req) => {
             console.error("[Webhook] Error upserting membership:", upsertError);
           } else {
             console.log("[Webhook] Membership subscription synced:", metadata.user_id, "Status:", subscription.status);
+            // Notify user: ZIVO+ activated
+            if (subscription.status === "active") {
+              try {
+                await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                  body: JSON.stringify({ user_id: metadata.user_id, notification_type: "membership_activated", title: "Welcome to ZIVO+ ⭐", body: "Your premium membership is now active. Enjoy exclusive perks!", data: { type: "membership_activated", action_url: "/account" } }),
+                });
+              } catch {}
+            }
           }
         }
         break;
