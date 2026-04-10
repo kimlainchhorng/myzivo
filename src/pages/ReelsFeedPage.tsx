@@ -1129,7 +1129,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         playsInline
         preload="metadata"
         onClick={togglePlay}
-        className="h-full w-full object-contain bg-black"
+        className="h-full w-full object-cover bg-black"
       />
 
       {/* Pause indicator */}
