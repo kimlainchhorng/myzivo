@@ -291,8 +291,14 @@ const NotificationsPage = () => {
   const handleNotificationClick = (notification: any) => {
     if (!notification.is_read) markAsRead([notification.id]);
     if (notification.action_url) {
-      if (notification.action_url.startsWith('/')) navigate(notification.action_url);
-      else import('@/lib/openExternalUrl').then(({ openExternalUrl: oe }) => oe(notification.action_url));
+      let url = notification.action_url as string;
+      // Remap legacy /dispatch/support/:id to /support/tickets/:id
+      const dispatchMatch = url.match(/^\/dispatch\/support\/(.+)$/);
+      if (dispatchMatch) {
+        url = `/support/tickets/${dispatchMatch[1]}`;
+      }
+      if (url.startsWith('/')) navigate(url);
+      else import('@/lib/openExternalUrl').then(({ openExternalUrl: oe }) => oe(url));
     }
   };
 
