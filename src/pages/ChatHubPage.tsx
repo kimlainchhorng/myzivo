@@ -520,61 +520,69 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       embedded ? "h-full overflow-y-auto relative" : "min-h-screen bg-background pb-24"
     )}>
       {/* Header */}
-      <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-xl border-b border-border/20">
-        <div className="px-5 pt-4 pb-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
-            >
-              <ArrowLeft className="w-5 h-5 text-foreground" />
-            </button>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">Chat</h1>
+      <div className={cn(
+        "sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-xl border-b border-border/20",
+        embedded && "bg-transparent backdrop-blur-none border-none"
+      )}>
+        {!embedded && (
+          <div className="px-5 pt-4 pb-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/')}
+                className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+              >
+                <ArrowLeft className="w-5 h-5 text-foreground" />
+              </button>
+              <div>
+                <h1 className="text-xl font-bold text-foreground">Chat</h1>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              {active === "personal" && (
+                <button
+                  onClick={() => setShowCreateGroup(true)}
+                  className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                  aria-label="New group"
+                >
+                  <Users className="w-5 h-5 text-muted-foreground" />
+                  <Plus className="w-2.5 h-2.5 text-primary absolute bottom-1 right-1" />
+                </button>
+              )}
+              <button
+                onClick={() => navigate('/notifications')}
+                className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                aria-label="Notifications"
+              >
+                <Bell className="w-5 h-5 text-muted-foreground" />
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-1">
-            {active === "personal" && (
-              <button
-                onClick={() => setShowCreateGroup(true)}
-                className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
-                aria-label="New group"
-              >
-                <Users className="w-5 h-5 text-muted-foreground" />
-                <Plus className="w-2.5 h-2.5 text-primary absolute bottom-1 right-1" />
-              </button>
-            )}
-            <button
-              onClick={() => navigate('/notifications')}
-              className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
-              aria-label="Notifications"
-            >
-              <Bell className="w-5 h-5 text-muted-foreground" />
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* Search */}
-        <div className="px-5 pb-3">
+        <div className={cn("px-5 pb-3", embedded && "px-3 pt-2 pb-2")}>
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search conversations..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-muted/60 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground transition-all"
+              className={cn(
+                "w-full pl-9 pr-4 bg-muted/60 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground transition-all",
+                embedded ? "py-2 text-xs" : "py-2.5"
+              )}
             />
             {search && (
               <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2">
-                <X className="w-4 h-4 text-muted-foreground" />
+                <X className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
             )}
           </div>
         </div>
 
         {/* Category Tabs — pill style with unread badges */}
-        <div className="flex px-5 gap-2 pb-3 overflow-x-auto scrollbar-hide">
+        <div className={cn("flex px-5 gap-2 pb-3 overflow-x-auto scrollbar-hide", embedded && "px-3 gap-1.5 pb-2")}>
           {categories.map((cat) => {
             const isActive = active === cat.id;
             const unread = unreadMap[cat.id];
@@ -583,17 +591,18 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 key={cat.id}
                 onClick={() => setActive(cat.id)}
                 className={cn(
-                  "flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full transition-all whitespace-nowrap active:scale-95",
+                  "flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all whitespace-nowrap active:scale-95",
                   isActive
                     ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
-                    : "bg-muted/60 text-muted-foreground hover:bg-muted"
+                    : "bg-muted/60 text-muted-foreground hover:bg-muted",
+                  embedded && "px-3 py-1.5 text-[11px]"
                 )}
               >
                 <cat.icon className="w-3.5 h-3.5" />
                 <span>{cat.label}</span>
                 {unread > 0 && (
                   <span className={cn(
-                    "min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full flex items-center justify-center",
+                    "min-w-[16px] h-[16px] px-1 text-[9px] font-bold rounded-full flex items-center justify-center",
                     isActive ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"
                   )}>
                     {unread > 99 ? "99+" : unread}
