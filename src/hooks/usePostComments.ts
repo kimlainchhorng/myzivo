@@ -120,7 +120,23 @@ export function usePostComments({ postId, postSource, currentUserId }: UsePostCo
       content: content.trim(),
       parent_id: parentId || null,
     });
-    // Also create notification for post owner (done in component)
+
+    // Push notification to post author
+    try {
+      // Look up the post author
+      const table = postSource === "user" ? "user_posts" : "store_posts";
+      const authorField = postSource === "user" ? "user_id" : "store_id";
+      const { data: postData } = await (supabase as any).from(table).select(authorField).eq("id", postId).maybeSingle();
+      const authorId = postData?.[authorField];
+      if (authorId && authorId !== currentUserId) {
+        const { data: sp } = await supabase.from("profiles").select("full_name").eq("user_id", currentUserId).single();
+        const preview = content.trim().length > 60 ? content.trim().slice(0, 60) + "…" : content.trim();
+        await supabase.functions.invoke("send-push-notification", {
+          body: { user_id: authorId, notification_type: "post_comment", title: "New Comment 💬", body: `${sp?.full_name || "Someone"}: ${preview}`, data: { type: "post_comment", post_id: postId, commenter_id: currentUserId, action_url: `/reels?post=${postId}` } },
+        });
+      }
+    } catch {}
+
     await fetchComments();
     setSubmitting(false);
   };

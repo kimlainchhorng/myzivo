@@ -1430,9 +1430,20 @@ export default function FeedPage() {
       await supabase.from("store_post_likes").delete().eq("post_id", postId).eq("user_id", userId);
     } else {
       await supabase.from("store_post_likes").insert({ post_id: postId, user_id: userId });
+      // Push notification to post author
+      const post = posts.find(p => p.id === postId);
+      const authorId = post?.author_id;
+      if (authorId && authorId !== userId) {
+        try {
+          const { data: sp } = await supabase.from("profiles").select("full_name").eq("user_id", userId).single();
+          await supabase.functions.invoke("send-push-notification", {
+            body: { user_id: authorId, notification_type: "post_liked", title: "New Like ❤️", body: `${sp?.full_name || "Someone"} liked your post`, data: { type: "post_liked", post_id: postId, liker_id: userId, action_url: `/feed?post=${postId}` } },
+          });
+        } catch {}
+      }
     }
     queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
-  }, [userId, queryClient]);
+  }, [userId, queryClient, posts]);
 
   // IntersectionObserver
   useEffect(() => {
