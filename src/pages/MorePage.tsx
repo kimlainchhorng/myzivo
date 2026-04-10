@@ -52,15 +52,19 @@ const quickLinksMain: QuickLink[] = [
   { icon: DollarSign, label: "Monetization", href: "/monetization", description: "Earn & grow revenue", iconColor: "text-primary", iconBg: "bg-primary/10" },
   { icon: Handshake, label: "Become Partner", href: "#partner", description: "Join ZIVO as partner", iconColor: "text-violet-500", iconBg: "bg-violet-500/10" },
   { icon: Heart, label: "Favorites", href: "/account/favorites", description: "Saved items & places", iconColor: "text-pink-500", iconBg: "bg-pink-500/10" },
+  { icon: Crown, label: "ZIVO Plus", href: "/zivo-plus", description: "Premium membership", iconColor: "text-amber-500", iconBg: "bg-amber-500/10", badge: "PRO" },
+  { icon: Award, label: "Badges & Achievements", href: "/badges", description: "Your earned badges", iconColor: "text-indigo-500", iconBg: "bg-indigo-500/10" },
 ];
 
 const quickLinksCreator: QuickLink[] = [
   { icon: BarChart3, label: "Creator Dashboard", href: "/creator-dashboard", description: "Earnings & analytics", iconColor: "text-cyan-500", iconBg: "bg-cyan-500/10", badge: "Pro" },
   { icon: TrendingUp, label: "Creator Analytics", href: "/creator-analytics", description: "Deep content insights", iconColor: "text-indigo-500", iconBg: "bg-indigo-500/10", badge: "New" },
   { icon: Video, label: "Content Scheduler", href: "/content-scheduler", description: "Plan & schedule posts", iconColor: "text-purple-500", iconBg: "bg-purple-500/10" },
-  { icon: BookOpen, label: "Creator Academy", href: "/monetization/articles", description: "Learn & grow", iconColor: "text-orange-500", iconBg: "bg-orange-500/10" },
+  { icon: BookOpen, label: "Creator Academy", href: "/monetization/articles", description: "500+ guides & tutorials", iconColor: "text-orange-500", iconBg: "bg-orange-500/10" },
   { icon: Gift, label: "Affiliate Hub", href: "/affiliate-hub", description: "Referral earnings", iconColor: "text-teal-500", iconBg: "bg-teal-500/10", badge: "New" },
   { icon: PenTool, label: "Digital Products", href: "/digital-products", description: "Sell courses & guides", iconColor: "text-fuchsia-500", iconBg: "bg-fuchsia-500/10" },
+  { icon: Eye, label: "Content Analytics", href: "/content-analytics", description: "Performance & reach", iconColor: "text-sky-500", iconBg: "bg-sky-500/10" },
+  { icon: Target, label: "Content Drafts", href: "/drafts", description: "Unpublished content", iconColor: "text-slate-500", iconBg: "bg-slate-500/10" },
 ];
 
 const quickLinksTravel: QuickLink[] = [
@@ -70,6 +74,8 @@ const quickLinksTravel: QuickLink[] = [
   { icon: Coffee, label: "Food Orders", href: "/eats/orders", description: "Order history", iconColor: "text-orange-500", iconBg: "bg-orange-500/10" },
   { icon: Calendar, label: "Check-in", href: "/check-in", description: "Flight check-in", iconColor: "text-green-500", iconBg: "bg-green-500/10" },
   { icon: Compass, label: "Explore Nearby", href: "/nearby", description: "Discover around you", iconColor: "text-rose-500", iconBg: "bg-rose-500/10" },
+  { icon: Globe, label: "AI Trip Planner", href: "/ai-trip-planner", description: "Plan trips with AI", iconColor: "text-violet-500", iconBg: "bg-violet-500/10", badge: "AI" },
+  { icon: Smartphone, label: "Booking Management", href: "/booking-management", description: "Manage bookings", iconColor: "text-cyan-500", iconBg: "bg-cyan-500/10" },
 ];
 
 const quickLinksSocial: QuickLink[] = [
@@ -79,17 +85,30 @@ const quickLinksSocial: QuickLink[] = [
   { icon: MessageCircle, label: "Chat Hub", href: "/chat", description: "Messages & DMs", iconColor: "text-blue-500", iconBg: "bg-blue-500/10" },
   { icon: Share2, label: "Share Profile", href: "/qr-profile", description: "QR code & link", iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10" },
   { icon: Megaphone, label: "Events", href: "/events", description: "Upcoming events", iconColor: "text-amber-500", iconBg: "bg-amber-500/10" },
+  { icon: Star, label: "Leaderboard", href: "/leaderboard", description: "Top creators", iconColor: "text-yellow-500", iconBg: "bg-yellow-500/10" },
+  { icon: Music, label: "Sound Library", href: "/sound/trending", description: "Trending sounds", iconColor: "text-pink-500", iconBg: "bg-pink-500/10" },
+];
+
+const quickLinksBusiness: QuickLink[] = [
+  { icon: Store, label: "Shop Dashboard", href: "/shop-dashboard", description: "Manage your store", iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10" },
+  { icon: Truck, label: "Delivery Dashboard", href: "/drive", description: "Driver earnings", iconColor: "text-blue-500", iconBg: "bg-blue-500/10" },
+  { icon: UtensilsCrossed, label: "Restaurant Dashboard", href: "/eats/restaurant-dashboard", description: "Manage food orders", iconColor: "text-orange-500", iconBg: "bg-orange-500/10" },
+  { icon: Briefcase, label: "Business Account", href: "/business/account", description: "Corporate features", iconColor: "text-slate-500", iconBg: "bg-slate-500/10" },
+  { icon: Building2, label: "Store Map", href: "/store-map", description: "Your store on map", iconColor: "text-purple-500", iconBg: "bg-purple-500/10" },
+  { icon: Wrench, label: "Store Setup", href: "/store/setup", description: "Configure your store", iconColor: "text-rose-500", iconBg: "bg-rose-500/10" },
 ];
 
 const quickLinksAccount: QuickLink[] = [
   { icon: Bell, label: "Notifications", href: "/account/notifications", description: "Manage alerts", iconColor: "text-yellow-500", iconBg: "bg-yellow-500/10" },
   { icon: Lock, label: "Privacy & Security", href: "/account/privacy", description: "Data & security settings", iconColor: "text-red-500", iconBg: "bg-red-500/10" },
   { icon: BadgeCheck, label: "Verification", href: "/account/verification", description: "Get verified badge", iconColor: "text-blue-500", iconBg: "bg-blue-500/10" },
-  { icon: Globe, label: "Language", href: "/account/settings", description: "Change language", iconColor: "text-teal-500", iconBg: "bg-teal-500/10" },
+  { icon: Globe, label: "Language & Region", href: "/account/preferences", description: "Language & currency", iconColor: "text-teal-500", iconBg: "bg-teal-500/10" },
   { icon: HelpCircle, label: "Help Center", href: "/help", description: "FAQ & support", iconColor: "text-muted-foreground", iconBg: "bg-muted/60" },
   { icon: FileText, label: "Legal & Policies", href: "/account/legal", description: "Terms & privacy", iconColor: "text-slate-500", iconBg: "bg-slate-500/10" },
   { icon: Download, label: "Get the App", href: "/install", description: "Download ZIVO app", iconColor: "text-primary", iconBg: "bg-primary/10" },
   { icon: Lightbulb, label: "Feedback", href: "/feedback", description: "Share your ideas", iconColor: "text-yellow-500", iconBg: "bg-yellow-500/10" },
+  { icon: Shield, label: "Safety Center", href: "/safety", description: "Reporting & safety", iconColor: "text-red-500", iconBg: "bg-red-500/10" },
+  { icon: Palette, label: "Appearance", href: "/account/settings", description: "Theme & display", iconColor: "text-purple-500", iconBg: "bg-purple-500/10" },
 ];
 
 const sections = [
