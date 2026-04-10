@@ -275,6 +275,23 @@ const ENGAGEMENT_SECTIONS: Section[] = [
     ],
   },
   {
+    heading: "Master your Content Category",
+    articles: [
+      { title: "Creating winning sports content on ZIVO", description: "If you're an athlete, coach, commentator, or just a fan, sports content is your arena...", views: "130.4K views", icon: Star, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Turning your passion into ZIVO success with learning content", description: "Learning content is booming on ZIVO! From tutorials to deep dives, education is entertainment...", views: "22.6K views", icon: BookOpen, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Shifting your ZIVO journey into high gear with automotive content", description: "ZIVO's hot new trend is automotive content. Car reviews, mods, and road trips are taking off...", views: "17.2K views", icon: Compass, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Repurposing your high-quality automotive content for ZIVO", description: "Are you already an automotive expert posting on other platforms? Here's how to adapt for ZIVO...", views: "24.9K views", icon: Video, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "What is the STEM feed?", description: "The STEM feed is a dedicated space where science, technology, engineering, and math content shines...", views: "119.3K views", icon: Lightbulb, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+      { title: "Creating content for the STEM feed", description: "Whether you're a math whiz explaining equations or a scientist doing experiments, the STEM feed awaits...", views: "85.2K views", icon: Brain, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+      { title: "Creating food content that makes mouths water", description: "Food content is one of the most popular niches on ZIVO. Learn to make your recipes go viral...", views: "342.7K views", icon: Star, iconBg: "bg-orange-500/10", iconColor: "text-orange-500" },
+      { title: "Travel content that inspires wanderlust", description: "Take your audience on a journey. Travel content on ZIVO connects cultures and sparks adventure...", views: "267.8K views", icon: Globe, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Building your fitness and wellness community", description: "From workout routines to mental health tips, wellness content helps millions live better lives...", views: "198.4K views", icon: Heart, iconBg: "bg-rose-500/10", iconColor: "text-rose-500" },
+      { title: "Fashion and beauty content that stands out", description: "ZIVO is the runway for fashion and beauty creators. Learn how to showcase your unique style...", views: "455.1K views", icon: Sparkles, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+      { title: "Gaming content creation masterclass", description: "Level up your gaming content with tips on streaming, highlights, and building a gamer community...", views: "521.3K views", icon: PlayCircle, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "Music and performance content on ZIVO", description: "Whether you're a singer, instrumentalist, or DJ, ZIVO is your stage. Reach millions of fans...", views: "389.6K views", icon: Music, iconBg: "bg-red-500/10", iconColor: "text-red-500" },
+    ],
+  },
+  {
     heading: "Account Health and Traffic Sources",
     articles: [
       { title: "Driving video traffic: The For You feed", description: "On ZIVO, traffic is actually a good thing! Learn how the For You feed works for discovery...", views: "84.9K views", icon: TrendingUp, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
