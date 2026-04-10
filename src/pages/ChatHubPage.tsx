@@ -892,6 +892,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             onClose={() => { setOpenPersonalChat(null); setPendingCall(null); queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] }); }}
             autoStartCall={pendingCall}
             onCallStarted={() => setPendingCall(null)}
+            inline={embedded}
           />
         )}
       </AnimatePresence>
