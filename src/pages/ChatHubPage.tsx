@@ -515,7 +515,10 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   }
 
   return (
-    <PullToRefresh onRefresh={handlePullRefresh} enabled={!hasOverlayChatOpen} className="min-h-screen bg-background pb-24 overscroll-none">
+    <PullToRefresh onRefresh={handlePullRefresh} enabled={!hasOverlayChatOpen} className={cn(
+      "overscroll-none",
+      embedded ? "h-full overflow-y-auto relative" : "min-h-screen bg-background pb-24"
+    )}>
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-xl border-b border-border/20">
         <div className="px-5 pt-4 pb-3 flex items-center justify-between">
