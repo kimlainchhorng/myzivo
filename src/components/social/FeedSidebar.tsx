@@ -61,17 +61,27 @@ export default function FeedSidebar() {
   const [showSwitch, setShowSwitch] = useState(false);
   const [showChat, setShowChat] = useState(false);
 
+  // Broadcast chat state so the feed layout can adjust
+  const setChatOpen = useCallback((open: boolean) => {
+    setShowChat(open);
+    window.dispatchEvent(new CustomEvent("zivo-chat-state", { detail: { open } }));
+  }, []);
+
   // Listen for global "open chat" event from NavBar
   useEffect(() => {
-    const handleOpen = () => setShowChat(true);
-    const handleToggle = () => setShowChat((prev) => !prev);
+    const handleOpen = () => setChatOpen(true);
+    const handleToggle = () => setShowChat((prev) => {
+      const next = !prev;
+      window.dispatchEvent(new CustomEvent("zivo-chat-state", { detail: { open: next } }));
+      return next;
+    });
     window.addEventListener("zivo-open-chat", handleOpen);
     window.addEventListener("zivo-toggle-chat", handleToggle);
     return () => {
       window.removeEventListener("zivo-open-chat", handleOpen);
       window.removeEventListener("zivo-toggle-chat", handleToggle);
     };
-  }, []);
+  }, [setChatOpen]);
 
   const avatarUrl = optimizeAvatar(profile?.avatar_url, 80) || profile?.avatar_url || user?.user_metadata?.avatar_url;
   const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
