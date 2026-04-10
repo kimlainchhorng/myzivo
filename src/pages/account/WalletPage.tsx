@@ -7,8 +7,12 @@ import {
   ArrowLeft, Wallet, CreditCard, Star, Trash2, Plus, Shield,
   Users, Gift, Trophy,
   Clock, DollarSign, ChevronRight, Eye, EyeOff,
-  TrendingUp, Zap
+  TrendingUp, Zap, Banknote, Building2, Send, AlertCircle
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,15 +42,28 @@ function brandLabel(brand: string) {
 
 const TAB_ITEMS = [
   { key: "cards", label: "Cards", icon: CreditCard },
+  { key: "cashout", label: "Cash Out", icon: Banknote },
   { key: "history", label: "History", icon: Clock },
   { key: "credits", label: "Credits", icon: Gift },
 ] as const;
+
+const CASHOUT_METHODS = [
+  { id: "bank_transfer", label: "Bank Transfer", icon: Building2, desc: "Transfer to your bank account" },
+  { id: "aba", label: "ABA / KHQR", icon: Banknote, desc: "Withdraw via ABA PayWay" },
+] as const;
+
+const QUICK_AMOUNTS = [5, 10, 25, 50, 100];
 
 export default function WalletPage() {
   const navigate = useNavigate();
   const [showAddCard, setShowAddCard] = useState(false);
   const [balanceHidden, setBalanceHidden] = useState(false);
-  const [activeTab, setActiveTab] = useState<"cards" | "history" | "credits">("cards");
+  const [activeTab, setActiveTab] = useState<"cards" | "cashout" | "history" | "credits">("cards");
+  const [cashoutAmount, setCashoutAmount] = useState("");
+  const [cashoutMethod, setCashoutMethod] = useState<string>("bank_transfer");
+  const [cashoutNote, setCashoutNote] = useState("");
+  const [cashoutSubmitting, setCashoutSubmitting] = useState(false);
+  const { user } = useAuth();
 
   const { balanceDollars, lifetimeEarnedDollars, isLoading: walletLoading } = useCustomerWallet();
   const { data: stripeCards = [], isLoading: cardsLoading } = useStripePaymentMethods();
