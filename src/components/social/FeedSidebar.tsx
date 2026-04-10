@@ -343,16 +343,19 @@ export default function FeedSidebar() {
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[1290] lg:hidden"
             onClick={() => setChatOpen(false)}
           />
-          <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[420px] md:w-[440px] lg:top-[4.5rem] lg:w-[400px] xl:w-[420px] 2xl:w-[440px] bg-background lg:border-l lg:border-border/30 shadow-2xl z-[1300] flex flex-col lg:rounded-none rounded-l-2xl sm:rounded-l-2xl">
+          <div className="fixed right-0 top-0 bottom-0 z-[1300] flex w-full flex-col overflow-hidden bg-background shadow-2xl sm:w-[420px] md:w-[460px] lg:right-4 lg:top-[5rem] lg:bottom-4 lg:w-[460px] lg:rounded-[30px] lg:border lg:border-border/20 lg:bg-background/95 lg:backdrop-blur-2xl xl:w-[520px] 2xl:w-[560px] rounded-l-2xl sm:rounded-l-[28px]">
             {/* Header */}
             <div
-              className="px-4 py-3 border-b border-border/20 flex items-center gap-3 shrink-0 bg-background/80 backdrop-blur-xl"
+              className="px-4 py-3 border-b border-border/20 flex items-center gap-3 shrink-0 bg-background/80 backdrop-blur-xl lg:px-5 lg:py-4"
               style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 0.75rem)' }}
             >
-              <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+              <div className="h-9 w-9 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <MessageCircle className="h-4 w-4 text-primary" />
               </div>
-              <span className="text-sm font-semibold text-foreground flex-1">Messages</span>
+              <div className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-foreground">Messages</span>
+                <span className="hidden lg:block text-[11px] text-muted-foreground">Desktop chat panel</span>
+              </div>
               <button
                 onClick={() => setChatOpen(false)}
                 className="h-7 w-7 rounded-lg hover:bg-muted/60 flex items-center justify-center transition-colors"
