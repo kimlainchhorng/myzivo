@@ -65,6 +65,7 @@ export default function WalletPage() {
   const [cashoutNote, setCashoutNote] = useState("");
   const [cashoutSubmitting, setCashoutSubmitting] = useState(false);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { balanceDollars, lifetimeEarnedDollars, isLoading: walletLoading } = useCustomerWallet();
   const { data: stripeCards = [], isLoading: cardsLoading } = useStripePaymentMethods();
