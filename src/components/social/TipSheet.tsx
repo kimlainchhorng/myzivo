@@ -1,5 +1,5 @@
 /**
- * TipSheet — Send a tip/gift to a creator
+ * TipSheet — Send a real Stripe-powered tip/gift to a creator
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,19 +36,29 @@ export default function TipSheet({ open, onClose, creatorId, creatorName, creato
     }
     setSending(true);
     try {
-      const { error } = await (supabase as any).from("creator_tips").insert({
-        tipper_id: user.id,
-        creator_id: creatorId,
-        amount_cents: finalAmount,
-        message: message || null,
-        is_anonymous: isAnonymous,
-        currency: "USD",
+      const { data, error } = await supabase.functions.invoke("create-tip-checkout", {
+        body: {
+          creator_id: creatorId,
+          amount_cents: finalAmount,
+          message: message || null,
+          is_anonymous: isAnonymous,
+        },
       });
+
       if (error) throw error;
-      toast.success(`Sent $${(finalAmount / 100).toFixed(2)} tip to ${creatorName}!`);
-      onClose();
-    } catch (err) {
-      toast.error("Failed to send tip");
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.url) {
+        // Redirect to Stripe Checkout
+        window.open(data.url, "_blank");
+        toast.success("Redirecting to payment...");
+        onClose();
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (err: any) {
+      console.error("[TipSheet] Error:", err);
+      toast.error(err?.message || "Failed to create tip checkout");
     } finally {
       setSending(false);
     }
@@ -167,6 +177,10 @@ export default function TipSheet({ open, onClose, creatorId, creatorName, creato
                   </>
                 )}
               </button>
+
+              <p className="text-[10px] text-muted-foreground text-center mt-3">
+                Powered by Stripe · Secure payment
+              </p>
             </div>
           </motion.div>
         </motion.div>

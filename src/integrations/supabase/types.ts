@@ -10683,6 +10683,7 @@ export type Database = {
           is_anonymous: boolean | null
           message: string | null
           payment_intent_id: string | null
+          status: string | null
           tipper_id: string
         }
         Insert: {
@@ -10694,6 +10695,7 @@ export type Database = {
           is_anonymous?: boolean | null
           message?: string | null
           payment_intent_id?: string | null
+          status?: string | null
           tipper_id: string
         }
         Update: {
@@ -10705,6 +10707,7 @@ export type Database = {
           is_anonymous?: boolean | null
           message?: string | null
           payment_intent_id?: string | null
+          status?: string | null
           tipper_id?: string
         }
         Relationships: []
