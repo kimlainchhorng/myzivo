@@ -120,6 +120,10 @@ export default function SoundPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{displayName} | Zivo</title>
+        <meta name="description" content={`Listen to ${displayName} by ${artistName} on Zivo`} />
+      </Helmet>
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur border-b border-border/40">
         <div className="flex items-center gap-3 px-4 py-3 safe-area-top">
