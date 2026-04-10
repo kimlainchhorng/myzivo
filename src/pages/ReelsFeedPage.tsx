@@ -584,7 +584,7 @@ export default function ReelsFeedPage() {
         {/* Main Feed Content — shrinks when chat is open */}
         <PullToRefresh onRefresh={handlePullRefresh} className={cn(
           "min-h-screen bg-background pb-20 lg:pb-0 flex-1 transition-all duration-300",
-          chatOpen ? "lg:mr-[360px] xl:mr-[380px] 2xl:mr-[400px] lg:max-w-none" : "lg:max-w-2xl lg:mx-auto"
+          chatOpen ? "lg:max-w-[calc(100%-360px)] xl:max-w-[calc(100%-380px)] 2xl:max-w-[calc(100%-400px)]" : "lg:max-w-2xl lg:mx-auto"
         )}>
           {/* Header */}
           <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center gap-3 lg:pt-3" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 0.625rem)' }}>
