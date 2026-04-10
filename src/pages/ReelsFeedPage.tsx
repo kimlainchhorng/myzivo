@@ -1375,13 +1375,22 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
             zIndex={80}
             onVisitProfile={() => {
               onClose();
-              if (item.source === "store" && item.store_slug) {
-                navigate(`/grocery/shop/${item.store_slug}`);
-              } else if (item.author_id) {
-                navigate(`/user/${item.author_id}`);
+              const isShared = !!item.shared_from_post_id;
+              const profileSource = isShared && item.shared_from_source ? item.shared_from_source : item.source;
+              const profileStoreSlug = isShared && item.shared_from_store_slug ? item.shared_from_store_slug : item.store_slug;
+              const profileAuthorId = isShared && item.shared_from_user_id ? item.shared_from_user_id : item.author_id;
+
+              if (profileSource === "store" && profileStoreSlug) {
+                navigate(`/grocery/shop/${profileStoreSlug}`);
+              } else if (profileAuthorId) {
+                navigate(`/user/${profileAuthorId}`);
               }
             }}
-            visitProfileLabel={item.author_name ? `${item.author_name}` : "Visit Profile"}
+            visitProfileLabel={(() => {
+              const isShared = !!item.shared_from_post_id;
+              const displayName = isShared && item.shared_from_user_name ? item.shared_from_user_name : item.author_name;
+              return displayName || "Visit Profile";
+            })()}
           />
         )}
       </AnimatePresence>
