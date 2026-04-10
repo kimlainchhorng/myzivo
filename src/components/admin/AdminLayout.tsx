@@ -29,6 +29,7 @@ import {
   MessageSquare,
   AlertTriangle,
   UserPlus,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -58,6 +59,7 @@ const adminNavEntries: NavEntry[] = [
     ],
   },
   { label: "Store", icon: Store, path: "/admin/stores" },
+  { label: "Wallet", icon: Wallet, path: "/admin/wallet" },
   { label: "Employees", icon: Users, path: "/admin/employees" },
   { label: "Pricing", icon: DollarSign, path: "/admin/pricing" },
   { label: "System Health", icon: Activity, path: "/admin/system-health" },
