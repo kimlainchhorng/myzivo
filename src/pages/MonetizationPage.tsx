@@ -253,8 +253,9 @@ export default function MonetizationPage() {
             {resourceTabs.map((tab, i) => (
               <button
                 key={tab}
+                onClick={() => setActiveResTab(i)}
                 className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                  i === 0
+                  i === activeResTab
                     ? "bg-foreground text-background"
                     : "bg-muted/60 text-muted-foreground"
                 }`}
