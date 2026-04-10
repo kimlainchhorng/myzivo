@@ -146,7 +146,7 @@ export default function AdminLaunchDashboard() {
     <div className="min-h-screen bg-background text-foreground pb-16">
       <SEOHead title="Launch Dashboard — ZIVO Admin" description="Admin overview of installs, sales, and Meta event accuracy." />
 
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/30 px-4 py-3">
+      <div className="sticky top-0 safe-area-top z-30 bg-background/95 backdrop-blur-md border-b border-border/30 px-4 py-3">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
