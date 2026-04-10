@@ -173,7 +173,7 @@ export default function ProfileFeedCard({
 
           {/* Embedded original post card */}
           <div className="mx-3 mb-2 border border-border/50 rounded-2xl overflow-hidden bg-card shadow-sm">
-            <div className="flex items-center px-3 py-2.5">
+           <div className="flex items-center px-3 py-2.5">
               <button
                 type="button"
                 onClick={() => {
@@ -196,6 +196,18 @@ export default function ProfileFeedCard({
                   </div>
                 </div>
               </button>
+              {item.sharedOrigin?.userId && item.sharedOrigin.userId !== currentUserId && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/user/${item.sharedOrigin!.userId}`);
+                  }}
+                  className="text-primary text-[13px] font-semibold ml-2 shrink-0"
+                >
+                  Follow
+                </button>
+              )}
             </div>
 
             {item.sharedOrigin.caption && (
