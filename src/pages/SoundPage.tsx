@@ -10,6 +10,7 @@ import { ArrowLeft, Play, Music, Grid3X3, Users, Eye } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import CreatePostModal from "@/components/social/CreatePostModal";
+import { Helmet } from "react-helmet-async";
 
 /** Convert a URL slug like "midnight-drive" into "Midnight Drive" */
 function humanizeSlug(slug: string): string {
