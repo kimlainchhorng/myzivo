@@ -5,8 +5,8 @@
 import { useState } from "react";
 import {
   ArrowLeft, Wallet, CreditCard, Star, Trash2, Plus, Shield,
-  Users, Gift, Trophy, ExternalLink,
-  Clock, DollarSign, Sparkles, PiggyBank, ChevronRight, Eye, EyeOff,
+  Users, Gift, Trophy,
+  Clock, DollarSign, ChevronRight, Eye, EyeOff,
   TrendingUp, Zap
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -15,8 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import { useCustomerWallet } from "@/hooks/useCustomerWallet";
 import { useStripePaymentMethods, useDeleteStripeCard, useSetDefaultStripeCard } from "@/hooks/useStripePaymentMethods";
 import { useWalletTransactions, useWalletCredits, useWalletSummary } from "@/hooks/useZivoWallet";
-import { useWalletBudgets, useUpsertBudget } from "@/hooks/useWalletBudgets";
-import { useSavingsGoals, useCreateSavingsGoal, useDeleteSavingsGoal } from "@/hooks/useSavingsGoals";
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
 import AddCardForm from "@/components/wallet/AddCardForm";
 import SEOHead from "@/components/SEOHead";
@@ -38,13 +36,6 @@ function brandLabel(brand: string) {
   return map[brand?.toLowerCase()] || brand?.toUpperCase() || "Card";
 }
 
-const BUDGET_CATEGORIES = [
-  { key: "flights", label: "Flights", emoji: "✈️", color: "from-blue-500 to-blue-600" },
-  { key: "hotels", label: "Hotels", emoji: "🏨", color: "from-amber-500 to-amber-600" },
-  { key: "rides", label: "Rides", emoji: "🚗", color: "from-emerald-500 to-emerald-600" },
-  { key: "food", label: "Food", emoji: "🍔", color: "from-orange-500 to-orange-600" },
-];
-
 const TAB_ITEMS = [
   { key: "cards", label: "Cards", icon: CreditCard },
   { key: "history", label: "History", icon: Clock },
@@ -54,12 +45,8 @@ const TAB_ITEMS = [
 export default function WalletPage() {
   const navigate = useNavigate();
   const [showAddCard, setShowAddCard] = useState(false);
-  const [showAddGoal, setShowAddGoal] = useState(false);
   const [balanceHidden, setBalanceHidden] = useState(false);
   const [activeTab, setActiveTab] = useState<"cards" | "history" | "credits">("cards");
-  const [newGoalName, setNewGoalName] = useState("");
-  const [newGoalEmoji, setNewGoalEmoji] = useState("🏖️");
-  const [newGoalTarget, setNewGoalTarget] = useState("");
 
   const { balanceDollars, lifetimeEarnedDollars, isLoading: walletLoading } = useCustomerWallet();
   const { data: stripeCards = [], isLoading: cardsLoading } = useStripePaymentMethods();
@@ -68,42 +55,15 @@ export default function WalletPage() {
   const { data: walletTransactions = [], isLoading: txLoading } = useWalletTransactions();
   const { data: walletCredits = [], isLoading: creditsLoading } = useWalletCredits();
   const { data: summary, isLoading: summaryLoading } = useWalletSummary();
-  const { data: budgets = [], isLoading: budgetsLoading } = useWalletBudgets();
-  const upsertBudget = useUpsertBudget();
-  const { data: savingsGoals = [], isLoading: goalsLoading } = useSavingsGoals();
-  const createGoal = useCreateSavingsGoal();
-  const deleteGoal = useDeleteSavingsGoal();
-  const { points, isLoading: pointsLoading, getNextTierProgress } = useLoyaltyPoints();
+  const { points, isLoading: pointsLoading } = useLoyaltyPoints();
 
   const totalSpent = summary?.totalSpent ?? 0;
   const txCount = summary?.transactionCount ?? 0;
-  const spentByService = summary?.spentByService ?? {};
-
-  const budgetMap = budgets.reduce((acc, b) => {
-    acc[b.category] = b.budget_amount;
-    return acc;
-  }, {} as Record<string, number>);
 
   const earnedCredits = walletCredits
     .filter((c) => !c.expires_at || new Date(c.expires_at) > new Date())
     .reduce((sum, c) => sum + Number(c.amount), 0);
 
-  const tierProgress = getNextTierProgress();
-
-  const handleCreateGoal = () => {
-    if (!newGoalName || !newGoalTarget) return;
-    createGoal.mutate(
-      { name: newGoalName, emoji: newGoalEmoji, target_amount: Number(newGoalTarget) },
-      {
-        onSuccess: () => {
-          setShowAddGoal(false);
-          setNewGoalName("");
-          setNewGoalEmoji("🏖️");
-          setNewGoalTarget("");
-        },
-      }
-    );
-  };
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-24">
