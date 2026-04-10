@@ -63,6 +63,7 @@ const AppLayout = ({
           "flex-1",
           fixedHeight ? "min-h-0 overflow-hidden flex flex-col" : "scroll-momentum",
           !hideNav && "pb-nav",
+          hideHeader && "safe-area-top",
           className
         )}
         style={
