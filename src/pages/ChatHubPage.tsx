@@ -818,7 +818,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       </AnimatePresence>
 
       {/* FAB — New Chat */}
-      {active === "personal" && !sharePayload && (
+      {active === "personal" && !sharePayload && !embedded && (
         <motion.button
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
