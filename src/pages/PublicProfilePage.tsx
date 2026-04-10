@@ -182,7 +182,7 @@ export default function PublicProfilePage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedPost, setSelectedPost] = useState<any>(null);
-  const [confirmAction, setConfirmAction] = useState<null | { action: "cancel" | "unfriend"; label: string }>(null);
+  const [confirmAction, setConfirmAction] = useState<null | { action: "cancel" | "unfriend" | "unfollow"; label: string }>(null);
   const [postTab, setPostTab] = useState<PostTab>("all");
   const [commentPost, setCommentPost] = useState<any>(null);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
@@ -840,7 +840,7 @@ export default function PublicProfilePage() {
             {/* Actions */}
             {!isOwnProfile && user && (
               <div className="flex gap-2.5 mt-5 w-full max-w-sm px-2">
-                <motion.button whileTap={{ scale: 0.95 }} onClick={() => followMutation.mutate()} disabled={followMutation.isPending}
+                <motion.button whileTap={{ scale: 0.95 }} onClick={() => { if (isFollowing) { setConfirmAction({ action: "unfollow", label: `Unfollow ${resolvedProfile?.full_name}?` }); } else { followMutation.mutate(); } }} disabled={followMutation.isPending}
                   className={`flex-1 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${isFollowing ? "bg-muted text-foreground border border-border" : "bg-primary text-primary-foreground"}`}>
                   <Heart className={`h-4 w-4 ${isFollowing ? "fill-primary text-primary" : ""}`} />
                   {isFollowing ? "Following" : "Follow"}
@@ -1252,13 +1252,19 @@ export default function PublicProfilePage() {
       <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{confirmAction?.action === "cancel" ? "Cancel Friend Request?" : "Unfriend?"}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {confirmAction?.action === "cancel" ? "Cancel Friend Request?" : confirmAction?.action === "unfollow" ? "Unfollow?" : "Unfriend?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>{confirmAction?.label}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>No, keep it</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { if (confirmAction) friendMutation.mutate(confirmAction.action); setConfirmAction(null); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {confirmAction?.action === "cancel" ? "Yes, cancel" : "Yes, unfriend"}
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (confirmAction?.action === "unfollow") { followMutation.mutate(); }
+              else if (confirmAction) { friendMutation.mutate(confirmAction.action as "cancel" | "unfriend"); }
+              setConfirmAction(null);
+            }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {confirmAction?.action === "cancel" ? "Yes, cancel" : confirmAction?.action === "unfollow" ? "Yes, unfollow" : "Yes, unfriend"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
