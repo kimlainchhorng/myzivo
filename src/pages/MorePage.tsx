@@ -66,7 +66,7 @@ const quickLinksCreator: QuickLink[] = [
 const quickLinksTravel: QuickLink[] = [
   { icon: Plane, label: "My Trips", href: "/trips", description: "Upcoming & past trips", iconColor: "text-sky-500", iconBg: "bg-sky-500/10" },
   { icon: Bookmark, label: "Saved Searches", href: "/saved-searches", description: "Flight & hotel alerts", iconColor: "text-amber-500", iconBg: "bg-amber-500/10" },
-  { icon: Car, label: "Ride History", href: "/app/rides", description: "Past rides & receipts", iconColor: "text-blue-500", iconBg: "bg-blue-500/10" },
+  { icon: Car, label: "Ride History", href: "/rides", description: "Past rides & receipts", iconColor: "text-blue-500", iconBg: "bg-blue-500/10" },
   { icon: Coffee, label: "Food Orders", href: "/eats/orders", description: "Order history", iconColor: "text-orange-500", iconBg: "bg-orange-500/10" },
   { icon: Calendar, label: "Check-in", href: "/check-in", description: "Flight check-in", iconColor: "text-green-500", iconBg: "bg-green-500/10" },
   { icon: Compass, label: "Explore Nearby", href: "/nearby", description: "Discover around you", iconColor: "text-rose-500", iconBg: "bg-rose-500/10" },
@@ -74,7 +74,7 @@ const quickLinksTravel: QuickLink[] = [
 
 const quickLinksSocial: QuickLink[] = [
   { icon: Users, label: "Communities", href: "/communities", description: "Join & create groups", iconColor: "text-violet-500", iconBg: "bg-violet-500/10" },
-  { icon: Radio, label: "Audio Spaces", href: "/audio-spaces", description: "Live audio rooms", iconColor: "text-fuchsia-500", iconBg: "bg-fuchsia-500/10" },
+  { icon: Radio, label: "Audio Spaces", href: "/spaces", description: "Live audio rooms", iconColor: "text-fuchsia-500", iconBg: "bg-fuchsia-500/10" },
   { icon: Camera, label: "Reels Feed", href: "/reels", description: "Short videos", iconColor: "text-pink-500", iconBg: "bg-pink-500/10" },
   { icon: MessageCircle, label: "Chat Hub", href: "/chat", description: "Messages & DMs", iconColor: "text-blue-500", iconBg: "bg-blue-500/10" },
   { icon: Share2, label: "Share Profile", href: "/qr-profile", description: "QR code & link", iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10" },
@@ -82,9 +82,9 @@ const quickLinksSocial: QuickLink[] = [
 ];
 
 const quickLinksAccount: QuickLink[] = [
-  { icon: Bell, label: "Notifications", href: "/notification-settings", description: "Manage alerts", iconColor: "text-yellow-500", iconBg: "bg-yellow-500/10" },
+  { icon: Bell, label: "Notifications", href: "/account/notifications", description: "Manage alerts", iconColor: "text-yellow-500", iconBg: "bg-yellow-500/10" },
   { icon: Lock, label: "Privacy & Security", href: "/account/privacy", description: "Data & security settings", iconColor: "text-red-500", iconBg: "bg-red-500/10" },
-  { icon: BadgeCheck, label: "Verification", href: "/account/verify", description: "Get verified badge", iconColor: "text-blue-500", iconBg: "bg-blue-500/10" },
+  { icon: BadgeCheck, label: "Verification", href: "/account/verification", description: "Get verified badge", iconColor: "text-blue-500", iconBg: "bg-blue-500/10" },
   { icon: Globe, label: "Language", href: "/account/settings", description: "Change language", iconColor: "text-teal-500", iconBg: "bg-teal-500/10" },
   { icon: HelpCircle, label: "Help Center", href: "/help", description: "FAQ & support", iconColor: "text-muted-foreground", iconBg: "bg-muted/60" },
   { icon: FileText, label: "Legal & Policies", href: "/account/legal", description: "Terms & privacy", iconColor: "text-slate-500", iconBg: "bg-slate-500/10" },
