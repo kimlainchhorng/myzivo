@@ -91,6 +91,7 @@ export default function FeedSidebar() {
 
   return (
     <>
+    <aside className="hidden lg:flex flex-col w-60 shrink-0 sticky top-[4.5rem] h-[calc(100vh-4.5rem)] overflow-y-auto border-r border-border/30 bg-card/30 backdrop-blur-sm">
       <div className="flex flex-col gap-0.5 p-3">
         {/* Profile card with Switch Account */}
         {user && (
