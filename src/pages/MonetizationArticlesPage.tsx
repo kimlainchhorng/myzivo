@@ -714,7 +714,7 @@ const SAFETY_SECTIONS: Section[] = [
 ];
 
 /* ─── Tab data map ─── */
-const Wallet = DollarSign; // alias
+
 const TAB_DATA: Record<string, { hero?: { title: string; description: string }; sections: Section[]; subtabs?: string[] }> = {
   recommended: {
     hero: { title: "How to Monetize on ZIVO", description: "Explore opportunities to get rewarded on ZIVO." },
