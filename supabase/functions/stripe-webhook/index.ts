@@ -622,6 +622,18 @@ serve(async (req) => {
 
         console.log("[Webhook] Charge refunded:", charge.id, "Amount:", refundAmount, "PI:", paymentIntentId);
 
+        // Notify user about refund
+        const refundUserId = charge.metadata?.user_id || charge.metadata?.customer_id || charge.metadata?.rider_id;
+        if (refundUserId) {
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+              body: JSON.stringify({ user_id: refundUserId, notification_type: "refund_processed", title: "Refund Processed 💵", body: `$${refundAmount.toFixed(2)} has been refunded to your payment method`, data: { type: "refund_processed", amount: refundAmount, action_url: "/wallet" } }),
+            });
+          } catch {}
+        }
+
         if (paymentIntentId) {
           // Update ride requests
           await supabase
