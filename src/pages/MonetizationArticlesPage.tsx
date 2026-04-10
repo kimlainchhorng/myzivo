@@ -407,7 +407,23 @@ const TAB_DATA: Record<string, { hero?: { title: string; description: string }; 
 export default function MonetizationArticlesPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("recommended");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const tabData = TAB_DATA[activeTab];
+
+  // Filter articles by search query
+  const filteredSections = searchQuery.trim()
+    ? tabData.sections
+        .map((section) => ({
+          ...section,
+          articles: section.articles.filter(
+            (a) =>
+              a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              a.description.toLowerCase().includes(searchQuery.toLowerCase())
+          ),
+        }))
+        .filter((s) => s.articles.length > 0)
+    : tabData.sections;
 
   return (
     <div className="min-h-dvh bg-background pb-24">
@@ -419,8 +435,22 @@ export default function MonetizationArticlesPage() {
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-base font-bold flex-1 text-center">Articles</h1>
-          <button className="p-2 -mr-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          {searchOpen ? (
+            <input
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search articles..."
+              className="flex-1 text-sm bg-transparent outline-none placeholder:text-muted-foreground/50"
+              onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
+            />
+          ) : (
+            <h1 className="text-base font-bold flex-1 text-center">Articles</h1>
+          )}
+          <button
+            onClick={() => { setSearchOpen(!searchOpen); setSearchQuery(""); }}
+            className="p-2 -mr-2 rounded-full hover:bg-muted/50 touch-manipulation"
+          >
             <Search className="h-5 w-5" />
           </button>
         </div>
