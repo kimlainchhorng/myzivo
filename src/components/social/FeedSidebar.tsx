@@ -344,17 +344,14 @@ export default function FeedSidebar() {
             onClick={() => setChatOpen(false)}
           />
           <div className="fixed right-0 top-0 bottom-0 z-[1300] flex w-full flex-col overflow-hidden bg-background shadow-2xl sm:w-[420px] md:w-[440px] lg:top-[4.5rem] lg:bottom-0 lg:w-[400px] lg:border-l lg:border-border/20 xl:w-[420px] 2xl:w-[440px] rounded-l-2xl sm:rounded-l-2xl lg:rounded-none">
-            {/* Chat content — full height */}
-            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-              <Suspense fallback={
-                <div className="flex flex-col items-center justify-center h-64 gap-3">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Loading chats…</span>
-                </div>
-              }>
-                <ChatHubPage embedded />
-              </Suspense>
-            </div>
+            <Suspense fallback={
+              <div className="flex flex-col items-center justify-center h-64 gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Loading chats…</span>
+              </div>
+            }>
+              <ChatHubPage embedded />
+            </Suspense>
           </div>
         </>
       )}
