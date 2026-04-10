@@ -403,7 +403,7 @@ export default function ChatMessageBubble({
 
               {/* Rich link preview */}
               {linkUrl && (
-                <LinkPreviewCard url={linkUrl} isMe={isMe} hasText={!!textWithoutUrl} />
+                <LinkPreviewCard url={linkUrl} isMe={isMe} hasText={!!textWithoutUrl} messageText={message} />
               )}
 
               {/* Timestamp — iMessage style */}
@@ -745,8 +745,63 @@ function MsgMenuItem({ icon: Icon, label, onClick, destructive, active, chevron 
   );
 }
 
+type LegacyMusicShareMeta = {
+  title: string;
+  artist: string;
+  genre?: string;
+  duration?: string;
+  soundPath: string;
+};
+
+function slugifySoundName(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/["']/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function humanizeSoundSlug(slug: string) {
+  return decodeURIComponent(slug)
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function parseLegacyMusicShare(messageText?: string | null): LegacyMusicShareMeta | null {
+  if (!messageText) return null;
+
+  const cleaned = messageText
+    .replace(/https?:\/\/[^\s]+/gi, "")
+    .replace(/\r/g, "");
+
+  const lines = cleaned
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const headerLine = lines.find((line) => /[🎵🎶]/.test(line) || /[—-]/.test(line)) ?? lines[0];
+  const headerMatch = headerLine?.match(/^(?:[🎵🎶]\s*)?(.+?)\s+[—-]\s+(.+)$/);
+  if (!headerMatch) return null;
+
+  const title = headerMatch[1].trim();
+  const artist = headerMatch[2].replace(/Listen:?$/i, "").trim();
+  if (!title || !artist) return null;
+
+  const metaLine = lines.find((line) => /·/.test(line) && /\d+:\d+/.test(line));
+  const metaMatch = metaLine?.match(/^(.+?)\s+·\s+(\d+:\d+)$/);
+
+  return {
+    title,
+    artist,
+    genre: metaMatch?.[1]?.trim(),
+    duration: metaMatch?.[2]?.trim(),
+    soundPath: `/sound/${slugifySoundName(title)}`,
+  };
+}
+
 /* ── Link Preview Card ─────────────────────────────────────────── */
-function LinkPreviewCard({ url, isMe, hasText }: { url: string; isMe: boolean; hasText: boolean }) {
+function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isMe: boolean; hasText: boolean; messageText?: string }) {
   const navigate = useNavigate();
   const [preview, setPreview] = useState<{
     mediaUrl?: string | null;
@@ -755,6 +810,7 @@ function LinkPreviewCard({ url, isMe, hasText }: { url: string; isMe: boolean; h
     description: string;
     authorName?: string;
     authorAvatar?: string | null;
+    internalPath?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -763,6 +819,25 @@ function LinkPreviewCard({ url, isMe, hasText }: { url: string; isMe: boolean; h
       try {
         const u = new URL(url);
         const p = u.pathname + u.search;
+        const legacyMusicShare = parseLegacyMusicShare(messageText);
+        const soundSlugMatch = p.match(/\/sound\/([^/?#]+)/i);
+
+        if (soundSlugMatch || (u.hostname.includes("soundhelix") && legacyMusicShare)) {
+          const resolvedSlug = soundSlugMatch?.[1] || slugifySoundName(legacyMusicShare?.title || "original-sound");
+          const soundTitle = legacyMusicShare?.title || humanizeSoundSlug(resolvedSlug);
+          const soundDescription = legacyMusicShare
+            ? [legacyMusicShare.artist, legacyMusicShare.genre, legacyMusicShare.duration].filter(Boolean).join(" · ")
+            : "Tap to open sound on ZIVO";
+
+          if (alive) {
+            setPreview({
+              label: soundTitle,
+              description: soundDescription || "Tap to open sound on ZIVO",
+              internalPath: `/sound/${resolvedSlug}`,
+            });
+          }
+          return;
+        }
 
         // Extract post ID from feed URLs like ?post=uuid
         const postMatch = p.match(/[?&]post=([a-f0-9-]{36})/i);
@@ -847,7 +922,7 @@ function LinkPreviewCard({ url, isMe, hasText }: { url: string; isMe: boolean; h
     };
     fetchPreview();
     return () => { alive = false; };
-  }, [url]);
+  }, [url, messageText]);
 
   if (!preview) {
     return (
@@ -878,6 +953,12 @@ function LinkPreviewCard({ url, isMe, hasText }: { url: string; isMe: boolean; h
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (preview.internalPath) {
+      navigate(preview.internalPath);
+      return;
+    }
+
     if (isInternalLink) {
       navigate(getInAppPath());
     } else {
