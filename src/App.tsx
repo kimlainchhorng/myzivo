@@ -579,6 +579,9 @@ const App = () => (
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
                 <Route path="/creator-dashboard" element={<ProtectedRoute><CreatorDashboardPage /></ProtectedRoute>} />
+                <Route path="/creator-analytics" element={<ProtectedRoute><CreatorAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/affiliate-hub" element={<ProtectedRoute><AffiliateHubPage /></ProtectedRoute>} />
+                <Route path="/digital-products" element={<ProtectedRoute><DigitalProductsPage /></ProtectedRoute>} />
                 <Route path="/monetization" element={<ProtectedRoute><MonetizationPage /></ProtectedRoute>} />
                 <Route path="/monetization/articles" element={<ProtectedRoute><MonetizationArticlesPage /></ProtectedRoute>} />
                 <Route path="/monetization/articles/:slug" element={<ProtectedRoute><MonetizationArticleDetailPage /></ProtectedRoute>} />
