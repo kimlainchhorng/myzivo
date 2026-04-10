@@ -864,6 +864,15 @@ serve(async (req) => {
             console.error("[Webhook] Error cancelling membership:", updateError);
           } else {
             console.log("[Webhook] Membership cancelled for subscription:", subscription.id);
+            if (metadata.user_id) {
+              try {
+                await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                  body: JSON.stringify({ user_id: metadata.user_id, notification_type: "membership_cancelled", title: "ZIVO+ Cancelled", body: "Your ZIVO+ membership has been cancelled. You can resubscribe anytime.", data: { type: "membership_cancelled", action_url: "/account" } }),
+                });
+              } catch {}
+            }
           }
         }
         break;
