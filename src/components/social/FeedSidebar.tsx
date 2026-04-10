@@ -312,7 +312,7 @@ export default function FeedSidebar() {
       <Sheet open={showChat} onOpenChange={setShowChat}>
         <SheetContent
           side="left"
-          className="!w-[420px] !max-w-[420px] xl:!w-[460px] xl:!max-w-[460px] 2xl:!w-[480px] 2xl:!max-w-[480px] p-0 flex flex-col border-r border-border/40 bg-background/95 backdrop-blur-xl shadow-2xl z-[60]"
+          className="!w-[420px] !max-w-[420px] xl:!w-[460px] xl:!max-w-[460px] 2xl:!w-[480px] 2xl:!max-w-[480px] p-0 flex flex-col border-r border-border/40 bg-background/95 backdrop-blur-xl shadow-2xl z-[1300]"
         >
           <SheetHeader className="px-5 py-3.5 border-b border-border/30 flex-row items-center gap-3 shrink-0">
             <div className="flex items-center gap-2.5 flex-1">
