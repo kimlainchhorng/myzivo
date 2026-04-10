@@ -1469,25 +1469,35 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
   const handleFollowToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!currentUserId || !item.author_id || followLoading) return;
+    if (isFollowingAuthor) {
+      setShowUnfollowConfirm(true);
+      return;
+    }
     setFollowLoading(true);
     try {
-      if (isFollowingAuthor) {
-        await supabase.from("user_followers" as any).delete()
-          .eq("follower_id", currentUserId).eq("following_id", item.author_id);
-        setIsFollowingAuthor(false);
-      } else {
-        await (supabase as any).from("user_followers").insert({
-          follower_id: currentUserId,
-          following_id: item.author_id,
+      await (supabase as any).from("user_followers").insert({
+        follower_id: currentUserId,
+        following_id: item.author_id,
+      });
+      setIsFollowingAuthor(true);
+      try {
+        const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", currentUserId).single();
+        await supabase.functions.invoke("send-push-notification", {
+          body: { user_id: item.author_id, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: currentUserId, avatar_url: sp?.avatar_url, action_url: `/user/${currentUserId}` } },
         });
-        setIsFollowingAuthor(true);
-        try {
-          const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", currentUserId).single();
-          await supabase.functions.invoke("send-push-notification", {
-            body: { user_id: item.author_id, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: currentUserId, avatar_url: sp?.avatar_url, action_url: `/user/${currentUserId}` } },
-          });
-        } catch {}
-      }
+      } catch {}
+    } catch { /* ignore */ } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const executeFeedUnfollow = async () => {
+    if (!currentUserId || !item.author_id) return;
+    setFollowLoading(true);
+    try {
+      await supabase.from("user_followers" as any).delete()
+        .eq("follower_id", currentUserId).eq("following_id", item.author_id);
+      setIsFollowingAuthor(false);
     } catch { /* ignore */ } finally {
       setFollowLoading(false);
     }
