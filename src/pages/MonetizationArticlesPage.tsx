@@ -38,7 +38,8 @@ const TABS = [
   { id: "getting-started", label: "Getting Started on ZIVO" },
   { id: "community", label: "Follow Community Guidelines" },
   { id: "tools", label: "How to Use Our Tools" },
-  { id: "engagement", label: "How to Increase Engagement" },
+  { id: "engagement", label: "How to Increase Engagement on ZIVO" },
+  { id: "monetize", label: "How to Monetize on ZIVO" },
 ];
 
 /* ─── RECOMMENDED ─── */
