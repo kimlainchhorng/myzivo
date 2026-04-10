@@ -558,6 +558,7 @@ serve(async (req) => {
       case "payment_intent.payment_failed": {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log("[Webhook] Payment failed:", paymentIntent.id);
+        const failedUserId = paymentIntent.metadata?.user_id || paymentIntent.metadata?.customer_id || paymentIntent.metadata?.rider_id;
 
         // Update any orders with this payment intent ID
         await supabase
@@ -569,6 +570,17 @@ serve(async (req) => {
           .from("food_orders")
           .update({ payment_status: "failed", status: "cancelled" })
           .eq("stripe_payment_id", paymentIntent.id);
+
+        // Notify user: payment failed
+        if (failedUserId) {
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+              body: JSON.stringify({ user_id: failedUserId, notification_type: "payment_failed", title: "Payment Failed ❌", body: `Your payment of $${(paymentIntent.amount / 100).toFixed(2)} could not be processed. Please try again.`, data: { type: "payment_failed", action_url: "/wallet" } }),
+            });
+          } catch {}
+        }
 
         // Handle flight payment failures
         if (paymentIntent.metadata?.type === 'flight') {
