@@ -105,6 +105,10 @@ const GETTING_STARTED_SECTIONS: Section[] = [
       { title: "Getting started on ZIVO", description: "Are you looking for a place where you can share your passion and connect with others?", views: "1.8M views", icon: Users, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
       { title: "8 tips for becoming a successful ZIVO creator", description: "Endless laughs, jaw-dropping storytimes, and content that inspires millions...", views: "1.6M views", icon: Sparkles, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
       { title: "Kickstarting your ZIVO journey with content ideas", description: "Have you ever watched your favorite creators and wondered how they come up with ideas?", views: "419.6K views", icon: BookOpen, iconBg: "bg-rose-500/10", iconColor: "text-rose-500" },
+      { title: "Finding your niche on ZIVO", description: "The most successful creators focus on a niche. Discover which content category fits you best...", views: "892.3K views", icon: Target, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Your first 30 days on ZIVO", description: "A complete day-by-day guide to building your presence during your crucial first month...", views: "2.3M views", icon: Compass, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Understanding ZIVO's creator tiers", description: "From Rising Star to Elite Creator, learn about the tier system and how to level up...", views: "567.8K views", icon: TrendingUp, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+      { title: "Setting up your creator workspace", description: "You don't need a professional studio to create great content. Here's how to set up at home...", views: "334.2K views", icon: Camera, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
     ],
   },
   {
@@ -114,6 +118,27 @@ const GETTING_STARTED_SECTIONS: Section[] = [
       { title: "Verification 101: how to get the Blue Check", description: "Ever noticed that little blue check mark next to some profiles? Learn how to get yours...", views: "775.2K views", icon: BadgeCheck, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
       { title: "Choosing the right account: Business vs. Personal", description: "Joining the ZIVO community can open up a world of possibilities...", views: "1.0M views", icon: Settings, iconBg: "bg-muted", iconColor: "text-muted-foreground" },
       { title: "Troubleshooting issues with Account check", description: "If something's up with your ZIVO account, Account check can help diagnose and fix it...", views: "113.9K views", icon: AlertTriangle, iconBg: "bg-orange-500/10", iconColor: "text-orange-500" },
+      { title: "Managing multiple ZIVO accounts", description: "Whether you have a personal and business account, learn the best practices for managing both...", views: "245.7K views", icon: Settings, iconBg: "bg-muted", iconColor: "text-muted-foreground" },
+      { title: "Securing your account with two-factor authentication", description: "Protect your account from unauthorized access with 2FA. Here's how to set it up...", views: "189.4K views", icon: Shield, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Understanding your ZIVO notifications", description: "Master your notification settings so you never miss important updates...", views: "156.8K views", icon: Bell, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+    ],
+  },
+  {
+    heading: "Profile Optimization",
+    articles: [
+      { title: "Crafting the perfect ZIVO bio", description: "Your bio is your first impression. Learn how to write one that converts visitors into followers...", views: "1.4M views", icon: PenTool, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+      { title: "Choosing a profile photo that stands out", description: "Your profile picture is your brand identity. Make it memorable and professional...", views: "678.3K views", icon: Camera, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Linking your other social accounts", description: "Cross-promote your presence by connecting your ZIVO profile to other platforms...", views: "234.5K views", icon: Globe, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Setting up your creator portfolio", description: "Showcase your best work with a curated portfolio that brands and followers will love...", views: "312.9K views", icon: Layers, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+    ],
+  },
+  {
+    heading: "Privacy & Safety",
+    articles: [
+      { title: "Privacy settings for creators", description: "Control who sees your content, who can comment, and how your data is handled...", views: "445.6K views", icon: Lock, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Blocking and reporting users", description: "Keep your community safe by learning how to block and report problematic users...", views: "567.2K views", icon: ShieldCheck, iconBg: "bg-red-500/10", iconColor: "text-red-500" },
+      { title: "Managing comment filters", description: "Automatically filter out spam and offensive comments to maintain a positive community...", views: "234.8K views", icon: MessageCircle, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Data download and account portability", description: "Learn how to download all your ZIVO data and understand your data rights...", views: "89.3K views", icon: Settings, iconBg: "bg-muted", iconColor: "text-muted-foreground" },
     ],
   },
 ];
