@@ -275,8 +275,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           .from("direct_messages")
           .select("*")
           .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
-          .order("created_at", { ascending: true })
-          .limit(100),
+          .order("created_at", { ascending: false })
+          .limit(200),
         (supabase as any)
           .from("call_history")
           .select("*")
@@ -284,7 +284,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           .order("created_at", { ascending: true })
           .limit(50),
       ]);
-      const data = msgRes.data || [];
+      const data = (msgRes.data || []).reverse();
       setMessages(data);
       setCallEvents((callRes.data || []).map((c: any) => ({ ...c, _isCallEvent: true as const })));
       setLoading(false);

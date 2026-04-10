@@ -254,6 +254,7 @@ export default function ReelsFeedPage() {
             views_count: post.view_count || 0,
             author_name: store?.name || "Store",
             author_avatar: store?.logo_url || null,
+            author_id: store?.id || post.store_id,
             store_slug: store?.slug || null,
             created_at: post.created_at,
           });
@@ -1370,6 +1371,9 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
             shareText={item.caption || `Check out this post by ${item.author_name}`}
             shareMediaUrl={mediaUrl}
             shareMediaType={item.media_type === "video" ? "video" : "image"}
+            sharePostId={item.shared_from_post_id ? item.shared_from_post_id : item.id.replace(/^u-/, "")}
+            sharePostAuthorId={item.shared_from_user_id || item.author_id}
+            sharePostAuthorName={item.shared_from_user_name || item.author_name}
             onClose={() => setShowShareSheet(false)}
             positioning="absolute"
             zIndex={80}
