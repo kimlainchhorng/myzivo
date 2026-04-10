@@ -803,7 +803,7 @@ export default function ReelsFeedPage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 z-[100] bg-black"
+                className="fixed inset-0 z-[100] bg-black lg:top-[4.5rem]"
               >
                 {/* Snap-scroll container */}
                 <div ref={reelsScrollRef} className="h-full w-full overflow-y-scroll snap-y snap-mandatory">
@@ -1118,7 +1118,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   return (
     <div
       ref={containerRef}
-      className="relative h-screen w-full snap-start snap-always flex-shrink-0"
+      className="relative h-[100dvh] lg:h-full w-full snap-start snap-always flex-shrink-0"
     >
       {/* Video */}
       <video

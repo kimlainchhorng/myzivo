@@ -385,7 +385,7 @@ function ReelCard({
   }, [isActive, isVideoPost, currentSrc, hasLoadedFrame, isRepairing, isBlobLoading]);
 
   return (
-    <div className="relative w-full h-[100dvh] bg-black overflow-hidden snap-start flex-shrink-0">
+    <div className="relative w-full h-[100dvh] lg:h-full bg-black overflow-hidden snap-start flex-shrink-0">
       {/* Media */}
       {isVideoPost ? (
         <video
@@ -1549,7 +1549,7 @@ export default function FeedPage() {
               <div
                 key={post.id}
                 ref={(el) => { cardRefs.current[index] = el; }}
-                className="w-full h-[100dvh] md:h-full snap-start"
+                className="w-full h-[100dvh] md:h-full snap-start lg:h-full"
               >
                 <ReelCard
                   post={post}
