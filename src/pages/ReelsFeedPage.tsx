@@ -1188,15 +1188,17 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center"
         >
           <MessageCircle className="h-7 w-7 text-white drop-shadow-lg" />
-          {localComments > 0 && (
-            <span className="text-white text-[11px] font-semibold drop-shadow">{localComments}</span>
-          )}
+          <span className="text-white text-[11px] font-semibold drop-shadow">
+            {localComments > 999 ? `${(localComments / 1000).toFixed(1)}k` : localComments}
+          </span>
         </button>
 
         {/* Views */}
         <div className="flex flex-col items-center gap-1">
           <Eye className="h-6 w-6 text-white/70 drop-shadow-lg" />
-          {item.views_count > 0 && <span className="text-white/70 text-[11px] font-semibold drop-shadow">{item.views_count}</span>}
+          <span className="text-white/70 text-[11px] font-semibold drop-shadow">
+            {item.views_count > 999 ? `${(item.views_count / 1000).toFixed(1)}k` : item.views_count}
+          </span>
         </div>
 
         {/* Share */}
@@ -1324,6 +1326,23 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
                   <p className="text-white/60 text-[10px] drop-shadow">{timeAgo}</p>
                 </div>
               </button>
+              {/* Follow button next to author */}
+              {currentUserId && displayAuthorId && displayAuthorId !== currentUserId && (
+                <button
+                  onClick={handleReelFollow}
+                  disabled={followLoading}
+                  className={cn(
+                    "ml-2 mb-1 px-4 py-1 rounded-md text-xs font-semibold transition-all",
+                    isFollowing
+                      ? "bg-white/20 text-white border border-white/30"
+                      : "bg-emerald-500 text-white"
+                  )}
+                >
+                  {followLoading ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : isFollowing ? "Following" : "Follow"}
+                </button>
+              )}
               {/* "Shared by" indicator */}
               {isShared && (
                 <p className="text-white/50 text-[11px] mb-1 drop-shadow flex items-center gap-1">
@@ -1347,6 +1366,20 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
             {item.caption.length > 80 && !showCaption && (
               <span className="text-white/60 text-xs">more</span>
             )}
+          </div>
+        )}
+
+        {/* Sound ticker */}
+        {item.media_type === "video" && (
+          <div className="flex items-center gap-2 mt-1.5 overflow-hidden">
+            <div className="flex items-center justify-center h-4 w-4 shrink-0">
+              <Radio className="h-3.5 w-3.5 text-white/70" />
+            </div>
+            <div className="overflow-hidden flex-1">
+              <p className="text-white/70 text-[11px] whitespace-nowrap">
+                Original Sound - {item.author_name}
+              </p>
+            </div>
           </div>
         )}
       </div>
