@@ -109,7 +109,7 @@ export default function CreatorDashboardPage() {
       {/* Header with ZIVO ribbon */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30 zivo-ribbon">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          <button onClick={() => navigate("/more")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-extrabold flex-1 tracking-tight">Creator Dashboard</h1>
