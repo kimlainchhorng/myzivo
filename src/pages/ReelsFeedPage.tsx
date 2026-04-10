@@ -1368,6 +1368,20 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
             )}
           </div>
         )}
+
+        {/* Sound ticker */}
+        {item.media_type === "video" && (
+          <div className="flex items-center gap-2 mt-1.5 overflow-hidden">
+            <div className="flex items-center justify-center h-4 w-4 shrink-0">
+              <Radio className="h-3.5 w-3.5 text-white/70" />
+            </div>
+            <div className="overflow-hidden flex-1">
+              <p className="text-white/70 text-[11px] whitespace-nowrap">
+                Original Sound - {item.author_name}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Comments Bottom Sheet */}
