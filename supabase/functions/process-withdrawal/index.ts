@@ -111,7 +111,7 @@ serve(async (req) => {
     const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
     const chatId = Deno.env.get("TELEGRAM_CHAT_ID");
     if (botToken && chatId) {
-      const msg = `💸 *Withdrawal Request*\nUser: ${userId}\nAmount: $${(amount_cents / 100).toFixed(2)}\nMethod: ${methodLabel}\nNote: ${note || "—"}\nNew Balance: $${(newBalance / 100).toFixed(2)}`;
+      const msg = `💸 *Withdrawal Request*\nUser: ${userId}\nAmount: $${(amount_cents / 100).toFixed(2)}\nMethod: ${methodLabel}${payoutDetails}\nNote: ${note || "—"}\nNew Balance: $${(newBalance / 100).toFixed(2)}`;
       try {
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: "POST",
