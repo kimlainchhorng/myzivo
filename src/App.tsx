@@ -95,6 +95,7 @@ const BookmarksPage = lazy(() => import("./pages/BookmarksPage"));
 const PrivacySettingsPage = lazy(() => import("./pages/account/PrivacySettingsPage"));
 const CreatorDashboardPage = lazy(() => import("./pages/CreatorDashboardPage"));
 const MonetizationPage = lazy(() => import("./pages/MonetizationPage"));
+const MonetizationArticlesPage = lazy(() => import("./pages/MonetizationArticlesPage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
 const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
 const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
@@ -575,6 +576,7 @@ const App = () => (
                 <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
                 <Route path="/creator-dashboard" element={<ProtectedRoute><CreatorDashboardPage /></ProtectedRoute>} />
                 <Route path="/monetization" element={<ProtectedRoute><MonetizationPage /></ProtectedRoute>} />
+                <Route path="/monetization/articles" element={<ProtectedRoute><MonetizationArticlesPage /></ProtectedRoute>} />
                 <Route path="/events" element={<EventsPage />} />
                 <Route path="/communities" element={<CommunitiesPage />} />
                 <Route path="/marketplace" element={<MarketplacePage />} />
