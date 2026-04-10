@@ -2,6 +2,7 @@
  * MonetizationPage — Full monetization hub for ZIVO creators
  * Programs, earnings overview, and learning resources
  */
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
