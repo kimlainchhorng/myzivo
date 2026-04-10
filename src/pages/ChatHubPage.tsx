@@ -693,11 +693,12 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   )}
                   <motion.button
                     className={cn(
-                      "w-full flex items-center gap-3.5 p-3.5 rounded-2xl transition-all text-left relative z-10",
+                      "w-full flex items-center gap-3 p-3 rounded-2xl transition-all text-left relative z-10",
                       "bg-card border border-border/40 shadow-sm hover:shadow-md hover:border-border/60",
                       "active:scale-[0.98] active:shadow-none",
                       canDelete && swipedId === chat.id && "-translate-x-16",
-                      chat.unread > 0 && "border-primary/20 bg-primary/[0.02] shadow-primary/5"
+                      chat.unread > 0 && "border-primary/20 bg-primary/[0.02] shadow-primary/5",
+                      embedded && "p-2.5 gap-2.5 rounded-xl"
                     )}
                     onClick={() => {
                       if (swipedId === chat.id) {
