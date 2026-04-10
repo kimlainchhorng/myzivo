@@ -61,27 +61,30 @@ export default function FeedSidebar() {
   const [showSwitch, setShowSwitch] = useState(false);
   const [showChat, setShowChat] = useState(false);
 
-  // Broadcast chat state so the feed layout can adjust
+  // Manage chat panel state without dispatching events during render/state calculation
   const setChatOpen = useCallback((open: boolean) => {
     setShowChat(open);
-    window.dispatchEvent(new CustomEvent("zivo-chat-state", { detail: { open } }));
   }, []);
+
+  const toggleChat = useCallback(() => {
+    setShowChat((prev) => !prev);
+  }, []);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("zivo-chat-state", { detail: { open: showChat } }));
+  }, [showChat]);
 
   // Listen for global "open chat" event from NavBar
   useEffect(() => {
     const handleOpen = () => setChatOpen(true);
-    const handleToggle = () => setShowChat((prev) => {
-      const next = !prev;
-      window.dispatchEvent(new CustomEvent("zivo-chat-state", { detail: { open: next } }));
-      return next;
-    });
+    const handleToggle = () => toggleChat();
     window.addEventListener("zivo-open-chat", handleOpen);
     window.addEventListener("zivo-toggle-chat", handleToggle);
     return () => {
       window.removeEventListener("zivo-open-chat", handleOpen);
       window.removeEventListener("zivo-toggle-chat", handleToggle);
     };
-  }, [setChatOpen]);
+  }, [setChatOpen, toggleChat]);
 
   const avatarUrl = optimizeAvatar(profile?.avatar_url, 80) || profile?.avatar_url || user?.user_metadata?.avatar_url;
   const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
