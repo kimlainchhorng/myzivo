@@ -1537,7 +1537,7 @@ export default function FeedPage() {
 
       {/* Snap-scroll reel container */}
       <div
-        className="relative w-full h-full md:flex md:items-center md:justify-center md:gap-4 lg:flex-1 lg:min-h-0 lg:h-auto"
+        className="relative w-full h-full md:flex md:items-center md:justify-center md:gap-4 lg:flex-1 lg:min-h-0 lg:h-0"
       >
         {/* Phone-frame on tablet+ */}
         <div className="w-full h-full md:mx-auto md:rounded-2xl md:overflow-hidden md:shadow-2xl md:border md:border-white/10 md:h-[calc(100%-2rem)] md:w-auto md:aspect-[9/16] md:max-w-[420px] lg:max-h-full">
@@ -1549,7 +1549,7 @@ export default function FeedPage() {
               <div
                 key={post.id}
                 ref={(el) => { cardRefs.current[index] = el; }}
-                className="w-full h-[100dvh] md:h-full snap-start lg:h-full"
+                className="w-full h-full snap-start"
               >
                 <ReelCard
                   post={post}
