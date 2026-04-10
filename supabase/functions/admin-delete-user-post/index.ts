@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2.49.4";
+import { createClient } from "npm:@supabase/supabase-js@2.49.1";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 const ALLOWED_ROLES = ["admin", "super_admin", "support"];

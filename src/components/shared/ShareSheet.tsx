@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MoreHorizontal, X, MessageCircle, User } from "lucide-react";
+import { MoreHorizontal, X, MessageCircle, User, UserCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,10 @@ interface ShareSheetProps {
   sharePostAuthorId?: string;
   /** Original post author's display name */
   sharePostAuthorName?: string;
+  /** Callback to navigate to the post owner's profile */
+  onVisitProfile?: () => void;
+  /** Label for the visit profile button */
+  visitProfileLabel?: string;
 }
 
 export default function ShareSheet({
@@ -36,6 +40,8 @@ export default function ShareSheet({
   sharePostId,
   sharePostAuthorId,
   sharePostAuthorName,
+  onVisitProfile,
+  visitProfileLabel,
 }: ShareSheetProps) {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [sharingToProfile, setSharingToProfile] = useState(false);
@@ -155,6 +161,7 @@ export default function ShareSheet({
   const inAppOptions = [
     { key: "chat", label: "Chat", icon: MessageCircle, color: "hsl(var(--primary))", onClick: handleShareToChat },
     { key: "profile", label: "Profile", icon: User, color: "hsl(var(--primary))", onClick: handleShareToProfile },
+    ...(onVisitProfile ? [{ key: "visit", label: visitProfileLabel || "Visit Profile", icon: UserCircle, color: "hsl(var(--primary))", onClick: () => { onClose(); onVisitProfile(); } }] : []),
   ];
 
   // ── External share options ──────────────────────────────────────────────

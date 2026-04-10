@@ -1125,7 +1125,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         playsInline
         preload="metadata"
         onClick={togglePlay}
-        className="h-full w-full object-cover"
+        className="h-full w-full object-contain bg-black"
       />
 
       {/* Pause indicator */}
@@ -1347,6 +1347,15 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
             onClose={() => setShowShareSheet(false)}
             positioning="absolute"
             zIndex={80}
+            onVisitProfile={() => {
+              onClose();
+              if (item.source === "store" && item.store_slug) {
+                navigate(`/grocery/shop/${item.store_slug}`);
+              } else if (item.author_id) {
+                navigate(`/user/${item.author_id}`);
+              }
+            }}
+            visitProfileLabel={item.author_name ? `${item.author_name}` : "Visit Profile"}
           />
         )}
       </AnimatePresence>
