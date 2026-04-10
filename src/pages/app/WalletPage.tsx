@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import { 
   ArrowLeft, CreditCard, Plus, Trash2, Star,
   ArrowDownLeft, ArrowUpRight, Gift, Clock, Loader2,
-  Wallet, Shield, ChevronRight, BarChart3, DollarSign, Sparkles,
+  Wallet, Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -341,123 +341,8 @@ export default function WalletPage() {
           </motion.div>
         )}
 
-        {/* === WAVE 6: Financial Intelligence === */}
-        <div className="space-y-4 mt-6">
-          <h2 className="font-bold text-sm flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-primary" /> Financial Insights
-          </h2>
 
-          {/* Monthly Spending Chart */}
-          <Card className="border-border/40">
-            <CardContent className="p-4">
-              <p className="text-xs font-bold text-foreground mb-3">Monthly Spending</p>
-              <div className="flex items-end gap-1.5 h-20">
-                {[180, 240, 120, 350, 280, 195].map((val, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: `${(val / 400) * 100}%` }}
-                      transition={{ duration: 0.6, delay: i * 0.08 }}
-                      className={`w-full rounded-t ${i === 5 ? "bg-primary" : "bg-primary/20"}`}
-                    />
-                    <span className="text-[8px] text-muted-foreground">{["Oct", "Nov", "Dec", "Jan", "Feb", "Mar"][i]}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
-                <span>6-month total: <b className="text-foreground">$1,365</b></span>
-                <span className="text-emerald-500">↓ 8% vs prev period</span>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Budget Planner */}
-          <Card className="border-border/40">
-            <CardContent className="p-4">
-              <p className="text-xs font-bold text-foreground mb-3">Budget Tracker</p>
-              <div className="space-y-3">
-                {[
-                  { cat: "Flights", spent: 680, budget: 1000, color: "bg-sky-500" },
-                  { cat: "Hotels", spent: 420, budget: 600, color: "bg-amber-500" },
-                  { cat: "Rides", spent: 95, budget: 150, color: "bg-emerald-500" },
-                  { cat: "Food", spent: 180, budget: 200, color: "bg-orange-500" },
-                ].map(b => (
-                  <div key={b.cat}>
-                    <div className="flex justify-between text-[10px] mb-1">
-                      <span className="text-muted-foreground">{b.cat}</span>
-                      <span className="font-bold text-foreground">${b.spent} / ${b.budget}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((b.spent / b.budget) * 100, 100)}%` }} transition={{ duration: 0.8 }}
-                        className={cn("h-full rounded-full", b.color, b.spent > b.budget * 0.9 && "bg-destructive")} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Cashback Tracker */}
-          <Card className="border-emerald-500/20 bg-emerald-500/5">
-            <CardContent className="p-4">
-              <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-2">
-                <DollarSign className="w-3.5 h-3.5 text-emerald-500" /> Cashback & Rewards
-              </p>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-emerald-500">$42</p>
-                  <p className="text-[9px] text-muted-foreground">Earned</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-foreground">$18</p>
-                  <p className="text-[9px] text-muted-foreground">Pending</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-amber-500">1,240</p>
-                  <p className="text-[9px] text-muted-foreground">Points</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Savings Goals */}
-          <Card className="border-border/40">
-            <CardContent className="p-4">
-              <p className="text-xs font-bold text-foreground mb-3">Savings Goals</p>
-              <div className="space-y-3">
-                {[
-                  { goal: "Summer Trip Fund", saved: 850, target: 2000, emoji: "🏖️" },
-                  { goal: "Emergency Travel", saved: 320, target: 500, emoji: "🚨" },
-                ].map(g => (
-                  <div key={g.goal}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span>{g.emoji}</span>
-                      <span className="text-xs font-bold text-foreground flex-1">{g.goal}</span>
-                      <span className="text-[10px] text-muted-foreground">${g.saved}/${g.target}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${(g.saved / g.target) * 100}%` }} transition={{ duration: 1 }} className="h-full rounded-full bg-primary" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Smart Tips */}
-          <Card className="border-sky-500/20 bg-sky-500/5">
-            <CardContent className="p-4">
-              <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-sky-500" /> Money-Saving Tips
-              </p>
-              <div className="space-y-1.5">
-                <p className="text-[11px] text-muted-foreground">💡 Use your $42 cashback before it expires on Apr 15</p>
-                <p className="text-[11px] text-muted-foreground">🎯 You're $150 away from Gold tier (2x points)</p>
-                <p className="text-[11px] text-muted-foreground">💳 Switch to ZIVO card for +3% back on travel</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
 
       <MobileBottomNav />
