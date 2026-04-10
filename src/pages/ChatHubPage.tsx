@@ -74,7 +74,7 @@ function getMessagePreviewIcon(message: string) {
   return null;
 }
 
-export default function ChatHubPage() {
+export default function ChatHubPage({ embedded = false }: { embedded?: boolean } = {}) {
   const [active, setActive] = useState<ChatCategory>("personal");
   const [search, setSearch] = useState("");
   const { user } = useAuth();
@@ -515,7 +515,10 @@ export default function ChatHubPage() {
   }
 
   return (
-    <PullToRefresh onRefresh={handlePullRefresh} enabled={!hasOverlayChatOpen} className="min-h-screen bg-background pb-24 overscroll-none">
+    <PullToRefresh onRefresh={handlePullRefresh} enabled={!hasOverlayChatOpen} className={cn(
+      "overscroll-none",
+      embedded ? "h-full overflow-y-auto relative" : "min-h-screen bg-background pb-24"
+    )}>
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-xl border-b border-border/20">
         <div className="px-5 pt-4 pb-3 flex items-center justify-between">
@@ -892,6 +895,7 @@ export default function ChatHubPage() {
             onClose={() => { setOpenPersonalChat(null); setPendingCall(null); queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] }); }}
             autoStartCall={pendingCall}
             onCallStarted={() => setPendingCall(null)}
+            inline={embedded}
           />
         )}
       </AnimatePresence>
