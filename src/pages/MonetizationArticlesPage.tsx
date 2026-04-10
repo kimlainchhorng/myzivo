@@ -275,6 +275,23 @@ const ENGAGEMENT_SECTIONS: Section[] = [
     ],
   },
   {
+    heading: "Master your Content Category",
+    articles: [
+      { title: "Creating winning sports content on ZIVO", description: "If you're an athlete, coach, commentator, or just a fan, sports content is your arena...", views: "130.4K views", icon: Star, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Turning your passion into ZIVO success with learning content", description: "Learning content is booming on ZIVO! From tutorials to deep dives, education is entertainment...", views: "22.6K views", icon: BookOpen, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Shifting your ZIVO journey into high gear with automotive content", description: "ZIVO's hot new trend is automotive content. Car reviews, mods, and road trips are taking off...", views: "17.2K views", icon: Compass, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Repurposing your high-quality automotive content for ZIVO", description: "Are you already an automotive expert posting on other platforms? Here's how to adapt for ZIVO...", views: "24.9K views", icon: Video, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "What is the STEM feed?", description: "The STEM feed is a dedicated space where science, technology, engineering, and math content shines...", views: "119.3K views", icon: Lightbulb, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+      { title: "Creating content for the STEM feed", description: "Whether you're a math whiz explaining equations or a scientist doing experiments, the STEM feed awaits...", views: "85.2K views", icon: Brain, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+      { title: "Creating food content that makes mouths water", description: "Food content is one of the most popular niches on ZIVO. Learn to make your recipes go viral...", views: "342.7K views", icon: Star, iconBg: "bg-orange-500/10", iconColor: "text-orange-500" },
+      { title: "Travel content that inspires wanderlust", description: "Take your audience on a journey. Travel content on ZIVO connects cultures and sparks adventure...", views: "267.8K views", icon: Globe, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Building your fitness and wellness community", description: "From workout routines to mental health tips, wellness content helps millions live better lives...", views: "198.4K views", icon: Heart, iconBg: "bg-rose-500/10", iconColor: "text-rose-500" },
+      { title: "Fashion and beauty content that stands out", description: "ZIVO is the runway for fashion and beauty creators. Learn how to showcase your unique style...", views: "455.1K views", icon: Sparkles, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+      { title: "Gaming content creation masterclass", description: "Level up your gaming content with tips on streaming, highlights, and building a gamer community...", views: "521.3K views", icon: PlayCircle, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "Music and performance content on ZIVO", description: "Whether you're a singer, instrumentalist, or DJ, ZIVO is your stage. Reach millions of fans...", views: "389.6K views", icon: Music, iconBg: "bg-red-500/10", iconColor: "text-red-500" },
+    ],
+  },
+  {
     heading: "Account Health and Traffic Sources",
     articles: [
       { title: "Driving video traffic: The For You feed", description: "On ZIVO, traffic is actually a good thing! Learn how the For You feed works for discovery...", views: "84.9K views", icon: TrendingUp, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
@@ -308,44 +325,44 @@ const ENGAGEMENT_SECTIONS: Section[] = [
 /* ─── MONETIZE TAB ─── */
 const MONETIZE_SECTIONS: Section[] = [
   {
-    heading: "Creator Rewards",
+    heading: "Platform Pay",
     articles: [
-      { title: "Creator Rewards Program overview", description: "If you're passionate about crafting high-quality content, the Creator Rewards Program is for you...", views: "14.4M views", icon: Crown, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
-      { title: "Maximizing your Creator Rewards earnings", description: "Learn proven strategies to increase your reward payouts through quality content...", views: "5.2M views", icon: TrendingUp, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
-      { title: "Understanding Audience Commercial Value", description: "In the Creator Rewards Program, high-quality content that attracts commercial audiences earns more...", views: "66.8K views", icon: BarChart3, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Creator Rewards Program", description: "If you're passionate about crafting high-quality content, the Creator Rewards Program is for you...", views: "14.4M views", icon: Crown, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
       { title: "Effect Creator Rewards", description: "Have you ever wondered what ZIVO's Effect Creator Rewards are all about? Discover how to earn...", views: "5.0M views", icon: Sparkles, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "Winning rewards and boosting your creativity with ZIVO post contests", description: "Whether you're creating film & TV, sport, or lifestyle content, contests can supercharge your reach...", views: "203.1K views", icon: Star, iconBg: "bg-orange-500/10", iconColor: "text-orange-500" },
     ],
   },
   {
-    heading: "Subscription & Exclusive Content",
+    heading: "User Pay",
     articles: [
+      { title: "Series", description: "Series allows you to post groups of videos behind a paywall, creating premium episodic content...", views: "310.4K views", icon: Video, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
       { title: "Getting started with Subscription", description: "Subscription is your key to unleashing your creativity and fostering deeper audience connections...", views: "7.7M views", icon: Crown, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
-      { title: "Series: Premium episodic content", description: "Series allows you to post groups of videos behind a paywall, creating premium content...", views: "310.4K views", icon: Video, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
       { title: "Locked Media monetization", description: "Send exclusive photos and videos as pay-to-unlock content in chat and grow your revenue...", views: "1.2M views", icon: Lock, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
     ],
   },
   {
-    heading: "LIVE Monetization",
-    articles: [
-      { title: "Unlocking LIVE monetization", description: "Get more from your LIVEs! Explore all the ways you can monetize your streams...", views: "5.7M views", icon: DollarSign, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
-      { title: "Scaled LIVE rewards: Supercharging your journey", description: "We understand the dedication and effort you put into every LIVE session...", views: "544.7K views", icon: TrendingUp, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
-      { title: "Tips and Gifts on LIVE", description: "ZIVO LIVE lets your audience show appreciation through tips and virtual gifts during streams...", views: "3.2M views", icon: Gift, iconBg: "bg-rose-500/10", iconColor: "text-rose-500" },
-    ],
-  },
-  {
-    heading: "Brand Partnerships",
+    heading: "Branded content",
     articles: [
       { title: "Creating branded content on ZIVO", description: "Whether you're participating in collaborations or building brand partnerships, learn the essentials...", views: "2.3M views", icon: Megaphone, iconBg: "bg-orange-500/10", iconColor: "text-orange-500" },
-      { title: "Building long-lasting brand partnerships", description: "ZIVO audiences crave authentic content. Learn how to build sustainable brand relationships...", views: "86.6K views", icon: Users, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
-      { title: "Monetize your content with brand deals on ZIVO", description: "If you're a creator, brand deals can help you earn while doing what you love...", views: "6,571 views", icon: DollarSign, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
-      { title: "Creating content brands will want to Spark", description: "Are you looking to land a brand deal? Here's how to stand out and attract partnerships...", views: "80.2K views", icon: Sparkles, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+      { title: "Creating content brands will want to Spark", description: "Are you looking to land a brand deal and grow your creator business? Here's how to stand out...", views: "80.2K views", icon: Sparkles, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+      { title: "Building long-lasting brand partnerships", description: "ZIVO audiences crave authentic content. Learn how to build sustainable brand relationships...", views: "86.7K views", icon: Users, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Collecting more rewards through brand tagging and Spark Ad authorization", description: "If you want more brands to see your content, learn how to leverage tagging and authorization...", views: "42.4K views", icon: Target, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Monetize your content with brand deals on ZIVO", description: "If you're a creator, brand deals can help you earn while doing what you love...", views: "6,577 views", icon: DollarSign, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Understanding Audience Commercial Value in the Creator Rewards", description: "In the Creator Rewards Program, high-quality content that attracts commercial audiences earns more...", views: "66.8K views", icon: BarChart3, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
     ],
   },
   {
-    heading: "ZIVO Shop",
+    heading: "LIVE",
     articles: [
-      { title: "Getting started with ZIVO Shop", description: "With ZIVO Shop, you can drive your audience from content to commerce seamlessly...", views: "6.8M views", icon: Store, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
-      { title: "Winning rewards with contests", description: "Whether you're creating film & TV, sport, or lifestyle content, contests can supercharge your reach...", views: "203.1K views", icon: Star, iconBg: "bg-orange-500/10", iconColor: "text-orange-500" },
+      { title: "Going LIVE!", description: "ZIVO LIVE is where the party's at – it's all about real-time fun, self-expression, and connecting...", views: "5.7M views", icon: Video, iconBg: "bg-red-500/10", iconColor: "text-red-500" },
+      { title: "Unlocking LIVE monetization", description: "Get more from your LIVEs! Explore all the ways you can monetize your streams and increase earnings...", views: "5.7M views", icon: DollarSign, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Scaled LIVE rewards: Supercharging your LIVE journey", description: "We understand the dedication and effort you put into every LIVE session...", views: "544.7K views", icon: TrendingUp, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+    ],
+  },
+  {
+    heading: "Shop",
+    articles: [
+      { title: "Shop", description: "With ZIVO Shop, you can drive your audience from content to commerce seamlessly...", views: "6.8M views", icon: Store, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
     ],
   },
   {
