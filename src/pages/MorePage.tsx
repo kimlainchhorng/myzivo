@@ -86,7 +86,7 @@ const quickLinksSocial: QuickLink[] = [
   { icon: Share2, label: "Share Profile", href: "/qr-profile", description: "QR code & link", iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10" },
   { icon: Megaphone, label: "Events", href: "/events", description: "Upcoming events", iconColor: "text-amber-500", iconBg: "bg-amber-500/10" },
   { icon: Star, label: "Leaderboard", href: "/leaderboard", description: "Top creators", iconColor: "text-yellow-500", iconBg: "bg-yellow-500/10" },
-  { icon: Music, label: "Sound Library", href: "/sound/trending", description: "Trending sounds", iconColor: "text-pink-500", iconBg: "bg-pink-500/10" },
+  { icon: Music, label: "Sound Library", href: "/explore", description: "Trending sounds", iconColor: "text-pink-500", iconBg: "bg-pink-500/10" },
 ];
 
 const quickLinksBusiness: QuickLink[] = [
