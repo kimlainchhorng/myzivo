@@ -43,6 +43,7 @@ const serviceNavItems = [
 const directNavItems = [
   { label: "Feed", href: "/feed", icon: Newspaper, cssVar: "var(--flights)" },
   { label: "Reel", href: "/reels", icon: Film, cssVar: "var(--eats)" },
+  { label: "Chat", href: "__chat__", icon: MessageCircle, cssVar: "var(--rides)" },
 ];
 
 const communityNavItems = [
