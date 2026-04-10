@@ -131,6 +131,7 @@ const resourceTabs = ["Recommended", "Subscription", "LIVE rewards", "Creator Re
 export default function MonetizationPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [activeResTab, setActiveResTab] = useState(0);
 
   return (
     <div className="min-h-dvh bg-background pb-24">
