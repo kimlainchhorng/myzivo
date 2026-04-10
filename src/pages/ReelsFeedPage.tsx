@@ -1209,46 +1209,57 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           </button>
         )}
 
-        {/* Author avatar with Follow badge */}
-        <div className="relative">
-          <button
-            onClick={() => {
-              onClose();
-              if (item.source === "store" && item.store_slug) {
-                navigate(`/grocery/shop/${item.store_slug}`);
-              } else if (item.author_id) {
-                navigate(`/user/${item.author_id}`);
-              }
-            }}
-          >
-            <div className="h-11 w-11 rounded-full overflow-hidden border-2 border-white shrink-0">
-              {item.author_avatar ? (
-                <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <div className="h-full w-full bg-white/20 flex items-center justify-center text-white text-sm font-bold">
-                  {item.author_name[0]}
+        {/* Author avatar with Follow badge — show original creator for shared posts */}
+        {(() => {
+          const isShared = !!item.shared_from_post_id;
+          const displayAvatar = isShared && item.shared_from_user_avatar ? item.shared_from_user_avatar : item.author_avatar;
+          const displayName = isShared && item.shared_from_user_name ? item.shared_from_user_name : item.author_name;
+          const displayAuthorId = isShared && item.shared_from_user_id ? item.shared_from_user_id : item.author_id;
+          const displayStoreSlug = isShared && item.shared_from_store_slug ? item.shared_from_store_slug : item.store_slug;
+          const displaySource = isShared && item.shared_from_source ? item.shared_from_source : item.source;
+
+          return (
+            <div className="relative">
+              <button
+                onClick={() => {
+                  onClose();
+                  if (displaySource === "store" && displayStoreSlug) {
+                    navigate(`/grocery/shop/${displayStoreSlug}`);
+                  } else if (displayAuthorId) {
+                    navigate(`/user/${displayAuthorId}`);
+                  }
+                }}
+              >
+                <div className="h-11 w-11 rounded-full overflow-hidden border-2 border-white shrink-0">
+                  {displayAvatar ? (
+                    <img src={displayAvatar} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full bg-white/20 flex items-center justify-center text-white text-sm font-bold">
+                      {displayName[0]}
+                    </div>
+                  )}
                 </div>
+              </button>
+              {/* Follow button */}
+              {currentUserId && displayAuthorId && displayAuthorId !== currentUserId && (
+                <button
+                  onClick={handleReelFollow}
+                  disabled={followLoading}
+                  className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full flex items-center justify-center shadow-lg"
+                  style={{ backgroundColor: isFollowing ? 'hsl(var(--muted))' : 'hsl(var(--primary))' }}
+                >
+                  {followLoading ? (
+                    <Loader2 className="h-2.5 w-2.5 animate-spin text-primary-foreground" />
+                  ) : isFollowing ? (
+                    <UserCheck className="h-2.5 w-2.5 text-primary-foreground" />
+                  ) : (
+                    <Plus className="h-3 w-3 text-primary-foreground" />
+                  )}
+                </button>
               )}
             </div>
-          </button>
-          {/* Follow button */}
-          {currentUserId && item.author_id !== currentUserId && (
-            <button
-              onClick={handleReelFollow}
-              disabled={followLoading}
-              className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full flex items-center justify-center shadow-lg"
-              style={{ backgroundColor: isFollowing ? 'hsl(var(--muted))' : 'hsl(var(--primary))' }}
-            >
-              {followLoading ? (
-                <Loader2 className="h-2.5 w-2.5 animate-spin text-primary-foreground" />
-              ) : isFollowing ? (
-                <UserCheck className="h-2.5 w-2.5 text-primary-foreground" />
-              ) : (
-                <Plus className="h-3 w-3 text-primary-foreground" />
-              )}
-            </button>
-          )}
-        </div>
+          );
+        })()}
       </div>
 
       {/* Floating Product Card — "Buy from [Shop] - Xkm away" */}
@@ -1273,32 +1284,52 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         className="absolute left-0 right-16 bottom-0 px-4"
         style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 2rem)' }}
       >
-        {/* Author info */}
-        <button
-          onClick={() => {
-            onClose();
-            if (item.source === "store" && item.store_slug) {
-              navigate(`/grocery/shop/${item.store_slug}`);
-            } else if (item.author_id) {
-              navigate(`/user/${item.author_id}`);
-            }
-          }}
-          className="flex items-center gap-2.5 mb-2"
-        >
-          <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-white/40 shrink-0">
-            {item.author_avatar ? (
-              <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="h-full w-full bg-white/20 flex items-center justify-center text-white text-sm font-bold">
-                {item.author_name[0]}
-              </div>
-            )}
-          </div>
-          <div className="text-left">
-            <p className="text-white text-sm font-bold drop-shadow-lg">{item.author_name}</p>
-            <p className="text-white/60 text-[10px] drop-shadow">{timeAgo}</p>
-          </div>
-        </button>
+        {/* Author info — show original creator for shared posts */}
+        {(() => {
+          const isShared = !!item.shared_from_post_id;
+          const displayAvatar = isShared && item.shared_from_user_avatar ? item.shared_from_user_avatar : item.author_avatar;
+          const displayName = isShared && item.shared_from_user_name ? item.shared_from_user_name : item.author_name;
+          const displayAuthorId = isShared && item.shared_from_user_id ? item.shared_from_user_id : item.author_id;
+          const displayStoreSlug = isShared && item.shared_from_store_slug ? item.shared_from_store_slug : item.store_slug;
+          const displaySource = isShared && item.shared_from_source ? item.shared_from_source : item.source;
+
+          return (
+            <>
+              <button
+                onClick={() => {
+                  onClose();
+                  if (displaySource === "store" && displayStoreSlug) {
+                    navigate(`/grocery/shop/${displayStoreSlug}`);
+                  } else if (displayAuthorId) {
+                    navigate(`/user/${displayAuthorId}`);
+                  }
+                }}
+                className="flex items-center gap-2.5 mb-1"
+              >
+                <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-white/40 shrink-0">
+                  {displayAvatar ? (
+                    <img src={displayAvatar} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full bg-white/20 flex items-center justify-center text-white text-sm font-bold">
+                      {displayName[0]}
+                    </div>
+                  )}
+                </div>
+                <div className="text-left">
+                  <p className="text-white text-sm font-bold drop-shadow-lg">{displayName}</p>
+                  <p className="text-white/60 text-[10px] drop-shadow">{timeAgo}</p>
+                </div>
+              </button>
+              {/* "Shared by" indicator */}
+              {isShared && (
+                <p className="text-white/50 text-[11px] mb-1 drop-shadow flex items-center gap-1">
+                  <Share2 className="h-3 w-3" />
+                  Shared by {item.author_name}
+                </p>
+              )}
+            </>
+          );
+        })()}
 
         {/* Caption */}
         {item.caption && (
