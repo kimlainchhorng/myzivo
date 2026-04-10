@@ -80,8 +80,9 @@ interface FeedItem {
 const normalizeUserPostMediaType = (mediaType: string | null | undefined): "image" | "video" =>
   mediaType === "video" || mediaType === "reel" ? "video" : "image";
 
-const getReelsSharePostId = (item: FeedItem): string => item.id.replace(/^u-/, "");
-const getFeedInteractionPostId = (item: FeedItem): string => item.source === "user" ? item.id.replace(/^u-/, "") : item.id;
+const stripFeedUserPrefix = (postId: string): string => postId.replace(/^u-/, "");
+const getReelsSharePostId = (item: FeedItem): string => stripFeedUserPrefix(item.id);
+const getFeedInteractionPostId = (item: FeedItem): string => item.source === "user" ? stripFeedUserPrefix(item.id) : item.id;
 const getFeedLikesTable = (item: FeedItem): "post_likes" | "store_post_likes" => item.source === "user" ? "post_likes" : "store_post_likes";
 
 export default function ReelsFeedPage() {
@@ -472,6 +473,54 @@ export default function ReelsFeedPage() {
         // Keep feed rendering even if commerce links fail.
       }
 
+      try {
+        const userPostIds = [...new Set(
+          allItems
+            .filter((item) => item.source === "user")
+            .map((item) => stripFeedUserPrefix(item.id))
+            .filter(Boolean)
+        )];
+
+        if (userPostIds.length) {
+          const commentPostIds = [...new Set([...userPostIds, ...userPostIds.map((id) => `u-${id}`)])];
+
+          const [{ data: rawLikes }, { data: rawComments }] = await Promise.all([
+            (supabase as any)
+              .from("post_likes")
+              .select("post_id")
+              .in("post_id", userPostIds),
+            (supabase as any)
+              .from("post_comments")
+              .select("post_id")
+              .eq("post_source", "user")
+              .in("post_id", commentPostIds),
+          ]);
+
+          const likeCounts = new Map<string, number>();
+          for (const row of rawLikes || []) {
+            const postId = String((row as any).post_id || "");
+            if (!postId) continue;
+            likeCounts.set(postId, (likeCounts.get(postId) || 0) + 1);
+          }
+
+          const commentCounts = new Map<string, number>();
+          for (const row of rawComments || []) {
+            const postId = stripFeedUserPrefix(String((row as any).post_id || ""));
+            if (!postId) continue;
+            commentCounts.set(postId, (commentCounts.get(postId) || 0) + 1);
+          }
+
+          allItems.forEach((item) => {
+            if (item.source !== "user") return;
+            const rawId = stripFeedUserPrefix(item.id);
+            item.likes_count = likeCounts.get(rawId) ?? item.likes_count ?? 0;
+            item.comments_count = commentCounts.get(rawId) ?? item.comments_count ?? 0;
+          });
+        }
+      } catch {
+        // Fall back to denormalized counters if interaction tables are unavailable.
+      }
+
       allItems.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       return allItems;
     },
@@ -800,17 +849,21 @@ export default function ReelsFeedPage() {
 
 function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUserId: string | null; onClose: () => void }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
   const [liked, setLiked] = useState(false);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
+  const [localComments, setLocalComments] = useState(item.comments_count);
   const [showCaption, setShowCaption] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const interactionPostId = getFeedInteractionPostId(item);
+  const likesTable = getFeedLikesTable(item);
 
   // Check follow status on mount
   useEffect(() => {
@@ -838,7 +891,38 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       setFollowLoading(false);
     }
   };
-   const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+
+  useEffect(() => {
+    setLocalLikes(item.likes_count);
+  }, [item.likes_count]);
+
+  useEffect(() => {
+    setLocalComments(item.comments_count);
+  }, [item.comments_count]);
+
+  useEffect(() => {
+    if (!currentUserId) {
+      setLiked(false);
+      return;
+    }
+
+    let alive = true;
+    (supabase as any)
+      .from(likesTable)
+      .select("id")
+      .eq("post_id", interactionPostId)
+      .eq("user_id", currentUserId)
+      .maybeSingle()
+      .then(({ data, error }: any) => {
+        if (!alive || error) return;
+        setLiked(Boolean(data));
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [currentUserId, interactionPostId, likesTable]);
 
   const mediaUrl = item.media_urls[0];
 
@@ -877,15 +961,31 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       toast.error("Please sign in to like posts");
       return;
     }
+
     const newLiked = !liked;
     setLiked(newLiked);
-    setLocalLikes((prev) => prev + (newLiked ? 1 : -1));
-    if (item.source === "store") {
+    setLocalLikes((prev) => Math.max(0, prev + (newLiked ? 1 : -1)));
+
+    try {
       if (newLiked) {
-        await supabase.from("store_post_likes").insert({ post_id: item.id, user_id: currentUserId }).then(() => {});
+        const { error } = await (supabase as any)
+          .from(likesTable)
+          .insert({ post_id: interactionPostId, user_id: currentUserId });
+        if (error) throw error;
       } else {
-        await supabase.from("store_post_likes").delete().eq("post_id", item.id).eq("user_id", currentUserId);
+        const { error } = await (supabase as any)
+          .from(likesTable)
+          .delete()
+          .eq("post_id", interactionPostId)
+          .eq("user_id", currentUserId);
+        if (error) throw error;
       }
+
+      void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+    } catch {
+      setLiked(!newLiked);
+      setLocalLikes((prev) => Math.max(0, prev - (newLiked ? 1 : -1)));
+      toast.error("Failed to update like");
     }
   };
 
@@ -1042,8 +1142,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center"
         >
           <MessageCircle className="h-7 w-7 text-white drop-shadow-lg" />
-          {item.comments_count > 0 && (
-            <span className="text-white text-[11px] font-semibold drop-shadow">{item.comments_count}</span>
+          {localComments > 0 && (
+            <span className="text-white text-[11px] font-semibold drop-shadow">{localComments}</span>
           )}
         </button>
 
@@ -1182,11 +1282,15 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       {/* Comments Bottom Sheet */}
       <CommentsSheet
         open={showComments}
-        onClose={() => setShowComments(false)}
-        postId={item.id}
+        onClose={() => {
+          setShowComments(false);
+          void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+        }}
+        postId={interactionPostId}
         postSource={item.source}
         currentUserId={currentUserId}
-        commentsCount={item.comments_count}
+        commentsCount={localComments}
+        onCommentsCountChange={setLocalComments}
         dark
       />
 
