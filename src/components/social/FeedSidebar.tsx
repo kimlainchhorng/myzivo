@@ -338,7 +338,7 @@ export default function FeedSidebar() {
           {/* Backdrop for mobile/tablet */}
           <div
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[1290] lg:hidden"
-            onClick={() => setShowChat(false)}
+            onClick={() => setChatOpen(false)}
           />
           <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[400px] md:w-[420px] lg:top-[4.5rem] lg:w-[360px] xl:w-[380px] 2xl:w-[400px] bg-background lg:border-l lg:border-border/30 shadow-2xl z-[1300] flex flex-col lg:rounded-none rounded-l-2xl sm:rounded-l-2xl">
             {/* Header */}
@@ -351,7 +351,7 @@ export default function FeedSidebar() {
               </div>
               <span className="text-base font-semibold text-foreground flex-1">Messages</span>
               <button
-                onClick={() => setShowChat(false)}
+                onClick={() => setChatOpen(false)}
                 className="h-8 w-8 rounded-lg hover:bg-muted/60 flex items-center justify-center transition-colors"
               >
                 <XIcon className="h-4 w-4 text-muted-foreground" />
