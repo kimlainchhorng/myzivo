@@ -46,6 +46,8 @@ interface PersonalChatProps {
   onClose: () => void;
   autoStartCall?: "voice" | "video" | null;
   onCallStarted?: () => void;
+  /** Render inline (inside parent) instead of fixed full-screen overlay */
+  inline?: boolean;
 }
 
 interface Message {
