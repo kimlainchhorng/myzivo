@@ -344,14 +344,30 @@ export default function FeedSidebar() {
             onClick={() => setChatOpen(false)}
           />
           <div className="fixed right-0 top-0 bottom-0 z-[1300] flex w-full flex-col overflow-hidden bg-background shadow-2xl sm:w-[420px] md:w-[440px] lg:top-[4.5rem] lg:bottom-0 lg:w-[400px] lg:border-l lg:border-border/20 xl:w-[420px] 2xl:w-[440px] rounded-l-2xl sm:rounded-l-2xl lg:rounded-none">
-            <Suspense fallback={
-              <div className="flex flex-col items-center justify-center h-64 gap-3">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Loading chats…</span>
+            {/* Close / Back header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 bg-background/95 backdrop-blur-sm shrink-0">
+              <div className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-primary" />
+                <h2 className="text-base font-semibold text-foreground">Messages</h2>
               </div>
-            }>
-              <ChatHubPage embedded />
-            </Suspense>
+              <button
+                onClick={() => setChatOpen(false)}
+                className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-muted/80 active:scale-90 transition-all"
+                aria-label="Close chat"
+              >
+                <XIcon className="h-4.5 w-4.5 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <Suspense fallback={
+                <div className="flex flex-col items-center justify-center h-64 gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Loading chats…</span>
+                </div>
+              }>
+                <ChatHubPage embedded />
+              </Suspense>
+            </div>
           </div>
         </>
       )}
