@@ -108,6 +108,7 @@ const ActivityFeedPage = lazy(() => import("./pages/ActivityFeedPage"));
 const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const AdminModerationPage = lazy(() => import("./pages/AdminModerationPage"));
 const AdminLaunchDashboard = lazy(() => import("./pages/admin/AdminLaunchDashboard"));
+const AdminWalletPage = lazy(() => import("./pages/admin/AdminWalletPage"));
 const ContentSchedulerPage = lazy(() => import("./pages/ContentSchedulerPage"));
 const StoryPollsPage = lazy(() => import("./pages/StoryPollsPage"));
 
@@ -637,6 +638,7 @@ const App = () => (
                 <Route path="/admin/stores/:storeId" element={<ProtectedRoute><AdminStoreEditPage /></ProtectedRoute>} />
                 <Route path="/store/setup" element={<ProtectedRoute><StoreSetup /></ProtectedRoute>} />
                 <Route path="/admin/employees" element={<ProtectedRoute><AdminEmployeesPage /></ProtectedRoute>} />
+                <Route path="/admin/wallet" element={<ProtectedRoute><AdminWalletPage /></ProtectedRoute>} />
                 <Route path="/admin/system-health" element={<ProtectedRoute><AdminSystemHealth /></ProtectedRoute>} />
                 <Route path="/admin/app-store-assets" element={<ProtectedRoute><AdminAppStoreAssets /></ProtectedRoute>} />
                 <Route path="/admin/android-verification" element={<ProtectedRoute><AdminAndroidVerification /></ProtectedRoute>} />
