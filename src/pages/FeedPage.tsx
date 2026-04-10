@@ -1540,7 +1540,7 @@ export default function FeedPage() {
         className="relative w-full h-full md:flex md:items-center md:justify-center md:gap-4 lg:flex-1 lg:min-h-0 lg:h-0"
       >
         {/* Phone-frame on tablet, full-width on desktop */}
-        <div className="w-full h-full md:mx-auto md:rounded-2xl md:overflow-hidden md:shadow-2xl md:border md:border-white/10 md:h-[calc(100%-2rem)] md:w-auto md:aspect-[9/16] md:max-w-[420px] lg:max-w-none lg:w-full lg:h-full lg:rounded-none lg:border-0 lg:shadow-none lg:aspect-auto">
+        <div className="w-full h-full md:mx-auto md:rounded-2xl md:overflow-hidden md:shadow-2xl md:border md:border-white/10 md:h-[calc(100%-2rem)] md:w-auto md:aspect-[9/16] md:max-w-[420px] lg:max-w-[460px] xl:max-w-[500px]">
           <div
             className="w-full h-full overflow-y-scroll snap-y snap-mandatory"
             style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
