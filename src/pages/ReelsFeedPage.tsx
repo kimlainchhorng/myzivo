@@ -875,6 +875,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   const [showCaption, setShowCaption] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const interactionPostId = getFeedInteractionPostId(item);
