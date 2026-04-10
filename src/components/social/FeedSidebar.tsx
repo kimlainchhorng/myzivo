@@ -61,6 +61,13 @@ export default function FeedSidebar() {
   const [showSwitch, setShowSwitch] = useState(false);
   const [showChat, setShowChat] = useState(false);
 
+  // Listen for global "open chat" event from NavBar
+  React.useEffect(() => {
+    const handler = () => setShowChat(true);
+    window.addEventListener("zivo-open-chat", handler);
+    return () => window.removeEventListener("zivo-open-chat", handler);
+  }, []);
+
   const avatarUrl = optimizeAvatar(profile?.avatar_url, 80) || profile?.avatar_url || user?.user_metadata?.avatar_url;
   const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
   const email = user?.email || "";

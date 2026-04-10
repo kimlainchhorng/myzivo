@@ -190,7 +190,8 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
 
                 {/* Direct nav pills: Feed, Reel */}
                 {directNavItems.map((item) => {
-                  const isActive = location.pathname.startsWith(item.href);
+                  const isChat = item.href === "__chat__";
+                  const isActive = !isChat && location.pathname.startsWith(item.href);
                   return (
                     <motion.div
                       key={item.href}
@@ -198,23 +199,37 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       whileTap={{ scale: 0.95 }}
                       transition={{ type: "spring", stiffness: 400, damping: 22 }}
                     >
-                      <Link
-                        to={item.href}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap"
-                        style={{
-                          background: isActive
-                            ? `linear-gradient(135deg, hsl(${item.cssVar} / 0.15), hsl(${item.cssVar} / 0.08))`
-                            : "transparent",
-                          border: `1.5px solid hsl(${item.cssVar} / ${isActive ? "0.3" : "0.12"})`,
-                          boxShadow: isActive
-                            ? `0 2px 12px -3px hsl(${item.cssVar} / 0.25)`
-                            : "none",
-                          color: `hsl(${item.cssVar})`,
-                        }}
-                      >
-                        <item.icon className="w-4 h-4" />
-                        {item.label}
-                      </Link>
+                      {isChat ? (
+                        <button
+                          onClick={() => window.dispatchEvent(new CustomEvent("zivo-open-chat"))}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap"
+                          style={{
+                            border: `1.5px solid hsl(${item.cssVar} / 0.12)`,
+                            color: `hsl(${item.cssVar})`,
+                          }}
+                        >
+                          <item.icon className="w-4 h-4" />
+                          {item.label}
+                        </button>
+                      ) : (
+                        <Link
+                          to={item.href}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap"
+                          style={{
+                            background: isActive
+                              ? `linear-gradient(135deg, hsl(${item.cssVar} / 0.15), hsl(${item.cssVar} / 0.08))`
+                              : "transparent",
+                            border: `1.5px solid hsl(${item.cssVar} / ${isActive ? "0.3" : "0.12"})`,
+                            boxShadow: isActive
+                              ? `0 2px 12px -3px hsl(${item.cssVar} / 0.25)`
+                              : "none",
+                            color: `hsl(${item.cssVar})`,
+                          }}
+                        >
+                          <item.icon className="w-4 h-4" />
+                          {item.label}
+                        </Link>
+                      )}
                     </motion.div>
                   );
                 })}
