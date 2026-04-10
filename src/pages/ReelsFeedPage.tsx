@@ -1398,6 +1398,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
   const [tipTarget, setTipTarget] = useState<{ id: string; name: string } | null>(null);
   const [isFollowingAuthor, setIsFollowingAuthor] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
