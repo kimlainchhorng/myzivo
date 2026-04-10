@@ -53,7 +53,7 @@ export default function TripsListPage() {
   };
 
   return (
-    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background safe-area-top">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>

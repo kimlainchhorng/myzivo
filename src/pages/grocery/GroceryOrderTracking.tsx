@@ -217,7 +217,7 @@ export default function GroceryOrderTracking() {
   const itemCount = order.items.reduce((s, i) => s + (i.quantity || 1), 0);
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden pb-24">
+    <div className="min-h-screen bg-background relative overflow-hidden pb-24 safe-area-top">
       {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-64 w-64 rounded-full bg-primary/8 blur-[80px]" />
