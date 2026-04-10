@@ -75,6 +75,19 @@ function TipForm({ creatorId, creatorName, onClose }: { creatorId: string; creat
 
       if (paymentIntent?.status === "succeeded") {
         toast.success(`Sent $${(finalAmount / 100).toFixed(2)} tip to ${creatorName}! 🎉`);
+        // Notify creator they received a tip
+        try {
+          const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).single();
+          await supabase.functions.invoke("send-push-notification", {
+            body: {
+              user_id: creatorId,
+              notification_type: "tip_received",
+              title: "You received a tip! 💰",
+              body: `${isAnonymous ? "Someone" : (sp?.full_name || "Someone")} sent you $${(finalAmount / 100).toFixed(2)}`,
+              data: { type: "tip_received", amount_cents: finalAmount, sender_id: isAnonymous ? null : user.id, avatar_url: isAnonymous ? null : sp?.avatar_url, action_url: "/wallet" },
+            },
+          });
+        } catch {}
         onClose();
       } else {
         toast.error("Payment not completed");

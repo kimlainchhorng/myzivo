@@ -127,6 +127,23 @@ serve(async (req) => {
       }
     }
 
+    // Notify user their withdrawal was submitted
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+      await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
+        body: JSON.stringify({
+          user_id: userId,
+          notification_type: "withdrawal_submitted",
+          title: "Withdrawal Submitted 💸",
+          body: `Your $${(amount_cents / 100).toFixed(2)} ${methodLabel} withdrawal is being processed`,
+          data: { type: "withdrawal_submitted", amount_cents, method, action_url: "/wallet" },
+        }),
+      });
+    } catch (e) { console.error("[WITHDRAWAL] Push notify error:", e); }
+
     return new Response(
       JSON.stringify({
         success: true,

@@ -168,6 +168,17 @@ serve(async (req) => {
             console.error("Error updating ride request:", error);
           } else {
             console.log("Ride request updated to paid:", metadata.ride_request_id);
+            // Notify rider: payment confirmed
+            if (metadata.rider_id || metadata.user_id || metadata.customer_id) {
+              const uid = metadata.rider_id || metadata.user_id || metadata.customer_id;
+              try {
+                await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                  body: JSON.stringify({ user_id: uid, notification_type: "payment_confirmed", title: "Ride Payment Confirmed ✅", body: `Your ride payment of $${((session.amount_total || 0) / 100).toFixed(2)} was successful`, data: { type: "payment_confirmed", service: "ride", action_url: `/rides/tracking/${metadata.ride_request_id}` } }),
+                });
+              } catch {}
+            }
           }
         } else if (metadata.type === "eats") {
           // Update food order
@@ -185,6 +196,17 @@ serve(async (req) => {
             console.error("Error updating food order:", error);
           } else {
             console.log("Food order updated to paid:", metadata.order_id);
+            // Notify customer: order confirmed
+            if (metadata.user_id || metadata.customer_id) {
+              const uid = metadata.user_id || metadata.customer_id;
+              try {
+                await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                  body: JSON.stringify({ user_id: uid, notification_type: "payment_confirmed", title: "Order Confirmed 🍕", body: `Your order payment of $${((session.amount_total || 0) / 100).toFixed(2)} was successful`, data: { type: "payment_confirmed", service: "eats", action_url: `/eats/${metadata.order_id}` } }),
+                });
+              } catch {}
+            }
           }
         } else if (metadata.type === "p2p") {
           // Update P2P booking
@@ -248,8 +270,17 @@ serve(async (req) => {
           }
 
           console.log("[Webhook] Flight booking paid:", metadata.booking_id);
-          
-          // Send payment receipt email
+
+          // Notify user: flight payment confirmed
+          if (metadata.user_id) {
+            try {
+              await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                body: JSON.stringify({ user_id: metadata.user_id, notification_type: "payment_confirmed", title: "Flight Payment Confirmed ✈️", body: `Your flight payment of $${((session.amount_total || 0) / 100).toFixed(2)} was successful. Ticketing in progress.`, data: { type: "payment_confirmed", service: "flight", booking_id: metadata.booking_id, action_url: `/bookings/${metadata.booking_id}` } }),
+              });
+            } catch {}
+          }
           try {
             await fetch(`${supabaseUrl}/functions/v1/send-flight-email`, {
               method: "POST",
@@ -527,6 +558,7 @@ serve(async (req) => {
       case "payment_intent.payment_failed": {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log("[Webhook] Payment failed:", paymentIntent.id);
+        const failedUserId = paymentIntent.metadata?.user_id || paymentIntent.metadata?.customer_id || paymentIntent.metadata?.rider_id;
 
         // Update any orders with this payment intent ID
         await supabase
@@ -538,6 +570,17 @@ serve(async (req) => {
           .from("food_orders")
           .update({ payment_status: "failed", status: "cancelled" })
           .eq("stripe_payment_id", paymentIntent.id);
+
+        // Notify user: payment failed
+        if (failedUserId) {
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+              body: JSON.stringify({ user_id: failedUserId, notification_type: "payment_failed", title: "Payment Failed ❌", body: `Your payment of $${(paymentIntent.amount / 100).toFixed(2)} could not be processed. Please try again.`, data: { type: "payment_failed", action_url: "/wallet" } }),
+            });
+          } catch {}
+        }
 
         // Handle flight payment failures
         if (paymentIntent.metadata?.type === 'flight') {
@@ -578,6 +621,18 @@ serve(async (req) => {
         const refundAmount = charge.amount_refunded / 100;
 
         console.log("[Webhook] Charge refunded:", charge.id, "Amount:", refundAmount, "PI:", paymentIntentId);
+
+        // Notify user about refund
+        const refundUserId = charge.metadata?.user_id || charge.metadata?.customer_id || charge.metadata?.rider_id;
+        if (refundUserId) {
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+              body: JSON.stringify({ user_id: refundUserId, notification_type: "refund_processed", title: "Refund Processed 💵", body: `$${refundAmount.toFixed(2)} has been refunded to your payment method`, data: { type: "refund_processed", amount: refundAmount, action_url: "/wallet" } }),
+            });
+          } catch {}
+        }
 
         if (paymentIntentId) {
           // Update ride requests

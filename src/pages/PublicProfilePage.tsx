@@ -457,6 +457,13 @@ export default function PublicProfilePage() {
       } else if (action === "accept") {
         if (!isFollowing) await (supabase as any).from("user_followers").insert({ follower_id: user.id, following_id: targetUserId }).throwOnError();
         await supabase.from("friendships").update({ status: "accepted", accepted_at: new Date().toISOString() }).eq("user_id", targetUserId).eq("friend_id", user.id).throwOnError();
+        // Notify the requester
+        try {
+          const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).single();
+          await supabase.functions.invoke("send-push-notification", {
+            body: { user_id: targetUserId, notification_type: "friend_request_accepted", title: "Friend Request Accepted 🎉", body: `${sp?.full_name || "Someone"} accepted your friend request`, data: { type: "friend_accepted", sender_id: user.id, avatar_url: sp?.avatar_url, action_url: `/user/${user.id}` } },
+          });
+        } catch {}
       }
     },
     onSuccess: (_, action) => {
