@@ -10,6 +10,7 @@ import { ArrowLeft, Play, Music, Grid3X3, Users, Eye } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import CreatePostModal from "@/components/social/CreatePostModal";
+import { Helmet } from "react-helmet-async";
 
 /** Convert a URL slug like "midnight-drive" into "Midnight Drive" */
 function humanizeSlug(slug: string): string {
@@ -119,6 +120,10 @@ export default function SoundPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{displayName} | Zivo</title>
+        <meta name="description" content={`Listen to ${displayName} by ${artistName} on Zivo`} />
+      </Helmet>
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur border-b border-border/40">
         <div className="flex items-center gap-3 px-4 py-3 safe-area-top">
