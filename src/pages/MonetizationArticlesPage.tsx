@@ -510,7 +510,12 @@ export default function MonetizationArticlesPage() {
 
           {/* Sections */}
           <div className="space-y-6">
-            {tabData.sections.map((section) => (
+            {filteredSections.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-sm text-muted-foreground">No articles found for "{searchQuery}"</p>
+              </div>
+            )}
+            {filteredSections.map((section) => (
               <div key={section.heading}>
                 <h3 className="font-bold text-base mb-3">{section.heading}</h3>
                 <div className="rounded-2xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
