@@ -1,18 +1,17 @@
 /**
- * ZIVO Wallet — Unified payments & credits hub
- * All sections powered by real Supabase/Stripe data
+ * ZIVO Wallet — Premium 2026 redesign
+ * Real Supabase/Stripe data throughout
  */
 import { useState } from "react";
 import {
   ArrowLeft, Wallet, CreditCard, Star, Trash2, Plus, Shield,
-  BarChart3, Users, Tag, Gift, Trophy, ExternalLink, TrendingUp,
-  Clock, DollarSign, Target, Lightbulb, Sparkles, PiggyBank
+  Users, Gift, Trophy, ExternalLink,
+  Clock, DollarSign, Sparkles, PiggyBank, ChevronRight, Eye, EyeOff,
+  TrendingUp, Zap
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { useCustomerWallet } from "@/hooks/useCustomerWallet";
 import { useStripePaymentMethods, useDeleteStripeCard, useSetDefaultStripeCard } from "@/hooks/useStripePaymentMethods";
 import { useWalletTransactions, useWalletCredits, useWalletSummary } from "@/hooks/useZivoWallet";
@@ -21,32 +20,47 @@ import { useSavingsGoals, useCreateSavingsGoal, useDeleteSavingsGoal } from "@/h
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
 import AddCardForm from "@/components/wallet/AddCardForm";
 import SEOHead from "@/components/SEOHead";
-import { motion } from "framer-motion";
-import { formatDistanceToNow } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
+import { formatDistanceToNow, format } from "date-fns";
+
+function brandIcon(brand: string) {
+  const b = brand?.toLowerCase();
+  if (b === "visa") return "💳";
+  if (b === "mastercard") return "🔶";
+  if (b === "amex") return "💎";
+  return "💳";
+}
 
 function brandLabel(brand: string) {
   const map: Record<string, string> = {
-    visa: "VISA", mastercard: "MC", amex: "AMEX", discover: "Discover",
+    visa: "Visa", mastercard: "Mastercard", amex: "Amex", discover: "Discover",
   };
-  return map[brand?.toLowerCase()] || brand?.toUpperCase() || "CARD";
+  return map[brand?.toLowerCase()] || brand?.toUpperCase() || "Card";
 }
 
 const BUDGET_CATEGORIES = [
-  { key: "flights", label: "Flights", color: "bg-blue-500" },
-  { key: "hotels", label: "Hotels", color: "bg-amber-500" },
-  { key: "rides", label: "Rides", color: "bg-emerald-500" },
-  { key: "food", label: "Food", color: "bg-orange-500" },
+  { key: "flights", label: "Flights", emoji: "✈️", color: "from-blue-500 to-blue-600" },
+  { key: "hotels", label: "Hotels", emoji: "🏨", color: "from-amber-500 to-amber-600" },
+  { key: "rides", label: "Rides", emoji: "🚗", color: "from-emerald-500 to-emerald-600" },
+  { key: "food", label: "Food", emoji: "🍔", color: "from-orange-500 to-orange-600" },
 ];
+
+const TAB_ITEMS = [
+  { key: "cards", label: "Cards", icon: CreditCard },
+  { key: "history", label: "History", icon: Clock },
+  { key: "credits", label: "Credits", icon: Gift },
+] as const;
 
 export default function WalletPage() {
   const navigate = useNavigate();
   const [showAddCard, setShowAddCard] = useState(false);
   const [showAddGoal, setShowAddGoal] = useState(false);
+  const [balanceHidden, setBalanceHidden] = useState(false);
+  const [activeTab, setActiveTab] = useState<"cards" | "history" | "credits">("cards");
   const [newGoalName, setNewGoalName] = useState("");
   const [newGoalEmoji, setNewGoalEmoji] = useState("🏖️");
   const [newGoalTarget, setNewGoalTarget] = useState("");
 
-  // Real data hooks
   const { balanceDollars, lifetimeEarnedDollars, isLoading: walletLoading } = useCustomerWallet();
   const { data: stripeCards = [], isLoading: cardsLoading } = useStripePaymentMethods();
   const deleteCard = useDeleteStripeCard();
@@ -65,50 +79,16 @@ export default function WalletPage() {
   const txCount = summary?.transactionCount ?? 0;
   const spentByService = summary?.spentByService ?? {};
 
-  // Build budget data from real sources
   const budgetMap = budgets.reduce((acc, b) => {
     acc[b.category] = b.budget_amount;
     return acc;
   }, {} as Record<string, number>);
 
-  // Cashback from wallet credits, pending from unused credits with expiry
   const earnedCredits = walletCredits
     .filter((c) => !c.expires_at || new Date(c.expires_at) > new Date())
     .reduce((sum, c) => sum + Number(c.amount), 0);
-  const pendingCredits = walletCredits
-    .filter((c) => c.credit_type === "pending" || c.credit_type === "cashback")
-    .reduce((sum, c) => sum + Number(c.amount), 0);
 
-  // Dynamic tips based on real data
   const tierProgress = getNextTierProgress();
-
-  const tips: { icon: React.ReactNode; text: string }[] = [];
-  const expiringCredit = walletCredits.find(
-    (c) => c.expires_at && new Date(c.expires_at) > new Date() &&
-      new Date(c.expires_at).getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000
-  );
-  if (expiringCredit) {
-    const expDate = new Date(expiringCredit.expires_at!);
-    tips.push({
-      icon: <span>💡</span>,
-      text: `Use your $${Number(expiringCredit.amount).toFixed(0)} cashback before it expires on ${expDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
-    });
-  }
-  if (tierProgress.pointsNeeded > 0) {
-    tips.push({
-      icon: <span>🔥</span>,
-      text: `You're ${tierProgress.pointsNeeded.toLocaleString()} pts away from ${tierProgress.nextTier} tier (2x points)`,
-    });
-  }
-  if (stripeCards.length === 0) {
-    tips.push({
-      icon: <span>💳</span>,
-      text: `Add a payment method for faster checkouts`,
-    });
-  }
-  if (tips.length === 0) {
-    tips.push({ icon: <span>✨</span>, text: "Book with ZIVO to earn cashback and loyalty points" });
-  }
 
   const handleCreateGoal = () => {
     if (!newGoalName || !newGoalTarget) return;
@@ -130,255 +110,376 @@ export default function WalletPage() {
       <SEOHead title="ZIVO Wallet" description="Payments & credits" />
 
       {/* Header */}
-      <div className="sticky top-0 safe-area-top z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="flex items-center justify-between px-6 py-4">
-          <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-muted border border-border/50 flex items-center justify-center">
-            <ArrowLeft className="w-5 h-5" />
+      <div className="sticky top-0 safe-area-top z-50 bg-background/80 backdrop-blur-2xl border-b border-border/30">
+        <div className="flex items-center px-5 py-3.5 gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center active:scale-95 transition-transform"
+          >
+            <ArrowLeft className="w-4.5 h-4.5" />
           </button>
-          <div className="text-center">
-            <h1 className="font-bold text-lg">ZIVO Wallet</h1>
-            <p className="text-xs text-muted-foreground">Payments & credits</p>
+          <div className="flex-1">
+            <h1 className="font-bold text-[17px] leading-tight">Wallet</h1>
           </div>
-          <div className="w-10" />
+          <button
+            onClick={() => setBalanceHidden(!balanceHidden)}
+            className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center"
+          >
+            {balanceHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
         </div>
       </div>
 
-      <div className="px-6 py-6 space-y-6">
-        {/* Balance Card */}
+      <div className="px-5 pt-5 pb-4 space-y-5">
+
+        {/* ── BALANCE HERO ── */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-3xl p-6 text-white relative overflow-hidden"
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="relative rounded-[22px] overflow-hidden"
         >
-          <div className="absolute top-4 right-4">
-            <Badge className="bg-white/20 text-white border-0 text-[10px] gap-1">
-              <Shield className="w-3 h-3" /> Secure
-            </Badge>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
-            <CreditCard className="w-6 h-6 text-white" />
-          </div>
-          <p className="text-sm text-white/80">Available Balance</p>
-          <p className="text-4xl font-bold mt-1">
-            {walletLoading ? "..." : `$${balanceDollars.toFixed(2)}`}
-          </p>
-          <div className="flex gap-8 mt-6 pt-4 border-t border-white/20">
-            <div>
-              <p className="text-[10px] text-white/60 uppercase tracking-wider">6-month total</p>
-              <p className="font-bold text-lg">{summaryLoading ? "..." : `$${totalSpent.toFixed(0).toLocaleString()}`}</p>
+          {/* Gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-emerald-500 to-teal-600" />
+          {/* Decorative circles */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/8" />
+          <div className="absolute -bottom-6 -left-6 w-28 h-28 rounded-full bg-white/5" />
+          <div className="absolute top-1/2 right-1/4 w-20 h-20 rounded-full bg-white/5 blur-xl" />
+
+          <div className="relative z-10 p-6">
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-[14px] bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                  <Wallet className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-white/70 text-[11px] font-medium tracking-wide uppercase">Available Balance</p>
+                </div>
+              </div>
+              <Badge className="bg-white/15 text-white border-0 text-[9px] font-semibold gap-1 backdrop-blur-sm">
+                <Shield className="w-2.5 h-2.5" /> Encrypted
+              </Badge>
             </div>
-            <div>
-              <p className="text-[10px] text-white/60 uppercase tracking-wider">Transactions</p>
-              <p className="font-bold text-lg">{summaryLoading ? "..." : txCount}</p>
+
+            <div className="mb-6">
+              <motion.p
+                key={balanceHidden ? "hidden" : "visible"}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-[42px] font-extrabold text-white leading-none tracking-tight"
+              >
+                {walletLoading ? "..." : balanceHidden ? "••••••" : `$${balanceDollars.toFixed(2)}`}
+              </motion.p>
+              {lifetimeEarnedDollars > 0 && (
+                <p className="text-white/50 text-[11px] mt-1.5 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  ${lifetimeEarnedDollars.toFixed(2)} lifetime earned
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-0 border-t border-white/15 -mx-6 px-6 pt-4">
+              <div className="flex-1">
+                <p className="text-white/45 text-[10px] font-medium uppercase tracking-wider">Total Spent</p>
+                <p className="text-white font-bold text-lg mt-0.5">
+                  {summaryLoading ? "..." : balanceHidden ? "••••" : `$${totalSpent.toFixed(0)}`}
+                </p>
+              </div>
+              <div className="w-px bg-white/15 mx-4" />
+              <div className="flex-1">
+                <p className="text-white/45 text-[10px] font-medium uppercase tracking-wider">Transactions</p>
+                <p className="text-white font-bold text-lg mt-0.5">
+                  {summaryLoading ? "..." : txCount}
+                </p>
+              </div>
+              <div className="w-px bg-white/15 mx-4" />
+              <div className="flex-1">
+                <p className="text-white/45 text-[10px] font-medium uppercase tracking-wider">Points</p>
+                <p className="text-white font-bold text-lg mt-0.5 flex items-center gap-1">
+                  {pointsLoading ? "..." : points.points_balance.toLocaleString()}
+                  <Zap className="w-3.5 h-3.5 text-amber-300" />
+                </p>
+              </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Tabs: Cards / History / Credits */}
-        <Tabs defaultValue="cards">
-          <TabsList className="w-full grid grid-cols-3">
-            <TabsTrigger value="cards">Cards</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
-            <TabsTrigger value="credits">Credits</TabsTrigger>
-          </TabsList>
+        {/* ── TABS ── */}
+        <div className="flex bg-muted/40 rounded-2xl p-1 gap-0.5">
+          {TAB_ITEMS.map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`flex-1 flex items-center justify-center gap-1.5 text-[13px] font-semibold py-2.5 rounded-[14px] transition-all duration-200 touch-manipulation ${
+                activeTab === key
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground"
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {label}
+            </button>
+          ))}
+        </div>
 
-          {/* CARDS TAB */}
-          <TabsContent value="cards" className="mt-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-bold">Payment Methods</h2>
-              <Button size="sm" className="rounded-xl gap-1 font-bold" onClick={() => setShowAddCard(true)}>
-                <Plus className="w-4 h-4" /> Add Card
-              </Button>
-            </div>
-
-            {showAddCard && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-                <AddCardForm onClose={() => setShowAddCard(false)} />
-              </motion.div>
-            )}
-
-            {cardsLoading ? (
-              <div className="space-y-3">
-                {[1, 2].map((i) => (
-                  <div key={i} className="h-16 bg-muted/30 rounded-xl animate-pulse" />
-                ))}
+        {/* ── TAB CONTENT ── */}
+        <AnimatePresence mode="wait">
+          {activeTab === "cards" && (
+            <motion.div key="cards" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="font-bold text-[15px]">Payment Methods</h2>
+                {!showAddCard && (
+                  <Button size="sm" className="rounded-xl font-semibold gap-1.5 h-8 text-xs" onClick={() => setShowAddCard(true)}>
+                    <Plus className="w-3.5 h-3.5" /> Add Card
+                  </Button>
+                )}
               </div>
-            ) : stripeCards.length === 0 ? (
-              <div className="bg-card border border-border/50 rounded-2xl p-8 text-center">
-                <CreditCard className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="text-muted-foreground">No payment methods</p>
-                <p className="text-sm text-muted-foreground/60 mt-1">Add a card to get started</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {stripeCards.map((card) => (
-                  <div key={card.id} className="bg-card border border-border/50 rounded-xl p-4 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                      <CreditCard className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">
-                        {brandLabel(card.brand)} •••• {card.last4}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Expires {card.exp_month}/{card.exp_year}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setDefault.mutate(card.id)}
-                      disabled={card.is_default || setDefault.isPending}
-                      className={`p-2 rounded-lg transition-colors ${card.is_default ? "text-amber-500" : "text-muted-foreground/40 hover:text-amber-500"}`}
-                    >
-                      <Star className="w-4 h-4" fill={card.is_default ? "currentColor" : "none"} />
-                    </button>
-                    <button
-                      onClick={() => { if (confirm("Remove this card?")) deleteCard.mutate(card.id); }}
-                      disabled={deleteCard.isPending}
-                      className="p-2 rounded-lg text-muted-foreground/40 hover:text-destructive transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+
+              {showAddCard && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
+                  <AddCardForm onClose={() => setShowAddCard(false)} />
+                </motion.div>
+              )}
+
+              {cardsLoading ? (
+                <div className="space-y-2.5">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="h-[72px] bg-muted/30 rounded-2xl animate-pulse" />
+                  ))}
+                </div>
+              ) : stripeCards.length === 0 && !showAddCard ? (
+                <div className="rounded-2xl border border-dashed border-border/60 p-8 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-3">
+                    <CreditCard className="w-7 h-7 text-muted-foreground/40" />
                   </div>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* HISTORY TAB */}
-          <TabsContent value="history" className="mt-4 space-y-4">
-            <h2 className="font-bold">Transaction History</h2>
-            {txLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-14 bg-muted/30 rounded-xl animate-pulse" />
-                ))}
-              </div>
-            ) : walletTransactions.length === 0 ? (
-              <div className="bg-card border border-border/50 rounded-2xl p-8 text-center">
-                <Wallet className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="text-muted-foreground">No transactions yet</p>
-                <p className="text-sm text-muted-foreground/60 mt-1">Your payment history will appear here</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {walletTransactions.map((tx) => {
-                  const isCredit = tx.transaction_type !== "payment";
-                  return (
-                    <div key={tx.id} className="bg-card border border-border/50 rounded-xl p-3 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isCredit ? "bg-emerald-500/15 text-emerald-500" : "bg-destructive/15 text-destructive"}`}>
-                          <Wallet className="w-4 h-4" />
+                  <p className="font-semibold text-sm">No payment methods</p>
+                  <p className="text-xs text-muted-foreground mt-1">Add a card for fast checkout</p>
+                  <Button size="sm" variant="outline" className="mt-4 rounded-xl text-xs font-semibold gap-1.5" onClick={() => setShowAddCard(true)}>
+                    <Plus className="w-3 h-3" /> Add Your First Card
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {stripeCards.map((card, i) => (
+                    <motion.div
+                      key={card.id}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className={`rounded-2xl border p-4 flex items-center gap-3.5 transition-all ${
+                        card.is_default
+                          ? "border-emerald-500/30 bg-emerald-500/[0.03]"
+                          : "border-border/40 bg-card"
+                      }`}
+                    >
+                      <div className="text-2xl w-10 h-10 flex items-center justify-center">
+                        {brandIcon(card.brand)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-sm">{brandLabel(card.brand)}</p>
+                          <span className="text-muted-foreground text-sm">•••• {card.last4}</span>
+                          {card.is_default && (
+                            <Badge className="bg-emerald-500/10 text-emerald-600 border-0 text-[9px] font-bold px-1.5 py-0">
+                              Default
+                            </Badge>
+                          )}
                         </div>
-                        <div>
-                          <p className="text-sm font-medium">{tx.description || tx.service_type}</p>
-                          <p className="text-[11px] text-muted-foreground">
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Expires {card.exp_month}/{card.exp_year}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        {!card.is_default && (
+                          <button
+                            onClick={() => setDefault.mutate(card.id)}
+                            disabled={setDefault.isPending}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-amber-500 transition-colors"
+                          >
+                            <Star className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => { if (confirm("Remove this card?")) deleteCard.mutate(card.id); }}
+                          disabled={deleteCard.isPending}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-destructive transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {activeTab === "history" && (
+            <motion.div key="history" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} className="space-y-3">
+              <h2 className="font-bold text-[15px]">Recent Transactions</h2>
+              {txLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-16 bg-muted/30 rounded-2xl animate-pulse" />
+                  ))}
+                </div>
+              ) : walletTransactions.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border/60 p-8 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-3">
+                    <Clock className="w-7 h-7 text-muted-foreground/40" />
+                  </div>
+                  <p className="font-semibold text-sm">No transactions yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">Your payment history appears here</p>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {walletTransactions.map((tx, i) => {
+                    const isCredit = tx.transaction_type !== "payment";
+                    return (
+                      <motion.div
+                        key={tx.id}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.03 }}
+                        className="rounded-xl bg-card border border-border/30 p-3.5 flex items-center gap-3"
+                      >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                          isCredit ? "bg-emerald-500/10" : "bg-muted/60"
+                        }`}>
+                          {isCredit
+                            ? <DollarSign className="w-4.5 h-4.5 text-emerald-500" />
+                            : <Wallet className="w-4.5 h-4.5 text-muted-foreground" />
+                          }
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-[13px] truncate">
+                            {tx.description || tx.service_type}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
                             {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
                           </p>
                         </div>
-                      </div>
-                      <p className={`font-bold text-sm ${isCredit ? "text-emerald-500" : "text-destructive"}`}>
-                        {isCredit ? "+" : "-"}${Math.abs(Number(tx.amount)).toFixed(2)}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </TabsContent>
+                        <p className={`font-bold text-sm tabular-nums ${isCredit ? "text-emerald-500" : "text-foreground"}`}>
+                          {isCredit ? "+" : "−"}${Math.abs(Number(tx.amount)).toFixed(2)}
+                        </p>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          )}
 
-          {/* CREDITS TAB */}
-          <TabsContent value="credits" className="mt-4 space-y-4">
-            <h2 className="font-bold">Available Credits</h2>
-            {creditsLoading ? (
-              <div className="space-y-3">
-                {[1, 2].map((i) => (
-                  <div key={i} className="h-14 bg-muted/30 rounded-xl animate-pulse" />
-                ))}
+          {activeTab === "credits" && (
+            <motion.div key="credits" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} className="space-y-4">
+              {/* Credits summary */}
+              <div className="flex gap-3">
+                <div className="flex-1 rounded-2xl bg-emerald-500/[0.06] border border-emerald-500/15 p-4 text-center">
+                  <p className="text-2xl font-bold text-emerald-600">${earnedCredits.toFixed(0)}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">Available</p>
+                </div>
+                <div className="flex-1 rounded-2xl bg-amber-500/[0.06] border border-amber-500/15 p-4 text-center">
+                  <p className="text-2xl font-bold text-amber-600">{points.points_balance.toLocaleString()}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">Points</p>
+                </div>
               </div>
-            ) : walletCredits.length === 0 ? (
-              <div className="bg-card border border-border/50 rounded-2xl p-8 text-center">
-                <Gift className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="text-muted-foreground">No credits yet</p>
-                <p className="text-sm text-muted-foreground/60 mt-1">Earn credits from referrals, promos & rewards</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {walletCredits.map((credit) => (
-                  <div key={credit.id} className="bg-card border border-border/50 rounded-xl p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-emerald-500/15 flex items-center justify-center">
-                        <Gift className="w-4 h-4 text-emerald-500" />
+
+              <h2 className="font-bold text-[15px]">Credit History</h2>
+              {creditsLoading ? (
+                <div className="space-y-2">
+                  {[1, 2].map((i) => <div key={i} className="h-14 bg-muted/30 rounded-2xl animate-pulse" />)}
+                </div>
+              ) : walletCredits.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border/60 p-8 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-3">
+                    <Gift className="w-7 h-7 text-muted-foreground/40" />
+                  </div>
+                  <p className="font-semibold text-sm">No credits yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">Earn credits from referrals & promos</p>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {walletCredits.map((credit) => (
+                    <div key={credit.id} className="rounded-xl bg-card border border-border/30 p-3.5 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                        <Gift className="w-4.5 h-4.5 text-emerald-500" />
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">{credit.source_description || credit.credit_type}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-[13px]">{credit.source_description || credit.credit_type}</p>
                         {credit.expires_at && (
-                          <p className="text-[11px] text-muted-foreground">
-                            Expires {formatDistanceToNow(new Date(credit.expires_at), { addSuffix: true })}
+                          <p className="text-[11px] text-amber-600 mt-0.5">
+                            Expires {format(new Date(credit.expires_at), "MMM d, yyyy")}
                           </p>
                         )}
                       </div>
+                      <p className="font-bold text-sm text-emerald-500">+${Number(credit.amount).toFixed(2)}</p>
                     </div>
-                    <p className="font-bold text-sm text-emerald-500">
-                      ${Number(credit.amount).toFixed(2)}
-                    </p>
-                  </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Earn more */}
+              <div className="space-y-2">
+                <h3 className="font-bold text-[13px] text-muted-foreground">Earn More</h3>
+                {[
+                  { label: "Refer Friends", desc: "Earn when they book", icon: Users, path: "/account/referrals" },
+                  { label: "Achievements", desc: "Milestones & rewards", icon: Trophy, path: "/account/rewards" },
+                  { label: "Gift Cards", desc: "Buy, send, or redeem", icon: Gift, path: "/account/gift-cards" },
+                ].map(({ label, desc, icon: Icon, path }) => (
+                  <button
+                    key={path}
+                    onClick={() => navigate(path)}
+                    className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-border/30 hover:border-primary/20 transition-colors text-left active:scale-[0.98]"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-[13px]">{label}</p>
+                      <p className="text-[11px] text-muted-foreground">{desc}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/30" />
+                  </button>
                 ))}
               </div>
-            )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            {/* Earn more CTA */}
-            <div className="bg-card border border-border/50 rounded-2xl p-5 space-y-3">
-              <h3 className="font-bold text-sm">Earn More Credits</h3>
-              {[
-                { label: "Refer Friends", desc: "Earn when they book", icon: Users, path: "/account/referrals" },
-                { label: "Rewards", desc: "Milestones & achievements", icon: Trophy, path: "/account/rewards" },
-                { label: "Gift Cards", desc: "Buy, send, or redeem", icon: Gift, path: "/account/gift-cards" },
-              ].map(({ label, desc, icon: Icon, path }) => (
-                <button
-                  key={path}
-                  onClick={() => navigate(path)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors text-left"
-                >
-                  <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
-                    <Icon className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{label}</p>
-                    <p className="text-[11px] text-muted-foreground">{desc}</p>
-                  </div>
-                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/40" />
-                </button>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* ─── BUDGET TRACKER ─── */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <div className="bg-card border border-border/50 rounded-2xl p-5">
-            <h3 className="font-bold mb-4">Budget Tracker</h3>
+        {/* ── BUDGET TRACKER ── */}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <div className="rounded-2xl bg-card border border-border/40 p-5">
+            <h3 className="font-bold text-[15px] mb-4">Budget Tracker</h3>
             {budgetsLoading || summaryLoading ? (
               <div className="space-y-4">
-                {[1, 2, 3, 4].map((i) => <div key={i} className="h-8 bg-muted/30 rounded animate-pulse" />)}
+                {[1, 2, 3, 4].map((i) => <div key={i} className="h-10 bg-muted/30 rounded-xl animate-pulse" />)}
               </div>
             ) : (
               <div className="space-y-4">
-                {BUDGET_CATEGORIES.map(({ key, label, color }) => {
+                {BUDGET_CATEGORIES.map(({ key, label, emoji, color }) => {
                   const spent = Number(spentByService[key] ?? 0);
                   const budget = Number(budgetMap[key] ?? 0);
                   const pct = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
 
                   return (
-                    <div key={key} className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium">{label}</span>
-                        <span className="text-muted-foreground">
-                          ${spent.toFixed(0)} / ${budget > 0 ? `$${budget.toFixed(0)}` : "—"}
+                    <div key={key} className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{emoji}</span>
+                          <span className="font-medium text-[13px]">{label}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          ${spent.toFixed(0)}{budget > 0 ? ` / $${budget.toFixed(0)}` : ""}
                         </span>
                       </div>
                       {budget > 0 ? (
-                        <div className="w-full h-2.5 rounded-full bg-muted overflow-hidden">
-                          <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${pct}%` }} />
+                        <div className="w-full h-2 rounded-full bg-muted/50 overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${pct}%` }}
+                            transition={{ duration: 0.6 }}
+                            className={`h-full rounded-full bg-gradient-to-r ${color}`}
+                          />
                         </div>
                       ) : (
                         <button
@@ -388,7 +489,7 @@ export default function WalletPage() {
                               upsertBudget.mutate({ category: key, budget_amount: Number(val) });
                             }
                           }}
-                          className="text-xs text-primary hover:underline"
+                          className="text-[11px] text-primary font-medium"
                         >
                           + Set budget
                         </button>
@@ -401,84 +502,47 @@ export default function WalletPage() {
           </div>
         </motion.div>
 
-        {/* ─── CASHBACK & REWARDS ─── */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <div className="bg-card border border-border/50 rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <DollarSign className="w-5 h-5 text-emerald-500" />
-              <h3 className="font-bold">Cashback & Rewards</h3>
-            </div>
-            {creditsLoading || pointsLoading ? (
-              <div className="h-16 bg-muted/30 rounded-xl animate-pulse" />
-            ) : (
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-2xl font-bold text-foreground">
-                    ${earnedCredits.toFixed(0)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Earned</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">
-                    ${pendingCredits.toFixed(0)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Pending</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-amber-500">
-                    {points.points_balance.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Points</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* ─── SAVINGS GOALS ─── */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <div className="bg-card border border-border/50 rounded-2xl p-5">
+        {/* ── SAVINGS GOALS ── */}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <div className="rounded-2xl bg-card border border-border/40 p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold">Savings Goals</h3>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 text-xs gap-1"
-                onClick={() => setShowAddGoal(!showAddGoal)}
-              >
+              <h3 className="font-bold text-[15px]">Savings Goals</h3>
+              <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 rounded-lg" onClick={() => setShowAddGoal(!showAddGoal)}>
                 <Plus className="w-3 h-3" /> Add
               </Button>
             </div>
 
             {showAddGoal && (
-              <div className="bg-muted/30 rounded-xl p-3 mb-4 space-y-2">
-                <div className="flex gap-2">
-                  <input
-                    value={newGoalEmoji}
-                    onChange={(e) => setNewGoalEmoji(e.target.value)}
-                    className="w-12 text-center bg-background border border-border rounded-lg p-1.5 text-lg"
-                    maxLength={2}
-                  />
-                  <input
-                    value={newGoalName}
-                    onChange={(e) => setNewGoalName(e.target.value)}
-                    placeholder="Goal name"
-                    className="flex-1 bg-background border border-border rounded-lg px-3 py-1.5 text-sm"
-                  />
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mb-4">
+                <div className="bg-muted/30 rounded-xl p-3 space-y-2.5">
+                  <div className="flex gap-2">
+                    <input
+                      value={newGoalEmoji}
+                      onChange={(e) => setNewGoalEmoji(e.target.value)}
+                      className="w-11 text-center bg-background border border-border/60 rounded-lg p-1.5 text-lg"
+                      maxLength={2}
+                    />
+                    <input
+                      value={newGoalName}
+                      onChange={(e) => setNewGoalName(e.target.value)}
+                      placeholder="Goal name"
+                      className="flex-1 bg-background border border-border/60 rounded-lg px-3 py-1.5 text-sm"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      value={newGoalTarget}
+                      onChange={(e) => setNewGoalTarget(e.target.value)}
+                      placeholder="Target ($)"
+                      type="number"
+                      className="flex-1 bg-background border border-border/60 rounded-lg px-3 py-1.5 text-sm"
+                    />
+                    <Button size="sm" className="rounded-lg" onClick={handleCreateGoal} disabled={createGoal.isPending}>
+                      Save
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <input
-                    value={newGoalTarget}
-                    onChange={(e) => setNewGoalTarget(e.target.value)}
-                    placeholder="Target amount ($)"
-                    type="number"
-                    className="flex-1 bg-background border border-border rounded-lg px-3 py-1.5 text-sm"
-                  />
-                  <Button size="sm" onClick={handleCreateGoal} disabled={createGoal.isPending}>
-                    Save
-                  </Button>
-                </div>
-              </div>
+              </motion.div>
             )}
 
             {goalsLoading ? (
@@ -486,10 +550,9 @@ export default function WalletPage() {
                 {[1, 2].map((i) => <div key={i} className="h-12 bg-muted/30 rounded-xl animate-pulse" />)}
               </div>
             ) : savingsGoals.length === 0 ? (
-              <div className="text-center py-4">
-                <PiggyBank className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+              <div className="text-center py-5">
+                <PiggyBank className="w-10 h-10 text-muted-foreground/25 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">No savings goals yet</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Create a goal to start saving</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -500,14 +563,19 @@ export default function WalletPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="text-lg">{goal.emoji}</span>
-                          <span className="font-medium text-sm">{goal.name}</span>
+                          <span className="font-medium text-[13px]">{goal.name}</span>
                         </div>
-                        <span className="text-sm text-muted-foreground">
-                          ${goal.saved_amount.toFixed(0)}/${goal.target_amount.toFixed(0)}
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          ${goal.saved_amount.toFixed(0)} / ${goal.target_amount.toFixed(0)}
                         </span>
                       </div>
-                      <div className="w-full h-2.5 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${pct}%` }} />
+                      <div className="w-full h-2 rounded-full bg-muted/50 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.6 }}
+                          className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400"
+                        />
                       </div>
                     </div>
                   );
@@ -517,29 +585,27 @@ export default function WalletPage() {
           </div>
         </motion.div>
 
-        {/* ─── MONEY-SAVING TIPS ─── */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="w-5 h-5 text-emerald-500" />
-              <h3 className="font-bold">Money-Saving Tips</h3>
+        {/* ── SMART TIPS ── */}
+        {tierProgress.pointsNeeded > 0 && (
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <div className="rounded-2xl bg-gradient-to-br from-emerald-500/[0.06] to-teal-500/[0.04] border border-emerald-500/15 p-4 flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                <Sparkles className="w-4 h-4 text-emerald-500" />
+              </div>
+              <div>
+                <p className="font-semibold text-[13px]">Level Up!</p>
+                <p className="text-[12px] text-muted-foreground mt-0.5 leading-relaxed">
+                  You're {tierProgress.pointsNeeded.toLocaleString()} points away from <span className="font-semibold text-foreground">{tierProgress.nextTier}</span> tier with 2× earning rate.
+                </p>
+              </div>
             </div>
-            <div className="space-y-2.5">
-              {tips.map((tip, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <span className="mt-0.5 shrink-0">{tip.icon}</span>
-                  <span>{tip.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* Footer */}
-        <div className="text-xs text-muted-foreground/60 space-y-1">
-          <p>• Credits are automatically applied at checkout</p>
-          <p>• Cards are securely stored by Stripe</p>
-          <p>• Credits have no cash value</p>
+        <div className="text-[11px] text-muted-foreground/50 space-y-0.5 pt-2">
+          <p>• Credits auto-applied at checkout</p>
+          <p>• Cards secured by Stripe</p>
         </div>
       </div>
     </div>
