@@ -161,6 +161,7 @@ export default function ShareSheet({
   const inAppOptions = [
     { key: "chat", label: "Chat", icon: MessageCircle, color: "hsl(var(--primary))", onClick: handleShareToChat },
     { key: "profile", label: "Profile", icon: User, color: "hsl(var(--primary))", onClick: handleShareToProfile },
+    ...(onVisitProfile ? [{ key: "visit", label: visitProfileLabel || "Visit Profile", icon: UserCircle, color: "hsl(var(--primary))", onClick: () => { onClose(); onVisitProfile(); } }] : []),
   ];
 
   // ── External share options ──────────────────────────────────────────────
