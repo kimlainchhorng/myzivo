@@ -3,7 +3,7 @@
  * Contains navigation shortcuts, services, and account switching
  */
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   Car, UtensilsCrossed, MapPin, Plane, Hotel, CarFront,
   Package, Compass, ShoppingBag, Heart, MessageCircle,
@@ -61,17 +61,27 @@ export default function FeedSidebar() {
   const [showSwitch, setShowSwitch] = useState(false);
   const [showChat, setShowChat] = useState(false);
 
+  // Broadcast chat state so the feed layout can adjust
+  const setChatOpen = useCallback((open: boolean) => {
+    setShowChat(open);
+    window.dispatchEvent(new CustomEvent("zivo-chat-state", { detail: { open } }));
+  }, []);
+
   // Listen for global "open chat" event from NavBar
   useEffect(() => {
-    const handleOpen = () => setShowChat(true);
-    const handleToggle = () => setShowChat((prev) => !prev);
+    const handleOpen = () => setChatOpen(true);
+    const handleToggle = () => setShowChat((prev) => {
+      const next = !prev;
+      window.dispatchEvent(new CustomEvent("zivo-chat-state", { detail: { open: next } }));
+      return next;
+    });
     window.addEventListener("zivo-open-chat", handleOpen);
     window.addEventListener("zivo-toggle-chat", handleToggle);
     return () => {
       window.removeEventListener("zivo-open-chat", handleOpen);
       window.removeEventListener("zivo-toggle-chat", handleToggle);
     };
-  }, []);
+  }, [setChatOpen]);
 
   const avatarUrl = optimizeAvatar(profile?.avatar_url, 80) || profile?.avatar_url || user?.user_metadata?.avatar_url;
   const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
@@ -328,7 +338,7 @@ export default function FeedSidebar() {
           {/* Backdrop for mobile/tablet */}
           <div
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[1290] lg:hidden"
-            onClick={() => setShowChat(false)}
+            onClick={() => setChatOpen(false)}
           />
           <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[400px] md:w-[420px] lg:top-[4.5rem] lg:w-[360px] xl:w-[380px] 2xl:w-[400px] bg-background lg:border-l lg:border-border/30 shadow-2xl z-[1300] flex flex-col lg:rounded-none rounded-l-2xl sm:rounded-l-2xl">
             {/* Header */}
@@ -341,7 +351,7 @@ export default function FeedSidebar() {
               </div>
               <span className="text-base font-semibold text-foreground flex-1">Messages</span>
               <button
-                onClick={() => setShowChat(false)}
+                onClick={() => setChatOpen(false)}
                 className="h-8 w-8 rounded-lg hover:bg-muted/60 flex items-center justify-center transition-colors"
               >
                 <XIcon className="h-4 w-4 text-muted-foreground" />
