@@ -884,16 +884,29 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const interactionPostId = getFeedInteractionPostId(item);
   const likesTable = getFeedLikesTable(item);
+  const isSharedReel = Boolean(item.shared_from_post_id || item.shared_from_user_id);
+  const followTargetSource = isSharedReel && item.shared_from_source ? item.shared_from_source : item.source;
+  const followTargetUserId = followTargetSource === "user"
+    ? ((isSharedReel && item.shared_from_user_id) ? item.shared_from_user_id : item.author_id) || null
+    : null;
 
   // Check follow status on mount
   useEffect(() => {
-    if (!currentUserId || !item.author_id || item.author_id === currentUserId) return;
-    supabase.rpc("is_following", { target_user_id: item.author_id })
+    if (!currentUserId || !followTargetUserId || followTargetUserId === currentUserId) {
+      setIsFollowing(false);
+      return;
+    }
+    supabase.rpc("is_following", { target_user_id: followTargetUserId })
       .then(({ data }) => { if (typeof data === "boolean") setIsFollowing(data); });
-  }, [currentUserId, item.author_id]);
+  }, [currentUserId, followTargetUserId]);
 
   const handleReelFollow = async () => {
-    if (!currentUserId || !item.author_id || followLoading) return;
+    if (!followTargetUserId || followLoading) return;
+    if (!currentUserId) {
+      toast.error("Please sign in to follow");
+      return;
+    }
+    if (followTargetUserId === currentUserId) return;
     if (isFollowing) {
       setShowUnfollowConfirm(true);
       return;
@@ -902,13 +915,13 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     try {
       await (supabase as any).from("user_followers").insert({
         follower_id: currentUserId,
-        following_id: item.author_id,
+        following_id: followTargetUserId,
       });
       setIsFollowing(true);
       try {
         const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", currentUserId).single();
         await supabase.functions.invoke("send-push-notification", {
-          body: { user_id: item.author_id, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: currentUserId, avatar_url: sp?.avatar_url, action_url: `/user/${currentUserId}` } },
+          body: { user_id: followTargetUserId, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: currentUserId, avatar_url: sp?.avatar_url, action_url: `/user/${currentUserId}` } },
         });
       } catch {}
     } catch { /* ignore */ } finally {
@@ -917,11 +930,11 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   };
 
   const executeReelUnfollow = async () => {
-    if (!currentUserId || !item.author_id) return;
+    if (!currentUserId || !followTargetUserId) return;
     setFollowLoading(true);
     try {
       await (supabase as any).from("user_followers").delete()
-        .eq("follower_id", currentUserId).eq("following_id", item.author_id);
+        .eq("follower_id", currentUserId).eq("following_id", followTargetUserId);
       setIsFollowing(false);
     } catch { /* ignore */ } finally {
       setFollowLoading(false);
@@ -1217,7 +1230,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
         {/* Author avatar with Follow badge — show original creator for shared posts */}
         {(() => {
-          const isShared = !!item.shared_from_post_id;
+          const isShared = Boolean(item.shared_from_post_id || item.shared_from_user_id);
           const displayAvatar = isShared && item.shared_from_user_avatar ? item.shared_from_user_avatar : item.author_avatar;
           const displayName = isShared && item.shared_from_user_name ? item.shared_from_user_name : item.author_name;
           const displayAuthorId = isShared && item.shared_from_user_id ? item.shared_from_user_id : item.author_id;
@@ -1247,7 +1260,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
                 </div>
               </button>
               {/* Follow button */}
-              {currentUserId && displayAuthorId && displayAuthorId !== currentUserId && (
+              {displaySource === "user" && displayAuthorId && displayAuthorId !== currentUserId && (
                 <button
                   onClick={handleReelFollow}
                   disabled={followLoading}
@@ -1292,7 +1305,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       >
         {/* Author info — show original creator for shared posts */}
         {(() => {
-          const isShared = !!item.shared_from_post_id;
+          const isShared = Boolean(item.shared_from_post_id || item.shared_from_user_id);
           const displayAvatar = isShared && item.shared_from_user_avatar ? item.shared_from_user_avatar : item.author_avatar;
           const displayName = isShared && item.shared_from_user_name ? item.shared_from_user_name : item.author_name;
           const displayAuthorId = isShared && item.shared_from_user_id ? item.shared_from_user_id : item.author_id;
@@ -1301,48 +1314,50 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
           return (
             <>
-              <button
-                onClick={() => {
-                  onClose();
-                  if (displaySource === "store" && displayStoreSlug) {
-                    navigate(`/grocery/shop/${displayStoreSlug}`);
-                  } else if (displayAuthorId) {
-                    navigate(`/user/${displayAuthorId}`);
-                  }
-                }}
-                className="flex items-center gap-2.5 mb-1"
-              >
-                <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-white/40 shrink-0">
-                  {displayAvatar ? (
-                    <img src={displayAvatar} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="h-full w-full bg-white/20 flex items-center justify-center text-white text-sm font-bold">
-                      {displayName[0]}
-                    </div>
-                  )}
-                </div>
-                <div className="text-left">
-                  <p className="text-white text-sm font-bold drop-shadow-lg">{displayName}</p>
-                  <p className="text-white/60 text-[10px] drop-shadow">{timeAgo}</p>
-                </div>
-              </button>
-              {/* Follow button next to author */}
-              {currentUserId && displayAuthorId && displayAuthorId !== currentUserId && (
+              <div className="mb-1 flex items-center gap-2">
                 <button
-                  onClick={handleReelFollow}
-                  disabled={followLoading}
-                  className={cn(
-                    "ml-2 mb-1 px-4 py-1 rounded-md text-xs font-semibold transition-all",
-                    isFollowing
-                      ? "bg-white/20 text-white border border-white/30"
-                      : "bg-emerald-500 text-white"
-                  )}
+                  onClick={() => {
+                    onClose();
+                    if (displaySource === "store" && displayStoreSlug) {
+                      navigate(`/grocery/shop/${displayStoreSlug}`);
+                    } else if (displayAuthorId) {
+                      navigate(`/user/${displayAuthorId}`);
+                    }
+                  }}
+                  className="flex min-w-0 flex-1 items-center gap-2.5"
                 >
-                  {followLoading ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : isFollowing ? "Following" : "Follow"}
+                  <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-white/40 shrink-0">
+                    {displayAvatar ? (
+                      <img src={displayAvatar} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full bg-white/20 flex items-center justify-center text-white text-sm font-bold">
+                        {displayName[0]}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 text-left">
+                    <p className="truncate text-white text-sm font-bold drop-shadow-lg">{displayName}</p>
+                    <p className="text-white/60 text-[10px] drop-shadow">{timeAgo}</p>
+                  </div>
                 </button>
-              )}
+                {/* Follow button next to author */}
+                {displaySource === "user" && displayAuthorId && displayAuthorId !== currentUserId && (
+                  <button
+                    onClick={handleReelFollow}
+                    disabled={followLoading}
+                    className={cn(
+                      "shrink-0 px-4 py-1 rounded-md text-xs font-semibold transition-all",
+                      isFollowing
+                        ? "bg-white/20 text-white border border-white/30"
+                        : "bg-emerald-500 text-white"
+                    )}
+                  >
+                    {followLoading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : isFollowing ? "Following" : "Follow"}
+                  </button>
+                )}
+              </div>
               {/* "Shared by" indicator */}
               {isShared && (
                 <p className="text-white/50 text-[11px] mb-1 drop-shadow flex items-center gap-1">
