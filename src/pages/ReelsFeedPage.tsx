@@ -2652,6 +2652,19 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
         creatorName={tipTarget?.name || ""}
       />
 
+      {/* Unfollow confirm dialog */}
+      <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unfollow?</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to unfollow {item.author_name}?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { executeFeedUnfollow(); setShowUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
