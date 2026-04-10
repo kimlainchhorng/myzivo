@@ -385,7 +385,7 @@ function ReelCard({
   }, [isActive, isVideoPost, currentSrc, hasLoadedFrame, isRepairing, isBlobLoading]);
 
   return (
-    <div className="relative w-full h-[100dvh] lg:h-full bg-black overflow-hidden snap-start flex-shrink-0 lg:rounded-[28px]">
+    <div className="relative w-full h-[100dvh] lg:h-full bg-black overflow-hidden snap-start flex-shrink-0">
       {/* Media */}
       {isVideoPost ? (
         <video
