@@ -513,7 +513,7 @@ const App = () => (
                 <Route path="/app" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
                 <Route path="/app/home" element={<ProtectedRoute><AppHome /></ProtectedRoute>} />
                 <Route path="/my-trips" element={<ProtectedRoute><MyTripsPage /></ProtectedRoute>} />
-                <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
+                <Route path="/wallet" element={<ProtectedRoute><AccountWalletPage /></ProtectedRoute>} />
                 <Route path="/support" element={<ProtectedRoute><SupportCenterPage /></ProtectedRoute>} />
                 <Route path="/travel" element={<ProtectedRoute><AppTravel /></ProtectedRoute>} />
                 <Route path="/more" element={<ProtectedRoute><AppMore /></ProtectedRoute>} />
