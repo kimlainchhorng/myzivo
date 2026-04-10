@@ -3,7 +3,7 @@
  * Contains navigation shortcuts, services, and account switching
  */
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   Car, UtensilsCrossed, MapPin, Plane, Hotel, CarFront,
   Package, Compass, ShoppingBag, Heart, MessageCircle,
