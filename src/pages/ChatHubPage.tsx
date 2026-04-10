@@ -516,7 +516,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   }
 
   const shell = (
-    <>
+    <div className={cn("flex flex-col", embedded ? "h-full min-h-0" : "min-h-screen")}>
       {showListShell && (
         <>
           <div className={cn(
@@ -932,11 +932,11 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           queryClient.invalidateQueries({ queryKey: ["chat-hub-groups"] });
         }}
       />
-    </>
+    </div>
   );
 
   if (embedded) {
-    return <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-background">{shell}</div>;
+    return <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-background">{shell}</div>;
   }
 
   return (
