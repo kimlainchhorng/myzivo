@@ -137,7 +137,7 @@ const Profile = () => {
   const { user, signOut, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
-  const { unreadCount: notifUnreadCount } = useNotifications(20);
+  const { unreadCount: notifUnreadCount, notifications } = useNotifications(20);
   
   // Count pending friend requests + new followers
   const [socialCount, setSocialCount] = useState(0);
@@ -522,21 +522,122 @@ const Profile = () => {
                               <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                             </button>
                           )}
-                          {notifUnreadCount > 0 && (
-                            <button
-                              onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
-                              className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors text-left touch-manipulation"
-                            >
-                              <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
-                                <Bell className="w-4 h-4 text-destructive" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold">Unread Alerts</p>
-                                <p className="text-[10px] text-muted-foreground">{notifUnreadCount} notifications</p>
-                              </div>
-                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                            </button>
-                          )}
+                          {(() => {
+                            const followNotifs = notifications.filter(n => !n.is_read && (n.template?.includes('follow') || n.title?.toLowerCase().includes('follow')));
+                            return followNotifs.length > 0 ? (
+                              <button
+                                onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
+                                className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-blue-500/5 border border-blue-500/15 hover:bg-blue-500/10 transition-colors text-left touch-manipulation"
+                              >
+                                <div className="w-8 h-8 rounded-full bg-blue-500/15 flex items-center justify-center shrink-0">
+                                  <UserCheck className="w-4 h-4 text-blue-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold">New Followers</p>
+                                  <p className="text-[10px] text-muted-foreground">{followNotifs.length} new</p>
+                                </div>
+                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              </button>
+                            ) : null;
+                          })()}
+                          {(() => {
+                            const paymentNotifs = notifications.filter(n => !n.is_read && (n.category === 'transactional' || n.template?.includes('payment') || n.template?.includes('order') || n.title?.toLowerCase().includes('payment') || n.title?.toLowerCase().includes('order')));
+                            return paymentNotifs.length > 0 ? (
+                              <button
+                                onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
+                                className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/15 hover:bg-emerald-500/10 transition-colors text-left touch-manipulation"
+                              >
+                                <div className="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
+                                  <Wallet className="w-4 h-4 text-emerald-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold">Payments & Orders</p>
+                                  <p className="text-[10px] text-muted-foreground">{paymentNotifs.length} updates</p>
+                                </div>
+                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              </button>
+                            ) : null;
+                          })()}
+                          {(() => {
+                            const supportNotifs = notifications.filter(n => !n.is_read && (n.template?.includes('support') || n.template?.includes('ticket') || n.title?.toLowerCase().includes('support')));
+                            return supportNotifs.length > 0 ? (
+                              <button
+                                onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
+                                className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/15 hover:bg-amber-500/10 transition-colors text-left touch-manipulation"
+                              >
+                                <div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
+                                  <Phone className="w-4 h-4 text-amber-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold">Support Tickets</p>
+                                  <p className="text-[10px] text-muted-foreground">{supportNotifs.length} updates</p>
+                                </div>
+                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              </button>
+                            ) : null;
+                          })()}
+                          {(() => {
+                            const promoNotifs = notifications.filter(n => !n.is_read && (n.category === 'marketing' || n.template?.includes('promo') || n.title?.toLowerCase().includes('deal')));
+                            return promoNotifs.length > 0 ? (
+                              <button
+                                onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
+                                className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-purple-500/5 border border-purple-500/15 hover:bg-purple-500/10 transition-colors text-left touch-manipulation"
+                              >
+                                <div className="w-8 h-8 rounded-full bg-purple-500/15 flex items-center justify-center shrink-0">
+                                  <Sparkles className="w-4 h-4 text-purple-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold">Deals & Promos</p>
+                                  <p className="text-[10px] text-muted-foreground">{promoNotifs.length} new</p>
+                                </div>
+                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              </button>
+                            ) : null;
+                          })()}
+                          {(() => {
+                            const accountNotifs = notifications.filter(n => !n.is_read && n.category === 'account' && !n.template?.includes('follow') && !n.template?.includes('support'));
+                            return accountNotifs.length > 0 ? (
+                              <button
+                                onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
+                                className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors text-left touch-manipulation"
+                              >
+                                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                                  <Shield className="w-4 h-4 text-muted-foreground" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold">Account Updates</p>
+                                  <p className="text-[10px] text-muted-foreground">{accountNotifs.length} updates</p>
+                                </div>
+                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              </button>
+                            ) : null;
+                          })()}
+                          {(() => {
+                            // Show generic unread count for any remaining uncategorized
+                            const categorized = notifications.filter(n => !n.is_read).filter(n =>
+                              n.template?.includes('follow') || n.title?.toLowerCase().includes('follow') ||
+                              n.category === 'transactional' || n.template?.includes('payment') || n.template?.includes('order') || n.title?.toLowerCase().includes('payment') || n.title?.toLowerCase().includes('order') ||
+                              n.template?.includes('support') || n.template?.includes('ticket') || n.title?.toLowerCase().includes('support') ||
+                              n.category === 'marketing' || n.template?.includes('promo') || n.title?.toLowerCase().includes('deal') ||
+                              n.category === 'account'
+                            );
+                            const otherCount = notifUnreadCount - categorized.length;
+                            return otherCount > 0 ? (
+                              <button
+                                onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }}
+                                className="flex items-center gap-3 w-full p-2.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors text-left touch-manipulation"
+                              >
+                                <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                                  <Bell className="w-4 h-4 text-destructive" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold">Other Alerts</p>
+                                  <p className="text-[10px] text-muted-foreground">{otherCount} notifications</p>
+                                </div>
+                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              </button>
+                            ) : null;
+                          })()}
                         </>
                       )}
                     </div>
