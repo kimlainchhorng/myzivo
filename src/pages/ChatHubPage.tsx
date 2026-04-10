@@ -633,7 +633,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         </div>
       )}
 
-      <ChatStories />
+      {!embedded && <ChatStories />}
 
       {/* Chat List */}
       <AnimatePresence mode="wait">
