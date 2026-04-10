@@ -1208,30 +1208,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
             </div>
           </button>
         )}
-      </div>
 
-      {/* Floating Product Card — "Buy from [Shop] - Xkm away" */}
-      {item.commerce_link && (
-        <div
-          className="absolute left-4 right-20"
-          style={{ bottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 5.5rem), 7rem)' }}
-        >
-          <FloatingProductCard
-            commerceLink={item.commerce_link}
-            shopName={item.author_name}
-            storeSlug={item.store_slug}
-            postId={item.id}
-            currentUserId={currentUserId}
-            onNavigate={onClose}
-          />
-        </div>
-      )}
-
-      {/* Right side continued - Author avatar with Follow button */}
-      <div
-        className="absolute right-3 flex flex-col items-center"
-        style={{ bottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 1.5rem), 2.5rem)' }}
-      >
+        {/* Author avatar with Follow badge */}
         <div className="relative">
           <button
             onClick={() => {
@@ -1255,7 +1233,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           </button>
           {/* Follow button */}
           {currentUserId && item.author_id !== currentUserId && (
-             <button
+            <button
               onClick={handleReelFollow}
               disabled={followLoading}
               className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full flex items-center justify-center shadow-lg"
