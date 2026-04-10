@@ -100,6 +100,7 @@ const DigitalProductsPage = lazy(() => import("./pages/DigitalProductsPage"));
 const MonetizationPage = lazy(() => import("./pages/MonetizationPage"));
 const MonetizationArticlesPage = lazy(() => import("./pages/MonetizationArticlesPage"));
 const MonetizationArticleDetailPage = lazy(() => import("./pages/MonetizationArticleDetailPage"));
+const ProgramDetailPage = lazy(() => import("./pages/ProgramDetailPage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
 const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
 const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
@@ -585,6 +586,7 @@ const App = () => (
                 <Route path="/monetization" element={<ProtectedRoute><MonetizationPage /></ProtectedRoute>} />
                 <Route path="/monetization/articles" element={<ProtectedRoute><MonetizationArticlesPage /></ProtectedRoute>} />
                 <Route path="/monetization/articles/:slug" element={<ProtectedRoute><MonetizationArticleDetailPage /></ProtectedRoute>} />
+                <Route path="/monetization/program/:programId" element={<ProtectedRoute><ProgramDetailPage /></ProtectedRoute>} />
                 <Route path="/events" element={<EventsPage />} />
                 <Route path="/communities" element={<CommunitiesPage />} />
                 <Route path="/marketplace" element={<MarketplacePage />} />
