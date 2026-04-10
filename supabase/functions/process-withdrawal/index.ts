@@ -29,7 +29,7 @@ serve(async (req) => {
     const userId = userData.user.id;
 
     // Parse & validate input
-    const { amount_cents, method, note } = await req.json();
+    const { amount_cents, method, note, payout_method_id } = await req.json();
 
     if (!amount_cents || typeof amount_cents !== "number" || amount_cents < 500) {
       throw new Error("Minimum withdrawal is $5.00");
@@ -39,6 +39,22 @@ serve(async (req) => {
     }
     if (!method || !["bank_transfer", "aba"].includes(method)) {
       throw new Error("Invalid withdrawal method");
+    }
+
+    // Fetch payout method details for the notification
+    let payoutDetails = "";
+    if (payout_method_id) {
+      const { data: pm } = await supabase
+        .from("customer_payout_methods")
+        .select("*")
+        .eq("id", payout_method_id)
+        .eq("user_id", userId)
+        .single();
+      if (pm) {
+        payoutDetails = pm.method_type === "aba"
+          ? `\nABA ID: ${pm.aba_account_id}\nHolder: ${pm.account_holder_name || "—"}`
+          : `\nBank: ${pm.bank_name || "—"}\nAcct: ${pm.account_number || "—"}\nHolder: ${pm.account_holder_name || "—"}`;
+      }
     }
 
     // Get current wallet balance (with row lock via service role)
@@ -95,7 +111,7 @@ serve(async (req) => {
     const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
     const chatId = Deno.env.get("TELEGRAM_CHAT_ID");
     if (botToken && chatId) {
-      const msg = `💸 *Withdrawal Request*\nUser: ${userId}\nAmount: $${(amount_cents / 100).toFixed(2)}\nMethod: ${methodLabel}\nNote: ${note || "—"}\nNew Balance: $${(newBalance / 100).toFixed(2)}`;
+      const msg = `💸 *Withdrawal Request*\nUser: ${userId}\nAmount: $${(amount_cents / 100).toFixed(2)}\nMethod: ${methodLabel}${payoutDetails}\nNote: ${note || "—"}\nNew Balance: $${(newBalance / 100).toFixed(2)}`;
       try {
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: "POST",

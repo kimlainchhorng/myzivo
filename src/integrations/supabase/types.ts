@@ -11166,6 +11166,51 @@ export type Database = {
           },
         ]
       }
+      customer_payout_methods: {
+        Row: {
+          aba_account_id: string | null
+          account_holder_name: string | null
+          account_number: string | null
+          bank_name: string | null
+          created_at: string
+          id: string
+          is_default: boolean
+          is_verified: boolean
+          label: string | null
+          method_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aba_account_id?: string | null
+          account_holder_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          is_verified?: boolean
+          label?: string | null
+          method_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aba_account_id?: string | null
+          account_holder_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          is_verified?: boolean
+          label?: string | null
+          method_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customer_profiles: {
         Row: {
           created_at: string

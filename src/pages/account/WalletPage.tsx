@@ -2,8 +2,8 @@
  * ZIVO Wallet — Premium 2026 redesign
  * Real Supabase/Stripe data throughout
  */
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import {
   ArrowLeft, Wallet, CreditCard, Star, Trash2, Plus, Shield,
   Users, Gift, Trophy,
@@ -64,6 +64,16 @@ export default function WalletPage() {
   const [cashoutMethod, setCashoutMethod] = useState<string>("bank_transfer");
   const [cashoutNote, setCashoutNote] = useState("");
   const [cashoutSubmitting, setCashoutSubmitting] = useState(false);
+  const [showAddPayout, setShowAddPayout] = useState(false);
+  const [payoutForm, setPayoutForm] = useState({
+    method_type: "bank_transfer" as "bank_transfer" | "aba",
+    label: "",
+    bank_name: "",
+    account_number: "",
+    account_holder_name: "",
+    aba_account_id: "",
+  });
+  const [selectedPayoutId, setSelectedPayoutId] = useState<string | null>(null);
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -75,6 +85,72 @@ export default function WalletPage() {
   const { data: walletCredits = [], isLoading: creditsLoading } = useWalletCredits();
   const { data: summary, isLoading: summaryLoading } = useWalletSummary();
   const { points, isLoading: pointsLoading } = useLoyaltyPoints();
+
+  // Payout methods
+  const { data: payoutMethods = [], isLoading: payoutsLoading } = useQuery({
+    queryKey: ["payout-methods", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await (supabase as any)
+        .from("customer_payout_methods")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  const addPayoutMethod = useMutation({
+    mutationFn: async (form: typeof payoutForm) => {
+      if (!user) throw new Error("Not authenticated");
+      const { error } = await (supabase as any)
+        .from("customer_payout_methods")
+        .insert({
+          user_id: user.id,
+          method_type: form.method_type,
+          label: form.label || (form.method_type === "aba" ? "ABA Account" : "Bank Account"),
+          bank_name: form.bank_name || null,
+          account_number: form.account_number || null,
+          account_holder_name: form.account_holder_name || null,
+          aba_account_id: form.aba_account_id || null,
+          is_default: payoutMethods.length === 0,
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payout-methods"] });
+      setShowAddPayout(false);
+      setPayoutForm({ method_type: "bank_transfer", label: "", bank_name: "", account_number: "", account_holder_name: "", aba_account_id: "" });
+      toast.success("Payout method added!");
+    },
+    onError: (err: any) => toast.error(err?.message || "Failed to add"),
+  });
+
+  const deletePayoutMethod = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any)
+        .from("customer_payout_methods")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payout-methods"] });
+      if (selectedPayoutId) setSelectedPayoutId(null);
+      toast.success("Payout method removed");
+    },
+  });
+
+  // Auto-select first payout method or default
+  useEffect(() => {
+    if (payoutMethods.length > 0 && !selectedPayoutId) {
+      const def = payoutMethods.find((p: any) => p.is_default) || payoutMethods[0];
+      setSelectedPayoutId(def.id);
+      setCashoutMethod(def.method_type);
+    }
+  }, [payoutMethods, selectedPayoutId]);
 
   const totalSpent = summary?.totalSpent ?? 0;
   const txCount = summary?.transactionCount ?? 0;
@@ -310,138 +386,281 @@ export default function WalletPage() {
                 </div>
               </div>
 
-              {/* Method selection */}
+              {/* Saved Payout Methods */}
               <div>
-                <h3 className="font-bold text-[13px] mb-2.5">Withdrawal Method</h3>
-                <div className="space-y-2">
-                  {CASHOUT_METHODS.map(({ id, label, icon: Icon, desc }) => (
-                    <button
-                      key={id}
-                      onClick={() => setCashoutMethod(id)}
-                      className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all text-left active:scale-[0.98] ${
-                        cashoutMethod === id
-                          ? "border-emerald-500/40 bg-emerald-500/[0.04]"
-                          : "border-border/40 bg-card"
-                      }`}
-                    >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                        cashoutMethod === id ? "bg-emerald-500/15" : "bg-muted/60"
-                      }`}>
-                        <Icon className={`w-5 h-5 ${cashoutMethod === id ? "text-emerald-500" : "text-muted-foreground"}`} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-[13px]">{label}</p>
-                        <p className="text-[11px] text-muted-foreground">{desc}</p>
-                      </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        cashoutMethod === id ? "border-emerald-500" : "border-muted-foreground/30"
-                      }`}>
-                        {cashoutMethod === id && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Amount */}
-              <div>
-                <h3 className="font-bold text-[13px] mb-2.5">Amount</h3>
-                <div className="flex gap-2 flex-wrap mb-3">
-                  {QUICK_AMOUNTS.filter(a => a <= balanceDollars).map((amt) => (
-                    <button
-                      key={amt}
-                      onClick={() => setCashoutAmount(String(amt))}
-                      className={`px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all ${
-                        cashoutAmount === String(amt)
-                          ? "bg-emerald-500 text-white"
-                          : "bg-muted/50 text-foreground border border-border/40"
-                      }`}
-                    >
-                      ${amt}
-                    </button>
-                  ))}
-                  {balanceDollars >= 5 && (
-                    <button
-                      onClick={() => setCashoutAmount(balanceDollars.toFixed(2))}
-                      className={`px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all ${
-                        cashoutAmount === balanceDollars.toFixed(2)
-                          ? "bg-emerald-500 text-white"
-                          : "bg-muted/50 text-foreground border border-border/40"
-                      }`}
-                    >
-                      All (${balanceDollars.toFixed(2)})
-                    </button>
+                <div className="flex items-center justify-between mb-2.5">
+                  <h3 className="font-bold text-[13px]">Payout Account</h3>
+                  {!showAddPayout && (
+                    <Button size="sm" variant="outline" className="rounded-xl text-xs font-semibold gap-1 h-7" onClick={() => setShowAddPayout(true)}>
+                      <Plus className="w-3 h-3" /> Add
+                    </Button>
                   )}
                 </div>
-                <Input
-                  type="number"
-                  placeholder="Enter custom amount"
-                  value={cashoutAmount}
-                  onChange={(e) => setCashoutAmount(e.target.value)}
-                  className="rounded-xl h-11"
-                  min="5"
-                  max={balanceDollars}
-                />
-                {Number(cashoutAmount) > 0 && Number(cashoutAmount) < 5 && (
-                  <p className="text-[11px] text-destructive mt-1.5 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" /> Minimum withdrawal is $5.00
-                  </p>
+
+                {/* Add Payout Method Form */}
+                {showAddPayout && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mb-3">
+                    <div className="rounded-2xl border border-border/40 bg-card p-4 space-y-3">
+                      <h4 className="font-semibold text-[13px]">Add Payout Method</h4>
+                      
+                      {/* Type toggle */}
+                      <div className="flex gap-2">
+                        {CASHOUT_METHODS.map(({ id, label, icon: Icon }) => (
+                          <button
+                            key={id}
+                            onClick={() => setPayoutForm(f => ({ ...f, method_type: id as any }))}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12px] font-semibold transition-all ${
+                              payoutForm.method_type === id
+                                ? "bg-emerald-500 text-white"
+                                : "bg-muted/50 text-foreground border border-border/40"
+                            }`}
+                          >
+                            <Icon className="w-3.5 h-3.5" />
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <Input
+                        placeholder="Account holder name"
+                        value={payoutForm.account_holder_name}
+                        onChange={(e) => setPayoutForm(f => ({ ...f, account_holder_name: e.target.value }))}
+                        className="rounded-xl h-10 text-sm"
+                      />
+
+                      {payoutForm.method_type === "bank_transfer" ? (
+                        <>
+                          <Input
+                            placeholder="Bank name (e.g. Chase, ABA)"
+                            value={payoutForm.bank_name}
+                            onChange={(e) => setPayoutForm(f => ({ ...f, bank_name: e.target.value }))}
+                            className="rounded-xl h-10 text-sm"
+                          />
+                          <Input
+                            placeholder="Account number"
+                            value={payoutForm.account_number}
+                            onChange={(e) => setPayoutForm(f => ({ ...f, account_number: e.target.value }))}
+                            className="rounded-xl h-10 text-sm"
+                          />
+                        </>
+                      ) : (
+                        <Input
+                          placeholder="ABA Account ID / Phone number"
+                          value={payoutForm.aba_account_id}
+                          onChange={(e) => setPayoutForm(f => ({ ...f, aba_account_id: e.target.value }))}
+                          className="rounded-xl h-10 text-sm"
+                        />
+                      )}
+
+                      <Input
+                        placeholder="Nickname (optional, e.g. 'My ABA')"
+                        value={payoutForm.label}
+                        onChange={(e) => setPayoutForm(f => ({ ...f, label: e.target.value }))}
+                        className="rounded-xl h-10 text-sm"
+                      />
+
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 rounded-xl"
+                          onClick={() => setShowAddPayout(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold"
+                          disabled={
+                            addPayoutMethod.isPending ||
+                            !payoutForm.account_holder_name.trim() ||
+                            (payoutForm.method_type === "bank_transfer" && (!payoutForm.account_number.trim() || !payoutForm.bank_name.trim())) ||
+                            (payoutForm.method_type === "aba" && !payoutForm.aba_account_id.trim())
+                          }
+                          onClick={() => addPayoutMethod.mutate(payoutForm)}
+                        >
+                          {addPayoutMethod.isPending ? "Saving..." : "Save"}
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Saved payout methods list */}
+                {payoutsLoading ? (
+                  <div className="h-16 bg-muted/30 rounded-2xl animate-pulse" />
+                ) : payoutMethods.length === 0 && !showAddPayout ? (
+                  <div className="rounded-2xl border border-dashed border-border/60 p-6 text-center">
+                    <div className="w-12 h-12 rounded-2xl bg-muted/40 flex items-center justify-center mx-auto mb-2">
+                      <Building2 className="w-6 h-6 text-muted-foreground/40" />
+                    </div>
+                    <p className="font-semibold text-sm">No payout account</p>
+                    <p className="text-xs text-muted-foreground mt-1">Add your bank or ABA account to withdraw</p>
+                    <Button size="sm" variant="outline" className="mt-3 rounded-xl text-xs font-semibold gap-1" onClick={() => setShowAddPayout(true)}>
+                      <Plus className="w-3 h-3" /> Add Payout Account
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {payoutMethods.map((pm: any) => (
+                      <button
+                        key={pm.id}
+                        onClick={() => {
+                          setSelectedPayoutId(pm.id);
+                          setCashoutMethod(pm.method_type);
+                        }}
+                        className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all text-left active:scale-[0.98] ${
+                          selectedPayoutId === pm.id
+                            ? "border-emerald-500/40 bg-emerald-500/[0.04]"
+                            : "border-border/40 bg-card"
+                        }`}
+                      >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                          selectedPayoutId === pm.id ? "bg-emerald-500/15" : "bg-muted/60"
+                        }`}>
+                          {pm.method_type === "aba"
+                            ? <Banknote className={`w-5 h-5 ${selectedPayoutId === pm.id ? "text-emerald-500" : "text-muted-foreground"}`} />
+                            : <Building2 className={`w-5 h-5 ${selectedPayoutId === pm.id ? "text-emerald-500" : "text-muted-foreground"}`} />
+                          }
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-[13px]">{pm.label || (pm.method_type === "aba" ? "ABA Account" : "Bank Account")}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            {pm.method_type === "aba"
+                              ? pm.aba_account_id
+                              : `${pm.bank_name || ""} •••• ${pm.account_number?.slice(-4) || ""}`
+                            }
+                            {pm.account_holder_name ? ` · ${pm.account_holder_name}` : ""}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm("Remove this payout method?")) deletePayoutMethod.mutate(pm.id);
+                            }}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-destructive transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            selectedPayoutId === pm.id ? "border-emerald-500" : "border-muted-foreground/30"
+                          }`}>
+                            {selectedPayoutId === pm.id && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
 
-              {/* Note */}
-              <div>
-                <h3 className="font-bold text-[13px] mb-2.5">Note (optional)</h3>
-                <Input
-                  placeholder="Account number, reference, etc."
-                  value={cashoutNote}
-                  onChange={(e) => setCashoutNote(e.target.value)}
-                  className="rounded-xl h-11"
-                />
-              </div>
+              {/* Amount — only show if they have a payout method */}
+              {payoutMethods.length > 0 && (
+                <>
+                  <div>
+                    <h3 className="font-bold text-[13px] mb-2.5">Amount</h3>
+                    <div className="flex gap-2 flex-wrap mb-3">
+                      {QUICK_AMOUNTS.filter(a => a <= balanceDollars).map((amt) => (
+                        <button
+                          key={amt}
+                          onClick={() => setCashoutAmount(String(amt))}
+                          className={`px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all ${
+                            cashoutAmount === String(amt)
+                              ? "bg-emerald-500 text-white"
+                              : "bg-muted/50 text-foreground border border-border/40"
+                          }`}
+                        >
+                          ${amt}
+                        </button>
+                      ))}
+                      {balanceDollars >= 5 && (
+                        <button
+                          onClick={() => setCashoutAmount(balanceDollars.toFixed(2))}
+                          className={`px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all ${
+                            cashoutAmount === balanceDollars.toFixed(2)
+                              ? "bg-emerald-500 text-white"
+                              : "bg-muted/50 text-foreground border border-border/40"
+                          }`}
+                        >
+                          All (${balanceDollars.toFixed(2)})
+                        </button>
+                      )}
+                    </div>
+                    <Input
+                      type="number"
+                      placeholder="Enter custom amount"
+                      value={cashoutAmount}
+                      onChange={(e) => setCashoutAmount(e.target.value)}
+                      className="rounded-xl h-11"
+                      min="5"
+                      max={balanceDollars}
+                    />
+                    {Number(cashoutAmount) > 0 && Number(cashoutAmount) < 5 && (
+                      <p className="text-[11px] text-destructive mt-1.5 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> Minimum withdrawal is $5.00
+                      </p>
+                    )}
+                  </div>
 
-              {/* Submit */}
-              <Button
-                className="w-full h-12 rounded-2xl font-bold text-[15px] gap-2 bg-emerald-500 hover:bg-emerald-600 text-white"
-                disabled={
-                  cashoutSubmitting ||
-                  !cashoutAmount ||
-                  Number(cashoutAmount) < 5 ||
-                  Number(cashoutAmount) > balanceDollars
-                }
-                onClick={async () => {
-                  if (!user) { toast.error("Please sign in"); return; }
-                  setCashoutSubmitting(true);
-                  try {
-                    const amountCents = Math.round(Number(cashoutAmount) * 100);
-                    const { data, error } = await supabase.functions.invoke("process-withdrawal", {
-                      body: {
-                        amount_cents: amountCents,
-                        method: cashoutMethod,
-                        note: cashoutNote || undefined,
-                      },
-                    });
-                    if (error) throw new Error(error.message || "Withdrawal failed");
-                    if (data?.error) throw new Error(data.error);
+                  {/* Note */}
+                  <div>
+                    <h3 className="font-bold text-[13px] mb-2.5">Note (optional)</h3>
+                    <Input
+                      placeholder="Reference or message"
+                      value={cashoutNote}
+                      onChange={(e) => setCashoutNote(e.target.value)}
+                      className="rounded-xl h-11"
+                    />
+                  </div>
 
-                    toast.success(`Withdrawal of $${Number(cashoutAmount).toFixed(2)} submitted!`, {
-                      description: "Processing usually takes 1-3 business days.",
-                    });
-                    setCashoutAmount("");
-                    setCashoutNote("");
-                    queryClient.invalidateQueries({ queryKey: ["customer-wallet"] });
-                    queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
-                    queryClient.invalidateQueries({ queryKey: ["wallet-summary"] });
-                  } catch (err: any) {
-                    toast.error(err?.message || "Withdrawal failed");
-                  } finally {
-                    setCashoutSubmitting(false);
-                  }
-                }}
-              >
-                <Send className="w-4.5 h-4.5" />
-                {cashoutSubmitting ? "Processing..." : `Withdraw $${Number(cashoutAmount || 0).toFixed(2)}`}
-              </Button>
+                  {/* Submit */}
+                  <Button
+                    className="w-full h-12 rounded-2xl font-bold text-[15px] gap-2 bg-emerald-500 hover:bg-emerald-600 text-white"
+                    disabled={
+                      cashoutSubmitting ||
+                      !cashoutAmount ||
+                      Number(cashoutAmount) < 5 ||
+                      Number(cashoutAmount) > balanceDollars ||
+                      !selectedPayoutId
+                    }
+                    onClick={async () => {
+                      if (!user) { toast.error("Please sign in"); return; }
+                      setCashoutSubmitting(true);
+                      try {
+                        const amountCents = Math.round(Number(cashoutAmount) * 100);
+                        const selectedPayout = payoutMethods.find((p: any) => p.id === selectedPayoutId);
+                        const { data, error } = await supabase.functions.invoke("process-withdrawal", {
+                          body: {
+                            amount_cents: amountCents,
+                            method: selectedPayout?.method_type || cashoutMethod,
+                            note: cashoutNote || undefined,
+                            payout_method_id: selectedPayoutId,
+                          },
+                        });
+                        if (error) throw new Error(error.message || "Withdrawal failed");
+                        if (data?.error) throw new Error(data.error);
+
+                        toast.success(`Withdrawal of $${Number(cashoutAmount).toFixed(2)} submitted!`, {
+                          description: "Processing usually takes 1-3 business days.",
+                        });
+                        setCashoutAmount("");
+                        setCashoutNote("");
+                        queryClient.invalidateQueries({ queryKey: ["customer-wallet"] });
+                        queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+                        queryClient.invalidateQueries({ queryKey: ["wallet-summary"] });
+                      } catch (err: any) {
+                        toast.error(err?.message || "Withdrawal failed");
+                      } finally {
+                        setCashoutSubmitting(false);
+                      }
+                    }}
+                  >
+                    <Send className="w-4.5 h-4.5" />
+                    {cashoutSubmitting ? "Processing..." : `Withdraw $${Number(cashoutAmount || 0).toFixed(2)}`}
+                  </Button>
+                </>
+              )}
 
               {/* Info */}
               <div className="text-[11px] text-muted-foreground/60 space-y-0.5">
