@@ -276,9 +276,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     }
   }, [recipientId, user]);
 
+  // Scroll to bottom after messages render (when loading transitions to false)
+  const initialScrollDone = useRef(false);
+  useEffect(() => {
+    if (!loading && messages.length > 0 && !initialScrollDone.current) {
+      initialScrollDone.current = true;
+      scrollToBottom(true);
+    }
+  }, [loading, messages.length, scrollToBottom]);
+
   // Load messages
   useEffect(() => {
     if (!user?.id) return;
+    initialScrollDone.current = false;
     const load = async () => {
       setLoading(true);
       const [msgRes, callRes] = await Promise.all([
@@ -299,7 +309,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setMessages(data);
       setCallEvents((callRes.data || []).map((c: any) => ({ ...c, _isCallEvent: true as const })));
       setLoading(false);
-      scrollToBottom(true);
 
       if (data?.length) {
         const unread = data.filter((m: Message) => m.receiver_id === user.id && !m.is_read);
