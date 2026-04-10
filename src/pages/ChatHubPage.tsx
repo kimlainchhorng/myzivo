@@ -738,8 +738,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     {/* Avatar */}
                     <div className="relative flex-shrink-0">
                       <div className={cn(
-                        "w-[54px] h-[54px] rounded-2xl flex items-center justify-center overflow-hidden ring-2 ring-border/30",
-                        (chat as any).isGroup ? "bg-primary/10" : "bg-muted"
+                        "w-[50px] h-[50px] rounded-2xl flex items-center justify-center overflow-hidden ring-2 ring-border/30",
+                        (chat as any).isGroup ? "bg-primary/10" : "bg-muted",
+                        embedded && "w-[44px] h-[44px] rounded-xl"
                       )}>
                         {chat.avatar ? (
                           <img src={chat.avatar} alt="" className="w-full h-full object-cover" />
