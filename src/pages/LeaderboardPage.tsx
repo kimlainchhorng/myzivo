@@ -52,7 +52,7 @@ export default function LeaderboardPage() {
   const [myScore] = useState(2450);
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 safe-area-top">
       <div className="bg-gradient-to-b from-primary/20 to-background p-4 pt-6">
         <div className="flex items-center gap-2 mb-6">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>

@@ -43,7 +43,7 @@ export default function BadgesPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="bg-gradient-to-b from-primary/20 to-background p-4 pt-6">
+      <div className="bg-gradient-to-b from-primary/20 to-background p-4 pt-6 safe-area-top">
         <div className="flex items-center gap-2 mb-6">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />

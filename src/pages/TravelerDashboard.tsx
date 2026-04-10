@@ -71,7 +71,7 @@ export default function TravelerDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
+    <div className="min-h-screen bg-background pb-24 relative overflow-hidden safe-area-top">
       <SEOHead title="My Dashboard – ZIVO" description="View your travel overview, achievements, and upcoming trips on ZIVO." noIndex={true} />
       <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(circle,hsl(var(--primary)/0.04)_0%,transparent_70%)] pointer-events-none" />
 
