@@ -320,20 +320,21 @@ export default function FeedSidebar() {
           </div>
         </SheetContent>
       </Sheet>
-      {/* Chat Slide Panel */}
-      <Sheet open={showChat} onOpenChange={setShowChat}>
-        <SheetContent
-          side="left"
-          className="!w-[420px] !max-w-[420px] xl:!w-[460px] xl:!max-w-[460px] 2xl:!w-[480px] 2xl:!max-w-[480px] p-0 flex flex-col border-r border-border/40 bg-background/95 backdrop-blur-xl shadow-2xl z-[1300]"
-        >
-          <SheetHeader className="px-5 py-3.5 border-b border-border/30 flex-row items-center gap-3 shrink-0">
-            <div className="flex items-center gap-2.5 flex-1">
-              <div className="h-8 w-8 rounded-full bg-sky-500/10 flex items-center justify-center">
-                <MessageCircle className="h-4 w-4 text-sky-500" />
-              </div>
-              <SheetTitle className="text-[15px] font-semibold">Chat</SheetTitle>
+      {/* Inline Chat Panel — sits beside the sidebar */}
+      {showChat && (
+        <div className="fixed left-60 top-[4.5rem] bottom-0 w-[380px] xl:w-[400px] 2xl:w-[420px] bg-background border-r border-border/40 shadow-xl z-[100] flex flex-col">
+          <div className="px-4 py-3 border-b border-border/30 flex items-center gap-2.5 shrink-0">
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <MessageCircle className="h-4 w-4 text-primary" />
             </div>
-          </SheetHeader>
+            <span className="text-[15px] font-semibold text-foreground flex-1">Chat</span>
+            <button
+              onClick={() => setShowChat(false)}
+              className="h-8 w-8 rounded-full hover:bg-muted/60 flex items-center justify-center transition-colors"
+            >
+              <XIcon className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
           <div className="flex-1 overflow-y-auto overflow-x-hidden">
             <Suspense fallback={
               <div className="flex flex-col items-center justify-center h-64 gap-3">
@@ -344,8 +345,8 @@ export default function FeedSidebar() {
               <ChatHubPage />
             </Suspense>
           </div>
-        </SheetContent>
-      </Sheet>
+        </div>
+      )}
     </aside>
   );
 }
