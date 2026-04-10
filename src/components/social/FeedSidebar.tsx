@@ -343,21 +343,15 @@ export default function FeedSidebar() {
             className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[1290] lg:hidden"
             onClick={() => setChatOpen(false)}
           />
-          <div
-            className="fixed right-0 top-0 bottom-0 z-[1300] flex w-full flex-col overflow-hidden bg-background shadow-2xl sm:w-[420px] md:w-[440px] lg:w-[400px] xl:w-[420px] 2xl:w-[440px] lg:border-l lg:border-border/20 rounded-l-2xl sm:rounded-l-2xl lg:rounded-none"
-          >
-            {/* Spacer to push content below navbar on desktop */}
-            <div className="hidden lg:block shrink-0" style={{ height: '4.5rem' }} />
-            <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
-              <Suspense fallback={
-                <div className="flex flex-1 flex-col items-center justify-center gap-3">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Loading chats…</span>
-                </div>
-              }>
-                <ChatHubPage embedded />
-              </Suspense>
-            </div>
+          <div className="fixed right-0 top-0 bottom-0 z-[1300] flex w-full flex-col overflow-hidden bg-background shadow-2xl sm:w-[420px] md:w-[440px] lg:top-[4.5rem] lg:bottom-0 lg:w-[400px] lg:border-l lg:border-border/20 xl:w-[420px] 2xl:w-[440px] rounded-l-2xl sm:rounded-l-2xl lg:rounded-none">
+            <Suspense fallback={
+              <div className="flex flex-col items-center justify-center h-64 gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Loading chats…</span>
+              </div>
+            }>
+              <ChatHubPage embedded />
+            </Suspense>
           </div>
         </>
       )}
