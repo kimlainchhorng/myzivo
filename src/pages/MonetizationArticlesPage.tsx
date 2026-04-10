@@ -62,7 +62,7 @@ const RECOMMENDED_SECTIONS: Section[] = [
       { title: "How to verify your identity to collect payouts", description: "Maintaining safety on ZIVO is our top priority. Learn how to verify and start earning...", views: "249.8K views", icon: BadgeCheck, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
       { title: "Getting your rewards from ZIVO", description: "We've made managing your ZIVO rewards simple. Track, withdraw, and manage your creator earnings...", views: "243.6K views", icon: Gift, iconBg: "bg-rose-500/10", iconColor: "text-rose-500" },
       { title: "Understanding ZIVO's payment timeline", description: "When do payouts arrive? Learn about processing times, payment methods, and minimum thresholds...", views: "1.8M views", icon: Clock, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
-      { title: "Setting up direct deposit for faster payouts", description: "Get your earnings faster by linking your bank account for direct deposit payments...", views: "567.3K views", icon: Wallet, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Setting up direct deposit for faster payouts", description: "Get your earnings faster by linking your bank account for direct deposit payments...", views: "567.3K views", icon: DollarSign, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
     ],
   },
   {
