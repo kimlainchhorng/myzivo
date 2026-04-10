@@ -322,10 +322,10 @@ export default function FeedSidebar() {
         </SheetContent>
       </Sheet>
     </aside>
-      {/* Inline Chat Panel — sits beside the sidebar */}
+      {/* Inline Chat Panel — right side, responsive */}
       {showChat && (
-        <div className="hidden lg:flex fixed left-60 top-[4.5rem] bottom-0 w-[380px] xl:w-[400px] 2xl:w-[420px] bg-background border-r border-border/40 shadow-xl z-[1100] flex-col">
-          <div className="px-4 py-3 border-b border-border/30 flex items-center gap-2.5 shrink-0">
+        <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[380px] md:w-[400px] lg:w-[380px] xl:w-[400px] 2xl:w-[420px] lg:top-[4.5rem] bg-background border-l border-border/40 shadow-xl z-[1300] flex flex-col">
+          <div className="px-4 py-3 border-b border-border/30 flex items-center gap-2.5 shrink-0" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 0.75rem)' }}>
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
               <MessageCircle className="h-4 w-4 text-primary" />
             </div>
