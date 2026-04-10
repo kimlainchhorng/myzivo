@@ -643,7 +643,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
           transition={{ duration: 0.12 }}
-          className="px-4 pt-2"
+          className={cn("px-4 pt-2", embedded && "px-2 pt-1")}
         >
           {searchingProfiles && active === "personal" ? (
             <div className="flex flex-col items-center justify-center py-20">
