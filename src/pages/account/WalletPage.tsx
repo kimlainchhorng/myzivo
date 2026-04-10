@@ -463,7 +463,7 @@ export default function WalletPage() {
             </motion.div>
           )}
 
-
+          {activeTab === "history" && (
             <motion.div key="history" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} className="space-y-3">
               <h2 className="font-bold text-[15px]">Recent Transactions</h2>
               {txLoading ? (
