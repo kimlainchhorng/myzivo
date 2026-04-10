@@ -3,7 +3,7 @@
  * Contains navigation shortcuts, services, and account switching
  */
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Car, UtensilsCrossed, MapPin, Plane, Hotel, CarFront,
   Package, Compass, ShoppingBag, Heart, MessageCircle,
@@ -62,7 +62,7 @@ export default function FeedSidebar() {
   const [showChat, setShowChat] = useState(false);
 
   // Listen for global "open chat" event from NavBar
-  React.useEffect(() => {
+  useEffect(() => {
     const handler = () => setShowChat(true);
     window.addEventListener("zivo-open-chat", handler);
     return () => window.removeEventListener("zivo-open-chat", handler);
