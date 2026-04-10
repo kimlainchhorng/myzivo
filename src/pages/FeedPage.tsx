@@ -385,7 +385,7 @@ function ReelCard({
   }, [isActive, isVideoPost, currentSrc, hasLoadedFrame, isRepairing, isBlobLoading]);
 
   return (
-    <div className="relative w-full h-[100dvh] lg:h-full bg-black overflow-hidden snap-start flex-shrink-0">
+    <div className="relative w-full h-[100dvh] lg:h-full bg-black overflow-hidden snap-start flex-shrink-0 lg:rounded-[28px]">
       {/* Media */}
       {isVideoPost ? (
         <video
@@ -1537,10 +1537,10 @@ export default function FeedPage() {
 
       {/* Snap-scroll reel container */}
       <div
-        className="relative w-full h-full md:flex md:items-center md:justify-center md:gap-4 lg:flex-1 lg:min-h-0 lg:h-0"
+        className="relative w-full h-full md:flex md:items-center md:justify-center md:gap-4 lg:flex-1 lg:min-h-0 lg:h-0 lg:items-stretch"
       >
         {/* Phone-frame on tablet+ */}
-        <div className="w-full h-full md:mx-auto md:rounded-2xl md:overflow-hidden md:shadow-2xl md:border md:border-white/10 md:h-[calc(100%-2rem)] md:w-auto md:aspect-[9/16] md:max-w-[420px] lg:max-h-full">
+        <div className="w-full h-full md:mx-auto md:rounded-2xl md:overflow-hidden md:shadow-2xl md:border md:border-white/10 md:h-[calc(100%-2rem)] md:w-auto md:aspect-[9/16] md:max-w-[420px] lg:h-full lg:w-[420px] lg:max-w-none lg:rounded-none lg:border-y-0 lg:shadow-none xl:w-[460px] 2xl:w-[500px]">
           <div
             className="w-full h-full overflow-y-scroll snap-y snap-mandatory"
             style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
