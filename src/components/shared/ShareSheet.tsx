@@ -23,6 +23,10 @@ interface ShareSheetProps {
   sharePostAuthorId?: string;
   /** Original post author's display name */
   sharePostAuthorName?: string;
+  /** Callback to navigate to the post owner's profile */
+  onVisitProfile?: () => void;
+  /** Label for the visit profile button */
+  visitProfileLabel?: string;
 }
 
 export default function ShareSheet({
