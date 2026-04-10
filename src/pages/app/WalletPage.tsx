@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import { 
   ArrowLeft, CreditCard, Plus, Trash2, Star,
   ArrowDownLeft, ArrowUpRight, Gift, Clock, Loader2,
-  Wallet, Shield, ChevronRight, BarChart3, DollarSign, Sparkles,
+  Wallet, Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
