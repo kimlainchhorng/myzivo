@@ -38,7 +38,8 @@ const TABS = [
   { id: "getting-started", label: "Getting Started on ZIVO" },
   { id: "community", label: "Follow Community Guidelines" },
   { id: "tools", label: "How to Use Our Tools" },
-  { id: "engagement", label: "How to Increase Engagement" },
+  { id: "engagement", label: "How to Increase Engagement on ZIVO" },
+  { id: "monetize", label: "How to Monetize on ZIVO" },
 ];
 
 /* ─── RECOMMENDED ─── */
@@ -232,22 +233,65 @@ const TOOLS_SECTIONS: Section[] = [
 /* ─── ENGAGEMENT ─── */
 const ENGAGEMENT_SECTIONS: Section[] = [
   {
-    heading: "Grow Your Audience",
+    heading: "Unlocking High-Quality Content",
     articles: [
-      { title: "Growing your followers organically", description: "Learn proven strategies to build a genuine, engaged community on ZIVO without shortcuts...", views: "3.8M views", icon: Users, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
-      { title: "Understanding the ZIVO algorithm", description: "How does content get discovered? Learn what makes the recommendation engine tick...", views: "6.1M views", icon: Eye, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
-      { title: "Collaborating with other creators", description: "Team up with fellow creators to reach new audiences and create memorable content together...", views: "890K views", icon: Heart, iconBg: "bg-rose-500/10", iconColor: "text-rose-500" },
-      { title: "Optimizing your posting schedule", description: "Timing is everything. Learn the best times to post on ZIVO for maximum engagement...", views: "2.4M views", icon: Star, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Creating high-quality videos on ZIVO", description: "Guess what? ZIVO users are totally hooked on stunning, high-quality video content...", views: "1.5M views", icon: Camera, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "8 tips for becoming a successful ZIVO creator", description: "Endless laughs, jaw-dropping storytimes, and content that inspires millions of people...", views: "1.6M views", icon: Sparkles, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "Creating captivating content with great storytelling", description: "Storytime! There's nothing better than a great story that keeps your audience hooked...", views: "144.1K views", icon: BookOpen, iconBg: "bg-rose-500/10", iconColor: "text-rose-500" },
+      { title: "Showcasing your expertise with specialized content", description: "You know how it feels like every time you share something you're passionate about...", views: "152.6K views", icon: Star, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+      { title: "Elements of a ZIVO video", description: "A ZIVO video may seem simple, but the elements that go into making one stand out matter...", views: "320.2K views", icon: Film, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Understanding and engaging your audience", description: "One important aspect of being a creator is knowing who your audience is and what they want...", views: "261.9K views", icon: Users, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Filming high-quality videos to wow your viewers", description: "Ready to wow viewers with your content creation skills? Here's how to film like a pro...", views: "694.9K views", icon: Camera, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Filming high-quality content on the go", description: "Whether you're capturing behind-the-scenes moments or creating content while traveling...", views: "6,457 views", icon: Smartphone, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+      { title: "High-quality longer video content strategy", description: "Anyone can create standout longer video content with the right strategy and approach...", views: "1.0M views", icon: Film, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "Filming 101: Thinking like a director", description: "Ready to reach red-carpet-level status with your content? Think like a director...", views: "234.0K views", icon: Video, iconBg: "bg-red-500/10", iconColor: "text-red-500" },
+      { title: "Filming 102: Creating interest through cinematography", description: "Cinematography is the art of using special camera techniques to create visual impact...", views: "33.7K views", icon: Camera, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+      { title: "Audio 102: Soundproofing made easy", description: "Want to create content that turns heads? Start with crystal-clear audio and soundproofing...", views: "244.0K views", icon: Mic, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Building a thriving community on ZIVO", description: "Being a creator on ZIVO is so much more than just posting videos. Build your tribe...", views: "180.8K views", icon: Users, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Getting creative with color in your content", description: "Color Theory suggests that certain colors can evoke specific emotions in your audience...", views: "49.6K views", icon: Palette, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+      { title: "Enhancing your videos with special effects", description: "Special effects can take your videos from good to unforgettable. Learn the best techniques...", views: "180.1K views", icon: Wand2, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "Audio 101: Recording audio like a pro", description: "You know your followers love hearing every word you say. Here's how to record great audio...", views: "141.1K views", icon: Mic, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+      { title: "Lighting 101 - Crafting content that dazzles", description: "You can't say camera and action without great lighting. Master the basics of lighting...", views: "97.1K views", icon: Lightbulb, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+    ],
+  },
+  {
+    heading: "Making Editing Professional",
+    articles: [
+      { title: "Creating well-crafted content with editing tools", description: "Creating awesome videos is now easier than ever with professional editing tools...", views: "141.8K views", icon: PenTool, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+      { title: "Creating more engaging content with these editing tricks", description: "High-quality long form videos are having a moment. Learn pro editing techniques...", views: "175.7K views", icon: Film, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "Optimizing your video layout to get more rewards", description: "Posting well-crafted content that keeps viewers watching is key to earning more rewards...", views: "43.2K views", icon: Layout, iconBg: "bg-red-500/10", iconColor: "text-red-500" },
+    ],
+  },
+  {
+    heading: "Creating Film & TV Content",
+    articles: [
+      { title: "Creating awesome Film & TV content", description: "Love watching the latest movies or TV shows? Turn your passion into engaging content...", views: "993.2K views", icon: Film, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Mastering Film & TV narrative content with these 3 tips", description: "Film & TV narrative content is buzzing on ZIVO. Here's how to master it...", views: "136.5K views", icon: BookOpen, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+      { title: "Elevate your Film & TV commentary content with these 4 tips", description: "Want to feel like a Hollywood insider? Create engaging commentary content...", views: "150.8K views", icon: MessageCircle, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Becoming a Film & TV edits expert with these best practices", description: "Edits are an extremely popular type of content. Master the art of fan edits...", views: "256.5K views", icon: PenTool, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "Creating unforgettable Film & TV reaction content with best practices", description: "Reaction videos allow you to capture that genuine moment of surprise and emotion...", views: "111.8K views", icon: PlayCircle, iconBg: "bg-red-500/10", iconColor: "text-red-500" },
+      { title: "Crafting buzzworthy Film & TV entertainment news content", description: "Join the conversation by sharing engaging entertainment news and pop culture updates...", views: "112.6K views", icon: Megaphone, iconBg: "bg-orange-500/10", iconColor: "text-orange-500" },
+      { title: "Dress up your Film & TV cosplay content with these best practices", description: "Cosplay is a creative way to embody the characters you love from movies and TV shows...", views: "1,546 views", icon: Star, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+    ],
+  },
+  {
+    heading: "Account Health and Traffic Sources",
+    articles: [
+      { title: "Driving video traffic: The For You feed", description: "On ZIVO, traffic is actually a good thing! Learn how the For You feed works for discovery...", views: "84.9K views", icon: TrendingUp, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Driving video traffic: Search", description: "On ZIVO, traffic is actually a good thing! Learn how to optimize your content for Search...", views: "91.9K views", icon: Search, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Maximize your video traffic: Profile", description: "On ZIVO, traffic is actually a good thing! Optimize your profile to drive more views...", views: "50.0K views", icon: Users, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "Troubleshooting issues with Account check", description: "If something's up with your ZIVO account, Account check can help diagnose and fix issues...", views: "113.9K views", icon: AlertTriangle, iconBg: "bg-orange-500/10", iconColor: "text-orange-500" },
     ],
   },
   {
     heading: "Content Strategy",
     articles: [
-      { title: "How to create engaging Reels", description: "Master the art of short-form video content that captivates your audience from the first second...", views: "4.2M views", icon: Video, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
-      { title: "Writing captions that convert", description: "A great caption can be the difference between a scroll-past and a follow. Here's how to write them...", views: "1.8M views", icon: PenTool, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+      { title: "How to create engaging short-form content", description: "Master the art of short-form video content that captivates your audience from the first second...", views: "4.2M views", icon: Video, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "Writing captions that convert", description: "A great caption can be the difference between a scroll-past and a follow. Here's how...", views: "1.8M views", icon: PenTool, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
       { title: "Using hashtags effectively on ZIVO", description: "Hashtags are still one of the most powerful discovery tools. Learn the right strategy...", views: "3.1M views", icon: TrendingUp, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
       { title: "Creating a content calendar that works", description: "Consistency is key to growth. Learn how to plan and maintain a sustainable content schedule...", views: "1.2M views", icon: BookOpen, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
       { title: "Leveraging trends without losing your voice", description: "Trends can boost your reach, but staying authentic is crucial. Here's how to balance both...", views: "956K views", icon: Compass, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Optimizing your posting schedule", description: "Timing is everything. Learn the best times to post on ZIVO for maximum engagement...", views: "2.4M views", icon: Star, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
     ],
   },
   {
@@ -259,12 +303,57 @@ const ENGAGEMENT_SECTIONS: Section[] = [
       { title: "Cross-promoting your ZIVO content on other platforms", description: "Maximize your reach by sharing your ZIVO content across multiple social platforms...", views: "678K views", icon: Share2, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
     ],
   },
+];
+
+/* ─── MONETIZE TAB ─── */
+const MONETIZE_SECTIONS: Section[] = [
   {
-    heading: "Analytics & Optimization",
+    heading: "Creator Rewards",
     articles: [
-      { title: "Reading your analytics dashboard", description: "Numbers tell a story. Learn how to interpret your ZIVO analytics for actionable insights...", views: "1.9M views", icon: BarChart3, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
-      { title: "A/B testing your content on ZIVO", description: "Not sure what works? Test different approaches and let the data guide your strategy...", views: "432K views", icon: Zap, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
-      { title: "Understanding audience demographics", description: "Know your audience inside and out. Demographics data helps you create content that resonates...", views: "765K views", icon: Globe, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Creator Rewards Program overview", description: "If you're passionate about crafting high-quality content, the Creator Rewards Program is for you...", views: "14.4M views", icon: Crown, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+      { title: "Maximizing your Creator Rewards earnings", description: "Learn proven strategies to increase your reward payouts through quality content...", views: "5.2M views", icon: TrendingUp, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Understanding Audience Commercial Value", description: "In the Creator Rewards Program, high-quality content that attracts commercial audiences earns more...", views: "66.8K views", icon: BarChart3, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Effect Creator Rewards", description: "Have you ever wondered what ZIVO's Effect Creator Rewards are all about? Discover how to earn...", views: "5.0M views", icon: Sparkles, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+    ],
+  },
+  {
+    heading: "Subscription & Exclusive Content",
+    articles: [
+      { title: "Getting started with Subscription", description: "Subscription is your key to unleashing your creativity and fostering deeper audience connections...", views: "7.7M views", icon: Crown, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+      { title: "Series: Premium episodic content", description: "Series allows you to post groups of videos behind a paywall, creating premium content...", views: "310.4K views", icon: Video, iconBg: "bg-purple-500/10", iconColor: "text-purple-500" },
+      { title: "Locked Media monetization", description: "Send exclusive photos and videos as pay-to-unlock content in chat and grow your revenue...", views: "1.2M views", icon: Lock, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+    ],
+  },
+  {
+    heading: "LIVE Monetization",
+    articles: [
+      { title: "Unlocking LIVE monetization", description: "Get more from your LIVEs! Explore all the ways you can monetize your streams...", views: "5.7M views", icon: DollarSign, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Scaled LIVE rewards: Supercharging your journey", description: "We understand the dedication and effort you put into every LIVE session...", views: "544.7K views", icon: TrendingUp, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+      { title: "Tips and Gifts on LIVE", description: "ZIVO LIVE lets your audience show appreciation through tips and virtual gifts during streams...", views: "3.2M views", icon: Gift, iconBg: "bg-rose-500/10", iconColor: "text-rose-500" },
+    ],
+  },
+  {
+    heading: "Brand Partnerships",
+    articles: [
+      { title: "Creating branded content on ZIVO", description: "Whether you're participating in collaborations or building brand partnerships, learn the essentials...", views: "2.3M views", icon: Megaphone, iconBg: "bg-orange-500/10", iconColor: "text-orange-500" },
+      { title: "Building long-lasting brand partnerships", description: "ZIVO audiences crave authentic content. Learn how to build sustainable brand relationships...", views: "86.6K views", icon: Users, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "Monetize your content with brand deals on ZIVO", description: "If you're a creator, brand deals can help you earn while doing what you love...", views: "6,571 views", icon: DollarSign, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Creating content brands will want to Spark", description: "Are you looking to land a brand deal? Here's how to stand out and attract partnerships...", views: "80.2K views", icon: Sparkles, iconBg: "bg-pink-500/10", iconColor: "text-pink-500" },
+    ],
+  },
+  {
+    heading: "ZIVO Shop",
+    articles: [
+      { title: "Getting started with ZIVO Shop", description: "With ZIVO Shop, you can drive your audience from content to commerce seamlessly...", views: "6.8M views", icon: Store, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Winning rewards with contests", description: "Whether you're creating film & TV, sport, or lifestyle content, contests can supercharge your reach...", views: "203.1K views", icon: Star, iconBg: "bg-orange-500/10", iconColor: "text-orange-500" },
+    ],
+  },
+  {
+    heading: "Payouts & Verification",
+    articles: [
+      { title: "How to verify your identity to collect payouts", description: "Maintaining safety on ZIVO is our top priority. Learn how to verify and start earning...", views: "249.8K views", icon: BadgeCheck, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+      { title: "Getting your rewards from ZIVO", description: "We've made managing your ZIVO rewards simple. Track, withdraw, and manage your earnings...", views: "243.6K views", icon: Gift, iconBg: "bg-rose-500/10", iconColor: "text-rose-500" },
+      { title: "Tax information for ZIVO creators", description: "Understanding your tax obligations as a creator is important. Here's what you need to know...", views: "189.3K views", icon: DollarSign, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
     ],
   },
 ];
@@ -289,8 +378,12 @@ const TAB_DATA: Record<string, { hero?: { title: string; description: string }; 
     sections: TOOLS_SECTIONS,
   },
   engagement: {
-    hero: { title: "How to Increase Engagement", description: "Proven strategies and tips to grow your audience and boost your content performance on ZIVO." },
+    hero: { title: "How to Increase Engagement on ZIVO", description: "Get expert advice and tips to make your posts stand out." },
     sections: ENGAGEMENT_SECTIONS,
+  },
+  monetize: {
+    hero: { title: "How to Monetize on ZIVO", description: "Turn your creativity into income. Explore all the ways to earn on ZIVO." },
+    sections: MONETIZE_SECTIONS,
   },
 };
 
