@@ -116,6 +116,7 @@ const sections = [
   { title: "Creator Tools", links: quickLinksCreator },
   { title: "Travel & Orders", links: quickLinksTravel },
   { title: "Social & Community", links: quickLinksSocial },
+  { title: "Business & Partner", links: quickLinksBusiness },
   { title: "Account & Support", links: quickLinksAccount },
 ];
 
