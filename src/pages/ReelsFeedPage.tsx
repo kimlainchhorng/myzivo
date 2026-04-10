@@ -755,7 +755,10 @@ export default function ReelsFeedPage() {
                 <div key={item.id}>
                   <FeedCard item={item} currentUserId={userId} onOpenFullscreen={() => {
                     if (item.media_type === 'video') {
-                      setReelsStartIndex(idx);
+                      // Find the correct index in video-only list
+                      const videoItems = filteredItems.filter(it => it.media_type === 'video');
+                      const videoIdx = videoItems.findIndex(v => v.id === item.id);
+                      setReelsStartIndex(videoIdx >= 0 ? videoIdx : 0);
                     } else {
                       setFullscreenIndex(idx);
                     }
