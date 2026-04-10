@@ -182,7 +182,7 @@ export default function PublicProfilePage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedPost, setSelectedPost] = useState<any>(null);
-  const [confirmAction, setConfirmAction] = useState<null | { action: "cancel" | "unfriend"; label: string }>(null);
+  const [confirmAction, setConfirmAction] = useState<null | { action: "cancel" | "unfriend" | "unfollow"; label: string }>(null);
   const [postTab, setPostTab] = useState<PostTab>("all");
   const [commentPost, setCommentPost] = useState<any>(null);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
