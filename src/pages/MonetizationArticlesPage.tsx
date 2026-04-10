@@ -86,12 +86,26 @@ const RECOMMENDED_SECTIONS: Section[] = [
       { title: "Going LIVE!", description: "ZIVO LIVE is where the party's at – it's all about real-time fun, self-expression, and connecting...", views: "5.7M views", icon: Video, iconBg: "bg-red-500/10", iconColor: "text-red-500" },
       { title: "Unlocking LIVE monetization", description: "Get more from your LIVEs! Explore all the ways you can monetize your streams and increase earnings...", views: "5.7M views", icon: DollarSign, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
       { title: "Scaled LIVE rewards: Supercharging your LIVE journey", description: "We understand the dedication and effort you put into every LIVE session...", views: "544.7K views", icon: TrendingUp, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
+      { title: "LIVE battles and competitions", description: "Compete with other creators in real-time LIVE battles. Win prizes and grow your audience...", views: "1.2M views", icon: Star, iconBg: "bg-orange-500/10", iconColor: "text-orange-500" },
+      { title: "Multi-guest LIVE streaming", description: "Invite up to 4 guests to your LIVE for panel discussions, debates, and collaborations...", views: "345.6K views", icon: Users, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "LIVE scheduling and promotion", description: "Build anticipation for your LIVE by scheduling in advance and promoting to your audience...", views: "223.1K views", icon: Bell, iconBg: "bg-amber-500/10", iconColor: "text-amber-500" },
     ],
   },
   {
     heading: "Shop",
     articles: [
       { title: "ZIVO Shop", description: "With ZIVO Shop, you can drive your audience from content to commerce seamlessly...", views: "6.8M views", icon: Store, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Setting up your first ZIVO Shop product", description: "Step by step guide to listing your first product and making your first sale...", views: "2.1M views", icon: Store, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Shipping and fulfillment on ZIVO Shop", description: "Everything you need to know about getting products to your customers efficiently...", views: "445.3K views", icon: Globe, iconBg: "bg-blue-500/10", iconColor: "text-blue-500" },
+      { title: "ZIVO Shop analytics and optimization", description: "Track sales, conversion rates, and optimize your shop for maximum revenue...", views: "312.7K views", icon: BarChart3, iconBg: "bg-indigo-500/10", iconColor: "text-indigo-500" },
+    ],
+  },
+  {
+    heading: "Creator Safety",
+    articles: [
+      { title: "Protecting your intellectual property on ZIVO", description: "Learn about copyright, content ownership, and how to protect your original work...", views: "567.8K views", icon: Shield, iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
+      { title: "Dealing with trolls and negative comments", description: "Every creator faces negativity. Here are proven strategies for handling it gracefully...", views: "892.3K views", icon: ShieldCheck, iconBg: "bg-red-500/10", iconColor: "text-red-500" },
+      { title: "Creator burnout: prevention and recovery", description: "Creating content is rewarding but can be exhausting. Learn how to maintain your wellbeing...", views: "1.3M views", icon: Heart, iconBg: "bg-rose-500/10", iconColor: "text-rose-500" },
     ],
   },
 ];
