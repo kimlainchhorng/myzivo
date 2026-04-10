@@ -3,6 +3,7 @@
  * Real Supabase/Stripe data throughout
  */
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Wallet, CreditCard, Star, Trash2, Plus, Shield,
   Users, Gift, Trophy,
@@ -64,6 +65,7 @@ export default function WalletPage() {
   const [cashoutNote, setCashoutNote] = useState("");
   const [cashoutSubmitting, setCashoutSubmitting] = useState(false);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { balanceDollars, lifetimeEarnedDollars, isLoading: walletLoading } = useCustomerWallet();
   const { data: stripeCards = [], isLoading: cardsLoading } = useStripePaymentMethods();
@@ -412,36 +414,24 @@ export default function WalletPage() {
                   setCashoutSubmitting(true);
                   try {
                     const amountCents = Math.round(Number(cashoutAmount) * 100);
-                    // Record withdrawal request as a transaction
-                    const { error } = await supabase
-                      .from("customer_wallet_transactions")
-                      .insert({
-                        wallet_id: (await supabase.from("customer_wallets").select("id").eq("user_id", user.id).single()).data?.id,
-                        user_id: user.id,
-                        amount_cents: -amountCents,
-                        type: "withdrawal",
-                        description: `Cash out via ${cashoutMethod === "aba" ? "ABA / KHQR" : "Bank Transfer"}${cashoutNote ? ` — ${cashoutNote}` : ""}`,
-                      } as any);
-                    if (error) throw error;
-
-                    // Deduct balance
-                    const { data: wallet } = await supabase
-                      .from("customer_wallets")
-                      .select("balance_cents")
-                      .eq("user_id", user.id)
-                      .single();
-                    if (wallet) {
-                      await supabase
-                        .from("customer_wallets")
-                        .update({ balance_cents: wallet.balance_cents - amountCents, updated_at: new Date().toISOString() })
-                        .eq("user_id", user.id);
-                    }
+                    const { data, error } = await supabase.functions.invoke("process-withdrawal", {
+                      body: {
+                        amount_cents: amountCents,
+                        method: cashoutMethod,
+                        note: cashoutNote || undefined,
+                      },
+                    });
+                    if (error) throw new Error(error.message || "Withdrawal failed");
+                    if (data?.error) throw new Error(data.error);
 
                     toast.success(`Withdrawal of $${Number(cashoutAmount).toFixed(2)} submitted!`, {
                       description: "Processing usually takes 1-3 business days.",
                     });
                     setCashoutAmount("");
                     setCashoutNote("");
+                    queryClient.invalidateQueries({ queryKey: ["customer-wallet"] });
+                    queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+                    queryClient.invalidateQueries({ queryKey: ["wallet-summary"] });
                   } catch (err: any) {
                     toast.error(err?.message || "Withdrawal failed");
                   } finally {
