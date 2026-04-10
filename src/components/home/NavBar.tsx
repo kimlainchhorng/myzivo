@@ -201,7 +201,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                     >
                       {isChat ? (
                         <button
-                          onClick={() => window.dispatchEvent(new CustomEvent("zivo-open-chat"))}
+                          onClick={() => window.dispatchEvent(new CustomEvent("zivo-toggle-chat"))}
                           className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap"
                           style={{
                             border: `1.5px solid hsl(${item.cssVar} / 0.12)`,
