@@ -373,7 +373,25 @@ export default function ChatMessageBubble({
           if (stickerMatch) {
             return (
               <div className="p-1">
-                <img src={stickerMatch[2]} alt={stickerMatch[1]} className="w-32 h-32 object-contain" loading="lazy" />
+                <motion.img
+                  src={stickerMatch[2]}
+                  alt={stickerMatch[1]}
+                  className="w-32 h-32 object-contain"
+                  loading="lazy"
+                  initial={{ scale: 0.3, opacity: 0 }}
+                  animate={{
+                    scale: 1,
+                    opacity: 1,
+                    y: [0, -4, 0],
+                    rotate: [0, 2, -2, 0],
+                  }}
+                  transition={{
+                    scale: { type: "spring", stiffness: 400, damping: 15 },
+                    opacity: { duration: 0.2 },
+                    y: { duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 },
+                    rotate: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 },
+                  }}
+                />
                 <div className="flex items-center gap-1 justify-end px-1 pb-1 -mt-1">
                   <span className={`text-[10px] ${isMe ? "text-muted-foreground/60" : "text-muted-foreground/60"}`}>{time}</span>
                   {isMe && (isRead ? <CheckCheck className="h-3 w-3 text-blue-400" /> : isDelivered ? <CheckCheck className="h-3 w-3 text-muted-foreground/40" /> : <Check className="h-3 w-3 text-muted-foreground/40" />)}
