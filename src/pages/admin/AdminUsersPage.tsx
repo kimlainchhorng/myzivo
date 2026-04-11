@@ -54,7 +54,7 @@ export default function AdminUsersPage() {
 
   // Fetch all profiles
   const { data: profiles, isLoading } = useQuery({
-    queryKey: ["admin-users"],
+    queryKey: ["admin-users", isAdmin],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
@@ -64,7 +64,7 @@ export default function AdminUsersPage() {
       if (error) throw error;
       return data || [];
     },
-    enabled: isAdmin,
+    enabled: isAdmin && !authLoading,
   });
 
   // Fetch user roles
