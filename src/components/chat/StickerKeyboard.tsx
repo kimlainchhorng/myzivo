@@ -594,7 +594,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                   </button>
                 )}
                 {/* Illustrated packs first */}
-                {ILLUSTRATED_PACKS.map((pack, i) => (
+                {illustratedPacks.map((pack, i) => (
                   <button key={pack.id} onClick={() => setActivePack(1000 + i)} className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 ${activePack === 1000 + i ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
                     {pack.icon} {pack.name}
                   </button>
