@@ -924,13 +924,14 @@ export default function CreatePostModal({
             { label: "Video", icon: Play, accept: "video/*", color: "text-rose-500", action: "file" },
             { label: "Reel", icon: Film, accept: "video/*", color: "text-violet-500", action: "file" },
             { label: "Music", icon: Music, accept: "", color: "text-sky-500", action: "audio" },
-            { label: "Live", icon: Radio, accept: "", color: "text-amber-500", action: "live" },
+            { label: "Live", icon: Radio, accept: "", color: "text-amber-500", action: "live" as const },
           ].map((opt) => (
             <button
               key={opt.label}
               onClick={() => {
                 if (opt.action === "live") {
-                  toast.info("Live is coming soon!");
+                  onClose();
+                  window.location.href = "/live";
                   return;
                 }
                 if (opt.action === "audio") {
