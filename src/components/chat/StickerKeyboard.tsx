@@ -689,8 +689,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
             )}
           </div>
 
-          {/* Tab grid */}
-          <div className="grid grid-cols-7 gap-1">
+          {/* Tab grid — refined with active indicator */}
+          <div className="flex items-center gap-0.5 bg-muted/30 rounded-2xl p-1">
             {([
               { key: "stickers" as TabKey, label: "Stickers", icon: Smile },
               { key: "gifs" as TabKey, label: "GIFs", icon: ImageIcon },
@@ -703,12 +703,15 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               <button
                 key={tab.key}
                 onClick={() => { setActiveTab(tab.key); setSearch(""); }}
-                className={`rounded-2xl px-1 py-2 flex flex-col items-center gap-1 transition-colors ${
-                  activeTab === tab.key ? "bg-primary/10 text-primary" : "text-muted-foreground"
-                }`}
+                className={cn(
+                  "flex-1 rounded-xl px-1 py-2 flex flex-col items-center gap-0.5 transition-all",
+                  activeTab === tab.key
+                    ? "bg-background text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
               >
-                <tab.icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium leading-tight">{tab.label}</span>
+                <tab.icon className="w-[18px] h-[18px]" />
+                <span className="text-[9px] font-semibold leading-tight">{tab.label}</span>
               </button>
             ))}
           </div>
