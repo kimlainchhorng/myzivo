@@ -104,9 +104,9 @@ export default function MonetizationPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("creator_program_enrollments")
-        .select("program_id, status, enrolled_at")
-        .eq("user_id", user!.id);
-      return data || [];
+        .select("program_id, status")
+        .eq("user_id", user!.id) as any;
+      return (data as any[]) || [];
     },
     enabled: !!user,
   });
