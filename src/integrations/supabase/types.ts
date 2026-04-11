@@ -24689,6 +24689,30 @@ export type Database = {
         }
         Relationships: []
       }
+      login_attempts: {
+        Row: {
+          created_at: string
+          device_fingerprint: string | null
+          id: string
+          identifier: string
+          success: boolean
+        }
+        Insert: {
+          created_at?: string
+          device_fingerprint?: string | null
+          id?: string
+          identifier: string
+          success?: boolean
+        }
+        Update: {
+          created_at?: string
+          device_fingerprint?: string | null
+          id?: string
+          identifier?: string
+          success?: boolean
+        }
+        Relationships: []
+      }
       login_history: {
         Row: {
           city: string | null
@@ -55118,6 +55142,18 @@ export type Database = {
       assign_job_zone_and_surge_postgis: {
         Args: { p_job_id: string }
         Returns: Json
+      }
+      auth_precheck_login: {
+        Args: { _device_fingerprint?: string; _identifier: string }
+        Returns: Json
+      }
+      auth_record_login_attempt: {
+        Args: {
+          _device_fingerprint?: string
+          _identifier: string
+          _success: boolean
+        }
+        Returns: undefined
       }
       auto_assign_order:
         | { Args: { p_order_id: string }; Returns: Json }
