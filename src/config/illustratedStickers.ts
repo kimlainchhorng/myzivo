@@ -28,6 +28,12 @@ import buddyAvocado from "@/assets/stickers/buddy-avocado.png";
 import buddyOwl from "@/assets/stickers/buddy-owl.png";
 import buddyDonut from "@/assets/stickers/buddy-donut.png";
 import buddyKoala from "@/assets/stickers/buddy-koala.png";
+import buddyBear from "@/assets/stickers/buddy-bear.png";
+import buddyWhale from "@/assets/stickers/buddy-whale.png";
+import buddyCherry from "@/assets/stickers/buddy-cherry.png";
+import buddyUnicorn from "@/assets/stickers/buddy-unicorn.png";
+import buddyRaccoon from "@/assets/stickers/buddy-raccoon.png";
+import buddyButterfly from "@/assets/stickers/buddy-butterfly.png";
 
 export interface IllustratedSticker {
   id: string;
@@ -38,7 +44,7 @@ export interface IllustratedSticker {
 export interface IllustratedStickerPack {
   id: string;
   name: string;
-  icon: string; // emoji used as pack tab icon
+  icon: string;
   stickers: IllustratedSticker[];
 }
 
@@ -61,6 +67,7 @@ export const ILLUSTRATED_PACKS: IllustratedStickerPack[] = [
       { id: "bb-strawberry", src: buddyStrawberry, alt: "Sweet Strawberry" },
       { id: "bb-avocado", src: buddyAvocado, alt: "Happy Avocado" },
       { id: "bb-donut", src: buddyDonut, alt: "Excited Donut" },
+      { id: "bb-cherry", src: buddyCherry, alt: "Happy Cherries" },
     ],
   },
   {
@@ -83,6 +90,11 @@ export const ILLUSTRATED_PACKS: IllustratedStickerPack[] = [
       { id: "cf-fox", src: buddyFox, alt: "Sly Fox" },
       { id: "cf-owl", src: buddyOwl, alt: "Sleepy Owl" },
       { id: "cf-koala", src: buddyKoala, alt: "Shy Koala" },
+      { id: "cf-bear", src: buddyBear, alt: "Cuddly Bear" },
+      { id: "cf-whale", src: buddyWhale, alt: "Happy Whale" },
+      { id: "cf-unicorn", src: buddyUnicorn, alt: "Magical Unicorn" },
+      { id: "cf-raccoon", src: buddyRaccoon, alt: "Cheeky Raccoon" },
+      { id: "cf-butterfly", src: buddyButterfly, alt: "Pretty Butterfly" },
     ],
   },
 ];
