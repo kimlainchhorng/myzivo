@@ -291,29 +291,6 @@ interface IllustratedStickerLike {
   src: string;
   alt: string;
 }
-
-interface StickerFaceLayout {
-  eyeTop: string;
-  eyeInset: string;
-  eyeWidth: string;
-  eyeHeight: string;
-  mouthBottom: string;
-  mouthWidth: string;
-  mouthHeight: string;
-  cheekTop: string;
-}
-
-const DEFAULT_FACE_LAYOUT: StickerFaceLayout = {
-  eyeTop: "34%",
-  eyeInset: "24%",
-  eyeWidth: "14%",
-  eyeHeight: "10%",
-  mouthBottom: "24%",
-  mouthWidth: "22%",
-  mouthHeight: "12%",
-  cheekTop: "47%",
-};
-
 function getIllustratedTone(stickerId: string): IllustratedTone {
   return /sunflower|cupcake|octopus|hedgehog/.test(stickerId)
     ? "angry"
@@ -330,48 +307,6 @@ function getIllustratedTone(stickerId: string): IllustratedTone {
               : "float";
 }
 
-function getStickerFaceLayout(stickerId: string): StickerFaceLayout {
-  if (/coffee|sushi|toast|cupcake/.test(stickerId)) {
-    return {
-      eyeTop: "38%",
-      eyeInset: "25%",
-      eyeWidth: "13%",
-      eyeHeight: "9%",
-      mouthBottom: "20%",
-      mouthWidth: "24%",
-      mouthHeight: "12%",
-      cheekTop: "49%",
-    };
-  }
-
-  if (/pear|lemon|carrot|beet|tomato|potato|mushroom/.test(stickerId)) {
-    return {
-      eyeTop: "31%",
-      eyeInset: "25%",
-      eyeWidth: "12%",
-      eyeHeight: "9%",
-      mouthBottom: "27%",
-      mouthWidth: "20%",
-      mouthHeight: "10%",
-      cheekTop: "45%",
-    };
-  }
-
-  if (/sunflower|pig|hamster|penguin|bunny|hedgehog|octopus|cat-love/.test(stickerId)) {
-    return {
-      eyeTop: "36%",
-      eyeInset: "23%",
-      eyeWidth: "14%",
-      eyeHeight: "10%",
-      mouthBottom: "23%",
-      mouthWidth: "24%",
-      mouthHeight: "12%",
-      cheekTop: "49%",
-    };
-  }
-
-  return DEFAULT_FACE_LAYOUT;
-}
 
 function LiveIllustratedStickerArt({
   sticker,
@@ -385,10 +320,7 @@ function LiveIllustratedStickerArt({
   withShadow?: boolean;
 }) {
   const tone = getIllustratedTone(sticker.id);
-  const face = getStickerFaceLayout(sticker.id);
   const lift = large ? 1.3 : 1;
-  const isEater = /hamster|sushi|toast|cupcake|carrot|coffee/.test(sticker.id);
-  const showCheeks = tone === "happy" || tone === "love" || tone === "shy";
 
   const duration = tone === "angry"
     ? 0.95
@@ -444,34 +376,6 @@ function LiveIllustratedStickerArt({
     : tone === "sleepy"
       ? { scaleX: [0.82, 1.1, 0.82], opacity: [0.16, 0.1, 0.16] }
       : { scaleX: [0.74, 1.2, 0.74], opacity: [0.16, 0.08, 0.16] };
-
-  const eyeAnimate = tone === "sleepy"
-    ? {
-        scaleY: [1, 0.2, 0.08, 0.2, 1, 1],
-        scaleX: [1, 1.08, 1.14, 1.08, 1, 1],
-        y: [0, 1, 1.5, 1, 0, 0],
-      }
-    : {
-        scaleY: [1, 1, 1, 0.14, 1, 1, 1, 0.18, 1],
-        scaleX: [1, 1, 1, 1.18, 1, 1, 1, 1.12, 1],
-        y: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-      };
-
-  const mouthAnimate = isEater
-    ? { scaleX: [1, 1.26, 0.92, 1.2, 1], scaleY: [0.45, 1.3, 0.38, 1.08, 0.5], y: [0, 1, -1, 1, 0] }
-    : tone === "happy"
-      ? { scaleX: [1, 1.16, 0.94, 1.08, 1], scaleY: [0.38, 0.95, 0.34, 0.85, 0.38], y: [0, 0.5, -0.5, 0.5, 0] }
-      : tone === "love"
-        ? { scaleX: [1, 1.12, 0.96, 1.08, 1], scaleY: [0.45, 0.92, 0.42, 0.88, 0.45], y: [0, -0.5, 0, -0.3, 0] }
-        : tone === "sad"
-          ? { scaleX: [1, 0.92, 1], scaleY: [0.32, 0.18, 0.32], y: [0, 1, 0], rotate: [0, -4, 0] }
-          : tone === "sleepy"
-            ? { scaleX: [0.92, 1.02, 0.92], scaleY: [0.8, 1.15, 0.8], opacity: [0.65, 0.5, 0.65] }
-            : tone === "angry"
-              ? { scaleX: [1, 1.25, 0.92, 1.12, 1], scaleY: [0.6, 0.28, 0.7, 0.32, 0.6], x: [0, -1, 1, 0] }
-              : tone === "shy"
-                ? { scaleX: [0.88, 1.05, 0.88], scaleY: [0.35, 0.55, 0.35], y: [0, -0.4, 0] }
-                : { scaleX: [1, 1.1, 0.95, 1.05, 1], scaleY: [0.4, 0.8, 0.4, 0.75, 0.4], y: [0, 0.5, 0, 0.4, 0] };
 
   return (
     <>
@@ -541,80 +445,6 @@ function LiveIllustratedStickerArt({
           style={{ transformOrigin: "center bottom" }}
         />
 
-        <div className="pointer-events-none absolute inset-0 z-10">
-          <span aria-hidden className="absolute overflow-hidden" style={{ top: face.eyeTop, left: face.eyeInset, width: face.eyeWidth, height: face.eyeHeight }}>
-            <motion.span
-              className="block h-full w-full rounded-full bg-foreground/80"
-              animate={eyeAnimate}
-              transition={{ duration: tone === "sleepy" ? 2.6 : 3.1, repeat: Infinity, ease: "easeInOut", delay: index * 0.08 }}
-              style={{ transformOrigin: "center center" }}
-            />
-          </span>
-          <span aria-hidden className="absolute overflow-hidden" style={{ top: face.eyeTop, right: face.eyeInset, width: face.eyeWidth, height: face.eyeHeight }}>
-            <motion.span
-              className="block h-full w-full rounded-full bg-foreground/80"
-              animate={eyeAnimate}
-              transition={{ duration: tone === "sleepy" ? 2.6 : 3.1, repeat: Infinity, ease: "easeInOut", delay: 0.12 + index * 0.08 }}
-              style={{ transformOrigin: "center center" }}
-            />
-          </span>
-
-          {showCheeks && (
-            <>
-              <motion.span
-                aria-hidden
-                className="absolute rounded-full bg-primary/20"
-                style={{ top: face.cheekTop, left: "18%", width: "12%", height: "8%" }}
-                animate={{ opacity: [0.18, 0.4, 0.18], scale: [0.85, 1.15, 0.85] }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut", delay: index * 0.03 }}
-              />
-              <motion.span
-                aria-hidden
-                className="absolute rounded-full bg-primary/20"
-                style={{ top: face.cheekTop, right: "18%", width: "12%", height: "8%" }}
-                animate={{ opacity: [0.18, 0.4, 0.18], scale: [0.85, 1.15, 0.85] }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut", delay: 0.15 + index * 0.03 }}
-              />
-            </>
-          )}
-
-          <span aria-hidden className="absolute left-1/2" style={{ bottom: face.mouthBottom, width: face.mouthWidth, height: face.mouthHeight, transform: "translateX(-50%)" }}>
-            <motion.span
-              className="block h-full w-full"
-              animate={mouthAnimate}
-              transition={{ duration: isEater ? 0.72 : tone === "sleepy" ? 1.9 : 0.95, repeat: Infinity, ease: "easeInOut", delay: index * 0.05 }}
-              style={{ transformOrigin: "center center" }}
-            >
-              <span className={tone === "angry" ? "block h-full w-full rounded-[35%] bg-foreground/80" : tone === "sleepy" ? "block h-full w-full rounded-full bg-foreground/60" : "block h-full w-full rounded-full bg-foreground/75"} />
-            </motion.span>
-          </span>
-
-          {isEater && (
-            <>
-              <motion.span
-                aria-hidden
-                className="absolute h-1 w-1 rounded-full bg-primary/60"
-                style={{ bottom: face.mouthBottom, left: "34%" }}
-                animate={{ y: [0, 6, 12], x: [-2, -5, -8], opacity: [0, 0.9, 0], scale: [0.3, 0.8, 0.2] }}
-                transition={{ duration: 1.1, repeat: Infinity, ease: "easeOut", delay: index * 0.05 }}
-              />
-              <motion.span
-                aria-hidden
-                className="absolute h-1 w-1 rounded-full bg-accent/60"
-                style={{ bottom: face.mouthBottom, right: "33%" }}
-                animate={{ y: [0, 5, 10], x: [1, 4, 7], opacity: [0, 0.8, 0], scale: [0.4, 0.9, 0.3] }}
-                transition={{ duration: 1.3, repeat: Infinity, ease: "easeOut", delay: 0.3 + index * 0.05 }}
-              />
-              <motion.span
-                aria-hidden
-                className="absolute h-1 w-1 rounded-full bg-foreground/35"
-                style={{ bottom: face.mouthBottom, left: "48%" }}
-                animate={{ y: [0, 8, 14], opacity: [0, 0.7, 0], scale: [0.3, 0.7, 0.2] }}
-                transition={{ duration: 1.0, repeat: Infinity, ease: "easeOut", delay: 0.6 + index * 0.05 }}
-              />
-            </>
-          )}
-        </div>
       </motion.div>
     </>
   );
