@@ -1,6 +1,5 @@
 /**
  * Animated sticker video URLs — maps sticker IDs to their animated mp4 CDN paths.
- * These are used in both the sticker picker (StickerKeyboard) and chat bubbles (ChatMessageBubble).
  */
 
 import beetAnim from "@/assets/stickers/anim/buddy-beet-anim.mp4.asset.json";
@@ -37,9 +36,22 @@ import cherryAnim from "@/assets/stickers/anim/buddy-cherry-anim.mp4.asset.json"
 import unicornAnim from "@/assets/stickers/anim/buddy-unicorn-anim.mp4.asset.json";
 import raccoonAnim from "@/assets/stickers/anim/buddy-raccoon-anim.mp4.asset.json";
 import butterflyAnim from "@/assets/stickers/anim/buddy-butterfly-anim.mp4.asset.json";
+import elephantAnim from "@/assets/stickers/anim/buddy-elephant-anim.mp4.asset.json";
+import giraffeAnim from "@/assets/stickers/anim/buddy-giraffe-anim.mp4.asset.json";
+import lionAnim from "@/assets/stickers/anim/buddy-lion-anim.mp4.asset.json";
+import turtleAnim from "@/assets/stickers/anim/buddy-turtle-anim.mp4.asset.json";
+import frogAnim from "@/assets/stickers/anim/buddy-frog-anim.mp4.asset.json";
+import slothAnim from "@/assets/stickers/anim/buddy-sloth-anim.mp4.asset.json";
+import icecreamAnim from "@/assets/stickers/anim/buddy-icecream-anim.mp4.asset.json";
+import cookieAnim from "@/assets/stickers/anim/buddy-cookie-anim.mp4.asset.json";
+import watermelonAnim from "@/assets/stickers/anim/buddy-watermelon-anim.mp4.asset.json";
+import chickAnim from "@/assets/stickers/anim/buddy-chick-anim.mp4.asset.json";
+import deerAnim from "@/assets/stickers/anim/buddy-deer-anim.mp4.asset.json";
+import dragonAnim from "@/assets/stickers/anim/buddy-dragon-anim.mp4.asset.json";
 
-/** Map from sticker id (e.g. "bb-sunflower") to animated video URL */
+/** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
+  // Buddy Buddies
   "bb-sunflower": sunflowerAnim.url,
   "bb-pear": pearAnim.url,
   "bb-sushi": sushiAnim.url,
@@ -54,6 +66,10 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "bb-avocado": avocadoAnim.url,
   "bb-donut": donutAnim.url,
   "bb-cherry": cherryAnim.url,
+  "bb-icecream": icecreamAnim.url,
+  "bb-cookie": cookieAnim.url,
+  "bb-watermelon": watermelonAnim.url,
+  // Cozy Friends
   "cf-penguin": penguinAnim.url,
   "cf-hamster": hamsterAnim.url,
   "cf-cat-love": catLoveAnim.url,
@@ -71,9 +87,19 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "cf-koala": koalaAnim.url,
   "cf-bear": bearAnim.url,
   "cf-whale": whaleAnim.url,
-  "cf-unicorn": unicornAnim.url,
-  "cf-raccoon": raccoonAnim.url,
-  "cf-butterfly": butterflyAnim.url,
+  "cf-chick": chickAnim.url,
+  "cf-deer": deerAnim.url,
+  "cf-sloth": slothAnim.url,
+  // Magic Squad
+  "ms-unicorn": unicornAnim.url,
+  "ms-dragon": dragonAnim.url,
+  "ms-butterfly": butterflyAnim.url,
+  "ms-raccoon": raccoonAnim.url,
+  "ms-elephant": elephantAnim.url,
+  "ms-giraffe": giraffeAnim.url,
+  "ms-lion": lionAnim.url,
+  "ms-turtle": turtleAnim.url,
+  "ms-frog": frogAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */

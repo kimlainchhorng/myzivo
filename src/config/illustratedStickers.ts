@@ -34,6 +34,18 @@ import buddyCherry from "@/assets/stickers/buddy-cherry.png";
 import buddyUnicorn from "@/assets/stickers/buddy-unicorn.png";
 import buddyRaccoon from "@/assets/stickers/buddy-raccoon.png";
 import buddyButterfly from "@/assets/stickers/buddy-butterfly.png";
+import buddyElephant from "@/assets/stickers/buddy-elephant.png";
+import buddyGiraffe from "@/assets/stickers/buddy-giraffe.png";
+import buddyLion from "@/assets/stickers/buddy-lion.png";
+import buddyTurtle from "@/assets/stickers/buddy-turtle.png";
+import buddyFrog from "@/assets/stickers/buddy-frog.png";
+import buddySloth from "@/assets/stickers/buddy-sloth.png";
+import buddyIcecream from "@/assets/stickers/buddy-icecream.png";
+import buddyCookie from "@/assets/stickers/buddy-cookie.png";
+import buddyWatermelon from "@/assets/stickers/buddy-watermelon.png";
+import buddyChick from "@/assets/stickers/buddy-chick.png";
+import buddyDeer from "@/assets/stickers/buddy-deer.png";
+import buddyDragon from "@/assets/stickers/buddy-dragon.png";
 
 export interface IllustratedSticker {
   id: string;
@@ -68,6 +80,9 @@ export const ILLUSTRATED_PACKS: IllustratedStickerPack[] = [
       { id: "bb-avocado", src: buddyAvocado, alt: "Happy Avocado" },
       { id: "bb-donut", src: buddyDonut, alt: "Excited Donut" },
       { id: "bb-cherry", src: buddyCherry, alt: "Happy Cherries" },
+      { id: "bb-icecream", src: buddyIcecream, alt: "Melty Ice Cream" },
+      { id: "bb-cookie", src: buddyCookie, alt: "Happy Cookie" },
+      { id: "bb-watermelon", src: buddyWatermelon, alt: "Fresh Watermelon" },
     ],
   },
   {
@@ -92,9 +107,25 @@ export const ILLUSTRATED_PACKS: IllustratedStickerPack[] = [
       { id: "cf-koala", src: buddyKoala, alt: "Shy Koala" },
       { id: "cf-bear", src: buddyBear, alt: "Cuddly Bear" },
       { id: "cf-whale", src: buddyWhale, alt: "Happy Whale" },
-      { id: "cf-unicorn", src: buddyUnicorn, alt: "Magical Unicorn" },
-      { id: "cf-raccoon", src: buddyRaccoon, alt: "Cheeky Raccoon" },
-      { id: "cf-butterfly", src: buddyButterfly, alt: "Pretty Butterfly" },
+      { id: "cf-chick", src: buddyChick, alt: "Curious Chick" },
+      { id: "cf-deer", src: buddyDeer, alt: "Gentle Deer" },
+      { id: "cf-sloth", src: buddySloth, alt: "Lazy Sloth" },
+    ],
+  },
+  {
+    id: "magic-squad",
+    name: "Magic Squad",
+    icon: "🐉",
+    stickers: [
+      { id: "ms-unicorn", src: buddyUnicorn, alt: "Magical Unicorn" },
+      { id: "ms-dragon", src: buddyDragon, alt: "Baby Dragon" },
+      { id: "ms-butterfly", src: buddyButterfly, alt: "Pretty Butterfly" },
+      { id: "ms-raccoon", src: buddyRaccoon, alt: "Cheeky Raccoon" },
+      { id: "ms-elephant", src: buddyElephant, alt: "Sweet Elephant" },
+      { id: "ms-giraffe", src: buddyGiraffe, alt: "Tall Giraffe" },
+      { id: "ms-lion", src: buddyLion, alt: "Brave Lion" },
+      { id: "ms-turtle", src: buddyTurtle, alt: "Slow Turtle" },
+      { id: "ms-frog", src: buddyFrog, alt: "Happy Frog" },
     ],
   },
 ];
