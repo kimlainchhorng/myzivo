@@ -368,6 +368,20 @@ export default function ChatMessageBubble({
 
         {/* Message body */}
         {message && (() => {
+          // Illustrated sticker detection: [sticker:id:src]
+          const stickerMatch = message.match(/^\[sticker:([^:]+):(.+)\]$/);
+          if (stickerMatch) {
+            return (
+              <div className="p-1">
+                <img src={stickerMatch[2]} alt={stickerMatch[1]} className="w-32 h-32 object-contain" loading="lazy" />
+                <div className="flex items-center gap-1 justify-end px-1 pb-1 -mt-1">
+                  <span className={`text-[10px] ${isMe ? "text-muted-foreground/60" : "text-muted-foreground/60"}`}>{time}</span>
+                  {isMe && (isRead ? <CheckCheck className="h-3 w-3 text-blue-400" /> : isDelivered ? <CheckCheck className="h-3 w-3 text-muted-foreground/40" /> : <Check className="h-3 w-3 text-muted-foreground/40" />)}
+                </div>
+              </div>
+            );
+          }
+
           const urlRegex = /(https?:\/\/[^\s]+)/gi;
           const urls = message.match(urlRegex);
           const hasLink = urls && urls.length > 0;
