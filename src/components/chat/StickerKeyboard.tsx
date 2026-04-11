@@ -397,24 +397,17 @@ function LiveIllustratedStickerArt({
     />
   );
 
-  // Grid mode: Facebook-style — subtle character animation, no particles/glow
+  // Grid mode: Facebook-style — clean static PNG thumbnails, no animation
   if (!large) {
     return (
-      <motion.div
-        className="relative flex h-full w-full items-center justify-center"
-        animate={motionSpec.wrapper.animate}
-        transition={motionSpec.wrapper.transition}
-        style={{ transformOrigin: motionSpec.wrapper.transformOrigin }}
-      >
-        <motion.div
-          className="h-full w-full"
-          animate={motionSpec.media.animate}
-          transition={motionSpec.media.transition}
-          style={{ transformOrigin: motionSpec.media.transformOrigin }}
-        >
-          {mediaElement}
-        </motion.div>
-      </motion.div>
+      <div className="relative flex h-full w-full items-center justify-center p-1.5">
+        <img
+          src={sticker.src}
+          alt={sticker.alt}
+          className="h-full w-full object-contain pointer-events-none"
+          loading="lazy"
+        />
+      </div>
     );
   }
 
