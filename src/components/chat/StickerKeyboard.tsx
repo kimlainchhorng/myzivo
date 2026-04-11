@@ -320,10 +320,7 @@ function LiveIllustratedStickerArt({
   withShadow?: boolean;
 }) {
   const tone = getIllustratedTone(sticker.id);
-  const face = getStickerFaceLayout(sticker.id);
   const lift = large ? 1.3 : 1;
-  const isEater = /hamster|sushi|toast|cupcake|carrot|coffee/.test(sticker.id);
-  const showCheeks = tone === "happy" || tone === "love" || tone === "shy";
 
   const duration = tone === "angry"
     ? 0.95
@@ -379,34 +376,6 @@ function LiveIllustratedStickerArt({
     : tone === "sleepy"
       ? { scaleX: [0.82, 1.1, 0.82], opacity: [0.16, 0.1, 0.16] }
       : { scaleX: [0.74, 1.2, 0.74], opacity: [0.16, 0.08, 0.16] };
-
-  const eyeAnimate = tone === "sleepy"
-    ? {
-        scaleY: [1, 0.2, 0.08, 0.2, 1, 1],
-        scaleX: [1, 1.08, 1.14, 1.08, 1, 1],
-        y: [0, 1, 1.5, 1, 0, 0],
-      }
-    : {
-        scaleY: [1, 1, 1, 0.14, 1, 1, 1, 0.18, 1],
-        scaleX: [1, 1, 1, 1.18, 1, 1, 1, 1.12, 1],
-        y: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-      };
-
-  const mouthAnimate = isEater
-    ? { scaleX: [1, 1.26, 0.92, 1.2, 1], scaleY: [0.45, 1.3, 0.38, 1.08, 0.5], y: [0, 1, -1, 1, 0] }
-    : tone === "happy"
-      ? { scaleX: [1, 1.16, 0.94, 1.08, 1], scaleY: [0.38, 0.95, 0.34, 0.85, 0.38], y: [0, 0.5, -0.5, 0.5, 0] }
-      : tone === "love"
-        ? { scaleX: [1, 1.12, 0.96, 1.08, 1], scaleY: [0.45, 0.92, 0.42, 0.88, 0.45], y: [0, -0.5, 0, -0.3, 0] }
-        : tone === "sad"
-          ? { scaleX: [1, 0.92, 1], scaleY: [0.32, 0.18, 0.32], y: [0, 1, 0], rotate: [0, -4, 0] }
-          : tone === "sleepy"
-            ? { scaleX: [0.92, 1.02, 0.92], scaleY: [0.8, 1.15, 0.8], opacity: [0.65, 0.5, 0.65] }
-            : tone === "angry"
-              ? { scaleX: [1, 1.25, 0.92, 1.12, 1], scaleY: [0.6, 0.28, 0.7, 0.32, 0.6], x: [0, -1, 1, 0] }
-              : tone === "shy"
-                ? { scaleX: [0.88, 1.05, 0.88], scaleY: [0.35, 0.55, 0.35], y: [0, -0.4, 0] }
-                : { scaleX: [1, 1.1, 0.95, 1.05, 1], scaleY: [0.4, 0.8, 0.4, 0.75, 0.4], y: [0, 0.5, 0, 0.4, 0] };
 
   return (
     <>
