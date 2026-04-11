@@ -92,10 +92,10 @@ export default function AdminUsersPage() {
     return map;
   }, [userRoles]);
 
-  // Show all registered ZIVO users across web/app domains, only hide internal staff roles
+  // Show all registered ZIVO users across web/app domains, hide internal staff AND drivers
   const customerProfiles = useMemo(() => {
     if (!profiles) return [];
-    const excludedRoles = ["admin", "moderator", "super_admin", "operations", "finance", "support", "merchant", "owner", "manager"];
+    const excludedRoles = ["admin", "moderator", "super_admin", "operations", "finance", "support", "merchant", "owner", "manager", "driver"];
     return profiles.filter((p) => {
       const uid = getProfileUid(p);
       const roles = roleMap[uid] || [];
