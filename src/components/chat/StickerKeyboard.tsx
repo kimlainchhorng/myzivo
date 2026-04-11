@@ -502,7 +502,7 @@ function LiveIllustratedStickerArt({
         transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
         style={{ transformOrigin: "center bottom" }}
       >
-        {sticker.animatedSrc ? (
+        {false && sticker.animatedSrc ? (
           <TransparentStickerVideo
             src={sticker.animatedSrc}
             fallbackSrc={sticker.src}
