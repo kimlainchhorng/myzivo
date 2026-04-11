@@ -15,6 +15,7 @@ import { openExternalUrl } from "@/lib/openExternalUrl";
 import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
 import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
+import { TransparentStickerVideo } from "./TransparentStickerVideo";
 
 const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "🎉", "😍"];
 
@@ -524,14 +525,11 @@ export default function ChatMessageBubble({
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             transition={{ type: "spring", stiffness: 380, damping: 14 }}
                           >
-                            <video
+                            <TransparentStickerVideo
                               src={animatedUrl}
-                              className="w-28 h-28 object-contain rounded-2xl"
-                              autoPlay
-                              loop
-                              muted
-                              playsInline
-                              preload="auto"
+                              fallbackSrc={stickerSrc}
+                              alt={parsedSticker.id}
+                              className="drop-shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
                             />
                           </motion.div>
                         );
