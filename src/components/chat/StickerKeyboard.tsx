@@ -501,10 +501,10 @@ function LiveIllustratedStickerArt({
         transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
         style={{ transformOrigin: "center bottom" }}
       >
-        {false && sticker.animatedSrc ? (
+        {sticker.animatedSrc ? (
           <video
             src={sticker.animatedSrc}
-            className="h-full w-full object-contain pointer-events-none rounded-xl"
+            className="h-full w-full object-contain pointer-events-none rounded-xl bg-white"
             autoPlay loop muted playsInline preload="auto"
           />
         ) : (
