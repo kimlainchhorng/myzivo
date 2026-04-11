@@ -13,6 +13,7 @@ interface TransparentStickerVideoProps {
   alt?: string;
   className?: string;
   fallbackSrc?: string;
+  preload?: "none" | "metadata" | "auto";
 }
 
 export function TransparentStickerVideo({
@@ -20,6 +21,7 @@ export function TransparentStickerVideo({
   alt = "",
   className,
   fallbackSrc,
+  preload = "auto",
 }: TransparentStickerVideoProps) {
   const [error, setError] = useState(false);
 
@@ -45,7 +47,7 @@ export function TransparentStickerVideo({
       loop
       muted
       playsInline
-      preload="auto"
+      preload={preload}
       onError={() => setError(true)}
     />
   );

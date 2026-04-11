@@ -16,6 +16,7 @@ import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
 import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
 import { TransparentStickerVideo } from "./TransparentStickerVideo";
+import { getStickerMotionSpec } from "./stickerMotion";
 
 const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "🎉", "😍"];
 
@@ -479,6 +480,7 @@ export default function ChatMessageBubble({
           // Sticker rendering (supports legacy + current formats)
           if (parsedSticker) {
             const stickerFallbackSrc = parsedSticker.fallbackSrc || parsedSticker.src;
+            const stickerMotion = getStickerMotionSpec(parsedSticker.id);
             const burstParticles = [
               { x: -34, y: -28, delay: 0, color: "#f59e0b" },
               { x: -12, y: -42, delay: 0.03, color: "#fb7185" },
@@ -514,21 +516,35 @@ export default function ChatMessageBubble({
                     whileTap={{ scale: 0.9, rotate: -4 }}
                     style={{ transformOrigin: "center bottom" }}
                   >
-                    {parsedSticker.animatedSrc ? (
-                      <TransparentStickerVideo
-                        src={parsedSticker.animatedSrc}
-                        fallbackSrc={stickerFallbackSrc}
-                        alt={parsedSticker.id}
-                        className="drop-shadow-lg"
-                      />
-                    ) : (
-                      <img
-                        src={stickerFallbackSrc}
-                        alt={parsedSticker.id}
-                        className="h-full w-full object-contain pointer-events-none drop-shadow-lg"
-                        loading="lazy"
-                      />
-                    )}
+                    <motion.div
+                      className="h-full w-full"
+                      animate={stickerMotion.wrapper.animate}
+                      transition={stickerMotion.wrapper.transition}
+                      style={{ transformOrigin: stickerMotion.wrapper.transformOrigin }}
+                    >
+                      <motion.div
+                        className="h-full w-full"
+                        animate={stickerMotion.media.animate}
+                        transition={stickerMotion.media.transition}
+                        style={{ transformOrigin: stickerMotion.media.transformOrigin }}
+                      >
+                        {parsedSticker.animatedSrc ? (
+                          <TransparentStickerVideo
+                            src={parsedSticker.animatedSrc}
+                            fallbackSrc={stickerFallbackSrc}
+                            alt={parsedSticker.id}
+                            preload="auto"
+                          />
+                        ) : (
+                          <img
+                            src={stickerFallbackSrc}
+                            alt={parsedSticker.id}
+                            className="h-full w-full object-contain pointer-events-none"
+                            loading="lazy"
+                          />
+                        )}
+                      </motion.div>
+                    </motion.div>
                   </motion.div>
                 </div>
                 <div className="flex items-center gap-1 justify-end px-1 pb-0.5 -mt-1">
