@@ -7,6 +7,8 @@ import { X, Image, Video, Mic, FileText, Download, ArrowLeft, Play } from "lucid
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
+import { validateExternalUrl } from "@/lib/urlSafety";
+import { openExternalUrl } from "@/lib/openExternalUrl";
 
 interface ChatMediaGalleryProps {
   open: boolean;
@@ -57,7 +59,9 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
             const urls = msg.message.match(urlRegex);
             if (urls) {
               for (const u of urls) {
-                media.push({ id: `${msg.id}-link`, url: u, type: "links", message: msg.message, created_at: msg.created_at, sender_id: msg.sender_id });
+                const safeUrl = validateExternalUrl(u);
+                if (!safeUrl) continue;
+                media.push({ id: `${msg.id}-link`, url: safeUrl, type: "links", message: msg.message, created_at: msg.created_at, sender_id: msg.sender_id });
               }
             }
           }
@@ -187,11 +191,11 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
         ) : (
           <div className="space-y-2">
             {filtered.map((item) => (
-              <a
+              <button
                 key={item.id}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
+                onClick={() => {
+                  void openExternalUrl(item.url);
+                }}
                 className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-border/30 hover:bg-muted/60 transition-colors"
               >
                 <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
@@ -203,7 +207,7 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
                     {format(new Date(item.created_at), "MMM d, h:mm a")}
                   </p>
                 </div>
-              </a>
+              </button>
             ))}
           </div>
         )}

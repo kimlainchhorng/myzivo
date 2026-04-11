@@ -21,6 +21,8 @@ import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import PersonalChat from "@/components/chat/PersonalChat";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useCallback } from "react";
+import { assessChatMessageRisk, sanitizeOutgoingMessage } from "@/lib/security/chatContentSafety";
+import { validateExternalUrl } from "@/lib/urlSafety";
 
 type ChatCategory = "personal" | "shop" | "support" | "ride";
 
@@ -174,9 +176,23 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const handleShareToContact = async (contactId: string, contactName: string, contactAvatar?: string | null) => {
     if (!sharePayload || !user) return;
     try {
-      const shareMessage = sharePayload.shareText
-        ? `${sharePayload.shareText}\n${sharePayload.shareUrl}`
-        : sharePayload.shareUrl;
+      const safeShareUrl = validateExternalUrl(sharePayload.shareUrl);
+      if (!safeShareUrl) {
+        toast.error("Blocked unsafe share link");
+        return;
+      }
+
+      const shareText = sanitizeOutgoingMessage(sharePayload.shareText || "");
+      const shareMessage = shareText
+        ? `${shareText}\n${safeShareUrl}`
+        : safeShareUrl;
+
+      const risk = assessChatMessageRisk(shareMessage);
+      if (risk.blocked) {
+        toast.error("Blocked unsafe message content");
+        return;
+      }
+
       await supabase.from("direct_messages").insert({
         sender_id: user.id,
         receiver_id: contactId,
@@ -186,8 +202,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       setSharePayload(null);
       queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] });
       setOpenPersonalChat({ id: contactId, name: contactName, avatar: contactAvatar });
-    } catch {
-      toast.error("Failed to share");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to share");
     }
   };
 

@@ -4,6 +4,7 @@
  */
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
+import { isSafeProtocol } from "@/lib/urlSafety";
 
 const SYSTEM_SCHEMES = ["mailto:", "tel:", "sms:"];
 
@@ -32,7 +33,12 @@ function resolveUrl(url: string): URL | null {
 }
 
 function isSystemUrl(url: string): boolean {
-  return SYSTEM_SCHEMES.some((scheme) => url.startsWith(scheme));
+  const normalized = url.toLowerCase();
+  return SYSTEM_SCHEMES.some((scheme) => normalized.startsWith(scheme));
+}
+
+function isAllowedNavigationProtocol(resolvedUrl: URL): boolean {
+  return resolvedUrl.protocol === "https:" || resolvedUrl.protocol === "http:";
 }
 
 function isInternalAppUrl(resolvedUrl: URL, originalUrl: string): boolean {
@@ -73,6 +79,11 @@ export async function openExternalUrl(url: string): Promise<void> {
   const normalizedUrl = normalizeUrl(url);
   if (!normalizedUrl || normalizedUrl === "#") return;
 
+  if (!isSafeProtocol(normalizedUrl)) {
+    console.warn("[openExternalUrl] blocked unsafe protocol", normalizedUrl.slice(0, 60));
+    return;
+  }
+
   if (isSystemUrl(normalizedUrl)) {
     openSystemUrl(normalizedUrl);
     return;
@@ -80,6 +91,11 @@ export async function openExternalUrl(url: string): Promise<void> {
 
   const resolvedUrl = resolveUrl(normalizedUrl);
   if (!resolvedUrl) return;
+
+  if (!isAllowedNavigationProtocol(resolvedUrl) && !isInternalAppUrl(resolvedUrl, normalizedUrl)) {
+    console.warn("[openExternalUrl] blocked non-http protocol", resolvedUrl.protocol);
+    return;
+  }
 
   if (isInternalAppUrl(resolvedUrl, normalizedUrl)) {
     window.location.assign(`${resolvedUrl.pathname}${resolvedUrl.search}${resolvedUrl.hash}`);
@@ -116,5 +132,9 @@ export async function openExternalUrl(url: string): Promise<void> {
 
 /** For mailto:, tel:, sms: links */
 export function openSystemUrl(url: string): void {
+  if (!isSystemUrl(url)) {
+    console.warn("[openExternalUrl] blocked unsupported system URL", url.slice(0, 40));
+    return;
+  }
   window.location.assign(url);
 }

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Activity, CheckCircle, AlertTriangle, XCircle, Server, Database, Wifi, Clock, ArrowLeft } from "lucide-react";
+import { Activity, CheckCircle, AlertTriangle, XCircle, Server, Clock, ArrowLeft, ShieldAlert } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -39,6 +39,23 @@ export default function AdminSystemHealth() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">System Health</h1>
           <p className="text-muted-foreground">Real-time status of all platform services</p>
+        </div>
+      </div>
+
+      <div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => navigate('/admin/chat-security')}>
+            <ShieldAlert className="h-4 w-4" />
+            Open Chat Security Monitor
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={() => navigate('/admin/security-sentinel')}>
+            <ShieldAlert className="h-4 w-4" />
+            Open Security Sentinel
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={() => navigate('/admin/auth-shield')}>
+            <ShieldAlert className="h-4 w-4" />
+            Open Auth Shield Control
+          </Button>
         </div>
       </div>
 

@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { User, Shield } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
 
 interface TicketChatMessageProps {
   message: string;
@@ -22,6 +23,7 @@ export function TicketChatMessage({
   isCurrentUser = false,
 }: TicketChatMessageProps) {
   const isRight = isAdmin;
+  const risk = assessChatMessageRisk(message || "");
 
   return (
     <div
@@ -63,6 +65,11 @@ export function TicketChatMessage({
           )}
         >
           {message}
+          {!isCurrentUser && risk.warnings.length > 0 && (
+            <p className="text-[10px] mt-1 font-medium text-amber-600">
+              Suspicious link pattern detected.
+            </p>
+          )}
         </div>
       </div>
     </div>

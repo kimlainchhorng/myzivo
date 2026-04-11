@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { isAllowedPaymentUrl } from "@/lib/urlSafety";
+import { assessChatMessageRisk, sanitizeOutgoingMessage } from "@/lib/security/chatContentSafety";
 
 interface StoreLiveChatProps {
   storeId: string;
@@ -483,7 +484,19 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
 
   const sendMessage = async () => {
     if (!input.trim() || !chatId || sending) return;
-    const text = input.trim();
+    const text = sanitizeOutgoingMessage(input);
+    if (!text) return;
+
+    const risk = assessChatMessageRisk(text);
+    if (risk.blocked) {
+      toast.error("Blocked message containing unsafe link pattern");
+      return;
+    }
+
+    if (risk.warnings.length > 0) {
+      toast.warning("Potentially suspicious link pattern detected in message");
+    }
+
     setInput("");
     setSending(true);
 
@@ -497,7 +510,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
       content: text,
     });
 
-    if (error) toast.error("Failed to send message");
+    if (error) toast.error(error.message || "Failed to send message");
     setSending(false);
   };
 
@@ -670,6 +683,10 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
                       onClick={() => {
                         const url = prompt("Paste your payment link or URL:");
                         if (!url?.trim()) return;
+                        if (!isAllowedPaymentUrl(url.trim())) {
+                          toast.error("Payment link blocked. Use an approved payment domain.");
+                          return;
+                        }
                         const amount = prompt("Amount (optional):");
                         const note = prompt("Note (optional):");
                         const sendQR = async () => {

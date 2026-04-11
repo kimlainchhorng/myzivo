@@ -11,6 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
+import { openExternalUrl } from "@/lib/openExternalUrl";
+import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
 
 const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "🎉", "😍"];
 
@@ -43,6 +45,7 @@ export default function ChatMessageBubble({
   const [showReactions, setShowReactions] = useState(false);
   const [showDeleteSub, setShowDeleteSub] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const messageRisk = assessChatMessageRisk(message || "");
   const isLockedType = messageType === "locked_image" || messageType === "locked_video";
   const [isLocked, setIsLocked] = useState(isLockedType && !isMe);
   const [unlockLoading, setUnlockLoading] = useState(false);
@@ -431,6 +434,12 @@ export default function ChatMessageBubble({
                 <p className={`whitespace-pre-wrap break-words px-4 pt-3 pb-1 relative z-[1] ${
                   isMe ? "text-primary-foreground" : "text-foreground"
                 }`}>{textWithoutUrl}</p>
+              )}
+
+              {!isMe && messageRisk.warnings.length > 0 && (
+                <p className={`px-4 pb-1 text-[10px] font-medium ${isMe ? "text-primary-foreground/70" : "text-amber-600"}`}>
+                  Suspicious link pattern detected. Open carefully.
+                </p>
               )}
 
               {/* Rich link preview */}
@@ -994,7 +1003,7 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
     if (isInternalLink) {
       navigate(getInAppPath());
     } else {
-      window.open(url, "_blank", "noopener,noreferrer");
+      void openExternalUrl(url);
     }
   };
 

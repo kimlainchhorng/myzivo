@@ -32,6 +32,7 @@ import RoutePrefetcher from "./components/shared/RoutePrefetcher";
 import { GlobalViewportMeta } from "@/components/shared/GlobalViewportMeta";
 import IncomingCallListener from "@/components/chat/IncomingCallListener";
 import ChatNotificationListener from "@/components/chat/ChatNotificationListener";
+import RuntimeSecurityGuard from "@/components/security/RuntimeSecurityGuard";
 import { Loader2 } from "lucide-react";
 import { categorizeError } from "@/lib/supabaseErrors";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
@@ -175,6 +176,9 @@ const AiCreativeSuite = lazy(() => import("./pages/app/shop/AiCreativeSuite"));
 const AiContentSuite = lazy(() => import("./pages/app/shop/AiContentSuite"));
 const MerchantWalletPage = lazy(() => import("./pages/app/shop/MerchantWalletPage"));
 const MerchantTaxReportPage = lazy(() => import("./pages/app/shop/MerchantTaxReportPage"));
+const AdminChatSecurityPage = lazy(() => import("./pages/admin/AdminChatSecurityPage"));
+const AdminSecuritySentinelPage = lazy(() => import("./pages/admin/AdminSecuritySentinelPage"));
+const AdminAuthShieldPage = lazy(() => import("./pages/admin/AdminAuthShieldPage"));
 const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
 const DriverEarningsPage = lazy(() => import("./pages/driver/DriverEarningsPage"));
 const DriverPerformancePage = lazy(() => import("./pages/driver/DriverPerformancePage"));
@@ -500,6 +504,7 @@ const App = () => (
               <SkipToContent />
               <Toaster />
               <Sonner />
+              <RuntimeSecurityGuard />
               <BrowserRouter>
                 <PageViewTracker />
                 <GeoDetector />
@@ -669,6 +674,9 @@ const App = () => (
                 <Route path="/shop-dashboard/wallet" element={<ProtectedRoute><MerchantWalletPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/tax-reports" element={<ProtectedRoute><MerchantTaxReportPage /></ProtectedRoute>} />
                 <Route path="/admin/god-view" element={<ProtectedRoute><AdminGodView /></ProtectedRoute>} />
+                <Route path="/admin/chat-security" element={<ProtectedRoute><AdminChatSecurityPage /></ProtectedRoute>} />
+                <Route path="/admin/security-sentinel" element={<ProtectedRoute><AdminSecuritySentinelPage /></ProtectedRoute>} />
+                <Route path="/admin/auth-shield" element={<ProtectedRoute><AdminAuthShieldPage /></ProtectedRoute>} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
                 <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
                 <Route path="/insurance" element={<PreserveQueryRedirect to="/travel-insurance" />} />

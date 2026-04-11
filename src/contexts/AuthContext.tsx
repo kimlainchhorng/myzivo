@@ -157,10 +157,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      const normalizedEmail = email.trim().toLowerCase();
+      const deviceFingerprint = `${navigator.userAgent}|${Intl.DateTimeFormat().resolvedOptions().timeZone}|${navigator.language}`;
+
+      const { data: precheckData, error: precheckError } = await (supabase as any).rpc("auth_precheck_login", {
+        _identifier: normalizedEmail,
+        _device_fingerprint: deviceFingerprint,
+      });
+
+      if (precheckError) {
+        return { error: new Error(precheckError.message || "Security precheck failed") };
+      }
+
+      const precheck = Array.isArray(precheckData) ? precheckData[0] : precheckData;
+      if (precheck && precheck.allowed === false) {
+        return { error: new Error(precheck.reason || "Too many failed attempts. Please try later.") };
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password,
       });
+
+      await (supabase as any).rpc("auth_record_login_attempt", {
+        _identifier: normalizedEmail,
+        _success: !error,
+        _device_fingerprint: deviceFingerprint,
+      });
+
       if (!error) {
         loginGraceUntilRef.current = Date.now() + 15_000;
 

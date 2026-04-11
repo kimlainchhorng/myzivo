@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Link2, Plus, Trash2, GripVertical, Eye, ExternalLink, BarChart3, Palette } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { validateExternalUrl } from "@/lib/urlSafety";
+import { toast } from "sonner";
 
 interface BioLink {
   id: string;
@@ -44,7 +46,13 @@ export default function LinkHubPage() {
 
   const addLink = () => {
     if (!newTitle.trim() || !newUrl.trim()) return;
-    setLinks(prev => [...prev, { id: Date.now().toString(), title: newTitle, url: newUrl, clicks: 0, icon: "🔗" }]);
+    const safeUrl = validateExternalUrl(newUrl);
+    if (!safeUrl) {
+      toast.error("Unsafe or invalid URL blocked");
+      return;
+    }
+
+    setLinks(prev => [...prev, { id: Date.now().toString(), title: newTitle, url: safeUrl, clicks: 0, icon: "🔗" }]);
     setNewTitle("");
     setNewUrl("");
     setShowAdd(false);
@@ -66,14 +74,27 @@ export default function LinkHubPage() {
           </div>
           <div className="space-y-3">
             {links.map((link, i) => (
-              <motion.a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                className="block">
-                <Card className="p-4 text-center hover:scale-[1.02] transition-transform cursor-pointer">
-                  <span className="mr-2">{link.icon}</span>
-                  <span className="font-medium">{link.title}</span>
-                </Card>
-              </motion.a>
+              <motion.div
+                key={link.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+              >
+                {validateExternalUrl(link.url) ? (
+                  <a href={link.url} target="_blank" rel="noopener noreferrer" className="block">
+                    <Card className="p-4 text-center hover:scale-[1.02] transition-transform cursor-pointer">
+                      <span className="mr-2">{link.icon}</span>
+                      <span className="font-medium">{link.title}</span>
+                    </Card>
+                  </a>
+                ) : (
+                  <Card className="p-4 text-center border-destructive/30 bg-destructive/5">
+                    <span className="mr-2">{link.icon}</span>
+                    <span className="font-medium">{link.title}</span>
+                    <p className="text-xs text-destructive mt-1">Blocked unsafe URL</p>
+                  </Card>
+                )}
+              </motion.div>
             ))}
           </div>
           <div className="text-center mt-8">
