@@ -14,8 +14,6 @@ import { Capacitor } from "@capacitor/core";
 import { openExternalUrl } from "@/lib/openExternalUrl";
 import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
 import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
-import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
-import { TransparentStickerVideo } from "./TransparentStickerVideo";
 
 const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "🎉", "😍"];
 
@@ -507,55 +505,33 @@ export default function ChatMessageBubble({
                     </AnimatePresence>
 
 
-                    {(() => {
-                      const animatedUrl = getAnimatedStickerUrl(parsedSticker.id);
-                      if (animatedUrl) {
-                        return (
-                          <motion.div
-                            className="w-32 h-32"
-                            initial={{ scale: 0.2, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            transition={{ type: "spring", stiffness: 380, damping: 14 }}
-                          >
-                            <TransparentStickerVideo
-                              src={animatedUrl}
-                              fallbackSrc={stickerSrc}
-                              alt={parsedSticker.id}
-                              className="drop-shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
-                            />
-                          </motion.div>
-                        );
-                      }
-                      return (
-                        <motion.img
-                          src={stickerSrc}
-                          alt={parsedSticker.id}
-                          className="w-32 h-32 object-contain mix-blend-multiply dark:mix-blend-screen dark:invert"
-                          loading="lazy"
-                          initial={{ scale: 0.2, opacity: 0, y: 20 }}
-                          animate={{
-                            scale: [1, 1.04, 1, 1.02, 1],
-                            opacity: 1,
-                            y: [0, -8, 0, -4, 0],
-                            rotate: [0, -2, 2, -1, 0],
-                          }}
-                          transition={{
-                            scale: { type: "spring", stiffness: 380, damping: 14 },
-                            opacity: { duration: 0.15 },
-                            y: { duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: 0.2 },
-                            rotate: { duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: 0.2 },
-                          }}
-                          style={{ transformOrigin: "center bottom" }}
-                          onError={() => {
-                            if (!stickerFallbackActive && parsedSticker.fallbackSrc) {
-                              setStickerFallbackActive(true);
-                              return;
-                            }
-                            setStickerLoadFailed(true);
-                          }}
-                        />
-                      );
-                    })()}
+                    <motion.img
+                      src={stickerSrc}
+                      alt={parsedSticker.id}
+                      className="w-32 h-32 object-contain"
+                      loading="lazy"
+                      initial={{ scale: 0.2, opacity: 0, y: 20 }}
+                      animate={{
+                        scale: [1, 1.04, 1, 1.02, 1],
+                        opacity: 1,
+                        y: [0, -8, 0, -4, 0],
+                        rotate: [0, -2, 2, -1, 0],
+                      }}
+                      transition={{
+                        scale: { type: "spring", stiffness: 380, damping: 14 },
+                        opacity: { duration: 0.15 },
+                        y: { duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: 0.2 },
+                        rotate: { duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: 0.2 },
+                      }}
+                      style={{ transformOrigin: "center bottom" }}
+                      onError={() => {
+                        if (!stickerFallbackActive && parsedSticker.fallbackSrc) {
+                          setStickerFallbackActive(true);
+                          return;
+                        }
+                        setStickerLoadFailed(true);
+                      }}
+                    />
                   </div>
                 ) : (
                   <div className="w-40 h-40 rounded-3xl bg-muted/40 border border-border/20 grid place-items-center text-[11px] text-muted-foreground text-center px-3">
