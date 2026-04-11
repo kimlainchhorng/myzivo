@@ -31,6 +31,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ILLUSTRATED_PACKS, type IllustratedStickerPack } from "@/config/illustratedStickers";
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
 import { TransparentStickerVideo } from "./TransparentStickerVideo";
+import { getStickerMotionSpec } from "./stickerMotion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -374,81 +375,44 @@ function LiveIllustratedStickerArt({
   withShadow?: boolean;
 }) {
   const tone = getIllustratedTone(sticker.id);
-  const lift = large ? 1.3 : 1;
-
-  const duration = tone === "angry"
-    ? 0.95
-    : tone === "happy"
-      ? 1.15
-      : tone === "love"
-        ? 1.45
-        : tone === "sleepy"
-          ? 2.2
-          : 1.6;
-
-  const bodyAnimate = tone === "angry"
-    ? {
-        y: [0, -5.5 * lift, 0, -2.5 * lift, 0],
-        x: [0, -4.5 * lift, 4.5 * lift, -3 * lift, 3 * lift, 0],
-        rotate: [0, -4, 4, -2, 2, 0],
-        scaleX: [1, 1.04, 0.96, 1.02, 1],
-        scaleY: [1, 0.97, 1.07, 0.98, 1],
-      }
-    : tone === "sad"
-      ? { y: [0, 2 * lift, 0, -2 * lift, 0], rotate: [0, -4, 0, 4, 0], scale: [1, 0.97, 1, 1.02, 1] }
-      : tone === "sleepy"
-        ? { y: [0, -4 * lift, 0, -2 * lift, 0], rotate: [0, -3, 2, -1, 0], scale: [1, 1.05, 1, 1.02, 1] }
-        : tone === "love"
-          ? { y: [0, -9 * lift, 0, -4 * lift, 0], rotate: [0, -3, 3, 0], scale: [1, 1.09, 1, 1.04, 1] }
-          : tone === "happy"
-            ? {
-                y: [0, -13 * lift, 0, -7 * lift, 0],
-                rotate: [0, -4, 4, -2, 0],
-                scaleX: [1, 1.07, 0.93, 1.05, 1],
-                scaleY: [1, 0.94, 1.1, 0.97, 1],
-              }
-            : tone === "shy"
-              ? { y: [0, -6 * lift, 0, -3 * lift, 0], rotate: [0, -5, 5, -2, 0], scale: [1, 1.04, 1, 1.02, 1] }
-              : { y: [0, -8 * lift, 0, -4 * lift, 0], rotate: [0, -4, 4, 0], scale: [1, 1.05, 1, 1.02, 1] };
-
-  const imgAnimate = tone === "angry"
-    ? { rotate: [0, -7, 7, -5, 4, 0], y: [0, -1.5 * lift, 0] }
-    : tone === "sad"
-      ? { rotate: [0, -3, 0, 3, 0], y: [0, 1, 0] }
-      : tone === "sleepy"
-        ? { rotate: [0, -4, 2, -1, 0], scale: [1, 1.03, 1, 1.01, 1] }
-        : tone === "love"
-          ? { rotate: [0, -4, 4, 0], scale: [1, 1.07, 1, 1.04, 1] }
-          : tone === "happy"
-            ? { rotate: [0, -4, 4, -2, 0], y: [0, -1.5 * lift, 0], scale: [1, 1.04, 1, 1.02, 1] }
-            : tone === "shy"
-              ? { rotate: [0, -3, 3, 0], scale: [1, 1.03, 1] }
-              : { rotate: [0, -3, 3, 0], y: [0, -1 * lift, 0] };
-
-  const shadowAnimate = tone === "happy"
-    ? { scaleX: [0.65, 1.36, 0.58, 1.18, 0.65], opacity: [0.18, 0.05, 0.2, 0.08, 0.18] }
-    : tone === "sleepy"
-      ? { scaleX: [0.82, 1.1, 0.82], opacity: [0.16, 0.1, 0.16] }
-      : { scaleX: [0.74, 1.2, 0.74], opacity: [0.16, 0.08, 0.16] };
+  const motionSpec = getStickerMotionSpec(sticker.id, { large, index });
+  const mediaShadowClassName = withShadow && large
+    ? "drop-shadow-[0_10px_24px_hsl(var(--foreground)/0.18)]"
+    : undefined;
+  const mediaElement = sticker.animatedSrc ? (
+    <TransparentStickerVideo
+      src={sticker.animatedSrc}
+      fallbackSrc={sticker.src}
+      alt={sticker.alt}
+      preload={large ? "auto" : "metadata"}
+      className={mediaShadowClassName}
+    />
+  ) : (
+    <img
+      src={sticker.src}
+      alt={sticker.alt}
+      className={cn("h-full w-full object-contain pointer-events-none", mediaShadowClassName)}
+      loading="lazy"
+    />
+  );
 
   // Grid mode: Facebook-style — subtle character animation, no particles/glow
   if (!large) {
     return (
       <motion.div
         className="relative flex h-full w-full items-center justify-center"
-        animate={bodyAnimate}
-        transition={{ duration: duration * 1.3, repeat: Infinity, ease: "easeInOut", delay: index * 0.08 }}
-        style={{ transformOrigin: "center bottom" }}
+        animate={motionSpec.wrapper.animate}
+        transition={motionSpec.wrapper.transition}
+        style={{ transformOrigin: motionSpec.wrapper.transformOrigin }}
       >
-        <motion.img
-          src={sticker.src}
-          alt={sticker.alt}
-          className="h-full w-full object-contain pointer-events-none"
-          loading="lazy"
-          animate={imgAnimate}
-          transition={{ duration: duration * 1.3, repeat: Infinity, ease: "easeInOut", delay: index * 0.08 }}
-          style={{ transformOrigin: "center bottom" }}
-        />
+        <motion.div
+          className="h-full w-full"
+          animate={motionSpec.media.animate}
+          transition={motionSpec.media.transition}
+          style={{ transformOrigin: motionSpec.media.transformOrigin }}
+        >
+          {mediaElement}
+        </motion.div>
       </motion.div>
     );
   }
@@ -462,8 +426,8 @@ function LiveIllustratedStickerArt({
         <motion.span
           aria-hidden
           className="pointer-events-none absolute inset-x-[12%] bottom-[8%] h-5 rounded-full bg-foreground/10 blur-xl"
-          animate={shadowAnimate}
-          transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.04 }}
+          animate={motionSpec.shadow.animate}
+          transition={motionSpec.shadow.transition}
         />
       )}
 
@@ -517,19 +481,18 @@ function LiveIllustratedStickerArt({
 
       <motion.div
         className="relative flex h-full w-full items-center justify-center"
-        animate={bodyAnimate}
-        transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
-        style={{ transformOrigin: "center bottom" }}
+        animate={motionSpec.wrapper.animate}
+        transition={motionSpec.wrapper.transition}
+        style={{ transformOrigin: motionSpec.wrapper.transformOrigin }}
       >
-        <motion.img
-          src={sticker.src}
-          alt={sticker.alt}
-          className="h-full w-full object-contain pointer-events-none drop-shadow-[0_10px_24px_hsl(var(--foreground)/0.18)]"
-          loading="lazy"
-          animate={imgAnimate}
-          transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
-          style={{ transformOrigin: "center bottom" }}
-        />
+        <motion.div
+          className="h-full w-full"
+          animate={motionSpec.media.animate}
+          transition={motionSpec.media.transition}
+          style={{ transformOrigin: motionSpec.media.transformOrigin }}
+        >
+          {mediaElement}
+        </motion.div>
       </motion.div>
     </>
   );
