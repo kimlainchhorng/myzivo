@@ -82,7 +82,7 @@ export default function AdminUsersPage() {
 
   // Fetch driver emails to exclude driver accounts (from zivodriver.com)
   const { data: driverEmails } = useQuery({
-    queryKey: ["admin-driver-emails"],
+    queryKey: ["admin-driver-emails", isAdmin],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("drivers")
@@ -96,7 +96,7 @@ export default function AdminUsersPage() {
       });
       return { emails: emailSet, ids: idSet };
     },
-    enabled: isAdmin,
+    enabled: isAdmin && !authLoading,
   });
 
   const roleMap = useMemo(() => {
