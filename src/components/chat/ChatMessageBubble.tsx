@@ -519,14 +519,14 @@ export default function ChatMessageBubble({
                       if (animatedUrl) {
                         return (
                           <motion.div
-                            className="w-40 h-40"
+                            className="w-28 h-28"
                             initial={{ scale: 0.2, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             transition={{ type: "spring", stiffness: 380, damping: 14 }}
                           >
                             <video
                               src={animatedUrl}
-                              className="w-40 h-40 object-contain rounded-2xl bg-white"
+                              className="w-28 h-28 object-contain rounded-2xl bg-white"
                               autoPlay
                               loop
                               muted
