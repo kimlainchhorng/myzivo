@@ -50,6 +50,10 @@ function formatChatTime(dateStr: string) {
 }
 
 function parseRichMessagePreview(message: string): string {
+  const trimmed = message.trim();
+  if (!trimmed) return "";
+  if (/^\[sticker:([^\]:]+)(?::(.+))?\]$/i.test(trimmed)) return "Sticker";
+
   try {
     let parsed = JSON.parse(message);
     if (typeof parsed === "string") parsed = JSON.parse(parsed);
@@ -65,10 +69,12 @@ function parseRichMessagePreview(message: string): string {
       }
     }
   } catch {}
+
   return message;
 }
 
 function getMessagePreviewIcon(message: string) {
+  if (message === "Sticker") return <ImageIcon className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
   if (message === "📷 Image" || message.includes("[image]")) return <ImageIcon className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
   if (message.includes("[voice]") || message.includes("🎤")) return <Mic className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
   if (message.includes("[location]") || message.includes("📍")) return <MapPin className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
