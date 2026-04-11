@@ -1,10 +1,10 @@
 /**
  * MonetizationPage — ZIVO Signature Design (2026)
- * Unique aurora mesh, organic cards, emerald identity
+ * Real wallet data, complete program hub, creator tools
  */
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, DollarSign, Crown, Gift, Heart, Sparkles,
   ChevronRight, TrendingUp, Zap, Star, Lock, Store,
@@ -12,7 +12,7 @@ import {
   BookOpen, Users, Target, BarChart3, Headphones,
   PenTool, Package, Globe, Award, Mic, Camera,
   Palette, Music, Radio, Calendar, MessageCircle, ArrowRight,
-  CheckCircle,
+  CheckCircle, Search, Filter, Eye, Play, Clock,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,10 +74,29 @@ const quickActions = [
   { label: "Wallet", icon: Wallet, href: "/wallet", accent: "hsl(38 92% 50%)" },
 ];
 
+const programFilter = ["All", "Joined", "Available", "Coming Soon"] as const;
+
 export default function MonetizationPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeResTab, setActiveResTab] = useState(0);
+  const [activeFilter, setActiveFilter] = useState<typeof programFilter[number]>("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Fetch user wallet balance
+  const { data: walletData } = useQuery({
+    queryKey: ["monetization-wallet", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("wallets")
+        .select("balance")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
 
   // Fetch all user enrollments
   const { data: enrollments = [] } = useQuery({
@@ -85,15 +104,45 @@ export default function MonetizationPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("creator_program_enrollments")
-        .select("program_id, status")
+        .select("program_id, status, enrolled_at")
         .eq("user_id", user!.id);
       return data || [];
     },
     enabled: !!user,
   });
 
+  // Fetch referral count
+  const { data: referralCount } = useQuery({
+    queryKey: ["monetization-referrals", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("referrals")
+        .select("id", { count: "exact", head: true })
+        .eq("referrer_id", user!.id);
+      return count || 0;
+    },
+    enabled: !!user,
+  });
+
   const enrolledIds = new Set(enrollments.map((e: any) => e.program_id));
   const enrolledCount = enrolledIds.size;
+  const balance = walletData?.balance ?? 0;
+
+  // Filter programs
+  const filteredPrograms = monetizationPrograms.filter((prog) => {
+    const matchesSearch = !searchQuery || 
+      prog.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      prog.description.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!matchesSearch) return false;
+
+    switch (activeFilter) {
+      case "Joined": return enrolledIds.has(prog.programId);
+      case "Available": return prog.status === "join" && !enrolledIds.has(prog.programId);
+      case "Coming Soon": return prog.badge === "Soon";
+      default: return true;
+    }
+  });
 
   return (
     <div className="min-h-dvh bg-background pb-24">
@@ -105,13 +154,29 @@ export default function MonetizationPage() {
           <button onClick={() => navigate("/more")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-lg font-extrabold flex-1 tracking-tight">Monetization</h1>
-          <DollarSign className="h-5 w-5 text-primary" />
+          {searchOpen ? (
+            <input
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search programs..."
+              className="flex-1 text-sm bg-transparent outline-none placeholder:text-muted-foreground/50"
+              onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
+            />
+          ) : (
+            <h1 className="text-lg font-extrabold flex-1 tracking-tight">Monetization</h1>
+          )}
+          <button
+            onClick={() => { setSearchOpen(!searchOpen); if (searchOpen) setSearchQuery(""); }}
+            className="p-2 -mr-1 rounded-full hover:bg-muted/50 touch-manipulation"
+          >
+            <Search className="h-5 w-5" />
+          </button>
         </div>
       </div>
 
       <div className="px-4 py-5 space-y-6 zivo-aurora">
-        {/* Earnings Hero */}
+        {/* Earnings Hero — Real Data */}
         {user && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -124,8 +189,8 @@ export default function MonetizationPage() {
                   <Wallet className="h-5 w-5" style={{ color: "hsl(142 71% 45%)" }} />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Total Earnings</p>
-                  <p className="text-xl font-extrabold">$0.00</p>
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Wallet Balance</p>
+                  <p className="text-xl font-extrabold">${(balance / 100).toFixed(2)}</p>
                 </div>
               </div>
               <Link to="/creator-dashboard" className="zivo-btn-signature px-4 py-2 text-[11px] flex items-center gap-1 touch-manipulation">
@@ -134,10 +199,10 @@ export default function MonetizationPage() {
             </div>
             <div className="grid grid-cols-4 gap-2">
               {[
-                { label: "This month", value: "$0.00" },
                 { label: "Programs", value: String(enrolledCount) },
+                { label: "Referrals", value: String(referralCount ?? 0) },
                 { label: "Tips", value: "0" },
-                { label: "Affiliates", value: "0" },
+                { label: "Status", value: enrolledCount > 0 ? "Active" : "Start" },
               ].map((stat) => (
                 <div key={stat.label} className="rounded-xl bg-muted/30 p-2 text-center border border-border/20">
                   <p className="text-xs font-bold">{stat.value}</p>
@@ -172,55 +237,91 @@ export default function MonetizationPage() {
           </div>
         </div>
 
-        {/* Programs */}
+        {/* Programs with Filter */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-[15px] flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-primary" /> Programs
             </h2>
-            <span className="text-[11px] text-muted-foreground font-medium">{monetizationPrograms.length} available</span>
+            <span className="text-[11px] text-muted-foreground font-medium">{filteredPrograms.length} shown</span>
           </div>
+
+          {/* Filter chips */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-3 -mx-1 px-1">
+            {programFilter.map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                  activeFilter === filter
+                    ? "bg-foreground text-background"
+                    : "bg-muted/60 text-muted-foreground"
+                }`}
+              >
+                {filter}
+                {filter === "Joined" && enrolledCount > 0 && (
+                  <span className="ml-1 text-[10px]">({enrolledCount})</span>
+                )}
+              </button>
+            ))}
+          </div>
+
           <div className="space-y-1.5">
-            {monetizationPrograms.map((prog, i) => {
-              const isEnrolled = enrolledIds.has(prog.programId);
-              return (
-                <Link key={prog.label} to={`/monetization/program/${prog.programId}`}>
+            <AnimatePresence mode="popLayout">
+              {filteredPrograms.map((prog, i) => {
+                const isEnrolled = enrolledIds.has(prog.programId);
+                return (
                   <motion.div
+                    key={prog.programId}
+                    layout
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.025 }}
-                    className="zivo-card-organic flex items-start gap-3 p-3.5 touch-manipulation"
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ delay: i * 0.02 }}
                   >
-                    <div className="zivo-icon-pill w-9 h-9 rounded-xl shrink-0 mt-0.5" style={{ color: prog.accent, background: `${prog.accent}15` }}>
-                      <prog.icon className="h-4 w-4" style={{ color: prog.accent }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <p className="font-bold text-[13px]">{prog.label}</p>
-                        {prog.badge && <span className="zivo-badge">{prog.badge}</span>}
-                        {prog.lockInfo && (
-                          <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-lg bg-muted text-muted-foreground flex items-center gap-0.5">
-                            <Lock className="w-2 h-2" /> {prog.lockInfo}
+                    <Link to={`/monetization/program/${prog.programId}`}>
+                      <div className="zivo-card-organic flex items-start gap-3 p-3.5 touch-manipulation">
+                        <div className="zivo-icon-pill w-9 h-9 rounded-xl shrink-0 mt-0.5" style={{ color: prog.accent, background: `${prog.accent}15` }}>
+                          <prog.icon className="h-4 w-4" style={{ color: prog.accent }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <p className="font-bold text-[13px]">{prog.label}</p>
+                            {prog.badge && <span className="zivo-badge">{prog.badge}</span>}
+                            {prog.lockInfo && (
+                              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-lg bg-muted text-muted-foreground flex items-center gap-0.5">
+                                <Lock className="w-2 h-2" /> {prog.lockInfo}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">{prog.description}</p>
+                        </div>
+                        {isEnrolled ? (
+                          <span className="shrink-0 mt-1 flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold">
+                            <CheckCircle className="w-3 h-3" /> Joined
                           </span>
+                        ) : prog.status === "join" ? (
+                          <span className="shrink-0 mt-1 zivo-btn-signature px-3.5 py-1.5 text-[11px]">
+                            Join
+                          </span>
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0 mt-2" />
                         )}
                       </div>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed">{prog.description}</p>
-                    </div>
-                    {isEnrolled ? (
-                      <span className="shrink-0 mt-1 flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold">
-                        <CheckCircle className="w-3 h-3" /> Joined
-                      </span>
-                    ) : prog.status === "join" ? (
-                      <span className="shrink-0 mt-1 zivo-btn-signature px-3.5 py-1.5 text-[11px]">
-                        Join
-                      </span>
-                    ) : (
-                      <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0 mt-2" />
-                    )}
+                    </Link>
                   </motion.div>
-                </Link>
-              );
-            })}
+                );
+              })}
+            </AnimatePresence>
+
+            {filteredPrograms.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground">No programs match your filter</p>
+                <button onClick={() => { setActiveFilter("All"); setSearchQuery(""); }} className="text-xs text-primary font-semibold mt-2">
+                  Show all programs
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -245,7 +346,11 @@ export default function MonetizationPage() {
               <button
                 key={tab}
                 onClick={() => setActiveResTab(i)}
-                className={`zivo-chip shrink-0 text-xs ${i === activeResTab ? "active" : ""}`}
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                  i === activeResTab
+                    ? "bg-foreground text-background"
+                    : "bg-muted/60 text-muted-foreground"
+                }`}
               >
                 {tab}
               </button>
@@ -260,17 +365,55 @@ export default function MonetizationPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + i * 0.04 }}
                 onClick={() => navigate(`/monetization/articles/${res.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "")}`)}
-                className="w-full flex items-start gap-3 text-left touch-manipulation"
+                className="w-full flex items-start gap-3 text-left touch-manipulation active:bg-muted/10 rounded-xl p-2 -mx-2 transition-colors"
               >
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-[13px] leading-tight mb-1">{res.title}</p>
                   <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">{res.description}</p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-1">{res.views}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Eye className="w-3 h-3 text-muted-foreground/50" />
+                    <p className="text-[10px] text-muted-foreground/60">{res.views}</p>
+                  </div>
                 </div>
                 <div className="zivo-icon-pill w-14 h-14 rounded-2xl shrink-0" style={{ color: res.accent, background: `${res.accent}10` }}>
                   <res.icon className="w-6 h-6" style={{ color: res.accent }} />
                 </div>
               </motion.button>
+            ))}
+          </div>
+        </div>
+
+        <div className="zivo-divider" />
+
+        {/* Creator Progress */}
+        <div>
+          <h2 className="font-bold text-[15px] mb-3 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-primary" /> Your Creator Journey
+          </h2>
+          <div className="zivo-card-organic p-4 space-y-4">
+            {[
+              { step: "Create Account", done: true },
+              { step: "Complete Verification", done: false, href: "/account/verification" },
+              { step: "Join First Program", done: enrolledCount > 0 },
+              { step: "Earn Your First Dollar", done: balance > 0 },
+              { step: "Reach 1K Followers", done: false },
+            ].map((item, i) => (
+              <button
+                key={item.step}
+                onClick={() => item.href && navigate(item.href)}
+                className="flex items-center gap-3 w-full text-left touch-manipulation"
+                disabled={!item.href && item.done}
+              >
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
+                  item.done ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground"
+                }`}>
+                  {item.done ? <CheckCircle className="w-4 h-4" /> : i + 1}
+                </div>
+                <p className={`text-sm font-medium flex-1 ${item.done ? "line-through text-muted-foreground" : ""}`}>
+                  {item.step}
+                </p>
+                {item.href && !item.done && <ChevronRight className="w-4 h-4 text-muted-foreground/40" />}
+              </button>
             ))}
           </div>
         </div>
