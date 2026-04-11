@@ -3,6 +3,7 @@
  * Shared component for Feed and Profile pages
  */
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X as XIcon, Globe, Users, Lock, FolderPlus, MapPin, Hash,
@@ -74,6 +75,7 @@ export default function CreatePostModal({
   commerceLinkDraft,
   initialAudioName,
 }: CreatePostModalProps) {
+  const navigate = useNavigate();
   // Load draft from localStorage
   const loadDraft = () => {
     try {
@@ -931,7 +933,7 @@ export default function CreatePostModal({
               onClick={() => {
                 if (opt.action === "live") {
                   onClose();
-                  window.location.href = "/live";
+                  navigate("/live");
                   return;
                 }
                 if (opt.action === "audio") {

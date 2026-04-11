@@ -2,6 +2,7 @@
  * ZIVO Mobile Bottom Navigation — iOS 2026 Style
  * Large icons, clean labels, subtle active glow with photographic backgrounds
  */
+import { forwardRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Rss, MapPin, MessageCircle, User, Film, Newspaper } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,7 +26,7 @@ interface NavTab {
   cssVar: string;
 }
 
-const ZivoMobileNav = () => {
+const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, ref) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { activeAlertsCount } = usePriceAlerts();
@@ -119,6 +120,8 @@ const ZivoMobileNav = () => {
       </div>
     </nav>
   );
-};
+});
+
+ZivoMobileNav.displayName = "ZivoMobileNav";
 
 export default ZivoMobileNav;
