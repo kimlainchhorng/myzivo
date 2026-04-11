@@ -604,7 +604,17 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                   /* Illustrated sticker grid — 5 columns with images */
                   <div className="grid grid-cols-5 gap-2">
                     {filteredIllustratedStickers.map((sticker) => (
-                      <button key={sticker.id} onClick={() => sendSticker(`[sticker:${sticker.id}:${sticker.src}]`)}
+                      <button key={sticker.id}
+                        onClick={() => sendSticker(`[sticker:${sticker.id}:${sticker.src}]`)}
+                        onTouchStart={() => {
+                          longPressRef.current = setTimeout(() => {
+                            setPreviewSticker(sticker);
+                            if (navigator.vibrate) navigator.vibrate(10);
+                          }, 400);
+                        }}
+                        onTouchEnd={() => { if (longPressRef.current) clearTimeout(longPressRef.current); }}
+                        onTouchMove={() => { if (longPressRef.current) clearTimeout(longPressRef.current); }}
+                        onContextMenu={(e) => { e.preventDefault(); setPreviewSticker(sticker); }}
                         className="aspect-square flex items-center justify-center rounded-xl hover:bg-muted/60 active:scale-90 transition-all p-1">
                         <img src={sticker.src} alt={sticker.alt} className="w-full h-full object-contain" loading="lazy" />
                       </button>
