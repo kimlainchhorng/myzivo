@@ -14,6 +14,7 @@ import { Capacitor } from "@capacitor/core";
 import { openExternalUrl } from "@/lib/openExternalUrl";
 import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
 import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
+import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
 
 const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "🎉", "😍"];
 

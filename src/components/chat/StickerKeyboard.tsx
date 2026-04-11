@@ -1204,7 +1204,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               {/* Large sticker preview */}
               <div className="w-56 h-56 bg-card/90 rounded-3xl border border-border/40 shadow-2xl flex items-center justify-center p-6 mb-3">
                 <div className="relative h-full w-full">
-                  <LiveIllustratedStickerArt sticker={previewSticker} large />
+                  <LiveIllustratedStickerArt sticker={{ ...previewSticker, animatedSrc: getAnimatedStickerUrl(previewSticker.id) }} large />
                 </div>
               </div>
 
