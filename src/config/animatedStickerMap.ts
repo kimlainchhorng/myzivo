@@ -204,6 +204,17 @@ import emLionCoolAnim from "@/assets/stickers/anim/em-lion-cool-anim.mp4.asset.j
 import emFrogAngryAnim from "@/assets/stickers/anim/em-frog-angry-anim.mp4.asset.json";
 import emFrogSleepyAnim from "@/assets/stickers/anim/em-frog-sleepy-anim.mp4.asset.json";
 import emFrogShyAnim from "@/assets/stickers/anim/em-frog-shy-anim.mp4.asset.json";
+// Emotion animated stickers — batch 14
+import emFrogSurprisedAnim from "@/assets/stickers/anim/em-frog-surprised-anim.mp4.asset.json";
+import emFrogCoolAnim from "@/assets/stickers/anim/em-frog-cool-anim.mp4.asset.json";
+import emPigAngryAnim from "@/assets/stickers/anim/em-pig-angry-anim.mp4.asset.json";
+import emPigSleepyAnim from "@/assets/stickers/anim/em-pig-sleepy-anim.mp4.asset.json";
+import emPigShyAnim from "@/assets/stickers/anim/em-pig-shy-anim.mp4.asset.json";
+import emPigSurprisedAnim from "@/assets/stickers/anim/em-pig-surprised-anim.mp4.asset.json";
+import emPigCoolAnim from "@/assets/stickers/anim/em-pig-cool-anim.mp4.asset.json";
+import emWhaleLoveAnim from "@/assets/stickers/anim/em-whale-love-anim.mp4.asset.json";
+import emWhaleAngryAnim from "@/assets/stickers/anim/em-whale-angry-anim.mp4.asset.json";
+import emWhaleSleepyAnim from "@/assets/stickers/anim/em-whale-sleepy-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -411,6 +422,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-frog-angry": emFrogAngryAnim.url,
   "em-frog-sleepy": emFrogSleepyAnim.url,
   "em-frog-shy": emFrogShyAnim.url,
+  // batch 14
+  "em-frog-surprised": emFrogSurprisedAnim.url,
+  "em-frog-cool": emFrogCoolAnim.url,
+  "em-pig-angry": emPigAngryAnim.url,
+  "em-pig-sleepy": emPigSleepyAnim.url,
+  "em-pig-shy": emPigShyAnim.url,
+  "em-pig-surprised": emPigSurprisedAnim.url,
+  "em-pig-cool": emPigCoolAnim.url,
+  "em-whale-love": emWhaleLoveAnim.url,
+  "em-whale-angry": emWhaleAngryAnim.url,
+  "em-whale-sleepy": emWhaleSleepyAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
