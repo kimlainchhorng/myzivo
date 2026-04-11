@@ -246,27 +246,35 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       senderAvatarUrl = profile?.avatar_url || "";
     } catch { /* ignore */ }
 
-    let preview = messageText.trim();
-    if (messageType === "image" || messageType === "locked_image") preview = "📷 Photo";
-    else if (messageType === "video" || messageType === "locked_video") preview = "🎥 Video";
-    else if (messageType === "voice") preview = "🎤 Voice message";
-    else if (messageType === "location") preview = "📍 Location";
-    else if (messageType === "sticker") preview = "🎭 Sticker";
-    else if (messageType === "gif") preview = "GIF";
-    else if (preview.length > 120) preview = `${preview.slice(0, 117)}...`;
+    let preview = "";
+    if (messageType === "image") preview = "Sent you a photo 📷";
+    else if (messageType === "locked_image") preview = "Sent you a locked photo 🔒📷";
+    else if (messageType === "video") preview = "Sent you a video 🎥";
+    else if (messageType === "locked_video") preview = "Sent you a locked video 🔒🎥";
+    else if (messageType === "voice") preview = "Sent you a voice message 🎤";
+    else if (messageType === "location") preview = "Shared a location 📍";
+    else if (messageType === "sticker") preview = "Sent a sticker 🎭";
+    else if (messageType === "gif") preview = "Sent a GIF";
+    else if (messageText.trim()) {
+      const trimmed = messageText.trim();
+      preview = trimmed.length > 100 ? `${trimmed.slice(0, 97)}...` : trimmed;
+    } else {
+      preview = "Sent you a message";
+    }
 
     try {
       await supabase.functions.invoke("send-push-notification", {
         body: {
           user_id: recipientId,
           notification_type: "chat_message",
-          title: senderName,
-          body: preview || "Sent you a message",
+          title: `💬 ${senderName}`,
+          body: preview,
           data: {
             type: "chat_message",
             sender_id: user.id,
             sender_name: senderName,
             sender_avatar_url: senderAvatarUrl,
+            action_url: `/chat`,
           },
           image_url: senderAvatarUrl,
         },
