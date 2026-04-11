@@ -911,7 +911,17 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
             >
               {/* Large sticker preview */}
               <div className="w-56 h-56 bg-card/90 rounded-3xl border border-border/40 shadow-2xl flex items-center justify-center p-6 mb-3">
-                <img src={previewSticker.src} alt={previewSticker.alt} className="w-full h-full object-contain" />
+                <motion.img
+                  src={previewSticker.src}
+                  alt={previewSticker.alt}
+                  className="w-full h-full object-contain"
+                  animate={{
+                    y: [0, -8, 0],
+                    rotate: [0, 4, -4, 0],
+                    scale: [1, 1.05, 1],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
               </div>
 
               {/* Action buttons */}
