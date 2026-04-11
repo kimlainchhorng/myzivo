@@ -526,7 +526,34 @@ export default function ReelsFeedPage() {
         // Fall back to denormalized counters if interaction tables are unavailable.
       }
 
-      allItems.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      // Facebook-style algorithmic feed: blend engagement + recency + randomness
+      const now = Date.now();
+      const ONE_HOUR = 3_600_000;
+      const seededRandom = (id: string) => {
+        let h = 0;
+        for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+        return ((h >>> 0) % 1000) / 1000;
+      };
+
+      allItems.forEach((item: any) => {
+        const ageHours = (now - new Date(item.created_at).getTime()) / ONE_HOUR;
+        // Recency decay: posts lose value over time (half-life ~6h)
+        const recencyScore = 1 / (1 + ageHours / 6);
+        // Engagement signal: normalized log of interactions
+        const totalEngagement = (item.likes_count || 0) + (item.comments_count || 0) * 2 + (item.shares_count || 0) * 3;
+        const engagementScore = Math.log2(1 + totalEngagement) / 10;
+        // Boost videos slightly
+        const mediaBoost = item.media_type === "video" ? 0.05 : 0;
+        // Boost shared posts (social proof)
+        const shareBoost = item.shared_from_post_id ? 0.03 : 0;
+        // Random shuffle factor (changes daily per post)
+        const dayKey = Math.floor(now / 86_400_000);
+        const randomFactor = seededRandom(item.id + dayKey) * 0.15;
+
+        item._feedScore = recencyScore * 0.45 + engagementScore * 0.3 + mediaBoost + shareBoost + randomFactor;
+      });
+
+      allItems.sort((a: any, b: any) => (b._feedScore || 0) - (a._feedScore || 0));
       return allItems;
     },
     staleTime: 30_000,
