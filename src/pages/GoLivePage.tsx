@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { giftImages } from "@/config/giftIcons";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -43,50 +44,50 @@ export default function GoLivePage() {
 
   const allGifts = {
     gifts: [
-      { icon: "🎁", name: "Gift Pack", coins: 1, badge: "Unlock", bg: "from-pink-500/30 to-purple-500/30" },
-      { icon: "🌹", name: "Rose", coins: 1, badge: "Popular", bg: "from-rose-500/30 to-pink-500/30" },
-      { icon: "❤️", name: "Heart Me", coins: 1, bg: "from-red-500/30 to-pink-500/30" },
-      { icon: "🥊", name: "Boxing Gloves", coins: 299, bg: "from-blue-500/30 to-indigo-500/30" },
-      { icon: "🎯", name: "GG", coins: 1, bg: "from-orange-500/30 to-red-500/30" },
-      { icon: "💸", name: "Money Gun", coins: 500, bg: "from-green-500/30 to-emerald-500/30" },
-      { icon: "📦", name: "Treasure Box", coins: 30, badge: "Interaction", bg: "from-amber-500/30 to-yellow-500/30" },
-      { icon: "🎩", name: "Hat & Mustache", coins: 99, bg: "from-yellow-500/30 to-orange-500/30" },
-      { icon: "🐱", name: "You're Awesome", coins: 1, bg: "from-orange-400/30 to-amber-400/30" },
-      { icon: "💜", name: "TikTok", coins: 1, bg: "from-violet-500/30 to-purple-500/30" },
-      { icon: "🫶", name: "Finger Heart", coins: 5, bg: "from-pink-400/30 to-rose-400/30" },
-      { icon: "🎊", name: "Happy Weekend", coins: 10, bg: "from-green-400/30 to-teal-400/30" },
-      { icon: "🍩", name: "Doughnut", coins: 30, bg: "from-pink-300/30 to-amber-300/30" },
-      { icon: "🍦", name: "Ice Cream Cone", coins: 1, bg: "from-pink-200/30 to-blue-200/30" },
-      { icon: "🥰", name: "Love You So Much", coins: 1, bg: "from-red-400/30 to-pink-400/30" },
-      { icon: "🎊", name: "Confetti", coins: 100, bg: "from-purple-400/30 to-blue-400/30" },
+      { icon: "🎁", name: "Gift Pack", coins: 1, badge: "Unlock", bg: "from-pink-400 to-purple-400" },
+      { icon: "🌹", name: "Rose", coins: 1, badge: "Popular", bg: "from-rose-400 to-pink-400" },
+      { icon: "❤️", name: "Heart Me", coins: 1, bg: "from-red-400 to-pink-400" },
+      { icon: "🥊", name: "Boxing Gloves", coins: 299, bg: "from-amber-600 to-yellow-700" },
+      { icon: "🎯", name: "GG", coins: 1, bg: "from-rose-300 to-pink-300" },
+      { icon: "💸", name: "Money Gun", coins: 500, bg: "from-green-400 to-emerald-400" },
+      { icon: "📦", name: "Treasure Box", coins: 30, badge: "Interaction", bg: "from-teal-400 to-green-400" },
+      { icon: "🎩", name: "Hat & Mustache", coins: 99, bg: "from-amber-500 to-yellow-600" },
+      { icon: "🐱", name: "You're Awesome", coins: 1, bg: "from-orange-300 to-amber-300" },
+      { icon: "💜", name: "TikTok", coins: 1, bg: "from-violet-400 to-purple-400" },
+      { icon: "🫶", name: "Finger Heart", coins: 5, bg: "from-purple-400 to-fuchsia-400" },
+      { icon: "🎊", name: "Happy Weekend", coins: 10, bg: "from-teal-500 to-green-500" },
+      { icon: "🍩", name: "Doughnut", coins: 30, bg: "from-pink-300 to-rose-300" },
+      { icon: "🍦", name: "Ice Cream Cone", coins: 1, bg: "from-sky-200 to-blue-200" },
+      { icon: "🥰", name: "Love You So Much", coins: 1, bg: "from-red-300 to-pink-300" },
+      { icon: "🎊", name: "Confetti", coins: 100, bg: "from-purple-400 to-indigo-400" },
     ],
     interactive: [
-      { icon: "🐳", name: "Whale Diving", coins: 2150, bg: "from-blue-500/30 to-cyan-500/30" },
-      { icon: "🦁", name: "Lion", coins: 29999, bg: "from-amber-500/30 to-orange-500/30" },
-      { icon: "🐕", name: "Corgi", coins: 299, bg: "from-orange-300/30 to-amber-300/30" },
-      { icon: "🤝", name: "Friendship", coins: 10, bg: "from-pink-400/30 to-purple-400/30" },
-      { icon: "🦢", name: "Swan", coins: 699, bg: "from-blue-200/30 to-white/20" },
-      { icon: "✈️", name: "Flying Jets", coins: 5000, badge: "NEW", bg: "from-sky-500/30 to-blue-500/30" },
-      { icon: "🍰", name: "Cake Slice", coins: 1, bg: "from-yellow-300/30 to-pink-300/30" },
-      { icon: "🎫", name: "Journey Pass", coins: 10, bg: "from-indigo-500/30 to-purple-500/30" },
-      { icon: "🐌", name: "Slow Motion", coins: 10, bg: "from-purple-400/30 to-pink-400/30" },
-      { icon: "🎆", name: "Fireworks", coins: 1088, bg: "from-orange-400/30 to-red-400/30" },
-      { icon: "🌌", name: "Galaxy", coins: 1000, bg: "from-indigo-600/30 to-purple-600/30" },
-      { icon: "🫧", name: "Pop", coins: 1, bg: "from-blue-300/30 to-cyan-300/30" },
+      { icon: "🐳", name: "Whale Diving", coins: 2150, bg: "from-blue-400 to-cyan-400" },
+      { icon: "🦁", name: "Lion", coins: 29999, bg: "from-amber-400 to-orange-400" },
+      { icon: "🐕", name: "Corgi", coins: 299, bg: "from-orange-300 to-amber-200" },
+      { icon: "🤝", name: "Friendship", coins: 10, bg: "from-pink-300 to-purple-300" },
+      { icon: "🦢", name: "Swan", coins: 699, bg: "from-blue-200 to-sky-200" },
+      { icon: "✈️", name: "Flying Jets", coins: 5000, badge: "NEW", bg: "from-sky-400 to-blue-400" },
+      { icon: "🍰", name: "Cake Slice", coins: 1, bg: "from-yellow-200 to-pink-200" },
+      { icon: "🎫", name: "Journey Pass", coins: 10, bg: "from-indigo-400 to-purple-400" },
+      { icon: "🐌", name: "Slow Motion", coins: 10, bg: "from-purple-300 to-pink-300" },
+      { icon: "🎆", name: "Fireworks", coins: 1088, bg: "from-orange-400 to-red-400" },
+      { icon: "🌌", name: "Galaxy", coins: 1000, bg: "from-indigo-500 to-purple-500" },
+      { icon: "🫧", name: "Pop", coins: 1, bg: "from-blue-200 to-cyan-200" },
     ],
     exclusive: [
-      { icon: "🏎️", name: "Racing Debut", coins: 1500, badge: "NEW", bg: "from-red-500/30 to-orange-500/30" },
-      { icon: "🌵", name: "Cactus Shuffle", coins: 399, badge: "NEW", bg: "from-green-400/30 to-lime-400/30" },
-      { icon: "🎸", name: "Heart Guitar", coins: 500, badge: "NEW", bg: "from-red-500/30 to-rose-500/30" },
-      { icon: "🤡", name: "Clown Boogie", coins: 449, bg: "from-yellow-400/30 to-orange-400/30" },
-      { icon: "🏍️", name: "Motorcycle", coins: 2988, bg: "from-cyan-500/30 to-green-500/30" },
-      { icon: "🎹", name: "Music Mate", coins: 299, bg: "from-pink-400/30 to-purple-400/30" },
-      { icon: "☄️", name: "Meteor Shower", coins: 3000, bg: "from-indigo-500/30 to-blue-500/30" },
-      { icon: "🏴‍☠️", name: "Pirate Treasure", coins: 449, bg: "from-yellow-600/30 to-amber-600/30" },
-      { icon: "🚂", name: "Train", coins: 899, bg: "from-blue-400/30 to-indigo-400/30" },
-      { icon: "🌸", name: "Blooming Ribbons", coins: 1000, bg: "from-pink-300/30 to-rose-300/30" },
-      { icon: "✈️", name: "Private Jet", coins: 4888, bg: "from-sky-400/30 to-blue-400/30" },
-      { icon: "🌹", name: "Rose Hand", coins: 199, bg: "from-red-400/30 to-pink-400/30" },
+      { icon: "🏎️", name: "Racing Debut", coins: 1500, badge: "NEW", bg: "from-red-500 to-orange-500" },
+      { icon: "🌵", name: "Cactus Shuffle", coins: 399, badge: "NEW", bg: "from-green-400 to-lime-400" },
+      { icon: "🎸", name: "Heart Guitar", coins: 500, badge: "NEW", bg: "from-red-400 to-rose-400" },
+      { icon: "🤡", name: "Clown Boogie", coins: 449, bg: "from-yellow-300 to-orange-300" },
+      { icon: "🏍️", name: "Motorcycle", coins: 2988, bg: "from-cyan-500 to-teal-500" },
+      { icon: "🎹", name: "Music Mate", coins: 299, bg: "from-pink-400 to-purple-400" },
+      { icon: "☄️", name: "Meteor Shower", coins: 3000, bg: "from-indigo-500 to-blue-500" },
+      { icon: "🏴‍☠️", name: "Pirate Treasure", coins: 449, bg: "from-yellow-600 to-amber-600" },
+      { icon: "🚂", name: "Train", coins: 899, bg: "from-blue-400 to-indigo-400" },
+      { icon: "🌸", name: "Blooming Ribbons", coins: 1000, bg: "from-pink-300 to-rose-300" },
+      { icon: "✈️", name: "Private Jet", coins: 4888, bg: "from-sky-400 to-blue-400" },
+      { icon: "🌹", name: "Rose Hand", coins: 199, bg: "from-red-400 to-pink-400" },
     ],
   };
 
@@ -517,8 +518,12 @@ export default function GoLivePage() {
                             {gift.badge}
                           </span>
                         )}
-                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br", gift.bg)}>
-                          <span className="text-3xl">{gift.icon}</span>
+                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br overflow-hidden", gift.bg)}>
+                          {giftImages[gift.name] ? (
+                            <img src={giftImages[gift.name]} alt={gift.name} className="w-10 h-10 object-contain" loading="lazy" />
+                          ) : (
+                            <span className="text-3xl">{gift.icon}</span>
+                          )}
                         </div>
                         <span className="text-[10px] text-white/70 truncate w-full text-center leading-tight mt-0.5">{gift.name}</span>
                         <div className="flex items-center gap-0.5">
