@@ -505,6 +505,167 @@ function LiveIllustratedStickerArt({
   );
 }
 
+/* ═══════════════ Supabase Store Tab ═══════════════ */
+
+const GRADIENT_COLORS = [
+  "from-amber-400 to-orange-500",
+  "from-violet-500 to-purple-600",
+  "from-sky-400 to-blue-600",
+  "from-rose-500 to-red-600",
+  "from-pink-400 to-fuchsia-600",
+  "from-emerald-500 to-teal-600",
+  "from-cyan-400 to-blue-500",
+  "from-orange-400 to-red-500",
+];
+
+function SupabaseStoreTab({ search }: { search: string }) {
+  const { data: packs, isLoading } = useSupabaseStickerPacks();
+  const { data: installedIds = [] } = useUserInstalledPacks();
+  const toggleMutation = useToggleStickerPack();
+  const [previewPackId, setPreviewPackId] = useState<string | null>(null);
+  const { data: previewStickers } = useSupabaseStickers(previewPackId);
+
+  const filtered = useMemo(() => {
+    if (!packs) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return packs;
+    return packs.filter(
+      (p) => p.name.toLowerCase().includes(q) || (p.category || "").toLowerCase().includes(q)
+    );
+  }, [packs, search]);
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex flex-col items-center justify-center gap-3">
+        <motion.div
+          className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        />
+        <p className="text-xs text-muted-foreground">Loading sticker store...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-3 space-y-3">
+      <p className="text-sm font-bold text-foreground">Sticker Store</p>
+      {filtered && filtered.length > 0 && (
+        <div className="flex gap-2 mb-2">
+          <span className="text-xs text-muted-foreground">{filtered.length} packs available</span>
+          {installedIds.length > 0 && (
+            <span className="text-xs text-primary font-medium">{installedIds.length} installed</span>
+          )}
+        </div>
+      )}
+
+      {filtered && filtered.map((pack, idx) => {
+        const installed = installedIds.includes(pack.id);
+        const isPreviewing = previewPackId === pack.id;
+        return (
+          <motion.div
+            key={pack.id}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05 }}
+            className="rounded-2xl border border-border/30 overflow-hidden"
+          >
+            <div
+              className={`bg-gradient-to-r ${GRADIENT_COLORS[idx % GRADIENT_COLORS.length]} px-4 py-3 flex items-center justify-between cursor-pointer`}
+              onClick={() => setPreviewPackId(isPreviewing ? null : pack.id)}
+            >
+              <div className="flex items-center gap-3">
+                {pack.preview_url ? (
+                  <img src={pack.preview_url} alt={pack.name} className="w-10 h-10 rounded-xl object-cover" />
+                ) : (
+                  <span className="text-3xl">📦</span>
+                )}
+                <div>
+                  <p className="text-sm font-bold text-white drop-shadow">{pack.name}</p>
+                  <p className="text-xs text-white/80">
+                    {pack.sticker_count || 0} stickers
+                    {pack.category && ` · ${pack.category}`}
+                    {(pack.download_count || 0) > 0 && ` · ${pack.download_count} downloads`}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleMutation.mutate({ packId: pack.id, installed });
+                }}
+                disabled={toggleMutation.isPending}
+                className={`h-8 px-4 rounded-full text-xs font-bold shadow-lg transition-all ${
+                  installed
+                    ? "bg-white/20 text-white backdrop-blur"
+                    : "bg-white text-gray-900 hover:bg-white/90"
+                }`}
+              >
+                {installed ? (
+                  <><Check className="w-3.5 h-3.5 inline mr-1" />Added</>
+                ) : (
+                  <><Download className="w-3.5 h-3.5 inline mr-1" />{pack.is_premium ? `$${((pack.price_cents || 0) / 100).toFixed(2)}` : "Get"}</>
+                )}
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {isPreviewing && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-4 py-3 grid grid-cols-5 gap-2">
+                    {previewStickers && previewStickers.length > 0 ? (
+                      previewStickers.slice(0, 10).map((s) => (
+                        <div key={s.id} className="aspect-square rounded-xl bg-muted/20 flex items-center justify-center p-1">
+                          <img src={s.image_url} alt={s.name || "sticker"} className="w-full h-full object-contain" loading="lazy" />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="col-span-5 py-2 text-center">
+                        <p className="text-xs text-muted-foreground">Loading stickers...</p>
+                      </div>
+                    )}
+                  </div>
+                  {previewStickers && previewStickers.length > 10 && (
+                    <p className="text-xs text-muted-foreground text-center pb-2">
+                      +{previewStickers.length - 10} more stickers
+                    </p>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        );
+      })}
+
+      {/* Built-in packs */}
+      <div className="pt-3 border-t border-border/20">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Built-in Packs</p>
+        {ILLUSTRATED_PACKS.map((pack, idx) => (
+          <div key={pack.id} className="rounded-2xl border border-border/20 overflow-hidden mb-2">
+            <div className={`bg-gradient-to-r ${GRADIENT_COLORS[(idx + (filtered?.length || 0)) % GRADIENT_COLORS.length]} px-4 py-2.5 flex items-center justify-between`}>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{pack.icon}</span>
+                <div>
+                  <p className="text-sm font-bold text-white drop-shadow">{pack.name}</p>
+                  <p className="text-xs text-white/80">{pack.stickers.length} stickers</p>
+                </div>
+              </div>
+              <span className="h-7 px-3 rounded-full bg-white/20 text-white text-[11px] font-bold inline-flex items-center backdrop-blur">
+                <Check className="w-3 h-3 mr-1" /> Included
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ═══════════════ Component ═══════════════ */
 
 export default function StickerKeyboard({ open, onClose, onSendSticker, onStartVoice, onOpenCamera }: StickerKeyboardProps) {
