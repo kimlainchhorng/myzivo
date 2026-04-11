@@ -269,7 +269,7 @@ export default function AdminUsersPage() {
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex gap-1 flex-wrap">
-                              {roles.map((role) => (
+                              {roles.filter((role) => role !== "driver").map((role) => (
                                 <Badge key={role} variant="secondary" className="text-[10px] bg-violet-500/10 text-violet-500 border-0">
                                   <Shield className="w-2.5 h-2.5 mr-0.5" />{role}
                                 </Badge>
@@ -322,7 +322,7 @@ export default function AdminUsersPage() {
                             ) : (
                               <Badge variant="secondary" className="text-[9px] bg-amber-500/10 text-amber-500 border-0 px-1.5 py-0">Unverified</Badge>
                             )}
-                            {roles.map((role) => (
+                            {roles.filter((role) => role !== "driver").map((role) => (
                               <Badge key={role} variant="secondary" className="text-[9px] bg-violet-500/10 text-violet-500 border-0 px-1.5 py-0">{role}</Badge>
                             ))}
                           </div>
@@ -398,8 +398,8 @@ export default function AdminUsersPage() {
                 <div>
                   <p className="text-xs font-medium text-muted-foreground mb-1.5">Roles</p>
                   <div className="flex gap-1.5 flex-wrap">
-                    {selectedRoles.length > 0 ? (
-                      selectedRoles.map((role: string) => (
+                    {selectedRoles.filter((r: string) => r !== "driver").length > 0 ? (
+                      selectedRoles.filter((r: string) => r !== "driver").map((role: string) => (
                         <Badge key={role} className="bg-violet-500/10 text-violet-500 border-0">
                           <Shield className="w-3 h-3 mr-1" />{role}
                         </Badge>
