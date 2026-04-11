@@ -687,27 +687,27 @@ export default function ReelsFeedPage() {
           {userId && (
             <button
               onClick={() => setShowCreate(true)}
-              className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-border/10 bg-card hover:bg-muted/20 transition-colors"
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 border-b border-border/10 bg-card hover:bg-muted/20 transition-colors"
             >
-              <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border-2 border-primary/20 shrink-0">
+              <div className="h-8 w-8 rounded-full overflow-hidden bg-muted border border-primary/20 shrink-0">
                 {userProfile?.avatar ? (
                   <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center text-muted-foreground/50">
-                    <Camera className="h-4 w-4" />
+                    <Camera className="h-3.5 w-3.5" />
                   </div>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground flex-1 text-left">What's on your mind?</p>
-              <div className="flex gap-1.5">
-                <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <ImageIcon className="h-3.5 w-3.5 text-emerald-600" />
+              <p className="text-xs text-muted-foreground flex-1 text-left">What's on your mind?</p>
+              <div className="flex gap-1">
+                <div className="h-7 w-7 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                  <ImageIcon className="h-3 w-3 text-emerald-600" />
                 </div>
-                <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <Film className="h-3.5 w-3.5 text-blue-600" />
+                <div className="h-7 w-7 rounded-full bg-blue-500/10 flex items-center justify-center">
+                  <Film className="h-3 w-3 text-blue-600" />
                 </div>
-                <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
-                  <Camera className="h-3.5 w-3.5 text-orange-600" />
+                <div className="h-7 w-7 rounded-full bg-orange-500/10 flex items-center justify-center">
+                  <Camera className="h-3 w-3 text-orange-600" />
                 </div>
               </div>
             </button>
@@ -717,17 +717,17 @@ export default function ReelsFeedPage() {
           {/* Live Now Banner */}
           <button
             onClick={() => navigate("/live")}
-            className="mx-4 mt-2 mb-1 flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-red-500/10 via-rose-500/5 to-amber-500/10 border border-red-500/20 hover:border-red-500/40 transition-colors"
+            className="mx-3 mt-1.5 mb-0.5 flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-red-500/10 via-rose-500/5 to-amber-500/10 border border-red-500/20 hover:border-red-500/40 transition-colors"
           >
             <div className="relative">
-              <Radio className="h-5 w-5 text-red-500" />
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              <Radio className="h-4 w-4 text-red-500" />
+              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
             </div>
             <div className="flex-1 text-left min-w-0">
-              <p className="text-xs font-bold text-foreground">Live Now</p>
-              <p className="text-[10px] text-muted-foreground">Watch live streams from creators</p>
+              <p className="text-[11px] font-bold text-foreground leading-tight">Live Now</p>
+              <p className="text-[9px] text-muted-foreground leading-tight">Watch live streams from creators</p>
             </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
           </button>
 
           {/* Story Rings */}
