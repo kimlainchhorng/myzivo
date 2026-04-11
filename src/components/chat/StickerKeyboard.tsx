@@ -798,6 +798,70 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                                 transition={{ duration: dur, repeat: Infinity, ease: "easeInOut", delay: idx * 0.035 }}
                                 style={{ transformOrigin: "center bottom" }}
                               />
+
+                              {/* ── Blinking eyes overlay ── */}
+                              <motion.span
+                                aria-hidden
+                                className="pointer-events-none absolute"
+                                style={{ top: "30%", left: "28%", width: "14%", height: "5%" }}
+                              >
+                                <motion.span
+                                  className="block w-full h-full rounded-full bg-foreground/70"
+                                  animate={{ scaleY: [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], opacity: [0, 0, 0, 0.85, 0, 0, 0, 0, 0, 0, 0, 0] }}
+                                  transition={{ duration: 3.2 + idx * 0.15, repeat: Infinity, ease: "easeInOut", delay: idx * 0.2 }}
+                                />
+                              </motion.span>
+                              <motion.span
+                                aria-hidden
+                                className="pointer-events-none absolute"
+                                style={{ top: "30%", right: "28%", width: "14%", height: "5%" }}
+                              >
+                                <motion.span
+                                  className="block w-full h-full rounded-full bg-foreground/70"
+                                  animate={{ scaleY: [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], opacity: [0, 0, 0, 0.85, 0, 0, 0, 0, 0, 0, 0, 0] }}
+                                  transition={{ duration: 3.2 + idx * 0.15, repeat: Infinity, ease: "easeInOut", delay: idx * 0.2 }}
+                                />
+                              </motion.span>
+
+                              {/* ── Chewing / mouth animation ── */}
+                              {(tone === "happy" || tone === "love" || tone === "float") && (
+                                <motion.span
+                                  aria-hidden
+                                  className="pointer-events-none absolute"
+                                  style={{ bottom: "28%", left: "50%", transform: "translateX(-50%)" }}
+                                  animate={{ scaleY: [1, 0.5, 1, 0.6, 1], scaleX: [1, 1.15, 1, 1.1, 1] }}
+                                  transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut", delay: idx * 0.06 }}
+                                >
+                                  <span className="block w-3 h-1.5 rounded-full bg-foreground/0" />
+                                </motion.span>
+                              )}
+
+                              {/* ── Food crumbs for eating stickers ── */}
+                              {/hamster|sushi|toast|cupcake|carrot/.test(sticker.id) && (
+                                <>
+                                  <motion.span
+                                    aria-hidden
+                                    className="pointer-events-none absolute w-1 h-1 rounded-full bg-amber-500/70"
+                                    style={{ bottom: "22%", left: "32%" }}
+                                    animate={{ y: [0, 6, 12], x: [-2, -5, -8], opacity: [0, 0.9, 0], scale: [0.3, 0.8, 0.2] }}
+                                    transition={{ duration: 1.1, repeat: Infinity, ease: "easeOut", delay: idx * 0.05 }}
+                                  />
+                                  <motion.span
+                                    aria-hidden
+                                    className="pointer-events-none absolute w-0.5 h-0.5 rounded-full bg-amber-600/60"
+                                    style={{ bottom: "24%", right: "30%" }}
+                                    animate={{ y: [0, 5, 10], x: [1, 4, 7], opacity: [0, 0.8, 0], scale: [0.4, 0.9, 0.3] }}
+                                    transition={{ duration: 1.3, repeat: Infinity, ease: "easeOut", delay: 0.3 + idx * 0.05 }}
+                                  />
+                                  <motion.span
+                                    aria-hidden
+                                    className="pointer-events-none absolute w-0.5 h-0.5 rounded-full bg-orange-400/50"
+                                    style={{ bottom: "20%", left: "45%" }}
+                                    animate={{ y: [0, 8, 14], opacity: [0, 0.7, 0], scale: [0.3, 0.7, 0.2] }}
+                                    transition={{ duration: 1.0, repeat: Infinity, ease: "easeOut", delay: 0.6 + idx * 0.05 }}
+                                  />
+                                </>
+                              )}
                             </motion.div>
                           </motion.button>
                         );
