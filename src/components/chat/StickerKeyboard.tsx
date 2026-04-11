@@ -301,6 +301,9 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
   const [audioDuration, setAudioDuration] = useState(0);
   const [musicLinkInput, setMusicLinkInput] = useState("");
   const [musicLinkParsed, setMusicLinkParsed] = useState<ReturnType<typeof parseMusicLink> | null>(null);
+  const [previewSticker, setPreviewSticker] = useState<{ id: string; src: string; alt: string } | null>(null);
+  const [favoriteStickers, setFavoriteStickers] = useState<string[]>([]);
+  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -318,6 +321,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
     setFavoriteTracks(readJsonArray(FAV_TRACKS_KEY));
     setRecentTracks(readJsonArray(RECENT_TRACKS_KEY));
     setInstalledPacks(readJsonArray(STORE_INSTALLED_KEY));
+    setFavoriteStickers(readJsonArray("zivo_fav_stickers"));
 
     const loadPacks = async () => {
       const { data } = await (supabase as any).from("chat_sticker_packs").select("id, name, emoji_prefix, stickers").order("created_at", { ascending: true });
@@ -600,7 +604,17 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                   /* Illustrated sticker grid — 5 columns with images */
                   <div className="grid grid-cols-5 gap-2">
                     {filteredIllustratedStickers.map((sticker) => (
-                      <button key={sticker.id} onClick={() => sendSticker(`[sticker:${sticker.id}:${sticker.src}]`)}
+                      <button key={sticker.id}
+                        onClick={() => sendSticker(`[sticker:${sticker.id}:${sticker.src}]`)}
+                        onTouchStart={() => {
+                          longPressRef.current = setTimeout(() => {
+                            setPreviewSticker(sticker);
+                            if (navigator.vibrate) navigator.vibrate(10);
+                          }, 400);
+                        }}
+                        onTouchEnd={() => { if (longPressRef.current) clearTimeout(longPressRef.current); }}
+                        onTouchMove={() => { if (longPressRef.current) clearTimeout(longPressRef.current); }}
+                        onContextMenu={(e) => { e.preventDefault(); setPreviewSticker(sticker); }}
                         className="aspect-square flex items-center justify-center rounded-xl hover:bg-muted/60 active:scale-90 transition-all p-1">
                         <img src={sticker.src} alt={sticker.alt} className="w-full h-full object-contain" loading="lazy" />
                       </button>
@@ -843,6 +857,65 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
           )}
         </div>
       </motion.div>
+
+      {/* ── Long-press sticker preview — Facebook Messenger style ── */}
+      <AnimatePresence>
+        {previewSticker && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center"
+            style={{ backdropFilter: "blur(16px)", background: "rgba(0,0,0,0.4)" }}
+            onClick={() => setPreviewSticker(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.6, opacity: 0 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              className="flex flex-col items-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Large sticker preview */}
+              <div className="w-56 h-56 bg-card/90 rounded-3xl border border-border/40 shadow-2xl flex items-center justify-center p-6 mb-3">
+                <img src={previewSticker.src} alt={previewSticker.alt} className="w-full h-full object-contain" />
+              </div>
+
+              {/* Action buttons */}
+              <div className="bg-card rounded-2xl border border-border/40 shadow-xl overflow-hidden min-w-[200px]">
+                <button
+                  onClick={() => {
+                    sendSticker(`[sticker:${previewSticker.id}:${previewSticker.src}]`);
+                    setPreviewSticker(null);
+                  }}
+                  className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-muted/50 active:bg-muted transition-colors border-b border-border/20"
+                >
+                  <span className="text-[15px] font-medium text-foreground">Send</span>
+                  <Send className="w-4 h-4 text-muted-foreground" />
+                </button>
+                <button
+                  onClick={() => {
+                    const key = "zivo_fav_stickers";
+                    const isFav = favoriteStickers.includes(previewSticker.id);
+                    const next = isFav
+                      ? favoriteStickers.filter((id) => id !== previewSticker.id)
+                      : [previewSticker.id, ...favoriteStickers].slice(0, 50);
+                    setFavoriteStickers(next);
+                    writeJsonArray(key, next);
+                    toast.success(isFav ? "Removed from favorites" : "Added to favorites ⭐");
+                    setPreviewSticker(null);
+                  }}
+                  className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-muted/50 active:bg-muted transition-colors"
+                >
+                  <span className="text-[15px] font-medium text-foreground">Favorite</span>
+                  <Heart className={`w-4 h-4 ${favoriteStickers.includes(previewSticker.id) ? "text-rose-500 fill-rose-500" : "text-muted-foreground"}`} />
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 }
