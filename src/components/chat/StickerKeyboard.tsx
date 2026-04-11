@@ -32,6 +32,7 @@ import { ILLUSTRATED_PACKS, type IllustratedStickerPack } from "@/config/illustr
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
 import { TransparentStickerVideo } from "./TransparentStickerVideo";
 import { getStickerMotionSpec } from "./stickerMotion";
+import { useSupabaseStickerPacks, useSupabaseStickers, useUserInstalledPacks, useToggleStickerPack } from "@/hooks/useSupabaseStickerPacks";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -1022,35 +1023,9 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
             </div>
           )}
 
-          {/* ═══ STORE — pack cards ═══ */}
+          {/* ═══ STORE — Supabase-backed sticker packs ═══ */}
           {activeTab === "store" && (
-            <div className="p-3 space-y-3">
-              <p className="text-sm font-bold text-foreground">Sticker Store</p>
-              {STORE_PACKS.filter((p) => !search.trim() || p.name.toLowerCase().includes(search.trim().toLowerCase()) || p.category.toLowerCase().includes(search.trim().toLowerCase())).map((pack) => {
-                const installed = installedPacks.includes(pack.name);
-                return (
-                  <div key={pack.name} className="rounded-2xl border border-border/30 overflow-hidden">
-                    <div className={`bg-gradient-to-r ${pack.gradient} px-4 py-3 flex items-center justify-between`}>
-                      <div className="flex items-center gap-3">
-                        <span className="text-3xl">{pack.emoji}</span>
-                        <div>
-                          <p className="text-sm font-bold text-white drop-shadow">{pack.name}</p>
-                          <p className="text-xs text-white/80">{pack.count} stickers · {pack.category}</p>
-                        </div>
-                      </div>
-                      <button onClick={() => toggleInstallPack(pack.name)}
-                        className={`h-8 px-4 rounded-full text-xs font-bold shadow-lg ${installed ? "bg-white/20 text-white backdrop-blur" : "bg-white text-gray-900"}`}>
-                        {installed ? <><Check className="w-3.5 h-3.5 inline mr-1" />Added</> : <><Download className="w-3.5 h-3.5 inline mr-1" />Get</>}
-                      </button>
-                    </div>
-                    <div className="px-4 py-2.5 flex gap-3">
-                      {pack.preview.map((emoji, i) => <span key={i} className="text-2xl">{emoji}</span>)}
-                      <span className="text-xs text-muted-foreground self-center ml-auto">+{pack.count - pack.preview.length} more</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <SupabaseStoreTab search={search} />
           )}
 
           {/* ═══ MEMES — gradient cards ═══ */}
