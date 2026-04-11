@@ -857,6 +857,65 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
           )}
         </div>
       </motion.div>
+
+      {/* ── Long-press sticker preview — Facebook Messenger style ── */}
+      <AnimatePresence>
+        {previewSticker && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center"
+            style={{ backdropFilter: "blur(16px)", background: "rgba(0,0,0,0.4)" }}
+            onClick={() => setPreviewSticker(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.6, opacity: 0 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              className="flex flex-col items-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Large sticker preview */}
+              <div className="w-56 h-56 bg-card/90 rounded-3xl border border-border/40 shadow-2xl flex items-center justify-center p-6 mb-3">
+                <img src={previewSticker.src} alt={previewSticker.alt} className="w-full h-full object-contain" />
+              </div>
+
+              {/* Action buttons */}
+              <div className="bg-card rounded-2xl border border-border/40 shadow-xl overflow-hidden min-w-[200px]">
+                <button
+                  onClick={() => {
+                    sendSticker(`[sticker:${previewSticker.id}:${previewSticker.src}]`);
+                    setPreviewSticker(null);
+                  }}
+                  className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-muted/50 active:bg-muted transition-colors border-b border-border/20"
+                >
+                  <span className="text-[15px] font-medium text-foreground">Send</span>
+                  <Send className="w-4 h-4 text-muted-foreground" />
+                </button>
+                <button
+                  onClick={() => {
+                    const key = "zivo_fav_stickers";
+                    const isFav = favoriteStickers.includes(previewSticker.id);
+                    const next = isFav
+                      ? favoriteStickers.filter((id) => id !== previewSticker.id)
+                      : [previewSticker.id, ...favoriteStickers].slice(0, 50);
+                    setFavoriteStickers(next);
+                    writeJsonArray(key, next);
+                    toast.success(isFav ? "Removed from favorites" : "Added to favorites ⭐");
+                    setPreviewSticker(null);
+                  }}
+                  className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-muted/50 active:bg-muted transition-colors"
+                >
+                  <span className="text-[15px] font-medium text-foreground">Favorite</span>
+                  <Heart className={`w-4 h-4 ${favoriteStickers.includes(previewSticker.id) ? "text-rose-500 fill-rose-500" : "text-muted-foreground"}`} />
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 }
