@@ -1,4 +1,4 @@
-/** Illustrated sticker packs — kawaii character stickers */
+/** Illustrated sticker packs — kawaii character stickers (v2) */
 
 import buddySunflower from "@/assets/stickers/buddy-sunflower.png";
 import buddyPear from "@/assets/stickers/buddy-pear.png";
