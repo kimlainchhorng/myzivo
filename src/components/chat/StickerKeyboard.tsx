@@ -801,21 +801,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                     />
                   </button>
                 ))}
-                {packs.map((pack, i) => (
-                  <button
-                    key={pack.id}
-                    onClick={() => setActivePack(i)}
-                    title={pack.name}
-                    className={cn(
-                      "h-10 w-10 rounded-2xl grid place-items-center text-lg shrink-0 transition-all border",
-                      activePack === i
-                        ? "bg-primary/10 border-primary/30 shadow-sm scale-110"
-                        : "border-transparent hover:bg-muted/40"
-                    )}
-                  >
-                    <span>{pack.emoji_prefix || "🙂"}</span>
-                  </button>
-                ))}
+
+
               </div>
 
               {/* Pack name — hidden for illustrated packs (Facebook-style) */}
