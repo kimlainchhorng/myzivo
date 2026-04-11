@@ -606,13 +606,34 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                     {filteredIllustratedStickers.map((sticker, idx) => {
                       const stickerPayload = `[sticker:${sticker.id}:${sticker.src}]`;
                       let didLongPress = false;
+                      // Each sticker gets a unique animation style based on index
+                      const animStyle = idx % 6;
+                      const idleAnimate = (() => {
+                        switch (animStyle) {
+                          case 0: // bounce
+                            return { y: [0, -6, 0, -3, 0], scale: [1, 1.05, 1, 1.02, 1] };
+                          case 1: // wobble
+                            return { rotate: [0, -8, 8, -5, 3, 0], y: [0, -2, 0] };
+                          case 2: // pulse glow
+                            return { scale: [1, 1.08, 1, 1.04, 1], y: [0, -4, 0] };
+                          case 3: // wiggle side
+                            return { x: [0, -4, 4, -2, 0], rotate: [0, -3, 3, 0] };
+                          case 4: // hop + spin
+                            return { y: [0, -8, 0], rotate: [0, 5, -5, 0], scale: [1, 1.06, 1] };
+                          case 5: // sway
+                            return { rotate: [0, -6, 6, -4, 2, 0], y: [0, -3, 0, -1, 0] };
+                          default:
+                            return { y: [0, -4, 0] };
+                        }
+                      })();
+                      const idleDuration = 1.8 + (idx % 5) * 0.4;
                       return (
                         <motion.button key={sticker.id}
-                          initial={{ opacity: 0, scale: 0.5, y: 12 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          transition={{ delay: idx * 0.04, type: "spring", stiffness: 400, damping: 18 }}
-                          whileHover={{ scale: 1.2, rotate: [0, -6, 6, -3, 0], transition: { rotate: { duration: 0.5 } } }}
-                          whileTap={{ scale: 0.85 }}
+                          initial={{ opacity: 0, scale: 0.3, y: 20, rotate: -10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
+                          transition={{ delay: idx * 0.035, type: "spring", stiffness: 500, damping: 16 }}
+                          whileHover={{ scale: 1.25, rotate: [0, -8, 8, -4, 0], transition: { rotate: { duration: 0.4 } } }}
+                          whileTap={{ scale: 0.8 }}
                           onTouchStart={() => {
                             didLongPress = false;
                             longPressRef.current = setTimeout(() => {
@@ -637,15 +658,13 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                             alt={sticker.alt}
                             className="w-full h-full object-contain pointer-events-none"
                             loading="lazy"
-                            animate={{
-                              y: [0, -3, 0],
-                              rotate: [0, 1.5, -1.5, 0],
-                            }}
+                            animate={idleAnimate}
                             transition={{
-                              duration: 2.5 + (idx % 3) * 0.5,
+                              duration: idleDuration,
                               repeat: Infinity,
                               ease: "easeInOut",
-                              delay: idx * 0.15,
+                              delay: idx * 0.12,
+                              repeatType: "loop",
                             }}
                           />
                         </motion.button>
