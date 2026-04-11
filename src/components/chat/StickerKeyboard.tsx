@@ -363,10 +363,19 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
     }));
   }, [remotePacks]);
 
+  const illustratedPacks: IllustratedStickerPack[] = [
+    {
+      id: "buddy-buddies-all",
+      name: "Buddy Buddies",
+      icon: "🍒",
+      stickers: ILLUSTRATED_PACKS.flatMap((pack) => pack.stickers),
+    },
+  ];
+
   // Illustrated packs offset: activePack values >= 1000 are illustrated
   const isIllustratedPack = activePack >= 1000;
   const illustratedPackIndex = activePack - 1000;
-  const currentIllustratedPack = isIllustratedPack ? ILLUSTRATED_PACKS[illustratedPackIndex] : null;
+  const currentIllustratedPack = isIllustratedPack ? illustratedPacks[illustratedPackIndex] : null;
 
   const currentPack = !isIllustratedPack ? packs[activePack] : null;
   const filteredStickers = useMemo(() => {
@@ -585,7 +594,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                   </button>
                 )}
                 {/* Illustrated packs first */}
-                {ILLUSTRATED_PACKS.map((pack, i) => (
+                {illustratedPacks.map((pack, i) => (
                   <button key={pack.id} onClick={() => setActivePack(1000 + i)} className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 ${activePack === 1000 + i ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
                     {pack.icon} {pack.name}
                   </button>
@@ -601,76 +610,255 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               {/* Sticker grid */}
               <div className="h-[240px] overflow-y-auto p-2">
                 {isIllustratedPack ? (
-                  /* Illustrated sticker grid — 5 columns with animated images */
-                  <div className="grid grid-cols-5 gap-2">
-                    {filteredIllustratedStickers.map((sticker, idx) => {
-                      const stickerPayload = `[sticker:${sticker.id}:${sticker.src}]`;
-                      let didLongPress = false;
-                      // Each sticker gets a unique animation style based on index
-                      const animStyle = idx % 6;
-                      const idleAnimate = (() => {
-                        switch (animStyle) {
-                          case 0: // bounce
-                            return { y: [0, -6, 0, -3, 0], scale: [1, 1.05, 1, 1.02, 1] };
-                          case 1: // wobble
-                            return { rotate: [0, -8, 8, -5, 3, 0], y: [0, -2, 0] };
-                          case 2: // pulse glow
-                            return { scale: [1, 1.08, 1, 1.04, 1], y: [0, -4, 0] };
-                          case 3: // wiggle side
-                            return { x: [0, -4, 4, -2, 0], rotate: [0, -3, 3, 0] };
-                          case 4: // hop + spin
-                            return { y: [0, -8, 0], rotate: [0, 5, -5, 0], scale: [1, 1.06, 1] };
-                          case 5: // sway
-                            return { rotate: [0, -6, 6, -4, 2, 0], y: [0, -3, 0, -1, 0] };
-                          default:
-                            return { y: [0, -4, 0] };
-                        }
-                      })();
-                      const idleDuration = 1.8 + (idx % 5) * 0.4;
-                      return (
-                        <motion.button key={sticker.id}
-                          initial={{ opacity: 0, scale: 0.3, y: 20, rotate: -10 }}
-                          animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
-                          transition={{ delay: idx * 0.035, type: "spring", stiffness: 500, damping: 16 }}
-                          whileHover={{ scale: 1.25, rotate: [0, -8, 8, -4, 0], transition: { rotate: { duration: 0.4 } } }}
-                          whileTap={{ scale: 0.8 }}
-                          onTouchStart={() => {
-                            didLongPress = false;
-                            longPressRef.current = setTimeout(() => {
-                              didLongPress = true;
-                              setPreviewSticker(sticker);
-                              if (navigator.vibrate) navigator.vibrate(10);
-                            }, 400);
-                          }}
-                          onTouchEnd={(e) => {
-                            if (longPressRef.current) clearTimeout(longPressRef.current);
-                            if (!didLongPress) {
-                              e.preventDefault();
-                              sendSticker(stickerPayload);
-                            }
-                          }}
-                          onTouchMove={() => { if (longPressRef.current) clearTimeout(longPressRef.current); }}
-                          onContextMenu={(e) => e.preventDefault()}
-                          onClick={() => sendSticker(stickerPayload)}
-                          className="aspect-square flex items-center justify-center rounded-xl p-1">
-                          <motion.img
-                            src={sticker.src}
-                            alt={sticker.alt}
-                            className="w-full h-full object-contain pointer-events-none"
+                  <>
+                    <div className="px-1 pb-3">
+                      <div className="mb-3 flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border/30 bg-muted/50 shadow-sm">
+                          <Smile className="h-5 w-5 text-foreground" />
+                        </div>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border/30 bg-muted/50 shadow-sm">
+                          <Sparkles className="h-5 w-5 text-foreground" />
+                        </div>
+                        <motion.div
+                          className="ml-2 flex h-14 w-14 items-center justify-center rounded-full border border-border/30 bg-muted/40 p-2 shadow-sm"
+                          animate={{ y: [0, -4, 0], rotate: [0, -3, 3, 0], scale: [1, 1.04, 1] }}
+                          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          <img
+                            src={currentIllustratedPack?.stickers[0]?.src}
+                            alt={currentIllustratedPack?.stickers[0]?.alt || "Buddy Buddies"}
+                            className="h-full w-full object-contain"
                             loading="lazy"
-                            animate={idleAnimate}
-                            transition={{
-                              duration: idleDuration,
-                              repeat: Infinity,
-                              ease: "easeInOut",
-                              delay: idx * 0.12,
-                              repeatType: "loop",
-                            }}
                           />
-                        </motion.button>
-                      );
-                    })}
-                  </div>
+                        </motion.div>
+                      </div>
+                      <p className="text-[22px] font-semibold leading-none text-foreground">
+                        {currentIllustratedPack?.name ?? "Buddy Buddies"}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-5 gap-2 overflow-visible pb-1">
+                      {filteredIllustratedStickers.map((sticker, idx) => {
+                        const stickerPayload = `[sticker:${sticker.id}:${sticker.src}]`;
+                        let didLongPress = false;
+                        const tone = /sunflower|cupcake|octopus|hedgehog/.test(sticker.id)
+                          ? "angry"
+                          : /pear|pig|bunny/.test(sticker.id)
+                            ? "sad"
+                            : /coffee|potato|penguin/.test(sticker.id)
+                              ? "sleepy"
+                              : /cat-love/.test(sticker.id)
+                                ? "love"
+                                : /sushi|toast|hamster|carrot/.test(sticker.id)
+                                  ? "happy"
+                                  : /tomato|beet|mushroom|lemon/.test(sticker.id)
+                                    ? "shy"
+                                    : "float";
+
+                        const wrapperAnimate = tone === "angry"
+                          ? { y: [0, -2, 0], x: [0, -2.5, 2.5, -2, 2, 0], rotate: [0, -1.5, 1.5, -1, 0], scaleY: [1, 0.98, 1.04, 1] }
+                          : tone === "sad"
+                            ? { y: [0, 1, 0, -1, 0], rotate: [0, -1.2, 0, 1, 0], scale: [1, 0.99, 1, 1.01, 1] }
+                            : tone === "sleepy"
+                              ? { y: [0, -4, 0], rotate: [0, -1.5, 1, 0], scale: [1, 1.02, 1] }
+                              : tone === "love"
+                                ? { y: [0, -5, 0], scale: [1, 1.04, 1, 1.02, 1] }
+                                : tone === "happy"
+                                  ? { y: [0, -8, 0, -3, 0], scaleX: [1, 1.03, 0.98, 1.02, 1], scaleY: [1, 0.97, 1.05, 0.99, 1] }
+                                  : tone === "shy"
+                                    ? { y: [0, -3, 0], rotate: [0, -2, 2, 0], scale: [1, 1.02, 1] }
+                                    : { y: [0, -4, 0], rotate: [0, -2.5, 2.5, 0], scale: [1, 1.03, 1] };
+
+                        const imageAnimate = tone === "angry"
+                          ? { rotate: [0, -4, 4, -3, 2, 0], scale: [1, 1.02, 1] }
+                          : tone === "sad"
+                            ? { rotate: [0, -1.5, 0, 1.5, 0], y: [0, 1, 0] }
+                            : tone === "sleepy"
+                              ? { rotate: [0, -2, 1, 0], y: [0, -1, 0] }
+                              : tone === "love"
+                                ? { rotate: [0, -2, 2, 0], scale: [1, 1.05, 1] }
+                                : tone === "happy"
+                                  ? { rotate: [0, -2, 2, -1, 0], scale: [1, 1.04, 1] }
+                                  : tone === "shy"
+                                    ? { rotate: [0, -1.5, 1.5, 0], scale: [1, 1.02, 1] }
+                                    : { rotate: [0, -2, 2, 0], y: [0, -1, 0] };
+
+                        const shadowAnimate = tone === "happy"
+                          ? { scaleX: [1, 1.28, 0.92, 1.14, 1], opacity: [0.14, 0.08, 0.16, 0.1, 0.14] }
+                          : tone === "sleepy"
+                            ? { scaleX: [1, 1.12, 1], opacity: [0.14, 0.1, 0.14] }
+                            : { scaleX: [1, 1.16, 1], opacity: [0.14, 0.09, 0.14] };
+
+                        const cycleDuration = tone === "angry"
+                          ? 1.15
+                          : tone === "happy"
+                            ? 1.5
+                            : tone === "love"
+                              ? 1.8
+                              : tone === "sleepy"
+                                ? 2.25
+                                : 2;
+
+                        return (
+                          <motion.button
+                            key={sticker.id}
+                            initial={{ opacity: 0, scale: 0.55, y: 14 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{ delay: idx * 0.03, type: "spring", stiffness: 420, damping: 18 }}
+                            whileTap={{ scale: 0.84 }}
+                            onTouchStart={() => {
+                              didLongPress = false;
+                              longPressRef.current = setTimeout(() => {
+                                didLongPress = true;
+                                setPreviewSticker(sticker);
+                                if (navigator.vibrate) navigator.vibrate(10);
+                              }, 400);
+                            }}
+                            onTouchEnd={(e) => {
+                              if (longPressRef.current) clearTimeout(longPressRef.current);
+                              if (!didLongPress) {
+                                e.preventDefault();
+                                sendSticker(stickerPayload);
+                              }
+                            }}
+                            onTouchMove={() => {
+                              if (longPressRef.current) clearTimeout(longPressRef.current);
+                            }}
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              setPreviewSticker(sticker);
+                            }}
+                            onClick={() => sendSticker(stickerPayload)}
+                            className="group relative aspect-square overflow-visible rounded-xl p-1"
+                          >
+                            <motion.span
+                              aria-hidden="true"
+                              className="pointer-events-none absolute inset-x-3 bottom-2 h-2 rounded-full bg-foreground/10 blur-md"
+                              animate={shadowAnimate}
+                              transition={{ duration: cycleDuration, repeat: Infinity, ease: "easeInOut", delay: idx * 0.05 }}
+                            />
+
+                            {tone === "angry" && (
+                              <>
+                                <motion.span
+                                  aria-hidden="true"
+                                  className="pointer-events-none absolute left-1 top-2 h-1.5 w-1.5 rounded-full bg-destructive/70 blur-[1px]"
+                                  animate={{ y: [0, -5, -8], opacity: [0, 1, 0], scale: [0.5, 1, 0.6] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: idx * 0.06 }}
+                                />
+                                <motion.span
+                                  aria-hidden="true"
+                                  className="pointer-events-none absolute right-2 top-1 h-1.5 w-1.5 rounded-full bg-destructive/70 blur-[1px]"
+                                  animate={{ y: [0, -4, -7], opacity: [0, 1, 0], scale: [0.5, 1, 0.6] }}
+                                  transition={{ duration: 1, repeat: Infinity, delay: 0.2 + idx * 0.04 }}
+                                />
+                              </>
+                            )}
+
+                            {tone === "sad" && (
+                              <motion.span
+                                aria-hidden="true"
+                                className="pointer-events-none absolute right-2 top-3 h-2.5 w-1.5 rounded-full bg-primary/45"
+                                animate={{ y: [-1, 5, 9], opacity: [0, 0.9, 0], scaleY: [0.8, 1, 0.7] }}
+                                transition={{ duration: 1.4, repeat: Infinity, delay: 0.25 + idx * 0.03 }}
+                              />
+                            )}
+
+                            {tone === "sleepy" && (
+                              <>
+                                <motion.span
+                                  aria-hidden="true"
+                                  className="pointer-events-none absolute right-1 top-1 h-2.5 w-2.5 rounded-full border border-primary/35"
+                                  animate={{ y: [0, -8, -14], x: [0, 2, 4], opacity: [0, 0.75, 0], scale: [0.5, 1, 1.3] }}
+                                  transition={{ duration: 1.8, repeat: Infinity, delay: idx * 0.04 }}
+                                />
+                                <motion.span
+                                  aria-hidden="true"
+                                  className="pointer-events-none absolute right-3 top-3 h-1.5 w-1.5 rounded-full bg-primary/25"
+                                  animate={{ y: [0, -4, -7], opacity: [0, 0.6, 0], scale: [0.6, 1, 0.7] }}
+                                  transition={{ duration: 1.8, repeat: Infinity, delay: 0.35 + idx * 0.04 }}
+                                />
+                              </>
+                            )}
+
+                            {tone === "love" && (
+                              <>
+                                <motion.span
+                                  aria-hidden="true"
+                                  className="pointer-events-none absolute left-1 top-1 text-[10px] leading-none text-destructive"
+                                  animate={{ y: [0, -8, -12], x: [0, -2, -4], opacity: [0, 1, 0], scale: [0.6, 1.05, 0.8] }}
+                                  transition={{ duration: 1.5, repeat: Infinity, delay: idx * 0.04 }}
+                                >
+                                  ♥
+                                </motion.span>
+                                <motion.span
+                                  aria-hidden="true"
+                                  className="pointer-events-none absolute right-1 top-2 text-[8px] leading-none text-destructive"
+                                  animate={{ y: [0, -7, -10], x: [0, 2, 4], opacity: [0, 1, 0], scale: [0.6, 1, 0.75] }}
+                                  transition={{ duration: 1.5, repeat: Infinity, delay: 0.45 + idx * 0.04 }}
+                                >
+                                  ♥
+                                </motion.span>
+                              </>
+                            )}
+
+                            {tone === "happy" && (
+                              <>
+                                <motion.span
+                                  aria-hidden="true"
+                                  className="pointer-events-none absolute right-2 top-1 text-[10px] leading-none text-primary"
+                                  animate={{ y: [0, -5, -8], rotate: [0, 8, 0], opacity: [0, 1, 0], scale: [0.6, 1.1, 0.8] }}
+                                  transition={{ duration: 1.2, repeat: Infinity, delay: idx * 0.03 }}
+                                >
+                                  ✦
+                                </motion.span>
+                                <motion.span
+                                  aria-hidden="true"
+                                  className="pointer-events-none absolute left-2 top-3 h-1.5 w-1.5 rounded-full bg-accent/60"
+                                  animate={{ y: [0, -3, -5], opacity: [0, 0.8, 0], scale: [0.5, 1, 0.7] }}
+                                  transition={{ duration: 1.2, repeat: Infinity, delay: 0.25 + idx * 0.03 }}
+                                />
+                              </>
+                            )}
+
+                            {tone === "shy" && (
+                              <>
+                                <motion.span
+                                  aria-hidden="true"
+                                  className="pointer-events-none absolute left-2 top-4 h-1.5 w-1.5 rounded-full bg-primary/35"
+                                  animate={{ opacity: [0.2, 0.8, 0.2], scale: [0.8, 1.15, 0.8] }}
+                                  transition={{ duration: 1.7, repeat: Infinity, delay: idx * 0.03 }}
+                                />
+                                <motion.span
+                                  aria-hidden="true"
+                                  className="pointer-events-none absolute right-2 top-4 h-1.5 w-1.5 rounded-full bg-primary/35"
+                                  animate={{ opacity: [0.2, 0.8, 0.2], scale: [0.8, 1.15, 0.8] }}
+                                  transition={{ duration: 1.7, repeat: Infinity, delay: 0.18 + idx * 0.03 }}
+                                />
+                              </>
+                            )}
+
+                            <motion.div
+                              className="relative flex h-full w-full items-center justify-center"
+                              animate={wrapperAnimate}
+                              transition={{ duration: cycleDuration, repeat: Infinity, ease: "easeInOut", delay: idx * 0.04 }}
+                              style={{ transformOrigin: "center bottom" }}
+                            >
+                              <motion.img
+                                src={sticker.src}
+                                alt={sticker.alt}
+                                className="h-full w-full object-contain pointer-events-none drop-shadow-[0_8px_8px_hsl(var(--foreground)/0.08)]"
+                                loading="lazy"
+                                animate={imageAnimate}
+                                transition={{ duration: cycleDuration, repeat: Infinity, ease: "easeInOut", delay: idx * 0.04 }}
+                                style={{ transformOrigin: "center bottom" }}
+                              />
+                            </motion.div>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </>
                 ) : (
                   /* Emoji sticker grid */
                   <div className="grid grid-cols-8 gap-0.5">
