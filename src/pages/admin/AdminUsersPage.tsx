@@ -381,63 +381,63 @@ export default function AdminUsersPage() {
           {selectedUser && (() => {
             const selectedUid = getProfileUid(selectedUser);
             const selectedRoles = roleMap[selectedUid] || [];
-            return (
-            <div className="space-y-4 mt-2">
-              <div className="grid grid-cols-2 gap-3">
-                <DetailItem label="Email" value={selectedUser.email} />
-                <DetailItem label="Phone" value={selectedUser.phone} />
-                <DetailItem label="User ID" value={selectedUid} mono />
-                <DetailItem label="Joined" value={selectedUser.created_at ? format(new Date(selectedUser.created_at), "MMM d, yyyy h:mm a") : "—"} />
-                <DetailItem label="Email Verified" value={selectedUser.email_verified ? "Yes" : "No"} />
-                <DetailItem label="Setup Complete" value={selectedUser.setup_complete ? "Yes" : "No"} />
-                <DetailItem label="Country" value={selectedUser.country || "—"} />
-                <DetailItem label="City" value={selectedUser.city || "—"} />
-              </div>
 
-              {/* Roles */}
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1.5">Roles</p>
-                <div className="flex gap-1.5 flex-wrap">
-                  {selectedRoles.length > 0 ? (
-                    selectedRoles.map((role: string) => (
-                      <Badge key={role} className="bg-violet-500/10 text-violet-500 border-0">
-                        <Shield className="w-3 h-3 mr-1" />{role}
-                      </Badge>
-                    ))
-                  ) : (
-                    <span className="text-sm text-muted-foreground">Regular user (no special roles)</span>
+            return (
+              <div className="space-y-4 mt-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <DetailItem label="Email" value={selectedUser.email} />
+                  <DetailItem label="Phone" value={selectedUser.phone} />
+                  <DetailItem label="User ID" value={selectedUid} mono />
+                  <DetailItem label="Joined" value={selectedUser.created_at ? format(new Date(selectedUser.created_at), "MMM d, yyyy h:mm a") : "—"} />
+                  <DetailItem label="Email Verified" value={selectedUser.email_verified ? "Yes" : "No"} />
+                  <DetailItem label="Setup Complete" value={selectedUser.setup_complete ? "Yes" : "No"} />
+                  <DetailItem label="Country" value={selectedUser.country || "—"} />
+                  <DetailItem label="City" value={selectedUser.city || "—"} />
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-1.5">Roles</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {selectedRoles.length > 0 ? (
+                      selectedRoles.map((role: string) => (
+                        <Badge key={role} className="bg-violet-500/10 text-violet-500 border-0">
+                          <Shield className="w-3 h-3 mr-1" />{role}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Regular user (no special roles)</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-border">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Account Verification</p>
+                  <Button
+                    variant={selectedUser.is_verified ? "outline" : "default"}
+                    size="sm"
+                    className="gap-2"
+                    disabled={verifyMutation.isPending}
+                    onClick={() => verifyMutation.mutate({ userId: selectedUid, verified: !selectedUser.is_verified })}
+                  >
+                    {selectedUser.is_verified ? (
+                      <>
+                        <ShieldCheck className="w-4 h-4 text-primary" />
+                        Verified — Remove Badge
+                      </>
+                    ) : (
+                      <>
+                        <BadgeCheck className="w-4 h-4" />
+                        Verify Account
+                      </>
+                    )}
+                  </Button>
+                  {selectedUser.is_verified && (
+                    <p className="text-[10px] text-muted-foreground mt-1.5">This account has been verified by an admin.</p>
                   )}
                 </div>
               </div>
-
-              {/* Verify action */}
-              <div className="pt-2 border-t border-border">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Account Verification</p>
-                <Button
-                  variant={selectedUser.is_verified ? "outline" : "default"}
-                  size="sm"
-                  className="gap-2"
-                  disabled={verifyMutation.isPending}
-                  onClick={() => verifyMutation.mutate({ userId: selectedUid, verified: !selectedUser.is_verified })}
-                >
-                  {selectedUser.is_verified ? (
-                    <>
-                      <ShieldCheck className="w-4 h-4 text-primary" />
-                      Verified — Remove Badge
-                    </>
-                  ) : (
-                    <>
-                      <BadgeCheck className="w-4 h-4" />
-                      Verify Account
-                    </>
-                  )}
-                </Button>
-                {selectedUser.is_verified && (
-                  <p className="text-[10px] text-muted-foreground mt-1.5">This account has been verified by an admin.</p>
-                )}
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </AdminLayout>
