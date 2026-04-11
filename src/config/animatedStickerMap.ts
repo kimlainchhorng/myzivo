@@ -94,6 +94,17 @@ import emSlothHappyAnim from "@/assets/stickers/anim/em-sloth-happy-anim.mp4.ass
 import emDeerHappyAnim from "@/assets/stickers/anim/em-deer-happy-anim.mp4.asset.json";
 import emChickHappyAnim from "@/assets/stickers/anim/em-chick-happy-anim.mp4.asset.json";
 import emRaccoonHappyAnim from "@/assets/stickers/anim/em-raccoon-happy-anim.mp4.asset.json";
+// Emotion animated stickers — batch 4
+import emPandaAngryAnim from "@/assets/stickers/anim/em-panda-angry-anim.mp4.asset.json";
+import emPandaSleepyAnim from "@/assets/stickers/anim/em-panda-sleepy-anim.mp4.asset.json";
+import emFoxCryAnim from "@/assets/stickers/anim/em-fox-cry-anim.mp4.asset.json";
+import emFoxLoveAnim from "@/assets/stickers/anim/em-fox-love-anim.mp4.asset.json";
+import emCatHappyAnim from "@/assets/stickers/anim/em-cat-happy-anim.mp4.asset.json";
+import emCatCryAnim from "@/assets/stickers/anim/em-cat-cry-anim.mp4.asset.json";
+import emDuckHappyAnim from "@/assets/stickers/anim/em-duck-happy-anim.mp4.asset.json";
+import emHamsterHappyAnim from "@/assets/stickers/anim/em-hamster-happy-anim.mp4.asset.json";
+import emBearHappyAnim from "@/assets/stickers/anim/em-bear-happy-anim.mp4.asset.json";
+import emPenguinCryAnim from "@/assets/stickers/anim/em-penguin-cry-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -158,7 +169,7 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "op-clownfish": clownfishAnim.url,
   "op-squid": squidAnim.url,
   "op-dolphin": dolphinAnim.url,
-  // Emotion animated stickers
+  // Emotion animated stickers — batches 1-3
   "em-panda-happy": emPandaHappyAnim.url,
   "em-panda-cry": emPandaCryAnim.url,
   "em-panda-love": emPandaLoveAnim.url,
@@ -191,6 +202,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-deer-happy": emDeerHappyAnim.url,
   "em-chick-happy": emChickHappyAnim.url,
   "em-raccoon-happy": emRaccoonHappyAnim.url,
+  // Emotion animated stickers — batch 4
+  "em-panda-angry": emPandaAngryAnim.url,
+  "em-panda-sleepy": emPandaSleepyAnim.url,
+  "em-fox-cry": emFoxCryAnim.url,
+  "em-fox-love": emFoxLoveAnim.url,
+  "em-cat-happy": emCatHappyAnim.url,
+  "em-cat-cry": emCatCryAnim.url,
+  "em-duck-happy": emDuckHappyAnim.url,
+  "em-hamster-happy": emHamsterHappyAnim.url,
+  "em-bear-happy": emBearHappyAnim.url,
+  "em-penguin-cry": emPenguinCryAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
