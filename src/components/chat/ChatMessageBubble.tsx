@@ -504,6 +504,15 @@ export default function ChatMessageBubble({
                       ))}
                     </AnimatePresence>
 
+                    {/* Breathing glow behind sticker */}
+                    <motion.div
+                      aria-hidden
+                      className="pointer-events-none absolute inset-[10%] rounded-full blur-xl"
+                      style={{ background: "hsl(var(--primary) / 0.08)" }}
+                      animate={{ scale: [1, 1.18, 1], opacity: [0.4, 0.9, 0.4] }}
+                      transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+                    />
+
                     <motion.img
                       src={stickerSrc}
                       alt={parsedSticker.id}
@@ -511,17 +520,22 @@ export default function ChatMessageBubble({
                       loading="lazy"
                       initial={{ scale: 0.2, opacity: 0, y: 20 }}
                       animate={{
-                        scale: 1,
+                        scale: [1, 1.04, 1, 1.02, 1],
                         opacity: 1,
-                        y: [0, -5, 0],
-                        rotate: [0, 1, -1, 0],
+                        y: [0, -8, 0, -4, 0],
+                        rotate: [0, -2, 2, -1, 0],
+                        scaleX: [1, 1.03, 0.97, 1.01, 1],
+                        scaleY: [1, 0.97, 1.04, 0.99, 1],
                       }}
                       transition={{
                         scale: { type: "spring", stiffness: 380, damping: 14 },
                         opacity: { duration: 0.15 },
-                        y: { duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.3 },
-                        rotate: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.3 },
+                        y: { duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: 0.2 },
+                        rotate: { duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: 0.2 },
+                        scaleX: { duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: 0.2 },
+                        scaleY: { duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: 0.2 },
                       }}
+                      style={{ transformOrigin: "center bottom" }}
                       onError={() => {
                         if (!stickerFallbackActive && parsedSticker.fallbackSrc) {
                           setStickerFallbackActive(true);

@@ -309,6 +309,56 @@ function getIllustratedTone(stickerId: string): IllustratedTone {
 }
 
 
+/* Cute blink overlay — two tiny eyelid shapes that close periodically */
+function BlinkOverlay({ large = false }: { large?: boolean }) {
+  const size = large ? 6 : 3.5;
+  const gap = large ? 14 : 8;
+  const topPct = large ? "32%" : "34%";
+  return (
+    <div className="pointer-events-none absolute inset-0 flex items-start justify-center" style={{ paddingTop: topPct }}>
+      <motion.div
+        className="flex"
+        style={{ gap }}
+        animate={{ scaleY: [1, 1, 0.05, 0.05, 1, 1] }}
+        transition={{
+          duration: 3.2,
+          repeat: Infinity,
+          times: [0, 0.72, 0.75, 0.78, 0.81, 1],
+          ease: "easeInOut",
+        }}
+      >
+        <span
+          className="rounded-full bg-foreground/80"
+          style={{ width: size, height: size * 1.2, transformOrigin: "center" }}
+        />
+        <span
+          className="rounded-full bg-foreground/80"
+          style={{ width: size, height: size * 1.2, transformOrigin: "center" }}
+        />
+      </motion.div>
+    </div>
+  );
+}
+
+/* Breathing glow — subtle pulsing aura behind the sticker */
+function BreathingGlow({ tone, large }: { tone: IllustratedTone; large: boolean }) {
+  const color = tone === "angry" ? "hsl(0 70% 50% / 0.12)"
+    : tone === "love" ? "hsl(340 80% 60% / 0.15)"
+    : tone === "happy" ? "hsl(45 90% 55% / 0.12)"
+    : tone === "sad" ? "hsl(210 60% 55% / 0.1)"
+    : "hsl(var(--primary) / 0.08)";
+  const sz = large ? "85%" : "80%";
+  return (
+    <motion.div
+      aria-hidden
+      className="pointer-events-none absolute rounded-full blur-xl"
+      style={{ width: sz, height: sz, left: "10%", top: "10%", background: color }}
+      animate={{ scale: [1, 1.15, 1], opacity: [0.5, 1, 0.5] }}
+      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+    />
+  );
+}
+
 function LiveIllustratedStickerArt({
   sticker,
   index = 0,
@@ -380,6 +430,8 @@ function LiveIllustratedStickerArt({
 
   return (
     <>
+      <BreathingGlow tone={tone} large={large} />
+
       {withShadow && (
         <motion.span
           aria-hidden
@@ -427,6 +479,20 @@ function LiveIllustratedStickerArt({
         </>
       )}
 
+      {/* Cute cheek blush for shy stickers */}
+      {tone === "shy" && (
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute flex justify-between"
+          style={{ left: "18%", right: "18%", top: "48%", gap: large ? 20 : 10 }}
+          animate={{ opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <span className="rounded-full bg-pink-400/40" style={{ width: large ? 8 : 5, height: large ? 5 : 3 }} />
+          <span className="rounded-full bg-pink-400/40" style={{ width: large ? 8 : 5, height: large ? 5 : 3 }} />
+        </motion.div>
+      )}
+
       <motion.div
         className="relative flex h-full w-full items-center justify-center"
         animate={bodyAnimate}
@@ -445,7 +511,6 @@ function LiveIllustratedStickerArt({
           transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
           style={{ transformOrigin: "center bottom" }}
         />
-
       </motion.div>
     </>
   );
