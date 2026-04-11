@@ -105,6 +105,17 @@ import emDuckHappyAnim from "@/assets/stickers/anim/em-duck-happy-anim.mp4.asset
 import emHamsterHappyAnim from "@/assets/stickers/anim/em-hamster-happy-anim.mp4.asset.json";
 import emBearHappyAnim from "@/assets/stickers/anim/em-bear-happy-anim.mp4.asset.json";
 import emPenguinCryAnim from "@/assets/stickers/anim/em-penguin-cry-anim.mp4.asset.json";
+// Emotion animated stickers — batch 5
+import emFoxAngryAnim from "@/assets/stickers/anim/em-fox-angry-anim.mp4.asset.json";
+import emFoxCoolAnim from "@/assets/stickers/anim/em-fox-cool-anim.mp4.asset.json";
+import emCatAngryAnim from "@/assets/stickers/anim/em-cat-angry-anim.mp4.asset.json";
+import emCatCoolAnim from "@/assets/stickers/anim/em-cat-cool-anim.mp4.asset.json";
+import emBearLoveAnim from "@/assets/stickers/anim/em-bear-love-anim.mp4.asset.json";
+import emBearAngryAnim from "@/assets/stickers/anim/em-bear-angry-anim.mp4.asset.json";
+import emPenguinHappyAnim from "@/assets/stickers/anim/em-penguin-happy-anim.mp4.asset.json";
+import emPenguinLoveAnim from "@/assets/stickers/anim/em-penguin-love-anim.mp4.asset.json";
+import emBunnyCryAnim from "@/assets/stickers/anim/em-bunny-cry-anim.mp4.asset.json";
+import emBunnyLoveAnim from "@/assets/stickers/anim/em-bunny-love-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -213,6 +224,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-hamster-happy": emHamsterHappyAnim.url,
   "em-bear-happy": emBearHappyAnim.url,
   "em-penguin-cry": emPenguinCryAnim.url,
+  // Emotion animated stickers — batch 5
+  "em-fox-angry": emFoxAngryAnim.url,
+  "em-fox-cool": emFoxCoolAnim.url,
+  "em-cat-angry": emCatAngryAnim.url,
+  "em-cat-cool": emCatCoolAnim.url,
+  "em-bear-love": emBearLoveAnim.url,
+  "em-bear-angry": emBearAngryAnim.url,
+  "em-penguin-happy": emPenguinHappyAnim.url,
+  "em-penguin-love": emPenguinLoveAnim.url,
+  "em-bunny-cry": emBunnyCryAnim.url,
+  "em-bunny-love": emBunnyLoveAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
