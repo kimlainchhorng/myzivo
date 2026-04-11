@@ -831,13 +831,17 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                     onClick={() => setActivePack(1000 + i)}
                     title={pack.name}
                     className={cn(
-                      "h-10 w-10 rounded-2xl grid place-items-center text-lg shrink-0 transition-all border",
+                      "h-10 w-10 rounded-2xl grid place-items-center shrink-0 transition-all border overflow-hidden",
                       activePack === 1000 + i
                         ? "bg-primary/10 border-primary/30 shadow-sm scale-110"
                         : "border-transparent hover:bg-muted/40"
                     )}
                   >
-                    <span>{pack.icon}</span>
+                    <img
+                      src={pack.stickers[0]?.src}
+                      alt={pack.name}
+                      className="h-8 w-8 object-contain"
+                    />
                   </button>
                 ))}
                 {packs.map((pack, i) => (
