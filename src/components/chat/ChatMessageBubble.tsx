@@ -155,14 +155,14 @@ export default function ChatMessageBubble({
   const parsedGif = useMemo(() => parseGifMessage(message || "", messageType), [message, messageType]);
 
   useEffect(() => {
-    if (!parsedSticker) {
+    if (!parsedSticker || parsedSticker.animatedSrc) {
       setShowStickerBurst(false);
       return;
     }
     setShowStickerBurst(true);
     const timer = setTimeout(() => setShowStickerBurst(false), 420);
     return () => clearTimeout(timer);
-  }, [id, parsedSticker?.id]);
+  }, [id, parsedSticker?.animatedSrc, parsedSticker?.id]);
 
   // Check if already unlocked
   useEffect(() => {
@@ -480,79 +480,82 @@ export default function ChatMessageBubble({
           // Sticker rendering (supports legacy + current formats)
           if (parsedSticker) {
             const stickerFallbackSrc = parsedSticker.fallbackSrc || parsedSticker.src;
-            const stickerMotion = getStickerMotionSpec(parsedSticker.id);
+            const hasAnimatedSticker = Boolean(parsedSticker.animatedSrc);
+            const stickerMotion = hasAnimatedSticker ? null : getStickerMotionSpec(parsedSticker.id);
             return (
               <div className="py-0.5">
-                <div className="relative h-36 w-36 sm:h-40 sm:w-40">
-                  <AnimatePresence>
-                    {showStickerBurst && (
-                      <>
-                        <motion.span
-                          key={`${parsedSticker.id}-pulse`}
-                          className="pointer-events-none absolute inset-[22%] rounded-full bg-primary/10 blur-md"
-                          initial={{ scale: 0.55, opacity: 0 }}
-                          animate={{ scale: [0.55, 1.08, 1.18], opacity: [0, 0.28, 0] }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.42, ease: "easeOut" }}
-                        />
-                        <motion.span
-                          key={`${parsedSticker.id}-ring`}
-                          className="pointer-events-none absolute inset-[14%] rounded-full border border-primary/20"
-                          initial={{ scale: 0.72, opacity: 0 }}
-                          animate={{ scale: [0.72, 1.02, 1.16], opacity: [0, 0.4, 0] }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.46, ease: "easeOut" }}
-                        />
-                      </>
-                    )}
-                  </AnimatePresence>
-
-                  <motion.span
-                    aria-hidden
-                    className="pointer-events-none absolute inset-x-[20%] bottom-[8%] h-4 rounded-full bg-foreground/10 blur-lg"
-                    animate={stickerMotion.shadow.animate}
-                    transition={stickerMotion.shadow.transition}
-                  />
-
-                  <motion.div
-                    className="relative h-full w-full"
-                    initial={{ scale: 0, opacity: 0, y: 60, rotate: -12 }}
-                    animate={{ scale: 1, opacity: 1, y: 0, rotate: 0 }}
-                    transition={{ type: "spring", stiffness: 260, damping: 14, mass: 0.85 }}
-                    whileTap={{ scale: 0.9, rotate: -4 }}
-                    style={{ transformOrigin: "center bottom" }}
-                  >
-                    <motion.div
-                      className="h-full w-full"
-                      animate={stickerMotion.wrapper.animate}
-                      transition={stickerMotion.wrapper.transition}
-                      style={{ transformOrigin: stickerMotion.wrapper.transformOrigin }}
-                    >
-                      <motion.div
-                        className="h-full w-full"
-                        animate={stickerMotion.media.animate}
-                        transition={stickerMotion.media.transition}
-                        style={{ transformOrigin: stickerMotion.media.transformOrigin }}
-                      >
-                        {parsedSticker.animatedSrc ? (
-                          <TransparentStickerVideo
-                            src={parsedSticker.animatedSrc}
-                            fallbackSrc={stickerFallbackSrc}
-                            alt={parsedSticker.id}
-                            preload="auto"
-                            className="drop-shadow-[0_12px_20px_hsl(var(--foreground)/0.14)]"
-                          />
-                        ) : (
-                          <img
-                            src={stickerFallbackSrc}
-                            alt={parsedSticker.id}
-                            className="h-full w-full object-contain pointer-events-none drop-shadow-[0_12px_20px_hsl(var(--foreground)/0.14)]"
-                            loading="lazy"
-                          />
+                <div className="relative h-32 w-32 sm:h-36 sm:w-36">
+                  {hasAnimatedSticker ? (
+                    <TransparentStickerVideo
+                      src={parsedSticker.animatedSrc!}
+                      fallbackSrc={stickerFallbackSrc}
+                      alt={parsedSticker.id}
+                      preload="auto"
+                      renderMode="chroma"
+                    />
+                  ) : (
+                    <>
+                      <AnimatePresence>
+                        {showStickerBurst && (
+                          <>
+                            <motion.span
+                              key={`${parsedSticker.id}-pulse`}
+                              className="pointer-events-none absolute inset-[22%] rounded-full bg-primary/10 blur-md"
+                              initial={{ scale: 0.55, opacity: 0 }}
+                              animate={{ scale: [0.55, 1.08, 1.18], opacity: [0, 0.28, 0] }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.42, ease: "easeOut" }}
+                            />
+                            <motion.span
+                              key={`${parsedSticker.id}-ring`}
+                              className="pointer-events-none absolute inset-[14%] rounded-full border border-primary/20"
+                              initial={{ scale: 0.72, opacity: 0 }}
+                              animate={{ scale: [0.72, 1.02, 1.16], opacity: [0, 0.4, 0] }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.46, ease: "easeOut" }}
+                            />
+                          </>
                         )}
+                      </AnimatePresence>
+
+                      <motion.span
+                        aria-hidden
+                        className="pointer-events-none absolute inset-x-[20%] bottom-[8%] h-4 rounded-full bg-foreground/10 blur-lg"
+                        animate={stickerMotion!.shadow.animate}
+                        transition={stickerMotion!.shadow.transition}
+                      />
+
+                      <motion.div
+                        className="relative h-full w-full"
+                        initial={{ scale: 0, opacity: 0, y: 60, rotate: -12 }}
+                        animate={{ scale: 1, opacity: 1, y: 0, rotate: 0 }}
+                        transition={{ type: "spring", stiffness: 260, damping: 14, mass: 0.85 }}
+                        whileTap={{ scale: 0.9, rotate: -4 }}
+                        style={{ transformOrigin: "center bottom" }}
+                      >
+                        <motion.div
+                          className="h-full w-full"
+                          animate={stickerMotion!.wrapper.animate}
+                          transition={stickerMotion!.wrapper.transition}
+                          style={{ transformOrigin: stickerMotion!.wrapper.transformOrigin }}
+                        >
+                          <motion.div
+                            className="h-full w-full"
+                            animate={stickerMotion!.media.animate}
+                            transition={stickerMotion!.media.transition}
+                            style={{ transformOrigin: stickerMotion!.media.transformOrigin }}
+                          >
+                            <img
+                              src={stickerFallbackSrc}
+                              alt={parsedSticker.id}
+                              className="h-full w-full object-contain pointer-events-none drop-shadow-[0_12px_20px_hsl(var(--foreground)/0.14)]"
+                              loading="lazy"
+                            />
+                          </motion.div>
+                        </motion.div>
                       </motion.div>
-                    </motion.div>
-                  </motion.div>
+                    </>
+                  )}
                 </div>
                 <div className={`mt-0.5 flex items-center ${isMe ? "justify-end pr-0.5" : "justify-start pl-0.5"}`}>
                   <span className="text-[9px] font-medium tracking-[0.01em] text-muted-foreground/40">{time}</span>
