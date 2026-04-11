@@ -321,6 +321,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
     setFavoriteTracks(readJsonArray(FAV_TRACKS_KEY));
     setRecentTracks(readJsonArray(RECENT_TRACKS_KEY));
     setInstalledPacks(readJsonArray(STORE_INSTALLED_KEY));
+    setFavoriteStickers(readJsonArray("zivo_fav_stickers"));
 
     const loadPacks = async () => {
       const { data } = await (supabase as any).from("chat_sticker_packs").select("id, name, emoji_prefix, stickers").order("created_at", { ascending: true });
