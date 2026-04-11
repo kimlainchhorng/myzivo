@@ -120,16 +120,16 @@ export default function SuggestedUsersCarousel({ variant = "default" }: Suggeste
 
   // Default — full "Suggested for you" section
   return (
-    <div className="py-4">
-      <div className="flex items-center justify-between px-4 mb-3">
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-bold text-foreground">Suggested for you</h3>
+    <div className="py-2.5">
+      <div className="flex items-center justify-between px-3 mb-2">
+        <div className="flex items-center gap-1.5">
+          <Users className="h-3.5 w-3.5 text-primary" />
+          <h3 className="text-xs font-bold text-foreground">Suggested for you</h3>
         </div>
-        <button className="text-xs text-primary font-medium">See all</button>
+        <button className="text-[10px] text-primary font-medium">See all</button>
       </div>
 
-      <div className="flex gap-3 px-4 overflow-x-auto scrollbar-none pb-1">
+      <div className="flex gap-2 px-3 overflow-x-auto scrollbar-none pb-1">
         <AnimatePresence>
           {visible.map((profile: any) => (
             <motion.div
@@ -138,14 +138,14 @@ export default function SuggestedUsersCarousel({ variant = "default" }: Suggeste
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className="flex-shrink-0 w-[150px] bg-card rounded-2xl border border-border/30 p-3.5 text-center relative group"
+              className="flex-shrink-0 w-[120px] bg-card rounded-xl border border-border/30 p-2.5 text-center relative group"
             >
               {/* Dismiss */}
               <button
                 onClick={() => setDismissed((prev) => new Set([...prev, profile.id]))}
-                className="absolute top-2 right-2 p-1 rounded-full hover:bg-muted/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-1.5 right-1.5 p-0.5 rounded-full hover:bg-muted/50 opacity-0 group-hover:opacity-100 transition-opacity"
               >
-                <X className="h-3 w-3 text-muted-foreground" />
+                <X className="h-2.5 w-2.5 text-muted-foreground" />
               </button>
 
               {/* Avatar */}
@@ -153,22 +153,22 @@ export default function SuggestedUsersCarousel({ variant = "default" }: Suggeste
                 onClick={() => navigate(`/user/${profile.id}`)}
                 className="cursor-pointer"
               >
-                <Avatar className="h-18 w-18 mx-auto mb-2.5 ring-2 ring-primary/10">
-                  <AvatarImage src={optimizeAvatar(profile.avatar_url, 72)} loading="lazy" />
-                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-xl">
+                <Avatar className="h-12 w-12 mx-auto mb-1.5 ring-2 ring-primary/10">
+                  <AvatarImage src={optimizeAvatar(profile.avatar_url, 48)} loading="lazy" />
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
                     {profile.full_name?.[0]?.toUpperCase() || "?"}
                   </AvatarFallback>
                 </Avatar>
 
-                <div className="flex items-center justify-center gap-1 mb-0.5">
-                  <p className="text-xs font-semibold text-foreground truncate max-w-[110px]">
+                <div className="flex items-center justify-center gap-0.5 mb-0.5">
+                  <p className="text-[10px] font-semibold text-foreground truncate max-w-[90px]">
                     {profile.full_name || "User"}
                   </p>
-                  {profile.is_verified && <Shield className="h-3 w-3 text-primary shrink-0" />}
+                  {profile.is_verified && <Shield className="h-2.5 w-2.5 text-primary shrink-0" />}
                 </div>
 
                 {profile.bio && (
-                  <p className="text-[10px] text-muted-foreground line-clamp-2 mb-2 leading-tight">
+                  <p className="text-[9px] text-muted-foreground line-clamp-2 mb-1.5 leading-tight">
                     {profile.bio}
                   </p>
                 )}
@@ -178,7 +178,7 @@ export default function SuggestedUsersCarousel({ variant = "default" }: Suggeste
               <button
                 onClick={() => handleFollow(profile.id)}
                 disabled={following.has(profile.id)}
-                className={`w-full py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                className={`w-full py-1 rounded-lg text-[10px] font-semibold transition-all ${
                   following.has(profile.id)
                     ? "bg-muted text-muted-foreground"
                     : "bg-primary text-primary-foreground"
