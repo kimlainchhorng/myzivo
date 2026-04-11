@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Radio, Camera, CameraOff, Mic, MicOff, RotateCcw,
-  Users, Heart, MessageCircle, Send, Share2, X, Sparkles, Zap
+  Users, Heart, MessageCircle, Send, Share2, X, Sparkles, Zap, Gift, Star, Crown, Flame, ThumbsUp
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
