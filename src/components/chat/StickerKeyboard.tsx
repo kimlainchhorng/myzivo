@@ -359,12 +359,24 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
     }));
   }, [remotePacks]);
 
-  const currentPack = packs[activePack];
+  // Illustrated packs offset: activePack values >= 1000 are illustrated
+  const isIllustratedPack = activePack >= 1000;
+  const illustratedPackIndex = activePack - 1000;
+  const currentIllustratedPack = isIllustratedPack ? ILLUSTRATED_PACKS[illustratedPackIndex] : null;
+
+  const currentPack = !isIllustratedPack ? packs[activePack] : null;
   const filteredStickers = useMemo(() => {
     const list = currentPack?.stickers || [];
     if (!search.trim()) return list;
     return list.filter((s) => s.toLowerCase().includes(search.trim().toLowerCase()));
   }, [currentPack?.stickers, search]);
+
+  const filteredIllustratedStickers = useMemo(() => {
+    if (!currentIllustratedPack) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return currentIllustratedPack.stickers;
+    return currentIllustratedPack.stickers.filter((s) => s.alt.toLowerCase().includes(q));
+  }, [currentIllustratedPack, search]);
 
   /* ── Actions ── */
   const sendSticker = useCallback((sticker: string) => {
