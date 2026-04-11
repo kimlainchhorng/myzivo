@@ -59,6 +59,15 @@ import seahorseAnim from "@/assets/stickers/anim/buddy-seahorse-anim.mp4.asset.j
 import clownfishAnim from "@/assets/stickers/anim/buddy-clownfish-anim.mp4.asset.json";
 import squidAnim from "@/assets/stickers/anim/buddy-squid-anim.mp4.asset.json";
 import dolphinAnim from "@/assets/stickers/anim/buddy-dolphin-anim.mp4.asset.json";
+// Emotion animated stickers
+import emPandaHappyAnim from "@/assets/stickers/anim/em-panda-happy-anim.mp4.asset.json";
+import emPandaCryAnim from "@/assets/stickers/anim/em-panda-cry-anim.mp4.asset.json";
+import emPandaLoveAnim from "@/assets/stickers/anim/em-panda-love-anim.mp4.asset.json";
+import emFoxHappyAnim from "@/assets/stickers/anim/em-fox-happy-anim.mp4.asset.json";
+import emCatLoveAnim from "@/assets/stickers/anim/em-cat-love-anim.mp4.asset.json";
+import emBearCryAnim from "@/assets/stickers/anim/em-bear-cry-anim.mp4.asset.json";
+import emBunnyHappyAnim from "@/assets/stickers/anim/em-bunny-happy-anim.mp4.asset.json";
+import emPenguinCoolAnim from "@/assets/stickers/anim/em-penguin-cool-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -123,6 +132,15 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "op-clownfish": clownfishAnim.url,
   "op-squid": squidAnim.url,
   "op-dolphin": dolphinAnim.url,
+  // Emotion animated stickers
+  "em-panda-happy": emPandaHappyAnim.url,
+  "em-panda-cry": emPandaCryAnim.url,
+  "em-panda-love": emPandaLoveAnim.url,
+  "em-fox-happy": emFoxHappyAnim.url,
+  "em-cat-love": emCatLoveAnim.url,
+  "em-bear-cry": emBearCryAnim.url,
+  "em-bunny-happy": emBunnyHappyAnim.url,
+  "em-penguin-cool": emPenguinCoolAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */

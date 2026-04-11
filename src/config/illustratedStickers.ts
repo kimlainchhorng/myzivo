@@ -274,6 +274,78 @@ import butterflySleepy from "@/assets/stickers/emotions/butterfly-sleepy.png";
 import butterflyShy from "@/assets/stickers/emotions/butterfly-shy.png";
 import butterflySurprised from "@/assets/stickers/emotions/butterfly-surprised.png";
 import butterflyCool from "@/assets/stickers/emotions/butterfly-cool.png";
+// ── Raccoon Emotions ──
+import raccoonHappy from "@/assets/stickers/emotions/raccoon-happy.png";
+import raccoonCry from "@/assets/stickers/emotions/raccoon-cry.png";
+import raccoonLove from "@/assets/stickers/emotions/raccoon-love.png";
+import raccoonAngry from "@/assets/stickers/emotions/raccoon-angry.png";
+import raccoonSleepy from "@/assets/stickers/emotions/raccoon-sleepy.png";
+import raccoonShy from "@/assets/stickers/emotions/raccoon-shy.png";
+import raccoonSurprised from "@/assets/stickers/emotions/raccoon-surprised.png";
+import raccoonCool from "@/assets/stickers/emotions/raccoon-cool.png";
+// ── Giraffe Emotions ──
+import giraffeHappy from "@/assets/stickers/emotions/giraffe-happy.png";
+import giraffeCry from "@/assets/stickers/emotions/giraffe-cry.png";
+import giraffeLove from "@/assets/stickers/emotions/giraffe-love.png";
+import giraffeAngry from "@/assets/stickers/emotions/giraffe-angry.png";
+import giraffeSleepy from "@/assets/stickers/emotions/giraffe-sleepy.png";
+import giraffeShy from "@/assets/stickers/emotions/giraffe-shy.png";
+import giraffeSurprised from "@/assets/stickers/emotions/giraffe-surprised.png";
+import giraffeCool from "@/assets/stickers/emotions/giraffe-cool.png";
+// ── Octopus Emotions ──
+import octopusHappy from "@/assets/stickers/emotions/octopus-happy.png";
+import octopusCry from "@/assets/stickers/emotions/octopus-cry.png";
+import octopusLove from "@/assets/stickers/emotions/octopus-love.png";
+import octopusAngry from "@/assets/stickers/emotions/octopus-angry.png";
+import octopusSleepy from "@/assets/stickers/emotions/octopus-sleepy.png";
+import octopusShy from "@/assets/stickers/emotions/octopus-shy.png";
+import octopusSurprised from "@/assets/stickers/emotions/octopus-surprised.png";
+import octopusCool from "@/assets/stickers/emotions/octopus-cool.png";
+// ── Strawberry Emotions ──
+import strawberryHappy from "@/assets/stickers/emotions/strawberry-happy.png";
+import strawberryCry from "@/assets/stickers/emotions/strawberry-cry.png";
+import strawberryLove from "@/assets/stickers/emotions/strawberry-love.png";
+import strawberryAngry from "@/assets/stickers/emotions/strawberry-angry.png";
+import strawberrySleepy from "@/assets/stickers/emotions/strawberry-sleepy.png";
+import strawberryShy from "@/assets/stickers/emotions/strawberry-shy.png";
+import strawberrySurprised from "@/assets/stickers/emotions/strawberry-surprised.png";
+import strawberryCool from "@/assets/stickers/emotions/strawberry-cool.png";
+// ── Avocado Emotions ──
+import avocadoHappy from "@/assets/stickers/emotions/avocado-happy.png";
+import avocadoCry from "@/assets/stickers/emotions/avocado-cry.png";
+import avocadoLove from "@/assets/stickers/emotions/avocado-love.png";
+import avocadoAngry from "@/assets/stickers/emotions/avocado-angry.png";
+import avocadoSleepy from "@/assets/stickers/emotions/avocado-sleepy.png";
+import avocadoShy from "@/assets/stickers/emotions/avocado-shy.png";
+import avocadoSurprised from "@/assets/stickers/emotions/avocado-surprised.png";
+import avocadoCool from "@/assets/stickers/emotions/avocado-cool.png";
+// ── Donut Emotions ──
+import donutHappy from "@/assets/stickers/emotions/donut-happy.png";
+import donutCry from "@/assets/stickers/emotions/donut-cry.png";
+import donutLove from "@/assets/stickers/emotions/donut-love.png";
+import donutAngry from "@/assets/stickers/emotions/donut-angry.png";
+import donutSleepy from "@/assets/stickers/emotions/donut-sleepy.png";
+import donutShy from "@/assets/stickers/emotions/donut-shy.png";
+import donutSurprised from "@/assets/stickers/emotions/donut-surprised.png";
+import donutCool from "@/assets/stickers/emotions/donut-cool.png";
+// ── Mushroom Emotions ──
+import mushroomHappy from "@/assets/stickers/emotions/mushroom-happy.png";
+import mushroomCry from "@/assets/stickers/emotions/mushroom-cry.png";
+import mushroomLove from "@/assets/stickers/emotions/mushroom-love.png";
+import mushroomAngry from "@/assets/stickers/emotions/mushroom-angry.png";
+import mushroomSleepy from "@/assets/stickers/emotions/mushroom-sleepy.png";
+import mushroomShy from "@/assets/stickers/emotions/mushroom-shy.png";
+import mushroomSurprised from "@/assets/stickers/emotions/mushroom-surprised.png";
+import mushroomCool from "@/assets/stickers/emotions/mushroom-cool.png";
+// ── Toast Emotions ──
+import toastHappy from "@/assets/stickers/emotions/toast-happy.png";
+import toastCry from "@/assets/stickers/emotions/toast-cry.png";
+import toastLove from "@/assets/stickers/emotions/toast-love.png";
+import toastAngry from "@/assets/stickers/emotions/toast-angry.png";
+import toastSleepy from "@/assets/stickers/emotions/toast-sleepy.png";
+import toastShy from "@/assets/stickers/emotions/toast-shy.png";
+import toastSurprised from "@/assets/stickers/emotions/toast-surprised.png";
+import toastCool from "@/assets/stickers/emotions/toast-cool.png";
 
 export interface IllustratedSticker {
   id: string;
@@ -619,6 +691,248 @@ export const ILLUSTRATED_PACKS: IllustratedStickerPack[] = [
       { id: "em-pig-shy", src: pigShy, alt: "Pig Shy" },
       { id: "em-pig-surprised", src: pigSurprised, alt: "Pig Surprised" },
       { id: "em-pig-cool", src: pigCool, alt: "Pig Cool" },
+    ],
+  },
+  // ── Wave 3 Emotion Packs ──
+  {
+    id: "whale-emotions",
+    name: "Whale Moods",
+    icon: "🐳",
+    stickers: [
+      { id: "em-whale-happy", src: whaleHappy, alt: "Whale Happy" },
+      { id: "em-whale-cry", src: whaleCry, alt: "Whale Cry" },
+      { id: "em-whale-love", src: whaleLove, alt: "Whale Love" },
+      { id: "em-whale-angry", src: whaleAngry, alt: "Whale Angry" },
+      { id: "em-whale-sleepy", src: whaleSleepy, alt: "Whale Sleepy" },
+      { id: "em-whale-shy", src: whaleShy, alt: "Whale Shy" },
+      { id: "em-whale-surprised", src: whaleSurprised, alt: "Whale Surprised" },
+      { id: "em-whale-cool", src: whaleCool, alt: "Whale Cool" },
+    ],
+  },
+  {
+    id: "deer-emotions",
+    name: "Deer Moods",
+    icon: "🦌",
+    stickers: [
+      { id: "em-deer-happy", src: deerHappy, alt: "Deer Happy" },
+      { id: "em-deer-cry", src: deerCry, alt: "Deer Cry" },
+      { id: "em-deer-love", src: deerLove, alt: "Deer Love" },
+      { id: "em-deer-angry", src: deerAngry, alt: "Deer Angry" },
+      { id: "em-deer-sleepy", src: deerSleepy, alt: "Deer Sleepy" },
+      { id: "em-deer-shy", src: deerShy, alt: "Deer Shy" },
+      { id: "em-deer-surprised", src: deerSurprised, alt: "Deer Surprised" },
+      { id: "em-deer-cool", src: deerCool, alt: "Deer Cool" },
+    ],
+  },
+  {
+    id: "sloth-emotions",
+    name: "Sloth Moods",
+    icon: "🦥",
+    stickers: [
+      { id: "em-sloth-happy", src: slothHappy, alt: "Sloth Happy" },
+      { id: "em-sloth-cry", src: slothCry, alt: "Sloth Cry" },
+      { id: "em-sloth-love", src: slothLove, alt: "Sloth Love" },
+      { id: "em-sloth-angry", src: slothAngry, alt: "Sloth Angry" },
+      { id: "em-sloth-sleepy", src: slothSleepy, alt: "Sloth Sleepy" },
+      { id: "em-sloth-shy", src: slothShy, alt: "Sloth Shy" },
+      { id: "em-sloth-surprised", src: slothSurprised, alt: "Sloth Surprised" },
+      { id: "em-sloth-cool", src: slothCool, alt: "Sloth Cool" },
+    ],
+  },
+  {
+    id: "chick-emotions",
+    name: "Chick Moods",
+    icon: "🐥",
+    stickers: [
+      { id: "em-chick-happy", src: chickHappy, alt: "Chick Happy" },
+      { id: "em-chick-cry", src: chickCry, alt: "Chick Cry" },
+      { id: "em-chick-love", src: chickLove, alt: "Chick Love" },
+      { id: "em-chick-angry", src: chickAngry, alt: "Chick Angry" },
+      { id: "em-chick-sleepy", src: chickSleepy, alt: "Chick Sleepy" },
+      { id: "em-chick-shy", src: chickShy, alt: "Chick Shy" },
+      { id: "em-chick-surprised", src: chickSurprised, alt: "Chick Surprised" },
+      { id: "em-chick-cool", src: chickCool, alt: "Chick Cool" },
+    ],
+  },
+  {
+    id: "hedgehog-emotions",
+    name: "Hedgehog Moods",
+    icon: "🦔",
+    stickers: [
+      { id: "em-hedgehog-happy", src: hedgehogHappy, alt: "Hedgehog Happy" },
+      { id: "em-hedgehog-cry", src: hedgehogCry, alt: "Hedgehog Cry" },
+      { id: "em-hedgehog-love", src: hedgehogLove, alt: "Hedgehog Love" },
+      { id: "em-hedgehog-angry", src: hedgehogAngry, alt: "Hedgehog Angry" },
+      { id: "em-hedgehog-sleepy", src: hedgehogSleepy, alt: "Hedgehog Sleepy" },
+      { id: "em-hedgehog-shy", src: hedgehogShy, alt: "Hedgehog Shy" },
+      { id: "em-hedgehog-surprised", src: hedgehogSurprised, alt: "Hedgehog Surprised" },
+      { id: "em-hedgehog-cool", src: hedgehogCool, alt: "Hedgehog Cool" },
+    ],
+  },
+  {
+    id: "turtle-emotions",
+    name: "Turtle Moods",
+    icon: "🐢",
+    stickers: [
+      { id: "em-turtle-happy", src: turtleHappy, alt: "Turtle Happy" },
+      { id: "em-turtle-cry", src: turtleCry, alt: "Turtle Cry" },
+      { id: "em-turtle-love", src: turtleLove, alt: "Turtle Love" },
+      { id: "em-turtle-angry", src: turtleAngry, alt: "Turtle Angry" },
+      { id: "em-turtle-sleepy", src: turtleSleepy, alt: "Turtle Sleepy" },
+      { id: "em-turtle-shy", src: turtleShy, alt: "Turtle Shy" },
+      { id: "em-turtle-surprised", src: turtleSurprised, alt: "Turtle Surprised" },
+      { id: "em-turtle-cool", src: turtleCool, alt: "Turtle Cool" },
+    ],
+  },
+  {
+    id: "elephant-emotions",
+    name: "Elephant Moods",
+    icon: "🐘",
+    stickers: [
+      { id: "em-elephant-happy", src: elephantHappy, alt: "Elephant Happy" },
+      { id: "em-elephant-cry", src: elephantCry, alt: "Elephant Cry" },
+      { id: "em-elephant-love", src: elephantLove, alt: "Elephant Love" },
+      { id: "em-elephant-angry", src: elephantAngry, alt: "Elephant Angry" },
+      { id: "em-elephant-sleepy", src: elephantSleepy, alt: "Elephant Sleepy" },
+      { id: "em-elephant-shy", src: elephantShy, alt: "Elephant Shy" },
+      { id: "em-elephant-surprised", src: elephantSurprised, alt: "Elephant Surprised" },
+      { id: "em-elephant-cool", src: elephantCool, alt: "Elephant Cool" },
+    ],
+  },
+  {
+    id: "butterfly-emotions",
+    name: "Butterfly Moods",
+    icon: "🦋",
+    stickers: [
+      { id: "em-butterfly-happy", src: butterflyHappy, alt: "Butterfly Happy" },
+      { id: "em-butterfly-cry", src: butterflyCry, alt: "Butterfly Cry" },
+      { id: "em-butterfly-love", src: butterflyLove, alt: "Butterfly Love" },
+      { id: "em-butterfly-angry", src: butterflyAngry, alt: "Butterfly Angry" },
+      { id: "em-butterfly-sleepy", src: butterflySleepy, alt: "Butterfly Sleepy" },
+      { id: "em-butterfly-shy", src: butterflyShy, alt: "Butterfly Shy" },
+      { id: "em-butterfly-surprised", src: butterflySurprised, alt: "Butterfly Surprised" },
+      { id: "em-butterfly-cool", src: butterflyCool, alt: "Butterfly Cool" },
+    ],
+  },
+  // ── Wave 4 Emotion Packs ──
+  {
+    id: "raccoon-emotions",
+    name: "Raccoon Moods",
+    icon: "🦝",
+    stickers: [
+      { id: "em-raccoon-happy", src: raccoonHappy, alt: "Raccoon Happy" },
+      { id: "em-raccoon-cry", src: raccoonCry, alt: "Raccoon Cry" },
+      { id: "em-raccoon-love", src: raccoonLove, alt: "Raccoon Love" },
+      { id: "em-raccoon-angry", src: raccoonAngry, alt: "Raccoon Angry" },
+      { id: "em-raccoon-sleepy", src: raccoonSleepy, alt: "Raccoon Sleepy" },
+      { id: "em-raccoon-shy", src: raccoonShy, alt: "Raccoon Shy" },
+      { id: "em-raccoon-surprised", src: raccoonSurprised, alt: "Raccoon Surprised" },
+      { id: "em-raccoon-cool", src: raccoonCool, alt: "Raccoon Cool" },
+    ],
+  },
+  {
+    id: "giraffe-emotions",
+    name: "Giraffe Moods",
+    icon: "🦒",
+    stickers: [
+      { id: "em-giraffe-happy", src: giraffeHappy, alt: "Giraffe Happy" },
+      { id: "em-giraffe-cry", src: giraffeCry, alt: "Giraffe Cry" },
+      { id: "em-giraffe-love", src: giraffeLove, alt: "Giraffe Love" },
+      { id: "em-giraffe-angry", src: giraffeAngry, alt: "Giraffe Angry" },
+      { id: "em-giraffe-sleepy", src: giraffeSleepy, alt: "Giraffe Sleepy" },
+      { id: "em-giraffe-shy", src: giraffeShy, alt: "Giraffe Shy" },
+      { id: "em-giraffe-surprised", src: giraffeSurprised, alt: "Giraffe Surprised" },
+      { id: "em-giraffe-cool", src: giraffeCool, alt: "Giraffe Cool" },
+    ],
+  },
+  {
+    id: "octopus-emotions",
+    name: "Octopus Moods",
+    icon: "🐙",
+    stickers: [
+      { id: "em-octopus-happy", src: octopusHappy, alt: "Octopus Happy" },
+      { id: "em-octopus-cry", src: octopusCry, alt: "Octopus Cry" },
+      { id: "em-octopus-love", src: octopusLove, alt: "Octopus Love" },
+      { id: "em-octopus-angry", src: octopusAngry, alt: "Octopus Angry" },
+      { id: "em-octopus-sleepy", src: octopusSleepy, alt: "Octopus Sleepy" },
+      { id: "em-octopus-shy", src: octopusShy, alt: "Octopus Shy" },
+      { id: "em-octopus-surprised", src: octopusSurprised, alt: "Octopus Surprised" },
+      { id: "em-octopus-cool", src: octopusCool, alt: "Octopus Cool" },
+    ],
+  },
+  {
+    id: "strawberry-emotions",
+    name: "Strawberry Moods",
+    icon: "🍓",
+    stickers: [
+      { id: "em-strawberry-happy", src: strawberryHappy, alt: "Strawberry Happy" },
+      { id: "em-strawberry-cry", src: strawberryCry, alt: "Strawberry Cry" },
+      { id: "em-strawberry-love", src: strawberryLove, alt: "Strawberry Love" },
+      { id: "em-strawberry-angry", src: strawberryAngry, alt: "Strawberry Angry" },
+      { id: "em-strawberry-sleepy", src: strawberrySleepy, alt: "Strawberry Sleepy" },
+      { id: "em-strawberry-shy", src: strawberryShy, alt: "Strawberry Shy" },
+      { id: "em-strawberry-surprised", src: strawberrySurprised, alt: "Strawberry Surprised" },
+      { id: "em-strawberry-cool", src: strawberryCool, alt: "Strawberry Cool" },
+    ],
+  },
+  {
+    id: "avocado-emotions",
+    name: "Avocado Moods",
+    icon: "🥑",
+    stickers: [
+      { id: "em-avocado-happy", src: avocadoHappy, alt: "Avocado Happy" },
+      { id: "em-avocado-cry", src: avocadoCry, alt: "Avocado Cry" },
+      { id: "em-avocado-love", src: avocadoLove, alt: "Avocado Love" },
+      { id: "em-avocado-angry", src: avocadoAngry, alt: "Avocado Angry" },
+      { id: "em-avocado-sleepy", src: avocadoSleepy, alt: "Avocado Sleepy" },
+      { id: "em-avocado-shy", src: avocadoShy, alt: "Avocado Shy" },
+      { id: "em-avocado-surprised", src: avocadoSurprised, alt: "Avocado Surprised" },
+      { id: "em-avocado-cool", src: avocadoCool, alt: "Avocado Cool" },
+    ],
+  },
+  {
+    id: "donut-emotions",
+    name: "Donut Moods",
+    icon: "🍩",
+    stickers: [
+      { id: "em-donut-happy", src: donutHappy, alt: "Donut Happy" },
+      { id: "em-donut-cry", src: donutCry, alt: "Donut Cry" },
+      { id: "em-donut-love", src: donutLove, alt: "Donut Love" },
+      { id: "em-donut-angry", src: donutAngry, alt: "Donut Angry" },
+      { id: "em-donut-sleepy", src: donutSleepy, alt: "Donut Sleepy" },
+      { id: "em-donut-shy", src: donutShy, alt: "Donut Shy" },
+      { id: "em-donut-surprised", src: donutSurprised, alt: "Donut Surprised" },
+      { id: "em-donut-cool", src: donutCool, alt: "Donut Cool" },
+    ],
+  },
+  {
+    id: "mushroom-emotions",
+    name: "Mushroom Moods",
+    icon: "🍄",
+    stickers: [
+      { id: "em-mushroom-happy", src: mushroomHappy, alt: "Mushroom Happy" },
+      { id: "em-mushroom-cry", src: mushroomCry, alt: "Mushroom Cry" },
+      { id: "em-mushroom-love", src: mushroomLove, alt: "Mushroom Love" },
+      { id: "em-mushroom-angry", src: mushroomAngry, alt: "Mushroom Angry" },
+      { id: "em-mushroom-sleepy", src: mushroomSleepy, alt: "Mushroom Sleepy" },
+      { id: "em-mushroom-shy", src: mushroomShy, alt: "Mushroom Shy" },
+      { id: "em-mushroom-surprised", src: mushroomSurprised, alt: "Mushroom Surprised" },
+      { id: "em-mushroom-cool", src: mushroomCool, alt: "Mushroom Cool" },
+    ],
+  },
+  {
+    id: "toast-emotions",
+    name: "Toast Moods",
+    icon: "🍞",
+    stickers: [
+      { id: "em-toast-happy", src: toastHappy, alt: "Toast Happy" },
+      { id: "em-toast-cry", src: toastCry, alt: "Toast Cry" },
+      { id: "em-toast-love", src: toastLove, alt: "Toast Love" },
+      { id: "em-toast-angry", src: toastAngry, alt: "Toast Angry" },
+      { id: "em-toast-sleepy", src: toastSleepy, alt: "Toast Sleepy" },
+      { id: "em-toast-shy", src: toastShy, alt: "Toast Shy" },
+      { id: "em-toast-surprised", src: toastSurprised, alt: "Toast Surprised" },
+      { id: "em-toast-cool", src: toastCool, alt: "Toast Cool" },
     ],
   },
 ];
