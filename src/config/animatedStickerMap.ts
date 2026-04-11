@@ -48,6 +48,17 @@ import watermelonAnim from "@/assets/stickers/anim/buddy-watermelon-anim.mp4.ass
 import chickAnim from "@/assets/stickers/anim/buddy-chick-anim.mp4.asset.json";
 import deerAnim from "@/assets/stickers/anim/buddy-deer-anim.mp4.asset.json";
 import dragonAnim from "@/assets/stickers/anim/buddy-dragon-anim.mp4.asset.json";
+// New — Tiny Bugs & Ocean Pals
+import beeAnim from "@/assets/stickers/anim/buddy-bee-anim.mp4.asset.json";
+import snailAnim from "@/assets/stickers/anim/buddy-snail-anim.mp4.asset.json";
+import crabAnim from "@/assets/stickers/anim/buddy-crab-anim.mp4.asset.json";
+import jellyfishAnim from "@/assets/stickers/anim/buddy-jellyfish-anim.mp4.asset.json";
+import ladybugAnim from "@/assets/stickers/anim/buddy-ladybug-anim.mp4.asset.json";
+import starfishAnim from "@/assets/stickers/anim/buddy-starfish-anim.mp4.asset.json";
+import seahorseAnim from "@/assets/stickers/anim/buddy-seahorse-anim.mp4.asset.json";
+import clownfishAnim from "@/assets/stickers/anim/buddy-clownfish-anim.mp4.asset.json";
+import squidAnim from "@/assets/stickers/anim/buddy-squid-anim.mp4.asset.json";
+import dolphinAnim from "@/assets/stickers/anim/buddy-dolphin-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -100,6 +111,18 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "ms-lion": lionAnim.url,
   "ms-turtle": turtleAnim.url,
   "ms-frog": frogAnim.url,
+  // Tiny Bugs
+  "tb-bee": beeAnim.url,
+  "tb-snail": snailAnim.url,
+  "tb-ladybug": ladybugAnim.url,
+  // Ocean Pals
+  "op-crab": crabAnim.url,
+  "op-jellyfish": jellyfishAnim.url,
+  "op-starfish": starfishAnim.url,
+  "op-seahorse": seahorseAnim.url,
+  "op-clownfish": clownfishAnim.url,
+  "op-squid": squidAnim.url,
+  "op-dolphin": dolphinAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
