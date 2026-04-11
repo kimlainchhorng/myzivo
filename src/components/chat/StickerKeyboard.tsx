@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ILLUSTRATED_PACKS, type IllustratedStickerPack } from "@/config/illustratedStickers";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 /* ═══════════════ Types ═══════════════ */
@@ -660,7 +661,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: "100%", opacity: 0 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="bg-background border-t border-border/40 rounded-t-3xl shadow-xl max-h-[72vh] overflow-hidden flex flex-col"
+        className="bg-background border-t border-border/30 rounded-t-3xl shadow-2xl max-h-[72vh] overflow-hidden flex flex-col"
       >
         {/* ── Tab bar + search ── */}
         <div className="sticky top-0 bg-background/95 backdrop-blur-xl border-b border-border/20 px-3 pt-3 pb-2 z-10 shrink-0">
@@ -689,8 +690,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
             )}
           </div>
 
-          {/* Tab grid */}
-          <div className="grid grid-cols-7 gap-1">
+          {/* Tab grid — refined with active indicator */}
+          <div className="flex items-center gap-0.5 bg-muted/30 rounded-2xl p-1">
             {([
               { key: "stickers" as TabKey, label: "Stickers", icon: Smile },
               { key: "gifs" as TabKey, label: "GIFs", icon: ImageIcon },
@@ -703,12 +704,15 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               <button
                 key={tab.key}
                 onClick={() => { setActiveTab(tab.key); setSearch(""); }}
-                className={`rounded-2xl px-1 py-2 flex flex-col items-center gap-1 transition-colors ${
-                  activeTab === tab.key ? "bg-primary/10 text-primary" : "text-muted-foreground"
-                }`}
+                className={cn(
+                  "flex-1 rounded-xl px-1 py-2 flex flex-col items-center gap-0.5 transition-all",
+                  activeTab === tab.key
+                    ? "bg-background text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
               >
-                <tab.icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium leading-tight">{tab.label}</span>
+                <tab.icon className="w-[18px] h-[18px]" />
+                <span className="text-[9px] font-semibold leading-tight">{tab.label}</span>
               </button>
             ))}
           </div>
@@ -752,35 +756,48 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                 </div>
               </div>
 
-              {/* Pack icon strip — Messenger-style */}
-              <div className="flex px-2 py-2 gap-1.5 overflow-x-auto scrollbar-none border-b border-border/10">
+              {/* Pack icon strip — polished Messenger-style */}
+              <div className="flex px-2 py-2 gap-1 overflow-x-auto scrollbar-none border-b border-border/10">
                 {recentStickers.length > 0 && (
                   <button
                     onClick={() => setActivePack(-1)}
                     title="Recent"
-                    className={`h-9 w-9 rounded-xl grid place-items-center shrink-0 transition-all ${activePack === -1 ? "bg-primary/12 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:bg-muted/50"}`}
+                    className={cn(
+                      "h-10 w-10 rounded-2xl grid place-items-center shrink-0 transition-all border",
+                      activePack === -1
+                        ? "bg-primary/10 text-primary border-primary/30 shadow-sm"
+                        : "text-muted-foreground border-transparent hover:bg-muted/40"
+                    )}
                   >
-                    <Clock className="w-4 h-4" />
+                    <Clock className="w-4.5 h-4.5" />
                   </button>
                 )}
-                {/* Illustrated packs first */}
                 {illustratedPacks.map((pack, i) => (
                   <button
                     key={pack.id}
                     onClick={() => setActivePack(1000 + i)}
                     title={pack.name}
-                    className={`h-9 w-9 rounded-xl grid place-items-center text-base shrink-0 transition-all ${activePack === 1000 + i ? "bg-primary/12 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:bg-muted/50"}`}
+                    className={cn(
+                      "h-10 w-10 rounded-2xl grid place-items-center text-lg shrink-0 transition-all border",
+                      activePack === 1000 + i
+                        ? "bg-primary/10 border-primary/30 shadow-sm scale-110"
+                        : "border-transparent hover:bg-muted/40"
+                    )}
                   >
                     <span>{pack.icon}</span>
                   </button>
                 ))}
-                {/* Emoji packs */}
                 {packs.map((pack, i) => (
                   <button
                     key={pack.id}
                     onClick={() => setActivePack(i)}
                     title={pack.name}
-                    className={`h-9 w-9 rounded-xl grid place-items-center text-base shrink-0 transition-all ${activePack === i ? "bg-primary/12 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:bg-muted/50"}`}
+                    className={cn(
+                      "h-10 w-10 rounded-2xl grid place-items-center text-lg shrink-0 transition-all border",
+                      activePack === i
+                        ? "bg-primary/10 border-primary/30 shadow-sm scale-110"
+                        : "border-transparent hover:bg-muted/40"
+                    )}
                   >
                     <span>{pack.emoji_prefix || "🙂"}</span>
                   </button>
@@ -788,9 +805,9 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               </div>
 
               {/* Active pack name label */}
-              <div className="px-3 pt-2 pb-1">
-                <h3 className="text-xs font-semibold text-muted-foreground">
-                  {activePack === -1 ? "Recent" : isIllustratedPack ? (currentIllustratedPack?.name ?? "") : (currentPack?.name ?? "")}
+              <div className="px-4 pt-2.5 pb-1">
+                <h3 className="text-[13px] font-bold text-foreground tracking-tight">
+                  {activePack === -1 ? "Recently Used" : isIllustratedPack ? (currentIllustratedPack?.name ?? "") : (currentPack?.name ?? "")}
                 </h3>
               </div>
 
@@ -798,8 +815,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               <div className="min-h-[320px] overflow-y-auto p-2">
                 {isIllustratedPack ? (
                   <>
-                    {/* Sticker grid — 4 columns Messenger-style */}
-                    <div className="grid grid-cols-4 gap-2 px-1 pb-2">
+                    {/* Sticker grid — 4 columns, generous spacing */}
+                    <div className="grid grid-cols-4 gap-3 px-2 pb-3">
                       {filteredIllustratedStickers.map((sticker, idx) => {
                         const stickerPayload = `[sticker:${sticker.id}:${sticker.src}]`;
                         let didLongPress = false;
@@ -807,10 +824,11 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                         return (
                           <motion.button
                             key={sticker.id}
-                            initial={{ opacity: 0, scale: 0.4, y: 18 }}
+                            initial={{ opacity: 0, scale: 0.5, y: 12 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            transition={{ delay: idx * 0.025, type: "spring", stiffness: 450, damping: 16 }}
-                            whileTap={{ scale: 0.82 }}
+                            transition={{ delay: idx * 0.02, type: "spring", stiffness: 400, damping: 18 }}
+                            whileHover={{ scale: 1.08 }}
+                            whileTap={{ scale: 0.85 }}
                             onTouchStart={() => {
                               didLongPress = false;
                               longPressRef.current = setTimeout(() => {
@@ -826,7 +844,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                             onTouchMove={() => { if (longPressRef.current) clearTimeout(longPressRef.current); }}
                             onContextMenu={(e) => { e.preventDefault(); setPreviewSticker(sticker); }}
                             onClick={() => sendSticker(stickerPayload)}
-                            className="group relative aspect-square overflow-visible p-0.5"
+                            className="group relative aspect-square overflow-visible rounded-2xl hover:bg-muted/30 transition-colors p-1"
                           >
                             <LiveIllustratedStickerArt sticker={sticker} index={idx} />
                           </motion.button>

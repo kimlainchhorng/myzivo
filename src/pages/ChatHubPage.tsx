@@ -3,9 +3,10 @@
  * Personal, Shop, Support, Ride + Group chats
  * 2026-style design with premium UI
  */
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft, Trash2, X, Bell, Users, Plus, Edit3, Check, CheckCheck, Image as ImageIcon, Mic, MapPin, Phone, Video } from "lucide-react";
+import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
@@ -49,6 +50,24 @@ function formatChatTime(dateStr: string) {
   return format(d, "MMM d");
 }
 
+const STICKER_LOOKUP = ILLUSTRATED_PACKS
+  .flatMap((p) => p.stickers)
+  .reduce<Record<string, { src: string; alt: string }>>((acc, s) => {
+    acc[s.id.toLowerCase()] = { src: s.src, alt: s.alt };
+    return acc;
+  }, {});
+
+function parseStickerPreview(message: string): { src: string; alt: string } | null {
+  const m = message.trim().match(/^\[sticker:([^\]:]+)(?::(.+))?\]$/i);
+  if (!m) return null;
+  const id = m[1].trim().toLowerCase();
+  const entry = STICKER_LOOKUP[id];
+  if (entry) return entry;
+  const explicitSrc = m[2]?.trim();
+  if (explicitSrc) return { src: explicitSrc, alt: id };
+  return null;
+}
+
 function parseRichMessagePreview(message: string): string {
   const trimmed = message.trim();
   if (!trimmed) return "";
@@ -74,7 +93,6 @@ function parseRichMessagePreview(message: string): string {
 }
 
 function getMessagePreviewIcon(message: string) {
-  if (message === "Sticker") return <ImageIcon className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
   if (message === "📷 Image" || message.includes("[image]")) return <ImageIcon className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
   if (message.includes("[voice]") || message.includes("🎤")) return <Mic className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
   if (message.includes("[location]") || message.includes("📍")) return <MapPin className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
@@ -816,14 +834,33 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                     )}
                                   </span>
                                 )}
-                                {getMessagePreviewIcon(parseRichMessagePreview(chat.lastMessage))}
-                                <span className={cn(
-                                  embedded ? "text-[12px]" : "text-[13px]",
-                                  "truncate leading-snug",
-                                  chat.unread > 0 ? "text-foreground font-medium" : "text-muted-foreground"
-                                )}>
-                                  {parseRichMessagePreview(chat.lastMessage)}
-                                </span>
+                                {(() => {
+                                  const stickerPreview = parseStickerPreview(chat.lastMessage || "");
+                                  if (stickerPreview) {
+                                    return (
+                                      <span className="flex items-center gap-1.5">
+                                        <img src={stickerPreview.src} alt={stickerPreview.alt} className="w-5 h-5 object-contain" />
+                                        <span className={cn(
+                                          embedded ? "text-[12px]" : "text-[13px]",
+                                          "leading-snug text-muted-foreground"
+                                        )}>Sticker</span>
+                                      </span>
+                                    );
+                                  }
+                                  const preview = parseRichMessagePreview(chat.lastMessage);
+                                  return (
+                                    <>
+                                      {getMessagePreviewIcon(preview)}
+                                      <span className={cn(
+                                        embedded ? "text-[12px]" : "text-[13px]",
+                                        "truncate leading-snug",
+                                        chat.unread > 0 ? "text-foreground font-medium" : "text-muted-foreground"
+                                      )}>
+                                        {preview}
+                                      </span>
+                                    </>
+                                  );
+                                })()}
                               </div>
                               {chat.unread > 0 && (
                                 <span className="min-w-[22px] h-[22px] px-1.5 bg-primary text-primary-foreground text-[11px] font-bold rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
