@@ -574,6 +574,7 @@ const App = () => (
                 <Route path="/feed" element={<ReelsFeedPage />} />
                 <Route path="/reels" element={<FeedPage />} />
                 <Route path="/live" element={<LiveStreamPage />} />
+                <Route path="/go-live" element={<GoLivePage />} />
                 <Route path="/reels/:postId" element={<FeedPage />} />
                 <Route path="/sound/:soundName" element={<SoundPage />} />
                 <Route path="/dl/:kind/:id" element={<DeepLinkLandingPage />} />
