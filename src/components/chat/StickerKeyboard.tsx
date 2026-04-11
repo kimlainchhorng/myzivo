@@ -30,6 +30,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { ILLUSTRATED_PACKS, type IllustratedStickerPack } from "@/config/illustratedStickers";
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
+import { TransparentStickerVideo } from "./TransparentStickerVideo";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -501,11 +502,17 @@ function LiveIllustratedStickerArt({
         transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
         style={{ transformOrigin: "center bottom" }}
       >
-        {false && sticker.animatedSrc ? (
-          <video
+        {sticker.animatedSrc ? (
+          <TransparentStickerVideo
             src={sticker.animatedSrc}
-            className="h-full w-full object-contain pointer-events-none rounded-xl"
-            autoPlay loop muted playsInline preload="auto"
+            fallbackSrc={sticker.src}
+            alt={sticker.alt}
+            className={cn(
+              "pointer-events-none",
+              large
+                ? "drop-shadow-[0_10px_24px_hsl(var(--foreground)/0.18)]"
+                : "drop-shadow-[0_8px_18px_hsl(var(--foreground)/0.16)]"
+            )}
           />
         ) : (
           <motion.img
