@@ -202,6 +202,150 @@ import pigSleepy from "@/assets/stickers/emotions/pig-sleepy.png";
 import pigShy from "@/assets/stickers/emotions/pig-shy.png";
 import pigSurprised from "@/assets/stickers/emotions/pig-surprised.png";
 import pigCool from "@/assets/stickers/emotions/pig-cool.png";
+// ── Whale Emotions ──
+import whaleHappy from "@/assets/stickers/emotions/whale-happy.png";
+import whaleCry from "@/assets/stickers/emotions/whale-cry.png";
+import whaleLove from "@/assets/stickers/emotions/whale-love.png";
+import whaleAngry from "@/assets/stickers/emotions/whale-angry.png";
+import whaleSleepy from "@/assets/stickers/emotions/whale-sleepy.png";
+import whaleShy from "@/assets/stickers/emotions/whale-shy.png";
+import whaleSurprised from "@/assets/stickers/emotions/whale-surprised.png";
+import whaleCool from "@/assets/stickers/emotions/whale-cool.png";
+// ── Deer Emotions ──
+import deerHappy from "@/assets/stickers/emotions/deer-happy.png";
+import deerCry from "@/assets/stickers/emotions/deer-cry.png";
+import deerLove from "@/assets/stickers/emotions/deer-love.png";
+import deerAngry from "@/assets/stickers/emotions/deer-angry.png";
+import deerSleepy from "@/assets/stickers/emotions/deer-sleepy.png";
+import deerShy from "@/assets/stickers/emotions/deer-shy.png";
+import deerSurprised from "@/assets/stickers/emotions/deer-surprised.png";
+import deerCool from "@/assets/stickers/emotions/deer-cool.png";
+// ── Sloth Emotions ──
+import slothHappy from "@/assets/stickers/emotions/sloth-happy.png";
+import slothCry from "@/assets/stickers/emotions/sloth-cry.png";
+import slothLove from "@/assets/stickers/emotions/sloth-love.png";
+import slothAngry from "@/assets/stickers/emotions/sloth-angry.png";
+import slothSleepy from "@/assets/stickers/emotions/sloth-sleepy.png";
+import slothShy from "@/assets/stickers/emotions/sloth-shy.png";
+import slothSurprised from "@/assets/stickers/emotions/sloth-surprised.png";
+import slothCool from "@/assets/stickers/emotions/sloth-cool.png";
+// ── Chick Emotions ──
+import chickHappy from "@/assets/stickers/emotions/chick-happy.png";
+import chickCry from "@/assets/stickers/emotions/chick-cry.png";
+import chickLove from "@/assets/stickers/emotions/chick-love.png";
+import chickAngry from "@/assets/stickers/emotions/chick-angry.png";
+import chickSleepy from "@/assets/stickers/emotions/chick-sleepy.png";
+import chickShy from "@/assets/stickers/emotions/chick-shy.png";
+import chickSurprised from "@/assets/stickers/emotions/chick-surprised.png";
+import chickCool from "@/assets/stickers/emotions/chick-cool.png";
+// ── Hedgehog Emotions ──
+import hedgehogHappy from "@/assets/stickers/emotions/hedgehog-happy.png";
+import hedgehogCry from "@/assets/stickers/emotions/hedgehog-cry.png";
+import hedgehogLove from "@/assets/stickers/emotions/hedgehog-love.png";
+import hedgehogAngry from "@/assets/stickers/emotions/hedgehog-angry.png";
+import hedgehogSleepy from "@/assets/stickers/emotions/hedgehog-sleepy.png";
+import hedgehogShy from "@/assets/stickers/emotions/hedgehog-shy.png";
+import hedgehogSurprised from "@/assets/stickers/emotions/hedgehog-surprised.png";
+import hedgehogCool from "@/assets/stickers/emotions/hedgehog-cool.png";
+// ── Turtle Emotions ──
+import turtleHappy from "@/assets/stickers/emotions/turtle-happy.png";
+import turtleCry from "@/assets/stickers/emotions/turtle-cry.png";
+import turtleLove from "@/assets/stickers/emotions/turtle-love.png";
+import turtleAngry from "@/assets/stickers/emotions/turtle-angry.png";
+import turtleSleepy from "@/assets/stickers/emotions/turtle-sleepy.png";
+import turtleShy from "@/assets/stickers/emotions/turtle-shy.png";
+import turtleSurprised from "@/assets/stickers/emotions/turtle-surprised.png";
+import turtleCool from "@/assets/stickers/emotions/turtle-cool.png";
+// ── Elephant Emotions ──
+import elephantHappy from "@/assets/stickers/emotions/elephant-happy.png";
+import elephantCry from "@/assets/stickers/emotions/elephant-cry.png";
+import elephantLove from "@/assets/stickers/emotions/elephant-love.png";
+import elephantAngry from "@/assets/stickers/emotions/elephant-angry.png";
+import elephantSleepy from "@/assets/stickers/emotions/elephant-sleepy.png";
+import elephantShy from "@/assets/stickers/emotions/elephant-shy.png";
+import elephantSurprised from "@/assets/stickers/emotions/elephant-surprised.png";
+import elephantCool from "@/assets/stickers/emotions/elephant-cool.png";
+// ── Butterfly Emotions ──
+import butterflyHappy from "@/assets/stickers/emotions/butterfly-happy.png";
+import butterflyCry from "@/assets/stickers/emotions/butterfly-cry.png";
+import butterflyLove from "@/assets/stickers/emotions/butterfly-love.png";
+import butterflyAngry from "@/assets/stickers/emotions/butterfly-angry.png";
+import butterflySleepy from "@/assets/stickers/emotions/butterfly-sleepy.png";
+import butterflyShy from "@/assets/stickers/emotions/butterfly-shy.png";
+import butterflySurprised from "@/assets/stickers/emotions/butterfly-surprised.png";
+import butterflyCool from "@/assets/stickers/emotions/butterfly-cool.png";
+// ── Raccoon Emotions ──
+import raccoonHappy from "@/assets/stickers/emotions/raccoon-happy.png";
+import raccoonCry from "@/assets/stickers/emotions/raccoon-cry.png";
+import raccoonLove from "@/assets/stickers/emotions/raccoon-love.png";
+import raccoonAngry from "@/assets/stickers/emotions/raccoon-angry.png";
+import raccoonSleepy from "@/assets/stickers/emotions/raccoon-sleepy.png";
+import raccoonShy from "@/assets/stickers/emotions/raccoon-shy.png";
+import raccoonSurprised from "@/assets/stickers/emotions/raccoon-surprised.png";
+import raccoonCool from "@/assets/stickers/emotions/raccoon-cool.png";
+// ── Giraffe Emotions ──
+import giraffeHappy from "@/assets/stickers/emotions/giraffe-happy.png";
+import giraffeCry from "@/assets/stickers/emotions/giraffe-cry.png";
+import giraffeLove from "@/assets/stickers/emotions/giraffe-love.png";
+import giraffeAngry from "@/assets/stickers/emotions/giraffe-angry.png";
+import giraffeSleepy from "@/assets/stickers/emotions/giraffe-sleepy.png";
+import giraffeShy from "@/assets/stickers/emotions/giraffe-shy.png";
+import giraffeSurprised from "@/assets/stickers/emotions/giraffe-surprised.png";
+import giraffeCool from "@/assets/stickers/emotions/giraffe-cool.png";
+// ── Octopus Emotions ──
+import octopusHappy from "@/assets/stickers/emotions/octopus-happy.png";
+import octopusCry from "@/assets/stickers/emotions/octopus-cry.png";
+import octopusLove from "@/assets/stickers/emotions/octopus-love.png";
+import octopusAngry from "@/assets/stickers/emotions/octopus-angry.png";
+import octopusSleepy from "@/assets/stickers/emotions/octopus-sleepy.png";
+import octopusShy from "@/assets/stickers/emotions/octopus-shy.png";
+import octopusSurprised from "@/assets/stickers/emotions/octopus-surprised.png";
+import octopusCool from "@/assets/stickers/emotions/octopus-cool.png";
+// ── Strawberry Emotions ──
+import strawberryHappy from "@/assets/stickers/emotions/strawberry-happy.png";
+import strawberryCry from "@/assets/stickers/emotions/strawberry-cry.png";
+import strawberryLove from "@/assets/stickers/emotions/strawberry-love.png";
+import strawberryAngry from "@/assets/stickers/emotions/strawberry-angry.png";
+import strawberrySleepy from "@/assets/stickers/emotions/strawberry-sleepy.png";
+import strawberryShy from "@/assets/stickers/emotions/strawberry-shy.png";
+import strawberrySurprised from "@/assets/stickers/emotions/strawberry-surprised.png";
+import strawberryCool from "@/assets/stickers/emotions/strawberry-cool.png";
+// ── Avocado Emotions ──
+import avocadoHappy from "@/assets/stickers/emotions/avocado-happy.png";
+import avocadoCry from "@/assets/stickers/emotions/avocado-cry.png";
+import avocadoLove from "@/assets/stickers/emotions/avocado-love.png";
+import avocadoAngry from "@/assets/stickers/emotions/avocado-angry.png";
+import avocadoSleepy from "@/assets/stickers/emotions/avocado-sleepy.png";
+import avocadoShy from "@/assets/stickers/emotions/avocado-shy.png";
+import avocadoSurprised from "@/assets/stickers/emotions/avocado-surprised.png";
+import avocadoCool from "@/assets/stickers/emotions/avocado-cool.png";
+// ── Donut Emotions ──
+import donutHappy from "@/assets/stickers/emotions/donut-happy.png";
+import donutCry from "@/assets/stickers/emotions/donut-cry.png";
+import donutLove from "@/assets/stickers/emotions/donut-love.png";
+import donutAngry from "@/assets/stickers/emotions/donut-angry.png";
+import donutSleepy from "@/assets/stickers/emotions/donut-sleepy.png";
+import donutShy from "@/assets/stickers/emotions/donut-shy.png";
+import donutSurprised from "@/assets/stickers/emotions/donut-surprised.png";
+import donutCool from "@/assets/stickers/emotions/donut-cool.png";
+// ── Mushroom Emotions ──
+import mushroomHappy from "@/assets/stickers/emotions/mushroom-happy.png";
+import mushroomCry from "@/assets/stickers/emotions/mushroom-cry.png";
+import mushroomLove from "@/assets/stickers/emotions/mushroom-love.png";
+import mushroomAngry from "@/assets/stickers/emotions/mushroom-angry.png";
+import mushroomSleepy from "@/assets/stickers/emotions/mushroom-sleepy.png";
+import mushroomShy from "@/assets/stickers/emotions/mushroom-shy.png";
+import mushroomSurprised from "@/assets/stickers/emotions/mushroom-surprised.png";
+import mushroomCool from "@/assets/stickers/emotions/mushroom-cool.png";
+// ── Toast Emotions ──
+import toastHappy from "@/assets/stickers/emotions/toast-happy.png";
+import toastCry from "@/assets/stickers/emotions/toast-cry.png";
+import toastLove from "@/assets/stickers/emotions/toast-love.png";
+import toastAngry from "@/assets/stickers/emotions/toast-angry.png";
+import toastSleepy from "@/assets/stickers/emotions/toast-sleepy.png";
+import toastShy from "@/assets/stickers/emotions/toast-shy.png";
+import toastSurprised from "@/assets/stickers/emotions/toast-surprised.png";
+import toastCool from "@/assets/stickers/emotions/toast-cool.png";
 
 export interface IllustratedSticker {
   id: string;
