@@ -526,7 +526,7 @@ export default function ChatMessageBubble({
                           >
                             <video
                               src={animatedUrl}
-                              className="w-28 h-28 object-contain rounded-2xl bg-white"
+                              className="w-28 h-28 object-contain rounded-2xl"
                               autoPlay
                               loop
                               muted
