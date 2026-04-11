@@ -834,14 +834,33 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                     )}
                                   </span>
                                 )}
-                                {getMessagePreviewIcon(parseRichMessagePreview(chat.lastMessage))}
-                                <span className={cn(
-                                  embedded ? "text-[12px]" : "text-[13px]",
-                                  "truncate leading-snug",
-                                  chat.unread > 0 ? "text-foreground font-medium" : "text-muted-foreground"
-                                )}>
-                                  {parseRichMessagePreview(chat.lastMessage)}
-                                </span>
+                                {(() => {
+                                  const stickerPreview = parseStickerPreview(chat.lastMessage || "");
+                                  if (stickerPreview) {
+                                    return (
+                                      <span className="flex items-center gap-1.5">
+                                        <img src={stickerPreview.src} alt={stickerPreview.alt} className="w-5 h-5 object-contain" />
+                                        <span className={cn(
+                                          embedded ? "text-[12px]" : "text-[13px]",
+                                          "leading-snug text-muted-foreground"
+                                        )}>Sticker</span>
+                                      </span>
+                                    );
+                                  }
+                                  const preview = parseRichMessagePreview(chat.lastMessage);
+                                  return (
+                                    <>
+                                      {getMessagePreviewIcon(preview)}
+                                      <span className={cn(
+                                        embedded ? "text-[12px]" : "text-[13px]",
+                                        "truncate leading-snug",
+                                        chat.unread > 0 ? "text-foreground font-medium" : "text-muted-foreground"
+                                      )}>
+                                        {preview}
+                                      </span>
+                                    </>
+                                  );
+                                })()}
                               </div>
                               {chat.unread > 0 && (
                                 <span className="min-w-[22px] h-[22px] px-1.5 bg-primary text-primary-foreground text-[11px] font-bold rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
