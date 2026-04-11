@@ -132,6 +132,15 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "op-clownfish": clownfishAnim.url,
   "op-squid": squidAnim.url,
   "op-dolphin": dolphinAnim.url,
+  // Emotion animated stickers
+  "em-panda-happy": emPandaHappyAnim.url,
+  "em-panda-cry": emPandaCryAnim.url,
+  "em-panda-love": emPandaLoveAnim.url,
+  "em-fox-happy": emFoxHappyAnim.url,
+  "em-cat-love": emCatLoveAnim.url,
+  "em-bear-cry": emBearCryAnim.url,
+  "em-bunny-happy": emBunnyHappyAnim.url,
+  "em-penguin-cool": emPenguinCoolAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
