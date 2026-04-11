@@ -540,7 +540,7 @@ export default function ChatMessageBubble({
                         <motion.img
                           src={stickerSrc}
                           alt={parsedSticker.id}
-                          className="w-40 h-40 object-contain drop-shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
+                          className="w-28 h-28 object-contain drop-shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
                           loading="lazy"
                           initial={{ scale: 0.2, opacity: 0, y: 20 }}
                           animate={{
