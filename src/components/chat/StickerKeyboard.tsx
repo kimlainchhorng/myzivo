@@ -583,14 +583,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
     }));
   }, [remotePacks]);
 
-  const illustratedPacks: IllustratedStickerPack[] = [
-    {
-      id: "buddy-buddies-all",
-      name: "Buddy Buddies",
-      icon: "🍒",
-      stickers: ILLUSTRATED_PACKS.flatMap((pack) => pack.stickers),
-    },
-  ];
+  const illustratedPacks: IllustratedStickerPack[] = ILLUSTRATED_PACKS;
 
   // Illustrated packs offset: activePack values >= 1000 are illustrated
   const isIllustratedPack = activePack >= 1000;
