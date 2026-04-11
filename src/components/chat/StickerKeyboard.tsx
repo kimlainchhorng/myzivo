@@ -363,10 +363,19 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
     }));
   }, [remotePacks]);
 
+  const illustratedPacks: IllustratedStickerPack[] = [
+    {
+      id: "buddy-buddies-all",
+      name: "Buddy Buddies",
+      icon: "🍒",
+      stickers: ILLUSTRATED_PACKS.flatMap((pack) => pack.stickers),
+    },
+  ];
+
   // Illustrated packs offset: activePack values >= 1000 are illustrated
   const isIllustratedPack = activePack >= 1000;
   const illustratedPackIndex = activePack - 1000;
-  const currentIllustratedPack = isIllustratedPack ? ILLUSTRATED_PACKS[illustratedPackIndex] : null;
+  const currentIllustratedPack = isIllustratedPack ? illustratedPacks[illustratedPackIndex] : null;
 
   const currentPack = !isIllustratedPack ? packs[activePack] : null;
   const filteredStickers = useMemo(() => {
