@@ -1168,6 +1168,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             {/* Attach */}
             <div className="relative shrink-0">
               <button
+                data-attach-trigger
                 onClick={() => setShowAttachMenu(!showAttachMenu)}
                 disabled={uploadingMedia}
                 className={`h-10 w-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
