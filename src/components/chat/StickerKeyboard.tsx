@@ -431,6 +431,29 @@ function LiveIllustratedStickerArt({
       ? { scaleX: [0.82, 1.1, 0.82], opacity: [0.16, 0.1, 0.16] }
       : { scaleX: [0.74, 1.2, 0.74], opacity: [0.16, 0.08, 0.16] };
 
+  // Grid mode: clean Facebook-style — just the image, big and simple
+  if (!large) {
+    return (
+      <motion.div
+        className="relative flex h-full w-full items-center justify-center"
+        animate={bodyAnimate}
+        transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
+        style={{ transformOrigin: "center bottom" }}
+      >
+        <motion.img
+          src={sticker.src}
+          alt={sticker.alt}
+          className="h-full w-full object-contain pointer-events-none"
+          loading="lazy"
+          animate={imgAnimate}
+          transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
+          style={{ transformOrigin: "center bottom" }}
+        />
+      </motion.div>
+    );
+  }
+
+  // Large preview mode: full effects
   return (
     <>
       <BreathingGlow tone={tone} large={large} />
@@ -438,10 +461,7 @@ function LiveIllustratedStickerArt({
       {withShadow && (
         <motion.span
           aria-hidden
-          className={large
-            ? "pointer-events-none absolute inset-x-[12%] bottom-[8%] h-5 rounded-full bg-foreground/10 blur-xl"
-            : "pointer-events-none absolute inset-x-2 bottom-0.5 h-2.5 rounded-full bg-foreground/10 blur-md"
-          }
+          className="pointer-events-none absolute inset-x-[12%] bottom-[8%] h-5 rounded-full bg-foreground/10 blur-xl"
           animate={shadowAnimate}
           transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.04 }}
         />
@@ -482,17 +502,16 @@ function LiveIllustratedStickerArt({
         </>
       )}
 
-      {/* Cute cheek blush for shy stickers */}
       {tone === "shy" && (
         <motion.div
           aria-hidden
           className="pointer-events-none absolute flex justify-between"
-          style={{ left: "18%", right: "18%", top: "48%", gap: large ? 20 : 10 }}
+          style={{ left: "18%", right: "18%", top: "48%", gap: 20 }}
           animate={{ opacity: [0.3, 0.6, 0.3] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
-          <span className="rounded-full bg-pink-400/40" style={{ width: large ? 8 : 5, height: large ? 5 : 3 }} />
-          <span className="rounded-full bg-pink-400/40" style={{ width: large ? 8 : 5, height: large ? 5 : 3 }} />
+          <span className="rounded-full bg-pink-400/40" style={{ width: 8, height: 5 }} />
+          <span className="rounded-full bg-pink-400/40" style={{ width: 8, height: 5 }} />
         </motion.div>
       )}
 
@@ -502,32 +521,15 @@ function LiveIllustratedStickerArt({
         transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
         style={{ transformOrigin: "center bottom" }}
       >
-        {false && sticker.animatedSrc ? (
-          <TransparentStickerVideo
-            src={sticker.animatedSrc}
-            fallbackSrc={sticker.src}
-            alt={sticker.alt}
-            className={cn(
-              "pointer-events-none",
-              large
-                ? "drop-shadow-[0_10px_24px_hsl(var(--foreground)/0.18)]"
-                : "drop-shadow-[0_8px_18px_hsl(var(--foreground)/0.16)]"
-            )}
-          />
-        ) : (
-          <motion.img
-            src={sticker.src}
-            alt={sticker.alt}
-            className={large
-              ? "h-full w-full object-contain pointer-events-none drop-shadow-[0_10px_24px_hsl(var(--foreground)/0.18)]"
-              : "h-full w-full object-contain pointer-events-none drop-shadow-[0_8px_18px_hsl(var(--foreground)/0.16)]"
-            }
-            loading="lazy"
-            animate={imgAnimate}
-            transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
-            style={{ transformOrigin: "center bottom" }}
-          />
-        )}
+        <motion.img
+          src={sticker.src}
+          alt={sticker.alt}
+          className="h-full w-full object-contain pointer-events-none drop-shadow-[0_10px_24px_hsl(var(--foreground)/0.18)]"
+          loading="lazy"
+          animate={imgAnimate}
+          transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
+          style={{ transformOrigin: "center bottom" }}
+        />
       </motion.div>
     </>
   );
