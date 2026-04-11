@@ -141,16 +141,16 @@ export default function FeedStoryRing() {
 
   return (
     <>
-      <div className="flex gap-3 px-4 py-3 overflow-x-auto scrollbar-none border-b border-border/20">
+      <div className="flex gap-2.5 px-3 py-2 overflow-x-auto scrollbar-none border-b border-border/20">
         {/* Add story button */}
         <button
           onClick={() => fileRef.current?.click()}
-          className="flex flex-col items-center gap-1 shrink-0"
+          className="flex flex-col items-center gap-0.5 shrink-0"
           disabled={uploading}
         >
           <div className="relative">
             <div className={cn(
-              "h-16 w-16 rounded-full flex items-center justify-center border-2",
+              "h-[52px] w-[52px] rounded-full flex items-center justify-center border-2",
               hasMyStory
                 ? "border-transparent bg-gradient-to-tr from-primary to-primary/60 p-[2px]"
                 : "border-dashed border-primary/30"
@@ -158,23 +158,23 @@ export default function FeedStoryRing() {
               {hasMyStory ? (
                 <div className="h-full w-full rounded-full overflow-hidden bg-card">
                   <Avatar className="h-full w-full">
-                    <AvatarImage src={optimizeAvatar(storyUsers.find((u) => u.userId === user.id)?.avatarUrl, 64)} loading="lazy" />
-                    <AvatarFallback className="text-sm font-bold">{user.email?.[0]}</AvatarFallback>
+                    <AvatarImage src={optimizeAvatar(storyUsers.find((u) => u.userId === user.id)?.avatarUrl, 52)} loading="lazy" />
+                    <AvatarFallback className="text-xs font-bold">{user.email?.[0]}</AvatarFallback>
                   </Avatar>
                 </div>
               ) : uploading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
               ) : (
-                <Plus className="h-5 w-5 text-primary" />
+                <Plus className="h-4 w-4 text-primary" />
               )}
             </div>
             {!hasMyStory && (
-              <div className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full bg-primary flex items-center justify-center border-2 border-card">
-                <Plus className="h-3 w-3 text-primary-foreground" />
+              <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary flex items-center justify-center border-2 border-card">
+                <Plus className="h-2.5 w-2.5 text-primary-foreground" />
               </div>
             )}
           </div>
-          <span className="text-[10px] font-medium text-muted-foreground max-w-[56px] truncate">
+          <span className="text-[9px] font-medium text-muted-foreground max-w-[48px] truncate">
             Your story
           </span>
         </button>
@@ -183,27 +183,26 @@ export default function FeedStoryRing() {
         {storyUsers.filter((u) => u.userId !== user.id).map((su) => (
           <button
             key={su.userId}
-            className="flex flex-col items-center gap-1 shrink-0"
+            className="flex flex-col items-center gap-0.5 shrink-0"
             onClick={() => {
-              // Navigate to chat stories viewer - handled by ChatStories component
               toast.info(`Viewing ${su.userName}'s story`);
             }}
           >
             <div className={cn(
-              "h-16 w-16 rounded-full p-[2.5px]",
+              "h-[52px] w-[52px] rounded-full p-[2px]",
               su.hasUnviewed
                 ? "bg-gradient-to-tr from-primary via-destructive to-primary"
                 : "bg-muted-foreground/20"
             )}>
               <div className="h-full w-full rounded-full overflow-hidden bg-card border-2 border-card">
                 <Avatar className="h-full w-full">
-                  <AvatarImage src={optimizeAvatar(su.avatarUrl, 64)} loading="lazy" />
-                  <AvatarFallback className="text-sm font-bold">{su.userName[0]}</AvatarFallback>
+                  <AvatarImage src={optimizeAvatar(su.avatarUrl, 52)} loading="lazy" />
+                  <AvatarFallback className="text-xs font-bold">{su.userName[0]}</AvatarFallback>
                 </Avatar>
               </div>
             </div>
             <span className={cn(
-              "text-[10px] max-w-[56px] truncate",
+              "text-[9px] max-w-[48px] truncate",
               su.hasUnviewed ? "font-semibold text-foreground" : "font-medium text-muted-foreground"
             )}>
               {su.userName.split(" ")[0]}
