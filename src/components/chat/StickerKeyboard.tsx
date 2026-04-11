@@ -397,11 +397,11 @@ function LiveIllustratedStickerArt({
     />
   );
 
-  // Grid mode: Facebook-style — always use static PNG with subtle idle bounce
+  // Grid mode: Facebook-style — large PNG filling the cell with subtle idle bounce
   if (!large) {
     return (
       <motion.div
-        className="relative flex h-full w-full items-center justify-center p-1"
+        className="relative flex h-full w-full items-center justify-center"
         animate={motionSpec.wrapper.animate}
         transition={motionSpec.wrapper.transition}
         style={{ transformOrigin: motionSpec.wrapper.transformOrigin }}
@@ -871,7 +871,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                 {isIllustratedPack ? (
                   <>
                     {/* Sticker grid — 4 columns, Facebook-style */}
-                    <div className="grid grid-cols-4 gap-1 px-1 pb-3">
+                    <div className="grid grid-cols-4 gap-2 px-2 pb-3">
                       {filteredIllustratedStickers.map((sticker, idx) => {
                         const stickerPayload = `[sticker:${sticker.id}:${sticker.src}]`;
                         let didLongPress = false;
