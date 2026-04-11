@@ -138,6 +138,17 @@ import emFrogCryAnim from "@/assets/stickers/anim/em-frog-cry-anim.mp4.asset.jso
 import emFrogLoveAnim from "@/assets/stickers/anim/em-frog-love-anim.mp4.asset.json";
 import emPigCryAnim from "@/assets/stickers/anim/em-pig-cry-anim.mp4.asset.json";
 import emPigLoveAnim from "@/assets/stickers/anim/em-pig-love-anim.mp4.asset.json";
+// Emotion animated stickers — batch 8
+import emAvocadoAngryAnim from "@/assets/stickers/anim/em-avocado-angry-anim.mp4.asset.json";
+import emAvocadoCoolAnim from "@/assets/stickers/anim/em-avocado-cool-anim.mp4.asset.json";
+import emAvocadoCryAnim from "@/assets/stickers/anim/em-avocado-cry-anim.mp4.asset.json";
+import emAvocadoHappyAnim from "@/assets/stickers/anim/em-avocado-happy-anim.mp4.asset.json";
+import emAvocadoLoveAnim from "@/assets/stickers/anim/em-avocado-love-anim.mp4.asset.json";
+import emAvocadoShyAnim from "@/assets/stickers/anim/em-avocado-shy-anim.mp4.asset.json";
+import emAvocadoSleepyAnim from "@/assets/stickers/anim/em-avocado-sleepy-anim.mp4.asset.json";
+import emAvocadoSurprisedAnim from "@/assets/stickers/anim/em-avocado-surprised-anim.mp4.asset.json";
+import emBearCoolAnim from "@/assets/stickers/anim/em-bear-cool-anim.mp4.asset.json";
+import emBearShyAnim from "@/assets/stickers/anim/em-bear-shy-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -279,6 +290,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-frog-love": emFrogLoveAnim.url,
   "em-pig-cry": emPigCryAnim.url,
   "em-pig-love": emPigLoveAnim.url,
+  // batch 8
+  "em-avocado-angry": emAvocadoAngryAnim.url,
+  "em-avocado-cool": emAvocadoCoolAnim.url,
+  "em-avocado-cry": emAvocadoCryAnim.url,
+  "em-avocado-happy": emAvocadoHappyAnim.url,
+  "em-avocado-love": emAvocadoLoveAnim.url,
+  "em-avocado-shy": emAvocadoShyAnim.url,
+  "em-avocado-sleepy": emAvocadoSleepyAnim.url,
+  "em-avocado-surprised": emAvocadoSurprisedAnim.url,
+  "em-bear-cool": emBearCoolAnim.url,
+  "em-bear-shy": emBearShyAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
