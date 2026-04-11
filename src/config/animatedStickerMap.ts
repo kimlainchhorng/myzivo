@@ -248,6 +248,17 @@ import emButterflyShyAnim from "@/assets/stickers/anim/em-butterfly-shy-anim.mp4
 import emButterflySurprisedAnim from "@/assets/stickers/anim/em-butterfly-surprised-anim.mp4.asset.json";
 import emSlothCryAnim from "@/assets/stickers/anim/em-sloth-cry-anim.mp4.asset.json";
 import emSlothLoveAnim from "@/assets/stickers/anim/em-sloth-love-anim.mp4.asset.json";
+// Emotion animated stickers — batch 18
+import emSlothAngryAnim from "@/assets/stickers/anim/em-sloth-angry-anim.mp4.asset.json";
+import emSlothSleepyAnim from "@/assets/stickers/anim/em-sloth-sleepy-anim.mp4.asset.json";
+import emSlothShyAnim from "@/assets/stickers/anim/em-sloth-shy-anim.mp4.asset.json";
+import emSlothSurprisedAnim from "@/assets/stickers/anim/em-sloth-surprised-anim.mp4.asset.json";
+import emSlothCoolAnim from "@/assets/stickers/anim/em-sloth-cool-anim.mp4.asset.json";
+import emDeerCryAnim from "@/assets/stickers/anim/em-deer-cry-anim.mp4.asset.json";
+import emDeerLoveAnim from "@/assets/stickers/anim/em-deer-love-anim.mp4.asset.json";
+import emDeerAngryAnim from "@/assets/stickers/anim/em-deer-angry-anim.mp4.asset.json";
+import emDeerSleepyAnim from "@/assets/stickers/anim/em-deer-sleepy-anim.mp4.asset.json";
+import emDeerShyAnim from "@/assets/stickers/anim/em-deer-shy-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
