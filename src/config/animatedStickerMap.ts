@@ -226,6 +226,17 @@ import emTurtleSleepyAnim from "@/assets/stickers/anim/em-turtle-sleepy-anim.mp4
 import emTurtleShyAnim from "@/assets/stickers/anim/em-turtle-shy-anim.mp4.asset.json";
 import emTurtleSurprisedAnim from "@/assets/stickers/anim/em-turtle-surprised-anim.mp4.asset.json";
 import emTurtleCoolAnim from "@/assets/stickers/anim/em-turtle-cool-anim.mp4.asset.json";
+// Emotion animated stickers — batch 16
+import emHedgehogCryAnim from "@/assets/stickers/anim/em-hedgehog-cry-anim.mp4.asset.json";
+import emHedgehogLoveAnim from "@/assets/stickers/anim/em-hedgehog-love-anim.mp4.asset.json";
+import emHedgehogAngryAnim from "@/assets/stickers/anim/em-hedgehog-angry-anim.mp4.asset.json";
+import emHedgehogSleepyAnim from "@/assets/stickers/anim/em-hedgehog-sleepy-anim.mp4.asset.json";
+import emHedgehogShyAnim from "@/assets/stickers/anim/em-hedgehog-shy-anim.mp4.asset.json";
+import emHedgehogSurprisedAnim from "@/assets/stickers/anim/em-hedgehog-surprised-anim.mp4.asset.json";
+import emHedgehogCoolAnim from "@/assets/stickers/anim/em-hedgehog-cool-anim.mp4.asset.json";
+import emElephantCryAnim from "@/assets/stickers/anim/em-elephant-cry-anim.mp4.asset.json";
+import emElephantLoveAnim from "@/assets/stickers/anim/em-elephant-love-anim.mp4.asset.json";
+import emElephantAngryAnim from "@/assets/stickers/anim/em-elephant-angry-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -455,6 +466,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-turtle-shy": emTurtleShyAnim.url,
   "em-turtle-surprised": emTurtleSurprisedAnim.url,
   "em-turtle-cool": emTurtleCoolAnim.url,
+  // batch 16
+  "em-hedgehog-cry": emHedgehogCryAnim.url,
+  "em-hedgehog-love": emHedgehogLoveAnim.url,
+  "em-hedgehog-angry": emHedgehogAngryAnim.url,
+  "em-hedgehog-sleepy": emHedgehogSleepyAnim.url,
+  "em-hedgehog-shy": emHedgehogShyAnim.url,
+  "em-hedgehog-surprised": emHedgehogSurprisedAnim.url,
+  "em-hedgehog-cool": emHedgehogCoolAnim.url,
+  "em-elephant-cry": emElephantCryAnim.url,
+  "em-elephant-love": emElephantLoveAnim.url,
+  "em-elephant-angry": emElephantAngryAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
