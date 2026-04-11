@@ -1393,9 +1393,26 @@ export default function FeedPage() {
         });
       }
 
-      // Sort by created_at descending
-      allPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      // Facebook-style algorithmic feed: blend engagement + recency + randomness
+      const now = Date.now();
+      const ONE_HOUR = 3_600_000;
+      const seededRandom = (id: string) => {
+        let h = 0;
+        for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+        return ((h >>> 0) % 1000) / 1000;
+      };
+      const dayKey = Math.floor(now / 86_400_000);
 
+      allPosts.forEach((item: any) => {
+        const ageHours = (now - new Date(item.created_at).getTime()) / ONE_HOUR;
+        const recencyScore = 1 / (1 + ageHours / 6);
+        const totalEngagement = (item.likes_count || 0) + (item.comments_count || 0) * 2 + (item.view_count || 0) * 0.1;
+        const engagementScore = Math.log2(1 + totalEngagement) / 10;
+        const randomFactor = seededRandom(item.id + dayKey) * 0.15;
+        item._feedScore = recencyScore * 0.45 + engagementScore * 0.3 + randomFactor;
+      });
+
+      allPosts.sort((a: any, b: any) => (b._feedScore || 0) - (a._feedScore || 0));
       return allPosts;
     },
   });
