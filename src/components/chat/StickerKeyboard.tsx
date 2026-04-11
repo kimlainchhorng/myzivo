@@ -301,6 +301,9 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
   const [audioDuration, setAudioDuration] = useState(0);
   const [musicLinkInput, setMusicLinkInput] = useState("");
   const [musicLinkParsed, setMusicLinkParsed] = useState<ReturnType<typeof parseMusicLink> | null>(null);
+  const [previewSticker, setPreviewSticker] = useState<{ id: string; src: string; alt: string } | null>(null);
+  const [favoriteStickers, setFavoriteStickers] = useState<string[]>([]);
+  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
