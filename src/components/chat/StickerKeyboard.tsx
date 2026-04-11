@@ -397,11 +397,11 @@ function LiveIllustratedStickerArt({
     />
   );
 
-  // Grid mode: Facebook-style — always use static PNG with subtle idle bounce
+  // Grid mode: Facebook-style — large PNG filling the cell with subtle idle bounce
   if (!large) {
     return (
       <motion.div
-        className="relative flex h-full w-full items-center justify-center p-1"
+        className="relative flex h-full w-full items-center justify-center"
         animate={motionSpec.wrapper.animate}
         transition={motionSpec.wrapper.transition}
         style={{ transformOrigin: motionSpec.wrapper.transformOrigin }}
