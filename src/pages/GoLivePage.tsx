@@ -518,8 +518,12 @@ export default function GoLivePage() {
                             {gift.badge}
                           </span>
                         )}
-                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br", gift.bg)}>
-                          <span className="text-3xl">{gift.icon}</span>
+                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br overflow-hidden", gift.bg)}>
+                          {giftImages[gift.name] ? (
+                            <img src={giftImages[gift.name]} alt={gift.name} className="w-10 h-10 object-contain" loading="lazy" />
+                          ) : (
+                            <span className="text-3xl">{gift.icon}</span>
+                          )}
                         </div>
                         <span className="text-[10px] text-white/70 truncate w-full text-center leading-tight mt-0.5">{gift.name}</span>
                         <div className="flex items-center gap-0.5">
