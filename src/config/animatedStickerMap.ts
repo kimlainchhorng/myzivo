@@ -193,6 +193,17 @@ import emUnicornSurprisedAnim from "@/assets/stickers/anim/em-unicorn-surprised-
 import emUnicornCoolAnim from "@/assets/stickers/anim/em-unicorn-cool-anim.mp4.asset.json";
 import emDragonSleepyAnim from "@/assets/stickers/anim/em-dragon-sleepy-anim.mp4.asset.json";
 import emDragonShyAnim from "@/assets/stickers/anim/em-dragon-shy-anim.mp4.asset.json";
+// Emotion animated stickers — batch 13
+import emDragonSurprisedAnim from "@/assets/stickers/anim/em-dragon-surprised-anim.mp4.asset.json";
+import emDragonCoolAnim from "@/assets/stickers/anim/em-dragon-cool-anim.mp4.asset.json";
+import emLionAngryAnim from "@/assets/stickers/anim/em-lion-angry-anim.mp4.asset.json";
+import emLionSleepyAnim from "@/assets/stickers/anim/em-lion-sleepy-anim.mp4.asset.json";
+import emLionShyAnim from "@/assets/stickers/anim/em-lion-shy-anim.mp4.asset.json";
+import emLionSurprisedAnim from "@/assets/stickers/anim/em-lion-surprised-anim.mp4.asset.json";
+import emLionCoolAnim from "@/assets/stickers/anim/em-lion-cool-anim.mp4.asset.json";
+import emFrogAngryAnim from "@/assets/stickers/anim/em-frog-angry-anim.mp4.asset.json";
+import emFrogSleepyAnim from "@/assets/stickers/anim/em-frog-sleepy-anim.mp4.asset.json";
+import emFrogShyAnim from "@/assets/stickers/anim/em-frog-shy-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -389,6 +400,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-unicorn-cool": emUnicornCoolAnim.url,
   "em-dragon-sleepy": emDragonSleepyAnim.url,
   "em-dragon-shy": emDragonShyAnim.url,
+  // batch 13
+  "em-dragon-surprised": emDragonSurprisedAnim.url,
+  "em-dragon-cool": emDragonCoolAnim.url,
+  "em-lion-angry": emLionAngryAnim.url,
+  "em-lion-sleepy": emLionSleepyAnim.url,
+  "em-lion-shy": emLionShyAnim.url,
+  "em-lion-surprised": emLionSurprisedAnim.url,
+  "em-lion-cool": emLionCoolAnim.url,
+  "em-frog-angry": emFrogAngryAnim.url,
+  "em-frog-sleepy": emFrogSleepyAnim.url,
+  "em-frog-shy": emFrogShyAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
