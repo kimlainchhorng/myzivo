@@ -514,17 +514,18 @@ function LiveIllustratedStickerArt({
           />
         ) : (
           <motion.img
-          src={sticker.src}
-          alt={sticker.alt}
-          className={large
-            ? "h-full w-full object-contain pointer-events-none drop-shadow-[0_10px_24px_hsl(var(--foreground)/0.18)]"
-            : "h-full w-full object-contain pointer-events-none drop-shadow-[0_8px_18px_hsl(var(--foreground)/0.16)]"
-          }
-          loading="lazy"
-          animate={imgAnimate}
-          transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
-          style={{ transformOrigin: "center bottom" }}
-        />
+            src={sticker.src}
+            alt={sticker.alt}
+            className={large
+              ? "h-full w-full object-contain pointer-events-none drop-shadow-[0_10px_24px_hsl(var(--foreground)/0.18)]"
+              : "h-full w-full object-contain pointer-events-none drop-shadow-[0_8px_18px_hsl(var(--foreground)/0.16)]"
+            }
+            loading="lazy"
+            animate={imgAnimate}
+            transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
+            style={{ transformOrigin: "center bottom" }}
+          />
+        )}
       </motion.div>
     </>
   );
