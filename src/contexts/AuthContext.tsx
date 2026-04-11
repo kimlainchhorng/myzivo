@@ -181,11 +181,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password,
       });
 
-      await (supabase as any).rpc("auth_record_login_attempt", {
-        _identifier: normalizedEmail,
-        _success: !error,
-        _device_fingerprint: deviceFingerprint,
-      }).catch(() => {});
+      try {
+        await (supabase as any).rpc("auth_record_login_attempt", {
+          _identifier: normalizedEmail,
+          _success: !error,
+          _device_fingerprint: deviceFingerprint,
+        });
+      } catch {
+        // non-critical, ignore
+      }
 
       if (error) {
         // Attach email_exists hint for better error messages
