@@ -488,6 +488,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-elephant-cry": emElephantCryAnim.url,
   "em-elephant-love": emElephantLoveAnim.url,
   "em-elephant-angry": emElephantAngryAnim.url,
+  // batch 17
+  "em-elephant-sleepy": emElephantSleepyAnim.url,
+  "em-elephant-shy": emElephantShyAnim.url,
+  "em-elephant-surprised": emElephantSurprisedAnim.url,
+  "em-elephant-cool": emElephantCoolAnim.url,
+  "em-butterfly-love": emButterflyLoveAnim.url,
+  "em-butterfly-sleepy": emButterflySleepyAnim.url,
+  "em-butterfly-shy": emButterflyShyAnim.url,
+  "em-butterfly-surprised": emButterflySurprisedAnim.url,
+  "em-sloth-cry": emSlothCryAnim.url,
+  "em-sloth-love": emSlothLoveAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
