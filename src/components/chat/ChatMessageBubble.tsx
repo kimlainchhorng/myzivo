@@ -369,7 +369,7 @@ export default function ChatMessageBubble({
         {/* Message body */}
         {message && (() => {
           // Illustrated sticker detection: [sticker:id:src]
-          const stickerMatch = message.match(/^\[sticker:([^:]+):(.+)\]$/);
+          const stickerMatch = message.trim().match(/^\[sticker:([^:]+):(.+)\]$/);
           if (stickerMatch) {
             return (
               <div className="p-1">
