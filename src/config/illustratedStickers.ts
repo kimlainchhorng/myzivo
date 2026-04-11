@@ -130,6 +130,78 @@ import hamsterSleepy from "@/assets/stickers/emotions/hamster-sleepy.png";
 import hamsterShy from "@/assets/stickers/emotions/hamster-shy.png";
 import hamsterSurprised from "@/assets/stickers/emotions/hamster-surprised.png";
 import hamsterCool from "@/assets/stickers/emotions/hamster-cool.png";
+// ── Puppy Emotions ──
+import puppyHappy from "@/assets/stickers/emotions/puppy-happy.png";
+import puppyCry from "@/assets/stickers/emotions/puppy-cry.png";
+import puppyLove from "@/assets/stickers/emotions/puppy-love.png";
+import puppyAngry from "@/assets/stickers/emotions/puppy-angry.png";
+import puppySleepy from "@/assets/stickers/emotions/puppy-sleepy.png";
+import puppyShy from "@/assets/stickers/emotions/puppy-shy.png";
+import puppySurprised from "@/assets/stickers/emotions/puppy-surprised.png";
+import puppyCool from "@/assets/stickers/emotions/puppy-cool.png";
+// ── Owl Emotions ──
+import owlHappy from "@/assets/stickers/emotions/owl-happy.png";
+import owlCry from "@/assets/stickers/emotions/owl-cry.png";
+import owlLove from "@/assets/stickers/emotions/owl-love.png";
+import owlAngry from "@/assets/stickers/emotions/owl-angry.png";
+import owlSleepy from "@/assets/stickers/emotions/owl-sleepy.png";
+import owlShy from "@/assets/stickers/emotions/owl-shy.png";
+import owlSurprised from "@/assets/stickers/emotions/owl-surprised.png";
+import owlCool from "@/assets/stickers/emotions/owl-cool.png";
+// ── Koala Emotions ──
+import koalaHappy from "@/assets/stickers/emotions/koala-happy.png";
+import koalaCry from "@/assets/stickers/emotions/koala-cry.png";
+import koalaLove from "@/assets/stickers/emotions/koala-love.png";
+import koalaAngry from "@/assets/stickers/emotions/koala-angry.png";
+import koalaSleepy from "@/assets/stickers/emotions/koala-sleepy.png";
+import koalaShy from "@/assets/stickers/emotions/koala-shy.png";
+import koalaSurprised from "@/assets/stickers/emotions/koala-surprised.png";
+import koalaCool from "@/assets/stickers/emotions/koala-cool.png";
+// ── Unicorn Emotions ──
+import unicornHappy from "@/assets/stickers/emotions/unicorn-happy.png";
+import unicornCry from "@/assets/stickers/emotions/unicorn-cry.png";
+import unicornLove from "@/assets/stickers/emotions/unicorn-love.png";
+import unicornAngry from "@/assets/stickers/emotions/unicorn-angry.png";
+import unicornSleepy from "@/assets/stickers/emotions/unicorn-sleepy.png";
+import unicornShy from "@/assets/stickers/emotions/unicorn-shy.png";
+import unicornSurprised from "@/assets/stickers/emotions/unicorn-surprised.png";
+import unicornCool from "@/assets/stickers/emotions/unicorn-cool.png";
+// ── Dragon Emotions ──
+import dragonHappy from "@/assets/stickers/emotions/dragon-happy.png";
+import dragonCry from "@/assets/stickers/emotions/dragon-cry.png";
+import dragonLove from "@/assets/stickers/emotions/dragon-love.png";
+import dragonAngry from "@/assets/stickers/emotions/dragon-angry.png";
+import dragonSleepy from "@/assets/stickers/emotions/dragon-sleepy.png";
+import dragonShy from "@/assets/stickers/emotions/dragon-shy.png";
+import dragonSurprised from "@/assets/stickers/emotions/dragon-surprised.png";
+import dragonCool from "@/assets/stickers/emotions/dragon-cool.png";
+// ── Lion Emotions ──
+import lionHappy from "@/assets/stickers/emotions/lion-happy.png";
+import lionCry from "@/assets/stickers/emotions/lion-cry.png";
+import lionLove from "@/assets/stickers/emotions/lion-love.png";
+import lionAngry from "@/assets/stickers/emotions/lion-angry.png";
+import lionSleepy from "@/assets/stickers/emotions/lion-sleepy.png";
+import lionShy from "@/assets/stickers/emotions/lion-shy.png";
+import lionSurprised from "@/assets/stickers/emotions/lion-surprised.png";
+import lionCool from "@/assets/stickers/emotions/lion-cool.png";
+// ── Frog Emotions ──
+import frogHappy from "@/assets/stickers/emotions/frog-happy.png";
+import frogCry from "@/assets/stickers/emotions/frog-cry.png";
+import frogLove from "@/assets/stickers/emotions/frog-love.png";
+import frogAngry from "@/assets/stickers/emotions/frog-angry.png";
+import frogSleepy from "@/assets/stickers/emotions/frog-sleepy.png";
+import frogShy from "@/assets/stickers/emotions/frog-shy.png";
+import frogSurprised from "@/assets/stickers/emotions/frog-surprised.png";
+import frogCool from "@/assets/stickers/emotions/frog-cool.png";
+// ── Pig Emotions ──
+import pigHappy from "@/assets/stickers/emotions/pig-happy.png";
+import pigCry from "@/assets/stickers/emotions/pig-cry.png";
+import pigLove from "@/assets/stickers/emotions/pig-love.png";
+import pigAngry from "@/assets/stickers/emotions/pig-angry.png";
+import pigSleepy from "@/assets/stickers/emotions/pig-sleepy.png";
+import pigShy from "@/assets/stickers/emotions/pig-shy.png";
+import pigSurprised from "@/assets/stickers/emotions/pig-surprised.png";
+import pigCool from "@/assets/stickers/emotions/pig-cool.png";
 
 export interface IllustratedSticker {
   id: string;
