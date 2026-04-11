@@ -601,13 +601,18 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               {/* Sticker grid */}
               <div className="h-[240px] overflow-y-auto p-2">
                 {isIllustratedPack ? (
-                  /* Illustrated sticker grid — 5 columns with images */
+                  /* Illustrated sticker grid — 5 columns with animated images */
                   <div className="grid grid-cols-5 gap-2">
-                    {filteredIllustratedStickers.map((sticker) => {
+                    {filteredIllustratedStickers.map((sticker, idx) => {
                       const stickerPayload = `[sticker:${sticker.id}:${sticker.src}]`;
                       let didLongPress = false;
                       return (
-                        <button key={sticker.id}
+                        <motion.button key={sticker.id}
+                          initial={{ opacity: 0, scale: 0.5, y: 12 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          transition={{ delay: idx * 0.04, type: "spring", stiffness: 400, damping: 18 }}
+                          whileHover={{ scale: 1.2, rotate: [0, -6, 6, -3, 0], transition: { rotate: { duration: 0.5 } } }}
+                          whileTap={{ scale: 0.85 }}
                           onTouchStart={() => {
                             didLongPress = false;
                             longPressRef.current = setTimeout(() => {
@@ -626,9 +631,24 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                           onTouchMove={() => { if (longPressRef.current) clearTimeout(longPressRef.current); }}
                           onContextMenu={(e) => e.preventDefault()}
                           onClick={() => sendSticker(stickerPayload)}
-                          className="aspect-square flex items-center justify-center rounded-xl hover:bg-muted/60 active:scale-90 transition-all p-1">
-                          <img src={sticker.src} alt={sticker.alt} className="w-full h-full object-contain pointer-events-none" loading="lazy" />
-                        </button>
+                          className="aspect-square flex items-center justify-center rounded-xl p-1">
+                          <motion.img
+                            src={sticker.src}
+                            alt={sticker.alt}
+                            className="w-full h-full object-contain pointer-events-none"
+                            loading="lazy"
+                            animate={{
+                              y: [0, -3, 0],
+                              rotate: [0, 1.5, -1.5, 0],
+                            }}
+                            transition={{
+                              duration: 2.5 + (idx % 3) * 0.5,
+                              repeat: Infinity,
+                              ease: "easeInOut",
+                              delay: idx * 0.15,
+                            }}
+                          />
+                        </motion.button>
                       );
                     })}
                   </div>
@@ -891,7 +911,17 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
             >
               {/* Large sticker preview */}
               <div className="w-56 h-56 bg-card/90 rounded-3xl border border-border/40 shadow-2xl flex items-center justify-center p-6 mb-3">
-                <img src={previewSticker.src} alt={previewSticker.alt} className="w-full h-full object-contain" />
+                <motion.img
+                  src={previewSticker.src}
+                  alt={previewSticker.alt}
+                  className="w-full h-full object-contain"
+                  animate={{
+                    y: [0, -8, 0],
+                    rotate: [0, 4, -4, 0],
+                    scale: [1, 1.05, 1],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
               </div>
 
               {/* Action buttons */}
