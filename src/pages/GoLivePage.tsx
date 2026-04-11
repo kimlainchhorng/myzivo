@@ -204,7 +204,7 @@ export default function GoLivePage() {
             <Radio className="h-10 w-10 text-red-500" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">Stream Ended</h1>
-          <div className="flex gap-6 justify-center text-center">
+          <div className="flex gap-5 justify-center text-center flex-wrap">
             <div>
               <p className="text-2xl font-bold text-foreground">{formatTime(elapsed)}</p>
               <p className="text-xs text-muted-foreground">Duration</p>
@@ -215,7 +215,11 @@ export default function GoLivePage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{likes}</p>
-              <p className="text-xs text-muted-foreground">Likes</p>
+              <p className="text-xs text-muted-foreground">Reactions</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{giftsReceived}</p>
+              <p className="text-xs text-muted-foreground">Gifts</p>
             </div>
           </div>
           <div className="flex gap-3">
