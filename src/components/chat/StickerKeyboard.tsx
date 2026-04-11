@@ -397,7 +397,7 @@ function LiveIllustratedStickerArt({
     />
   );
 
-  // Grid mode: Facebook-style — subtle idle animation in the picker
+  // Grid mode: Facebook-style — always use static PNG with subtle idle bounce
   if (!large) {
     return (
       <motion.div
@@ -412,7 +412,12 @@ function LiveIllustratedStickerArt({
           transition={motionSpec.media.transition}
           style={{ transformOrigin: motionSpec.media.transformOrigin }}
         >
-          {mediaElement}
+          <img
+            src={sticker.src}
+            alt={sticker.alt}
+            className="h-full w-full object-contain pointer-events-none"
+            loading="lazy"
+          />
         </motion.div>
       </motion.div>
     );
