@@ -3,7 +3,7 @@
  * Features: long-press actions (reply/delete/copy/forward/pin), swipe-to-reply, emoji reactions, image/video display
  * Design: Glassmorphic iMessage aesthetic with gradient bubbles, tail shapes, and depth effects
  */
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { Trash2, Reply, Check, CheckCheck, Copy, Forward, Pin, Timer, Play, X, Volume2, VolumeX, Heart, MessageCircle, Share2, Pause, ChevronRight, Lock, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,8 +13,88 @@ import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { openExternalUrl } from "@/lib/openExternalUrl";
 import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
+import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
 
 const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "🎉", "😍"];
+
+type ParsedStickerMessage = {
+  id: string;
+  src: string;
+  fallbackSrc?: string;
+};
+
+type ParsedGifMessage = {
+  label?: string;
+  url: string;
+};
+
+const STICKER_LIBRARY = ILLUSTRATED_PACKS
+  .flatMap((pack) => pack.stickers)
+  .reduce<Record<string, { id: string; src: string }>>((acc, sticker) => {
+    acc[sticker.id.toLowerCase()] = { id: sticker.id, src: sticker.src };
+    return acc;
+  }, {});
+
+function normalizeStickerId(raw: string): string {
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/^sticker[:\-_]/, "")
+    .replace(/\.(png|jpg|jpeg|webp|gif)$/i, "");
+}
+
+function resolveStickerById(rawId: string): { id: string; src: string } | null {
+  const key = normalizeStickerId(rawId);
+  return STICKER_LIBRARY[key] || null;
+}
+
+function parseStickerMessage(messageText: string, msgType?: string): ParsedStickerMessage | null {
+  const trimmed = messageText.trim();
+  if (!trimmed) return null;
+
+  const bracketMatch = trimmed.match(/^\[sticker:([^\]:]+)(?::(.+))?\]$/i);
+  if (bracketMatch) {
+    const rawId = bracketMatch[1].trim();
+    const explicitSrc = bracketMatch[2]?.trim();
+    const resolved = resolveStickerById(rawId);
+
+    if (explicitSrc) {
+      return {
+        id: resolved?.id || rawId,
+        src: explicitSrc,
+        fallbackSrc: resolved?.src,
+      };
+    }
+
+    if (resolved) {
+      return { id: resolved.id, src: resolved.src };
+    }
+  }
+
+  if (msgType === "sticker") {
+    const resolved = resolveStickerById(trimmed);
+    if (resolved) return { id: resolved.id, src: resolved.src };
+  }
+
+  return null;
+}
+
+function parseGifMessage(messageText: string, msgType?: string): ParsedGifMessage | null {
+  const trimmed = messageText.trim();
+  if (!trimmed) return null;
+
+  const gifMatch = trimmed.match(/^\[gif\]\s*([^:]+):\s*(https?:\/\/\S+)$/i);
+  if (gifMatch) {
+    return { label: gifMatch[1].trim(), url: gifMatch[2].trim() };
+  }
+
+  if (msgType === "gif") {
+    const urlMatch = trimmed.match(/https?:\/\/\S+/i);
+    if (urlMatch) return { url: urlMatch[0].trim() };
+  }
+
+  return null;
+}
 
 interface ChatMessageBubbleProps {
   id: string;
@@ -53,10 +133,30 @@ export default function ChatMessageBubble({
   const unlockPriceLabel = `$${(unlockPrice / 100).toFixed(2)}`;
   const [reactions, setReactions] = useState<{ emoji: string; count: number; hasMyReaction: boolean }[]>([]);
   const [openDown, setOpenDown] = useState(false);
+  const [stickerFallbackActive, setStickerFallbackActive] = useState(false);
+  const [stickerLoadFailed, setStickerLoadFailed] = useState(false);
+  const [showStickerBurst, setShowStickerBurst] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPress = useRef(false);
   const hasMoved = useRef(false);
   const bubbleRef = useRef<HTMLDivElement>(null);
+  const parsedSticker = useMemo(() => parseStickerMessage(message || "", messageType), [message, messageType]);
+  const parsedGif = useMemo(() => parseGifMessage(message || "", messageType), [message, messageType]);
+
+  useEffect(() => {
+    setStickerFallbackActive(false);
+    setStickerLoadFailed(false);
+  }, [parsedSticker?.id, parsedSticker?.src]);
+
+  useEffect(() => {
+    if (!parsedSticker) {
+      setShowStickerBurst(false);
+      return;
+    }
+    setShowStickerBurst(true);
+    const timer = setTimeout(() => setShowStickerBurst(false), 700);
+    return () => clearTimeout(timer);
+  }, [id, parsedSticker?.id]);
 
   // Check if already unlocked
   useEffect(() => {
@@ -371,31 +471,97 @@ export default function ChatMessageBubble({
 
         {/* Message body */}
         {message && (() => {
-          // Illustrated sticker detection: [sticker:id:src]
-          const stickerMatch = message.trim().match(/^\[sticker:([^:]+):(.+)\]$/);
-          if (stickerMatch) {
+          // Sticker rendering (supports legacy + current formats)
+          if (parsedSticker) {
+            const stickerSrc = stickerFallbackActive && parsedSticker.fallbackSrc
+              ? parsedSticker.fallbackSrc
+              : parsedSticker.src;
+            const burstParticles = [
+              { x: -34, y: -28, delay: 0, color: "#f59e0b" },
+              { x: -12, y: -42, delay: 0.03, color: "#fb7185" },
+              { x: 18, y: -38, delay: 0.06, color: "#60a5fa" },
+              { x: 34, y: -20, delay: 0.08, color: "#34d399" },
+              { x: 38, y: 8, delay: 0.1, color: "#f97316" },
+              { x: 18, y: 28, delay: 0.12, color: "#a78bfa" },
+              { x: -18, y: 26, delay: 0.14, color: "#f43f5e" },
+              { x: -36, y: 6, delay: 0.16, color: "#06b6d4" },
+            ];
             return (
-              <div className="p-1">
-                <motion.img
-                  src={stickerMatch[2]}
-                  alt={stickerMatch[1]}
-                  className="w-32 h-32 object-contain"
-                  loading="lazy"
-                  initial={{ scale: 0.3, opacity: 0 }}
-                  animate={{
-                    scale: 1,
-                    opacity: 1,
-                    y: [0, -4, 0],
-                    rotate: [0, 2, -2, 0],
-                  }}
-                  transition={{
-                    scale: { type: "spring", stiffness: 400, damping: 15 },
-                    opacity: { duration: 0.2 },
-                    y: { duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 },
-                    rotate: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 },
-                  }}
-                />
+              <div className="p-1.5">
+                {!stickerLoadFailed ? (
+                  <div className="relative w-36 h-36">
+                    <AnimatePresence>
+                      {showStickerBurst && burstParticles.map((dot, i) => (
+                        <motion.span
+                          key={`${parsedSticker.id}-${i}`}
+                          className="absolute left-1/2 top-1/2 h-2 w-2 rounded-full"
+                          style={{ backgroundColor: dot.color }}
+                          initial={{ x: 0, y: 0, opacity: 0, scale: 0.4 }}
+                          animate={{ x: dot.x, y: dot.y, opacity: [0, 1, 0], scale: [0.4, 1.1, 0.2] }}
+                          exit={{ opacity: 0, scale: 0 }}
+                          transition={{ duration: 0.5, ease: "easeOut", delay: dot.delay }}
+                        />
+                      ))}
+                    </AnimatePresence>
+
+                    <motion.img
+                      src={stickerSrc}
+                      alt={parsedSticker.id}
+                      className="w-36 h-36 object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.2)]"
+                      loading="lazy"
+                      initial={{ scale: 0.28, opacity: 0, y: 18 }}
+                      animate={{
+                        scale: 1,
+                        opacity: 1,
+                        y: [0, -6, 0],
+                        rotate: [0, 1.5, -1.5, 0],
+                      }}
+                      transition={{
+                        scale: { type: "spring", stiffness: 420, damping: 16 },
+                        opacity: { duration: 0.18 },
+                        y: { duration: 2.1, repeat: Infinity, ease: "easeInOut", delay: 0.25 },
+                        rotate: { duration: 2.6, repeat: Infinity, ease: "easeInOut", delay: 0.25 },
+                      }}
+                      onError={() => {
+                        if (!stickerFallbackActive && parsedSticker.fallbackSrc) {
+                          setStickerFallbackActive(true);
+                          return;
+                        }
+                        setStickerLoadFailed(true);
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-36 h-36 rounded-3xl bg-muted/50 border border-border/30 grid place-items-center text-[11px] text-muted-foreground text-center px-3">
+                    Sticker unavailable
+                  </div>
+                )}
                 <div className="flex items-center gap-1 justify-end px-1 pb-1 -mt-1">
+                  <span className={`text-[10px] ${isMe ? "text-muted-foreground/60" : "text-muted-foreground/60"}`}>{time}</span>
+                  {isMe && (isRead ? <CheckCheck className="h-3 w-3 text-blue-400" /> : isDelivered ? <CheckCheck className="h-3 w-3 text-muted-foreground/40" /> : <Check className="h-3 w-3 text-muted-foreground/40" />)}
+                </div>
+              </div>
+            );
+          }
+
+          // GIF rendering for lively chat feel
+          if (parsedGif) {
+            return (
+              <div className="p-1.5">
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className={`overflow-hidden rounded-2xl border border-border/25 bg-muted/20 w-[180px] ${isMe ? "ml-auto" : ""}`}
+                >
+                  <img
+                    src={parsedGif.url}
+                    alt={parsedGif.label || "GIF"}
+                    className="w-full aspect-square object-cover"
+                    loading="lazy"
+                  />
+                </motion.div>
+                <div className="flex items-center gap-1 justify-end px-1 pb-1 mt-1">
                   <span className={`text-[10px] ${isMe ? "text-muted-foreground/60" : "text-muted-foreground/60"}`}>{time}</span>
                   {isMe && (isRead ? <CheckCheck className="h-3 w-3 text-blue-400" /> : isDelivered ? <CheckCheck className="h-3 w-3 text-muted-foreground/40" /> : <Check className="h-3 w-3 text-muted-foreground/40" />)}
                 </div>

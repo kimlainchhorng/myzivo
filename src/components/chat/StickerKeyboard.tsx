@@ -922,23 +922,37 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                 </div>
               </div>
 
-              {/* Pack tabs — scrollable */}
-              <div className="flex px-2 py-1.5 gap-1 overflow-x-auto scrollbar-none border-b border-border/10">
+              {/* Pack icon strip — Messenger-style */}
+              <div className="flex px-2 py-2 gap-1.5 overflow-x-auto scrollbar-none border-b border-border/10">
                 {recentStickers.length > 0 && (
-                  <button onClick={() => setActivePack(-1)} className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 ${activePack === -1 ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
-                    <Clock className="w-3 h-3 inline mr-1" />Recent
+                  <button
+                    onClick={() => setActivePack(-1)}
+                    title="Recent"
+                    className={`h-9 w-9 rounded-xl grid place-items-center shrink-0 transition-all ${activePack === -1 ? "bg-primary/12 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:bg-muted/50"}`}
+                  >
+                    <Clock className="w-4 h-4" />
                   </button>
                 )}
                 {/* Illustrated packs first */}
                 {illustratedPacks.map((pack, i) => (
-                  <button key={pack.id} onClick={() => setActivePack(1000 + i)} className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 ${activePack === 1000 + i ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
-                    {pack.icon} {pack.name}
+                  <button
+                    key={pack.id}
+                    onClick={() => setActivePack(1000 + i)}
+                    title={pack.name}
+                    className={`h-9 w-9 rounded-xl grid place-items-center text-base shrink-0 transition-all ${activePack === 1000 + i ? "bg-primary/12 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:bg-muted/50"}`}
+                  >
+                    <span>{pack.icon}</span>
                   </button>
                 ))}
                 {/* Emoji packs */}
                 {packs.map((pack, i) => (
-                  <button key={pack.id} onClick={() => setActivePack(i)} className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 ${activePack === i ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
-                    {pack.emoji_prefix} {pack.name}
+                  <button
+                    key={pack.id}
+                    onClick={() => setActivePack(i)}
+                    title={pack.name}
+                    className={`h-9 w-9 rounded-xl grid place-items-center text-base shrink-0 transition-all ${activePack === i ? "bg-primary/12 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:bg-muted/50"}`}
+                  >
+                    <span>{pack.emoji_prefix || "🙂"}</span>
                   </button>
                 ))}
               </div>
