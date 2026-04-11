@@ -835,7 +835,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               )}
 
               {/* Sticker grid */}
-              <div className="min-h-[320px] overflow-y-auto p-2">
+              <div className="overflow-y-auto p-2">
                 {isIllustratedPack ? (
                   <>
                     {/* Sticker grid — 4 columns, Facebook-style */}
