@@ -815,8 +815,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               <div className="min-h-[320px] overflow-y-auto p-2">
                 {isIllustratedPack ? (
                   <>
-                    {/* Sticker grid — 4 columns Messenger-style */}
-                    <div className="grid grid-cols-4 gap-2 px-1 pb-2">
+                    {/* Sticker grid — 4 columns, generous spacing */}
+                    <div className="grid grid-cols-4 gap-3 px-2 pb-3">
                       {filteredIllustratedStickers.map((sticker, idx) => {
                         const stickerPayload = `[sticker:${sticker.id}:${sticker.src}]`;
                         let didLongPress = false;
@@ -824,10 +824,11 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                         return (
                           <motion.button
                             key={sticker.id}
-                            initial={{ opacity: 0, scale: 0.4, y: 18 }}
+                            initial={{ opacity: 0, scale: 0.5, y: 12 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            transition={{ delay: idx * 0.025, type: "spring", stiffness: 450, damping: 16 }}
-                            whileTap={{ scale: 0.82 }}
+                            transition={{ delay: idx * 0.02, type: "spring", stiffness: 400, damping: 18 }}
+                            whileHover={{ scale: 1.08 }}
+                            whileTap={{ scale: 0.85 }}
                             onTouchStart={() => {
                               didLongPress = false;
                               longPressRef.current = setTimeout(() => {
@@ -843,7 +844,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                             onTouchMove={() => { if (longPressRef.current) clearTimeout(longPressRef.current); }}
                             onContextMenu={(e) => { e.preventDefault(); setPreviewSticker(sticker); }}
                             onClick={() => sendSticker(stickerPayload)}
-                            className="group relative aspect-square overflow-visible p-0.5"
+                            className="group relative aspect-square overflow-visible rounded-2xl hover:bg-muted/30 transition-colors p-1"
                           >
                             <LiveIllustratedStickerArt sticker={sticker} index={idx} />
                           </motion.button>
