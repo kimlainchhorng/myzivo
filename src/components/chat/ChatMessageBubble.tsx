@@ -508,21 +508,18 @@ export default function ChatMessageBubble({
                     <motion.img
                       src={stickerSrc}
                       alt={parsedSticker.id}
-                      className="w-32 h-32 object-contain"
+                      className="w-32 h-32 object-contain drop-shadow-lg"
                       loading="lazy"
-                      initial={{ scale: 0.2, opacity: 0, y: 20 }}
-                      animate={{
-                        scale: [1, 1.04, 1, 1.02, 1],
-                        opacity: 1,
-                        y: [0, -8, 0, -4, 0],
-                        rotate: [0, -2, 2, -1, 0],
-                      }}
+                      initial={{ scale: 0, opacity: 0, y: 60, rotate: -12 }}
+                      animate={{ scale: 1, opacity: 1, y: 0, rotate: 0 }}
                       transition={{
-                        scale: { type: "spring", stiffness: 380, damping: 14 },
-                        opacity: { duration: 0.15 },
-                        y: { duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: 0.2 },
-                        rotate: { duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: 0.2 },
+                        type: "spring",
+                        stiffness: 260,
+                        damping: 12,
+                        mass: 0.8,
                       }}
+                      whileHover={{ scale: 1.08, rotate: 3 }}
+                      whileTap={{ scale: 0.92 }}
                       style={{ transformOrigin: "center bottom" }}
                       onError={() => {
                         if (!stickerFallbackActive && parsedSticker.fallbackSrc) {
