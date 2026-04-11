@@ -455,6 +455,28 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-whale-love": emWhaleLoveAnim.url,
   "em-whale-angry": emWhaleAngryAnim.url,
   "em-whale-sleepy": emWhaleSleepyAnim.url,
+  // batch 15
+  "em-whale-shy": emWhaleShyAnim.url,
+  "em-whale-surprised": emWhaleSurprisedAnim.url,
+  "em-whale-cool": emWhaleCoolAnim.url,
+  "em-turtle-cry": emTurtleCryAnim.url,
+  "em-turtle-love": emTurtleLoveAnim.url,
+  "em-turtle-angry": emTurtleAngryAnim.url,
+  "em-turtle-sleepy": emTurtleSleepyAnim.url,
+  "em-turtle-shy": emTurtleShyAnim.url,
+  "em-turtle-surprised": emTurtleSurprisedAnim.url,
+  "em-turtle-cool": emTurtleCoolAnim.url,
+  // batch 16
+  "em-hedgehog-cry": emHedgehogCryAnim.url,
+  "em-hedgehog-love": emHedgehogLoveAnim.url,
+  "em-hedgehog-angry": emHedgehogAngryAnim.url,
+  "em-hedgehog-sleepy": emHedgehogSleepyAnim.url,
+  "em-hedgehog-shy": emHedgehogShyAnim.url,
+  "em-hedgehog-surprised": emHedgehogSurprisedAnim.url,
+  "em-hedgehog-cool": emHedgehogCoolAnim.url,
+  "em-elephant-cry": emElephantCryAnim.url,
+  "em-elephant-love": emElephantLoveAnim.url,
+  "em-elephant-angry": emElephantAngryAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
