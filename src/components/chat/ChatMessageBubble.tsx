@@ -160,7 +160,7 @@ export default function ChatMessageBubble({
       return;
     }
     setShowStickerBurst(true);
-    const timer = setTimeout(() => setShowStickerBurst(false), 700);
+    const timer = setTimeout(() => setShowStickerBurst(false), 420);
     return () => clearTimeout(timer);
   }, [id, parsedSticker?.id]);
 
@@ -342,7 +342,7 @@ export default function ChatMessageBubble({
         onPointerCancel={handlePointerUp}
         onPointerMove={handlePointerMove}
         onClick={handleTap}
-        className={`max-w-[78%] select-none touch-pan-y ${isOptimistic ? "opacity-60" : ""}`}
+        className={`${parsedSticker ? "w-fit max-w-none" : "max-w-[78%]"} select-none touch-pan-y ${isOptimistic ? "opacity-60" : ""}`}
         whileTap={{ scale: 0.97 }}
       >
         {/* Pin indicator */}
@@ -481,35 +481,41 @@ export default function ChatMessageBubble({
           if (parsedSticker) {
             const stickerFallbackSrc = parsedSticker.fallbackSrc || parsedSticker.src;
             const stickerMotion = getStickerMotionSpec(parsedSticker.id);
-            const burstParticles = [
-              { x: -34, y: -28, delay: 0, color: "#f59e0b" },
-              { x: -12, y: -42, delay: 0.03, color: "#fb7185" },
-              { x: 18, y: -38, delay: 0.06, color: "#60a5fa" },
-              { x: 34, y: -20, delay: 0.08, color: "#34d399" },
-              { x: 38, y: 8, delay: 0.1, color: "#f97316" },
-              { x: 18, y: 28, delay: 0.12, color: "#a78bfa" },
-              { x: -18, y: 26, delay: 0.14, color: "#f43f5e" },
-              { x: -36, y: 6, delay: 0.16, color: "#06b6d4" },
-            ];
             return (
-              <div className="py-1">
-                <div className="relative w-32 h-32">
+              <div className="py-0.5">
+                <div className="relative h-36 w-36 sm:h-40 sm:w-40">
                   <AnimatePresence>
-                    {showStickerBurst && burstParticles.map((dot, i) => (
-                      <motion.span
-                        key={`${parsedSticker.id}-${i}`}
-                        className="absolute left-1/2 top-1/2 h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: dot.color }}
-                        initial={{ x: 0, y: 0, opacity: 0, scale: 0.3 }}
-                        animate={{ x: dot.x * 1.2, y: dot.y * 1.2, opacity: [0, 1, 0], scale: [0.3, 1.2, 0] }}
-                        exit={{ opacity: 0, scale: 0 }}
-                        transition={{ duration: 0.55, ease: "easeOut", delay: dot.delay }}
-                      />
-                    ))}
+                    {showStickerBurst && (
+                      <>
+                        <motion.span
+                          key={`${parsedSticker.id}-pulse`}
+                          className="pointer-events-none absolute inset-[22%] rounded-full bg-primary/10 blur-md"
+                          initial={{ scale: 0.55, opacity: 0 }}
+                          animate={{ scale: [0.55, 1.08, 1.18], opacity: [0, 0.28, 0] }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.42, ease: "easeOut" }}
+                        />
+                        <motion.span
+                          key={`${parsedSticker.id}-ring`}
+                          className="pointer-events-none absolute inset-[14%] rounded-full border border-primary/20"
+                          initial={{ scale: 0.72, opacity: 0 }}
+                          animate={{ scale: [0.72, 1.02, 1.16], opacity: [0, 0.4, 0] }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.46, ease: "easeOut" }}
+                        />
+                      </>
+                    )}
                   </AnimatePresence>
 
+                  <motion.span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-x-[20%] bottom-[8%] h-4 rounded-full bg-foreground/10 blur-lg"
+                    animate={stickerMotion.shadow.animate}
+                    transition={stickerMotion.shadow.transition}
+                  />
+
                   <motion.div
-                    className="h-full w-full"
+                    className="relative h-full w-full"
                     initial={{ scale: 0, opacity: 0, y: 60, rotate: -12 }}
                     animate={{ scale: 1, opacity: 1, y: 0, rotate: 0 }}
                     transition={{ type: "spring", stiffness: 260, damping: 14, mass: 0.85 }}
@@ -534,12 +540,13 @@ export default function ChatMessageBubble({
                             fallbackSrc={stickerFallbackSrc}
                             alt={parsedSticker.id}
                             preload="auto"
+                            className="drop-shadow-[0_12px_20px_hsl(var(--foreground)/0.14)]"
                           />
                         ) : (
                           <img
                             src={stickerFallbackSrc}
                             alt={parsedSticker.id}
-                            className="h-full w-full object-contain pointer-events-none"
+                            className="h-full w-full object-contain pointer-events-none drop-shadow-[0_12px_20px_hsl(var(--foreground)/0.14)]"
                             loading="lazy"
                           />
                         )}
@@ -547,9 +554,8 @@ export default function ChatMessageBubble({
                     </motion.div>
                   </motion.div>
                 </div>
-                <div className="flex items-center gap-1 justify-end px-1 pb-0.5 -mt-1">
-                  <span className="text-[10px] text-muted-foreground/50">{time}</span>
-                  {isMe && (isRead ? <CheckCheck className="h-3 w-3 text-blue-400" /> : isDelivered ? <CheckCheck className="h-3 w-3 text-muted-foreground/40" /> : <Check className="h-3 w-3 text-muted-foreground/40" />)}
+                <div className={`mt-0.5 flex items-center ${isMe ? "justify-end pr-0.5" : "justify-start pl-0.5"}`}>
+                  <span className="text-[9px] font-medium tracking-[0.01em] text-muted-foreground/40">{time}</span>
                 </div>
               </div>
             );
