@@ -80,24 +80,8 @@ export default function AdminUsersPage() {
     enabled: isAdmin && !authLoading,
   });
 
-  // Fetch driver emails to exclude driver accounts (from zivodriver.com)
-  const { data: driverEmails } = useQuery({
-    queryKey: ["admin-driver-emails", isAdmin],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("drivers")
-        .select("email, user_id");
-      if (error) throw error;
-      const emailSet = new Set<string>();
-      const idSet = new Set<string>();
-      (data || []).forEach((d) => {
-        if (d.email) emailSet.add(d.email.toLowerCase());
-        if (d.user_id) idSet.add(d.user_id);
-      });
-      return { emails: emailSet, ids: idSet };
-    },
-    enabled: isAdmin && !authLoading,
-  });
+  const getProfileUid = (profile: { id?: string | null; user_id?: string | null }) =>
+    profile.user_id || profile.id || "";
 
   const roleMap = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -108,31 +92,29 @@ export default function AdminUsersPage() {
     return map;
   }, [userRoles]);
 
-  // Filter to hizivo.com customers only: exclude driver signups AND staff roles
+  // Show all registered ZIVO users across web/app domains, only hide internal staff roles
   const customerProfiles = useMemo(() => {
     if (!profiles) return [];
     const excludedRoles = ["admin", "moderator", "super_admin", "operations", "finance", "support", "merchant", "owner", "manager"];
     return profiles.filter((p) => {
-      const uid = p.user_id || p.id;
-      // Exclude users with a driver record (by email or user_id)
-      if (driverEmails?.ids.has(uid)) return false;
-      if (p.email && driverEmails?.emails.has(p.email.toLowerCase())) return false;
-      // Exclude staff roles
-      const roles = roleMap[uid] || roleMap[p.id] || [];
+      const uid = getProfileUid(p);
+      const roles = roleMap[uid] || [];
       return !roles.some((r) => excludedRoles.includes(r));
     });
-  }, [profiles, roleMap, driverEmails]);
+  }, [profiles, roleMap]);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return customerProfiles;
     const q = searchQuery.toLowerCase();
-    return customerProfiles.filter(
-      (p) =>
+    return customerProfiles.filter((p) => {
+      const uid = getProfileUid(p).toLowerCase();
+      return (
         (p.full_name || "").toLowerCase().includes(q) ||
         (p.email || "").toLowerCase().includes(q) ||
         (p.phone || "").toLowerCase().includes(q) ||
-        (p.user_id || "").toLowerCase().includes(q)
-    );
+        uid.includes(q)
+      );
+    });
   }, [customerProfiles, searchQuery]);
 
   const totalPages = Math.ceil((filtered?.length || 0) / PAGE_SIZE);
@@ -251,8 +233,11 @@ export default function AdminUsersPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {paginated.map((user) => (
-                        <tr key={user.user_id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                      {paginated.map((user) => {
+                        const uid = getProfileUid(user);
+                        const roles = roleMap[uid] || [];
+                        return (
+                        <tr key={uid} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
@@ -284,12 +269,12 @@ export default function AdminUsersPage() {
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex gap-1 flex-wrap">
-                              {(roleMap[user.user_id] || []).map((role) => (
+                              {roles.map((role) => (
                                 <Badge key={role} variant="secondary" className="text-[10px] bg-violet-500/10 text-violet-500 border-0">
                                   <Shield className="w-2.5 h-2.5 mr-0.5" />{role}
                                 </Badge>
                               ))}
-                              {!(roleMap[user.user_id]?.length) && (
+                              {!roles.length && (
                                 <span className="text-xs text-muted-foreground">user</span>
                               )}
                             </div>
@@ -308,16 +293,19 @@ export default function AdminUsersPage() {
                             </Button>
                           </td>
                         </tr>
-                      ))}
+                      )})}
                     </tbody>
                   </table>
                 </div>
 
                 {/* Mobile cards */}
                 <div className="md:hidden divide-y divide-border">
-                  {paginated.map((user) => (
+                  {paginated.map((user) => {
+                    const uid = getProfileUid(user);
+                    const roles = roleMap[uid] || [];
+                    return (
                     <button
-                      key={user.user_id}
+                      key={uid}
                       onClick={() => setSelectedUser(user)}
                       className="w-full text-left px-4 py-3 hover:bg-muted/20 transition-colors"
                     >
@@ -334,7 +322,7 @@ export default function AdminUsersPage() {
                             ) : (
                               <Badge variant="secondary" className="text-[9px] bg-amber-500/10 text-amber-500 border-0 px-1.5 py-0">Unverified</Badge>
                             )}
-                            {(roleMap[user.user_id] || []).map((role) => (
+                            {roles.map((role) => (
                               <Badge key={role} variant="secondary" className="text-[9px] bg-violet-500/10 text-violet-500 border-0 px-1.5 py-0">{role}</Badge>
                             ))}
                           </div>
@@ -342,7 +330,7 @@ export default function AdminUsersPage() {
                         <Eye className="w-4 h-4 text-muted-foreground shrink-0" />
                       </div>
                     </button>
-                  ))}
+                  )})}
                 </div>
               </>
             )}
@@ -390,12 +378,15 @@ export default function AdminUsersPage() {
             <DialogDescription>User profile information</DialogDescription>
           </DialogHeader>
 
-          {selectedUser && (
+          {selectedUser && (() => {
+            const selectedUid = getProfileUid(selectedUser);
+            const selectedRoles = roleMap[selectedUid] || [];
+            return (
             <div className="space-y-4 mt-2">
               <div className="grid grid-cols-2 gap-3">
                 <DetailItem label="Email" value={selectedUser.email} />
                 <DetailItem label="Phone" value={selectedUser.phone} />
-                <DetailItem label="User ID" value={selectedUser.user_id} mono />
+                <DetailItem label="User ID" value={selectedUid} mono />
                 <DetailItem label="Joined" value={selectedUser.created_at ? format(new Date(selectedUser.created_at), "MMM d, yyyy h:mm a") : "—"} />
                 <DetailItem label="Email Verified" value={selectedUser.email_verified ? "Yes" : "No"} />
                 <DetailItem label="Setup Complete" value={selectedUser.setup_complete ? "Yes" : "No"} />
@@ -407,8 +398,8 @@ export default function AdminUsersPage() {
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-1.5">Roles</p>
                 <div className="flex gap-1.5 flex-wrap">
-                  {(roleMap[selectedUser.user_id] || []).length > 0 ? (
-                    roleMap[selectedUser.user_id].map((role: string) => (
+                  {selectedRoles.length > 0 ? (
+                    selectedRoles.map((role: string) => (
                       <Badge key={role} className="bg-violet-500/10 text-violet-500 border-0">
                         <Shield className="w-3 h-3 mr-1" />{role}
                       </Badge>
@@ -427,7 +418,7 @@ export default function AdminUsersPage() {
                   size="sm"
                   className="gap-2"
                   disabled={verifyMutation.isPending}
-                  onClick={() => verifyMutation.mutate({ userId: selectedUser.id || selectedUser.user_id, verified: !selectedUser.is_verified })}
+                  onClick={() => verifyMutation.mutate({ userId: selectedUid, verified: !selectedUser.is_verified })}
                 >
                   {selectedUser.is_verified ? (
                     <>
