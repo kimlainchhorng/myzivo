@@ -46,7 +46,7 @@ export default function GoLivePage() {
         streamRef.current.getTracks().forEach((t) => t.stop());
       }
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: 720 }, height: { ideal: 1280 } },
+        video: { facingMode },
         audio: true,
       });
       streamRef.current = stream;
@@ -210,7 +210,7 @@ export default function GoLivePage() {
             autoPlay
             playsInline
             muted
-            className={cn("w-full h-full object-cover", facingMode === "user" && "scale-x-[-1]")}
+            className={cn("w-full h-full object-contain bg-black", facingMode === "user" && "scale-x-[-1]")}
           />
         )}
         {/* Dark overlay for readability */}
