@@ -130,6 +130,78 @@ import hamsterSleepy from "@/assets/stickers/emotions/hamster-sleepy.png";
 import hamsterShy from "@/assets/stickers/emotions/hamster-shy.png";
 import hamsterSurprised from "@/assets/stickers/emotions/hamster-surprised.png";
 import hamsterCool from "@/assets/stickers/emotions/hamster-cool.png";
+// ── Puppy Emotions ──
+import puppyHappy from "@/assets/stickers/emotions/puppy-happy.png";
+import puppyCry from "@/assets/stickers/emotions/puppy-cry.png";
+import puppyLove from "@/assets/stickers/emotions/puppy-love.png";
+import puppyAngry from "@/assets/stickers/emotions/puppy-angry.png";
+import puppySleepy from "@/assets/stickers/emotions/puppy-sleepy.png";
+import puppyShy from "@/assets/stickers/emotions/puppy-shy.png";
+import puppySurprised from "@/assets/stickers/emotions/puppy-surprised.png";
+import puppyCool from "@/assets/stickers/emotions/puppy-cool.png";
+// ── Owl Emotions ──
+import owlHappy from "@/assets/stickers/emotions/owl-happy.png";
+import owlCry from "@/assets/stickers/emotions/owl-cry.png";
+import owlLove from "@/assets/stickers/emotions/owl-love.png";
+import owlAngry from "@/assets/stickers/emotions/owl-angry.png";
+import owlSleepy from "@/assets/stickers/emotions/owl-sleepy.png";
+import owlShy from "@/assets/stickers/emotions/owl-shy.png";
+import owlSurprised from "@/assets/stickers/emotions/owl-surprised.png";
+import owlCool from "@/assets/stickers/emotions/owl-cool.png";
+// ── Koala Emotions ──
+import koalaHappy from "@/assets/stickers/emotions/koala-happy.png";
+import koalaCry from "@/assets/stickers/emotions/koala-cry.png";
+import koalaLove from "@/assets/stickers/emotions/koala-love.png";
+import koalaAngry from "@/assets/stickers/emotions/koala-angry.png";
+import koalaSleepy from "@/assets/stickers/emotions/koala-sleepy.png";
+import koalaShy from "@/assets/stickers/emotions/koala-shy.png";
+import koalaSurprised from "@/assets/stickers/emotions/koala-surprised.png";
+import koalaCool from "@/assets/stickers/emotions/koala-cool.png";
+// ── Unicorn Emotions ──
+import unicornHappy from "@/assets/stickers/emotions/unicorn-happy.png";
+import unicornCry from "@/assets/stickers/emotions/unicorn-cry.png";
+import unicornLove from "@/assets/stickers/emotions/unicorn-love.png";
+import unicornAngry from "@/assets/stickers/emotions/unicorn-angry.png";
+import unicornSleepy from "@/assets/stickers/emotions/unicorn-sleepy.png";
+import unicornShy from "@/assets/stickers/emotions/unicorn-shy.png";
+import unicornSurprised from "@/assets/stickers/emotions/unicorn-surprised.png";
+import unicornCool from "@/assets/stickers/emotions/unicorn-cool.png";
+// ── Dragon Emotions ──
+import dragonHappy from "@/assets/stickers/emotions/dragon-happy.png";
+import dragonCry from "@/assets/stickers/emotions/dragon-cry.png";
+import dragonLove from "@/assets/stickers/emotions/dragon-love.png";
+import dragonAngry from "@/assets/stickers/emotions/dragon-angry.png";
+import dragonSleepy from "@/assets/stickers/emotions/dragon-sleepy.png";
+import dragonShy from "@/assets/stickers/emotions/dragon-shy.png";
+import dragonSurprised from "@/assets/stickers/emotions/dragon-surprised.png";
+import dragonCool from "@/assets/stickers/emotions/dragon-cool.png";
+// ── Lion Emotions ──
+import lionHappy from "@/assets/stickers/emotions/lion-happy.png";
+import lionCry from "@/assets/stickers/emotions/lion-cry.png";
+import lionLove from "@/assets/stickers/emotions/lion-love.png";
+import lionAngry from "@/assets/stickers/emotions/lion-angry.png";
+import lionSleepy from "@/assets/stickers/emotions/lion-sleepy.png";
+import lionShy from "@/assets/stickers/emotions/lion-shy.png";
+import lionSurprised from "@/assets/stickers/emotions/lion-surprised.png";
+import lionCool from "@/assets/stickers/emotions/lion-cool.png";
+// ── Frog Emotions ──
+import frogHappy from "@/assets/stickers/emotions/frog-happy.png";
+import frogCry from "@/assets/stickers/emotions/frog-cry.png";
+import frogLove from "@/assets/stickers/emotions/frog-love.png";
+import frogAngry from "@/assets/stickers/emotions/frog-angry.png";
+import frogSleepy from "@/assets/stickers/emotions/frog-sleepy.png";
+import frogShy from "@/assets/stickers/emotions/frog-shy.png";
+import frogSurprised from "@/assets/stickers/emotions/frog-surprised.png";
+import frogCool from "@/assets/stickers/emotions/frog-cool.png";
+// ── Pig Emotions ──
+import pigHappy from "@/assets/stickers/emotions/pig-happy.png";
+import pigCry from "@/assets/stickers/emotions/pig-cry.png";
+import pigLove from "@/assets/stickers/emotions/pig-love.png";
+import pigAngry from "@/assets/stickers/emotions/pig-angry.png";
+import pigSleepy from "@/assets/stickers/emotions/pig-sleepy.png";
+import pigShy from "@/assets/stickers/emotions/pig-shy.png";
+import pigSurprised from "@/assets/stickers/emotions/pig-surprised.png";
+import pigCool from "@/assets/stickers/emotions/pig-cool.png";
 
 export interface IllustratedSticker {
   id: string;
@@ -355,6 +427,126 @@ export const ILLUSTRATED_PACKS: IllustratedStickerPack[] = [
       { id: "em-hamster-shy", src: hamsterShy, alt: "Hamster Shy" },
       { id: "em-hamster-surprised", src: hamsterSurprised, alt: "Hamster Surprised" },
       { id: "em-hamster-cool", src: hamsterCool, alt: "Hamster Cool" },
+    ],
+  },
+  {
+    id: "puppy-emotions",
+    name: "Puppy Moods",
+    icon: "🐶",
+    stickers: [
+      { id: "em-puppy-happy", src: puppyHappy, alt: "Puppy Happy" },
+      { id: "em-puppy-cry", src: puppyCry, alt: "Puppy Cry" },
+      { id: "em-puppy-love", src: puppyLove, alt: "Puppy Love" },
+      { id: "em-puppy-angry", src: puppyAngry, alt: "Puppy Angry" },
+      { id: "em-puppy-sleepy", src: puppySleepy, alt: "Puppy Sleepy" },
+      { id: "em-puppy-shy", src: puppyShy, alt: "Puppy Shy" },
+      { id: "em-puppy-surprised", src: puppySurprised, alt: "Puppy Surprised" },
+      { id: "em-puppy-cool", src: puppyCool, alt: "Puppy Cool" },
+    ],
+  },
+  {
+    id: "owl-emotions",
+    name: "Owl Moods",
+    icon: "🦉",
+    stickers: [
+      { id: "em-owl-happy", src: owlHappy, alt: "Owl Happy" },
+      { id: "em-owl-cry", src: owlCry, alt: "Owl Cry" },
+      { id: "em-owl-love", src: owlLove, alt: "Owl Love" },
+      { id: "em-owl-angry", src: owlAngry, alt: "Owl Angry" },
+      { id: "em-owl-sleepy", src: owlSleepy, alt: "Owl Sleepy" },
+      { id: "em-owl-shy", src: owlShy, alt: "Owl Shy" },
+      { id: "em-owl-surprised", src: owlSurprised, alt: "Owl Surprised" },
+      { id: "em-owl-cool", src: owlCool, alt: "Owl Cool" },
+    ],
+  },
+  {
+    id: "koala-emotions",
+    name: "Koala Moods",
+    icon: "🐨",
+    stickers: [
+      { id: "em-koala-happy", src: koalaHappy, alt: "Koala Happy" },
+      { id: "em-koala-cry", src: koalaCry, alt: "Koala Cry" },
+      { id: "em-koala-love", src: koalaLove, alt: "Koala Love" },
+      { id: "em-koala-angry", src: koalaAngry, alt: "Koala Angry" },
+      { id: "em-koala-sleepy", src: koalaSleepy, alt: "Koala Sleepy" },
+      { id: "em-koala-shy", src: koalaShy, alt: "Koala Shy" },
+      { id: "em-koala-surprised", src: koalaSurprised, alt: "Koala Surprised" },
+      { id: "em-koala-cool", src: koalaCool, alt: "Koala Cool" },
+    ],
+  },
+  {
+    id: "unicorn-emotions",
+    name: "Unicorn Moods",
+    icon: "🦄",
+    stickers: [
+      { id: "em-unicorn-happy", src: unicornHappy, alt: "Unicorn Happy" },
+      { id: "em-unicorn-cry", src: unicornCry, alt: "Unicorn Cry" },
+      { id: "em-unicorn-love", src: unicornLove, alt: "Unicorn Love" },
+      { id: "em-unicorn-angry", src: unicornAngry, alt: "Unicorn Angry" },
+      { id: "em-unicorn-sleepy", src: unicornSleepy, alt: "Unicorn Sleepy" },
+      { id: "em-unicorn-shy", src: unicornShy, alt: "Unicorn Shy" },
+      { id: "em-unicorn-surprised", src: unicornSurprised, alt: "Unicorn Surprised" },
+      { id: "em-unicorn-cool", src: unicornCool, alt: "Unicorn Cool" },
+    ],
+  },
+  {
+    id: "dragon-emotions",
+    name: "Dragon Moods",
+    icon: "🐲",
+    stickers: [
+      { id: "em-dragon-happy", src: dragonHappy, alt: "Dragon Happy" },
+      { id: "em-dragon-cry", src: dragonCry, alt: "Dragon Cry" },
+      { id: "em-dragon-love", src: dragonLove, alt: "Dragon Love" },
+      { id: "em-dragon-angry", src: dragonAngry, alt: "Dragon Angry" },
+      { id: "em-dragon-sleepy", src: dragonSleepy, alt: "Dragon Sleepy" },
+      { id: "em-dragon-shy", src: dragonShy, alt: "Dragon Shy" },
+      { id: "em-dragon-surprised", src: dragonSurprised, alt: "Dragon Surprised" },
+      { id: "em-dragon-cool", src: dragonCool, alt: "Dragon Cool" },
+    ],
+  },
+  {
+    id: "lion-emotions",
+    name: "Lion Moods",
+    icon: "🦁",
+    stickers: [
+      { id: "em-lion-happy", src: lionHappy, alt: "Lion Happy" },
+      { id: "em-lion-cry", src: lionCry, alt: "Lion Cry" },
+      { id: "em-lion-love", src: lionLove, alt: "Lion Love" },
+      { id: "em-lion-angry", src: lionAngry, alt: "Lion Angry" },
+      { id: "em-lion-sleepy", src: lionSleepy, alt: "Lion Sleepy" },
+      { id: "em-lion-shy", src: lionShy, alt: "Lion Shy" },
+      { id: "em-lion-surprised", src: lionSurprised, alt: "Lion Surprised" },
+      { id: "em-lion-cool", src: lionCool, alt: "Lion Cool" },
+    ],
+  },
+  {
+    id: "frog-emotions",
+    name: "Frog Moods",
+    icon: "🐸",
+    stickers: [
+      { id: "em-frog-happy", src: frogHappy, alt: "Frog Happy" },
+      { id: "em-frog-cry", src: frogCry, alt: "Frog Cry" },
+      { id: "em-frog-love", src: frogLove, alt: "Frog Love" },
+      { id: "em-frog-angry", src: frogAngry, alt: "Frog Angry" },
+      { id: "em-frog-sleepy", src: frogSleepy, alt: "Frog Sleepy" },
+      { id: "em-frog-shy", src: frogShy, alt: "Frog Shy" },
+      { id: "em-frog-surprised", src: frogSurprised, alt: "Frog Surprised" },
+      { id: "em-frog-cool", src: frogCool, alt: "Frog Cool" },
+    ],
+  },
+  {
+    id: "pig-emotions",
+    name: "Pig Moods",
+    icon: "🐷",
+    stickers: [
+      { id: "em-pig-happy", src: pigHappy, alt: "Pig Happy" },
+      { id: "em-pig-cry", src: pigCry, alt: "Pig Cry" },
+      { id: "em-pig-love", src: pigLove, alt: "Pig Love" },
+      { id: "em-pig-angry", src: pigAngry, alt: "Pig Angry" },
+      { id: "em-pig-sleepy", src: pigSleepy, alt: "Pig Sleepy" },
+      { id: "em-pig-shy", src: pigShy, alt: "Pig Shy" },
+      { id: "em-pig-surprised", src: pigSurprised, alt: "Pig Surprised" },
+      { id: "em-pig-cool", src: pigCool, alt: "Pig Cool" },
     ],
   },
 ];
