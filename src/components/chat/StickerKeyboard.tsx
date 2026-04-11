@@ -397,29 +397,29 @@ function LiveIllustratedStickerArt({
     />
   );
 
-  // Grid mode: Facebook-style — large PNG filling the cell with subtle idle bounce
+  // Grid mode: Facebook-style — use animated video if available, otherwise static PNG
   if (!large) {
+    const gridMedia = sticker.animatedSrc ? (
+      <TransparentStickerVideo
+        src={sticker.animatedSrc}
+        fallbackSrc={sticker.src}
+        alt={sticker.alt}
+        preload="metadata"
+        renderMode="chroma"
+      />
+    ) : (
+      <img
+        src={sticker.src}
+        alt={sticker.alt}
+        className="h-full w-full object-contain pointer-events-none"
+        loading="lazy"
+      />
+    );
+
     return (
-      <motion.div
-        className="relative flex h-full w-full items-center justify-center"
-        animate={motionSpec.wrapper.animate}
-        transition={motionSpec.wrapper.transition}
-        style={{ transformOrigin: motionSpec.wrapper.transformOrigin }}
-      >
-        <motion.div
-          className="h-full w-full"
-          animate={motionSpec.media.animate}
-          transition={motionSpec.media.transition}
-          style={{ transformOrigin: motionSpec.media.transformOrigin }}
-        >
-          <img
-            src={sticker.src}
-            alt={sticker.alt}
-            className="h-full w-full object-contain pointer-events-none"
-            loading="lazy"
-          />
-        </motion.div>
-      </motion.div>
+      <div className="relative flex h-full w-full items-center justify-center">
+        {gridMedia}
+      </div>
     );
   }
 
