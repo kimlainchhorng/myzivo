@@ -556,14 +556,16 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
           {activeTab === "stickers" && (
             <>
               <div className="px-3 py-1.5 flex items-center justify-between text-[11px] text-muted-foreground border-b border-border/10">
-                <span>{activePack === -1 ? recentStickers.length : filteredStickers.length} items</span>
+                <span>{isIllustratedPack ? filteredIllustratedStickers.length : (activePack === -1 ? recentStickers.length : filteredStickers.length)} items</span>
                 <div className="flex items-center gap-1.5">
-                  <button onClick={() => {
-                    const source = activePack === -1 ? recentStickers : filteredStickers;
-                    if (source.length) sendSticker(source[Math.floor(Math.random() * source.length)]);
-                  }} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border/30 hover:bg-muted/40">
-                    <Shuffle className="w-3 h-3" /> Random
-                  </button>
+                  {!isIllustratedPack && (
+                    <button onClick={() => {
+                      const source = activePack === -1 ? recentStickers : filteredStickers;
+                      if (source.length) sendSticker(source[Math.floor(Math.random() * source.length)]);
+                    }} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border/30 hover:bg-muted/40">
+                      <Shuffle className="w-3 h-3" /> Random
+                    </button>
+                  )}
                   {recentStickers.length > 0 && (
                     <button onClick={() => { localStorage.removeItem(RECENT_KEY); setRecentStickers([]); setActivePack(0); }}
                       className="px-2 py-1 rounded-md border border-border/30 hover:bg-muted/40">Clear</button>
@@ -578,6 +580,13 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                     <Clock className="w-3 h-3 inline mr-1" />Recent
                   </button>
                 )}
+                {/* Illustrated packs first */}
+                {ILLUSTRATED_PACKS.map((pack, i) => (
+                  <button key={pack.id} onClick={() => setActivePack(1000 + i)} className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 ${activePack === 1000 + i ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
+                    {pack.icon} {pack.name}
+                  </button>
+                ))}
+                {/* Emoji packs */}
                 {packs.map((pack, i) => (
                   <button key={pack.id} onClick={() => setActivePack(i)} className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 ${activePack === i ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}>
                     {pack.emoji_prefix} {pack.name}
@@ -587,15 +596,31 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
 
               {/* Sticker grid */}
               <div className="h-[240px] overflow-y-auto p-2">
-                <div className="grid grid-cols-8 gap-0.5">
-                  {(activePack === -1 ? recentStickers : filteredStickers).map((sticker, i) => (
-                    <button key={`${sticker}-${i}`} onClick={() => sendSticker(sticker)}
-                      className="aspect-square flex items-center justify-center text-2xl rounded-lg hover:bg-muted/60 active:scale-90 transition-all">
-                      {sticker}
-                    </button>
-                  ))}
-                </div>
-                {activePack !== -1 && filteredStickers.length === 0 && (
+                {isIllustratedPack ? (
+                  /* Illustrated sticker grid — 5 columns with images */
+                  <div className="grid grid-cols-5 gap-2">
+                    {filteredIllustratedStickers.map((sticker) => (
+                      <button key={sticker.id} onClick={() => sendSticker(`[sticker:${sticker.id}:${sticker.src}]`)}
+                        className="aspect-square flex items-center justify-center rounded-xl hover:bg-muted/60 active:scale-90 transition-all p-1">
+                        <img src={sticker.src} alt={sticker.alt} className="w-full h-full object-contain" loading="lazy" />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  /* Emoji sticker grid */
+                  <div className="grid grid-cols-8 gap-0.5">
+                    {(activePack === -1 ? recentStickers : filteredStickers).map((sticker, i) => (
+                      <button key={`${sticker}-${i}`} onClick={() => sendSticker(sticker)}
+                        className="aspect-square flex items-center justify-center text-2xl rounded-lg hover:bg-muted/60 active:scale-90 transition-all">
+                        {sticker}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {!isIllustratedPack && activePack !== -1 && filteredStickers.length === 0 && (
+                  <div className="flex items-center justify-center h-full text-xs text-muted-foreground">No stickers found</div>
+                )}
+                {isIllustratedPack && filteredIllustratedStickers.length === 0 && (
                   <div className="flex items-center justify-center h-full text-xs text-muted-foreground">No stickers found</div>
                 )}
               </div>
