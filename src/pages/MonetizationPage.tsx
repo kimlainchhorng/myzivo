@@ -88,11 +88,11 @@ export default function MonetizationPage() {
   const { data: walletData } = useQuery({
     queryKey: ["monetization-wallet", user?.id],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("wallets")
         .select("balance")
         .eq("user_id", user!.id)
-        .maybeSingle() as any;
+        .maybeSingle();
       return data as { balance: number } | null;
     },
     enabled: !!user,
@@ -115,10 +115,10 @@ export default function MonetizationPage() {
   const { data: referralCount } = useQuery({
     queryKey: ["monetization-referrals", user?.id],
     queryFn: async () => {
-      const { count } = await supabase
+      const { count } = await (supabase as any)
         .from("referrals")
         .select("id", { count: "exact", head: true })
-        .eq("referrer_id", user!.id) as any;
+        .eq("referrer_id", user!.id);
       return (count as number) || 0;
     },
     enabled: !!user,
