@@ -14,5 +14,7 @@
 		<string>applinks:myzivo.lovable.app</string>
 		<string>webcredentials:hizovo.com</string>
 	</array>
+	<key>com.apple.developer.usernotifications.communication</key>
+	<true/>
 </dict>
 </plist>
