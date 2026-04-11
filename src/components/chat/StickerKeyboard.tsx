@@ -499,7 +499,21 @@ function LiveIllustratedStickerArt({
         transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
         style={{ transformOrigin: "center bottom" }}
       >
-        <motion.img
+        {sticker.animatedSrc ? (
+          <video
+            src={sticker.animatedSrc}
+            className={large
+              ? "h-full w-full object-contain pointer-events-none drop-shadow-[0_10px_24px_hsl(var(--foreground)/0.18)]"
+              : "h-full w-full object-contain pointer-events-none drop-shadow-[0_8px_18px_hsl(var(--foreground)/0.16)]"
+            }
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+          />
+        ) : (
+          <motion.img
           src={sticker.src}
           alt={sticker.alt}
           className={large
