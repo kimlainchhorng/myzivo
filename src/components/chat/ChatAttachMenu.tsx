@@ -2,12 +2,13 @@
  * ChatAttachMenu — Bottom sheet for attachment options: image, video, location, disappearing
  * Lock & Unlock requires Chat+ or Pro ZIVO+ plan
  */
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ImagePlus, Video, MapPin, Timer, Lock } from "lucide-react";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { createPortal } from "react-dom";
 
 interface ChatAttachMenuProps {
   open: boolean;
@@ -36,8 +37,21 @@ export default function ChatAttachMenu({
 }: ChatAttachMenuProps) {
   const { isPlus, plan } = useZivoPlus();
   const navigate = useNavigate();
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; bottom: number } | null>(null);
 
-  if (!open) return null;
+  // Calculate position relative to viewport when opening
+  useEffect(() => {
+    if (!open) { setPos(null); return; }
+    // Find the parent button to anchor to
+    const el = document.querySelector('[data-attach-trigger]');
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      setPos({ left: rect.left, bottom: window.innerHeight - rect.top + 10 });
+    }
+  }, [open]);
+
+  if (!open || !pos) return null;
 
   const canUseLocked = isPlus && plan && LOCK_UNLOCK_PLANS.has(plan);
 
@@ -61,16 +75,17 @@ export default function ChatAttachMenu({
     onClose();
   };
 
-  return (
+  return createPortal(
     <>
-      <div className="fixed inset-0 z-40" onClick={onClose} />
+      <div className="fixed inset-0 z-[1400]" onClick={onClose} />
       <motion.div
         key="attach-panel"
         initial={{ y: 16, opacity: 0, scale: 0.92 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
         exit={{ y: 16, opacity: 0, scale: 0.92 }}
         transition={{ type: "spring", damping: 24, stiffness: 400 }}
-        className="absolute bottom-full mb-2.5 left-0 z-50 bg-background border border-border/30 rounded-2xl shadow-2xl p-4"
+        className="fixed z-[1401] bg-background border border-border/30 rounded-2xl shadow-2xl p-4"
+        style={{ left: pos.left, bottom: pos.bottom }}
       >
         <div className="flex gap-5">
           {menuItems.map((item) => {
@@ -100,6 +115,7 @@ export default function ChatAttachMenu({
           })}
         </div>
       </motion.div>
-    </>
+    </>,
+    document.body
   );
 }
