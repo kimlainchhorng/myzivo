@@ -29,6 +29,7 @@ interface LoginEventRow {
 export default function AdminAuthShieldPage() {
   const navigate = useNavigate();
   const [unlockingId, setUnlockingId] = useState<string | null>(null);
+  const [quarantiningId, setQuarantiningId] = useState<string | null>(null);
 
   const {
     data: lockouts = [],
@@ -80,6 +81,23 @@ export default function AdminAuthShieldPage() {
     },
     onError: (error: any) => {
       toast.error(error?.message || "Failed to clear lockout");
+    },
+  });
+
+  const quarantineMutation = useMutation({
+    mutationFn: async ({ identifier, hours }: { identifier: string; hours: number }) => {
+      const { error } = await (supabase as any).rpc("admin_force_auth_quarantine", {
+        _identifier: identifier,
+        _hours: hours,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("Forced quarantine applied");
+      await Promise.all([refetchLockouts(), refetchEvents()]);
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to force quarantine");
     },
   });
 
@@ -192,6 +210,19 @@ export default function AdminAuthShieldPage() {
                 >
                   <Unlock className="h-4 w-4" />
                   Clear Lock
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="gap-1"
+                  disabled={quarantineMutation.isPending && quarantiningId === item.identifier}
+                  onClick={() => {
+                    setQuarantiningId(item.identifier);
+                    quarantineMutation.mutate({ identifier: item.identifier, hours: 6 });
+                  }}
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  Force 6h
                 </Button>
               </div>
             ))
