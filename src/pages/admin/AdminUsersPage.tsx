@@ -80,6 +80,19 @@ export default function AdminUsersPage() {
     enabled: isAdmin && !authLoading,
   });
 
+  // Fetch actual driver accounts so customer list doesn't hide everyone with a generic driver role
+  const { data: driverUsers } = useQuery({
+    queryKey: ["admin-driver-users", isAdmin],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("drivers")
+        .select("user_id");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: isAdmin && !authLoading,
+  });
+
   const getProfileUid = (profile: { id?: string | null; user_id?: string | null }) =>
     profile.user_id || profile.id || "";
 
@@ -92,16 +105,21 @@ export default function AdminUsersPage() {
     return map;
   }, [userRoles]);
 
-  // Show all registered ZIVO users across web/app domains, hide internal staff AND drivers
+  const driverUserIds = useMemo(() => {
+    return new Set((driverUsers || []).map((driver) => driver.user_id).filter(Boolean));
+  }, [driverUsers]);
+
+  // Show ZIVO/ZivoLLC customers, but hide internal staff and accounts that actually belong to drivers
   const customerProfiles = useMemo(() => {
     if (!profiles) return [];
-    const excludedRoles = ["admin", "moderator", "super_admin", "operations", "finance", "support", "merchant", "owner", "manager", "driver"];
+    const excludedRoles = ["admin", "moderator", "super_admin", "operations", "finance", "support", "merchant", "owner", "manager"];
     return profiles.filter((p) => {
       const uid = getProfileUid(p);
       const roles = roleMap[uid] || [];
+      if (driverUserIds.has(uid)) return false;
       return !roles.some((r) => excludedRoles.includes(r));
     });
-  }, [profiles, roleMap]);
+  }, [profiles, roleMap, driverUserIds]);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return customerProfiles;
