@@ -943,6 +943,13 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                 ))}
               </div>
 
+              {/* Active pack name label */}
+              <div className="px-3 pt-2 pb-1">
+                <h3 className="text-xs font-semibold text-muted-foreground">
+                  {activePack === -1 ? "Recent" : isIllustratedPack ? (currentIllustratedPack?.name ?? "") : (currentPack?.name ?? "")}
+                </h3>
+              </div>
+
               {/* Sticker grid */}
               <div className="min-h-[320px] overflow-y-auto p-2">
                 {isIllustratedPack ? (
