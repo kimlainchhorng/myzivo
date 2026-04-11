@@ -12,8 +12,11 @@ import {
   BookOpen, Users, Target, BarChart3, Headphones,
   PenTool, Package, Globe, Award, Mic, Camera,
   Palette, Music, Radio, Calendar, MessageCircle, ArrowRight,
+  CheckCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import SEOHead from "@/components/SEOHead";
 
@@ -24,31 +27,31 @@ interface Program {
   label: string;
   description: string;
   status: ProgramStatus;
-  href: string;
+  programId: string;
   accent: string;
   badge?: string;
   lockInfo?: string;
 }
 
 const monetizationPrograms: Program[] = [
-  { icon: Gift, label: "Creator Rewards", description: "Get Gifts for your top-performing videos and content.", status: "join", href: "/creator-dashboard", accent: "hsl(340 75% 55%)" },
-  { icon: Zap, label: "Service+", description: "Build connections with potential clients when you're LIVE.", status: "join", badge: "Recommended", href: "/creator-dashboard", accent: "hsl(221 83% 53%)" },
-  { icon: Crown, label: "Subscription", description: "Connect more closely with viewers through subscriber-only content.", status: "explore", lockInfo: "3/4", href: "/creator-dashboard", accent: "hsl(38 92% 50%)" },
-  { icon: Heart, label: "Tips & Donations", description: "Let your audience show appreciation with direct tips.", status: "join", href: "/creator-dashboard", accent: "hsl(340 75% 55%)" },
-  { icon: Video, label: "LIVE Gifts", description: "Receive virtual gifts from viewers during LIVE streams.", status: "join", href: "/creator-dashboard", accent: "hsl(263 70% 58%)" },
-  { icon: Store, label: "ZIVO Shop", description: "Sell products directly to your audience.", status: "join", href: "/shop-dashboard", accent: "hsl(142 71% 45%)" },
-  { icon: Megaphone, label: "Brand Partnerships", description: "Get matched with brands for sponsored content.", status: "explore", badge: "New", href: "/creator-dashboard", accent: "hsl(25 95% 53%)" },
-  { icon: Lock, label: "Locked Media", description: "Monetize exclusive photos and videos with pay-to-unlock.", status: "join", href: "/creator-dashboard", accent: "hsl(263 70% 58%)" },
-  { icon: PenTool, label: "Digital Products", description: "Sell e-books, courses, templates, and digital bundles.", status: "join", badge: "New", href: "/digital-products", accent: "hsl(300 70% 55%)" },
-  { icon: Target, label: "Affiliate Marketing", description: "Earn commissions promoting ZIVO services.", status: "join", href: "/affiliate-hub", accent: "hsl(172 66% 50%)" },
-  { icon: Radio, label: "Audio Monetization", description: "Monetize live audio rooms with tickets and tips.", status: "explore", href: "/spaces", accent: "hsl(263 70% 58%)" },
-  { icon: Calendar, label: "Paid Events", description: "Host and sell tickets to events.", status: "explore", badge: "Soon", href: "/events", accent: "hsl(199 89% 48%)" },
-  { icon: BookOpen, label: "Course Builder", description: "Create and sell structured courses.", status: "join", href: "/digital-products", accent: "hsl(198 93% 59%)" },
-  { icon: Palette, label: "Creator Marketplace", description: "Offer freelance services on ZIVO.", status: "explore", href: "/marketplace", accent: "hsl(340 75% 55%)" },
-  { icon: Music, label: "Sound Licensing", description: "License your original music to others.", status: "explore", href: "/creator-dashboard", accent: "hsl(38 92% 50%)" },
-  { icon: MessageCircle, label: "Paid DMs", description: "Charge for priority messages.", status: "explore", href: "/creator-dashboard", accent: "hsl(142 71% 45%)" },
-  { icon: Camera, label: "Merch & Prints", description: "Sell physical products and merchandise.", status: "explore", badge: "Soon", href: "/creator-dashboard", accent: "hsl(340 75% 55%)" },
-  { icon: Mic, label: "Podcast", description: "Monetize podcasts with premium episodes.", status: "explore", href: "/creator-dashboard", accent: "hsl(263 70% 58%)" },
+  { icon: Gift, label: "Creator Rewards", description: "Get Gifts for your top-performing videos and content.", status: "join", programId: "creator-rewards", accent: "hsl(340 75% 55%)" },
+  { icon: Zap, label: "Service+", description: "Build connections with potential clients when you're LIVE.", status: "join", badge: "Recommended", programId: "service-plus", accent: "hsl(221 83% 53%)" },
+  { icon: Crown, label: "Subscription", description: "Connect more closely with viewers through subscriber-only content.", status: "explore", lockInfo: "3/4", programId: "subscription", accent: "hsl(38 92% 50%)" },
+  { icon: Heart, label: "Tips & Donations", description: "Let your audience show appreciation with direct tips.", status: "join", programId: "tips-donations", accent: "hsl(340 75% 55%)" },
+  { icon: Video, label: "LIVE Gifts", description: "Receive virtual gifts from viewers during LIVE streams.", status: "join", programId: "live-gifts", accent: "hsl(263 70% 58%)" },
+  { icon: Store, label: "ZIVO Shop", description: "Sell products directly to your audience.", status: "join", programId: "zivo-shop", accent: "hsl(142 71% 45%)" },
+  { icon: Megaphone, label: "Brand Partnerships", description: "Get matched with brands for sponsored content.", status: "explore", badge: "New", programId: "brand-partnerships", accent: "hsl(25 95% 53%)" },
+  { icon: Lock, label: "Locked Media", description: "Monetize exclusive photos and videos with pay-to-unlock.", status: "join", programId: "locked-media", accent: "hsl(263 70% 58%)" },
+  { icon: PenTool, label: "Digital Products", description: "Sell e-books, courses, templates, and digital bundles.", status: "join", badge: "New", programId: "digital-products", accent: "hsl(300 70% 55%)" },
+  { icon: Target, label: "Affiliate Marketing", description: "Earn commissions promoting ZIVO services.", status: "join", programId: "affiliate-marketing", accent: "hsl(172 66% 50%)" },
+  { icon: Radio, label: "Audio Monetization", description: "Monetize live audio rooms with tickets and tips.", status: "explore", programId: "audio-monetization", accent: "hsl(263 70% 58%)" },
+  { icon: Calendar, label: "Paid Events", description: "Host and sell tickets to events.", status: "explore", badge: "Soon", programId: "paid-events", accent: "hsl(199 89% 48%)" },
+  { icon: BookOpen, label: "Course Builder", description: "Create and sell structured courses.", status: "join", programId: "course-builder", accent: "hsl(198 93% 59%)" },
+  { icon: Palette, label: "Creator Marketplace", description: "Offer freelance services on ZIVO.", status: "explore", programId: "creator-marketplace", accent: "hsl(340 75% 55%)" },
+  { icon: Music, label: "Sound Licensing", description: "License your original music to others.", status: "explore", programId: "sound-licensing", accent: "hsl(38 92% 50%)" },
+  { icon: MessageCircle, label: "Paid DMs", description: "Charge for priority messages.", status: "explore", programId: "paid-dms", accent: "hsl(142 71% 45%)" },
+  { icon: Camera, label: "Merch & Prints", description: "Sell physical products and merchandise.", status: "explore", badge: "Soon", programId: "merch-prints", accent: "hsl(340 75% 55%)" },
+  { icon: Mic, label: "Podcast", description: "Monetize podcasts with premium episodes.", status: "explore", programId: "podcast", accent: "hsl(263 70% 58%)" },
 ];
 
 const learningResources = [
@@ -75,6 +78,22 @@ export default function MonetizationPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeResTab, setActiveResTab] = useState(0);
+
+  // Fetch all user enrollments
+  const { data: enrollments = [] } = useQuery({
+    queryKey: ["program-enrollments", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("creator_program_enrollments")
+        .select("program_id, status")
+        .eq("user_id", user!.id);
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  const enrolledIds = new Set(enrollments.map((e: any) => e.program_id));
+  const enrolledCount = enrolledIds.size;
 
   return (
     <div className="min-h-dvh bg-background pb-24">
@@ -116,7 +135,7 @@ export default function MonetizationPage() {
             <div className="grid grid-cols-4 gap-2">
               {[
                 { label: "This month", value: "$0.00" },
-                { label: "Subscribers", value: "0" },
+                { label: "Programs", value: String(enrolledCount) },
                 { label: "Tips", value: "0" },
                 { label: "Affiliates", value: "0" },
               ].map((stat) => (
@@ -162,39 +181,46 @@ export default function MonetizationPage() {
             <span className="text-[11px] text-muted-foreground font-medium">{monetizationPrograms.length} available</span>
           </div>
           <div className="space-y-1.5">
-            {monetizationPrograms.map((prog, i) => (
-              <Link key={prog.label} to={prog.href}>
-                <motion.div
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.025 }}
-                  className="zivo-card-organic flex items-start gap-3 p-3.5 touch-manipulation"
-                >
-                  <div className="zivo-icon-pill w-9 h-9 rounded-xl shrink-0 mt-0.5" style={{ color: prog.accent, background: `${prog.accent}15` }}>
-                    <prog.icon className="h-4 w-4" style={{ color: prog.accent }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <p className="font-bold text-[13px]">{prog.label}</p>
-                      {prog.badge && <span className="zivo-badge">{prog.badge}</span>}
-                      {prog.lockInfo && (
-                        <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-lg bg-muted text-muted-foreground flex items-center gap-0.5">
-                          <Lock className="w-2 h-2" /> {prog.lockInfo}
-                        </span>
-                      )}
+            {monetizationPrograms.map((prog, i) => {
+              const isEnrolled = enrolledIds.has(prog.programId);
+              return (
+                <Link key={prog.label} to={`/monetization/program/${prog.programId}`}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.025 }}
+                    className="zivo-card-organic flex items-start gap-3 p-3.5 touch-manipulation"
+                  >
+                    <div className="zivo-icon-pill w-9 h-9 rounded-xl shrink-0 mt-0.5" style={{ color: prog.accent, background: `${prog.accent}15` }}>
+                      <prog.icon className="h-4 w-4" style={{ color: prog.accent }} />
                     </div>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">{prog.description}</p>
-                  </div>
-                  {prog.status === "join" ? (
-                    <span className="shrink-0 mt-1 zivo-btn-signature px-3.5 py-1.5 text-[11px]">
-                      Join
-                    </span>
-                  ) : (
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0 mt-2" />
-                  )}
-                </motion.div>
-              </Link>
-            ))}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="font-bold text-[13px]">{prog.label}</p>
+                        {prog.badge && <span className="zivo-badge">{prog.badge}</span>}
+                        {prog.lockInfo && (
+                          <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-lg bg-muted text-muted-foreground flex items-center gap-0.5">
+                            <Lock className="w-2 h-2" /> {prog.lockInfo}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">{prog.description}</p>
+                    </div>
+                    {isEnrolled ? (
+                      <span className="shrink-0 mt-1 flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold">
+                        <CheckCircle className="w-3 h-3" /> Joined
+                      </span>
+                    ) : prog.status === "join" ? (
+                      <span className="shrink-0 mt-1 zivo-btn-signature px-3.5 py-1.5 text-[11px]">
+                        Join
+                      </span>
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0 mt-2" />
+                    )}
+                  </motion.div>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
@@ -233,7 +259,7 @@ export default function MonetizationPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + i * 0.04 }}
-                onClick={() => navigate("/monetization/articles")}
+                onClick={() => navigate(`/monetization/articles/${res.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "")}`)}
                 className="w-full flex items-start gap-3 text-left touch-manipulation"
               >
                 <div className="flex-1 min-w-0">
