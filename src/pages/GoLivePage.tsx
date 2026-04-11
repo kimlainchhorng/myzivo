@@ -39,17 +39,56 @@ export default function GoLivePage() {
   const [showGiftPanel, setShowGiftPanel] = useState(false);
   const [floatingReactions, setFloatingReactions] = useState<{ id: string; emoji: string; x: number }[]>([]);
   const [giftsReceived, setGiftsReceived] = useState(0);
+  const [giftTab, setGiftTab] = useState<"gifts" | "interactive" | "exclusive">("gifts");
 
-  const gifts = [
-    { emoji: "🌹", name: "Rose", coins: 1 },
-    { emoji: "💎", name: "Diamond", coins: 5 },
-    { emoji: "🎉", name: "Party", coins: 10 },
-    { emoji: "🚀", name: "Rocket", coins: 50 },
-    { emoji: "👑", name: "Crown", coins: 100 },
-    { emoji: "🦁", name: "Lion", coins: 200 },
-    { emoji: "🌈", name: "Rainbow", coins: 500 },
-    { emoji: "🏆", name: "Trophy", coins: 1000 },
-  ];
+  const allGifts = {
+    gifts: [
+      { icon: "🎁", name: "Gift Pack", coins: 1, badge: "Unlock", bg: "from-pink-500/30 to-purple-500/30" },
+      { icon: "🌹", name: "Rose", coins: 1, badge: "Popular", bg: "from-rose-500/30 to-pink-500/30" },
+      { icon: "❤️", name: "Heart Me", coins: 1, bg: "from-red-500/30 to-pink-500/30" },
+      { icon: "🥊", name: "Boxing Gloves", coins: 299, bg: "from-blue-500/30 to-indigo-500/30" },
+      { icon: "🎯", name: "GG", coins: 1, bg: "from-orange-500/30 to-red-500/30" },
+      { icon: "💸", name: "Money Gun", coins: 500, bg: "from-green-500/30 to-emerald-500/30" },
+      { icon: "📦", name: "Treasure Box", coins: 30, badge: "Interaction", bg: "from-amber-500/30 to-yellow-500/30" },
+      { icon: "🎩", name: "Hat & Mustache", coins: 99, bg: "from-yellow-500/30 to-orange-500/30" },
+      { icon: "🐱", name: "You're Awesome", coins: 1, bg: "from-orange-400/30 to-amber-400/30" },
+      { icon: "💜", name: "TikTok", coins: 1, bg: "from-violet-500/30 to-purple-500/30" },
+      { icon: "🫶", name: "Finger Heart", coins: 5, bg: "from-pink-400/30 to-rose-400/30" },
+      { icon: "🎊", name: "Happy Weekend", coins: 10, bg: "from-green-400/30 to-teal-400/30" },
+      { icon: "🍩", name: "Doughnut", coins: 30, bg: "from-pink-300/30 to-amber-300/30" },
+      { icon: "🍦", name: "Ice Cream Cone", coins: 1, bg: "from-pink-200/30 to-blue-200/30" },
+      { icon: "🥰", name: "Love You So Much", coins: 1, bg: "from-red-400/30 to-pink-400/30" },
+      { icon: "🎊", name: "Confetti", coins: 100, bg: "from-purple-400/30 to-blue-400/30" },
+    ],
+    interactive: [
+      { icon: "🐳", name: "Whale Diving", coins: 2150, bg: "from-blue-500/30 to-cyan-500/30" },
+      { icon: "🦁", name: "Lion", coins: 29999, bg: "from-amber-500/30 to-orange-500/30" },
+      { icon: "🐕", name: "Corgi", coins: 299, bg: "from-orange-300/30 to-amber-300/30" },
+      { icon: "🤝", name: "Friendship", coins: 10, bg: "from-pink-400/30 to-purple-400/30" },
+      { icon: "🦢", name: "Swan", coins: 699, bg: "from-blue-200/30 to-white/20" },
+      { icon: "✈️", name: "Flying Jets", coins: 5000, badge: "NEW", bg: "from-sky-500/30 to-blue-500/30" },
+      { icon: "🍰", name: "Cake Slice", coins: 1, bg: "from-yellow-300/30 to-pink-300/30" },
+      { icon: "🎫", name: "Journey Pass", coins: 10, bg: "from-indigo-500/30 to-purple-500/30" },
+      { icon: "🐌", name: "Slow Motion", coins: 10, bg: "from-purple-400/30 to-pink-400/30" },
+      { icon: "🎆", name: "Fireworks", coins: 1088, bg: "from-orange-400/30 to-red-400/30" },
+      { icon: "🌌", name: "Galaxy", coins: 1000, bg: "from-indigo-600/30 to-purple-600/30" },
+      { icon: "🫧", name: "Pop", coins: 1, bg: "from-blue-300/30 to-cyan-300/30" },
+    ],
+    exclusive: [
+      { icon: "🏎️", name: "Racing Debut", coins: 1500, badge: "NEW", bg: "from-red-500/30 to-orange-500/30" },
+      { icon: "🌵", name: "Cactus Shuffle", coins: 399, badge: "NEW", bg: "from-green-400/30 to-lime-400/30" },
+      { icon: "🎸", name: "Heart Guitar", coins: 500, badge: "NEW", bg: "from-red-500/30 to-rose-500/30" },
+      { icon: "🤡", name: "Clown Boogie", coins: 449, bg: "from-yellow-400/30 to-orange-400/30" },
+      { icon: "🏍️", name: "Motorcycle", coins: 2988, bg: "from-cyan-500/30 to-green-500/30" },
+      { icon: "🎹", name: "Music Mate", coins: 299, bg: "from-pink-400/30 to-purple-400/30" },
+      { icon: "☄️", name: "Meteor Shower", coins: 3000, bg: "from-indigo-500/30 to-blue-500/30" },
+      { icon: "🏴‍☠️", name: "Pirate Treasure", coins: 449, bg: "from-yellow-600/30 to-amber-600/30" },
+      { icon: "🚂", name: "Train", coins: 899, bg: "from-blue-400/30 to-indigo-400/30" },
+      { icon: "🌸", name: "Blooming Ribbons", coins: 1000, bg: "from-pink-300/30 to-rose-300/30" },
+      { icon: "✈️", name: "Private Jet", coins: 4888, bg: "from-sky-400/30 to-blue-400/30" },
+      { icon: "🌹", name: "Rose Hand", coins: 199, bg: "from-red-400/30 to-pink-400/30" },
+    ],
+  };
 
   const quickReactions = ["❤️", "🔥", "😍", "👏", "😂", "🎵", "💯", "✨"];
 
@@ -181,17 +220,16 @@ export default function GoLivePage() {
     setLikes((p) => p + 1);
   };
 
-  const sendGift = (gift: { emoji: string; name: string; coins: number }) => {
+  const sendGift = (gift: { icon: string; name: string; coins: number }) => {
     setGiftsReceived((p) => p + 1);
-    spawnFloatingReaction(gift.emoji);
-    // Add gift message to chat
+    spawnFloatingReaction(gift.icon);
     const names = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
     const sender = names[Math.floor(Math.random() * names.length)];
     setChatMessages((prev) => [
       ...prev.slice(-20),
-      { id: Date.now().toString(), user: sender, text: `sent ${gift.emoji} ${gift.name} (${gift.coins} coins)`, isGift: true },
+      { id: Date.now().toString(), user: sender, text: `sent ${gift.icon} ${gift.name} (${gift.coins} coins)`, isGift: true },
     ]);
-    toast(`${gift.emoji} ${gift.name} sent!`, { description: `${gift.coins} coins` });
+    toast(`${gift.icon} ${gift.name} sent!`, { description: `${gift.coins} coins` });
     setShowGiftPanel(false);
   };
 
@@ -435,40 +473,83 @@ export default function GoLivePage() {
           <AnimatePresence>
             {showGiftPanel && (
               <motion.div
-                initial={{ y: 300 }}
+                initial={{ y: 400 }}
                 animate={{ y: 0 }}
-                exit={{ y: 300 }}
+                exit={{ y: 400 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="absolute bottom-0 left-0 right-0 z-40 bg-zinc-900/95 backdrop-blur-xl rounded-t-3xl border-t border-white/10"
+                className="absolute bottom-0 left-0 right-0 z-40 bg-zinc-900/98 backdrop-blur-xl rounded-t-3xl border-t border-white/10"
+                style={{ maxHeight: "55vh" }}
               >
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-white font-bold text-sm flex items-center gap-2">
-                      <Gift className="h-4 w-4 text-yellow-400" /> Send a Gift
-                    </h3>
-                    <button onClick={() => setShowGiftPanel(false)} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                      <X className="h-4 w-4 text-white" />
-                    </button>
+                {/* Scrolling banner */}
+                <div className="overflow-hidden border-b border-white/5 py-2.5 px-4 flex items-center gap-3">
+                  <Gift className="h-5 w-5 text-white/70 shrink-0" />
+                  <div className="overflow-hidden flex-1">
+                    <motion.p
+                      animate={{ x: [0, -300] }}
+                      transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                      className="text-xs text-white/50 whitespace-nowrap"
+                    >
+                      Unlock Gifts and Coin rewards with your first purchase &nbsp;&nbsp;&nbsp; Unlock Gifts and Coin rewards with your first purchase
+                    </motion.p>
                   </div>
+                  <button onClick={() => setShowGiftPanel(false)} className="text-white/40 text-xs shrink-0">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
 
-                  <div className="grid grid-cols-4 gap-3 mb-4">
-                    {gifts.map((gift) => (
+                {/* Gift grid */}
+                <div className="overflow-y-auto px-2 py-3" style={{ maxHeight: "calc(55vh - 100px)" }}>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {allGifts[giftTab].map((gift) => (
                       <button
                         key={gift.name}
                         onClick={() => sendGift(gift)}
-                        className="flex flex-col items-center gap-1 p-3 rounded-2xl bg-white/5 hover:bg-white/10 active:scale-90 transition-all border border-white/5"
+                        className="relative flex flex-col items-center gap-0.5 py-2.5 px-1 rounded-xl hover:bg-white/5 active:scale-90 transition-all"
                       >
-                        <span className="text-2xl">{gift.emoji}</span>
-                        <span className="text-[10px] text-white/60">{gift.name}</span>
-                        <span className="text-[10px] text-yellow-400 font-semibold">{gift.coins}</span>
+                        {gift.badge && (
+                          <span className={cn(
+                            "absolute top-1 right-1 text-[8px] font-bold px-1.5 py-0.5 rounded-full z-10",
+                            gift.badge === "Popular" ? "bg-pink-500 text-white" :
+                            gift.badge === "NEW" ? "bg-red-500 text-white" :
+                            gift.badge === "Unlock" ? "bg-pink-500 text-white" :
+                            "bg-blue-500/80 text-white"
+                          )}>
+                            {gift.badge}
+                          </span>
+                        )}
+                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br", gift.bg)}>
+                          <span className="text-3xl">{gift.icon}</span>
+                        </div>
+                        <span className="text-[10px] text-white/70 truncate w-full text-center leading-tight mt-0.5">{gift.name}</span>
+                        <div className="flex items-center gap-0.5">
+                          <span className="text-[10px]">🪙</span>
+                          <span className="text-[10px] text-yellow-400 font-semibold">{gift.coins.toLocaleString()}</span>
+                        </div>
                       </button>
                     ))}
                   </div>
+                </div>
 
-                  <div className="flex items-center justify-center gap-2 text-xs text-white/40">
-                    <Star className="h-3 w-3 text-yellow-500" />
-                    <span>Coins are for fun — no real money involved</span>
-                  </div>
+                {/* Bottom tabs */}
+                <div className="flex items-center border-t border-white/10 px-2 py-2 gap-1" style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 8px), 8px)" }}>
+                  {(["gifts", "interactive", "exclusive"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setGiftTab(tab)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors",
+                        giftTab === tab ? "text-white" : "text-white/40"
+                      )}
+                    >
+                      {tab === "gifts" ? "Gifts ↕" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </button>
+                  ))}
+                  <div className="flex-1" />
+                  <button className="flex items-center gap-1.5 bg-zinc-800 rounded-full px-4 py-2 border border-white/10">
+                    <span className="text-sm">🪙</span>
+                    <span className="text-xs text-white font-bold">Recharge</span>
+                    <span className="text-white/40 text-xs">›</span>
+                  </button>
                 </div>
               </motion.div>
             )}
