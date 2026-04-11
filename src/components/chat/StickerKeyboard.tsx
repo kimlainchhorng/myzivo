@@ -954,35 +954,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               <div className="min-h-[320px] overflow-y-auto p-2">
                 {isIllustratedPack ? (
                   <>
-                    {/* Pack header — matching reference layout */}
-                    <div className="px-1 pb-4">
-                      <div className="mb-3 flex items-center gap-2.5">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border/30 bg-muted/50">
-                          <Smile className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border/30 bg-muted/50">
-                          <Sparkles className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <motion.div
-                          className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-primary/20 bg-primary/5 p-1.5"
-                          animate={{ y: [0, -5, 0], rotate: [0, -4, 4, 0], scale: [1, 1.06, 1] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                        >
-                          <img
-                            src={currentIllustratedPack?.stickers[0]?.src}
-                            alt="Pack icon"
-                            className="h-full w-full object-contain"
-                            loading="lazy"
-                          />
-                        </motion.div>
-                      </div>
-                      <p className="text-lg font-bold text-foreground">
-                        {currentIllustratedPack?.name ?? "Buddy Buddies"}
-                      </p>
-                    </div>
-
-                    {/* Sticker grid — 5 columns, generous sizing */}
-                    <div className="grid grid-cols-5 gap-3 px-0.5 pb-2">
+                    {/* Sticker grid — 4 columns Messenger-style */}
+                    <div className="grid grid-cols-4 gap-2 px-1 pb-2">
                       {filteredIllustratedStickers.map((sticker, idx) => {
                         const stickerPayload = `[sticker:${sticker.id}:${sticker.src}]`;
                         let didLongPress = false;
