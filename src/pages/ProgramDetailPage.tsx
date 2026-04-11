@@ -11,7 +11,7 @@ import {
   Store, Target, Video, Zap, Camera, Calendar, MessageCircle,
   BookOpen, PenTool, Star, TrendingUp, Users, Shield,
   Sparkles, CheckCircle, ArrowRight, AlertCircle, Award,
-  Calculator, Lightbulb, Share2, ExternalLink,
+  Calculator, Lightbulb, Share2, ExternalLink, Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
