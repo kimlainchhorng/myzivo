@@ -22,6 +22,15 @@ import sunflowerAnim from "@/assets/stickers/anim/buddy-sunflower-anim.mp4.asset
 import sushiAnim from "@/assets/stickers/anim/buddy-sushi-anim.mp4.asset.json";
 import toastAnim from "@/assets/stickers/anim/buddy-toast-anim.mp4.asset.json";
 import tomatoAnim from "@/assets/stickers/anim/buddy-tomato-anim.mp4.asset.json";
+import puppyAnim from "@/assets/stickers/anim/buddy-puppy-anim.mp4.asset.json";
+import duckAnim from "@/assets/stickers/anim/buddy-duck-anim.mp4.asset.json";
+import strawberryAnim from "@/assets/stickers/anim/buddy-strawberry-anim.mp4.asset.json";
+import pandaAnim from "@/assets/stickers/anim/buddy-panda-anim.mp4.asset.json";
+import foxAnim from "@/assets/stickers/anim/buddy-fox-anim.mp4.asset.json";
+import avocadoAnim from "@/assets/stickers/anim/buddy-avocado-anim.mp4.asset.json";
+import owlAnim from "@/assets/stickers/anim/buddy-owl-anim.mp4.asset.json";
+import donutAnim from "@/assets/stickers/anim/buddy-donut-anim.mp4.asset.json";
+import koalaAnim from "@/assets/stickers/anim/buddy-koala-anim.mp4.asset.json";
 
 /** Map from sticker id (e.g. "bb-sunflower") to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -35,6 +44,9 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "bb-lemon": lemonAnim.url,
   "bb-tomato": tomatoAnim.url,
   "bb-carrot": carrotAnim.url,
+  "bb-strawberry": strawberryAnim.url,
+  "bb-avocado": avocadoAnim.url,
+  "bb-donut": donutAnim.url,
   "cf-penguin": penguinAnim.url,
   "cf-hamster": hamsterAnim.url,
   "cf-cat-love": catLoveAnim.url,
@@ -44,6 +56,12 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "cf-hedgehog": hedgehogAnim.url,
   "cf-toast": toastAnim.url,
   "cf-octopus": octopusAnim.url,
+  "cf-puppy": puppyAnim.url,
+  "cf-duck": duckAnim.url,
+  "cf-panda": pandaAnim.url,
+  "cf-fox": foxAnim.url,
+  "cf-owl": owlAnim.url,
+  "cf-koala": koalaAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
