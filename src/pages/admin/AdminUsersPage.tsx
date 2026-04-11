@@ -80,19 +80,6 @@ export default function AdminUsersPage() {
     enabled: isAdmin && !authLoading,
   });
 
-  // Fetch driver user_ids to exclude actual driver-app accounts
-  const { data: driverUsers } = useQuery({
-    queryKey: ["admin-driver-user-ids", isAdmin],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("drivers")
-        .select("user_id");
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: isAdmin && !authLoading,
-  });
-
   const getProfileUid = (profile: { id?: string | null; user_id?: string | null }) =>
     profile.user_id || profile.id || "";
 
@@ -105,20 +92,16 @@ export default function AdminUsersPage() {
     return map;
   }, [userRoles]);
 
-  const driverUserIds = useMemo(() => new Set((driverUsers || []).map(d => d.user_id).filter(Boolean)), [driverUsers]);
-
-  // Show ZIVO/ZivoLLC customers, hide internal staff and actual driver-app accounts
+  // Show all customers, hide only internal staff roles
   const customerProfiles = useMemo(() => {
     if (!profiles) return [];
     const excludedRoles = ["admin", "moderator", "super_admin", "operations", "finance", "support", "merchant", "owner", "manager"];
     return profiles.filter((p) => {
       const uid = getProfileUid(p);
-      // Hide users with actual driver table records (ZivoDriver accounts)
-      if (driverUserIds.has(uid)) return false;
       const roles = roleMap[uid] || [];
       return !roles.some((r) => excludedRoles.includes(r));
     });
-  }, [profiles, roleMap, driverUserIds]);
+  }, [profiles, roleMap]);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return customerProfiles;
