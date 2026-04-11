@@ -505,8 +505,8 @@ function LiveIllustratedStickerArt({
           <video
             src={sticker.animatedSrc}
             className={large
-              ? "h-full w-full object-contain pointer-events-none drop-shadow-[0_10px_24px_hsl(var(--foreground)/0.18)]"
-              : "h-full w-full object-contain pointer-events-none drop-shadow-[0_8px_18px_hsl(var(--foreground)/0.16)]"
+              ? "h-full w-full object-contain pointer-events-none drop-shadow-[0_10px_24px_hsl(var(--foreground)/0.18)] mix-blend-multiply dark:mix-blend-screen"
+              : "h-full w-full object-contain pointer-events-none drop-shadow-[0_8px_18px_hsl(var(--foreground)/0.16)] mix-blend-multiply dark:mix-blend-screen"
             }
             autoPlay
             loop
