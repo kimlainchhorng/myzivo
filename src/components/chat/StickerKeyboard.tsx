@@ -756,35 +756,48 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                 </div>
               </div>
 
-              {/* Pack icon strip — Messenger-style */}
-              <div className="flex px-2 py-2 gap-1.5 overflow-x-auto scrollbar-none border-b border-border/10">
+              {/* Pack icon strip — polished Messenger-style */}
+              <div className="flex px-2 py-2 gap-1 overflow-x-auto scrollbar-none border-b border-border/10">
                 {recentStickers.length > 0 && (
                   <button
                     onClick={() => setActivePack(-1)}
                     title="Recent"
-                    className={`h-9 w-9 rounded-xl grid place-items-center shrink-0 transition-all ${activePack === -1 ? "bg-primary/12 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:bg-muted/50"}`}
+                    className={cn(
+                      "h-10 w-10 rounded-2xl grid place-items-center shrink-0 transition-all border",
+                      activePack === -1
+                        ? "bg-primary/10 text-primary border-primary/30 shadow-sm"
+                        : "text-muted-foreground border-transparent hover:bg-muted/40"
+                    )}
                   >
-                    <Clock className="w-4 h-4" />
+                    <Clock className="w-4.5 h-4.5" />
                   </button>
                 )}
-                {/* Illustrated packs first */}
                 {illustratedPacks.map((pack, i) => (
                   <button
                     key={pack.id}
                     onClick={() => setActivePack(1000 + i)}
                     title={pack.name}
-                    className={`h-9 w-9 rounded-xl grid place-items-center text-base shrink-0 transition-all ${activePack === 1000 + i ? "bg-primary/12 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:bg-muted/50"}`}
+                    className={cn(
+                      "h-10 w-10 rounded-2xl grid place-items-center text-lg shrink-0 transition-all border",
+                      activePack === 1000 + i
+                        ? "bg-primary/10 border-primary/30 shadow-sm scale-110"
+                        : "border-transparent hover:bg-muted/40"
+                    )}
                   >
                     <span>{pack.icon}</span>
                   </button>
                 ))}
-                {/* Emoji packs */}
                 {packs.map((pack, i) => (
                   <button
                     key={pack.id}
                     onClick={() => setActivePack(i)}
                     title={pack.name}
-                    className={`h-9 w-9 rounded-xl grid place-items-center text-base shrink-0 transition-all ${activePack === i ? "bg-primary/12 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:bg-muted/50"}`}
+                    className={cn(
+                      "h-10 w-10 rounded-2xl grid place-items-center text-lg shrink-0 transition-all border",
+                      activePack === i
+                        ? "bg-primary/10 border-primary/30 shadow-sm scale-110"
+                        : "border-transparent hover:bg-muted/40"
+                    )}
                   >
                     <span>{pack.emoji_prefix || "🙂"}</span>
                   </button>
@@ -792,9 +805,9 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               </div>
 
               {/* Active pack name label */}
-              <div className="px-3 pt-2 pb-1">
-                <h3 className="text-xs font-semibold text-muted-foreground">
-                  {activePack === -1 ? "Recent" : isIllustratedPack ? (currentIllustratedPack?.name ?? "") : (currentPack?.name ?? "")}
+              <div className="px-4 pt-2.5 pb-1">
+                <h3 className="text-[13px] font-bold text-foreground tracking-tight">
+                  {activePack === -1 ? "Recently Used" : isIllustratedPack ? (currentIllustratedPack?.name ?? "") : (currentPack?.name ?? "")}
                 </h3>
               </div>
 
