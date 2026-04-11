@@ -291,6 +291,7 @@ interface IllustratedStickerLike {
   id: string;
   src: string;
   alt: string;
+  animatedSrc?: string;
 }
 function getIllustratedTone(stickerId: string): IllustratedTone {
   return /sunflower|cupcake|octopus|hedgehog/.test(stickerId)
