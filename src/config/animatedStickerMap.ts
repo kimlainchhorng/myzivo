@@ -181,6 +181,16 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-lion-happy": emLionHappyAnim.url,
   "em-frog-happy": emFrogHappyAnim.url,
   "em-pig-happy": emPigHappyAnim.url,
+  "em-whale-happy": emWhaleHappyAnim.url,
+  "em-whale-cry": emWhaleCryAnim.url,
+  "em-turtle-happy": emTurtleHappyAnim.url,
+  "em-hedgehog-happy": emHedgehogHappyAnim.url,
+  "em-elephant-happy": emElephantHappyAnim.url,
+  "em-butterfly-happy": emButterflyHappyAnim.url,
+  "em-sloth-happy": emSlothHappyAnim.url,
+  "em-deer-happy": emDeerHappyAnim.url,
+  "em-chick-happy": emChickHappyAnim.url,
+  "em-raccoon-happy": emRaccoonHappyAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
