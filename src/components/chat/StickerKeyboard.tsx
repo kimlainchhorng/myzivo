@@ -431,17 +431,25 @@ function LiveIllustratedStickerArt({
       ? { scaleX: [0.82, 1.1, 0.82], opacity: [0.16, 0.1, 0.16] }
       : { scaleX: [0.74, 1.2, 0.74], opacity: [0.16, 0.08, 0.16] };
 
-  // Grid mode: clean Facebook-style — static image, no animations
+  // Grid mode: Facebook-style — subtle character animation, no particles/glow
   if (!large) {
     return (
-      <div className="relative flex h-full w-full items-center justify-center">
-        <img
+      <motion.div
+        className="relative flex h-full w-full items-center justify-center"
+        animate={bodyAnimate}
+        transition={{ duration: duration * 1.3, repeat: Infinity, ease: "easeInOut", delay: index * 0.08 }}
+        style={{ transformOrigin: "center bottom" }}
+      >
+        <motion.img
           src={sticker.src}
           alt={sticker.alt}
           className="h-full w-full object-contain pointer-events-none"
           loading="lazy"
+          animate={imgAnimate}
+          transition={{ duration: duration * 1.3, repeat: Infinity, ease: "easeInOut", delay: index * 0.08 }}
+          style={{ transformOrigin: "center bottom" }}
         />
-      </div>
+      </motion.div>
     );
   }
 
