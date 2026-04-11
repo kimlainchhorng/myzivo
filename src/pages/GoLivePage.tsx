@@ -33,9 +33,25 @@ export default function GoLivePage() {
   const [viewerCount, setViewerCount] = useState(0);
   const [likes, setLikes] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string }[]>([]);
+  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean }[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [cameraError, setCameraError] = useState(false);
+  const [showGiftPanel, setShowGiftPanel] = useState(false);
+  const [floatingReactions, setFloatingReactions] = useState<{ id: string; emoji: string; x: number }[]>([]);
+  const [giftsReceived, setGiftsReceived] = useState(0);
+
+  const gifts = [
+    { emoji: "🌹", name: "Rose", coins: 1 },
+    { emoji: "💎", name: "Diamond", coins: 5 },
+    { emoji: "🎉", name: "Party", coins: 10 },
+    { emoji: "🚀", name: "Rocket", coins: 50 },
+    { emoji: "👑", name: "Crown", coins: 100 },
+    { emoji: "🦁", name: "Lion", coins: 200 },
+    { emoji: "🌈", name: "Rainbow", coins: 500 },
+    { emoji: "🏆", name: "Trophy", coins: 1000 },
+  ];
+
+  const quickReactions = ["❤️", "🔥", "😍", "👏", "😂", "🎵", "💯", "✨"];
 
   const topics = ["General", "Music", "Gaming", "Cooking", "Tech", "Fitness", "Art", "Travel", "Fashion", "Comedy"];
 
