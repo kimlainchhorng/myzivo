@@ -174,6 +174,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { error: new Error(precheck.reason || "Too many failed attempts. Please try later.") };
       }
 
+      const emailExists = precheck?.email_exists ?? true;
+
       const { error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
@@ -183,7 +185,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         _identifier: normalizedEmail,
         _success: !error,
         _device_fingerprint: deviceFingerprint,
-      });
+      }).catch(() => {});
+
+      if (error) {
+        // Attach email_exists hint for better error messages
+        (error as any)._emailExists = emailExists;
+        return { error };
+      }
 
       if (!error) {
         loginGraceUntilRef.current = Date.now() + 15_000;
