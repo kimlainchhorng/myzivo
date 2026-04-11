@@ -269,7 +269,7 @@ export default function AdminUsersPage() {
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex gap-1 flex-wrap">
-                              {roles.map((role) => (
+                              {roles.filter((role) => role !== "driver").map((role) => (
                                 <Badge key={role} variant="secondary" className="text-[10px] bg-violet-500/10 text-violet-500 border-0">
                                   <Shield className="w-2.5 h-2.5 mr-0.5" />{role}
                                 </Badge>
