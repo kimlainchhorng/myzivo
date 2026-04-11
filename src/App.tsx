@@ -102,6 +102,7 @@ const MonetizationArticlesPage = lazy(() => import("./pages/MonetizationArticles
 const MonetizationArticleDetailPage = lazy(() => import("./pages/MonetizationArticleDetailPage"));
 const ProgramDetailPage = lazy(() => import("./pages/ProgramDetailPage"));
 const LiveStreamPage = lazy(() => import("./pages/LiveStreamPage"));
+const GoLivePage = lazy(() => import("./pages/GoLivePage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
 const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
 const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
@@ -573,6 +574,7 @@ const App = () => (
                 <Route path="/feed" element={<ReelsFeedPage />} />
                 <Route path="/reels" element={<FeedPage />} />
                 <Route path="/live" element={<LiveStreamPage />} />
+                <Route path="/go-live" element={<GoLivePage />} />
                 <Route path="/reels/:postId" element={<FeedPage />} />
                 <Route path="/sound/:soundName" element={<SoundPage />} />
                 <Route path="/dl/:kind/:id" element={<DeepLinkLandingPage />} />
