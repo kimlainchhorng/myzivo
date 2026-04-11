@@ -46,6 +46,17 @@ import buddyWatermelon from "@/assets/stickers/buddy-watermelon.png";
 import buddyChick from "@/assets/stickers/buddy-chick.png";
 import buddyDeer from "@/assets/stickers/buddy-deer.png";
 import buddyDragon from "@/assets/stickers/buddy-dragon.png";
+// New — Tiny Bugs & Ocean Pals
+import buddyBee from "@/assets/stickers/buddy-bee.png";
+import buddySnail from "@/assets/stickers/buddy-snail.png";
+import buddyCrab from "@/assets/stickers/buddy-crab.png";
+import buddyJellyfish from "@/assets/stickers/buddy-jellyfish.png";
+import buddyLadybug from "@/assets/stickers/buddy-ladybug.png";
+import buddyStarfish from "@/assets/stickers/buddy-starfish.png";
+import buddySeahorse from "@/assets/stickers/buddy-seahorse.png";
+import buddyClownfish from "@/assets/stickers/buddy-clownfish.png";
+import buddySquid from "@/assets/stickers/buddy-squid.png";
+import buddyDolphin from "@/assets/stickers/buddy-dolphin.png";
 
 export interface IllustratedSticker {
   id: string;
@@ -126,6 +137,30 @@ export const ILLUSTRATED_PACKS: IllustratedStickerPack[] = [
       { id: "ms-lion", src: buddyLion, alt: "Brave Lion" },
       { id: "ms-turtle", src: buddyTurtle, alt: "Slow Turtle" },
       { id: "ms-frog", src: buddyFrog, alt: "Happy Frog" },
+    ],
+  },
+  {
+    id: "tiny-bugs",
+    name: "Tiny Bugs",
+    icon: "🐝",
+    stickers: [
+      { id: "tb-bee", src: buddyBee, alt: "Buzzy Bee" },
+      { id: "tb-snail", src: buddySnail, alt: "Happy Snail" },
+      { id: "tb-ladybug", src: buddyLadybug, alt: "Cute Ladybug" },
+    ],
+  },
+  {
+    id: "ocean-pals",
+    name: "Ocean Pals",
+    icon: "🐬",
+    stickers: [
+      { id: "op-crab", src: buddyCrab, alt: "Snappy Crab" },
+      { id: "op-jellyfish", src: buddyJellyfish, alt: "Floaty Jellyfish" },
+      { id: "op-starfish", src: buddyStarfish, alt: "Twinkle Starfish" },
+      { id: "op-seahorse", src: buddySeahorse, alt: "Royal Seahorse" },
+      { id: "op-clownfish", src: buddyClownfish, alt: "Happy Clownfish" },
+      { id: "op-squid", src: buddySquid, alt: "Waving Squid" },
+      { id: "op-dolphin", src: buddyDolphin, alt: "Playful Dolphin" },
     ],
   },
 ];
