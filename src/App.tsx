@@ -102,6 +102,7 @@ const MonetizationArticlesPage = lazy(() => import("./pages/MonetizationArticles
 const MonetizationArticleDetailPage = lazy(() => import("./pages/MonetizationArticleDetailPage"));
 const ProgramDetailPage = lazy(() => import("./pages/ProgramDetailPage"));
 const LiveStreamPage = lazy(() => import("./pages/LiveStreamPage"));
+const GoLivePage = lazy(() => import("./pages/GoLivePage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
 const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
 const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
