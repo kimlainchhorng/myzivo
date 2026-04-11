@@ -291,6 +291,21 @@ interface IllustratedStickerLike {
   src: string;
   alt: string;
 }
+function getIllustratedTone(stickerId: string): IllustratedTone {
+  return /sunflower|cupcake|octopus|hedgehog/.test(stickerId)
+    ? "angry"
+    : /pear|pig|bunny/.test(stickerId)
+      ? "sad"
+      : /coffee|potato|penguin/.test(stickerId)
+        ? "sleepy"
+        : /cat-love/.test(stickerId)
+          ? "love"
+          : /sushi|toast|hamster|carrot/.test(stickerId)
+            ? "happy"
+            : /tomato|beet|mushroom|lemon/.test(stickerId)
+              ? "shy"
+              : "float";
+}
 
 
 function LiveIllustratedStickerArt({
