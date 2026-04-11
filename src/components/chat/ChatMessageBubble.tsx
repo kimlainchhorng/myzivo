@@ -530,7 +530,7 @@ export default function ChatMessageBubble({
                         <motion.img
                           src={stickerSrc}
                           alt={parsedSticker.id}
-                          className="w-32 h-32 object-contain"
+                          className="w-32 h-32 object-contain mix-blend-multiply dark:mix-blend-screen dark:invert"
                           loading="lazy"
                           initial={{ scale: 0.2, opacity: 0, y: 20 }}
                           animate={{
