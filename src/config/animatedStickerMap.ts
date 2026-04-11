@@ -59,7 +59,7 @@ import seahorseAnim from "@/assets/stickers/anim/buddy-seahorse-anim.mp4.asset.j
 import clownfishAnim from "@/assets/stickers/anim/buddy-clownfish-anim.mp4.asset.json";
 import squidAnim from "@/assets/stickers/anim/buddy-squid-anim.mp4.asset.json";
 import dolphinAnim from "@/assets/stickers/anim/buddy-dolphin-anim.mp4.asset.json";
-// Emotion animated stickers
+// Emotion animated stickers — batch 1
 import emPandaHappyAnim from "@/assets/stickers/anim/em-panda-happy-anim.mp4.asset.json";
 import emPandaCryAnim from "@/assets/stickers/anim/em-panda-cry-anim.mp4.asset.json";
 import emPandaLoveAnim from "@/assets/stickers/anim/em-panda-love-anim.mp4.asset.json";
@@ -68,6 +68,21 @@ import emCatLoveAnim from "@/assets/stickers/anim/em-cat-love-anim.mp4.asset.jso
 import emBearCryAnim from "@/assets/stickers/anim/em-bear-cry-anim.mp4.asset.json";
 import emBunnyHappyAnim from "@/assets/stickers/anim/em-bunny-happy-anim.mp4.asset.json";
 import emPenguinCoolAnim from "@/assets/stickers/anim/em-penguin-cool-anim.mp4.asset.json";
+// Emotion animated stickers — batch 2
+import emPuppyHappyAnim from "@/assets/stickers/anim/em-puppy-happy-anim.mp4.asset.json";
+import emPuppyCryAnim from "@/assets/stickers/anim/em-puppy-cry-anim.mp4.asset.json";
+import emPuppyLoveAnim from "@/assets/stickers/anim/em-puppy-love-anim.mp4.asset.json";
+import emOwlHappyAnim from "@/assets/stickers/anim/em-owl-happy-anim.mp4.asset.json";
+import emOwlCryAnim from "@/assets/stickers/anim/em-owl-cry-anim.mp4.asset.json";
+import emKoalaHappyAnim from "@/assets/stickers/anim/em-koala-happy-anim.mp4.asset.json";
+import emKoalaLoveAnim from "@/assets/stickers/anim/em-koala-love-anim.mp4.asset.json";
+import emUnicornHappyAnim from "@/assets/stickers/anim/em-unicorn-happy-anim.mp4.asset.json";
+import emUnicornCryAnim from "@/assets/stickers/anim/em-unicorn-cry-anim.mp4.asset.json";
+import emDragonHappyAnim from "@/assets/stickers/anim/em-dragon-happy-anim.mp4.asset.json";
+import emDragonAngryAnim from "@/assets/stickers/anim/em-dragon-angry-anim.mp4.asset.json";
+import emLionHappyAnim from "@/assets/stickers/anim/em-lion-happy-anim.mp4.asset.json";
+import emFrogHappyAnim from "@/assets/stickers/anim/em-frog-happy-anim.mp4.asset.json";
+import emPigHappyAnim from "@/assets/stickers/anim/em-pig-happy-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -141,6 +156,20 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-bear-cry": emBearCryAnim.url,
   "em-bunny-happy": emBunnyHappyAnim.url,
   "em-penguin-cool": emPenguinCoolAnim.url,
+  "em-puppy-happy": emPuppyHappyAnim.url,
+  "em-puppy-cry": emPuppyCryAnim.url,
+  "em-puppy-love": emPuppyLoveAnim.url,
+  "em-owl-happy": emOwlHappyAnim.url,
+  "em-owl-cry": emOwlCryAnim.url,
+  "em-koala-happy": emKoalaHappyAnim.url,
+  "em-koala-love": emKoalaLoveAnim.url,
+  "em-unicorn-happy": emUnicornHappyAnim.url,
+  "em-unicorn-cry": emUnicornCryAnim.url,
+  "em-dragon-happy": emDragonHappyAnim.url,
+  "em-dragon-angry": emDragonAngryAnim.url,
+  "em-lion-happy": emLionHappyAnim.url,
+  "em-frog-happy": emFrogHappyAnim.url,
+  "em-pig-happy": emPigHappyAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
