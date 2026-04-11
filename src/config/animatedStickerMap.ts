@@ -116,6 +116,17 @@ import emPenguinHappyAnim from "@/assets/stickers/anim/em-penguin-happy-anim.mp4
 import emPenguinLoveAnim from "@/assets/stickers/anim/em-penguin-love-anim.mp4.asset.json";
 import emBunnyCryAnim from "@/assets/stickers/anim/em-bunny-cry-anim.mp4.asset.json";
 import emBunnyLoveAnim from "@/assets/stickers/anim/em-bunny-love-anim.mp4.asset.json";
+// Emotion animated stickers — batch 6
+import emDuckCryAnim from "@/assets/stickers/anim/em-duck-cry-anim.mp4.asset.json";
+import emDuckLoveAnim from "@/assets/stickers/anim/em-duck-love-anim.mp4.asset.json";
+import emHamsterCryAnim from "@/assets/stickers/anim/em-hamster-cry-anim.mp4.asset.json";
+import emHamsterLoveAnim from "@/assets/stickers/anim/em-hamster-love-anim.mp4.asset.json";
+import emPuppyAngryAnim from "@/assets/stickers/anim/em-puppy-angry-anim.mp4.asset.json";
+import emPuppyCoolAnim from "@/assets/stickers/anim/em-puppy-cool-anim.mp4.asset.json";
+import emOwlLoveAnim from "@/assets/stickers/anim/em-owl-love-anim.mp4.asset.json";
+import emOwlAngryAnim from "@/assets/stickers/anim/em-owl-angry-anim.mp4.asset.json";
+import emKoalaCryAnim from "@/assets/stickers/anim/em-koala-cry-anim.mp4.asset.json";
+import emKoalaAngryAnim from "@/assets/stickers/anim/em-koala-angry-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -213,7 +224,7 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-deer-happy": emDeerHappyAnim.url,
   "em-chick-happy": emChickHappyAnim.url,
   "em-raccoon-happy": emRaccoonHappyAnim.url,
-  // Emotion animated stickers — batch 4
+  // batch 4
   "em-panda-angry": emPandaAngryAnim.url,
   "em-panda-sleepy": emPandaSleepyAnim.url,
   "em-fox-cry": emFoxCryAnim.url,
@@ -224,7 +235,7 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-hamster-happy": emHamsterHappyAnim.url,
   "em-bear-happy": emBearHappyAnim.url,
   "em-penguin-cry": emPenguinCryAnim.url,
-  // Emotion animated stickers — batch 5
+  // batch 5
   "em-fox-angry": emFoxAngryAnim.url,
   "em-fox-cool": emFoxCoolAnim.url,
   "em-cat-angry": emCatAngryAnim.url,
@@ -235,6 +246,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-penguin-love": emPenguinLoveAnim.url,
   "em-bunny-cry": emBunnyCryAnim.url,
   "em-bunny-love": emBunnyLoveAnim.url,
+  // batch 6
+  "em-duck-cry": emDuckCryAnim.url,
+  "em-duck-love": emDuckLoveAnim.url,
+  "em-hamster-cry": emHamsterCryAnim.url,
+  "em-hamster-love": emHamsterLoveAnim.url,
+  "em-puppy-angry": emPuppyAngryAnim.url,
+  "em-puppy-cool": emPuppyCoolAnim.url,
+  "em-owl-love": emOwlLoveAnim.url,
+  "em-owl-angry": emOwlAngryAnim.url,
+  "em-koala-cry": emKoalaCryAnim.url,
+  "em-koala-angry": emKoalaAngryAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
