@@ -511,15 +511,23 @@ export default function ChatMessageBubble({
                       className="w-32 h-32 object-contain drop-shadow-lg"
                       loading="lazy"
                       initial={{ scale: 0, opacity: 0, y: 60, rotate: -12 }}
-                      animate={{ scale: 1, opacity: 1, y: 0, rotate: 0 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 260,
-                        damping: 12,
-                        mass: 0.8,
+                      animate={{
+                        scale: [1, 1.06, 0.97, 1.03, 1],
+                        opacity: 1,
+                        y: [0, -6, 2, -3, 0],
+                        rotate: [0, -3, 2, -1, 0],
+                        scaleX: [1, 1.04, 0.96, 1.02, 1],
+                        scaleY: [1, 0.96, 1.05, 0.98, 1],
                       }}
-                      whileHover={{ scale: 1.08, rotate: 3 }}
-                      whileTap={{ scale: 0.92 }}
+                      transition={{
+                        scale: { duration: 2.4, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.8 },
+                        opacity: { duration: 0.2 },
+                        y: { duration: 2, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.5 },
+                        rotate: { duration: 2.8, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.3 },
+                        scaleX: { duration: 2.2, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.6 },
+                        scaleY: { duration: 2.2, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.6 },
+                      }}
+                      whileTap={{ scale: 0.85, rotate: -5 }}
                       style={{ transformOrigin: "center bottom" }}
                       onError={() => {
                         if (!stickerFallbackActive && parsedSticker.fallbackSrc) {
