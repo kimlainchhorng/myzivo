@@ -39,17 +39,56 @@ export default function GoLivePage() {
   const [showGiftPanel, setShowGiftPanel] = useState(false);
   const [floatingReactions, setFloatingReactions] = useState<{ id: string; emoji: string; x: number }[]>([]);
   const [giftsReceived, setGiftsReceived] = useState(0);
+  const [giftTab, setGiftTab] = useState<"gifts" | "interactive" | "exclusive">("gifts");
 
-  const gifts = [
-    { emoji: "🌹", name: "Rose", coins: 1 },
-    { emoji: "💎", name: "Diamond", coins: 5 },
-    { emoji: "🎉", name: "Party", coins: 10 },
-    { emoji: "🚀", name: "Rocket", coins: 50 },
-    { emoji: "👑", name: "Crown", coins: 100 },
-    { emoji: "🦁", name: "Lion", coins: 200 },
-    { emoji: "🌈", name: "Rainbow", coins: 500 },
-    { emoji: "🏆", name: "Trophy", coins: 1000 },
-  ];
+  const allGifts = {
+    gifts: [
+      { icon: "🎁", name: "Gift Pack", coins: 1, badge: "Unlock", bg: "from-pink-500/30 to-purple-500/30" },
+      { icon: "🌹", name: "Rose", coins: 1, badge: "Popular", bg: "from-rose-500/30 to-pink-500/30" },
+      { icon: "❤️", name: "Heart Me", coins: 1, bg: "from-red-500/30 to-pink-500/30" },
+      { icon: "🥊", name: "Boxing Gloves", coins: 299, bg: "from-blue-500/30 to-indigo-500/30" },
+      { icon: "🎯", name: "GG", coins: 1, bg: "from-orange-500/30 to-red-500/30" },
+      { icon: "💸", name: "Money Gun", coins: 500, bg: "from-green-500/30 to-emerald-500/30" },
+      { icon: "📦", name: "Treasure Box", coins: 30, badge: "Interaction", bg: "from-amber-500/30 to-yellow-500/30" },
+      { icon: "🎩", name: "Hat & Mustache", coins: 99, bg: "from-yellow-500/30 to-orange-500/30" },
+      { icon: "🐱", name: "You're Awesome", coins: 1, bg: "from-orange-400/30 to-amber-400/30" },
+      { icon: "💜", name: "TikTok", coins: 1, bg: "from-violet-500/30 to-purple-500/30" },
+      { icon: "🫶", name: "Finger Heart", coins: 5, bg: "from-pink-400/30 to-rose-400/30" },
+      { icon: "🎊", name: "Happy Weekend", coins: 10, bg: "from-green-400/30 to-teal-400/30" },
+      { icon: "🍩", name: "Doughnut", coins: 30, bg: "from-pink-300/30 to-amber-300/30" },
+      { icon: "🍦", name: "Ice Cream Cone", coins: 1, bg: "from-pink-200/30 to-blue-200/30" },
+      { icon: "🥰", name: "Love You So Much", coins: 1, bg: "from-red-400/30 to-pink-400/30" },
+      { icon: "🎊", name: "Confetti", coins: 100, bg: "from-purple-400/30 to-blue-400/30" },
+    ],
+    interactive: [
+      { icon: "🐳", name: "Whale Diving", coins: 2150, bg: "from-blue-500/30 to-cyan-500/30" },
+      { icon: "🦁", name: "Lion", coins: 29999, bg: "from-amber-500/30 to-orange-500/30" },
+      { icon: "🐕", name: "Corgi", coins: 299, bg: "from-orange-300/30 to-amber-300/30" },
+      { icon: "🤝", name: "Friendship", coins: 10, bg: "from-pink-400/30 to-purple-400/30" },
+      { icon: "🦢", name: "Swan", coins: 699, bg: "from-blue-200/30 to-white/20" },
+      { icon: "✈️", name: "Flying Jets", coins: 5000, badge: "NEW", bg: "from-sky-500/30 to-blue-500/30" },
+      { icon: "🍰", name: "Cake Slice", coins: 1, bg: "from-yellow-300/30 to-pink-300/30" },
+      { icon: "🎫", name: "Journey Pass", coins: 10, bg: "from-indigo-500/30 to-purple-500/30" },
+      { icon: "🐌", name: "Slow Motion", coins: 10, bg: "from-purple-400/30 to-pink-400/30" },
+      { icon: "🎆", name: "Fireworks", coins: 1088, bg: "from-orange-400/30 to-red-400/30" },
+      { icon: "🌌", name: "Galaxy", coins: 1000, bg: "from-indigo-600/30 to-purple-600/30" },
+      { icon: "🫧", name: "Pop", coins: 1, bg: "from-blue-300/30 to-cyan-300/30" },
+    ],
+    exclusive: [
+      { icon: "🏎️", name: "Racing Debut", coins: 1500, badge: "NEW", bg: "from-red-500/30 to-orange-500/30" },
+      { icon: "🌵", name: "Cactus Shuffle", coins: 399, badge: "NEW", bg: "from-green-400/30 to-lime-400/30" },
+      { icon: "🎸", name: "Heart Guitar", coins: 500, badge: "NEW", bg: "from-red-500/30 to-rose-500/30" },
+      { icon: "🤡", name: "Clown Boogie", coins: 449, bg: "from-yellow-400/30 to-orange-400/30" },
+      { icon: "🏍️", name: "Motorcycle", coins: 2988, bg: "from-cyan-500/30 to-green-500/30" },
+      { icon: "🎹", name: "Music Mate", coins: 299, bg: "from-pink-400/30 to-purple-400/30" },
+      { icon: "☄️", name: "Meteor Shower", coins: 3000, bg: "from-indigo-500/30 to-blue-500/30" },
+      { icon: "🏴‍☠️", name: "Pirate Treasure", coins: 449, bg: "from-yellow-600/30 to-amber-600/30" },
+      { icon: "🚂", name: "Train", coins: 899, bg: "from-blue-400/30 to-indigo-400/30" },
+      { icon: "🌸", name: "Blooming Ribbons", coins: 1000, bg: "from-pink-300/30 to-rose-300/30" },
+      { icon: "✈️", name: "Private Jet", coins: 4888, bg: "from-sky-400/30 to-blue-400/30" },
+      { icon: "🌹", name: "Rose Hand", coins: 199, bg: "from-red-400/30 to-pink-400/30" },
+    ],
+  };
 
   const quickReactions = ["❤️", "🔥", "😍", "👏", "😂", "🎵", "💯", "✨"];
 
