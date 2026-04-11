@@ -489,9 +489,9 @@ export default function ChatMessageBubble({
               { x: -36, y: 6, delay: 0.16, color: "#06b6d4" },
             ];
             return (
-              <div className="p-1">
+              <div className="py-1">
                 {!stickerLoadFailed ? (
-                  <div className="relative w-28 h-28">
+                  <div className="relative w-32 h-32">
                     <AnimatePresence>
                       {showStickerBurst && burstParticles.map((dot, i) => (
                         <motion.span
@@ -506,21 +506,13 @@ export default function ChatMessageBubble({
                       ))}
                     </AnimatePresence>
 
-                    {/* Breathing glow behind sticker */}
-                    <motion.div
-                      aria-hidden
-                      className="pointer-events-none absolute inset-[10%] rounded-full blur-xl"
-                      style={{ background: "hsl(var(--primary) / 0.08)" }}
-                      animate={{ scale: [1, 1.18, 1], opacity: [0.4, 0.9, 0.4] }}
-                      transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-                    />
 
                     {(() => {
                       const animatedUrl = getAnimatedStickerUrl(parsedSticker.id);
                       if (animatedUrl) {
                         return (
                           <motion.div
-                            className="w-28 h-28"
+                            className="w-32 h-32"
                             initial={{ scale: 0.2, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             transition={{ type: "spring", stiffness: 380, damping: 14 }}
@@ -538,7 +530,7 @@ export default function ChatMessageBubble({
                         <motion.img
                           src={stickerSrc}
                           alt={parsedSticker.id}
-                          className="w-28 h-28 object-contain drop-shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
+                          className="w-32 h-32 object-contain"
                           loading="lazy"
                           initial={{ scale: 0.2, opacity: 0, y: 20 }}
                           animate={{
