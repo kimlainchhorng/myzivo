@@ -490,7 +490,7 @@ export default function ChatMessageBubble({
             return (
               <div className="p-1">
                 {!stickerLoadFailed ? (
-                  <div className="relative w-40 h-40">
+                  <div className="relative w-28 h-28">
                     <AnimatePresence>
                       {showStickerBurst && burstParticles.map((dot, i) => (
                         <motion.span
