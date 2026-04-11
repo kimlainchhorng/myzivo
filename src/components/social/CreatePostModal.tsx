@@ -931,7 +931,7 @@ export default function CreatePostModal({
               onClick={() => {
                 if (opt.action === "live") {
                   onClose();
-                  window.location.href = "/live";
+                  navigate("/live");
                   return;
                 }
                 if (opt.action === "audio") {
