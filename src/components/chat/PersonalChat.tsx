@@ -240,7 +240,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       const { data: profile } = await (supabase as any)
         .from("profiles")
         .select("full_name, avatar_url")
-        .eq("id", user.id)
+        .eq("user_id", user.id)
         .maybeSingle();
       if (profile?.full_name) senderName = profile.full_name;
       senderAvatarUrl = profile?.avatar_url || "";
@@ -267,7 +267,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         body: {
           user_id: recipientId,
           notification_type: "chat_message",
-          title: `💬 ${senderName}`,
+          title: senderName,
           body: preview,
           data: {
             type: "chat_message",
