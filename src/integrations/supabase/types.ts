@@ -10623,6 +10623,33 @@ export type Database = {
         }
         Relationships: []
       }
+      creator_program_enrollments: {
+        Row: {
+          enrolled_at: string
+          id: string
+          program_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          enrolled_at?: string
+          id?: string
+          program_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          enrolled_at?: string
+          id?: string
+          program_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       creator_subscriptions: {
         Row: {
           cancelled_at: string | null
