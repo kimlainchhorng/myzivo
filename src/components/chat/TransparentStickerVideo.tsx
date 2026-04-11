@@ -1,8 +1,8 @@
 /**
  * TransparentStickerVideo — removes white background from sticker MP4s
- * Uses CSS mix-blend-mode (GPU-accelerated, zero CPU cost) instead of canvas pixel processing.
- * On light themes: multiply blend hides white naturally.
- * On dark themes: a white backing container + multiply blend achieves the same effect.
+ * Uses CSS mix-blend-mode: multiply (GPU-accelerated, zero CPU cost).
+ * White pixels become transparent against any background.
+ * No backing div needed — the blend works against the natural parent background.
  */
 
 import { useState } from "react";
@@ -35,23 +35,19 @@ export function TransparentStickerVideo({
   }
 
   return (
-    <div className="relative h-full w-full flex items-center justify-center">
-      {/* White backing for dark mode — multiply blend needs a white base */}
-      <div className="absolute inset-[4%] rounded-2xl bg-white dark:bg-white" />
-      <video
-        src={src}
-        className={cn(
-          "relative h-full w-full object-contain pointer-events-none mix-blend-multiply",
-          className
-        )}
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="auto"
-        onError={() => setError(true)}
-      />
-    </div>
+    <video
+      src={src}
+      className={cn(
+        "h-full w-full object-contain pointer-events-none mix-blend-multiply dark:mix-blend-screen dark:invert",
+        className
+      )}
+      autoPlay
+      loop
+      muted
+      playsInline
+      preload="auto"
+      onError={() => setError(true)}
+    />
   );
 }
 
