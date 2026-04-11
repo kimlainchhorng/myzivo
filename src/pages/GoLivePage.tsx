@@ -220,17 +220,16 @@ export default function GoLivePage() {
     setLikes((p) => p + 1);
   };
 
-  const sendGift = (gift: { emoji: string; name: string; coins: number }) => {
+  const sendGift = (gift: { icon: string; name: string; coins: number }) => {
     setGiftsReceived((p) => p + 1);
-    spawnFloatingReaction(gift.emoji);
-    // Add gift message to chat
+    spawnFloatingReaction(gift.icon);
     const names = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
     const sender = names[Math.floor(Math.random() * names.length)];
     setChatMessages((prev) => [
       ...prev.slice(-20),
-      { id: Date.now().toString(), user: sender, text: `sent ${gift.emoji} ${gift.name} (${gift.coins} coins)`, isGift: true },
+      { id: Date.now().toString(), user: sender, text: `sent ${gift.icon} ${gift.name} (${gift.coins} coins)`, isGift: true },
     ]);
-    toast(`${gift.emoji} ${gift.name} sent!`, { description: `${gift.coins} coins` });
+    toast(`${gift.icon} ${gift.name} sent!`, { description: `${gift.coins} coins` });
     setShowGiftPanel(false);
   };
 
