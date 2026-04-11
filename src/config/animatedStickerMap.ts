@@ -215,6 +215,17 @@ import emPigCoolAnim from "@/assets/stickers/anim/em-pig-cool-anim.mp4.asset.jso
 import emWhaleLoveAnim from "@/assets/stickers/anim/em-whale-love-anim.mp4.asset.json";
 import emWhaleAngryAnim from "@/assets/stickers/anim/em-whale-angry-anim.mp4.asset.json";
 import emWhaleSleepyAnim from "@/assets/stickers/anim/em-whale-sleepy-anim.mp4.asset.json";
+// Emotion animated stickers — batch 15
+import emWhaleShyAnim from "@/assets/stickers/anim/em-whale-shy-anim.mp4.asset.json";
+import emWhaleSurprisedAnim from "@/assets/stickers/anim/em-whale-surprised-anim.mp4.asset.json";
+import emWhaleCoolAnim from "@/assets/stickers/anim/em-whale-cool-anim.mp4.asset.json";
+import emTurtleCryAnim from "@/assets/stickers/anim/em-turtle-cry-anim.mp4.asset.json";
+import emTurtleLoveAnim from "@/assets/stickers/anim/em-turtle-love-anim.mp4.asset.json";
+import emTurtleAngryAnim from "@/assets/stickers/anim/em-turtle-angry-anim.mp4.asset.json";
+import emTurtleSleepyAnim from "@/assets/stickers/anim/em-turtle-sleepy-anim.mp4.asset.json";
+import emTurtleShyAnim from "@/assets/stickers/anim/em-turtle-shy-anim.mp4.asset.json";
+import emTurtleSurprisedAnim from "@/assets/stickers/anim/em-turtle-surprised-anim.mp4.asset.json";
+import emTurtleCoolAnim from "@/assets/stickers/anim/em-turtle-cool-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
