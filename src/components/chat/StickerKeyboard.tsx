@@ -928,7 +928,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                             onClick={() => sendSticker(stickerPayload)}
                             className="group relative aspect-square overflow-visible rounded-2xl hover:bg-muted/30 transition-colors p-1"
                           >
-                            <LiveIllustratedStickerArt sticker={sticker} index={idx} />
+                            <LiveIllustratedStickerArt sticker={{ ...sticker, animatedSrc: getAnimatedStickerUrl(sticker.id) }} index={idx} />
                           </motion.button>
                         );
                       })}
