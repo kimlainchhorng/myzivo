@@ -714,75 +714,56 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: "100%", opacity: 0 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="bg-background border-t border-border/30 rounded-t-3xl shadow-2xl max-h-[72vh] overflow-hidden flex flex-col"
+        className="bg-background border-t border-border/30 rounded-t-3xl shadow-2xl max-h-[58vh] overflow-hidden flex flex-col"
       >
-        {/* ── Tab bar + search ── */}
-        <div className="sticky top-0 bg-background/95 backdrop-blur-xl border-b border-border/20 px-3 pt-3 pb-2 z-10 shrink-0">
-          <div className="w-16 h-1.5 rounded-full bg-muted mx-auto mb-3" />
+        {/* ── Compact header ── */}
+        <div className="sticky top-0 bg-background/95 backdrop-blur-xl border-b border-border/20 px-3 pt-2 pb-1.5 z-10 shrink-0">
+          <div className="w-12 h-1 rounded-full bg-muted mx-auto mb-2" />
 
-          {/* Quick-access row: Voice + Camera + Tabs */}
-          <div className="flex items-center gap-1.5 mb-2">
-            {/* Voice & Camera shortcuts */}
-            {onStartVoice && (
-              <button
-                onClick={() => { onClose(); onStartVoice(); }}
-                className="h-10 w-10 rounded-xl bg-gradient-to-br from-rose-500/20 to-pink-500/10 flex items-center justify-center shrink-0 border border-rose-500/20"
-                title="Voice message"
-              >
-                <Mic className="w-5 h-5 text-rose-500" />
-              </button>
-            )}
-            {onOpenCamera && (
-              <button
-                onClick={() => { onClose(); onOpenCamera(); }}
-                className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-sky-500/10 flex items-center justify-center shrink-0 border border-blue-500/20"
-                title="Camera"
-              >
-                <Camera className="w-5 h-5 text-blue-500" />
-              </button>
-            )}
-          </div>
-
-          {/* Tab grid — refined with active indicator */}
-          <div className="flex items-center gap-0.5 bg-muted/30 rounded-2xl p-1">
-            {([
-              { key: "stickers" as TabKey, label: "Stickers", icon: Smile },
-              { key: "gifs" as TabKey, label: "GIFs", icon: ImageIcon },
-              { key: "avatar" as TabKey, label: "Avatar", icon: UserRound },
-              { key: "music" as TabKey, label: "Music", icon: Music2 },
-              { key: "store" as TabKey, label: "Store", icon: Store },
-              { key: "memes" as TabKey, label: "Memes", icon: Sparkles },
-              { key: "future" as TabKey, label: "Future", icon: Rocket },
-            ]).map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => { setActiveTab(tab.key); setSearch(""); }}
-                className={cn(
-                  "flex-1 rounded-xl px-1 py-2 flex flex-col items-center gap-0.5 transition-all",
-                  activeTab === tab.key
-                    ? "bg-background text-primary shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <tab.icon className="w-[18px] h-[18px]" />
-                <span className="text-[9px] font-semibold leading-tight">{tab.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Unified search */}
-          <div className="mt-2 flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={searchPlaceholders[activeTab]}
-                className="w-full h-9 rounded-full bg-muted/30 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground/60"
-              />
+          {/* Tab row + Done */}
+          <div className="flex items-center gap-1">
+            <div className="flex-1 flex items-center gap-0.5 bg-muted/30 rounded-2xl p-0.5">
+              {([
+                { key: "stickers" as TabKey, label: "Stickers", icon: Smile },
+                { key: "gifs" as TabKey, label: "GIFs", icon: ImageIcon },
+                { key: "avatar" as TabKey, label: "Avatar", icon: UserRound },
+                { key: "music" as TabKey, label: "Music", icon: Music2 },
+                { key: "store" as TabKey, label: "Store", icon: Store },
+                { key: "memes" as TabKey, label: "Memes", icon: Sparkles },
+                { key: "future" as TabKey, label: "Future", icon: Rocket },
+              ]).map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => { setActiveTab(tab.key); setSearch(""); }}
+                  className={cn(
+                    "flex-1 rounded-xl px-0.5 py-1.5 flex flex-col items-center gap-0 transition-all",
+                    activeTab === tab.key
+                      ? "bg-background text-primary shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  <span className="text-[8px] font-semibold leading-tight mt-0.5">{tab.label}</span>
+                </button>
+              ))}
             </div>
-            <button onClick={onClose} className="text-primary text-sm font-semibold px-2 py-1 rounded-lg hover:bg-primary/10 shrink-0">Done</button>
+            <button onClick={onClose} className="text-primary text-xs font-semibold px-2 py-1 rounded-lg hover:bg-primary/10 shrink-0">Done</button>
           </div>
+
+          {/* Search — only show for non-sticker tabs or when there's a search query */}
+          {(activeTab !== "stickers" || search) && (
+            <div className="mt-1.5 flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={searchPlaceholders[activeTab]}
+                  className="w-full h-8 rounded-full bg-muted/30 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground/60"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Scrollable content ── */}
@@ -791,23 +772,6 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
           {/* ═══ STICKERS ═══ */}
           {activeTab === "stickers" && (
             <>
-              <div className="px-3 py-1.5 flex items-center justify-between text-[11px] text-muted-foreground border-b border-border/10">
-                <span>{isIllustratedPack ? filteredIllustratedStickers.length : (activePack === -1 ? recentStickers.length : filteredStickers.length)} items</span>
-                <div className="flex items-center gap-1.5">
-                  {!isIllustratedPack && (
-                    <button onClick={() => {
-                      const source = activePack === -1 ? recentStickers : filteredStickers;
-                      if (source.length) sendSticker(source[Math.floor(Math.random() * source.length)]);
-                    }} className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border/30 hover:bg-muted/40">
-                      <Shuffle className="w-3 h-3" /> Random
-                    </button>
-                  )}
-                  {recentStickers.length > 0 && (
-                    <button onClick={() => { localStorage.removeItem(RECENT_KEY); setRecentStickers([]); setActivePack(0); }}
-                      className="px-2 py-1 rounded-md border border-border/30 hover:bg-muted/40">Clear</button>
-                  )}
-                </div>
-              </div>
 
               {/* Pack icon strip — polished Messenger-style */}
               <div className="flex px-2 py-2 gap-1 overflow-x-auto scrollbar-none border-b border-border/10">
