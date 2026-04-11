@@ -1505,8 +1505,15 @@ export default function FeedPage() {
       <div className="hidden lg:block relative z-[1200] shrink-0">
         <NavBar />
       </div>
-      {/* Discover + Search buttons - hide on desktop */}
+      {/* Discover + Search + Live buttons - hide on desktop */}
       <div className="absolute top-3 right-4 z-50 flex gap-2 lg:hidden" style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)" }}>
+        <button
+          type="button"
+          onClick={() => navigate("/live")}
+          className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+        >
+          <Radio className="w-5 h-5 text-red-400" />
+        </button>
         <button
           type="button"
           onClick={() => setShowDiscover(true)}
