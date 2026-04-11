@@ -660,7 +660,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: "100%", opacity: 0 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="bg-background border-t border-border/40 rounded-t-3xl shadow-xl max-h-[72vh] overflow-hidden flex flex-col"
+        className="bg-background border-t border-border/30 rounded-t-3xl shadow-2xl max-h-[72vh] overflow-hidden flex flex-col"
       >
         {/* ── Tab bar + search ── */}
         <div className="sticky top-0 bg-background/95 backdrop-blur-xl border-b border-border/20 px-3 pt-3 pb-2 z-10 shrink-0">
