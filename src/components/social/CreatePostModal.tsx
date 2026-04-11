@@ -75,6 +75,7 @@ export default function CreatePostModal({
   commerceLinkDraft,
   initialAudioName,
 }: CreatePostModalProps) {
+  const navigate = useNavigate();
   // Load draft from localStorage
   const loadDraft = () => {
     try {
