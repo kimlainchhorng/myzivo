@@ -210,7 +210,7 @@ export default function GoLivePage() {
             autoPlay
             playsInline
             muted
-            className={cn("w-full h-full object-cover", facingMode === "user" && "scale-x-[-1]")}
+            className={cn("w-full h-full object-contain bg-black", facingMode === "user" && "scale-x-[-1]")}
           />
         )}
         {/* Dark overlay for readability */}
