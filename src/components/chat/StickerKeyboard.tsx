@@ -28,6 +28,7 @@ import {
   X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ILLUSTRATED_PACKS, type IllustratedStickerPack } from "@/config/illustratedStickers";
 import { toast } from "sonner";
 
 /* ═══════════════ Types ═══════════════ */
