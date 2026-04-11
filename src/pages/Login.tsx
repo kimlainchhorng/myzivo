@@ -157,15 +157,21 @@ const Login = () => {
     if (error) {
       setIsLoading(false);
       const msg = (error.message || "").toLowerCase();
+      const emailExists = (error as any)?._emailExists;
+
       if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials")) {
-        toast.error("Incorrect email or password. Please try again.");
+        if (emailExists === false) {
+          toast.error("No account found with this email. Please sign up first.", { icon: "📧" });
+        } else {
+          toast.error("Incorrect password. Please try again.", { icon: "🔒" });
+        }
       } else if (msg.includes("email not confirmed")) {
-        toast.error("Please verify your email before signing in.");
+        toast.error("Please verify your email before signing in.", { icon: "✉️" });
         navigate("/verify-email", { replace: true });
       } else if (msg.includes("too many requests") || msg.includes("rate limit")) {
-        toast.error("Too many attempts. Please wait a moment and try again.");
-      } else if (msg.includes("user not found")) {
-        toast.error("No account found with this email. Please sign up first.");
+        toast.error("Too many attempts. Please wait a moment and try again.", { icon: "⏳" });
+      } else if (msg.includes("too many failed") || msg.includes("temporarily locked")) {
+        toast.error(error.message, { icon: "🔐" });
       } else {
         toast.error(error.message || "Failed to sign in. Please try again.");
       }
