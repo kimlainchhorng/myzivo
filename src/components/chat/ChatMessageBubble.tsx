@@ -487,19 +487,19 @@ export default function ChatMessageBubble({
               { x: -36, y: 6, delay: 0.16, color: "#06b6d4" },
             ];
             return (
-              <div className="p-1.5">
+              <div className="p-1">
                 {!stickerLoadFailed ? (
-                  <div className="relative w-36 h-36">
+                  <div className="relative w-40 h-40">
                     <AnimatePresence>
                       {showStickerBurst && burstParticles.map((dot, i) => (
                         <motion.span
                           key={`${parsedSticker.id}-${i}`}
-                          className="absolute left-1/2 top-1/2 h-2 w-2 rounded-full"
+                          className="absolute left-1/2 top-1/2 h-2.5 w-2.5 rounded-full"
                           style={{ backgroundColor: dot.color }}
-                          initial={{ x: 0, y: 0, opacity: 0, scale: 0.4 }}
-                          animate={{ x: dot.x, y: dot.y, opacity: [0, 1, 0], scale: [0.4, 1.1, 0.2] }}
+                          initial={{ x: 0, y: 0, opacity: 0, scale: 0.3 }}
+                          animate={{ x: dot.x * 1.2, y: dot.y * 1.2, opacity: [0, 1, 0], scale: [0.3, 1.2, 0] }}
                           exit={{ opacity: 0, scale: 0 }}
-                          transition={{ duration: 0.5, ease: "easeOut", delay: dot.delay }}
+                          transition={{ duration: 0.55, ease: "easeOut", delay: dot.delay }}
                         />
                       ))}
                     </AnimatePresence>
@@ -507,20 +507,20 @@ export default function ChatMessageBubble({
                     <motion.img
                       src={stickerSrc}
                       alt={parsedSticker.id}
-                      className="w-36 h-36 object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.2)]"
+                      className="w-40 h-40 object-contain drop-shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
                       loading="lazy"
-                      initial={{ scale: 0.28, opacity: 0, y: 18 }}
+                      initial={{ scale: 0.2, opacity: 0, y: 20 }}
                       animate={{
                         scale: 1,
                         opacity: 1,
-                        y: [0, -6, 0],
-                        rotate: [0, 1.5, -1.5, 0],
+                        y: [0, -5, 0],
+                        rotate: [0, 1, -1, 0],
                       }}
                       transition={{
-                        scale: { type: "spring", stiffness: 420, damping: 16 },
-                        opacity: { duration: 0.18 },
-                        y: { duration: 2.1, repeat: Infinity, ease: "easeInOut", delay: 0.25 },
-                        rotate: { duration: 2.6, repeat: Infinity, ease: "easeInOut", delay: 0.25 },
+                        scale: { type: "spring", stiffness: 380, damping: 14 },
+                        opacity: { duration: 0.15 },
+                        y: { duration: 2.4, repeat: Infinity, ease: "easeInOut", delay: 0.3 },
+                        rotate: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.3 },
                       }}
                       onError={() => {
                         if (!stickerFallbackActive && parsedSticker.fallbackSrc) {
@@ -532,12 +532,12 @@ export default function ChatMessageBubble({
                     />
                   </div>
                 ) : (
-                  <div className="w-36 h-36 rounded-3xl bg-muted/50 border border-border/30 grid place-items-center text-[11px] text-muted-foreground text-center px-3">
+                  <div className="w-40 h-40 rounded-3xl bg-muted/40 border border-border/20 grid place-items-center text-[11px] text-muted-foreground text-center px-3">
                     Sticker unavailable
                   </div>
                 )}
-                <div className="flex items-center gap-1 justify-end px-1 pb-1 -mt-1">
-                  <span className={`text-[10px] ${isMe ? "text-muted-foreground/60" : "text-muted-foreground/60"}`}>{time}</span>
+                <div className="flex items-center gap-1 justify-end px-1 pb-0.5 -mt-1">
+                  <span className="text-[10px] text-muted-foreground/50">{time}</span>
                   {isMe && (isRead ? <CheckCheck className="h-3 w-3 text-blue-400" /> : isDelivered ? <CheckCheck className="h-3 w-3 text-muted-foreground/40" /> : <Check className="h-3 w-3 text-muted-foreground/40" />)}
                 </div>
               </div>
