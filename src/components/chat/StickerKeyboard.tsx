@@ -897,8 +897,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               <div className="min-h-[320px] overflow-y-auto p-2">
                 {isIllustratedPack ? (
                   <>
-                    {/* Sticker grid — 4 columns, generous spacing */}
-                    <div className="grid grid-cols-4 gap-3 px-2 pb-3">
+                    {/* Sticker grid — 4 columns, Facebook-style tight layout */}
+                    <div className="grid grid-cols-4 gap-1 px-1 pb-3">
                       {filteredIllustratedStickers.map((sticker, idx) => {
                         const stickerPayload = `[sticker:${sticker.id}:${sticker.src}]`;
                         let didLongPress = false;
@@ -926,7 +926,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                             onTouchMove={() => { if (longPressRef.current) clearTimeout(longPressRef.current); }}
                             onContextMenu={(e) => { e.preventDefault(); setPreviewSticker(sticker); }}
                             onClick={() => sendSticker(stickerPayload)}
-                            className="group relative aspect-square overflow-visible rounded-2xl hover:bg-muted/30 transition-colors p-1"
+                            className="group relative aspect-square overflow-visible rounded-2xl hover:bg-muted/30 transition-colors p-0"
                           >
                             <LiveIllustratedStickerArt sticker={{ ...sticker, animatedSrc: getAnimatedStickerUrl(sticker.id) }} index={idx} />
                           </motion.button>
