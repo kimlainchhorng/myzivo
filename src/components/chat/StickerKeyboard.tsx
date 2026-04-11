@@ -288,7 +288,7 @@ function parseMusicLink(url: string): { platform: "spotify" | "apple" | null; di
 
 export default function StickerKeyboard({ open, onClose, onSendSticker, onStartVoice, onOpenCamera }: StickerKeyboardProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("stickers");
-  const [activePack, setActivePack] = useState(0);
+  const [activePack, setActivePack] = useState(1000); // Default to first illustrated pack
   const [search, setSearch] = useState("");
   const [gifCategory, setGifCategory] = useState<GifCategory | "All">("All");
   const [recentStickers, setRecentStickers] = useState<string[]>([]);
@@ -311,7 +311,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
     setActiveTab(savedTab || "stickers");
     setSearch("");
     setGifCategory("All");
-    setActivePack(0);
+    setActivePack(1000);
     setMusicLinkInput("");
     setMusicLinkParsed(null);
     setRecentStickers(getRecentStickers());
