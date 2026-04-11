@@ -50,6 +50,24 @@ function formatChatTime(dateStr: string) {
   return format(d, "MMM d");
 }
 
+const STICKER_LOOKUP = ILLUSTRATED_PACKS
+  .flatMap((p) => p.stickers)
+  .reduce<Record<string, { src: string; alt: string }>>((acc, s) => {
+    acc[s.id.toLowerCase()] = { src: s.src, alt: s.alt };
+    return acc;
+  }, {});
+
+function parseStickerPreview(message: string): { src: string; alt: string } | null {
+  const m = message.trim().match(/^\[sticker:([^\]:]+)(?::(.+))?\]$/i);
+  if (!m) return null;
+  const id = m[1].trim().toLowerCase();
+  const entry = STICKER_LOOKUP[id];
+  if (entry) return entry;
+  const explicitSrc = m[2]?.trim();
+  if (explicitSrc) return { src: explicitSrc, alt: id };
+  return null;
+}
+
 function parseRichMessagePreview(message: string): string {
   const trimmed = message.trim();
   if (!trimmed) return "";
@@ -75,7 +93,6 @@ function parseRichMessagePreview(message: string): string {
 }
 
 function getMessagePreviewIcon(message: string) {
-  if (message === "Sticker") return <ImageIcon className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
   if (message === "📷 Image" || message.includes("[image]")) return <ImageIcon className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
   if (message.includes("[voice]") || message.includes("🎤")) return <Mic className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
   if (message.includes("[location]") || message.includes("📍")) return <MapPin className="w-3.5 h-3.5 text-muted-foreground inline mr-1" />;
