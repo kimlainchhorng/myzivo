@@ -2,6 +2,7 @@
  * GoLivePage — Broadcast a live stream with camera, title, and chat
  */
 import { useState, useRef, useEffect, useCallback } from "react";
+import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -527,7 +528,7 @@ export default function GoLivePage() {
                         </div>
                         <span className="text-[10px] text-white/70 truncate w-full text-center leading-tight mt-0.5">{gift.name}</span>
                         <div className="flex items-center gap-0.5">
-                          <span className="text-[10px]">🪙</span>
+                          <img src={goldCoinIcon} alt="coin" className="w-3 h-3 object-contain" loading="lazy" />
                           <span className="text-[10px] text-yellow-400 font-semibold">{gift.coins.toLocaleString()}</span>
                         </div>
                       </button>
