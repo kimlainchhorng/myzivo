@@ -82,7 +82,7 @@ export default function AdminUsersPage() {
 
   // Fetch driver emails to exclude driver accounts (from zivodriver.com)
   const { data: driverEmails } = useQuery({
-    queryKey: ["admin-driver-emails"],
+    queryKey: ["admin-driver-emails", isAdmin],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("drivers")
@@ -96,7 +96,7 @@ export default function AdminUsersPage() {
       });
       return { emails: emailSet, ids: idSet };
     },
-    enabled: isAdmin,
+    enabled: isAdmin && !authLoading,
   });
 
   const roleMap = useMemo(() => {
@@ -113,11 +113,12 @@ export default function AdminUsersPage() {
     if (!profiles) return [];
     const excludedRoles = ["admin", "moderator", "super_admin", "operations", "finance", "support", "merchant", "owner", "manager"];
     return profiles.filter((p) => {
+      const uid = p.user_id || p.id;
       // Exclude users with a driver record (by email or user_id)
-      if (driverEmails?.ids.has(p.user_id)) return false;
+      if (driverEmails?.ids.has(uid)) return false;
       if (p.email && driverEmails?.emails.has(p.email.toLowerCase())) return false;
       // Exclude staff roles
-      const roles = roleMap[p.user_id] || [];
+      const roles = roleMap[uid] || roleMap[p.id] || [];
       return !roles.some((r) => excludedRoles.includes(r));
     });
   }, [profiles, roleMap, driverEmails]);
