@@ -431,25 +431,17 @@ function LiveIllustratedStickerArt({
       ? { scaleX: [0.82, 1.1, 0.82], opacity: [0.16, 0.1, 0.16] }
       : { scaleX: [0.74, 1.2, 0.74], opacity: [0.16, 0.08, 0.16] };
 
-  // Grid mode: clean Facebook-style — just the image, big and simple
+  // Grid mode: clean Facebook-style — static image, no animations
   if (!large) {
     return (
-      <motion.div
-        className="relative flex h-full w-full items-center justify-center"
-        animate={bodyAnimate}
-        transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
-        style={{ transformOrigin: "center bottom" }}
-      >
-        <motion.img
+      <div className="relative flex h-full w-full items-center justify-center">
+        <img
           src={sticker.src}
           alt={sticker.alt}
           className="h-full w-full object-contain pointer-events-none"
           loading="lazy"
-          animate={imgAnimate}
-          transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
-          style={{ transformOrigin: "center bottom" }}
         />
-      </motion.div>
+      </div>
     );
   }
 
@@ -899,8 +891,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               <div className="min-h-[320px] overflow-y-auto p-2">
                 {isIllustratedPack ? (
                   <>
-                    {/* Sticker grid — 4 columns, Facebook-style tight layout */}
-                    <div className="grid grid-cols-4 gap-1 px-1 pb-3">
+                    {/* Sticker grid — 5 columns, Facebook-style */}
+                    <div className="grid grid-cols-5 gap-0.5 px-1 pb-3">
                       {filteredIllustratedStickers.map((sticker, idx) => {
                         const stickerPayload = `[sticker:${sticker.id}:${sticker.src}]`;
                         let didLongPress = false;
@@ -936,15 +928,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                       })}
                     </div>
 
-                    {/* Visit sticker store button — matching reference */}
-                    <div className="px-2 pt-3 pb-4">
-                      <button
-                        onClick={() => setActiveTab("store")}
-                        className="w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold text-[15px] shadow-lg hover:opacity-90 active:scale-[0.98] transition-all"
-                      >
-                        Visit sticker store
-                      </button>
-                    </div>
+                  
                   </>
                 ) : (
                   /* Emoji sticker grid */
