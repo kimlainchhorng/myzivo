@@ -127,6 +127,17 @@ import emOwlLoveAnim from "@/assets/stickers/anim/em-owl-love-anim.mp4.asset.jso
 import emOwlAngryAnim from "@/assets/stickers/anim/em-owl-angry-anim.mp4.asset.json";
 import emKoalaCryAnim from "@/assets/stickers/anim/em-koala-cry-anim.mp4.asset.json";
 import emKoalaAngryAnim from "@/assets/stickers/anim/em-koala-angry-anim.mp4.asset.json";
+// Emotion animated stickers — batch 7
+import emUnicornLoveAnim from "@/assets/stickers/anim/em-unicorn-love-anim.mp4.asset.json";
+import emUnicornAngryAnim from "@/assets/stickers/anim/em-unicorn-angry-anim.mp4.asset.json";
+import emDragonCryAnim from "@/assets/stickers/anim/em-dragon-cry-anim.mp4.asset.json";
+import emDragonLoveAnim from "@/assets/stickers/anim/em-dragon-love-anim.mp4.asset.json";
+import emLionCryAnim from "@/assets/stickers/anim/em-lion-cry-anim.mp4.asset.json";
+import emLionLoveAnim from "@/assets/stickers/anim/em-lion-love-anim.mp4.asset.json";
+import emFrogCryAnim from "@/assets/stickers/anim/em-frog-cry-anim.mp4.asset.json";
+import emFrogLoveAnim from "@/assets/stickers/anim/em-frog-love-anim.mp4.asset.json";
+import emPigCryAnim from "@/assets/stickers/anim/em-pig-cry-anim.mp4.asset.json";
+import emPigLoveAnim from "@/assets/stickers/anim/em-pig-love-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -191,7 +202,7 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "op-clownfish": clownfishAnim.url,
   "op-squid": squidAnim.url,
   "op-dolphin": dolphinAnim.url,
-  // Emotion animated stickers — batches 1-3
+  // Emotion batches 1-3
   "em-panda-happy": emPandaHappyAnim.url,
   "em-panda-cry": emPandaCryAnim.url,
   "em-panda-love": emPandaLoveAnim.url,
@@ -257,6 +268,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-owl-angry": emOwlAngryAnim.url,
   "em-koala-cry": emKoalaCryAnim.url,
   "em-koala-angry": emKoalaAngryAnim.url,
+  // batch 7
+  "em-unicorn-love": emUnicornLoveAnim.url,
+  "em-unicorn-angry": emUnicornAngryAnim.url,
+  "em-dragon-cry": emDragonCryAnim.url,
+  "em-dragon-love": emDragonLoveAnim.url,
+  "em-lion-cry": emLionCryAnim.url,
+  "em-lion-love": emLionLoveAnim.url,
+  "em-frog-cry": emFrogCryAnim.url,
+  "em-frog-love": emFrogLoveAnim.url,
+  "em-pig-cry": emPigCryAnim.url,
+  "em-pig-love": emPigLoveAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
