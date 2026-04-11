@@ -36,17 +36,17 @@ export interface StickerMotionSpec {
 }
 
 function getStickerTone(stickerId: string): StickerTone {
-  return /sunflower|cupcake|octopus|hedgehog|raccoon/.test(stickerId)
+  return /sunflower|cupcake|octopus|hedgehog|raccoon|dragon|lion/.test(stickerId)
     ? "angry"
-    : /pear|pig|bunny|whale/.test(stickerId)
+    : /pear|pig|bunny|whale|deer/.test(stickerId)
       ? "sad"
-      : /coffee|potato|penguin|owl|koala|bear/.test(stickerId)
+      : /coffee|potato|penguin|owl|koala|bear|sloth|turtle|elephant/.test(stickerId)
         ? "sleepy"
         : /cat-love|puppy|unicorn|butterfly/.test(stickerId)
           ? "love"
-          : /sushi|toast|hamster|carrot|duck|donut|panda|cherry/.test(stickerId)
+          : /sushi|toast|hamster|carrot|duck|donut|panda|cherry|chick|frog|cookie|icecream/.test(stickerId)
             ? "happy"
-            : /tomato|beet|mushroom|lemon|strawberry|avocado|fox/.test(stickerId)
+            : /tomato|beet|mushroom|lemon|strawberry|avocado|fox|watermelon|giraffe/.test(stickerId)
               ? "shy"
               : "float";
 }
