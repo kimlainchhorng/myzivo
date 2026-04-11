@@ -83,6 +83,17 @@ import emDragonAngryAnim from "@/assets/stickers/anim/em-dragon-angry-anim.mp4.a
 import emLionHappyAnim from "@/assets/stickers/anim/em-lion-happy-anim.mp4.asset.json";
 import emFrogHappyAnim from "@/assets/stickers/anim/em-frog-happy-anim.mp4.asset.json";
 import emPigHappyAnim from "@/assets/stickers/anim/em-pig-happy-anim.mp4.asset.json";
+// Emotion animated stickers — batch 3
+import emWhaleHappyAnim from "@/assets/stickers/anim/em-whale-happy-anim.mp4.asset.json";
+import emWhaleCryAnim from "@/assets/stickers/anim/em-whale-cry-anim.mp4.asset.json";
+import emTurtleHappyAnim from "@/assets/stickers/anim/em-turtle-happy-anim.mp4.asset.json";
+import emHedgehogHappyAnim from "@/assets/stickers/anim/em-hedgehog-happy-anim.mp4.asset.json";
+import emElephantHappyAnim from "@/assets/stickers/anim/em-elephant-happy-anim.mp4.asset.json";
+import emButterflyHappyAnim from "@/assets/stickers/anim/em-butterfly-happy-anim.mp4.asset.json";
+import emSlothHappyAnim from "@/assets/stickers/anim/em-sloth-happy-anim.mp4.asset.json";
+import emDeerHappyAnim from "@/assets/stickers/anim/em-deer-happy-anim.mp4.asset.json";
+import emChickHappyAnim from "@/assets/stickers/anim/em-chick-happy-anim.mp4.asset.json";
+import emRaccoonHappyAnim from "@/assets/stickers/anim/em-raccoon-happy-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -170,6 +181,16 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-lion-happy": emLionHappyAnim.url,
   "em-frog-happy": emFrogHappyAnim.url,
   "em-pig-happy": emPigHappyAnim.url,
+  "em-whale-happy": emWhaleHappyAnim.url,
+  "em-whale-cry": emWhaleCryAnim.url,
+  "em-turtle-happy": emTurtleHappyAnim.url,
+  "em-hedgehog-happy": emHedgehogHappyAnim.url,
+  "em-elephant-happy": emElephantHappyAnim.url,
+  "em-butterfly-happy": emButterflyHappyAnim.url,
+  "em-sloth-happy": emSlothHappyAnim.url,
+  "em-deer-happy": emDeerHappyAnim.url,
+  "em-chick-happy": emChickHappyAnim.url,
+  "em-raccoon-happy": emRaccoonHappyAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
