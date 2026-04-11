@@ -46,7 +46,7 @@ export default function GoLivePage() {
         streamRef.current.getTracks().forEach((t) => t.stop());
       }
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: 720 }, height: { ideal: 1280 } },
+        video: { facingMode },
         audio: true,
       });
       streamRef.current = stream;
