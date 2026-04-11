@@ -42661,6 +42661,7 @@ export type Database = {
       }
       sticker_items: {
         Row: {
+          animated_video_url: string | null
           created_at: string | null
           emoji_shortcode: string | null
           id: string
@@ -42670,6 +42671,7 @@ export type Database = {
           sort_order: number | null
         }
         Insert: {
+          animated_video_url?: string | null
           created_at?: string | null
           emoji_shortcode?: string | null
           id?: string
@@ -42679,6 +42681,7 @@ export type Database = {
           sort_order?: number | null
         }
         Update: {
+          animated_video_url?: string | null
           created_at?: string | null
           emoji_shortcode?: string | null
           id?: string
@@ -49528,6 +49531,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_sticker_packs: {
+        Row: {
+          id: string
+          installed_at: string
+          pack_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          installed_at?: string
+          pack_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          installed_at?: string
+          pack_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sticker_packs_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "sticker_packs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_stories: {
         Row: {
