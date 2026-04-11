@@ -40,13 +40,13 @@ function getStickerTone(stickerId: string): StickerTone {
     ? "angry"
     : /pear|pig|bunny/.test(stickerId)
       ? "sad"
-      : /coffee|potato|penguin/.test(stickerId)
+      : /coffee|potato|penguin|owl|koala/.test(stickerId)
         ? "sleepy"
-        : /cat-love/.test(stickerId)
+        : /cat-love|puppy/.test(stickerId)
           ? "love"
-          : /sushi|toast|hamster|carrot/.test(stickerId)
+          : /sushi|toast|hamster|carrot|duck|donut|panda/.test(stickerId)
             ? "happy"
-            : /tomato|beet|mushroom|lemon/.test(stickerId)
+            : /tomato|beet|mushroom|lemon|strawberry|avocado|fox/.test(stickerId)
               ? "shy"
               : "float";
 }

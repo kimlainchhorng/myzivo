@@ -19,6 +19,15 @@ import buddyBunny from "@/assets/stickers/buddy-bunny.png";
 import buddyHedgehog from "@/assets/stickers/buddy-hedgehog.png";
 import buddyToast from "@/assets/stickers/buddy-toast.png";
 import buddyOctopus from "@/assets/stickers/buddy-octopus.png";
+import buddyPuppy from "@/assets/stickers/buddy-puppy.png";
+import buddyDuck from "@/assets/stickers/buddy-duck.png";
+import buddyStrawberry from "@/assets/stickers/buddy-strawberry.png";
+import buddyPanda from "@/assets/stickers/buddy-panda.png";
+import buddyFox from "@/assets/stickers/buddy-fox.png";
+import buddyAvocado from "@/assets/stickers/buddy-avocado.png";
+import buddyOwl from "@/assets/stickers/buddy-owl.png";
+import buddyDonut from "@/assets/stickers/buddy-donut.png";
+import buddyKoala from "@/assets/stickers/buddy-koala.png";
 
 export interface IllustratedSticker {
   id: string;
@@ -49,6 +58,9 @@ export const ILLUSTRATED_PACKS: IllustratedStickerPack[] = [
       { id: "bb-lemon", src: buddyLemon, alt: "Sour Lemon" },
       { id: "bb-tomato", src: buddyTomato, alt: "Shy Tomato" },
       { id: "bb-carrot", src: buddyCarrot, alt: "Excited Carrot" },
+      { id: "bb-strawberry", src: buddyStrawberry, alt: "Sweet Strawberry" },
+      { id: "bb-avocado", src: buddyAvocado, alt: "Happy Avocado" },
+      { id: "bb-donut", src: buddyDonut, alt: "Excited Donut" },
     ],
   },
   {
@@ -65,6 +77,12 @@ export const ILLUSTRATED_PACKS: IllustratedStickerPack[] = [
       { id: "cf-hedgehog", src: buddyHedgehog, alt: "Surprised Hedgehog" },
       { id: "cf-toast", src: buddyToast, alt: "Happy Toast" },
       { id: "cf-octopus", src: buddyOctopus, alt: "Angry Octopus" },
+      { id: "cf-puppy", src: buddyPuppy, alt: "Happy Puppy" },
+      { id: "cf-duck", src: buddyDuck, alt: "Cute Duck" },
+      { id: "cf-panda", src: buddyPanda, alt: "Waving Panda" },
+      { id: "cf-fox", src: buddyFox, alt: "Sly Fox" },
+      { id: "cf-owl", src: buddyOwl, alt: "Sleepy Owl" },
+      { id: "cf-koala", src: buddyKoala, alt: "Shy Koala" },
     ],
   },
 ];
