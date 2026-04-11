@@ -422,6 +422,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-frog-angry": emFrogAngryAnim.url,
   "em-frog-sleepy": emFrogSleepyAnim.url,
   "em-frog-shy": emFrogShyAnim.url,
+  // batch 14
+  "em-frog-surprised": emFrogSurprisedAnim.url,
+  "em-frog-cool": emFrogCoolAnim.url,
+  "em-pig-angry": emPigAngryAnim.url,
+  "em-pig-sleepy": emPigSleepyAnim.url,
+  "em-pig-shy": emPigShyAnim.url,
+  "em-pig-surprised": emPigSurprisedAnim.url,
+  "em-pig-cool": emPigCoolAnim.url,
+  "em-whale-love": emWhaleLoveAnim.url,
+  "em-whale-angry": emWhaleAngryAnim.url,
+  "em-whale-sleepy": emWhaleSleepyAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
