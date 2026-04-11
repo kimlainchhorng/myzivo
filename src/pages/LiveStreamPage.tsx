@@ -102,9 +102,7 @@ export default function LiveStreamPage() {
   };
 
   const handleGoLive = () => {
-    toast("Go Live is coming soon! 🔴", {
-      description: "We're building the broadcast feature. Stay tuned!",
-    });
+    navigate("/go-live");
   };
 
   // ── Active stream viewer ──
