@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ILLUSTRATED_PACKS, type IllustratedStickerPack } from "@/config/illustratedStickers";
+import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -291,6 +292,7 @@ interface IllustratedStickerLike {
   id: string;
   src: string;
   alt: string;
+  animatedSrc?: string;
 }
 function getIllustratedTone(stickerId: string): IllustratedTone {
   return /sunflower|cupcake|octopus|hedgehog/.test(stickerId)
@@ -499,18 +501,33 @@ function LiveIllustratedStickerArt({
         transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
         style={{ transformOrigin: "center bottom" }}
       >
-        <motion.img
-          src={sticker.src}
-          alt={sticker.alt}
-          className={large
-            ? "h-full w-full object-contain pointer-events-none drop-shadow-[0_10px_24px_hsl(var(--foreground)/0.18)]"
-            : "h-full w-full object-contain pointer-events-none drop-shadow-[0_8px_18px_hsl(var(--foreground)/0.16)]"
-          }
-          loading="lazy"
-          animate={imgAnimate}
-          transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
-          style={{ transformOrigin: "center bottom" }}
-        />
+        {sticker.animatedSrc ? (
+          <video
+            src={sticker.animatedSrc}
+            className={large
+              ? "h-full w-full object-contain pointer-events-none drop-shadow-[0_10px_24px_hsl(var(--foreground)/0.18)]"
+              : "h-full w-full object-contain pointer-events-none drop-shadow-[0_8px_18px_hsl(var(--foreground)/0.16)]"
+            }
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+          />
+        ) : (
+          <motion.img
+            src={sticker.src}
+            alt={sticker.alt}
+            className={large
+              ? "h-full w-full object-contain pointer-events-none drop-shadow-[0_10px_24px_hsl(var(--foreground)/0.18)]"
+              : "h-full w-full object-contain pointer-events-none drop-shadow-[0_8px_18px_hsl(var(--foreground)/0.16)]"
+            }
+            loading="lazy"
+            animate={imgAnimate}
+            transition={{ duration, repeat: Infinity, ease: "easeInOut", delay: index * 0.035 }}
+            style={{ transformOrigin: "center bottom" }}
+          />
+        )}
       </motion.div>
     </>
   );
@@ -911,7 +928,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                             onClick={() => sendSticker(stickerPayload)}
                             className="group relative aspect-square overflow-visible rounded-2xl hover:bg-muted/30 transition-colors p-1"
                           >
-                            <LiveIllustratedStickerArt sticker={sticker} index={idx} />
+                            <LiveIllustratedStickerArt sticker={{ ...sticker, animatedSrc: getAnimatedStickerUrl(sticker.id) }} index={idx} />
                           </motion.button>
                         );
                       })}
@@ -1187,7 +1204,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               {/* Large sticker preview */}
               <div className="w-56 h-56 bg-card/90 rounded-3xl border border-border/40 shadow-2xl flex items-center justify-center p-6 mb-3">
                 <div className="relative h-full w-full">
-                  <LiveIllustratedStickerArt sticker={previewSticker} large />
+                  <LiveIllustratedStickerArt sticker={{ ...previewSticker, animatedSrc: getAnimatedStickerUrl(previewSticker.id) }} large />
                 </div>
               </div>
 
