@@ -96,7 +96,7 @@ export default function AdminUsersPage() {
   // Driver-only separation should be handled in the Drivers area without wiping customer rows after refresh.
   const customerProfiles = useMemo(() => {
     if (!profiles) return [];
-    const excludedRoles = ["admin", "moderator", "super_admin", "operations", "finance", "support", "merchant", "owner", "manager"];
+    const excludedRoles = ["admin", "moderator", "super_admin", "operations", "finance", "support", "merchant", "owner", "manager", "driver"];
     return profiles.filter((p) => {
       const uid = getProfileUid(p);
       const roles = roleMap[uid] || [];
