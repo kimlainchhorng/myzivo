@@ -880,19 +880,21 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                 ))}
               </div>
 
-              {/* Active pack name label */}
-              <div className="px-4 pt-2.5 pb-1">
-                <h3 className="text-[13px] font-bold text-foreground tracking-tight">
-                  {activePack === -1 ? "Recently Used" : isIllustratedPack ? (currentIllustratedPack?.name ?? "") : (currentPack?.name ?? "")}
-                </h3>
-              </div>
+              {/* Pack name — hidden for illustrated packs (Facebook-style) */}
+              {!isIllustratedPack && (
+                <div className="px-4 pt-2.5 pb-1">
+                  <h3 className="text-[13px] font-bold text-foreground tracking-tight">
+                    {activePack === -1 ? "Recently Used" : (currentPack?.name ?? "")}
+                  </h3>
+                </div>
+              )}
 
               {/* Sticker grid */}
               <div className="min-h-[320px] overflow-y-auto p-2">
                 {isIllustratedPack ? (
                   <>
-                    {/* Sticker grid — 5 columns, Facebook-style */}
-                    <div className="grid grid-cols-5 gap-0.5 px-1 pb-3">
+                    {/* Sticker grid — 4 columns, Facebook-style */}
+                    <div className="grid grid-cols-4 gap-1 px-1 pb-3">
                       {filteredIllustratedStickers.map((sticker, idx) => {
                         const stickerPayload = `[sticker:${sticker.id}:${sticker.src}]`;
                         let didLongPress = false;
