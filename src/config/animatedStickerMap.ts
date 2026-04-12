@@ -687,5 +687,26 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
 export function getAnimatedStickerUrl(stickerId: string): string | undefined {
-  return ANIMATED_STICKER_MAP[stickerId];
+  const rawUrl = ANIMATED_STICKER_MAP[stickerId];
+  if (!rawUrl) return undefined;
+
+  // Lovable asset JSONs provide root-relative paths (e.g. /__l5e/...).
+  // On native Capacitor, relative URLs resolve against capacitor://localhost,
+  // so we promote them to absolute URLs using configured public origin.
+  const isAbsolute = /^https?:\/\//i.test(rawUrl);
+  if (isAbsolute) return rawUrl;
+
+  if (typeof window !== "undefined") {
+    const protocol = window.location.protocol;
+    const isNativeRuntime = protocol === "capacitor:" || protocol === "ionic:";
+    if (!isNativeRuntime) return rawUrl;
+  }
+
+  const configuredOrigin =
+    import.meta.env.VITE_STICKER_ASSET_ORIGIN?.trim() ||
+    import.meta.env.VITE_PUBLIC_ORIGIN?.trim() ||
+    "https://hizovo.com";
+  const normalizedOrigin = configuredOrigin.replace(/\/$/, "");
+  const normalizedPath = rawUrl.startsWith("/") ? rawUrl : `/${rawUrl}`;
+  return `${normalizedOrigin}${normalizedPath}`;
 }

@@ -52,6 +52,14 @@ function resolveStickerById(rawId: string): { id: string; src: string } | null {
   return STICKER_LIBRARY[key] || null;
 }
 
+function isVideoAssetUrl(value: string): boolean {
+  return /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(value);
+}
+
+function isImageAssetUrl(value: string): boolean {
+  return /\.(png|jpe?g|webp|gif|avif|svg)(\?|#|$)/i.test(value);
+}
+
 function parseStickerMessage(messageText: string, msgType?: string): ParsedStickerMessage | null {
   const trimmed = messageText.trim();
   if (!trimmed) return null;
@@ -62,19 +70,29 @@ function parseStickerMessage(messageText: string, msgType?: string): ParsedStick
     const explicitSrc = bracketMatch[2]?.trim();
     const resolved = resolveStickerById(rawId);
     const stickerId = resolved?.id || rawId;
-    const animatedSrc = getAnimatedStickerUrl(stickerId);
+    const mappedAnimatedSrc = getAnimatedStickerUrl(stickerId);
+
+    const explicitAnimatedSrc = explicitSrc && isVideoAssetUrl(explicitSrc) ? explicitSrc : undefined;
+    const explicitFallbackSrc = explicitSrc && isImageAssetUrl(explicitSrc) ? explicitSrc : undefined;
+    const animatedSrc = explicitAnimatedSrc || mappedAnimatedSrc;
+    const fallbackSrc = resolved?.src || explicitFallbackSrc;
+    const src = fallbackSrc || "";
 
     if (explicitSrc) {
       return {
         id: stickerId,
-        src: resolved?.src || explicitSrc,
-        fallbackSrc: explicitSrc,
+        src,
+        fallbackSrc,
         animatedSrc,
       };
     }
 
     if (resolved) {
       return { id: resolved.id, src: resolved.src, animatedSrc };
+    }
+
+    if (animatedSrc) {
+      return { id: stickerId, src, fallbackSrc, animatedSrc };
     }
   }
 
@@ -479,7 +497,10 @@ export default function ChatMessageBubble({
         {message && (() => {
           // Sticker rendering (supports legacy + current formats)
           if (parsedSticker) {
-            const stickerFallbackSrc = parsedSticker.fallbackSrc || parsedSticker.src;
+            const stickerFallbackSrc =
+              (parsedSticker.fallbackSrc && isImageAssetUrl(parsedSticker.fallbackSrc))
+                ? parsedSticker.fallbackSrc
+                : (parsedSticker.src && isImageAssetUrl(parsedSticker.src) ? parsedSticker.src : undefined);
             const hasAnimatedSticker = Boolean(parsedSticker.animatedSrc);
             const stickerMotion = hasAnimatedSticker ? null : getStickerMotionSpec(parsedSticker.id);
             return (
@@ -494,7 +515,7 @@ export default function ChatMessageBubble({
                         renderMode="chroma"
                         whiteKeyEnabled={true}
                       />
-                    ) : (
+                    ) : stickerFallbackSrc ? (
                       <motion.div
                         className="relative h-full w-full"
                         initial={{ scale: 0, opacity: 0, y: 40 }}
@@ -508,6 +529,10 @@ export default function ChatMessageBubble({
                           loading="lazy"
                         />
                       </motion.div>
+                    ) : (
+                      <div className="h-full w-full rounded-2xl bg-muted/30 border border-border/20 grid place-items-center text-3xl">
+                        🙂
+                      </div>
                     )}
                 </div>
                 <div className={`mt-1 flex items-center ${isMe ? "justify-end pr-1" : "justify-start pl-1"}`}>
