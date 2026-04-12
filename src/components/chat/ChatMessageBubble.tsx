@@ -491,7 +491,7 @@ export default function ChatMessageBubble({
                         fallbackSrc={stickerFallbackSrc}
                         alt={parsedSticker.id}
                         preload="auto"
-                        renderMode="webgl"
+                        renderMode="chroma"
                         whiteKeyEnabled={true}
                       />
                     ) : (
