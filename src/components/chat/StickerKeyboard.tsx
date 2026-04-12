@@ -398,28 +398,16 @@ function LiveIllustratedStickerArt({
     />
   );
 
-  // Grid mode: Facebook-style — use animated video if available, otherwise static PNG
+  // Grid mode: use static PNG thumbnails for performance (no video in grid)
   if (!large) {
-    const gridMedia = sticker.animatedSrc ? (
-      <TransparentStickerVideo
-        src={sticker.animatedSrc}
-        fallbackSrc={sticker.src}
-        alt={sticker.alt}
-        preload="metadata"
-        renderMode="blend"
-      />
-    ) : (
-      <img
-        src={sticker.src}
-        alt={sticker.alt}
-        className="h-full w-full object-contain pointer-events-none"
-        loading="lazy"
-      />
-    );
-
     return (
       <div className="relative flex h-full w-full items-center justify-center">
-        {gridMedia}
+        <img
+          src={sticker.src}
+          alt={sticker.alt}
+          className="h-full w-full object-contain pointer-events-none"
+          loading="lazy"
+        />
       </div>
     );
   }
@@ -989,9 +977,9 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                         return (
                           <motion.button
                             key={sticker.id}
-                            initial={{ opacity: 0, scale: 0.5, y: 12 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            transition={{ delay: idx * 0.02, type: "spring", stiffness: 400, damping: 18 }}
+                            initial={{ opacity: 0, scale: 0.85 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: Math.min(idx * 0.015, 0.3), duration: 0.15 }}
                             whileHover={{ scale: 1.08 }}
                             whileTap={{ scale: 0.85 }}
                             onTouchStart={() => {
