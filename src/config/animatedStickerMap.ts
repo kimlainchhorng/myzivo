@@ -310,6 +310,17 @@ import emStrawberryHappyAnim from "@/assets/stickers/anim/em-strawberry-happy-an
 import emStrawberryCryAnim from "@/assets/stickers/anim/em-strawberry-cry-anim.mp4.asset.json";
 import emStrawberryLoveAnim from "@/assets/stickers/anim/em-strawberry-love-anim.mp4.asset.json";
 import emStrawberryAngryAnim from "@/assets/stickers/anim/em-strawberry-angry-anim.mp4.asset.json";
+// Emotion animated stickers — batch 24
+import emStrawberrySleepyAnim from "@/assets/stickers/anim/em-strawberry-sleepy-anim.mp4.asset.json";
+import emStrawberryShyAnim from "@/assets/stickers/anim/em-strawberry-shy-anim.mp4.asset.json";
+import emStrawberrySurprisedAnim from "@/assets/stickers/anim/em-strawberry-surprised-anim.mp4.asset.json";
+import emStrawberryCoolAnim from "@/assets/stickers/anim/em-strawberry-cool-anim.mp4.asset.json";
+import emDonutHappyAnim from "@/assets/stickers/anim/em-donut-happy-anim.mp4.asset.json";
+import emDonutCryAnim from "@/assets/stickers/anim/em-donut-cry-anim.mp4.asset.json";
+import emDonutLoveAnim from "@/assets/stickers/anim/em-donut-love-anim.mp4.asset.json";
+import emDonutAngryAnim from "@/assets/stickers/anim/em-donut-angry-anim.mp4.asset.json";
+import emDonutSleepyAnim from "@/assets/stickers/anim/em-donut-sleepy-anim.mp4.asset.json";
+import emDonutShyAnim from "@/assets/stickers/anim/em-donut-shy-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
