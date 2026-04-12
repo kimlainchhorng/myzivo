@@ -20,6 +20,8 @@ const HARD_KEY_BRIGHTNESS = 240;
 const SOFT_KEY_BRIGHTNESS = 215;
 const MAX_NEUTRAL_VARIANCE = 30;
 const DARK_PIXEL_THRESHOLD = 80; // don't erode below this brightness
+const MAX_PIXEL_RATIO = 1.5; // cap resolution for perf
+const MIN_FRAME_INTERVAL_MS = 33; // ~30fps cap for chroma path
 
 // ─── HSL helper ──────────────────────────────────────────────────────────────
 function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
