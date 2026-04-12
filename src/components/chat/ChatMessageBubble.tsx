@@ -484,8 +484,7 @@ export default function ChatMessageBubble({
             const stickerMotion = hasAnimatedSticker ? null : getStickerMotionSpec(parsedSticker.id);
             return (
               <div className="py-1">
-                <div className="relative h-40 w-40 sm:h-44 sm:w-44">
-                  <div className="absolute inset-2 sm:inset-2.5">
+                <div className="h-44 w-44 sm:h-48 sm:w-48">
                     {hasAnimatedSticker ? (
                       <TransparentStickerVideo
                         src={parsedSticker.animatedSrc!}
@@ -509,7 +508,6 @@ export default function ChatMessageBubble({
                         />
                       </motion.div>
                     )}
-                  </div>
                 </div>
                 <div className={`mt-1 flex items-center ${isMe ? "justify-end pr-1" : "justify-start pl-1"}`}>
                   <span className="text-[11px] text-muted-foreground/60">{time}</span>
