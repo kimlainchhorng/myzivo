@@ -288,6 +288,17 @@ import emRaccoonSleepyAnim from "@/assets/stickers/anim/em-raccoon-sleepy-anim.m
 import emRaccoonShyAnim from "@/assets/stickers/anim/em-raccoon-shy-anim.mp4.asset.json";
 import emRaccoonSurprisedAnim from "@/assets/stickers/anim/em-raccoon-surprised-anim.mp4.asset.json";
 import emRaccoonCoolAnim from "@/assets/stickers/anim/em-raccoon-cool-anim.mp4.asset.json";
+// Emotion animated stickers — batch 22
+import emGiraffeHappyAnim from "@/assets/stickers/anim/em-giraffe-happy-anim.mp4.asset.json";
+import emGiraffeCryAnim from "@/assets/stickers/anim/em-giraffe-cry-anim.mp4.asset.json";
+import emGiraffeLoveAnim from "@/assets/stickers/anim/em-giraffe-love-anim.mp4.asset.json";
+import emGiraffeAngryAnim from "@/assets/stickers/anim/em-giraffe-angry-anim.mp4.asset.json";
+import emGiraffeSleepyAnim from "@/assets/stickers/anim/em-giraffe-sleepy-anim.mp4.asset.json";
+import emGiraffeShyAnim from "@/assets/stickers/anim/em-giraffe-shy-anim.mp4.asset.json";
+import emGiraffeSurprisedAnim from "@/assets/stickers/anim/em-giraffe-surprised-anim.mp4.asset.json";
+import emGiraffeCoolAnim from "@/assets/stickers/anim/em-giraffe-cool-anim.mp4.asset.json";
+import emOctopusHappyAnim from "@/assets/stickers/anim/em-octopus-happy-anim.mp4.asset.json";
+import emOctopusCryAnim from "@/assets/stickers/anim/em-octopus-cry-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -579,6 +590,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-raccoon-shy": emRaccoonShyAnim.url,
   "em-raccoon-surprised": emRaccoonSurprisedAnim.url,
   "em-raccoon-cool": emRaccoonCoolAnim.url,
+  // batch 22
+  "em-giraffe-happy": emGiraffeHappyAnim.url,
+  "em-giraffe-cry": emGiraffeCryAnim.url,
+  "em-giraffe-love": emGiraffeLoveAnim.url,
+  "em-giraffe-angry": emGiraffeAngryAnim.url,
+  "em-giraffe-sleepy": emGiraffeSleepyAnim.url,
+  "em-giraffe-shy": emGiraffeShyAnim.url,
+  "em-giraffe-surprised": emGiraffeSurprisedAnim.url,
+  "em-giraffe-cool": emGiraffeCoolAnim.url,
+  "em-octopus-happy": emOctopusHappyAnim.url,
+  "em-octopus-cry": emOctopusCryAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
