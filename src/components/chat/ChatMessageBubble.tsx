@@ -512,7 +512,8 @@ export default function ChatMessageBubble({
                         fallbackSrc={stickerFallbackSrc}
                         alt={parsedSticker.id}
                         preload="auto"
-                        renderMode="blend"
+                        renderMode="chroma"
+                        whiteKeyEnabled={true}
                       />
                     ) : stickerFallbackSrc ? (
                       <motion.div
@@ -524,7 +525,7 @@ export default function ChatMessageBubble({
                         <img
                           src={stickerFallbackSrc}
                           alt={parsedSticker.id}
-                          className="h-full w-full object-contain pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.12)] mix-blend-multiply dark:mix-blend-screen dark:invert"
+                          className="h-full w-full object-contain pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.12)]"
                           loading="lazy"
                         />
                       </motion.div>
