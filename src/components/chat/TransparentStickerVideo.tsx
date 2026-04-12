@@ -10,16 +10,49 @@ import { cn } from "@/lib/utils";
 
 type TransparentStickerVideoMode = "blend" | "chroma";
 
-const HARD_KEY_BRIGHTNESS = 240;
-const SOFT_KEY_BRIGHTNESS = 220;
-const MAX_NEUTRAL_VARIANCE = 22;
+const HARD_KEY_BRIGHTNESS = 242;
+const SOFT_KEY_BRIGHTNESS = 228;
+const MAX_NEUTRAL_VARIANCE = 20;
 
 /**
- * Enhanced chroma keyer — removes green, blue/cyan, and white backgrounds.
- * Uses saturation + channel-dominance analysis for robust edge handling.
+ * Chroma keyer — removes green, blue/cyan, and white backgrounds.
+ * Carefully tuned to preserve colorful sticker art while removing solid BG.
  */
 function applyChromaKey(frame: ImageData) {
   const { data } = frame;
+
+  // --- Edge-aware: sample corners to detect dominant BG color ---
+  const w = frame.width;
+  const h = frame.height;
+  const cornerSamples = [
+    0, // top-left
+    (w - 1) * 4, // top-right
+    (h - 1) * w * 4, // bottom-left
+    ((h - 1) * w + (w - 1)) * 4, // bottom-right
+    Math.floor(w / 2) * 4, // top-center
+    ((h - 1) * w + Math.floor(w / 2)) * 4, // bottom-center
+  ];
+
+  let bgR = 0, bgG = 0, bgB = 0, bgCount = 0;
+  for (const idx of cornerSamples) {
+    if (idx >= 0 && idx + 2 < data.length) {
+      bgR += data[idx];
+      bgG += data[idx + 1];
+      bgB += data[idx + 2];
+      bgCount++;
+    }
+  }
+  if (bgCount > 0) {
+    bgR = Math.round(bgR / bgCount);
+    bgG = Math.round(bgG / bgCount);
+    bgB = Math.round(bgB / bgCount);
+  }
+
+  const bgBrightness = (bgR + bgG + bgB) / 3;
+  const bgMaxC = Math.max(bgR, bgG, bgB);
+  const bgMinC = Math.min(bgR, bgG, bgB);
+  const bgSaturation = bgMaxC > 0 ? (bgMaxC - bgMinC) / bgMaxC : 0;
+  const hasBgColor = bgSaturation > 0.25 && bgBrightness > 40;
 
   for (let index = 0; index < data.length; index += 4) {
     const red = data[index];
@@ -31,46 +64,50 @@ function applyChromaKey(frame: ImageData) {
     const variance = maxC - minC;
     const brightness = (red + green + blue) / 3;
 
-    // --- Green screen keying (handles lime-green to deep-green) ---
-    if (green > 60 && green > red * 1.25 && green > blue * 1.2) {
+    // --- Detected BG color keying (adaptive) ---
+    if (hasBgColor) {
+      const distR = Math.abs(red - bgR);
+      const distG = Math.abs(green - bgG);
+      const distB = Math.abs(blue - bgB);
+      const colorDist = Math.sqrt(distR * distR + distG * distG + distB * distB);
+
+      if (colorDist < 45) {
+        data[index + 3] = 0;
+        continue;
+      }
+      if (colorDist < 80) {
+        const fade = 1 - (colorDist - 45) / (80 - 45);
+        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - fade)));
+        continue;
+      }
+    }
+
+    // --- Green screen keying ---
+    if (green > 70 && green > red * 1.35 && green > blue * 1.3) {
       const greenDominance = green / Math.max(1, (red + blue) / 2);
-      if (greenDominance > 1.45) {
+      if (greenDominance > 1.5) {
         data[index + 3] = 0;
         continue;
       }
-      if (greenDominance > 1.15) {
-        const fade = (greenDominance - 1.15) / (1.45 - 1.15);
+      if (greenDominance > 1.2) {
+        const fade = (greenDominance - 1.2) / (1.5 - 1.2);
         data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - fade)));
         continue;
       }
     }
 
-    // --- Blue / Cyan / Teal screen keying ---
-    if (blue > 60 && blue > red * 1.25 && blue >= green * 0.85) {
+    // --- Blue / Cyan screen keying ---
+    if (blue > 70 && blue > red * 1.35 && blue >= green * 0.9) {
       const blueDominance = blue / Math.max(1, (red + green) / 2);
-      if (blueDominance > 1.4) {
+      if (blueDominance > 1.5) {
         data[index + 3] = 0;
         continue;
       }
-      if (blueDominance > 1.15) {
-        const fade = (blueDominance - 1.15) / (1.4 - 1.15);
+      if (blueDominance > 1.2) {
+        const fade = (blueDominance - 1.2) / (1.5 - 1.2);
         data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - fade)));
         continue;
       }
-    }
-
-    // --- Saturated color keying (catches any vivid solid background) ---
-    // If a pixel is very saturated and bright, it's likely background
-    const saturation = maxC > 0 ? (variance / maxC) : 0;
-    if (saturation > 0.55 && brightness > 80 && brightness < 220) {
-      // Strong solid color — likely chroma background
-      if (saturation > 0.7) {
-        data[index + 3] = 0;
-        continue;
-      }
-      const fade = (saturation - 0.55) / (0.7 - 0.55);
-      data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - fade)));
-      continue;
     }
 
     // --- White key ---
