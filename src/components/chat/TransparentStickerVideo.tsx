@@ -76,11 +76,6 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
           const neutral = Math.round((red + blue) / 2);
           data[index + 1] = Math.round(neutral + (green - neutral) * 0.1);
         }
-        // Premultiply RGB by alpha
-        const a = data[index + 3] / 255;
-        data[index] = Math.round(data[index] * a);
-        data[index + 1] = Math.round(data[index + 1] * a);
-        data[index + 2] = Math.round(data[index + 2] * a);
         continue;
       }
     }
@@ -100,11 +95,6 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
       const newAlpha = Math.min(data[index + 3], Math.max(0, nextAlpha));
       if (newAlpha < data[index + 3]) keyedMask[pixelIdx] = 1;
       data[index + 3] = newAlpha;
-      // Premultiply
-      const a = data[index + 3] / 255;
-      data[index] = Math.round(data[index] * a);
-      data[index + 1] = Math.round(data[index + 1] * a);
-      data[index + 2] = Math.round(data[index + 2] * a);
     }
   }
 
@@ -142,15 +132,9 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
       }
 
       if (keyedWeight > 0.01) {
-        // Smooth falloff instead of hard multiplier
         const fade = Math.min(1, keyedWeight / 0.4);
         const newA = Math.round(a * (1 - fade * 0.85));
         data[pi + 3] = Math.max(0, newA);
-        // Re-premultiply
-        const ratio = data[pi + 3] / 255;
-        data[pi] = Math.round(data[pi] * ratio);
-        data[pi + 1] = Math.round(data[pi + 1] * ratio);
-        data[pi + 2] = Math.round(data[pi + 2] * ratio);
       }
     }
   }
