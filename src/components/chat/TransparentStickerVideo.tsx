@@ -19,9 +19,9 @@ type TransparentStickerVideoMode = "blend" | "chroma" | "webgl";
 const HARD_KEY_BRIGHTNESS = 240;
 const SOFT_KEY_BRIGHTNESS = 215;
 const MAX_NEUTRAL_VARIANCE = 30;
-const DARK_PIXEL_THRESHOLD = 80; // don't erode below this brightness
-const MAX_PIXEL_RATIO = 1.5; // cap resolution for perf
-const MIN_FRAME_INTERVAL_MS = 33; // ~30fps cap for chroma path
+const DARK_PIXEL_THRESHOLD = 80;
+const MAX_PIXEL_RATIO = 1.0; // low res for small stickers — big perf win
+const MIN_FRAME_INTERVAL_MS = 50; // ~20fps cap for chroma path (sufficient for small stickers)
 
 // ─── HSL helper ──────────────────────────────────────────────────────────────
 function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
@@ -342,6 +342,7 @@ export function TransparentStickerVideo({
   whiteKeyEnabled = true,
 }: TransparentStickerVideoProps) {
   const [error, setError] = useState(false);
+  const [ready, setReady] = useState(false);
   const [isInViewport, setIsInViewport] = useState(renderMode === "blend");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
