@@ -310,6 +310,17 @@ import emStrawberryHappyAnim from "@/assets/stickers/anim/em-strawberry-happy-an
 import emStrawberryCryAnim from "@/assets/stickers/anim/em-strawberry-cry-anim.mp4.asset.json";
 import emStrawberryLoveAnim from "@/assets/stickers/anim/em-strawberry-love-anim.mp4.asset.json";
 import emStrawberryAngryAnim from "@/assets/stickers/anim/em-strawberry-angry-anim.mp4.asset.json";
+// Emotion animated stickers — batch 24
+import emStrawberrySleepyAnim from "@/assets/stickers/anim/em-strawberry-sleepy-anim.mp4.asset.json";
+import emStrawberryShyAnim from "@/assets/stickers/anim/em-strawberry-shy-anim.mp4.asset.json";
+import emStrawberrySurprisedAnim from "@/assets/stickers/anim/em-strawberry-surprised-anim.mp4.asset.json";
+import emStrawberryCoolAnim from "@/assets/stickers/anim/em-strawberry-cool-anim.mp4.asset.json";
+import emDonutHappyAnim from "@/assets/stickers/anim/em-donut-happy-anim.mp4.asset.json";
+import emDonutCryAnim from "@/assets/stickers/anim/em-donut-cry-anim.mp4.asset.json";
+import emDonutLoveAnim from "@/assets/stickers/anim/em-donut-love-anim.mp4.asset.json";
+import emDonutAngryAnim from "@/assets/stickers/anim/em-donut-angry-anim.mp4.asset.json";
+import emDonutSleepyAnim from "@/assets/stickers/anim/em-donut-sleepy-anim.mp4.asset.json";
+import emDonutShyAnim from "@/assets/stickers/anim/em-donut-shy-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -623,6 +634,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-strawberry-cry": emStrawberryCryAnim.url,
   "em-strawberry-love": emStrawberryLoveAnim.url,
   "em-strawberry-angry": emStrawberryAngryAnim.url,
+  // batch 24
+  "em-strawberry-sleepy": emStrawberrySleepyAnim.url,
+  "em-strawberry-shy": emStrawberryShyAnim.url,
+  "em-strawberry-surprised": emStrawberrySurprisedAnim.url,
+  "em-strawberry-cool": emStrawberryCoolAnim.url,
+  "em-donut-happy": emDonutHappyAnim.url,
+  "em-donut-cry": emDonutCryAnim.url,
+  "em-donut-love": emDonutLoveAnim.url,
+  "em-donut-angry": emDonutAngryAnim.url,
+  "em-donut-sleepy": emDonutSleepyAnim.url,
+  "em-donut-shy": emDonutShyAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
