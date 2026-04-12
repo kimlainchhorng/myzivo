@@ -143,6 +143,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const videoInputRef = useRef<HTMLInputElement>(null);
   const lockedImageInputRef = useRef<HTMLInputElement>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const timelineRef = useRef<HTMLDivElement>(null);
 
   const { isTyping: recipientTyping, isOnline: recipientOnline, lastSeen: recipientLastSeen, setTyping } = useChatPresence(user?.id, recipientId);
   const voice = useVoiceRecorder();
