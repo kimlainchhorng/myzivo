@@ -492,7 +492,7 @@ export default function ChatMessageBubble({
                         alt={parsedSticker.id}
                         preload="auto"
                         renderMode="chroma"
-                        whiteKeyEnabled={false}
+                        whiteKeyEnabled={true}
                       />
                     ) : (
                       <motion.div
