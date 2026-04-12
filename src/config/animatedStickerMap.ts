@@ -645,6 +645,25 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-donut-angry": emDonutAngryAnim.url,
   "em-donut-sleepy": emDonutSleepyAnim.url,
   "em-donut-shy": emDonutShyAnim.url,
+  // batch 25 (final)
+  "em-donut-surprised": emDonutSurprisedAnim.url,
+  "em-donut-cool": emDonutCoolAnim.url,
+  "em-mushroom-happy": emMushroomHappyAnim.url,
+  "em-mushroom-cry": emMushroomCryAnim.url,
+  "em-mushroom-love": emMushroomLoveAnim.url,
+  "em-mushroom-angry": emMushroomAngryAnim.url,
+  "em-mushroom-sleepy": emMushroomSleepyAnim.url,
+  "em-mushroom-shy": emMushroomShyAnim.url,
+  "em-mushroom-surprised": emMushroomSurprisedAnim.url,
+  "em-mushroom-cool": emMushroomCoolAnim.url,
+  "em-toast-happy": emToastHappyAnim.url,
+  "em-toast-cry": emToastCryAnim.url,
+  "em-toast-love": emToastLoveAnim.url,
+  "em-toast-angry": emToastAngryAnim.url,
+  "em-toast-sleepy": emToastSleepyAnim.url,
+  "em-toast-shy": emToastShyAnim.url,
+  "em-toast-surprised": emToastSurprisedAnim.url,
+  "em-toast-cool": emToastCoolAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
