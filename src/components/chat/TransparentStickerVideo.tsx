@@ -20,6 +20,8 @@ const HARD_KEY_BRIGHTNESS = 240;
 const SOFT_KEY_BRIGHTNESS = 215;
 const MAX_NEUTRAL_VARIANCE = 30;
 const DARK_PIXEL_THRESHOLD = 80; // don't erode below this brightness
+const MAX_PIXEL_RATIO = 1.5; // cap resolution for perf
+const MIN_FRAME_INTERVAL_MS = 33; // ~30fps cap for chroma path
 
 // ─── HSL helper ──────────────────────────────────────────────────────────────
 function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
@@ -169,13 +171,7 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
     applyEdgeConnectedWhiteKey(frame, keyedMask);
   }
 
-  // ── Gaussian-weighted edge erosion (3×3 kernel) ──
-  // Only erode pixels adjacent to keyed areas; protect dark content
-  const weights = [
-    0.05, 0.15, 0.05,
-    0.15, 0.00, 0.15,
-    0.05, 0.15, 0.05,
-  ];
+  // ── Lightweight edge erosion (sample every 2nd pixel for speed) ──
   const alphaSnapshot = new Uint8Array(width * height);
   for (let i = 0; i < alphaSnapshot.length; i++) alphaSnapshot[i] = data[i * 4 + 3];
 
@@ -185,27 +181,20 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
       const a = alphaSnapshot[idx];
       if (a === 0 || keyedMask[idx] === 1) continue;
 
-      // Protect dark pixels
       const pi = idx * 4;
       const br = (data[pi] + data[pi + 1] + data[pi + 2]) / 3;
       if (br < DARK_PIXEL_THRESHOLD) continue;
 
-      // Sum weighted keyed-neighbor contributions
-      let keyedWeight = 0;
-      let wi = 0;
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (dx === 0 && dy === 0) { wi++; continue; }
-          const ni = (y + dy) * width + (x + dx);
-          if (keyedMask[ni] === 1) keyedWeight += weights[wi];
-          wi++;
-        }
-      }
+      // Fast 4-neighbor check instead of full 3x3 kernel
+      const keyedNeighbors =
+        (keyedMask[idx - 1] || 0) +
+        (keyedMask[idx + 1] || 0) +
+        (keyedMask[idx - width] || 0) +
+        (keyedMask[idx + width] || 0);
 
-      if (keyedWeight > 0.01) {
-        const fade = Math.min(1, keyedWeight / 0.4);
-        const newA = Math.round(a * (1 - fade * 0.85));
-        data[pi + 3] = Math.max(0, newA);
+      if (keyedNeighbors > 0) {
+        const fade = Math.min(1, keyedNeighbors / 2.5);
+        data[pi + 3] = Math.max(0, Math.round(a * (1 - fade * 0.8)));
       }
     }
   }
@@ -398,6 +387,8 @@ export function TransparentStickerVideo({
     let disposed = false;
     let rafId: number | null = null;
     let frameCallbackId: number | null = null;
+    let lastFrameTime = 0;
+    let cachedCtx: CanvasRenderingContext2D | null = null;
 
     const keyedVideo = video as HTMLVideoElement & {
       requestVideoFrameCallback?: (cb: (now: number, meta: unknown) => void) => number;
@@ -423,12 +414,13 @@ export function TransparentStickerVideo({
 
     const syncSize = () => {
       const b = container.getBoundingClientRect();
-      const pr = Math.min(devicePixelRatio || 1, 2);
+      const pr = Math.min(devicePixelRatio || 1, MAX_PIXEL_RATIO);
       const w = Math.max(1, Math.round(b.width * pr));
       const h = Math.max(1, Math.round(b.height * pr));
       if (canvas.width !== w || canvas.height !== h) {
         canvas.width = w;
         canvas.height = h;
+        cachedCtx = null; // invalidate cached context on resize
         if (webglCtx) webglCtx.gl.viewport(0, 0, w, h);
       }
     };
@@ -445,6 +437,17 @@ export function TransparentStickerVideo({
 
     const renderFrame = () => {
       if (disposed) return;
+
+      // Throttle chroma path to ~30fps
+      if (!webglCtx) {
+        const now = performance.now();
+        if (now - lastFrameTime < MIN_FRAME_INTERVAL_MS) {
+          scheduleNext();
+          return;
+        }
+        lastFrameTime = now;
+      }
+
       syncSize();
 
       if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
@@ -462,8 +465,11 @@ export function TransparentStickerVideo({
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       } else {
-        // ── Canvas 2D path ──
-        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        // ── Canvas 2D path (cached context) ──
+        if (!cachedCtx) {
+          cachedCtx = canvas.getContext("2d", { willReadFrequently: true });
+        }
+        const ctx = cachedCtx;
         if (!ctx) { scheduleNext(); return; }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
