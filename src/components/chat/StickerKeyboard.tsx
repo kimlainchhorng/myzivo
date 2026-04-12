@@ -983,7 +983,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                     {/* Sticker grid — 4 columns, Facebook-style */}
                     <div className="grid grid-cols-4 gap-2 px-2 pb-3">
                       {filteredIllustratedStickers.map((sticker, idx) => {
-                        const stickerPayload = `[sticker:${sticker.id}:${sticker.src}]`;
+                        const stickerPayload = `[sticker:${sticker.id}]`;
                         let didLongPress = false;
 
                         return (
