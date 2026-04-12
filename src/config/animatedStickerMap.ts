@@ -270,6 +270,17 @@ import emChickShyAnim from "@/assets/stickers/anim/em-chick-shy-anim.mp4.asset.j
 import emChickSurprisedAnim from "@/assets/stickers/anim/em-chick-surprised-anim.mp4.asset.json";
 import emChickCoolAnim from "@/assets/stickers/anim/em-chick-cool-anim.mp4.asset.json";
 import emRaccoonCryAnim from "@/assets/stickers/anim/em-raccoon-cry-anim.mp4.asset.json";
+// Emotion animated stickers — batch 20
+import emDuckAngryAnim from "@/assets/stickers/anim/em-duck-angry-anim.mp4.asset.json";
+import emDuckSleepyAnim from "@/assets/stickers/anim/em-duck-sleepy-anim.mp4.asset.json";
+import emDuckShyAnim from "@/assets/stickers/anim/em-duck-shy-anim.mp4.asset.json";
+import emDuckSurprisedAnim from "@/assets/stickers/anim/em-duck-surprised-anim.mp4.asset.json";
+import emDuckCoolAnim from "@/assets/stickers/anim/em-duck-cool-anim.mp4.asset.json";
+import emHamsterAngryAnim from "@/assets/stickers/anim/em-hamster-angry-anim.mp4.asset.json";
+import emHamsterSleepyAnim from "@/assets/stickers/anim/em-hamster-sleepy-anim.mp4.asset.json";
+import emHamsterShyAnim from "@/assets/stickers/anim/em-hamster-shy-anim.mp4.asset.json";
+import emHamsterSurprisedAnim from "@/assets/stickers/anim/em-hamster-surprised-anim.mp4.asset.json";
+import emHamsterCoolAnim from "@/assets/stickers/anim/em-hamster-cool-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -543,6 +554,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-chick-surprised": emChickSurprisedAnim.url,
   "em-chick-cool": emChickCoolAnim.url,
   "em-raccoon-cry": emRaccoonCryAnim.url,
+  // batch 20
+  "em-duck-angry": emDuckAngryAnim.url,
+  "em-duck-sleepy": emDuckSleepyAnim.url,
+  "em-duck-shy": emDuckShyAnim.url,
+  "em-duck-surprised": emDuckSurprisedAnim.url,
+  "em-duck-cool": emDuckCoolAnim.url,
+  "em-hamster-angry": emHamsterAngryAnim.url,
+  "em-hamster-sleepy": emHamsterSleepyAnim.url,
+  "em-hamster-shy": emHamsterShyAnim.url,
+  "em-hamster-surprised": emHamsterSurprisedAnim.url,
+  "em-hamster-cool": emHamsterCoolAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
