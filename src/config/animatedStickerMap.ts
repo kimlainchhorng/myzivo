@@ -704,8 +704,12 @@ export function getAnimatedStickerUrl(stickerId: string): string | undefined {
 
   const configuredOrigin =
     import.meta.env.VITE_STICKER_ASSET_ORIGIN?.trim() ||
-    import.meta.env.VITE_PUBLIC_ORIGIN?.trim() ||
-    "https://hizovo.com";
+    import.meta.env.VITE_PUBLIC_ORIGIN?.trim();
+  if (!configuredOrigin) {
+    // Without an explicit public origin, native runtimes cannot resolve
+    // root-relative /__l5e paths outside Lovable preview.
+    return undefined;
+  }
   const normalizedOrigin = configuredOrigin.replace(/\/$/, "");
   const normalizedPath = rawUrl.startsWith("/") ? rawUrl : `/${rawUrl}`;
   return `${normalizedOrigin}${normalizedPath}`;
