@@ -524,7 +524,7 @@ export default function ChatMessageBubble({
                         <img
                           src={stickerFallbackSrc}
                           alt={parsedSticker.id}
-                          className="h-full w-full object-contain pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.12)]"
+                          className="h-full w-full object-contain pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.12)] mix-blend-multiply dark:mix-blend-screen dark:invert"
                           loading="lazy"
                         />
                       </motion.div>
