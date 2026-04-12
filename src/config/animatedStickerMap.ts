@@ -299,6 +299,17 @@ import emGiraffeSurprisedAnim from "@/assets/stickers/anim/em-giraffe-surprised-
 import emGiraffeCoolAnim from "@/assets/stickers/anim/em-giraffe-cool-anim.mp4.asset.json";
 import emOctopusHappyAnim from "@/assets/stickers/anim/em-octopus-happy-anim.mp4.asset.json";
 import emOctopusCryAnim from "@/assets/stickers/anim/em-octopus-cry-anim.mp4.asset.json";
+// Emotion animated stickers — batch 23
+import emOctopusLoveAnim from "@/assets/stickers/anim/em-octopus-love-anim.mp4.asset.json";
+import emOctopusAngryAnim from "@/assets/stickers/anim/em-octopus-angry-anim.mp4.asset.json";
+import emOctopusSleepyAnim from "@/assets/stickers/anim/em-octopus-sleepy-anim.mp4.asset.json";
+import emOctopusShyAnim from "@/assets/stickers/anim/em-octopus-shy-anim.mp4.asset.json";
+import emOctopusSurprisedAnim from "@/assets/stickers/anim/em-octopus-surprised-anim.mp4.asset.json";
+import emOctopusCoolAnim from "@/assets/stickers/anim/em-octopus-cool-anim.mp4.asset.json";
+import emStrawberryHappyAnim from "@/assets/stickers/anim/em-strawberry-happy-anim.mp4.asset.json";
+import emStrawberryCryAnim from "@/assets/stickers/anim/em-strawberry-cry-anim.mp4.asset.json";
+import emStrawberryLoveAnim from "@/assets/stickers/anim/em-strawberry-love-anim.mp4.asset.json";
+import emStrawberryAngryAnim from "@/assets/stickers/anim/em-strawberry-angry-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -601,6 +612,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-giraffe-cool": emGiraffeCoolAnim.url,
   "em-octopus-happy": emOctopusHappyAnim.url,
   "em-octopus-cry": emOctopusCryAnim.url,
+  // batch 23
+  "em-octopus-love": emOctopusLoveAnim.url,
+  "em-octopus-angry": emOctopusAngryAnim.url,
+  "em-octopus-sleepy": emOctopusSleepyAnim.url,
+  "em-octopus-shy": emOctopusShyAnim.url,
+  "em-octopus-surprised": emOctopusSurprisedAnim.url,
+  "em-octopus-cool": emOctopusCoolAnim.url,
+  "em-strawberry-happy": emStrawberryHappyAnim.url,
+  "em-strawberry-cry": emStrawberryCryAnim.url,
+  "em-strawberry-love": emStrawberryLoveAnim.url,
+  "em-strawberry-angry": emStrawberryAngryAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
