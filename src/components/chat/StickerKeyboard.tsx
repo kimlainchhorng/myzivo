@@ -1261,7 +1261,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               <div className="bg-card rounded-2xl border border-border/40 shadow-xl overflow-hidden min-w-[200px]">
                 <button
                   onClick={() => {
-                    sendSticker(`[sticker:${previewSticker.id}:${previewSticker.src}]`);
+                    sendSticker(`[sticker:${previewSticker.id}]`);
                     setPreviewSticker(null);
                   }}
                   className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-muted/50 active:bg-muted transition-colors border-b border-border/20"
