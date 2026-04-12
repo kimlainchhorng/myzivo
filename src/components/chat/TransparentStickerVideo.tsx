@@ -104,12 +104,56 @@ export function TransparentStickerVideo({
   renderMode = "blend",
 }: TransparentStickerVideoProps) {
   const [error, setError] = useState(false);
+  const [isInViewport, setIsInViewport] = useState(renderMode !== "chroma");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (error || renderMode !== "chroma") return;
+    if (renderMode !== "chroma") {
+      setIsInViewport(true);
+      return;
+    }
+
+    const container = containerRef.current;
+    if (!container || typeof IntersectionObserver === "undefined") {
+      setIsInViewport(true);
+      return;
+    }
+
+    setIsInViewport(false);
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInViewport(entry.isIntersecting && entry.intersectionRatio > 0.08);
+      },
+      { threshold: [0, 0.08, 0.2] }
+    );
+
+    observer.observe(container);
+
+    return () => observer.disconnect();
+  }, [renderMode, src]);
+
+  useEffect(() => {
+    if (renderMode !== "chroma") return;
+
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (!isInViewport) {
+      video.pause();
+      return;
+    }
+
+    const playPromise = video.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => undefined);
+    }
+  }, [isInViewport, renderMode, src]);
+
+  useEffect(() => {
+    if (error || renderMode !== "chroma" || !isInViewport) return;
 
     const canvas = canvasRef.current;
     const video = videoRef.current;
@@ -214,7 +258,7 @@ export function TransparentStickerVideo({
       video.removeEventListener("pause", cancelScheduledFrame);
       video.removeEventListener("ended", cancelScheduledFrame);
     };
-  }, [error, renderMode, src]);
+  }, [error, isInViewport, renderMode, src]);
 
   if (error && fallbackSrc) {
     return (

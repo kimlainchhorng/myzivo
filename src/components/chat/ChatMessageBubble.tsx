@@ -490,7 +490,7 @@ export default function ChatMessageBubble({
                       src={parsedSticker.animatedSrc!}
                       fallbackSrc={stickerFallbackSrc}
                       alt={parsedSticker.id}
-                      preload="auto"
+                      preload="metadata"
                       renderMode="chroma"
                     />
                   ) : (
