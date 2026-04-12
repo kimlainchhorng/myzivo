@@ -406,7 +406,7 @@ function LiveIllustratedStickerArt({
         fallbackSrc={sticker.src}
         alt={sticker.alt}
         preload="metadata"
-        renderMode="chroma"
+        renderMode="blend"
       />
     ) : (
       <img
