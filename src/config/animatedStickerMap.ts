@@ -281,6 +281,13 @@ import emHamsterSleepyAnim from "@/assets/stickers/anim/em-hamster-sleepy-anim.m
 import emHamsterShyAnim from "@/assets/stickers/anim/em-hamster-shy-anim.mp4.asset.json";
 import emHamsterSurprisedAnim from "@/assets/stickers/anim/em-hamster-surprised-anim.mp4.asset.json";
 import emHamsterCoolAnim from "@/assets/stickers/anim/em-hamster-cool-anim.mp4.asset.json";
+// Emotion animated stickers — batch 21 (final)
+import emRaccoonLoveAnim from "@/assets/stickers/anim/em-raccoon-love-anim.mp4.asset.json";
+import emRaccoonAngryAnim from "@/assets/stickers/anim/em-raccoon-angry-anim.mp4.asset.json";
+import emRaccoonSleepyAnim from "@/assets/stickers/anim/em-raccoon-sleepy-anim.mp4.asset.json";
+import emRaccoonShyAnim from "@/assets/stickers/anim/em-raccoon-shy-anim.mp4.asset.json";
+import emRaccoonSurprisedAnim from "@/assets/stickers/anim/em-raccoon-surprised-anim.mp4.asset.json";
+import emRaccoonCoolAnim from "@/assets/stickers/anim/em-raccoon-cool-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
@@ -565,6 +572,13 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-hamster-shy": emHamsterShyAnim.url,
   "em-hamster-surprised": emHamsterSurprisedAnim.url,
   "em-hamster-cool": emHamsterCoolAnim.url,
+  // batch 21 (final)
+  "em-raccoon-love": emRaccoonLoveAnim.url,
+  "em-raccoon-angry": emRaccoonAngryAnim.url,
+  "em-raccoon-sleepy": emRaccoonSleepyAnim.url,
+  "em-raccoon-shy": emRaccoonShyAnim.url,
+  "em-raccoon-surprised": emRaccoonSurprisedAnim.url,
+  "em-raccoon-cool": emRaccoonCoolAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
