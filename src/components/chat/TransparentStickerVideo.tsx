@@ -21,64 +21,54 @@ function applyChromaKey(frame: ImageData) {
     const red = data[index];
     const green = data[index + 1];
     const blue = data[index + 2];
+    const maxChannel = Math.max(red, green, blue);
+    const minChannel = Math.min(red, green, blue);
     const brightness = (red + green + blue) / 3;
-    const variance = Math.max(red, green, blue) - Math.min(red, green, blue);
+    const variance = maxChannel - minChannel;
+    const maxOtherChannel = Math.max(red, blue);
+    const greenExcess = green - maxOtherChannel;
+    const saturation = maxChannel === 0 ? 0 : variance / maxChannel;
 
-    // --- Green screen keying (wide range, including dark greens) ---
-    if (green > 30 && green > red && green > blue) {
-      const greenOverRed = green / Math.max(1, red);
-      const greenOverBlue = green / Math.max(1, blue);
-      const dominance = Math.min(greenOverRed, greenOverBlue);
+    // --- Green screen keying ---
+    // Keep this selective so dark subject pixels (fur, eyes, shadows) are not punched out.
+    if (green > red && green > blue) {
+      const greenRatio = green / Math.max(1, maxOtherChannel);
+      const isHardGreen = green > 92 && greenExcess > 50 && saturation > 0.22 && greenRatio > 1.28;
 
-      // Hard key — clearly green dominant
-      if (dominance > 1.4) {
+      if (isHardGreen) {
         data[index + 3] = 0;
         continue;
       }
 
-      // Soft edge for borderline green (1.1 to 1.4 range)
-      if (dominance > 1.1) {
-        const fade = (dominance - 1.1) / (1.4 - 1.1);
+      const isSoftGreen = green > 42 && greenExcess > 16 && saturation > 0.12 && greenRatio > 1.08;
+      const isLightGreen = brightness > 132 && greenExcess > 12 && blue < green * 0.82 && saturation > 0.08;
+
+      if (isSoftGreen || isLightGreen) {
+        const softScore = isSoftGreen
+          ? Math.max(
+              Math.min(1, (greenExcess - 16) / 42),
+              Math.min(1, (greenRatio - 1.08) / 0.32)
+            )
+          : 0;
+
+        const lightScore = isLightGreen
+          ? Math.max(
+              Math.min(1, (greenExcess - 12) / 28),
+              Math.min(1, (brightness - 132) / 80)
+            )
+          : 0;
+
+        const fade = Math.max(softScore, lightScore);
         const nextAlpha = Math.round(255 * (1 - Math.min(1, fade)));
         data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
-        // Green spill suppression on semi-transparent edge pixels
-        if (nextAlpha < 200) {
-          const avg = (red + blue) / 2;
-          data[index + 1] = Math.min(green, Math.round(avg + (green - avg) * 0.3));
+
+        // Reduce green spill on semi-transparent keyed edges without damaging the subject.
+        if (data[index + 3] < 255) {
+          const neutralGreen = Math.round((red + blue) / 2);
+          data[index + 1] = Math.round(neutralGreen + (green - neutralGreen) * 0.25);
         }
         continue;
       }
-    }
-
-    // Bright green where green dominates at least one channel strongly
-    if (green > 60) {
-      const greenOverRed = green / Math.max(1, red);
-      const greenOverBlue = green / Math.max(1, blue);
-
-      if ((greenOverRed > 1.3 && greenOverBlue > 1.1) || (greenOverBlue > 1.3 && greenOverRed > 1.1)) {
-        const dominance = Math.min(greenOverRed, greenOverBlue);
-        const fade = Math.min(1, (dominance - 1.1) / 0.3);
-        const nextAlpha = Math.round(255 * (1 - fade));
-        data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
-        continue;
-      }
-
-      // Light / lime green
-      if (green > red && green > blue && brightness > 120 && blue < green * 0.7) {
-        const lightGreenScore = (green - Math.max(red, blue)) / green;
-        if (lightGreenScore > 0.06) {
-          const fade = Math.min(1, lightGreenScore / 0.2);
-          const nextAlpha = Math.round(255 * (1 - fade));
-          data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
-          continue;
-        }
-      }
-    }
-
-    // --- Dark fringe removal (very dark pixels near edges) ---
-    if (brightness < 25 && green >= red && green >= blue) {
-      data[index + 3] = 0;
-      continue;
     }
 
     // --- White key (legacy) ---
