@@ -55,17 +55,19 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
     const [hue, sat, lightness] = rgbToHsl(red, green, blue);
     const isGreenHue = hue >= 70 && hue <= 170;
 
-    if (isGreenHue && sat > 0.12 && lightness > 0.08 && lightness < 0.92) {
-      // Hard green
-      if (sat > 0.25 && lightness > 0.15 && lightness < 0.85) {
+    if (isGreenHue && sat > 0.18 && lightness > 0.10 && lightness < 0.88) {
+      // Hard green — require higher saturation & narrower lightness to protect white/rice areas
+      if (sat > 0.35 && lightness > 0.18 && lightness < 0.82) {
         data[index + 3] = 0;
         keyedMask[pixelIdx] = 1;
         continue;
       }
       // Soft green – fade proportional to saturation & hue proximity
+      // Protect light pixels (rice, white areas) by requiring stronger saturation
       const hueDist = Math.min(Math.abs(hue - 120), Math.abs(hue - 120 + 360)) / 50;
-      const fade = Math.min(1, sat * 2) * Math.max(0, 1 - hueDist);
-      if (fade > 0.05) {
+      const satFactor = lightness > 0.7 ? Math.max(0, (sat - 0.3) * 3.33) : Math.min(1, sat * 2);
+      const fade = satFactor * Math.max(0, 1 - hueDist);
+      if (fade > 0.08) {
         const nextAlpha = Math.round(255 * (1 - fade));
         const newAlpha = Math.min(data[index + 3], Math.max(0, nextAlpha));
         if (newAlpha < 255) keyedMask[pixelIdx] = 1;
