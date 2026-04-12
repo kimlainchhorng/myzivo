@@ -489,7 +489,7 @@ export function TransparentStickerVideo({
       scheduleNext();
     };
 
-    const handleStart = () => { syncSize(); renderFrame(); };
+    const handleStart = () => { syncSize(); renderFrame(); setReady(true); };
 
     const ro = new ResizeObserver(() => {
       syncSize();
@@ -545,7 +545,10 @@ export function TransparentStickerVideo({
       >
         <canvas
           ref={canvasRef}
-          className="h-full w-full object-contain drop-shadow-[0_3px_10px_rgba(0,0,0,0.10)]"
+          className={cn(
+            "h-full w-full object-contain drop-shadow-[0_3px_10px_rgba(0,0,0,0.10)] transition-opacity duration-200",
+            ready ? "opacity-100" : "opacity-0"
+          )}
         />
         <video
           ref={videoRef}
