@@ -65,7 +65,7 @@ function parseStickerPreview(message: string): { src: string; alt: string } | nu
   if (entry) return entry;
   const explicitSrc = m[2]?.trim();
   if (explicitSrc) return { src: explicitSrc, alt: id };
-  return null;
+  return { src: "", alt: id };
 }
 
 function parseRichMessagePreview(message: string): string {
