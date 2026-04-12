@@ -201,6 +201,23 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   }, []);
 
   useEffect(() => {
+    const scroller = scrollRef.current;
+    const timeline = timelineRef.current;
+    if (!scroller || !timeline || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(() => {
+      if (!isNearBottomRef.current) return;
+      scroller.scrollTop = scroller.scrollHeight;
+      requestAnimationFrame(() => {
+        scroller.scrollTop = scroller.scrollHeight;
+      });
+    });
+
+    observer.observe(timeline);
+    return () => observer.disconnect();
+  }, [messages.length, callEvents.length]);
+
+  useEffect(() => {
     const previousBodyOverscroll = document.body.style.overscrollBehavior;
     const previousHtmlOverscroll = document.documentElement.style.overscrollBehavior;
 
@@ -969,7 +986,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <p className="text-xs mt-1">Say hello to {recipientName}!</p>
           </div>
         ) : (
-          <div className="mt-auto space-y-2">
+          <div ref={timelineRef} className="mt-auto space-y-2">
             {(() => {
               const timeline: TimelineItem[] = [
                 ...messages,
