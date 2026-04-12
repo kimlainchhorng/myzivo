@@ -12,40 +12,35 @@ type TransparentStickerVideoMode = "blend" | "chroma";
 
 /**
  * Aggressive chroma keyer for AI-generated sticker videos.
- * 
- * Strategy: Sample the first frame's edges to learn BG colors, then cache
- * and reuse for all subsequent frames. Very wide tolerance to handle
- * gradients, sparkles, and particles in AI-generated backgrounds.
+ * Per-video BG color detection with very wide tolerances.
  */
 
-let cachedBgColors: Array<[number, number, number]> | null = null;
-let cachedSrc = "";
+const bgColorCache = new Map<string, Array<[number, number, number]>>();
 
 function sampleBgColors(data: Uint8ClampedArray, w: number, h: number): Array<[number, number, number]> {
   const samples: Array<[number, number, number]> = [];
   
-  // Sample top 5 rows, bottom 5 rows, left 5 cols, right 5 cols — very dense
-  const addSample = (x: number, y: number) => {
+  const addPx = (x: number, y: number) => {
+    if (x < 0 || x >= w || y < 0 || y >= h) return;
     const idx = (y * w + x) * 4;
-    if (idx >= 0 && idx + 2 < data.length) {
-      samples.push([data[idx], data[idx + 1], data[idx + 2]]);
-    }
+    if (idx + 2 < data.length) samples.push([data[idx], data[idx + 1], data[idx + 2]]);
   };
 
-  for (let row = 0; row < Math.min(5, h); row++) {
-    for (let x = 0; x < w; x++) { addSample(x, row); addSample(x, h - 1 - row); }
+  // Sample outer 8-pixel border on all sides
+  const border = Math.min(8, Math.floor(Math.min(w, h) / 4));
+  for (let row = 0; row < border; row++) {
+    for (let x = 0; x < w; x++) { addPx(x, row); addPx(x, h - 1 - row); }
   }
-  for (let col = 0; col < Math.min(5, w); col++) {
-    for (let y = 5; y < h - 5; y++) { addSample(col, y); addSample(w - 1 - col, y); }
+  for (let col = 0; col < border; col++) {
+    for (let y = border; y < h - border; y++) { addPx(col, y); addPx(w - 1 - col, y); }
   }
 
-  // Cluster into up to 8 BG colors
-  const clusters: Array<[number, number, number, number]> = []; // r,g,b,count
+  // Cluster
+  const clusters: Array<[number, number, number, number]> = [];
   for (const [r, g, b] of samples) {
     let matched = false;
     for (const c of clusters) {
-      const d = Math.abs(r - c[0]) + Math.abs(g - c[1]) + Math.abs(b - c[2]);
-      if (d < 90) {
+      if (Math.abs(r - c[0]) + Math.abs(g - c[1]) + Math.abs(b - c[2]) < 100) {
         c[0] = Math.round((c[0] * c[3] + r) / (c[3] + 1));
         c[1] = Math.round((c[1] * c[3] + g) / (c[3] + 1));
         c[2] = Math.round((c[2] * c[3] + b) / (c[3] + 1));
@@ -54,44 +49,41 @@ function sampleBgColors(data: Uint8ClampedArray, w: number, h: number): Array<[n
         break;
       }
     }
-    if (!matched && clusters.length < 8) clusters.push([r, g, b, 1]);
+    if (!matched && clusters.length < 12) clusters.push([r, g, b, 1]);
   }
 
-  // Only keep clusters seen in at least 1% of edge pixels
-  const minCount = Math.max(5, samples.length * 0.01);
-  return clusters.filter(c => c[3] >= minCount).map(c => [c[0], c[1], c[2]]);
+  const minCount = Math.max(3, samples.length * 0.005);
+  return clusters.filter(c => c[3] >= minCount).map(c => [c[0], c[1], c[2]] as [number, number, number]);
 }
 
 function applyChromaKey(frame: ImageData, videoSrc?: string) {
   const { data } = frame;
   const w = frame.width;
   const h = frame.height;
+  const key = videoSrc || "__default__";
 
-  // Cache BG colors per video source
-  if (!cachedBgColors || (videoSrc && videoSrc !== cachedSrc)) {
-    cachedBgColors = sampleBgColors(data, w, h);
-    cachedSrc = videoSrc || "";
+  if (!bgColorCache.has(key)) {
+    bgColorCache.set(key, sampleBgColors(data, w, h));
   }
-
-  const bgList = cachedBgColors;
+  const bgList = bgColorCache.get(key)!;
 
   for (let index = 0; index < data.length; index += 4) {
     const red = data[index];
     const green = data[index + 1];
     const blue = data[index + 2];
 
-    // --- Adaptive BG removal with wide tolerance ---
+    // --- Adaptive BG removal — very aggressive ---
     let removed = false;
     for (const bg of bgList) {
       const dr = red - bg[0], dg = green - bg[1], db = blue - bg[2];
       const dist = Math.sqrt(dr * dr + dg * dg + db * db);
-      if (dist < 80) {
+      if (dist < 95) {
         data[index + 3] = 0;
         removed = true;
         break;
       }
-      if (dist < 140) {
-        const t = (dist - 80) / 60; // 0..1
+      if (dist < 160) {
+        const t = (dist - 95) / 65;
         data[index + 3] = Math.min(data[index + 3], Math.round(255 * t * t));
         removed = true;
         break;
@@ -99,35 +91,32 @@ function applyChromaKey(frame: ImageData, videoSrc?: string) {
     }
     if (removed) continue;
 
-    // --- Saturation-aware: any very vivid non-brown/non-skin pixel ---
     const maxC = Math.max(red, green, blue);
     const minC = Math.min(red, green, blue);
     const sat = maxC > 0 ? (maxC - minC) / maxC : 0;
     const brightness = (red + green + blue) / 3;
 
-    // Green-dominant
-    if (green > 55 && green > red * 1.15 && green > blue * 1.1 && sat > 0.3) {
+    // Green-dominant (any shade)
+    if (green > 50 && green > red * 1.1 && green > blue * 1.05 && sat > 0.25) {
       const gd = green / Math.max(1, (red + blue) / 2);
-      if (gd > 1.3) { data[index + 3] = 0; continue; }
-      if (gd > 1.05) {
-        const t = (gd - 1.05) / 0.25;
-        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - t)));
+      if (gd > 1.25) { data[index + 3] = 0; continue; }
+      if (gd > 1.0) {
+        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - (gd - 1.0) / 0.25)));
         continue;
       }
     }
 
     // Blue/Cyan-dominant
-    if (blue > 55 && blue > red * 1.15 && sat > 0.3) {
+    if (blue > 50 && blue > red * 1.1 && sat > 0.25) {
       const bd = blue / Math.max(1, (red + green) / 2);
-      if (bd > 1.3) { data[index + 3] = 0; continue; }
-      if (bd > 1.05) {
-        const t = (bd - 1.05) / 0.25;
-        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - t)));
+      if (bd > 1.25) { data[index + 3] = 0; continue; }
+      if (bd > 1.0) {
+        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - (bd - 1.0) / 0.25)));
         continue;
       }
     }
 
-    // --- White / light key ---
+    // White / light key
     const variance = maxC - minC;
     if (brightness >= 235 && variance <= 22) {
       data[index + 3] = 0;
