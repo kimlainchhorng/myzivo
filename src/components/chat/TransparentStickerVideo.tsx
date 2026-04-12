@@ -219,6 +219,13 @@ const FRAGMENT_SRC = `
 `;
 
 function tryInitWebGL(canvas: HTMLCanvasElement) {
+  // Test WebGL on an offscreen canvas first to avoid locking the real canvas
+  const testCanvas = document.createElement("canvas");
+  testCanvas.width = 1;
+  testCanvas.height = 1;
+  const testGl = testCanvas.getContext("webgl");
+  if (!testGl) return null;
+  // Test passed — now use the real canvas
   const gl = canvas.getContext("webgl", { premultipliedAlpha: true, alpha: true });
   if (!gl) return null;
 
