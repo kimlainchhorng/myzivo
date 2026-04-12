@@ -10,10 +10,14 @@ import { cn } from "@/lib/utils";
 
 type TransparentStickerVideoMode = "blend" | "chroma";
 
-const HARD_KEY_BRIGHTNESS = 246;
-const SOFT_KEY_BRIGHTNESS = 236;
-const MAX_NEUTRAL_VARIANCE = 18;
+const HARD_KEY_BRIGHTNESS = 240;
+const SOFT_KEY_BRIGHTNESS = 220;
+const MAX_NEUTRAL_VARIANCE = 22;
 
+/**
+ * Enhanced chroma keyer — removes green, blue/cyan, and white backgrounds.
+ * Uses saturation + channel-dominance analysis for robust edge handling.
+ */
 function applyChromaKey(frame: ImageData) {
   const { data } = frame;
 
@@ -21,37 +25,64 @@ function applyChromaKey(frame: ImageData) {
     const red = data[index];
     const green = data[index + 1];
     const blue = data[index + 2];
-    const brightness = (red + green + blue) / 3;
-    const variance = Math.max(red, green, blue) - Math.min(red, green, blue);
 
-    // --- Green screen keying ---
-    // Strong green: green channel dominates red and blue
-    if (green > 80 && green > red * 1.4 && green > blue * 1.4) {
+    const maxC = Math.max(red, green, blue);
+    const minC = Math.min(red, green, blue);
+    const variance = maxC - minC;
+    const brightness = (red + green + blue) / 3;
+
+    // --- Green screen keying (handles lime-green to deep-green) ---
+    if (green > 60 && green > red * 1.25 && green > blue * 1.2) {
       const greenDominance = green / Math.max(1, (red + blue) / 2);
-      if (greenDominance > 1.6) {
-        // Hard key for very green pixels
+      if (greenDominance > 1.45) {
         data[index + 3] = 0;
         continue;
       }
-      if (greenDominance > 1.3) {
-        // Soft edge
-        const fade = (greenDominance - 1.3) / (1.6 - 1.3);
-        const nextAlpha = Math.round(255 * (1 - fade));
-        data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
+      if (greenDominance > 1.15) {
+        const fade = (greenDominance - 1.15) / (1.45 - 1.15);
+        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - fade)));
         continue;
       }
     }
 
-    // --- White key (legacy) ---
+    // --- Blue / Cyan / Teal screen keying ---
+    if (blue > 60 && blue > red * 1.25 && blue >= green * 0.85) {
+      const blueDominance = blue / Math.max(1, (red + green) / 2);
+      if (blueDominance > 1.4) {
+        data[index + 3] = 0;
+        continue;
+      }
+      if (blueDominance > 1.15) {
+        const fade = (blueDominance - 1.15) / (1.4 - 1.15);
+        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - fade)));
+        continue;
+      }
+    }
+
+    // --- Saturated color keying (catches any vivid solid background) ---
+    // If a pixel is very saturated and bright, it's likely background
+    const saturation = maxC > 0 ? (variance / maxC) : 0;
+    if (saturation > 0.55 && brightness > 80 && brightness < 220) {
+      // Strong solid color — likely chroma background
+      if (saturation > 0.7) {
+        data[index + 3] = 0;
+        continue;
+      }
+      const fade = (saturation - 0.55) / (0.7 - 0.55);
+      data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - fade)));
+      continue;
+    }
+
+    // --- White key ---
     if (brightness >= HARD_KEY_BRIGHTNESS && variance <= MAX_NEUTRAL_VARIANCE) {
       data[index + 3] = 0;
       continue;
     }
 
-    if (brightness < SOFT_KEY_BRIGHTNESS || variance > MAX_NEUTRAL_VARIANCE - 4) continue;
+    if (brightness < SOFT_KEY_BRIGHTNESS || variance > MAX_NEUTRAL_VARIANCE) continue;
 
     const brightnessFade = (brightness - SOFT_KEY_BRIGHTNESS) / (HARD_KEY_BRIGHTNESS - SOFT_KEY_BRIGHTNESS);
-    const varianceFade = 1 - variance / (MAX_NEUTRAL_VARIANCE - 4);
+    const varianceFade = 1 - variance / MAX_NEUTRAL_VARIANCE;
     const nextAlpha = Math.round(255 * (1 - brightnessFade * varianceFade));
     data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
   }
