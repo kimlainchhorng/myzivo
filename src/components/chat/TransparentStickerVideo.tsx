@@ -400,6 +400,8 @@ export function TransparentStickerVideo({
     let disposed = false;
     let rafId: number | null = null;
     let frameCallbackId: number | null = null;
+    let lastFrameTime = 0;
+    let cachedCtx: CanvasRenderingContext2D | null = null;
 
     const keyedVideo = video as HTMLVideoElement & {
       requestVideoFrameCallback?: (cb: (now: number, meta: unknown) => void) => number;
@@ -425,12 +427,13 @@ export function TransparentStickerVideo({
 
     const syncSize = () => {
       const b = container.getBoundingClientRect();
-      const pr = Math.min(devicePixelRatio || 1, 2);
+      const pr = Math.min(devicePixelRatio || 1, MAX_PIXEL_RATIO);
       const w = Math.max(1, Math.round(b.width * pr));
       const h = Math.max(1, Math.round(b.height * pr));
       if (canvas.width !== w || canvas.height !== h) {
         canvas.width = w;
         canvas.height = h;
+        cachedCtx = null; // invalidate cached context on resize
         if (webglCtx) webglCtx.gl.viewport(0, 0, w, h);
       }
     };
@@ -447,6 +450,17 @@ export function TransparentStickerVideo({
 
     const renderFrame = () => {
       if (disposed) return;
+
+      // Throttle chroma path to ~30fps
+      if (!webglCtx) {
+        const now = performance.now();
+        if (now - lastFrameTime < MIN_FRAME_INTERVAL_MS) {
+          scheduleNext();
+          return;
+        }
+        lastFrameTime = now;
+      }
+
       syncSize();
 
       if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
@@ -464,8 +478,11 @@ export function TransparentStickerVideo({
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       } else {
-        // ── Canvas 2D path ──
-        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        // ── Canvas 2D path (cached context) ──
+        if (!cachedCtx) {
+          cachedCtx = canvas.getContext("2d", { willReadFrequently: true });
+        }
+        const ctx = cachedCtx;
         if (!ctx) { scheduleNext(); return; }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
