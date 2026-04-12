@@ -65,7 +65,7 @@ function parseStickerPreview(message: string): { src: string; alt: string } | nu
   if (entry) return entry;
   const explicitSrc = m[2]?.trim();
   if (explicitSrc) return { src: explicitSrc, alt: id };
-  return null;
+  return { src: "", alt: id };
 }
 
 function parseRichMessagePreview(message: string): string {
@@ -839,7 +839,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                   if (stickerPreview) {
                                     return (
                                       <span className="flex items-center gap-1.5">
-                                        <img src={stickerPreview.src} alt={stickerPreview.alt} className="w-5 h-5 object-contain" />
+                                        {stickerPreview.src && (
+                                          <img src={stickerPreview.src} alt={stickerPreview.alt} className="w-5 h-5 object-contain" />
+                                        )}
                                         <span className={cn(
                                           embedded ? "text-[12px]" : "text-[13px]",
                                           "leading-snug text-muted-foreground"

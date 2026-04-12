@@ -983,7 +983,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                     {/* Sticker grid — 4 columns, Facebook-style */}
                     <div className="grid grid-cols-4 gap-2 px-2 pb-3">
                       {filteredIllustratedStickers.map((sticker, idx) => {
-                        const stickerPayload = `[sticker:${sticker.id}:${sticker.src}]`;
+                        const stickerPayload = `[sticker:${sticker.id}]`;
                         let didLongPress = false;
 
                         return (
@@ -1261,7 +1261,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               <div className="bg-card rounded-2xl border border-border/40 shadow-xl overflow-hidden min-w-[200px]">
                 <button
                   onClick={() => {
-                    sendSticker(`[sticker:${previewSticker.id}:${previewSticker.src}]`);
+                    sendSticker(`[sticker:${previewSticker.id}]`);
                     setPreviewSticker(null);
                   }}
                   className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-muted/50 active:bg-muted transition-colors border-b border-border/20"
