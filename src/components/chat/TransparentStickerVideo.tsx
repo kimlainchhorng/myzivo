@@ -121,7 +121,6 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
     }
   }
 }
-}
 
 interface TransparentStickerVideoProps {
   src: string;
