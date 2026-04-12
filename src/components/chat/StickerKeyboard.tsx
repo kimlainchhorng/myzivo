@@ -387,7 +387,7 @@ function LiveIllustratedStickerArt({
       alt={sticker.alt}
       preload={large ? "auto" : "metadata"}
       renderMode={large ? "chroma" : "blend"}
-      whiteKeyEnabled={true}
+      whiteKeyEnabled={false}
       className={mediaShadowClassName}
     />
   ) : (
