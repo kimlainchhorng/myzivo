@@ -231,7 +231,7 @@ export function TransparentStickerVideo({
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const frame = context.getImageData(0, 0, canvas.width, canvas.height);
-      applyChromaKey(frame);
+      applyChromaKey(frame, src);
       context.putImageData(frame, 0, 0);
 
       scheduleNextFrame();
