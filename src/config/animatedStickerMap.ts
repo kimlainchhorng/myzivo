@@ -281,6 +281,13 @@ import emHamsterSleepyAnim from "@/assets/stickers/anim/em-hamster-sleepy-anim.m
 import emHamsterShyAnim from "@/assets/stickers/anim/em-hamster-shy-anim.mp4.asset.json";
 import emHamsterSurprisedAnim from "@/assets/stickers/anim/em-hamster-surprised-anim.mp4.asset.json";
 import emHamsterCoolAnim from "@/assets/stickers/anim/em-hamster-cool-anim.mp4.asset.json";
+// Emotion animated stickers — batch 21 (final)
+import emRaccoonLoveAnim from "@/assets/stickers/anim/em-raccoon-love-anim.mp4.asset.json";
+import emRaccoonAngryAnim from "@/assets/stickers/anim/em-raccoon-angry-anim.mp4.asset.json";
+import emRaccoonSleepyAnim from "@/assets/stickers/anim/em-raccoon-sleepy-anim.mp4.asset.json";
+import emRaccoonShyAnim from "@/assets/stickers/anim/em-raccoon-shy-anim.mp4.asset.json";
+import emRaccoonSurprisedAnim from "@/assets/stickers/anim/em-raccoon-surprised-anim.mp4.asset.json";
+import emRaccoonCoolAnim from "@/assets/stickers/anim/em-raccoon-cool-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
