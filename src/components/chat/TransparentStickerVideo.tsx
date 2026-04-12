@@ -14,7 +14,7 @@ const HARD_KEY_BRIGHTNESS = 246;
 const SOFT_KEY_BRIGHTNESS = 236;
 const MAX_NEUTRAL_VARIANCE = 18;
 
-function applyChromaKey(frame: ImageData) {
+function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
   const { data } = frame;
 
   for (let index = 0; index < data.length; index += 4) {
@@ -71,6 +71,8 @@ function applyChromaKey(frame: ImageData) {
       }
     }
 
+    if (!whiteKeyEnabled) continue;
+
     // --- White key (legacy) ---
     if (brightness >= HARD_KEY_BRIGHTNESS && variance <= MAX_NEUTRAL_VARIANCE) {
       data[index + 3] = 0;
@@ -93,6 +95,7 @@ interface TransparentStickerVideoProps {
   fallbackSrc?: string;
   preload?: "none" | "metadata" | "auto";
   renderMode?: TransparentStickerVideoMode;
+  whiteKeyEnabled?: boolean;
 }
 
 export function TransparentStickerVideo({
@@ -102,6 +105,7 @@ export function TransparentStickerVideo({
   fallbackSrc,
   preload = "auto",
   renderMode = "blend",
+  whiteKeyEnabled = true,
 }: TransparentStickerVideoProps) {
   const [error, setError] = useState(false);
   const [isInViewport, setIsInViewport] = useState(renderMode !== "chroma");
@@ -229,7 +233,7 @@ export function TransparentStickerVideo({
       context.drawImage(video, dx, dy, dw, dh);
 
       const frame = context.getImageData(0, 0, canvas.width, canvas.height);
-      applyChromaKey(frame);
+      applyChromaKey(frame, whiteKeyEnabled);
       context.putImageData(frame, 0, 0);
 
       scheduleNextFrame();
@@ -267,7 +271,7 @@ export function TransparentStickerVideo({
       video.removeEventListener("pause", cancelScheduledFrame);
       video.removeEventListener("ended", cancelScheduledFrame);
     };
-  }, [error, isInViewport, renderMode, src]);
+  }, [error, isInViewport, renderMode, src, whiteKeyEnabled]);
 
   if (error && fallbackSrc) {
     return (
