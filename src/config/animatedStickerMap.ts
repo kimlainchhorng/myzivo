@@ -612,6 +612,17 @@ export const ANIMATED_STICKER_MAP: Record<string, string> = {
   "em-giraffe-cool": emGiraffeCoolAnim.url,
   "em-octopus-happy": emOctopusHappyAnim.url,
   "em-octopus-cry": emOctopusCryAnim.url,
+  // batch 23
+  "em-octopus-love": emOctopusLoveAnim.url,
+  "em-octopus-angry": emOctopusAngryAnim.url,
+  "em-octopus-sleepy": emOctopusSleepyAnim.url,
+  "em-octopus-shy": emOctopusShyAnim.url,
+  "em-octopus-surprised": emOctopusSurprisedAnim.url,
+  "em-octopus-cool": emOctopusCoolAnim.url,
+  "em-strawberry-happy": emStrawberryHappyAnim.url,
+  "em-strawberry-cry": emStrawberryCryAnim.url,
+  "em-strawberry-love": emStrawberryLoveAnim.url,
+  "em-strawberry-angry": emStrawberryAngryAnim.url,
 };
 
 /** Get animated video URL for a sticker ID, or undefined if not available */
