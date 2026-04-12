@@ -67,23 +67,39 @@ function applyChromaKey(frame: ImageData, videoSrc?: string) {
   }
   const bgList = bgColorCache.get(key)!;
 
+  const cx = w / 2;
+  const cy = h / 2;
+  const maxEdgeDist = Math.sqrt(cx * cx + cy * cy);
+
   for (let index = 0; index < data.length; index += 4) {
     const red = data[index];
     const green = data[index + 1];
     const blue = data[index + 2];
 
-    // --- Adaptive BG removal — very aggressive ---
+    // Pixel position — center pixels are protected more
+    const pixelIdx = index / 4;
+    const px = pixelIdx % w;
+    const py = Math.floor(pixelIdx / w);
+    const edgeDist = Math.sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy));
+    const edgeFactor = Math.min(1, edgeDist / (maxEdgeDist * 0.55)); // 0 at center, 1 at edges
+
+    // --- Adaptive BG removal with center protection ---
     let removed = false;
     for (const bg of bgList) {
       const dr = red - bg[0], dg = green - bg[1], db = blue - bg[2];
       const dist = Math.sqrt(dr * dr + dg * dg + db * db);
-      if (dist < 95) {
+
+      // Thresholds scale by edge proximity: aggressive at edges, conservative at center
+      const hardDist = 50 + edgeFactor * 40; // 50 center → 90 edges
+      const softDist = 90 + edgeFactor * 50; // 90 center → 140 edges
+
+      if (dist < hardDist) {
         data[index + 3] = 0;
         removed = true;
         break;
       }
-      if (dist < 160) {
-        const t = (dist - 95) / 65;
+      if (dist < softDist) {
+        const t = (dist - hardDist) / (softDist - hardDist);
         data[index + 3] = Math.min(data[index + 3], Math.round(255 * t * t));
         removed = true;
         break;
@@ -96,35 +112,36 @@ function applyChromaKey(frame: ImageData, videoSrc?: string) {
     const sat = maxC > 0 ? (maxC - minC) / maxC : 0;
     const brightness = (red + green + blue) / 3;
 
-    // Green-dominant (any shade)
-    if (green > 50 && green > red * 1.1 && green > blue * 1.05 && sat > 0.25) {
+    // Green-dominant — only at edges or very strong green
+    const greenThreshold = 1.15 + (1 - edgeFactor) * 0.2; // stricter at center
+    if (green > 60 && green > red * 1.2 && green > blue * 1.15 && sat > 0.3) {
       const gd = green / Math.max(1, (red + blue) / 2);
-      if (gd > 1.25) { data[index + 3] = 0; continue; }
-      if (gd > 1.0) {
-        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - (gd - 1.0) / 0.25)));
+      if (gd > greenThreshold + 0.2) { data[index + 3] = 0; continue; }
+      if (gd > greenThreshold) {
+        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - (gd - greenThreshold) / 0.2)));
         continue;
       }
     }
 
-    // Blue/Cyan-dominant
-    if (blue > 50 && blue > red * 1.1 && sat > 0.25) {
+    // Blue/Cyan-dominant — only at edges or very strong blue
+    if (blue > 60 && blue > red * 1.2 && sat > 0.3) {
       const bd = blue / Math.max(1, (red + green) / 2);
-      if (bd > 1.25) { data[index + 3] = 0; continue; }
-      if (bd > 1.0) {
-        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - (bd - 1.0) / 0.25)));
+      if (bd > greenThreshold + 0.2) { data[index + 3] = 0; continue; }
+      if (bd > greenThreshold) {
+        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - (bd - greenThreshold) / 0.2)));
         continue;
       }
     }
 
     // White / light key
     const variance = maxC - minC;
-    if (brightness >= 235 && variance <= 22) {
+    if (brightness >= 238 && variance <= 20) {
       data[index + 3] = 0;
       continue;
     }
-    if (brightness >= 215 && variance <= 22) {
-      const bf = (brightness - 215) / 20;
-      const vf = 1 - variance / 22;
+    if (brightness >= 220 && variance <= 20) {
+      const bf = (brightness - 220) / 18;
+      const vf = 1 - variance / 20;
       data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - bf * vf)));
     }
   }
