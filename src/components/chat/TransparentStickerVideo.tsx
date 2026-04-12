@@ -217,7 +217,16 @@ export function TransparentStickerVideo({
       }
 
       context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Draw with object-contain behavior — canvas doesn't support CSS object-fit
+      const vw = video.videoWidth || canvas.width;
+      const vh = video.videoHeight || canvas.height;
+      const scale = Math.min(canvas.width / vw, canvas.height / vh);
+      const dw = vw * scale;
+      const dh = vh * scale;
+      const dx = (canvas.width - dw) / 2;
+      const dy = (canvas.height - dh) / 2;
+      context.drawImage(video, dx, dy, dw, dh);
 
       const frame = context.getImageData(0, 0, canvas.width, canvas.height);
       applyChromaKey(frame);
