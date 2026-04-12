@@ -512,8 +512,7 @@ export default function ChatMessageBubble({
                         fallbackSrc={stickerFallbackSrc}
                         alt={parsedSticker.id}
                         preload="auto"
-                        renderMode="chroma"
-                        whiteKeyEnabled={false}
+                        renderMode="blend"
                       />
                     ) : stickerFallbackSrc ? (
                       <motion.div
