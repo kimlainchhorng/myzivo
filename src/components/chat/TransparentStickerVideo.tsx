@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
 
 type TransparentStickerVideoMode = "blend" | "chroma";
 
-const HARD_KEY_BRIGHTNESS = 246;
-const SOFT_KEY_BRIGHTNESS = 232;
-const MAX_NEUTRAL_VARIANCE = 20;
+const HARD_KEY_BRIGHTNESS = 240;
+const SOFT_KEY_BRIGHTNESS = 210;
+const MAX_NEUTRAL_VARIANCE = 28;
 
 function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
   const { data, width, height } = frame;
@@ -22,9 +22,8 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
     const green = data[index + 1];
     const blue = data[index + 2];
     const maxChannel = Math.max(red, green, blue);
-    const minChannel = Math.min(red, green, blue);
     const brightness = (red + green + blue) / 3;
-    const variance = maxChannel - minChannel;
+    const variance = maxChannel - Math.min(red, green, blue);
     const maxOtherChannel = Math.max(red, blue);
     const greenExcess = green - maxOtherChannel;
     const saturation = maxChannel === 0 ? 0 : variance / maxChannel;
@@ -32,28 +31,28 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
     // --- Green screen keying ---
     if (green > red && green > blue) {
       const greenRatio = green / Math.max(1, maxOtherChannel);
-      const isHardGreen = green > 80 && greenExcess > 40 && saturation > 0.18 && greenRatio > 1.2;
+      const isHardGreen = green > 70 && greenExcess > 30 && saturation > 0.14 && greenRatio > 1.15;
 
       if (isHardGreen) {
         data[index + 3] = 0;
         continue;
       }
 
-      const isSoftGreen = green > 36 && greenExcess > 10 && saturation > 0.08 && greenRatio > 1.05;
-      const isLightGreen = brightness > 120 && greenExcess > 8 && blue < green * 0.85 && saturation > 0.06;
+      const isSoftGreen = green > 30 && greenExcess > 6 && saturation > 0.06 && greenRatio > 1.03;
+      const isLightGreen = brightness > 110 && greenExcess > 5 && blue < green * 0.88 && saturation > 0.04;
 
       if (isSoftGreen || isLightGreen) {
         const softScore = isSoftGreen
           ? Math.max(
-              Math.min(1, (greenExcess - 10) / 35),
-              Math.min(1, (greenRatio - 1.05) / 0.25)
+              Math.min(1, (greenExcess - 6) / 28),
+              Math.min(1, (greenRatio - 1.03) / 0.2)
             )
           : 0;
 
         const lightScore = isLightGreen
           ? Math.max(
-              Math.min(1, (greenExcess - 8) / 22),
-              Math.min(1, (brightness - 120) / 70)
+              Math.min(1, (greenExcess - 5) / 18),
+              Math.min(1, (brightness - 110) / 60)
             )
           : 0;
 
@@ -64,7 +63,7 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
         // Despill green on semi-transparent keyed edges
         if (data[index + 3] < 255) {
           const neutralGreen = Math.round((red + blue) / 2);
-          data[index + 1] = Math.round(neutralGreen + (green - neutralGreen) * 0.15);
+          data[index + 1] = Math.round(neutralGreen + (green - neutralGreen) * 0.1);
         }
         continue;
       }
@@ -72,22 +71,30 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
 
     if (!whiteKeyEnabled) continue;
 
-    // --- White key ---
+    // --- White / near-white key (catches shadow ellipses too) ---
     if (brightness >= HARD_KEY_BRIGHTNESS && variance <= MAX_NEUTRAL_VARIANCE) {
       data[index + 3] = 0;
       continue;
     }
 
-    if (brightness < SOFT_KEY_BRIGHTNESS || variance > MAX_NEUTRAL_VARIANCE) continue;
+    if (brightness >= SOFT_KEY_BRIGHTNESS && variance <= MAX_NEUTRAL_VARIANCE) {
+      const brightnessFade = (brightness - SOFT_KEY_BRIGHTNESS) / (HARD_KEY_BRIGHTNESS - SOFT_KEY_BRIGHTNESS);
+      const varianceFade = 1 - variance / MAX_NEUTRAL_VARIANCE;
+      const nextAlpha = Math.round(255 * (1 - Math.min(1, brightnessFade * varianceFade)));
+      data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
+      continue;
+    }
 
-    const brightnessFade = (brightness - SOFT_KEY_BRIGHTNESS) / (HARD_KEY_BRIGHTNESS - SOFT_KEY_BRIGHTNESS);
-    const varianceFade = 1 - variance / MAX_NEUTRAL_VARIANCE;
-    const nextAlpha = Math.round(255 * (1 - brightnessFade * varianceFade));
-    data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
+    // --- Light pinkish/grayish shadow key (catches the foot shadow oval) ---
+    if (brightness >= 190 && variance <= 40 && saturation < 0.15) {
+      const shadowFade = Math.min(1, (brightness - 190) / 50) * (1 - saturation / 0.15);
+      const nextAlpha = Math.round(255 * (1 - Math.min(1, shadowFade * 0.7)));
+      data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
+    }
   }
 
-  // --- Two-pass edge erosion to clean fringe ---
-  for (let pass = 0; pass < 2; pass++) {
+  // --- Three-pass edge erosion to clean fringe ---
+  for (let pass = 0; pass < 3; pass++) {
     const alphaMap = new Uint8Array(width * height);
     for (let i = 0; i < alphaMap.length; i++) {
       alphaMap[i] = data[i * 4 + 3];
@@ -106,11 +113,9 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
         if (y < height - 1 && alphaMap[idx + width] === 0) transparentCount++;
 
         if (transparentCount >= 2) {
-          // Corner/edge pixel with 2+ transparent neighbors → fully remove
           data[idx * 4 + 3] = 0;
         } else if (transparentCount === 1) {
-          // Single edge pixel → heavily fade
-          data[idx * 4 + 3] = Math.round(a * (pass === 0 ? 0.15 : 0.3));
+          data[idx * 4 + 3] = Math.round(a * (pass === 0 ? 0.0 : pass === 1 ? 0.1 : 0.25));
         }
       }
     }
