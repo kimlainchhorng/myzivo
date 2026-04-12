@@ -485,29 +485,31 @@ export default function ChatMessageBubble({
             return (
               <div className="py-1">
                 <div className="relative h-40 w-40 sm:h-44 sm:w-44">
-                  {hasAnimatedSticker ? (
-                    <TransparentStickerVideo
-                      src={parsedSticker.animatedSrc!}
-                      fallbackSrc={stickerFallbackSrc}
-                      alt={parsedSticker.id}
-                      preload="metadata"
-                      renderMode="chroma"
-                    />
-                  ) : (
-                    <motion.div
-                      className="relative h-full w-full"
-                      initial={{ scale: 0, opacity: 0, y: 40 }}
-                      animate={{ scale: 1, opacity: 1, y: 0 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 16, mass: 0.8 }}
-                    >
-                      <img
-                        src={stickerFallbackSrc}
+                  <div className="absolute inset-2 sm:inset-2.5">
+                    {hasAnimatedSticker ? (
+                      <TransparentStickerVideo
+                        src={parsedSticker.animatedSrc!}
+                        fallbackSrc={stickerFallbackSrc}
                         alt={parsedSticker.id}
-                        className="h-full w-full object-contain pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.12)]"
-                        loading="lazy"
+                        preload="metadata"
+                        renderMode="chroma"
                       />
-                    </motion.div>
-                  )}
+                    ) : (
+                      <motion.div
+                        className="relative h-full w-full"
+                        initial={{ scale: 0, opacity: 0, y: 40 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 16, mass: 0.8 }}
+                      >
+                        <img
+                          src={stickerFallbackSrc}
+                          alt={parsedSticker.id}
+                          className="h-full w-full object-contain pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.12)]"
+                          loading="lazy"
+                        />
+                      </motion.div>
+                    )}
+                  </div>
                 </div>
                 <div className={`mt-1 flex items-center ${isMe ? "justify-end pr-1" : "justify-start pl-1"}`}>
                   <span className="text-[11px] text-muted-foreground/60">{time}</span>
