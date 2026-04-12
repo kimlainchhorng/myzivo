@@ -387,6 +387,7 @@ function LiveIllustratedStickerArt({
       alt={sticker.alt}
       preload={large ? "auto" : "metadata"}
       renderMode={large ? "chroma" : "blend"}
+      whiteKeyEnabled={false}
       className={mediaShadowClassName}
     />
   ) : (
@@ -934,7 +935,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                 )}
                 {illustratedPacks.map((pack, i) => (
                   <button
-                    key={pack.id}
+                    key={`${pack.id}-${i}`}
                     onClick={() => setActivePack(1000 + i)}
                     title={pack.name}
                     className={cn(
@@ -976,7 +977,7 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
 
                         return (
                           <motion.button
-                            key={sticker.id}
+                            key={`${currentIllustratedPack?.id ?? "illustrated"}-${sticker.id}-${idx}`}
                             initial={{ opacity: 0, scale: 0.85 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: Math.min(idx * 0.015, 0.3), duration: 0.15 }}
