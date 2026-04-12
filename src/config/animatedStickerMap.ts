@@ -321,6 +321,25 @@ import emDonutLoveAnim from "@/assets/stickers/anim/em-donut-love-anim.mp4.asset
 import emDonutAngryAnim from "@/assets/stickers/anim/em-donut-angry-anim.mp4.asset.json";
 import emDonutSleepyAnim from "@/assets/stickers/anim/em-donut-sleepy-anim.mp4.asset.json";
 import emDonutShyAnim from "@/assets/stickers/anim/em-donut-shy-anim.mp4.asset.json";
+// Emotion animated stickers — batch 25 (final batch)
+import emDonutSurprisedAnim from "@/assets/stickers/anim/em-donut-surprised-anim.mp4.asset.json";
+import emDonutCoolAnim from "@/assets/stickers/anim/em-donut-cool-anim.mp4.asset.json";
+import emMushroomHappyAnim from "@/assets/stickers/anim/em-mushroom-happy-anim.mp4.asset.json";
+import emMushroomCryAnim from "@/assets/stickers/anim/em-mushroom-cry-anim.mp4.asset.json";
+import emMushroomLoveAnim from "@/assets/stickers/anim/em-mushroom-love-anim.mp4.asset.json";
+import emMushroomAngryAnim from "@/assets/stickers/anim/em-mushroom-angry-anim.mp4.asset.json";
+import emMushroomSleepyAnim from "@/assets/stickers/anim/em-mushroom-sleepy-anim.mp4.asset.json";
+import emMushroomShyAnim from "@/assets/stickers/anim/em-mushroom-shy-anim.mp4.asset.json";
+import emMushroomSurprisedAnim from "@/assets/stickers/anim/em-mushroom-surprised-anim.mp4.asset.json";
+import emMushroomCoolAnim from "@/assets/stickers/anim/em-mushroom-cool-anim.mp4.asset.json";
+import emToastHappyAnim from "@/assets/stickers/anim/em-toast-happy-anim.mp4.asset.json";
+import emToastCryAnim from "@/assets/stickers/anim/em-toast-cry-anim.mp4.asset.json";
+import emToastLoveAnim from "@/assets/stickers/anim/em-toast-love-anim.mp4.asset.json";
+import emToastAngryAnim from "@/assets/stickers/anim/em-toast-angry-anim.mp4.asset.json";
+import emToastSleepyAnim from "@/assets/stickers/anim/em-toast-sleepy-anim.mp4.asset.json";
+import emToastShyAnim from "@/assets/stickers/anim/em-toast-shy-anim.mp4.asset.json";
+import emToastSurprisedAnim from "@/assets/stickers/anim/em-toast-surprised-anim.mp4.asset.json";
+import emToastCoolAnim from "@/assets/stickers/anim/em-toast-cool-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
