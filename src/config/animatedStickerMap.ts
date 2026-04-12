@@ -259,6 +259,17 @@ import emDeerLoveAnim from "@/assets/stickers/anim/em-deer-love-anim.mp4.asset.j
 import emDeerAngryAnim from "@/assets/stickers/anim/em-deer-angry-anim.mp4.asset.json";
 import emDeerSleepyAnim from "@/assets/stickers/anim/em-deer-sleepy-anim.mp4.asset.json";
 import emDeerShyAnim from "@/assets/stickers/anim/em-deer-shy-anim.mp4.asset.json";
+// Emotion animated stickers — batch 19
+import emDeerSurprisedAnim from "@/assets/stickers/anim/em-deer-surprised-anim.mp4.asset.json";
+import emDeerCoolAnim from "@/assets/stickers/anim/em-deer-cool-anim.mp4.asset.json";
+import emChickCryAnim from "@/assets/stickers/anim/em-chick-cry-anim.mp4.asset.json";
+import emChickLoveAnim from "@/assets/stickers/anim/em-chick-love-anim.mp4.asset.json";
+import emChickAngryAnim from "@/assets/stickers/anim/em-chick-angry-anim.mp4.asset.json";
+import emChickSleepyAnim from "@/assets/stickers/anim/em-chick-sleepy-anim.mp4.asset.json";
+import emChickShyAnim from "@/assets/stickers/anim/em-chick-shy-anim.mp4.asset.json";
+import emChickSurprisedAnim from "@/assets/stickers/anim/em-chick-surprised-anim.mp4.asset.json";
+import emChickCoolAnim from "@/assets/stickers/anim/em-chick-cool-anim.mp4.asset.json";
+import emRaccoonCryAnim from "@/assets/stickers/anim/em-raccoon-cry-anim.mp4.asset.json";
 
 /** Map from sticker id to animated video URL */
 export const ANIMATED_STICKER_MAP: Record<string, string> = {
