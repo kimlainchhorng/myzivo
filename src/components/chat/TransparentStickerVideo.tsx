@@ -10,14 +10,18 @@ import { cn } from "@/lib/utils";
 
 type TransparentStickerVideoMode = "blend" | "chroma";
 
-const HARD_KEY_BRIGHTNESS = 240;
-const SOFT_KEY_BRIGHTNESS = 210;
-const MAX_NEUTRAL_VARIANCE = 28;
+const HARD_KEY_BRIGHTNESS = 244;
+const SOFT_KEY_BRIGHTNESS = 228;
+const MAX_NEUTRAL_VARIANCE = 22;
 
 function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
   const { data, width, height } = frame;
 
+  // Track which pixels were keyed out (green/white) vs original transparent
+  const keyedMask = new Uint8Array(width * height);
+
   for (let index = 0; index < data.length; index += 4) {
+    const pixelIdx = index >> 2;
     const red = data[index];
     const green = data[index + 1];
     const blue = data[index + 2];
@@ -31,39 +35,42 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
     // --- Green screen keying ---
     if (green > red && green > blue) {
       const greenRatio = green / Math.max(1, maxOtherChannel);
-      const isHardGreen = green > 70 && greenExcess > 30 && saturation > 0.14 && greenRatio > 1.15;
+      const isHardGreen = green > 85 && greenExcess > 45 && saturation > 0.2 && greenRatio > 1.25;
 
       if (isHardGreen) {
         data[index + 3] = 0;
+        keyedMask[pixelIdx] = 1;
         continue;
       }
 
-      const isSoftGreen = green > 30 && greenExcess > 6 && saturation > 0.06 && greenRatio > 1.03;
-      const isLightGreen = brightness > 110 && greenExcess > 5 && blue < green * 0.88 && saturation > 0.04;
+      const isSoftGreen = green > 40 && greenExcess > 14 && saturation > 0.1 && greenRatio > 1.06;
+      const isLightGreen = brightness > 125 && greenExcess > 10 && blue < green * 0.84 && saturation > 0.07;
 
       if (isSoftGreen || isLightGreen) {
         const softScore = isSoftGreen
           ? Math.max(
-              Math.min(1, (greenExcess - 6) / 28),
-              Math.min(1, (greenRatio - 1.03) / 0.2)
+              Math.min(1, (greenExcess - 14) / 38),
+              Math.min(1, (greenRatio - 1.06) / 0.28)
             )
           : 0;
 
         const lightScore = isLightGreen
           ? Math.max(
-              Math.min(1, (greenExcess - 5) / 18),
-              Math.min(1, (brightness - 110) / 60)
+              Math.min(1, (greenExcess - 10) / 24),
+              Math.min(1, (brightness - 125) / 75)
             )
           : 0;
 
         const fade = Math.max(softScore, lightScore);
         const nextAlpha = Math.round(255 * (1 - Math.min(1, fade)));
-        data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
+        const newAlpha = Math.min(data[index + 3], Math.max(0, nextAlpha));
+        if (newAlpha < 255) keyedMask[pixelIdx] = 1;
+        data[index + 3] = newAlpha;
 
         // Despill green on semi-transparent keyed edges
-        if (data[index + 3] < 255) {
+        if (data[index + 3] < 255 && data[index + 3] > 0) {
           const neutralGreen = Math.round((red + blue) / 2);
-          data[index + 1] = Math.round(neutralGreen + (green - neutralGreen) * 0.1);
+          data[index + 1] = Math.round(neutralGreen + (green - neutralGreen) * 0.2);
         }
         continue;
       }
@@ -71,9 +78,10 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
 
     if (!whiteKeyEnabled) continue;
 
-    // --- White / near-white key (catches shadow ellipses too) ---
+    // --- White key ---
     if (brightness >= HARD_KEY_BRIGHTNESS && variance <= MAX_NEUTRAL_VARIANCE) {
       data[index + 3] = 0;
+      keyedMask[pixelIdx] = 1;
       continue;
     }
 
@@ -81,42 +89,33 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
       const brightnessFade = (brightness - SOFT_KEY_BRIGHTNESS) / (HARD_KEY_BRIGHTNESS - SOFT_KEY_BRIGHTNESS);
       const varianceFade = 1 - variance / MAX_NEUTRAL_VARIANCE;
       const nextAlpha = Math.round(255 * (1 - Math.min(1, brightnessFade * varianceFade)));
-      data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
-      continue;
-    }
-
-    // --- Light pinkish/grayish shadow key (catches the foot shadow oval) ---
-    if (brightness >= 190 && variance <= 40 && saturation < 0.15) {
-      const shadowFade = Math.min(1, (brightness - 190) / 50) * (1 - saturation / 0.15);
-      const nextAlpha = Math.round(255 * (1 - Math.min(1, shadowFade * 0.7)));
-      data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
+      const newAlpha = Math.min(data[index + 3], Math.max(0, nextAlpha));
+      if (newAlpha < data[index + 3]) keyedMask[pixelIdx] = 1;
+      data[index + 3] = newAlpha;
     }
   }
 
-  // --- Three-pass edge erosion to clean fringe ---
-  for (let pass = 0; pass < 3; pass++) {
-    const alphaMap = new Uint8Array(width * height);
-    for (let i = 0; i < alphaMap.length; i++) {
-      alphaMap[i] = data[i * 4 + 3];
-    }
+  // --- Single-pass edge cleanup: only erode pixels adjacent to KEYED pixels ---
+  // This prevents eating into legitimate sticker content
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = y * width + x;
+      const a = data[idx * 4 + 3];
+      if (a === 0 || keyedMask[idx] === 1) continue;
 
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const idx = y * width + x;
-        const a = alphaMap[idx];
-        if (a === 0) continue;
+      // Count how many keyed neighbors this pixel has
+      let keyedNeighborCount = 0;
+      if (x > 0 && keyedMask[idx - 1] === 1) keyedNeighborCount++;
+      if (x < width - 1 && keyedMask[idx + 1] === 1) keyedNeighborCount++;
+      if (y > 0 && keyedMask[idx - width] === 1) keyedNeighborCount++;
+      if (y < height - 1 && keyedMask[idx + width] === 1) keyedNeighborCount++;
 
-        let transparentCount = 0;
-        if (x > 0 && alphaMap[idx - 1] === 0) transparentCount++;
-        if (x < width - 1 && alphaMap[idx + 1] === 0) transparentCount++;
-        if (y > 0 && alphaMap[idx - width] === 0) transparentCount++;
-        if (y < height - 1 && alphaMap[idx + width] === 0) transparentCount++;
-
-        if (transparentCount >= 2) {
-          data[idx * 4 + 3] = 0;
-        } else if (transparentCount === 1) {
-          data[idx * 4 + 3] = Math.round(a * (pass === 0 ? 0.0 : pass === 1 ? 0.1 : 0.25));
-        }
+      if (keyedNeighborCount >= 2) {
+        // Surrounded by keyed pixels — likely fringe, fade strongly
+        data[idx * 4 + 3] = Math.round(a * 0.2);
+      } else if (keyedNeighborCount === 1) {
+        // Edge pixel next to one keyed pixel — gentle fade
+        data[idx * 4 + 3] = Math.round(a * 0.6);
       }
     }
   }
