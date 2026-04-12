@@ -284,7 +284,6 @@ export function TransparentStickerVideo({
           ref={videoRef}
           src={src}
           className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
-          autoPlay
           loop
           muted
           playsInline
