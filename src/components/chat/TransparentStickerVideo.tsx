@@ -10,140 +10,50 @@ import { cn } from "@/lib/utils";
 
 type TransparentStickerVideoMode = "blend" | "chroma";
 
-/**
- * Aggressive chroma keyer for AI-generated sticker videos.
- * Per-video BG color detection with very wide tolerances.
- */
+const HARD_KEY_BRIGHTNESS = 246;
+const SOFT_KEY_BRIGHTNESS = 236;
+const MAX_NEUTRAL_VARIANCE = 18;
 
-const bgColorCache = new Map<string, Array<[number, number, number]>>();
-
-function sampleBgColors(data: Uint8ClampedArray, w: number, h: number): Array<[number, number, number]> {
-  const samples: Array<[number, number, number]> = [];
-  
-  const addPx = (x: number, y: number) => {
-    if (x < 0 || x >= w || y < 0 || y >= h) return;
-    const idx = (y * w + x) * 4;
-    if (idx + 2 < data.length) samples.push([data[idx], data[idx + 1], data[idx + 2]]);
-  };
-
-  // Sample outer 8-pixel border on all sides
-  const border = Math.min(8, Math.floor(Math.min(w, h) / 4));
-  for (let row = 0; row < border; row++) {
-    for (let x = 0; x < w; x++) { addPx(x, row); addPx(x, h - 1 - row); }
-  }
-  for (let col = 0; col < border; col++) {
-    for (let y = border; y < h - border; y++) { addPx(col, y); addPx(w - 1 - col, y); }
-  }
-
-  // Cluster
-  const clusters: Array<[number, number, number, number]> = [];
-  for (const [r, g, b] of samples) {
-    let matched = false;
-    for (const c of clusters) {
-      if (Math.abs(r - c[0]) + Math.abs(g - c[1]) + Math.abs(b - c[2]) < 100) {
-        c[0] = Math.round((c[0] * c[3] + r) / (c[3] + 1));
-        c[1] = Math.round((c[1] * c[3] + g) / (c[3] + 1));
-        c[2] = Math.round((c[2] * c[3] + b) / (c[3] + 1));
-        c[3]++;
-        matched = true;
-        break;
-      }
-    }
-    if (!matched && clusters.length < 12) clusters.push([r, g, b, 1]);
-  }
-
-  const minCount = Math.max(3, samples.length * 0.005);
-  return clusters.filter(c => c[3] >= minCount).map(c => [c[0], c[1], c[2]] as [number, number, number]);
-}
-
-function applyChromaKey(frame: ImageData, videoSrc?: string) {
+function applyChromaKey(frame: ImageData) {
   const { data } = frame;
-  const w = frame.width;
-  const h = frame.height;
-  const key = videoSrc || "__default__";
-
-  if (!bgColorCache.has(key)) {
-    bgColorCache.set(key, sampleBgColors(data, w, h));
-  }
-  const bgList = bgColorCache.get(key)!;
-
-  const cx = w / 2;
-  const cy = h / 2;
-  const maxEdgeDist = Math.sqrt(cx * cx + cy * cy);
 
   for (let index = 0; index < data.length; index += 4) {
     const red = data[index];
     const green = data[index + 1];
     const blue = data[index + 2];
-
-    // Pixel position — center pixels are protected more
-    const pixelIdx = index / 4;
-    const px = pixelIdx % w;
-    const py = Math.floor(pixelIdx / w);
-    const edgeDist = Math.sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy));
-    const edgeFactor = Math.min(1, edgeDist / (maxEdgeDist * 0.55)); // 0 at center, 1 at edges
-
-    // --- Adaptive BG removal with center protection ---
-    let removed = false;
-    for (const bg of bgList) {
-      const dr = red - bg[0], dg = green - bg[1], db = blue - bg[2];
-      const dist = Math.sqrt(dr * dr + dg * dg + db * db);
-
-      // Thresholds scale by edge proximity: aggressive at edges, conservative at center
-      const hardDist = 50 + edgeFactor * 40; // 50 center → 90 edges
-      const softDist = 90 + edgeFactor * 50; // 90 center → 140 edges
-
-      if (dist < hardDist) {
-        data[index + 3] = 0;
-        removed = true;
-        break;
-      }
-      if (dist < softDist) {
-        const t = (dist - hardDist) / (softDist - hardDist);
-        data[index + 3] = Math.min(data[index + 3], Math.round(255 * t * t));
-        removed = true;
-        break;
-      }
-    }
-    if (removed) continue;
-
-    const maxC = Math.max(red, green, blue);
-    const minC = Math.min(red, green, blue);
-    const sat = maxC > 0 ? (maxC - minC) / maxC : 0;
     const brightness = (red + green + blue) / 3;
+    const variance = Math.max(red, green, blue) - Math.min(red, green, blue);
 
-    // Green-dominant — only at edges or very strong green
-    const greenThreshold = 1.15 + (1 - edgeFactor) * 0.2; // stricter at center
-    if (green > 60 && green > red * 1.2 && green > blue * 1.15 && sat > 0.3) {
-      const gd = green / Math.max(1, (red + blue) / 2);
-      if (gd > greenThreshold + 0.2) { data[index + 3] = 0; continue; }
-      if (gd > greenThreshold) {
-        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - (gd - greenThreshold) / 0.2)));
+    // --- Green screen keying ---
+    // Strong green: green channel dominates red and blue
+    if (green > 80 && green > red * 1.4 && green > blue * 1.4) {
+      const greenDominance = green / Math.max(1, (red + blue) / 2);
+      if (greenDominance > 1.6) {
+        // Hard key for very green pixels
+        data[index + 3] = 0;
+        continue;
+      }
+      if (greenDominance > 1.3) {
+        // Soft edge
+        const fade = (greenDominance - 1.3) / (1.6 - 1.3);
+        const nextAlpha = Math.round(255 * (1 - fade));
+        data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
         continue;
       }
     }
 
-    // Blue/Cyan-dominant — only at edges or very strong blue
-    if (blue > 60 && blue > red * 1.2 && sat > 0.3) {
-      const bd = blue / Math.max(1, (red + green) / 2);
-      if (bd > greenThreshold + 0.2) { data[index + 3] = 0; continue; }
-      if (bd > greenThreshold) {
-        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - (bd - greenThreshold) / 0.2)));
-        continue;
-      }
-    }
-
-    // White / light key
-    const variance = maxC - minC;
-    if (brightness >= 238 && variance <= 20) {
+    // --- White key (legacy) ---
+    if (brightness >= HARD_KEY_BRIGHTNESS && variance <= MAX_NEUTRAL_VARIANCE) {
       data[index + 3] = 0;
       continue;
     }
-    if (brightness >= 220 && variance <= 20) {
-      const bf = (brightness - 220) / 18;
-      const vf = 1 - variance / 20;
-      data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - bf * vf)));
-    }
+
+    if (brightness < SOFT_KEY_BRIGHTNESS || variance > MAX_NEUTRAL_VARIANCE - 4) continue;
+
+    const brightnessFade = (brightness - SOFT_KEY_BRIGHTNESS) / (HARD_KEY_BRIGHTNESS - SOFT_KEY_BRIGHTNESS);
+    const varianceFade = 1 - variance / (MAX_NEUTRAL_VARIANCE - 4);
+    const nextAlpha = Math.round(255 * (1 - brightnessFade * varianceFade));
+    data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
   }
 }
 
@@ -237,7 +147,7 @@ export function TransparentStickerVideo({
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const frame = context.getImageData(0, 0, canvas.width, canvas.height);
-      applyChromaKey(frame, src);
+      applyChromaKey(frame);
       context.putImageData(frame, 0, 0);
 
       scheduleNextFrame();
