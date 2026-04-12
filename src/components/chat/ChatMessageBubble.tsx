@@ -68,7 +68,7 @@ function parseStickerMessage(messageText: string, msgType?: string): ParsedStick
       return {
         id: stickerId,
         src: resolved?.src || explicitSrc,
-        fallbackSrc: explicitSrc,
+        fallbackSrc: resolved?.src || explicitSrc,
         animatedSrc,
       };
     }
