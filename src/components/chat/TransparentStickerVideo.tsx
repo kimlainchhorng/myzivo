@@ -86,29 +86,32 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
     data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
   }
 
-  // --- Edge erosion pass: clean up fringe pixels ---
-  // Build alpha copy, then erode: if any neighbor is transparent, reduce this pixel's alpha
-  const alphaMap = new Uint8Array(width * height);
-  for (let i = 0; i < alphaMap.length; i++) {
-    alphaMap[i] = data[i * 4 + 3];
-  }
+  // --- Two-pass edge erosion to clean fringe ---
+  for (let pass = 0; pass < 2; pass++) {
+    const alphaMap = new Uint8Array(width * height);
+    for (let i = 0; i < alphaMap.length; i++) {
+      alphaMap[i] = data[i * 4 + 3];
+    }
 
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const idx = y * width + x;
-      const a = alphaMap[idx];
-      if (a === 0) continue;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = y * width + x;
+        const a = alphaMap[idx];
+        if (a === 0) continue;
 
-      // Check 4-connected neighbors
-      let hasTransparentNeighbor = false;
-      if (x > 0 && alphaMap[idx - 1] === 0) hasTransparentNeighbor = true;
-      else if (x < width - 1 && alphaMap[idx + 1] === 0) hasTransparentNeighbor = true;
-      else if (y > 0 && alphaMap[idx - width] === 0) hasTransparentNeighbor = true;
-      else if (y < height - 1 && alphaMap[idx + width] === 0) hasTransparentNeighbor = true;
+        let transparentCount = 0;
+        if (x > 0 && alphaMap[idx - 1] === 0) transparentCount++;
+        if (x < width - 1 && alphaMap[idx + 1] === 0) transparentCount++;
+        if (y > 0 && alphaMap[idx - width] === 0) transparentCount++;
+        if (y < height - 1 && alphaMap[idx + width] === 0) transparentCount++;
 
-      if (hasTransparentNeighbor) {
-        // Fade edge pixels significantly to remove fringe
-        data[idx * 4 + 3] = Math.round(a * 0.3);
+        if (transparentCount >= 2) {
+          // Corner/edge pixel with 2+ transparent neighbors → fully remove
+          data[idx * 4 + 3] = 0;
+        } else if (transparentCount === 1) {
+          // Single edge pixel → heavily fade
+          data[idx * 4 + 3] = Math.round(a * (pass === 0 ? 0.15 : 0.3));
+        }
       }
     }
   }
