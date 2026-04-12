@@ -36,6 +36,92 @@ function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
   return [h * 360, s, l];
 }
 
+function getWhiteKeyStrength(red: number, green: number, blue: number) {
+  const brightness = (red + green + blue) / 3;
+  const maxChannel = Math.max(red, green, blue);
+  const minChannel = Math.min(red, green, blue);
+  const variance = maxChannel - minChannel;
+
+  if (brightness >= HARD_KEY_BRIGHTNESS && variance <= MAX_NEUTRAL_VARIANCE) return 1;
+  if (brightness < SOFT_KEY_BRIGHTNESS || variance > MAX_NEUTRAL_VARIANCE) return 0;
+
+  const brightnessFade = (brightness - SOFT_KEY_BRIGHTNESS) / (HARD_KEY_BRIGHTNESS - SOFT_KEY_BRIGHTNESS);
+  const varianceFade = 1 - variance / MAX_NEUTRAL_VARIANCE;
+  return Math.min(1, brightnessFade * varianceFade);
+}
+
+function applyEdgeConnectedWhiteKey(frame: ImageData, keyedMask: Uint8Array) {
+  const { data, width, height } = frame;
+  if (width === 0 || height === 0) return;
+
+  const pixelCount = width * height;
+  const whiteStrength = new Float32Array(pixelCount);
+  const visited = new Uint8Array(pixelCount);
+  const queue = new Uint32Array(pixelCount);
+  let head = 0;
+  let tail = 0;
+
+  for (let idx = 0; idx < pixelCount; idx++) {
+    const pixelIndex = idx * 4;
+    if (data[pixelIndex + 3] === 0) continue;
+
+    whiteStrength[idx] = getWhiteKeyStrength(
+      data[pixelIndex],
+      data[pixelIndex + 1],
+      data[pixelIndex + 2],
+    );
+  }
+
+  const enqueue = (idx: number) => {
+    if (visited[idx] === 1 || whiteStrength[idx] <= 0) return;
+    visited[idx] = 1;
+    queue[tail++] = idx;
+  };
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = y * width + x;
+      if (whiteStrength[idx] <= 0) continue;
+
+      const touchesFrameEdge = x === 0 || y === 0 || x === width - 1 || y === height - 1;
+      const touchesExposedPixel =
+        !touchesFrameEdge && (
+          data[(idx - 1) * 4 + 3] === 0 ||
+          data[(idx + 1) * 4 + 3] === 0 ||
+          data[(idx - width) * 4 + 3] === 0 ||
+          data[(idx + width) * 4 + 3] === 0 ||
+          keyedMask[idx - 1] === 1 ||
+          keyedMask[idx + 1] === 1 ||
+          keyedMask[idx - width] === 1 ||
+          keyedMask[idx + width] === 1
+        );
+
+      if (touchesFrameEdge || touchesExposedPixel) enqueue(idx);
+    }
+  }
+
+  while (head < tail) {
+    const idx = queue[head++];
+    const pixelIndex = idx * 4;
+    const strength = whiteStrength[idx];
+    if (strength <= 0) continue;
+
+    const currentAlpha = data[pixelIndex + 3];
+    const nextAlpha = Math.round(currentAlpha * (1 - strength));
+    if (nextAlpha < currentAlpha) {
+      data[pixelIndex + 3] = nextAlpha;
+      keyedMask[idx] = 1;
+    }
+
+    const x = idx % width;
+    const y = Math.floor(idx / width);
+    if (x > 0) enqueue(idx - 1);
+    if (x < width - 1) enqueue(idx + 1);
+    if (y > 0) enqueue(idx - width);
+    if (y < height - 1) enqueue(idx + width);
+  }
+}
+
 // ─── chroma key (canvas 2D path) ─────────────────────────────────────────────
 function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
   const { data, width, height } = frame;
@@ -46,10 +132,6 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
     const red = data[index];
     const green = data[index + 1];
     const blue = data[index + 2];
-    const brightness = (red + green + blue) / 3;
-    const maxChannel = Math.max(red, green, blue);
-    const minChannel = Math.min(red, green, blue);
-    const variance = maxChannel - minChannel;
 
     // ── HSL-based green keying ──
     const [hue, sat, lightness] = rgbToHsl(red, green, blue);
@@ -81,23 +163,10 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
         continue;
       }
     }
+  }
 
-    if (!whiteKeyEnabled) continue;
-
-    // ── White / near-white keying ──
-    if (brightness >= HARD_KEY_BRIGHTNESS && variance <= MAX_NEUTRAL_VARIANCE) {
-      data[index + 3] = 0;
-      keyedMask[pixelIdx] = 1;
-      continue;
-    }
-    if (brightness >= SOFT_KEY_BRIGHTNESS && variance <= MAX_NEUTRAL_VARIANCE) {
-      const bFade = (brightness - SOFT_KEY_BRIGHTNESS) / (HARD_KEY_BRIGHTNESS - SOFT_KEY_BRIGHTNESS);
-      const vFade = 1 - variance / MAX_NEUTRAL_VARIANCE;
-      const nextAlpha = Math.round(255 * (1 - Math.min(1, bFade * vFade)));
-      const newAlpha = Math.min(data[index + 3], Math.max(0, nextAlpha));
-      if (newAlpha < data[index + 3]) keyedMask[pixelIdx] = 1;
-      data[index + 3] = newAlpha;
-    }
+  if (whiteKeyEnabled) {
+    applyEdgeConnectedWhiteKey(frame, keyedMask);
   }
 
   // ── Gaussian-weighted edge erosion (3×3 kernel) ──
@@ -337,7 +406,7 @@ export function TransparentStickerVideo({
 
     // Try WebGL init
     let webglCtx: ReturnType<typeof tryInitWebGL> = null;
-    if (renderMode === "webgl") {
+    if (renderMode === "webgl" && !whiteKeyEnabled) {
       webglCtx = tryInitWebGL(canvas);
       effectiveModeRef.current = webglCtx ? "webgl" : "chroma";
     } else {
