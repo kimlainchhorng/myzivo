@@ -4,7 +4,7 @@
  * voice messages, reply threads, message search, disappearing messages, forward, pin, location sharing,
  * message effects (confetti, fireworks, hearts, lasers)
  */
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Send, Loader2, Phone, X, Mic, Search, Plus, Pin, Settings, Image as ImageIcon, Smile, Palette, Zap, Shield, Video, History, FileText, MoreVertical, PhoneCall } from "lucide-react";
@@ -22,7 +22,7 @@ import ChatSearch from "./ChatSearch";
 import ChatAttachMenu from "./ChatAttachMenu";
 import ChatNotificationSettings from "./ChatNotificationSettings";
 import ChatMediaGallery from "./ChatMediaGallery";
-import StickerKeyboard, { type StickerSendPayload } from "./StickerKeyboard";
+import type { StickerSendPayload } from "./StickerKeyboard";
 import ChatPersonalization, { getWallpaperClass, getWallpaperStyle } from "./ChatPersonalization";
 import ChatMiniApps from "./ChatMiniApps";
 import ChatSecurity from "./ChatSecurity";
@@ -38,6 +38,8 @@ import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { useChatDraft } from "@/hooks/useChatDraft";
 import MessageEffects, { detectMessageEffect, type EffectType } from "./MessageEffects";
+
+const StickerKeyboard = lazy(() => import("./StickerKeyboard"));
 
 interface PersonalChatProps {
   recipientId: string;
@@ -1279,13 +1281,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       {/* Sticker keyboard */}
       <AnimatePresence>
         {showStickerKeyboard && (
-          <StickerKeyboard
-            open={showStickerKeyboard}
-            onClose={() => setShowStickerKeyboard(false)}
-            onSendSticker={(payload) => { void handleQuickPanelSend(payload); }}
-            onStartVoice={() => voice.startRecording()}
-            onOpenCamera={() => fileInputRef.current?.click()}
-          />
+          <Suspense fallback={null}>
+            <StickerKeyboard
+              open={showStickerKeyboard}
+              onClose={() => setShowStickerKeyboard(false)}
+              onSendSticker={(payload) => { void handleQuickPanelSend(payload); }}
+              onStartVoice={() => voice.startRecording()}
+              onOpenCamera={() => fileInputRef.current?.click()}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
