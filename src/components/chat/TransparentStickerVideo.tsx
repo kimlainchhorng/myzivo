@@ -11,11 +11,11 @@ import { cn } from "@/lib/utils";
 type TransparentStickerVideoMode = "blend" | "chroma";
 
 const HARD_KEY_BRIGHTNESS = 246;
-const SOFT_KEY_BRIGHTNESS = 236;
-const MAX_NEUTRAL_VARIANCE = 18;
+const SOFT_KEY_BRIGHTNESS = 232;
+const MAX_NEUTRAL_VARIANCE = 20;
 
 function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
-  const { data } = frame;
+  const { data, width, height } = frame;
 
   for (let index = 0; index < data.length; index += 4) {
     const red = data[index];
@@ -30,31 +30,30 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
     const saturation = maxChannel === 0 ? 0 : variance / maxChannel;
 
     // --- Green screen keying ---
-    // Keep this selective so dark subject pixels (fur, eyes, shadows) are not punched out.
     if (green > red && green > blue) {
       const greenRatio = green / Math.max(1, maxOtherChannel);
-      const isHardGreen = green > 92 && greenExcess > 50 && saturation > 0.22 && greenRatio > 1.28;
+      const isHardGreen = green > 80 && greenExcess > 40 && saturation > 0.18 && greenRatio > 1.2;
 
       if (isHardGreen) {
         data[index + 3] = 0;
         continue;
       }
 
-      const isSoftGreen = green > 42 && greenExcess > 16 && saturation > 0.12 && greenRatio > 1.08;
-      const isLightGreen = brightness > 132 && greenExcess > 12 && blue < green * 0.82 && saturation > 0.08;
+      const isSoftGreen = green > 36 && greenExcess > 10 && saturation > 0.08 && greenRatio > 1.05;
+      const isLightGreen = brightness > 120 && greenExcess > 8 && blue < green * 0.85 && saturation > 0.06;
 
       if (isSoftGreen || isLightGreen) {
         const softScore = isSoftGreen
           ? Math.max(
-              Math.min(1, (greenExcess - 16) / 42),
-              Math.min(1, (greenRatio - 1.08) / 0.32)
+              Math.min(1, (greenExcess - 10) / 35),
+              Math.min(1, (greenRatio - 1.05) / 0.25)
             )
           : 0;
 
         const lightScore = isLightGreen
           ? Math.max(
-              Math.min(1, (greenExcess - 12) / 28),
-              Math.min(1, (brightness - 132) / 80)
+              Math.min(1, (greenExcess - 8) / 22),
+              Math.min(1, (brightness - 120) / 70)
             )
           : 0;
 
@@ -62,10 +61,10 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
         const nextAlpha = Math.round(255 * (1 - Math.min(1, fade)));
         data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
 
-        // Reduce green spill on semi-transparent keyed edges without damaging the subject.
+        // Despill green on semi-transparent keyed edges
         if (data[index + 3] < 255) {
           const neutralGreen = Math.round((red + blue) / 2);
-          data[index + 1] = Math.round(neutralGreen + (green - neutralGreen) * 0.25);
+          data[index + 1] = Math.round(neutralGreen + (green - neutralGreen) * 0.15);
         }
         continue;
       }
@@ -73,18 +72,48 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
 
     if (!whiteKeyEnabled) continue;
 
-    // --- White key (legacy) ---
+    // --- White key ---
     if (brightness >= HARD_KEY_BRIGHTNESS && variance <= MAX_NEUTRAL_VARIANCE) {
       data[index + 3] = 0;
       continue;
     }
 
-    if (brightness < SOFT_KEY_BRIGHTNESS || variance > MAX_NEUTRAL_VARIANCE - 4) continue;
+    if (brightness < SOFT_KEY_BRIGHTNESS || variance > MAX_NEUTRAL_VARIANCE) continue;
 
     const brightnessFade = (brightness - SOFT_KEY_BRIGHTNESS) / (HARD_KEY_BRIGHTNESS - SOFT_KEY_BRIGHTNESS);
-    const varianceFade = 1 - variance / (MAX_NEUTRAL_VARIANCE - 4);
+    const varianceFade = 1 - variance / MAX_NEUTRAL_VARIANCE;
     const nextAlpha = Math.round(255 * (1 - brightnessFade * varianceFade));
     data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
+  }
+
+  // --- Two-pass edge erosion to clean fringe ---
+  for (let pass = 0; pass < 2; pass++) {
+    const alphaMap = new Uint8Array(width * height);
+    for (let i = 0; i < alphaMap.length; i++) {
+      alphaMap[i] = data[i * 4 + 3];
+    }
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = y * width + x;
+        const a = alphaMap[idx];
+        if (a === 0) continue;
+
+        let transparentCount = 0;
+        if (x > 0 && alphaMap[idx - 1] === 0) transparentCount++;
+        if (x < width - 1 && alphaMap[idx + 1] === 0) transparentCount++;
+        if (y > 0 && alphaMap[idx - width] === 0) transparentCount++;
+        if (y < height - 1 && alphaMap[idx + width] === 0) transparentCount++;
+
+        if (transparentCount >= 2) {
+          // Corner/edge pixel with 2+ transparent neighbors → fully remove
+          data[idx * 4 + 3] = 0;
+        } else if (transparentCount === 1) {
+          // Single edge pixel → heavily fade
+          data[idx * 4 + 3] = Math.round(a * (pass === 0 ? 0.15 : 0.3));
+        }
+      }
+    }
   }
 }
 
@@ -222,7 +251,7 @@ export function TransparentStickerVideo({
 
       context.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw with object-contain behavior — canvas doesn't support CSS object-fit
+      // Draw with object-contain behavior
       const vw = video.videoWidth || canvas.width;
       const vh = video.videoHeight || canvas.height;
       const scale = Math.min(canvas.width / vw, canvas.height / vh);
