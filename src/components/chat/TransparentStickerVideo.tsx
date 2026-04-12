@@ -23,28 +23,32 @@ function applyChromaKey(frame: ImageData) {
   const w = frame.width;
   const h = frame.height;
 
-  // --- Sample edges heavily to detect BG color(s) ---
+  // --- Dense edge sampling: top/bottom rows fully + left/right cols ---
   const edgePixels: number[] = [];
-  // Top & bottom rows
-  for (let x = 0; x < w; x += Math.max(1, Math.floor(w / 20))) {
-    edgePixels.push(x * 4); // top row
-    edgePixels.push(((h - 1) * w + x) * 4); // bottom row
+  // Top 3 rows & bottom 3 rows (full width)
+  for (let row = 0; row < 3; row++) {
+    for (let x = 0; x < w; x += 2) {
+      edgePixels.push((row * w + x) * 4);
+      edgePixels.push(((h - 1 - row) * w + x) * 4);
+    }
   }
-  // Left & right columns
-  for (let y = 0; y < h; y += Math.max(1, Math.floor(h / 20))) {
-    edgePixels.push(y * w * 4); // left col
-    edgePixels.push((y * w + w - 1) * 4); // right col
+  // Left 3 cols & right 3 cols
+  for (let col = 0; col < 3; col++) {
+    for (let y = 0; y < h; y += 2) {
+      edgePixels.push((y * w + col) * 4);
+      edgePixels.push((y * w + w - 1 - col) * 4);
+    }
   }
 
-  // Collect unique BG colors via simple clustering
-  const bgColors: Array<[number, number, number, number]> = []; // r,g,b,count
+  // Cluster BG colors
+  const bgColors: Array<[number, number, number, number]> = [];
   for (const idx of edgePixels) {
     if (idx < 0 || idx + 2 >= data.length) continue;
     const r = data[idx], g = data[idx + 1], b = data[idx + 2];
     let matched = false;
     for (const c of bgColors) {
       const d = Math.abs(r - c[0]) + Math.abs(g - c[1]) + Math.abs(b - c[2]);
-      if (d < 60) {
+      if (d < 80) {
         c[0] = Math.round((c[0] * c[3] + r) / (c[3] + 1));
         c[1] = Math.round((c[1] * c[3] + g) / (c[3] + 1));
         c[2] = Math.round((c[2] * c[3] + b) / (c[3] + 1));
@@ -53,34 +57,37 @@ function applyChromaKey(frame: ImageData) {
         break;
       }
     }
-    if (!matched) bgColors.push([r, g, b, 1]);
+    if (!matched && bgColors.length < 10) bgColors.push([r, g, b, 1]);
   }
 
-  // Keep BG clusters with enough samples (at least 3 edge pixels)
-  const validBg = bgColors.filter(c => c[3] >= 3);
+  // Valid BG clusters (minimum 5 edge pixels)
+  const validBg = bgColors.filter(c => c[3] >= 5);
+
+  // Hard/soft distance thresholds — aggressive to catch sparkles/particles
+  const HARD_DIST = 72;
+  const SOFT_DIST = 130;
 
   for (let index = 0; index < data.length; index += 4) {
     const red = data[index];
     const green = data[index + 1];
     const blue = data[index + 2];
     const maxC = Math.max(red, green, blue);
-    const minC = Math.min(red, green, blue);
-    const variance = maxC - minC;
+    const variance = maxC - Math.min(red, green, blue);
     const brightness = (red + green + blue) / 3;
 
-    // --- Adaptive BG color removal (multi-cluster) ---
+    // --- Adaptive BG color removal ---
     let removed = false;
     for (const bg of validBg) {
       const dr = red - bg[0], dg = green - bg[1], db = blue - bg[2];
       const colorDist = Math.sqrt(dr * dr + dg * dg + db * db);
-      if (colorDist < 55) {
+      if (colorDist < HARD_DIST) {
         data[index + 3] = 0;
         removed = true;
         break;
       }
-      if (colorDist < 100) {
-        const fade = 1 - (colorDist - 55) / (100 - 55);
-        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - fade)));
+      if (colorDist < SOFT_DIST) {
+        const fade = 1 - (colorDist - HARD_DIST) / (SOFT_DIST - HARD_DIST);
+        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - fade * fade)));
         removed = true;
         break;
       }
@@ -88,26 +95,26 @@ function applyChromaKey(frame: ImageData) {
     if (removed) continue;
 
     // --- Green screen keying ---
-    if (green > 70 && green > red * 1.3 && green > blue * 1.25) {
+    if (green > 60 && green > red * 1.2 && green > blue * 1.15) {
       const gd = green / Math.max(1, (red + blue) / 2);
-      if (gd > 1.45) { data[index + 3] = 0; continue; }
-      if (gd > 1.15) {
-        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - (gd - 1.15) / 0.3)));
+      if (gd > 1.35) { data[index + 3] = 0; continue; }
+      if (gd > 1.1) {
+        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - (gd - 1.1) / 0.25)));
         continue;
       }
     }
 
     // --- Blue / Cyan keying ---
-    if (blue > 70 && blue > red * 1.3 && blue >= green * 0.85) {
+    if (blue > 60 && blue > red * 1.2 && blue >= green * 0.8) {
       const bd = blue / Math.max(1, (red + green) / 2);
-      if (bd > 1.45) { data[index + 3] = 0; continue; }
-      if (bd > 1.15) {
-        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - (bd - 1.15) / 0.3)));
+      if (bd > 1.35) { data[index + 3] = 0; continue; }
+      if (bd > 1.1) {
+        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - (bd - 1.1) / 0.25)));
         continue;
       }
     }
 
-    // --- White key ---
+    // --- White / light gray key ---
     if (brightness >= HARD_KEY_BRIGHTNESS && variance <= MAX_NEUTRAL_VARIANCE) {
       data[index + 3] = 0;
       continue;
