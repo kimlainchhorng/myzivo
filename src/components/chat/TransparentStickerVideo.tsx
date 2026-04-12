@@ -14,7 +14,7 @@ const HARD_KEY_BRIGHTNESS = 246;
 const SOFT_KEY_BRIGHTNESS = 236;
 const MAX_NEUTRAL_VARIANCE = 18;
 
-function applyWhiteKey(frame: ImageData) {
+function applyChromaKey(frame: ImageData) {
   const { data } = frame;
 
   for (let index = 0; index < data.length; index += 4) {
@@ -24,6 +24,25 @@ function applyWhiteKey(frame: ImageData) {
     const brightness = (red + green + blue) / 3;
     const variance = Math.max(red, green, blue) - Math.min(red, green, blue);
 
+    // --- Green screen keying ---
+    // Strong green: green channel dominates red and blue
+    if (green > 80 && green > red * 1.4 && green > blue * 1.4) {
+      const greenDominance = green / Math.max(1, (red + blue) / 2);
+      if (greenDominance > 1.6) {
+        // Hard key for very green pixels
+        data[index + 3] = 0;
+        continue;
+      }
+      if (greenDominance > 1.3) {
+        // Soft edge
+        const fade = (greenDominance - 1.3) / (1.6 - 1.3);
+        const nextAlpha = Math.round(255 * (1 - fade));
+        data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
+        continue;
+      }
+    }
+
+    // --- White key (legacy) ---
     if (brightness >= HARD_KEY_BRIGHTNESS && variance <= MAX_NEUTRAL_VARIANCE) {
       data[index + 3] = 0;
       continue;
@@ -128,7 +147,7 @@ export function TransparentStickerVideo({
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const frame = context.getImageData(0, 0, canvas.width, canvas.height);
-      applyWhiteKey(frame);
+      applyChromaKey(frame);
       context.putImageData(frame, 0, 0);
 
       scheduleNextFrame();
