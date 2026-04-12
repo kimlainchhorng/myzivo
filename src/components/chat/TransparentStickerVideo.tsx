@@ -171,13 +171,7 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
     applyEdgeConnectedWhiteKey(frame, keyedMask);
   }
 
-  // ── Gaussian-weighted edge erosion (3×3 kernel) ──
-  // Only erode pixels adjacent to keyed areas; protect dark content
-  const weights = [
-    0.05, 0.15, 0.05,
-    0.15, 0.00, 0.15,
-    0.05, 0.15, 0.05,
-  ];
+  // ── Lightweight edge erosion (sample every 2nd pixel for speed) ──
   const alphaSnapshot = new Uint8Array(width * height);
   for (let i = 0; i < alphaSnapshot.length; i++) alphaSnapshot[i] = data[i * 4 + 3];
 
@@ -187,27 +181,20 @@ function applyChromaKey(frame: ImageData, whiteKeyEnabled: boolean) {
       const a = alphaSnapshot[idx];
       if (a === 0 || keyedMask[idx] === 1) continue;
 
-      // Protect dark pixels
       const pi = idx * 4;
       const br = (data[pi] + data[pi + 1] + data[pi + 2]) / 3;
       if (br < DARK_PIXEL_THRESHOLD) continue;
 
-      // Sum weighted keyed-neighbor contributions
-      let keyedWeight = 0;
-      let wi = 0;
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (dx === 0 && dy === 0) { wi++; continue; }
-          const ni = (y + dy) * width + (x + dx);
-          if (keyedMask[ni] === 1) keyedWeight += weights[wi];
-          wi++;
-        }
-      }
+      // Fast 4-neighbor check instead of full 3x3 kernel
+      const keyedNeighbors =
+        (keyedMask[idx - 1] || 0) +
+        (keyedMask[idx + 1] || 0) +
+        (keyedMask[idx - width] || 0) +
+        (keyedMask[idx + width] || 0);
 
-      if (keyedWeight > 0.01) {
-        const fade = Math.min(1, keyedWeight / 0.4);
-        const newA = Math.round(a * (1 - fade * 0.85));
-        data[pi + 3] = Math.max(0, newA);
+      if (keyedNeighbors > 0) {
+        const fade = Math.min(1, keyedNeighbors / 2.5);
+        data[pi + 3] = Math.max(0, Math.round(a * (1 - fade * 0.8)));
       }
     }
   }
