@@ -24,38 +24,61 @@ function applyChromaKey(frame: ImageData) {
     const brightness = (red + green + blue) / 3;
     const variance = Math.max(red, green, blue) - Math.min(red, green, blue);
 
-    // --- Green screen keying (wide range) ---
+    // --- Green screen keying (wide range, including dark greens) ---
+    if (green > 30 && green > red && green > blue) {
+      const greenOverRed = green / Math.max(1, red);
+      const greenOverBlue = green / Math.max(1, blue);
+      const dominance = Math.min(greenOverRed, greenOverBlue);
+
+      // Hard key — clearly green dominant
+      if (dominance > 1.4) {
+        data[index + 3] = 0;
+        continue;
+      }
+
+      // Soft edge for borderline green (1.1 to 1.4 range)
+      if (dominance > 1.1) {
+        const fade = (dominance - 1.1) / (1.4 - 1.1);
+        const nextAlpha = Math.round(255 * (1 - Math.min(1, fade)));
+        data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
+        // Green spill suppression on semi-transparent edge pixels
+        if (nextAlpha < 200) {
+          const avg = (red + blue) / 2;
+          data[index + 1] = Math.min(green, Math.round(avg + (green - avg) * 0.3));
+        }
+        continue;
+      }
+    }
+
+    // Bright green where green dominates at least one channel strongly
     if (green > 60) {
       const greenOverRed = green / Math.max(1, red);
       const greenOverBlue = green / Math.max(1, blue);
 
-      // Strong green: green clearly dominates both channels
-      if (greenOverRed > 1.15 && greenOverBlue > 1.3) {
+      if ((greenOverRed > 1.3 && greenOverBlue > 1.1) || (greenOverBlue > 1.3 && greenOverRed > 1.1)) {
         const dominance = Math.min(greenOverRed, greenOverBlue);
-
-        if (dominance > 1.5) {
-          // Hard key — clearly green
-          data[index + 3] = 0;
-          continue;
-        }
-
-        // Soft edge for borderline green
-        const fade = (dominance - 1.15) / (1.5 - 1.15);
-        const nextAlpha = Math.round(255 * (1 - Math.min(1, fade)));
+        const fade = Math.min(1, (dominance - 1.1) / 0.3);
+        const nextAlpha = Math.round(255 * (1 - fade));
         data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
         continue;
       }
 
-      // Light / lime green: green is highest, brightness is high, blue is low
+      // Light / lime green
       if (green > red && green > blue && brightness > 120 && blue < green * 0.7) {
         const lightGreenScore = (green - Math.max(red, blue)) / green;
-        if (lightGreenScore > 0.08) {
-          const fade = Math.min(1, lightGreenScore / 0.25);
+        if (lightGreenScore > 0.06) {
+          const fade = Math.min(1, lightGreenScore / 0.2);
           const nextAlpha = Math.round(255 * (1 - fade));
           data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
           continue;
         }
       }
+    }
+
+    // --- Dark fringe removal (very dark pixels near edges) ---
+    if (brightness < 25 && green >= red && green >= blue) {
+      data[index + 3] = 0;
+      continue;
     }
 
     // --- White key (legacy) ---
