@@ -20,92 +20,89 @@ const MAX_NEUTRAL_VARIANCE = 20;
  */
 function applyChromaKey(frame: ImageData) {
   const { data } = frame;
-
-  // --- Edge-aware: sample corners to detect dominant BG color ---
   const w = frame.width;
   const h = frame.height;
-  const cornerSamples = [
-    0, // top-left
-    (w - 1) * 4, // top-right
-    (h - 1) * w * 4, // bottom-left
-    ((h - 1) * w + (w - 1)) * 4, // bottom-right
-    Math.floor(w / 2) * 4, // top-center
-    ((h - 1) * w + Math.floor(w / 2)) * 4, // bottom-center
-  ];
 
-  let bgR = 0, bgG = 0, bgB = 0, bgCount = 0;
-  for (const idx of cornerSamples) {
-    if (idx >= 0 && idx + 2 < data.length) {
-      bgR += data[idx];
-      bgG += data[idx + 1];
-      bgB += data[idx + 2];
-      bgCount++;
+  // --- Sample edges heavily to detect BG color(s) ---
+  const edgePixels: number[] = [];
+  // Top & bottom rows
+  for (let x = 0; x < w; x += Math.max(1, Math.floor(w / 20))) {
+    edgePixels.push(x * 4); // top row
+    edgePixels.push(((h - 1) * w + x) * 4); // bottom row
+  }
+  // Left & right columns
+  for (let y = 0; y < h; y += Math.max(1, Math.floor(h / 20))) {
+    edgePixels.push(y * w * 4); // left col
+    edgePixels.push((y * w + w - 1) * 4); // right col
+  }
+
+  // Collect unique BG colors via simple clustering
+  const bgColors: Array<[number, number, number, number]> = []; // r,g,b,count
+  for (const idx of edgePixels) {
+    if (idx < 0 || idx + 2 >= data.length) continue;
+    const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+    let matched = false;
+    for (const c of bgColors) {
+      const d = Math.abs(r - c[0]) + Math.abs(g - c[1]) + Math.abs(b - c[2]);
+      if (d < 60) {
+        c[0] = Math.round((c[0] * c[3] + r) / (c[3] + 1));
+        c[1] = Math.round((c[1] * c[3] + g) / (c[3] + 1));
+        c[2] = Math.round((c[2] * c[3] + b) / (c[3] + 1));
+        c[3]++;
+        matched = true;
+        break;
+      }
     }
-  }
-  if (bgCount > 0) {
-    bgR = Math.round(bgR / bgCount);
-    bgG = Math.round(bgG / bgCount);
-    bgB = Math.round(bgB / bgCount);
+    if (!matched) bgColors.push([r, g, b, 1]);
   }
 
-  const bgBrightness = (bgR + bgG + bgB) / 3;
-  const bgMaxC = Math.max(bgR, bgG, bgB);
-  const bgMinC = Math.min(bgR, bgG, bgB);
-  const bgSaturation = bgMaxC > 0 ? (bgMaxC - bgMinC) / bgMaxC : 0;
-  const hasBgColor = bgSaturation > 0.25 && bgBrightness > 40;
+  // Keep BG clusters with enough samples (at least 3 edge pixels)
+  const validBg = bgColors.filter(c => c[3] >= 3);
 
   for (let index = 0; index < data.length; index += 4) {
     const red = data[index];
     const green = data[index + 1];
     const blue = data[index + 2];
-
     const maxC = Math.max(red, green, blue);
     const minC = Math.min(red, green, blue);
     const variance = maxC - minC;
     const brightness = (red + green + blue) / 3;
 
-    // --- Detected BG color keying (adaptive) ---
-    if (hasBgColor) {
-      const distR = Math.abs(red - bgR);
-      const distG = Math.abs(green - bgG);
-      const distB = Math.abs(blue - bgB);
-      const colorDist = Math.sqrt(distR * distR + distG * distG + distB * distB);
-
-      if (colorDist < 45) {
+    // --- Adaptive BG color removal (multi-cluster) ---
+    let removed = false;
+    for (const bg of validBg) {
+      const dr = red - bg[0], dg = green - bg[1], db = blue - bg[2];
+      const colorDist = Math.sqrt(dr * dr + dg * dg + db * db);
+      if (colorDist < 55) {
         data[index + 3] = 0;
-        continue;
+        removed = true;
+        break;
       }
-      if (colorDist < 80) {
-        const fade = 1 - (colorDist - 45) / (80 - 45);
+      if (colorDist < 100) {
+        const fade = 1 - (colorDist - 55) / (100 - 55);
         data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - fade)));
-        continue;
+        removed = true;
+        break;
       }
     }
+    if (removed) continue;
 
     // --- Green screen keying ---
-    if (green > 70 && green > red * 1.35 && green > blue * 1.3) {
-      const greenDominance = green / Math.max(1, (red + blue) / 2);
-      if (greenDominance > 1.5) {
-        data[index + 3] = 0;
-        continue;
-      }
-      if (greenDominance > 1.2) {
-        const fade = (greenDominance - 1.2) / (1.5 - 1.2);
-        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - fade)));
+    if (green > 70 && green > red * 1.3 && green > blue * 1.25) {
+      const gd = green / Math.max(1, (red + blue) / 2);
+      if (gd > 1.45) { data[index + 3] = 0; continue; }
+      if (gd > 1.15) {
+        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - (gd - 1.15) / 0.3)));
         continue;
       }
     }
 
-    // --- Blue / Cyan screen keying ---
-    if (blue > 70 && blue > red * 1.35 && blue >= green * 0.9) {
-      const blueDominance = blue / Math.max(1, (red + green) / 2);
-      if (blueDominance > 1.5) {
-        data[index + 3] = 0;
-        continue;
-      }
-      if (blueDominance > 1.2) {
-        const fade = (blueDominance - 1.2) / (1.5 - 1.2);
-        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - fade)));
+    // --- Blue / Cyan keying ---
+    if (blue > 70 && blue > red * 1.3 && blue >= green * 0.85) {
+      const bd = blue / Math.max(1, (red + green) / 2);
+      if (bd > 1.45) { data[index + 3] = 0; continue; }
+      if (bd > 1.15) {
+        data[index + 3] = Math.min(data[index + 3], Math.round(255 * (1 - (bd - 1.15) / 0.3)));
         continue;
       }
     }
@@ -115,13 +112,11 @@ function applyChromaKey(frame: ImageData) {
       data[index + 3] = 0;
       continue;
     }
-
     if (brightness < SOFT_KEY_BRIGHTNESS || variance > MAX_NEUTRAL_VARIANCE) continue;
 
-    const brightnessFade = (brightness - SOFT_KEY_BRIGHTNESS) / (HARD_KEY_BRIGHTNESS - SOFT_KEY_BRIGHTNESS);
-    const varianceFade = 1 - variance / MAX_NEUTRAL_VARIANCE;
-    const nextAlpha = Math.round(255 * (1 - brightnessFade * varianceFade));
-    data[index + 3] = Math.min(data[index + 3], Math.max(0, nextAlpha));
+    const bf = (brightness - SOFT_KEY_BRIGHTNESS) / (HARD_KEY_BRIGHTNESS - SOFT_KEY_BRIGHTNESS);
+    const vf = 1 - variance / MAX_NEUTRAL_VARIANCE;
+    data[index + 3] = Math.min(data[index + 3], Math.max(0, Math.round(255 * (1 - bf * vf))));
   }
 }
 
