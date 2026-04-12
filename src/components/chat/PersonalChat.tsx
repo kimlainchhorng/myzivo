@@ -143,6 +143,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const videoInputRef = useRef<HTMLInputElement>(null);
   const lockedImageInputRef = useRef<HTMLInputElement>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const timelineRef = useRef<HTMLDivElement>(null);
 
   const { isTyping: recipientTyping, isOnline: recipientOnline, lastSeen: recipientLastSeen, setTyping } = useChatPresence(user?.id, recipientId);
   const voice = useVoiceRecorder();
@@ -198,6 +199,23 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     // Consider "near bottom" if within 150px of the bottom
     isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
   }, []);
+
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    const timeline = timelineRef.current;
+    if (!scroller || !timeline || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(() => {
+      if (!isNearBottomRef.current) return;
+      scroller.scrollTop = scroller.scrollHeight;
+      requestAnimationFrame(() => {
+        scroller.scrollTop = scroller.scrollHeight;
+      });
+    });
+
+    observer.observe(timeline);
+    return () => observer.disconnect();
+  }, [messages.length, callEvents.length]);
 
   useEffect(() => {
     const previousBodyOverscroll = document.body.style.overscrollBehavior;
@@ -968,7 +986,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <p className="text-xs mt-1">Say hello to {recipientName}!</p>
           </div>
         ) : (
-          <div className="mt-auto space-y-2">
+          <div ref={timelineRef} className="mt-auto space-y-2">
             {(() => {
               const timeline: TimelineItem[] = [
                 ...messages,
