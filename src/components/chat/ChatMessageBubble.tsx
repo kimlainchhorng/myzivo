@@ -505,7 +505,7 @@ export default function ChatMessageBubble({
             const stickerMotion = hasAnimatedSticker ? null : getStickerMotionSpec(parsedSticker.id);
             return (
               <div className="py-1">
-                <div className="h-44 w-44 sm:h-48 sm:w-48 bg-transparent">
+                <div className="w-44 sm:w-48 aspect-square bg-transparent overflow-visible">
                     {hasAnimatedSticker ? (
                       <TransparentStickerVideo
                         src={parsedSticker.animatedSrc!}
