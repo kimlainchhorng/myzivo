@@ -183,7 +183,9 @@ const FRAGMENT_SRC = `
 
     // Green key
     float greenHue = step(70.0, hue) * step(hue, 170.0);
-    float greenKey = greenHue * smoothstep(0.10, 0.30, sat) * smoothstep(0.06, 0.20, lit) * smoothstep(lit, 0.85, 0.92);
+    // Tighter thresholds: protect light/white pixels (rice, white areas)
+    float satGate = mix(smoothstep(0.15, 0.35, sat), smoothstep(0.28, 0.45, sat), smoothstep(0.65, 0.80, lit));
+    float greenKey = greenHue * satGate * smoothstep(0.08, 0.22, lit) * smoothstep(lit, 0.82, 0.88);
     alpha *= (1.0 - greenKey);
 
     // Despill
