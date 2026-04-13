@@ -1,42 +1,30 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { setupGlobalErrorHandlers } from "@/lib/security/errorReporting";
-import { Capacitor } from "@capacitor/core";
-import { StatusBar, Style } from "@capacitor/status-bar";
 
-// Initialize global error tracking
-setupGlobalErrorHandlers();
-
-const isNativeIOS = Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
-
-const getPreferredStatusBarStyle = () => {
-	const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-	const appDarkMode = document.documentElement.classList.contains("dark");
-	return prefersDark || appDarkMode ? Style.Light : Style.Dark;
-};
-
-if (isNativeIOS) {
-	// Allow web view to extend behind the status bar so env(safe-area-inset-top) works correctly
-	void StatusBar.setOverlaysWebView({ overlay: true });
-	void StatusBar.setStyle({ style: getPreferredStatusBarStyle() });
-
-	const handleAppearanceChange = () => {
-		void StatusBar.setStyle({ style: getPreferredStatusBarStyle() });
-	};
-
-	const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-	if (typeof mediaQuery.addEventListener === "function") {
-		mediaQuery.addEventListener("change", handleAppearanceChange);
-	} else {
-		mediaQuery.addListener(handleAppearanceChange);
-	}
-
-	const classObserver = new MutationObserver(handleAppearanceChange);
-	classObserver.observe(document.documentElement, {
-		attributes: true,
-		attributeFilter: ["class"],
-	});
-}
-
+// Render immediately — don't block on Capacitor or error handlers
 createRoot(document.getElementById("root")!).render(<App />);
+
+// Defer non-critical setup to after first paint
+const idle = window.requestIdleCallback || ((cb: () => void) => setTimeout(cb, 200));
+idle(() => {
+  import("@/lib/security/errorReporting").then(m => m.setupGlobalErrorHandlers());
+  
+  import("@capacitor/core").then(({ Capacitor }) => {
+    const isNativeIOS = Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
+    if (!isNativeIOS) return;
+    
+    import("@capacitor/status-bar").then(({ StatusBar, Style }) => {
+      const getStyle = () => {
+        const dark = window.matchMedia("(prefers-color-scheme: dark)").matches || document.documentElement.classList.contains("dark");
+        return dark ? Style.Light : Style.Dark;
+      };
+      void StatusBar.setOverlaysWebView({ overlay: true });
+      void StatusBar.setStyle({ style: getStyle() });
+      
+      const update = () => void StatusBar.setStyle({ style: getStyle() });
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", update);
+      new MutationObserver(update).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    });
+  });
+});

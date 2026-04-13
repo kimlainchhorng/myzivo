@@ -19,23 +19,22 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import PhoneRequiredGate from "@/components/auth/PhoneRequiredGate";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import { RouteErrorBoundary } from "./components/shared/RouteErrorBoundary";
-import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
-import LiveChatWidget from "./components/shared/LiveChatWidget";
 
-import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
-import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
-import InAppBrowserInterstitial from "./components/shared/InAppBrowserInterstitial";
-import { ScrollToTopButton } from "./components/shared/ScrollToTopButton";
+// Defer non-critical overlays — these don't need to block FCP/LCP
+const CookieConsent = lazy(() => import("./components/common/CookieConsent"));
+const PWAUpdatePrompt = lazy(() => import("./components/shared/PWAUpdatePrompt").then(m => ({ default: m.PWAUpdatePrompt })));
+const PWAInstallBanner = lazy(() => import("./components/shared/PWAInstallBanner").then(m => ({ default: m.PWAInstallBanner })));
+const InAppBrowserInterstitial = lazy(() => import("./components/shared/InAppBrowserInterstitial"));
+const IncomingCallListener = lazy(() => import("@/components/chat/IncomingCallListener"));
+const ChatNotificationListener = lazy(() => import("@/components/chat/ChatNotificationListener"));
+const RuntimeSecurityGuard = lazy(() => import("@/components/security/RuntimeSecurityGuard"));
+const SpatialCursor = lazy(() => import("./components/ui/SpatialCursor").then(m => ({ default: m.SpatialCursor })));
+
 import { SkipToContent } from "./components/shared/SkipToContent";
 import RoutePrefetcher from "./components/shared/RoutePrefetcher";
 import { GlobalViewportMeta } from "@/components/shared/GlobalViewportMeta";
-import IncomingCallListener from "@/components/chat/IncomingCallListener";
-import ChatNotificationListener from "@/components/chat/ChatNotificationListener";
-import RuntimeSecurityGuard from "@/components/security/RuntimeSecurityGuard";
-import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import { categorizeError } from "@/lib/supabaseErrors";
-import { SpatialCursor } from "./components/ui/SpatialCursor";
 import { useBrand } from "@/hooks/useBrand";
 import { applyBrandTheme, resetBrandTheme } from "@/lib/brandTheme";
 import { lazyRetry } from "@/lib/lazyRetry";
@@ -432,28 +431,12 @@ const queryClient = new QueryClient({
 });
 
 const PageLoader = () => (
-  <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-60" />
-    <div className="flex flex-col items-center gap-5 relative z-10 animate-fade-in">
-      <div className="relative">
-        {/* Pulsing ring behind the icon */}
-        <div className="absolute inset-0 rounded-2xl bg-primary/20 animate-ping" style={{ animationDuration: "1.5s" }} />
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/30 relative">
-          <Loader2 className="w-8 h-8 text-primary-foreground animate-spin" />
-        </div>
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/20">
+        <svg className="w-6 h-6 text-primary-foreground animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
       </div>
-      <div className="flex flex-col items-center gap-1.5">
-        <p className="text-sm text-foreground font-semibold tracking-tight">ZIVO</p>
-        <div className="flex gap-1">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce"
-              style={{ animationDelay: `${i * 150}ms`, animationDuration: "0.8s" }}
-            />
-          ))}
-        </div>
-      </div>
+      <p className="text-sm text-foreground font-semibold tracking-tight">ZIVO</p>
     </div>
   </div>
 );
@@ -506,7 +489,6 @@ const App = () => (
               <SkipToContent />
               <Toaster />
               <Sonner />
-              <RuntimeSecurityGuard />
               <BrowserRouter>
                 <PageViewTracker />
                 <GeoDetector />
@@ -932,17 +914,17 @@ const App = () => (
           </UTMProvider>
           </CurrencyProvider>
           </CustomerCityProvider>
-          <CookieConsent />
-          <PWAUpdatePrompt />
-          <PWAInstallBanner />
-          <InAppBrowserInterstitial />
-          {/* ScrollToTopButton removed */}
-          {/* LiveChatWidget removed */}
-          <SpatialCursor />
-          
+          <Suspense fallback={null}>
+            <CookieConsent />
+            <PWAUpdatePrompt />
+            <PWAInstallBanner />
+            <InAppBrowserInterstitial />
+            <SpatialCursor />
+            <RuntimeSecurityGuard />
+            <IncomingCallListener />
+            <ChatNotificationListener />
+          </Suspense>
           <BrandThemeApplicator />
-          <IncomingCallListener />
-          <ChatNotificationListener />
         </ZivoPlusProvider>
         </RemoteConfigProvider>
         </AuthProvider>
