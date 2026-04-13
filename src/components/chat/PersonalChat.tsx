@@ -759,13 +759,44 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   }, []);
 
   // Pinned messages
-  const pinnedMessages = messages.filter((m) => m.is_pinned);
+  const pinnedMessages = useMemo(() => messages.filter((m) => m.is_pinned), [messages]);
 
-  const latestMissedCall = [...callEvents]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .find((event) => ["missed", "no_answer", "declined"].includes(event.status));
+  // Memoize merged + sorted timeline to avoid re-sorting on every render
+  const timeline = useMemo<TimelineItem[]>(() => {
+    return [...messages, ...callEvents].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+  }, [messages, callEvents]);
 
-  const initials = (recipientName || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const latestMissedCall = useMemo(() => {
+    return [...callEvents]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .find((event) => ["missed", "no_answer", "declined"].includes(event.status));
+  }, [callEvents]);
+
+  const initials = useMemo(
+    () => (recipientName || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2),
+    [recipientName]
+  );
+
+  // Stabilize CallEventBubble callbacks
+  const handleCallDelete = useCallback(async (callId: string) => {
+    await (supabase as any).from("call_events").delete().eq("id", callId);
+    setCallEvents(prev => prev.filter(c => c.id !== callId));
+    toast.success("Call deleted");
+  }, []);
+
+  const handleCallDeleteAll = useCallback(async () => {
+    setCallEvents(prev => {
+      const ids = prev.map(c => c.id);
+      if (ids.length > 0) {
+        (supabase as any).from("call_events").delete().in("id", ids).then(() => {
+          toast.success(`${ids.length} call${ids.length > 1 ? "s" : ""} deleted`);
+        });
+      }
+      return [];
+    });
+  }, []);
 
   return (
     <motion.div
