@@ -3,9 +3,27 @@
  * Features: long-press actions (reply/delete/copy/forward/pin), swipe-to-reply, emoji reactions, image/video display
  * Design: Glassmorphic iMessage aesthetic with gradient bubbles, tail shapes, and depth effects
  */
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
-import { Trash2, Reply, Check, CheckCheck, Copy, Forward, Pin, Timer, Play, X, Volume2, VolumeX, Heart, MessageCircle, Share2, Pause, ChevronRight, Lock, DollarSign } from "lucide-react";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import Reply from "lucide-react/dist/esm/icons/reply";
+import Check from "lucide-react/dist/esm/icons/check";
+import CheckCheck from "lucide-react/dist/esm/icons/check-check";
+import Copy from "lucide-react/dist/esm/icons/copy";
+import Forward from "lucide-react/dist/esm/icons/forward";
+import Pin from "lucide-react/dist/esm/icons/pin";
+import Timer from "lucide-react/dist/esm/icons/timer";
+import Play from "lucide-react/dist/esm/icons/play";
+import X from "lucide-react/dist/esm/icons/x";
+import Volume2 from "lucide-react/dist/esm/icons/volume-2";
+import VolumeX from "lucide-react/dist/esm/icons/volume-x";
+import Heart from "lucide-react/dist/esm/icons/heart";
+import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
+import Pause from "lucide-react/dist/esm/icons/pause";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import Lock from "lucide-react/dist/esm/icons/lock";
+import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -147,7 +165,7 @@ interface ChatMessageBubbleProps {
   onPin?: (id: string, pinned: boolean) => void;
 }
 
-export default function ChatMessageBubble({
+const ChatMessageBubble = memo(function ChatMessageBubble({
   id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt, messageType, senderId, lockedPriceCents,
   onReply, onDelete, onForward, onPin,
 }: ChatMessageBubbleProps) {
@@ -736,7 +754,7 @@ export default function ChatMessageBubble({
       </AnimatePresence>
     </div>
   );
-}
+});
 
 /** Reel-style fullscreen video player */
 function ReelVideoPlayer({ videoUrl, onClose }: { videoUrl: string; onClose: () => void }) {
@@ -1241,3 +1259,5 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
     </div>
   );
 }
+
+export default ChatMessageBubble;

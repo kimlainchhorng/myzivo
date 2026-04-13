@@ -7,37 +7,60 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Send, Loader2, Phone, X, Mic, Search, Plus, Pin, Settings, Image as ImageIcon, Smile, Palette, Zap, Shield, Video, History, FileText, MoreVertical, PhoneCall } from "lucide-react";
+import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import Send from "lucide-react/dist/esm/icons/send";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import Phone from "lucide-react/dist/esm/icons/phone";
+import X from "lucide-react/dist/esm/icons/x";
+import Mic from "lucide-react/dist/esm/icons/mic";
+import Search from "lucide-react/dist/esm/icons/search";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import Pin from "lucide-react/dist/esm/icons/pin";
+import Settings from "lucide-react/dist/esm/icons/settings";
+import ImageIcon from "lucide-react/dist/esm/icons/image";
+import Smile from "lucide-react/dist/esm/icons/smile";
+import Palette from "lucide-react/dist/esm/icons/palette";
+import Zap from "lucide-react/dist/esm/icons/zap";
+import Shield from "lucide-react/dist/esm/icons/shield";
+import Video from "lucide-react/dist/esm/icons/video";
+import History from "lucide-react/dist/esm/icons/history";
+import FileText from "lucide-react/dist/esm/icons/file-text";
+import MoreVertical from "lucide-react/dist/esm/icons/more-vertical";
+import PhoneCall from "lucide-react/dist/esm/icons/phone-call";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
-import CallScreen from "./CallScreen";
-import CallPiP from "./CallPiP";
 import { primeCallAudio } from "@/lib/callAudio";
 import ChatMessageBubble from "./ChatMessageBubble";
-import VoiceMessagePlayer from "./VoiceMessagePlayer";
-import LocationShareBubble from "./LocationShareBubble";
-import ChatSearch from "./ChatSearch";
 import ChatAttachMenu from "./ChatAttachMenu";
-import ChatNotificationSettings from "./ChatNotificationSettings";
-import ChatMediaGallery from "./ChatMediaGallery";
 import type { StickerSendPayload } from "./StickerKeyboard";
-import ChatPersonalization, { getWallpaperClass, getWallpaperStyle } from "./ChatPersonalization";
-import ChatMiniApps from "./ChatMiniApps";
-import ChatSecurity from "./ChatSecurity";
-import CallHistoryPage from "./CallHistoryPage";
-import { ChatMediaUploader } from "./ChatMediaUploader";
+import { getWallpaperClass, getWallpaperStyle } from "./ChatPersonalization";
 import CallEventBubble from "./CallEventBubble";
-import LockedMediaPricePicker from "./LockedMediaPricePicker";
-import ChatContactInfo from "./ChatContactInfo";
-import MessageScheduler from "./MessageScheduler";
-import PinnedMessagesPanel from "./PinnedMessagesPanel";
+
+// Lazy-loaded panels (only downloaded when user opens them)
+const CallScreen = lazy(() => import("./CallScreen"));
+const CallPiP = lazy(() => import("./CallPiP"));
+const VoiceMessagePlayer = lazy(() => import("./VoiceMessagePlayer"));
+const LocationShareBubble = lazy(() => import("./LocationShareBubble"));
+const ChatSearch = lazy(() => import("./ChatSearch"));
+const ChatNotificationSettings = lazy(() => import("./ChatNotificationSettings"));
+const ChatMediaGallery = lazy(() => import("./ChatMediaGallery"));
+const ChatPersonalization = lazy(() => import("./ChatPersonalization"));
+const ChatMiniApps = lazy(() => import("./ChatMiniApps"));
+const ChatSecurity = lazy(() => import("./ChatSecurity"));
+const CallHistoryPage = lazy(() => import("./CallHistoryPage"));
+const ChatMediaUploader = lazy(() => import("./ChatMediaUploader").then(m => ({ default: m.ChatMediaUploader })));
+const LockedMediaPricePicker = lazy(() => import("./LockedMediaPricePicker"));
+const ChatContactInfo = lazy(() => import("./ChatContactInfo"));
+const MessageScheduler = lazy(() => import("./MessageScheduler"));
+const PinnedMessagesPanel = lazy(() => import("./PinnedMessagesPanel"));
+import { detectMessageEffect, type EffectType } from "./MessageEffects";
+const MessageEffects = lazy(() => import("./MessageEffects"));
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { useChatDraft } from "@/hooks/useChatDraft";
-import MessageEffects, { detectMessageEffect, type EffectType } from "./MessageEffects";
 
 const StickerKeyboard = lazy(() => import("./StickerKeyboard"));
 
@@ -904,64 +927,69 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       {/* Search bar */}
       <AnimatePresence>
         {showSearch && (
-          <ChatSearch messages={messages} onClose={() => setShowSearch(false)} onScrollToMessage={scrollToMessage} currentUserId={user?.id} />
+          <Suspense fallback={null}>
+            <ChatSearch messages={messages} onClose={() => setShowSearch(false)} onScrollToMessage={scrollToMessage} currentUserId={user?.id} />
+          </Suspense>
         )}
       </AnimatePresence>
 
       {/* Call overlay */}
       <AnimatePresence>
         {activeCall && (
-          <CallScreen
-            recipientName={recipientName}
-            recipientAvatar={recipientAvatar}
-            recipientId={recipientId}
-            callType={activeCall}
-            minimized={pipMode}
-            onEnd={() => { setActiveCall(null); setPipMode(false); setPipData(null); setPipControls(null); }}
-            onMinimize={(data) => {
-              setPipData(data);
-              setPipMode(true);
-            }}
-            onPipStateChange={(data) => {
-              setPipData(data);
-            }}
-            onPipControlsChange={(controls) => {
-              setPipControls(controls);
-            }}
-          />
+          <Suspense fallback={null}>
+            <CallScreen
+              recipientName={recipientName}
+              recipientAvatar={recipientAvatar}
+              recipientId={recipientId}
+              callType={activeCall}
+              minimized={pipMode}
+              onEnd={() => { setActiveCall(null); setPipMode(false); setPipData(null); setPipControls(null); }}
+              onMinimize={(data) => {
+                setPipData(data);
+                setPipMode(true);
+              }}
+              onPipStateChange={(data) => {
+                setPipData(data);
+              }}
+              onPipControlsChange={(controls) => {
+                setPipControls(controls);
+              }}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
       {/* Picture-in-Picture floating call */}
       <AnimatePresence>
         {activeCall && pipMode && (
-          <CallPiP
-            remoteStream={pipData?.remoteStream || null}
-            recipientName={recipientName}
-            isMuted={pipData?.isMuted || false}
-            duration={pipData?.duration || 0}
-            callType={pipData?.callType}
-            isCameraOff={pipData?.isCameraOff}
-            onExpand={() => setPipMode(false)}
-            onEndCall={() => {
-              if (pipControls) {
-                pipControls.endCall();
-                return;
-              }
-
-              setActiveCall(null);
-              setPipMode(false);
-              setPipData(null);
-            }}
-            onToggleMute={() => {
-              pipControls?.toggleMute();
-            }}
-            onToggleCamera={() => {
-              if ((pipData?.callType || activeCall) === "video") {
-                pipControls?.toggleCamera();
-              }
-            }}
-          />
+          <Suspense fallback={null}>
+            <CallPiP
+              remoteStream={pipData?.remoteStream || null}
+              recipientName={recipientName}
+              isMuted={pipData?.isMuted || false}
+              duration={pipData?.duration || 0}
+              callType={pipData?.callType}
+              isCameraOff={pipData?.isCameraOff}
+              onExpand={() => setPipMode(false)}
+              onEndCall={() => {
+                if (pipControls) {
+                  pipControls.endCall();
+                  return;
+                }
+                setActiveCall(null);
+                setPipMode(false);
+                setPipData(null);
+              }}
+              onToggleMute={() => {
+                pipControls?.toggleMute();
+              }}
+              onToggleCamera={() => {
+                if ((pipData?.callType || activeCall) === "video") {
+                  pipControls?.toggleCamera();
+                }
+              }}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
@@ -1226,11 +1254,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <input ref={lockedImageInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleLockedMediaSelect} />
 
             {/* Locked media price picker */}
-            <LockedMediaPricePicker
-              open={showLockedPricePicker}
-              onClose={() => { setShowLockedPricePicker(false); setPendingLockedFile(null); }}
-              onConfirm={handleLockedMediaConfirm}
-            />
+            {showLockedPricePicker && (
+              <Suspense fallback={null}>
+                <LockedMediaPricePicker
+                  open={showLockedPricePicker}
+                  onClose={() => { setShowLockedPricePicker(false); setPendingLockedFile(null); }}
+                  onConfirm={handleLockedMediaConfirm}
+                />
+              </Suspense>
+            )}
 
             {/* Document upload */}
             <ChatMediaUploader
@@ -1312,54 +1344,70 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       </AnimatePresence>
 
       {/* Notification settings */}
-      <ChatNotificationSettings
-        open={showNotifSettings}
-        onClose={() => setShowNotifSettings(false)}
-        chatPartnerId={recipientId}
-        chatPartnerName={recipientName}
-      />
+      {showNotifSettings && (
+        <Suspense fallback={null}>
+          <ChatNotificationSettings
+            open={showNotifSettings}
+            onClose={() => setShowNotifSettings(false)}
+            chatPartnerId={recipientId}
+            chatPartnerName={recipientName}
+          />
+        </Suspense>
+      )}
 
       {/* Media gallery */}
-      <AnimatePresence>
-        {showMediaGallery && (
+      {showMediaGallery && (
+        <Suspense fallback={null}>
           <ChatMediaGallery
             open={showMediaGallery}
             onClose={() => setShowMediaGallery(false)}
             recipientId={recipientId}
             recipientName={recipientName}
           />
-        )}
-      </AnimatePresence>
+        </Suspense>
+      )}
 
       {/* Personalization */}
-      <ChatPersonalization
-        open={showPersonalization}
-        onClose={() => setShowPersonalization(false)}
-        chatPartnerId={recipientId}
-        chatPartnerName={recipientName}
-        onApply={(s) => setChatStyle(s)}
-      />
+      {showPersonalization && (
+        <Suspense fallback={null}>
+          <ChatPersonalization
+            open={showPersonalization}
+            onClose={() => setShowPersonalization(false)}
+            chatPartnerId={recipientId}
+            chatPartnerName={recipientName}
+            onApply={(s) => setChatStyle(s)}
+          />
+        </Suspense>
+      )}
 
       {/* Mini Apps */}
-      <ChatMiniApps
-        open={showMiniApps}
-        onClose={() => setShowMiniApps(false)}
-        chatPartnerId={recipientId}
-        chatPartnerName={recipientName}
-      />
+      {showMiniApps && (
+        <Suspense fallback={null}>
+          <ChatMiniApps
+            open={showMiniApps}
+            onClose={() => setShowMiniApps(false)}
+            chatPartnerId={recipientId}
+            chatPartnerName={recipientName}
+          />
+        </Suspense>
+      )}
 
       {/* Security */}
-      <ChatSecurity
-        open={showSecurity}
-        onClose={() => setShowSecurity(false)}
-        chatPartnerId={recipientId}
-        chatPartnerName={recipientName}
-        onBlock={onClose}
-      />
+      {showSecurity && (
+        <Suspense fallback={null}>
+          <ChatSecurity
+            open={showSecurity}
+            onClose={() => setShowSecurity(false)}
+            chatPartnerId={recipientId}
+            chatPartnerName={recipientName}
+            onBlock={onClose}
+          />
+        </Suspense>
+      )}
 
       {/* Call History */}
-      <AnimatePresence>
-        {showCallHistory && (
+      {showCallHistory && (
+        <Suspense fallback={null}>
           <CallHistoryPage
             onClose={() => setShowCallHistory(false)}
             onCallUser={(userId, type) => {
@@ -1367,12 +1415,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               handleStartCall(type);
             }}
           />
-        )}
-      </AnimatePresence>
+        </Suspense>
+      )}
 
       {/* Contact Info */}
-      <AnimatePresence>
-        {showContactInfo && (
+      {showContactInfo && (
+        <Suspense fallback={null}>
           <ChatContactInfo
             recipientId={recipientId}
             recipientName={recipientName}
@@ -1389,50 +1437,62 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             onOpenMiniApps={() => { setShowContactInfo(false); setShowMiniApps(true); }}
             onOpenNotifSettings={() => { setShowContactInfo(false); setShowNotifSettings(true); }}
           />
-        )}
-      </AnimatePresence>
+        </Suspense>
+      )}
 
       {/* Message Scheduler */}
-      <MessageScheduler
-        open={showScheduler}
-        onClose={() => setShowScheduler(false)}
-        message={input}
-        onSchedule={async (scheduledAt) => {
-          if (!user?.id || !input.trim()) return;
-          try {
-            await (supabase as any).from("scheduled_messages").insert({
-              sender_id: user.id,
-              receiver_id: recipientId,
-              message: input.trim(),
-              scheduled_at: scheduledAt.toISOString(),
-            });
-            setInput("");
-            clearDraft();
-            setShowScheduler(false);
-            toast.success(`Message scheduled for ${format(scheduledAt, "MMM d, h:mm a")}`);
-          } catch {
-            toast.error("Failed to schedule message");
-          }
-        }}
-      />
+      {showScheduler && (
+        <Suspense fallback={null}>
+          <MessageScheduler
+            open={showScheduler}
+            onClose={() => setShowScheduler(false)}
+            message={input}
+            onSchedule={async (scheduledAt) => {
+              if (!user?.id || !input.trim()) return;
+              try {
+                await (supabase as any).from("scheduled_messages").insert({
+                  sender_id: user.id,
+                  receiver_id: recipientId,
+                  message: input.trim(),
+                  scheduled_at: scheduledAt.toISOString(),
+                });
+                setInput("");
+                clearDraft();
+                setShowScheduler(false);
+                toast.success(`Message scheduled for ${format(scheduledAt, "MMM d, h:mm a")}`);
+              } catch {
+                toast.error("Failed to schedule message");
+              }
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Pinned Messages Panel */}
-      <PinnedMessagesPanel
-        open={showPinnedPanel}
-        onClose={() => setShowPinnedPanel(false)}
-        messages={pinnedMessages.map(m => ({
-          id: m.id,
-          message: m.message,
-          sender_name: m.sender_id === user?.id ? "You" : recipientName,
-          time: formatMsgTime(m.created_at),
-          isMe: m.sender_id === user?.id,
-        }))}
-        onJumpToMessage={scrollToMessage}
-        onUnpin={(id) => handlePin(id, false)}
-      />
+      {showPinnedPanel && (
+        <Suspense fallback={null}>
+          <PinnedMessagesPanel
+            open={showPinnedPanel}
+            onClose={() => setShowPinnedPanel(false)}
+            messages={pinnedMessages.map(m => ({
+              id: m.id,
+              message: m.message,
+              sender_name: m.sender_id === user?.id ? "You" : recipientName,
+              time: formatMsgTime(m.created_at),
+              isMe: m.sender_id === user?.id,
+            }))}
+            onJumpToMessage={scrollToMessage}
+            onUnpin={(id) => handlePin(id, false)}
+          />
+        </Suspense>
+      )}
 
       {/* Message effects overlay */}
-      <MessageEffects effect={activeEffect} onComplete={() => setActiveEffect(null)} />
+      {activeEffect && (
+        <Suspense fallback={null}>
+          <MessageEffects effect={activeEffect} onComplete={() => setActiveEffect(null)} />
+        </Suspense>
+      )}
     </motion.div>
   );
 }
