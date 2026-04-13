@@ -67,8 +67,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
-const trackInitiateCheckout = (...args: any[]) =>
-  import("@/services/metaConversion").then((m) => m.trackInitiateCheckout(...args));
+const trackInitiateCheckout = (input: Parameters<typeof import("@/services/metaConversion").trackInitiateCheckout>[0]) =>
+  import("@/services/metaConversion").then((m) => m.trackInitiateCheckout(input));
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
