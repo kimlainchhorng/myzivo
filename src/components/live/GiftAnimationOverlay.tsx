@@ -70,11 +70,11 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-[60] pointer-events-none overflow-hidden"
+        className="fixed inset-0 z-[100] pointer-events-none overflow-hidden"
       >
         {/* ── Central gift image with effects ── */}
         {giftImg && (
-          <div className="absolute inset-0 flex items-center justify-center" style={{ marginTop: "-5%" }}>
+          <div className="absolute inset-0 flex items-center justify-center" style={{ marginTop: giftPanelOpen ? "-45%" : "-5%" }}>
             {/* Sparkle particles */}
             {sparkles.map((s) => (
               <motion.div
