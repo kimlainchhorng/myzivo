@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePersonalizedHome, HomeRestaurant } from "@/hooks/usePersonalizedHome";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { useCountry as useCountryHook } from "@/hooks/useCountry";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import zivoRideIcon from "@/assets/zivo-ride-icon.png";
 import zivoEatsIcon from "@/assets/zivo-eats-icon.png";
 import zivoFlightsIcon from "@/assets/zivo-flights-icon.png";
