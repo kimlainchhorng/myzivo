@@ -3,7 +3,15 @@
  */
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, BarChart3, ListTodo, Receipt, Plus, Check, Trash2, ChevronRight, Vote } from "lucide-react";
+import X from "lucide-react/dist/esm/icons/x";
+import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
+import ListTodo from "lucide-react/dist/esm/icons/list-todo";
+import Receipt from "lucide-react/dist/esm/icons/receipt";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import Check from "lucide-react/dist/esm/icons/check";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import Vote from "lucide-react/dist/esm/icons/vote";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";

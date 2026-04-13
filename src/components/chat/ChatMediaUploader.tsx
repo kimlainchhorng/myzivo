@@ -4,7 +4,10 @@
 import { useState, useRef, useCallback, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Image, FileText, Film, X } from "lucide-react";
+import Image from "lucide-react/dist/esm/icons/image";
+import FileText from "lucide-react/dist/esm/icons/file-text";
+import Film from "lucide-react/dist/esm/icons/film";
+import X from "lucide-react/dist/esm/icons/x";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 

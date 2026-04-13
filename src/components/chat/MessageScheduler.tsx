@@ -3,7 +3,10 @@
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, Send, Calendar } from "lucide-react";
+import X from "lucide-react/dist/esm/icons/x";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import Send from "lucide-react/dist/esm/icons/send";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
 import { Button } from "@/components/ui/button";
 import { format, addHours, addMinutes, setHours, setMinutes, startOfTomorrow } from "date-fns";
 

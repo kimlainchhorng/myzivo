@@ -1,7 +1,8 @@
 /**
  * LocationShareBubble — Displays shared location with a static map preview
  */
-import { MapPin, ExternalLink } from "lucide-react";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import ExternalLink from "lucide-react/dist/esm/icons/external-link";
 
 interface LocationShareBubbleProps {
   lat: number;

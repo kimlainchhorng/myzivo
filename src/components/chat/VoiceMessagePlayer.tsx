@@ -2,7 +2,8 @@
  * VoiceMessagePlayer — 2026-style waveform audio player with speed control
  */
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Play, Pause } from "lucide-react";
+import Play from "lucide-react/dist/esm/icons/play";
+import Pause from "lucide-react/dist/esm/icons/pause";
 import { motion } from "framer-motion";
 
 interface VoiceMessagePlayerProps {
