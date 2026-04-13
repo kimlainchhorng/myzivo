@@ -1,7 +1,7 @@
 /**
  * GiftAnimationOverlay — Transparent gift animation over live stream
  * Like Bigo/TikTok: gift effects float ON TOP of the stream, never blocking it
- * Uses gift images with rich particle effects — videos play as accent, not full-cover
+ * Uses gift images with rich sparkle/glow effects — stream always visible
  */
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,7 +14,6 @@ interface GiftAnimationOverlayProps {
 }
 
 export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAnimationOverlayProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const onCompleteRef = useRef(onComplete);
   const [animKey, setAnimKey] = useState(0);
@@ -29,7 +28,6 @@ export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAni
     onCompleteRef.current();
   }, []);
 
-  // Generate sparkles once per animKey
   const sparkles = useMemo(() =>
     Array.from({ length: 16 }, (_, i) => ({
       id: i,
@@ -48,24 +46,8 @@ export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAni
 
   useEffect(() => {
     if (!activeGift) return;
-
-    const hasVideo = !!giftAnimationVideos[activeGift.name];
-
-    if (hasVideo) {
-      // Play video as accent background, auto-dismiss on end or 5s
-      requestAnimationFrame(() => {
-        const vid = videoRef.current;
-        if (vid) {
-          vid.src = giftAnimationVideos[activeGift.name];
-          vid.currentTime = 0;
-          vid.play().catch(() => {});
-        }
-      });
-      timeoutRef.current = setTimeout(dismiss, 5000);
-    } else {
-      timeoutRef.current = setTimeout(dismiss, 3500);
-    }
-
+    const isPremium = !!giftAnimationVideos[activeGift.name];
+    timeoutRef.current = setTimeout(dismiss, isPremium ? 4500 : 3500);
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -76,8 +58,8 @@ export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAni
 
   if (!activeGift) return null;
 
-  const hasVideo = !!giftAnimationVideos[activeGift.name];
   const giftImg = giftImages[activeGift.name];
+  const isPremium = !!giftAnimationVideos[activeGift.name];
 
   return (
     <AnimatePresence>
@@ -89,30 +71,10 @@ export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAni
         transition={{ duration: 0.2 }}
         className="fixed inset-0 z-[60] pointer-events-none overflow-hidden"
       >
-        {/* ── Background video — plays full-screen with heavy transparency ── */}
-        {hasVideo && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.35 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="absolute inset-0"
-          >
-            <video
-              ref={videoRef}
-              onEnded={dismiss}
-              muted
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ mixBlendMode: "screen" }}
-            />
-          </motion.div>
-        )}
-
-        {/* ── Central gift image — always shown, large and prominent ── */}
+        {/* ── Central gift image with effects ── */}
         {giftImg && (
           <div className="absolute inset-0 flex items-center justify-center" style={{ marginTop: "-5%" }}>
-            {/* Sparkle ring */}
+            {/* Sparkle particles */}
             {sparkles.map((s) => (
               <motion.div
                 key={s.id}
@@ -132,19 +94,19 @@ export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAni
               </motion.div>
             ))}
 
-            {/* Golden glow behind gift */}
+            {/* Golden glow */}
             <motion.div
               className="absolute rounded-full"
               style={{
-                width: 220,
-                height: 220,
-                background: "radial-gradient(circle, hsla(42, 100%, 55%, 0.3) 0%, hsla(42, 100%, 55%, 0.1) 50%, transparent 70%)",
+                width: isPremium ? 260 : 200,
+                height: isPremium ? 260 : 200,
+                background: "radial-gradient(circle, hsla(42, 100%, 55%, 0.25) 0%, hsla(42, 100%, 55%, 0.08) 50%, transparent 70%)",
               }}
               animate={{ scale: [0.8, 1.3, 0.8], opacity: [0.3, 0.7, 0.3] }}
               transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
             />
 
-            {/* The gift itself */}
+            {/* Gift image */}
             <motion.div
               initial={{ scale: 0, opacity: 0, y: 100, rotate: -15 }}
               animate={{ scale: 1, opacity: 1, y: 0, rotate: 0 }}
@@ -154,21 +116,18 @@ export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAni
               <motion.img
                 src={giftImg}
                 alt={activeGift.name}
-                className="w-40 h-40 object-contain"
+                className={isPremium ? "w-44 h-44 object-contain" : "w-36 h-36 object-contain"}
                 style={{
                   filter: "drop-shadow(0 0 30px rgba(255,200,0,0.5)) drop-shadow(0 8px 20px rgba(0,0,0,0.4))",
                 }}
-                animate={{
-                  y: [0, -10, 0],
-                  scale: [1, 1.05, 1],
-                }}
+                animate={{ y: [0, -10, 0], scale: [1, 1.05, 1] }}
                 transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
               />
             </motion.div>
           </div>
         )}
 
-        {/* ── Sender banner — Bigo-style golden gradient from left ── */}
+        {/* ── Sender banner — golden gradient from left ── */}
         <motion.div
           initial={{ x: -350, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -184,32 +143,20 @@ export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAni
               boxShadow: "0 3px 20px rgba(255,170,0,0.25), inset 0 1px 0 rgba(255,255,255,0.15)",
             }}
           >
-            {/* Avatar */}
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shrink-0 border border-amber-300/30">
               {(activeGift.senderName || "S")[0]}
             </div>
-
-            {/* Gift thumbnail on avatar */}
             {giftImg && (
-              <img
-                src={giftImg}
-                alt=""
-                className="w-8 h-8 object-contain -ml-4 mb-[-8px] relative z-10"
-              />
+              <img src={giftImg} alt="" className="w-8 h-8 object-contain -ml-4 mb-[-8px] relative z-10" />
             )}
-
             <div className="min-w-0">
-              <p className="text-white text-[13px] font-bold leading-tight truncate"
-                style={{ textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}
-              >
+              <p className="text-white text-[13px] font-bold leading-tight truncate" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
                 {activeGift.senderName || "Someone"}
               </p>
               <p className="text-amber-100/90 text-[11px] font-medium leading-tight">
                 sent <span className="text-white font-semibold">{activeGift.name}</span>
               </p>
             </div>
-
-            {/* Coin badge */}
             <div className="flex items-center gap-0.5 bg-black/25 rounded-full px-2 py-0.5 ml-1 border border-amber-400/20">
               <span className="text-[10px]">💎</span>
               <span className="text-amber-200 text-[11px] font-bold">{activeGift.coins.toLocaleString()}</span>
@@ -249,12 +196,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAni
             animate={{ opacity: [0, 0.4, 0], y: -600 }}
             transition={{ duration: 2, delay: 0.3 + i * 0.2, ease: "easeOut" }}
           >
-            <div
-              className="w-0.5 h-32"
-              style={{
-                background: `linear-gradient(to top, rgba(255,200,0,0.5), transparent)`,
-              }}
-            />
+            <div className="w-0.5 h-32" style={{ background: "linear-gradient(to top, rgba(255,200,0,0.5), transparent)" }} />
           </motion.div>
         ))}
       </motion.div>
