@@ -4,6 +4,7 @@
  */
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
+import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
@@ -71,6 +72,7 @@ export default function GoLivePage() {
   const [showChat, setShowChat] = useState(true);
   const [streamQuality, setStreamQuality] = useState<"HD" | "SD">("HD");
   const [coinsEarned, setCoinsEarned] = useState(0);
+  const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
 
   const allGifts = useMemo(() => ({
     gifts: [
@@ -277,6 +279,8 @@ export default function GoLivePage() {
       ...prev.slice(-20),
       { id: Date.now().toString(), user: sender, text: `sent ${gift.icon} ${gift.name} (${gift.coins} coins)`, isGift: true, avatar: "bg-amber-500" },
     ]);
+    // Trigger full-screen gift animation
+    setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
     toast(`${gift.icon} ${gift.name} sent!`, { description: `${gift.coins} coins` });
     setShowGiftPanel(false);
   }, [spawnFloatingReaction]);
@@ -767,6 +771,12 @@ export default function GoLivePage() {
           </AnimatePresence>
         </div>
       )}
+
+      {/* Full-screen gift animation overlay */}
+      <GiftAnimationOverlay
+        activeGift={activeGiftAnim}
+        onComplete={() => setActiveGiftAnim(null)}
+      />
     </div>
   );
 }
