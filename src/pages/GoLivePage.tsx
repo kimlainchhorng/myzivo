@@ -73,6 +73,8 @@ export default function GoLivePage() {
   const [streamQuality, setStreamQuality] = useState<"HD" | "SD">("HD");
   const [coinsEarned, setCoinsEarned] = useState(0);
   const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
+  const [giftCombo, setGiftCombo] = useState(0);
+  const lastGiftRef = useRef<{ name: string; time: number }>({ name: "", time: 0 });
 
   const allGifts = useMemo(() => ({
     gifts: [
@@ -275,10 +277,17 @@ export default function GoLivePage() {
     spawnFloatingReaction(gift.icon);
     const senders = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
     const sender = senders[Math.floor(Math.random() * senders.length)];
-    // Trigger full-screen gift animation
-    setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
     
-    // Gift panel stays open — user closes manually with X
+    // Combo tracking — same gift within 5s increments combo
+    const now = Date.now();
+    if (lastGiftRef.current.name === gift.name && now - lastGiftRef.current.time < 5000) {
+      setGiftCombo((c) => c + 1);
+    } else {
+      setGiftCombo(1);
+    }
+    lastGiftRef.current = { name: gift.name, time: now };
+    
+    setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
   }, [spawnFloatingReaction]);
 
   // ── Ended screen ──
@@ -768,8 +777,9 @@ export default function GoLivePage() {
       {/* Full-screen gift animation overlay */}
       <GiftAnimationOverlay
         activeGift={activeGiftAnim}
-        onComplete={() => setActiveGiftAnim(null)}
+        onComplete={() => { setActiveGiftAnim(null); setGiftCombo(0); }}
         giftPanelOpen={showGiftPanel}
+        comboCount={giftCombo}
       />
     </div>
   );

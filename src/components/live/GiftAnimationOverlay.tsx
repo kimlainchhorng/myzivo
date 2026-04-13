@@ -12,9 +12,10 @@ interface GiftAnimationOverlayProps {
   activeGift: { name: string; coins: number; senderName?: string } | null;
   onComplete: () => void;
   giftPanelOpen?: boolean;
+  comboCount?: number;
 }
 
-export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen }: GiftAnimationOverlayProps) {
+export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCount = 1 }: GiftAnimationOverlayProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const onCompleteRef = useRef(onComplete);
   const [animKey, setAnimKey] = useState(0);
@@ -183,7 +184,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               WebkitTextStroke: "1.5px rgba(255,255,255,0.25)",
             }}
           >
-            ×1
+            ×{comboCount}
           </motion.span>
         </motion.div>
 
