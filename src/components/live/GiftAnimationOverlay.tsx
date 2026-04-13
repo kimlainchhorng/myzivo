@@ -14,7 +14,7 @@ interface GiftAnimationOverlayProps {
 }
 
 export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAnimationOverlayProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const onCompleteRef = useRef(onComplete);
   const [animKey, setAnimKey] = useState(0);
@@ -63,8 +63,8 @@ export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAni
 
   if (!activeGift) return null;
 
-  const hasVideo = !!giftAnimationVideos[activeGift.name];
   const giftImg = giftImages[activeGift.name];
+  const isPremium = !!giftAnimationVideos[activeGift.name];
 
   return (
     <AnimatePresence>
@@ -76,25 +76,6 @@ export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAni
         transition={{ duration: 0.2 }}
         className="fixed inset-0 z-[60] pointer-events-none overflow-hidden"
       >
-        {/* ── Background video — plays full-screen with heavy transparency ── */}
-        {hasVideo && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.35 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="absolute inset-0"
-          >
-            <video
-              ref={videoRef}
-              onEnded={dismiss}
-              muted
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ mixBlendMode: "screen" }}
-            />
-          </motion.div>
-        )}
 
         {/* ── Central gift image — always shown, large and prominent ── */}
         {giftImg && (
