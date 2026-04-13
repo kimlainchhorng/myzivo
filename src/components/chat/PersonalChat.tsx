@@ -4,7 +4,7 @@
  * voice messages, reply threads, message search, disappearing messages, forward, pin, location sharing,
  * message effects (confetti, fireworks, hearts, lasers)
  */
-import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
@@ -131,6 +131,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     };
   }, [recipientId]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [reactionsMap, setReactionsMap] = useState<Record<string, { emoji: string; count: number; hasMyReaction: boolean }[]>>({});
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -360,6 +361,29 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setMessages(data);
       setCallEvents((callRes.data || []).map((c: any) => ({ ...c, _isCallEvent: true as const })));
       setLoading(false);
+
+      // Batch-load all reactions in ONE query instead of per-message
+      const msgIds = data.filter((m: Message) => !m.id.startsWith("opt-")).map((m: Message) => m.id);
+      if (msgIds.length > 0) {
+        const { data: reactionsData } = await (supabase as any)
+          .from("message_reactions")
+          .select("message_id, emoji, user_id")
+          .in("message_id", msgIds);
+        if (reactionsData) {
+          const grouped: Record<string, Record<string, { count: number; hasMyReaction: boolean }>> = {};
+          for (const r of reactionsData) {
+            if (!grouped[r.message_id]) grouped[r.message_id] = {};
+            if (!grouped[r.message_id][r.emoji]) grouped[r.message_id][r.emoji] = { count: 0, hasMyReaction: false };
+            grouped[r.message_id][r.emoji].count++;
+            if (r.user_id === user.id) grouped[r.message_id][r.emoji].hasMyReaction = true;
+          }
+          const map: Record<string, { emoji: string; count: number; hasMyReaction: boolean }[]> = {};
+          for (const [msgId, emojis] of Object.entries(grouped)) {
+            map[msgId] = Object.entries(emojis).map(([emoji, v]) => ({ emoji, ...v }));
+          }
+          setReactionsMap(map);
+        }
+      }
 
       if (data?.length) {
         const unread = data.filter((m: Message) => m.receiver_id === user.id && !m.is_read);
@@ -759,13 +783,44 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   }, []);
 
   // Pinned messages
-  const pinnedMessages = messages.filter((m) => m.is_pinned);
+  const pinnedMessages = useMemo(() => messages.filter((m) => m.is_pinned), [messages]);
 
-  const latestMissedCall = [...callEvents]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .find((event) => ["missed", "no_answer", "declined"].includes(event.status));
+  // Memoize merged + sorted timeline to avoid re-sorting on every render
+  const timeline = useMemo<TimelineItem[]>(() => {
+    return [...messages, ...callEvents].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+  }, [messages, callEvents]);
 
-  const initials = (recipientName || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const latestMissedCall = useMemo(() => {
+    return [...callEvents]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .find((event) => ["missed", "no_answer", "declined"].includes(event.status));
+  }, [callEvents]);
+
+  const initials = useMemo(
+    () => (recipientName || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2),
+    [recipientName]
+  );
+
+  // Stabilize CallEventBubble callbacks
+  const handleCallDelete = useCallback(async (callId: string) => {
+    await (supabase as any).from("call_events").delete().eq("id", callId);
+    setCallEvents(prev => prev.filter(c => c.id !== callId));
+    toast.success("Call deleted");
+  }, []);
+
+  const handleCallDeleteAll = useCallback(async () => {
+    setCallEvents(prev => {
+      const ids = prev.map(c => c.id);
+      if (ids.length > 0) {
+        (supabase as any).from("call_events").delete().in("id", ids).then(() => {
+          toast.success(`${ids.length} call${ids.length > 1 ? "s" : ""} deleted`);
+        });
+      }
+      return [];
+    });
+  }, []);
 
   return (
     <motion.div
@@ -1015,13 +1070,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           </div>
         ) : (
           <div ref={timelineRef} className="mt-auto space-y-2">
-            {(() => {
-              const timeline: TimelineItem[] = [
-                ...messages,
-                ...callEvents,
-              ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-
-              return timeline.map((item) => {
+            {timeline.map((item) => {
                 if (isCallEvent(item)) {
                   return (
                     <CallEventBubble
@@ -1033,18 +1082,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       durationSeconds={item.duration_seconds}
                       createdAt={item.created_at}
                       onCallback={() => handleStartCall(item.call_type as "voice" | "video")}
-                      onDelete={async (callId) => {
-                        await (supabase as any).from("call_events").delete().eq("id", callId);
-                        setCallEvents(prev => prev.filter(c => c.id !== callId));
-                        toast.success("Call deleted");
-                      }}
-                      onDeleteAll={async () => {
-                        const ids = callEvents.map(c => c.id);
-                        if (ids.length === 0) return;
-                        await (supabase as any).from("call_events").delete().in("id", ids);
-                        setCallEvents([]);
-                        toast.success(`${ids.length} call${ids.length > 1 ? "s" : ""} deleted`);
-                      }}
+                      onDelete={handleCallDelete}
+                      onDeleteAll={handleCallDeleteAll}
                     />
                   );
                 }
@@ -1108,6 +1147,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         messageType={msg.message_type}
                         senderId={msg.sender_id}
                         lockedPriceCents={msg.locked_price_cents}
+                        initialReactions={reactionsMap[msg.id]}
                         onReply={handleReply}
                         onDelete={handleDelete}
                         onForward={handleForward}
@@ -1116,8 +1156,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                     )}
                   </div>
                 );
-              });
-            })()}
+            })}
 
             {/* Typing indicator — 2026 style */}
             {recipientTyping && (

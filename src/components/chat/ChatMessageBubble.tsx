@@ -161,6 +161,8 @@ interface ChatMessageBubbleProps {
   messageType?: string;
   senderId?: string;
   lockedPriceCents?: number | null;
+  /** Pre-loaded reactions from parent (avoids N+1 queries) */
+  initialReactions?: { emoji: string; count: number; hasMyReaction: boolean }[];
   onReply: (id: string, message: string, isMe: boolean) => void;
   onDelete: (id: string) => void;
   onForward?: (id: string, message: string) => void;
@@ -169,6 +171,7 @@ interface ChatMessageBubbleProps {
 
 const ChatMessageBubble = memo(function ChatMessageBubble({
   id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt, messageType, senderId, lockedPriceCents,
+  initialReactions,
   onReply, onDelete, onForward, onPin,
 }: ChatMessageBubbleProps) {
   const { user } = useAuth();
@@ -182,7 +185,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   const [unlockLoading, setUnlockLoading] = useState(false);
   const unlockPrice = lockedPriceCents && lockedPriceCents > 0 ? lockedPriceCents : 99;
   const unlockPriceLabel = `$${(unlockPrice / 100).toFixed(2)}`;
-  const [reactions, setReactions] = useState<{ emoji: string; count: number; hasMyReaction: boolean }[]>([]);
+  const [reactions, setReactions] = useState<{ emoji: string; count: number; hasMyReaction: boolean }[]>(initialReactions || []);
   const [openDown, setOpenDown] = useState(false);
   const [showStickerBurst, setShowStickerBurst] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -261,9 +264,9 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
     }
   }, [id, senderId, unlockPrice, unlockLoading]);
 
-  // Load reactions
+  // Load reactions only if not pre-loaded from parent
   useEffect(() => {
-    if (!id || id.startsWith("opt-")) return;
+    if (!id || id.startsWith("opt-") || initialReactions) return;
     const load = async () => {
       const { data } = await (supabase as any)
         .from("message_reactions")
@@ -280,7 +283,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
       }
     };
     load();
-  }, [id, user?.id]);
+  }, [id, user?.id, initialReactions]);
 
   const toggleReaction = async (emoji: string) => {
     if (!user?.id || id.startsWith("opt-")) return;
