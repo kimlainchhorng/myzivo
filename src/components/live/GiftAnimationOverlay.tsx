@@ -1,11 +1,13 @@
 /**
- * GiftAnimationOverlay — Floating gift animation over live stream
- * Shows gift effects WITHOUT blocking the live stream view
- * Like BIGO Live / TikTok Live style — gift floats in center then fades
+ * GiftAnimationOverlay — Full-screen gift video animation over live stream
+ * Plays MP4 video with screen blend mode so live stream shows through
+ * Falls back to static image + sparkles for gifts without video
+ * Auto-dismisses after video ends or 5s timeout
  */
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { giftImages } from "@/config/giftIcons";
+import { giftAnimationVideos } from "@/config/giftAnimations";
 
 interface GiftAnimationOverlayProps {
   activeGift: { name: string; coins: number; senderName?: string } | null;
@@ -13,196 +15,145 @@ interface GiftAnimationOverlayProps {
 }
 
 export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAnimationOverlayProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  const [phase, setPhase] = useState<"enter" | "show" | "exit">("enter");
+  const [showVideo, setShowVideo] = useState(false);
 
   const handleEnd = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setPhase("enter");
+    setShowVideo(false);
     onComplete();
   }, [onComplete]);
 
   useEffect(() => {
     if (!activeGift) {
-      setPhase("enter");
+      setShowVideo(false);
       return;
     }
 
-    setPhase("enter");
+    const videoUrl = giftAnimationVideos[activeGift.name];
+    
+    if (videoUrl && videoRef.current) {
+      // Has video — play it
+      setShowVideo(true);
+      const vid = videoRef.current;
+      vid.src = videoUrl;
+      vid.currentTime = 0;
+      vid.play().catch(() => {
+        // Autoplay blocked — fall back to timeout
+      });
 
-    // Phase timeline: enter(0.4s) -> show(2.5s) -> exit(0.5s) -> done
-    const t1 = setTimeout(() => setPhase("show"), 400);
-    const t2 = setTimeout(() => setPhase("exit"), 2900);
-    const t3 = setTimeout(handleEnd, 3500);
-    timeoutRef.current = t3;
+      // Safety timeout: dismiss after 6s even if video doesn't fire ended
+      timeoutRef.current = setTimeout(handleEnd, 6000);
+    } else {
+      // No video — show static animation for 4s
+      setShowVideo(false);
+      timeoutRef.current = setTimeout(handleEnd, 4000);
+    }
 
     return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, [activeGift, handleEnd]);
 
-  const sparkles = useMemo(() =>
-    Array.from({ length: 16 }, (_, i) => ({
-      id: i,
-      x: 20 + Math.random() * 60,
-      y: 20 + Math.random() * 40,
-      delay: Math.random() * 0.8,
-      size: 3 + Math.random() * 6,
-      duration: 1.2 + Math.random() * 1.5,
-      color: [
-        "hsl(45, 100%, 70%)",
-        "hsl(35, 100%, 75%)",
-        "hsl(280, 80%, 70%)",
-        "hsl(200, 90%, 70%)",
-        "hsl(350, 90%, 70%)",
-      ][Math.floor(Math.random() * 5)],
-    })), []);
+  const handleVideoEnded = useCallback(() => {
+    handleEnd();
+  }, [handleEnd]);
+
+  const videoUrl = activeGift ? giftAnimationVideos[activeGift.name] : null;
+  const hasVideo = !!videoUrl;
 
   return (
     <AnimatePresence>
       {activeGift && (
         <motion.div
-          key={activeGift.name + Date.now()}
+          key={activeGift.name + "-" + Date.now()}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[60] pointer-events-none"
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 z-[60] pointer-events-none flex items-center justify-center"
         >
-          {/* Semi-transparent pulse flash on enter */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0.15, 0] }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="absolute inset-0 bg-amber-500/20"
-          />
+          {/* Video layer — full screen, blended so stream shows through */}
+          {hasVideo && (
+            <video
+              ref={videoRef}
+              onEnded={handleVideoEnded}
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ mixBlendMode: "screen" }}
+            />
+          )}
 
-          {/* Main gift animation — centered, floating, see-through */}
-          <div className="absolute inset-0 flex items-center justify-center">
+          {/* Fallback: static gift image animation (only when no video) */}
+          {!hasVideo && giftImages[activeGift.name] && (
             <motion.div
               initial={{ scale: 0.3, opacity: 0, y: 60 }}
-              animate={
-                phase === "exit"
-                  ? { scale: 0.5, opacity: 0, y: -100 }
-                  : { scale: 1, opacity: 1, y: 0 }
-              }
-              transition={
-                phase === "exit"
-                  ? { duration: 0.5, ease: "easeIn" }
-                  : { type: "spring", damping: 12, stiffness: 200 }
-              }
-              className="relative flex flex-col items-center"
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.5, opacity: 0, y: -80 }}
+              transition={{ type: "spring", damping: 12, stiffness: 200 }}
+              className="relative"
             >
-              {/* Glow ring behind gift */}
               <motion.div
-                className="absolute w-44 h-44 rounded-full"
+                className="absolute -inset-8 rounded-full"
                 style={{
-                  background: "radial-gradient(circle, hsla(45, 100%, 60%, 0.25) 0%, transparent 70%)",
+                  background: "radial-gradient(circle, hsla(45, 100%, 60%, 0.3) 0%, transparent 70%)",
                 }}
-                animate={{
-                  scale: [1, 1.3, 1],
-                  opacity: [0.5, 0.8, 0.5],
-                }}
+                animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0.8, 0.4] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               />
-
-              {/* Gift image */}
-              {giftImages[activeGift.name] ? (
-                <motion.img
-                  src={giftImages[activeGift.name]}
-                  alt={activeGift.name}
-                  className="w-32 h-32 object-contain drop-shadow-[0_0_20px_rgba(255,200,0,0.5)] relative z-10"
-                  animate={{
-                    y: [0, -12, 0],
-                    rotate: [0, 3, -3, 0],
-                    scale: [1, 1.08, 1],
-                  }}
-                  transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                />
-              ) : (
-                <motion.span
-                  className="text-[90px] relative z-10"
-                  animate={{ y: [0, -12, 0], scale: [1, 1.08, 1] }}
-                  transition={{ duration: 1.2, repeat: Infinity }}
-                >
-                  🎁
-                </motion.span>
-              )}
+              <motion.img
+                src={giftImages[activeGift.name]}
+                alt={activeGift.name}
+                className="w-36 h-36 object-contain drop-shadow-[0_0_30px_rgba(255,200,0,0.6)] relative z-10"
+                animate={{
+                  y: [0, -14, 0],
+                  rotate: [0, 4, -4, 0],
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+              />
             </motion.div>
-          </div>
+          )}
 
-          {/* Sender banner — slides in from left like BIGO */}
+          {/* Sender banner — slides in from left */}
           <motion.div
             initial={{ x: -300, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
-            transition={{ type: "spring", damping: 20, stiffness: 200, delay: 0.15 }}
+            transition={{ type: "spring", damping: 20, stiffness: 200, delay: 0.2 }}
             className="absolute top-1/3 left-0"
           >
-            <div className="flex items-center gap-2.5 bg-gradient-to-r from-black/70 via-black/50 to-transparent pl-3 pr-8 py-2.5 rounded-r-full backdrop-blur-sm">
+            <div className="flex items-center gap-2.5 bg-gradient-to-r from-black/80 via-black/50 to-transparent pl-3 pr-10 py-3 rounded-r-full backdrop-blur-md">
               {giftImages[activeGift.name] && (
                 <img
                   src={giftImages[activeGift.name]}
                   alt=""
-                  className="w-9 h-9 object-contain"
+                  className="w-10 h-10 object-contain"
                 />
               )}
               <div>
-                <p className="text-white text-xs font-bold leading-tight">
+                <p className="text-white text-sm font-bold leading-tight">
                   {activeGift.senderName || "Someone"}
                 </p>
-                <p className="text-amber-400 text-[11px] font-semibold leading-tight">
+                <p className="text-amber-400 text-xs font-semibold leading-tight">
                   sent {activeGift.name} 💎 {activeGift.coins.toLocaleString()}
                 </p>
               </div>
             </div>
           </motion.div>
 
-          {/* Floating sparkles — scattered around the gift */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {sparkles.map((s) => (
-              <motion.div
-                key={s.id}
-                initial={{
-                  left: `${s.x}%`,
-                  top: `${s.y}%`,
-                  opacity: 0,
-                  scale: 0,
-                }}
-                animate={{
-                  opacity: [0, 1, 1, 0],
-                  scale: [0, 1.2, 0.8, 0],
-                  y: [0, -40 - Math.random() * 60],
-                  x: [-10 + Math.random() * 20],
-                }}
-                transition={{
-                  duration: s.duration,
-                  delay: s.delay,
-                  ease: "easeOut",
-                }}
-                className="absolute"
-                style={{
-                  width: s.size,
-                  height: s.size,
-                  background: s.color,
-                  borderRadius: "50%",
-                  boxShadow: `0 0 ${s.size * 2}px ${s.color}`,
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Combo counter effect (appears briefly) */}
+          {/* Combo counter */}
           <motion.div
             initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: [0, 1.3, 1], opacity: [0, 1, 1, 0] }}
-            transition={{ duration: 1.5, delay: 0.5 }}
-            className="absolute top-[45%] right-8"
+            animate={{ scale: [0, 1.4, 1], opacity: [0, 1, 1, 0] }}
+            transition={{ duration: 2, delay: 0.5 }}
+            className="absolute top-[42%] right-8"
           >
-            <span className="text-amber-400 text-4xl font-black drop-shadow-[0_0_10px_rgba(255,200,0,0.6)]"
-              style={{ WebkitTextStroke: "1px rgba(255,255,255,0.3)" }}
+            <span
+              className="text-amber-400 text-5xl font-black drop-shadow-[0_0_15px_rgba(255,200,0,0.7)]"
+              style={{ WebkitTextStroke: "1.5px rgba(255,255,255,0.3)" }}
             >
               ×1
             </span>
