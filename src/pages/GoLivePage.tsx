@@ -242,6 +242,31 @@ export default function GoLivePage() {
     return () => cancelAnimationFrame(raf);
   }, [phase]);
 
+  // Simulate random viewer gifts every 15-30s
+  useEffect(() => {
+    if (phase !== "live") return;
+    const giftNames = ["Baby Dragon", "Cute Panda", "Crystal Unicorn", "Lucky Cat", "Phoenix Rising", "Diamond Bear"];
+    const giftCoins = [1, 1, 10, 1, 50, 99];
+    const viewers = ["Luna", "Kai", "Mia", "Nora", "Zara", "Leo", "Aria"];
+    let timerRef: ReturnType<typeof setTimeout>;
+    const scheduleNext = () => {
+      const delay = 15000 + Math.random() * 15000;
+      timerRef = setTimeout(() => {
+        const idx = Math.floor(Math.random() * giftNames.length);
+        const sender = viewers[Math.floor(Math.random() * viewers.length)];
+        const notif = { id: Date.now().toString(), sender, giftName: giftNames[idx], coins: giftCoins[idx] };
+        setViewerGiftNotif(notif);
+        setGiftsReceived((p) => p + 1);
+        setCoinsEarned((p) => p + giftCoins[idx]);
+        playGiftSound(1);
+        setTimeout(() => setViewerGiftNotif((cur) => cur?.id === notif.id ? null : cur), 4000);
+        scheduleNext();
+      }, delay);
+    };
+    scheduleNext();
+    return () => clearTimeout(timerRef);
+  }, [phase]);
+
   const endStream = useCallback(() => {
     setPhase("ended");
     streamRef.current?.getTracks().forEach((t) => t.stop());
