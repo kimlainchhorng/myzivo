@@ -50,21 +50,8 @@ export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAni
     if (!activeGift) return;
 
     const hasVideo = !!giftAnimationVideos[activeGift.name];
-
-    if (hasVideo) {
-      // Play video as accent background, auto-dismiss on end or 5s
-      requestAnimationFrame(() => {
-        const vid = videoRef.current;
-        if (vid) {
-          vid.src = giftAnimationVideos[activeGift.name];
-          vid.currentTime = 0;
-          vid.play().catch(() => {});
-        }
-      });
-      timeoutRef.current = setTimeout(dismiss, 5000);
-    } else {
-      timeoutRef.current = setTimeout(dismiss, 3500);
-    }
+    // Premium gifts (with video) get longer display time
+    timeoutRef.current = setTimeout(dismiss, hasVideo ? 4500 : 3500);
 
     return () => {
       if (timeoutRef.current) {
