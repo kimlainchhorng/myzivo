@@ -556,7 +556,9 @@ export default function ReelsFeedPage() {
       allItems.sort((a: any, b: any) => (b._feedScore || 0) - (a._feedScore || 0));
       return allItems;
     },
-    staleTime: 30_000,
+    staleTime: 2 * 60_000, // 2 min — avoid refetching on every mount
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {

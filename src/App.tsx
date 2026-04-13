@@ -412,7 +412,9 @@ const BestTimeToBook = lazy(() => import("./pages/guides/BestTimeToBook"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
+      staleTime: 60_000, // 1 min default — reduce unnecessary refetches
+      gcTime: 5 * 60_000, // keep cache 5 min
+      refetchOnWindowFocus: false, // don't refetch every tab switch
       retry: (failureCount, error) => {
         const info = categorizeError(error);
         if (info.type === "auth") return false;
