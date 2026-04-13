@@ -161,6 +161,8 @@ interface ChatMessageBubbleProps {
   messageType?: string;
   senderId?: string;
   lockedPriceCents?: number | null;
+  /** Pre-loaded reactions from parent (avoids N+1 queries) */
+  initialReactions?: { emoji: string; count: number; hasMyReaction: boolean }[];
   onReply: (id: string, message: string, isMe: boolean) => void;
   onDelete: (id: string) => void;
   onForward?: (id: string, message: string) => void;
@@ -169,6 +171,7 @@ interface ChatMessageBubbleProps {
 
 const ChatMessageBubble = memo(function ChatMessageBubble({
   id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt, messageType, senderId, lockedPriceCents,
+  initialReactions,
   onReply, onDelete, onForward, onPin,
 }: ChatMessageBubbleProps) {
   const { user } = useAuth();
