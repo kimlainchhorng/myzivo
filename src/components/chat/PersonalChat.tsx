@@ -228,20 +228,22 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     });
   }, []);
 
+  const timelineLengthRef = useRef(0);
+
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     isNearBottomRef.current = distanceFromBottom < 150;
 
-    if (el.scrollTop < 120 && timeline.length > visibleTimelineCount && !expandingTimelineRef.current) {
+    if (el.scrollTop < 120 && timelineLengthRef.current > visibleTimelineCount && !expandingTimelineRef.current) {
       expandingTimelineRef.current = true;
-      setVisibleTimelineCount((prev) => Math.min(prev + VISIBLE_TIMELINE_STEP, timeline.length));
+      setVisibleTimelineCount((prev) => Math.min(prev + VISIBLE_TIMELINE_STEP, timelineLengthRef.current));
       requestAnimationFrame(() => {
         expandingTimelineRef.current = false;
       });
     }
-  }, [timeline.length, visibleTimelineCount]);
+  }, [visibleTimelineCount]);
 
   useEffect(() => {
     const scroller = scrollRef.current;
@@ -792,6 +794,27 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     inputRef.current?.focus();
   }, [recipientId, scrollToBottom, sendChatPush, sending, user?.id]);
 
+  // Pinned messages
+  const pinnedMessages = useMemo(() => messages.filter((m) => m.is_pinned), [messages]);
+
+  const messageMap = useMemo(() => {
+    return new Map(messages.map((message) => [message.id, message]));
+  }, [messages]);
+
+  // Memoize merged + sorted timeline to avoid re-sorting on every render
+  const timeline = useMemo<TimelineItem[]>(() => {
+    return [...messages, ...callEvents].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+  }, [messages, callEvents]);
+
+  // Keep ref in sync for handleScroll
+  useEffect(() => { timelineLengthRef.current = timeline.length; }, [timeline.length]);
+
+  const visibleTimeline = useMemo(() => {
+    return timeline.slice(-visibleTimelineCount);
+  }, [timeline, visibleTimelineCount]);
+
   const scrollToMessage = useCallback((id: string) => {
     const index = timeline.findIndex((item) => !isCallEvent(item) && item.id === id);
     if (index >= 0) {
@@ -808,24 +831,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       }
     });
   }, [timeline]);
-
-  // Pinned messages
-  const pinnedMessages = useMemo(() => messages.filter((m) => m.is_pinned), [messages]);
-
-  const messageMap = useMemo(() => {
-    return new Map(messages.map((message) => [message.id, message]));
-  }, [messages]);
-
-  // Memoize merged + sorted timeline to avoid re-sorting on every render
-  const timeline = useMemo<TimelineItem[]>(() => {
-    return [...messages, ...callEvents].sort(
-      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    );
-  }, [messages, callEvents]);
-
-  const visibleTimeline = useMemo(() => {
-    return timeline.slice(-visibleTimelineCount);
-  }, [timeline, visibleTimelineCount]);
 
   const latestMissedCall = useMemo(() => {
     return [...callEvents]
