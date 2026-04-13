@@ -513,16 +513,16 @@ const AppHome = () => {
         <div className="px-5 space-y-8">
 
           {/* ─── LIVE TRIP TRACKER ─── */}
-          <LiveTripTracker />
+          <Suspense fallback={null}><LiveTripTracker /></Suspense>
 
           {/* ─── TRENDING NEAR YOU (AI) ─── */}
-          <TrendingNearYou />
+          <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/30 animate-pulse" />}><TrendingNearYou /></Suspense>
 
           {/* ─── QUICK REORDER CAROUSEL ─── */}
-          <QuickReorderCarousel />
+          <Suspense fallback={null}><QuickReorderCarousel /></Suspense>
 
           {/* ─── PRICE ALERTS WIDGET ─── */}
-          <PriceAlertsWidget />
+          <Suspense fallback={null}><PriceAlertsWidget /></Suspense>
 
           {/* ─── ORDER AGAIN ─── */}
           {user && orderAgain.length > 0 && (
