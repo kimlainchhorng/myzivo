@@ -37,6 +37,8 @@ export default defineConfig(({ mode }) => ({
           ],
           "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
           "vendor-maps": ["@react-google-maps/api"],
+          "vendor-dates": ["date-fns"],
+          "vendor-carousel": ["embla-carousel-react", "embla-carousel-autoplay"],
         },
       },
     },
