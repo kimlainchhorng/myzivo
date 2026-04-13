@@ -3,13 +3,14 @@
  * Full-width cards with author info, media, captions, and engagement
  * Everyone can post photos/videos that show up here
  */
+import { lazy, Suspense } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import UnifiedShareSheet from "@/components/shared/ShareSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import NavBar from "@/components/home/NavBar";
-import TipSheet from "@/components/social/TipSheet";
+const TipSheet = lazy(() => import("@/components/social/TipSheet"));
 import {
   Loader2, Heart, MessageCircle, Share2, Eye, Bookmark,
   MoreHorizontal, Play, Volume2, VolumeX, Image as ImageIcon,
