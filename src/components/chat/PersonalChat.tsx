@@ -1131,8 +1131,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                     )}
                   </div>
                 );
-            })
-            })()}
+            })}
 
             {/* Typing indicator — 2026 style */}
             {recipientTyping && (
