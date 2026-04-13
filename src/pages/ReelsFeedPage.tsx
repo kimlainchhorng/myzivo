@@ -1471,36 +1471,38 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       {/* Share Sheet */}
       <AnimatePresence>
         {showShareSheet && (
-           <Suspense fallback={null}><UnifiedShareSheet
-            shareUrl={shareUrl}
-            shareText={item.caption || `Check out this post by ${item.author_name}`}
-            shareMediaUrl={mediaUrl}
-            shareMediaType={item.media_type === "video" ? "video" : "image"}
-            sharePostId={item.shared_from_post_id ? item.shared_from_post_id : item.id.replace(/^u-/, "")}
-            sharePostAuthorId={item.shared_from_user_id || item.author_id}
-            sharePostAuthorName={item.shared_from_user_name || item.author_name}
-            onClose={() => setShowShareSheet(false)}
-            positioning="absolute"
-            zIndex={80}
-            onVisitProfile={() => {
-              onClose();
-              const isShared = !!item.shared_from_post_id;
-              const profileSource = isShared && item.shared_from_source ? item.shared_from_source : item.source;
-              const profileStoreSlug = isShared && item.shared_from_store_slug ? item.shared_from_store_slug : item.store_slug;
-              const profileAuthorId = isShared && item.shared_from_user_id ? item.shared_from_user_id : item.author_id;
+           <Suspense fallback={null}>
+             <UnifiedShareSheet
+              shareUrl={shareUrl}
+              shareText={item.caption || `Check out this post by ${item.author_name}`}
+              shareMediaUrl={mediaUrl}
+              shareMediaType={item.media_type === "video" ? "video" : "image"}
+              sharePostId={item.shared_from_post_id ? item.shared_from_post_id : item.id.replace(/^u-/, "")}
+              sharePostAuthorId={item.shared_from_user_id || item.author_id}
+              sharePostAuthorName={item.shared_from_user_name || item.author_name}
+              onClose={() => setShowShareSheet(false)}
+              positioning="absolute"
+              zIndex={80}
+              onVisitProfile={() => {
+                onClose();
+                const isShared = !!item.shared_from_post_id;
+                const profileSource = isShared && item.shared_from_source ? item.shared_from_source : item.source;
+                const profileStoreSlug = isShared && item.shared_from_store_slug ? item.shared_from_store_slug : item.store_slug;
+                const profileAuthorId = isShared && item.shared_from_user_id ? item.shared_from_user_id : item.author_id;
 
-              if (profileSource === "store" && profileStoreSlug) {
-                navigate(`/grocery/shop/${profileStoreSlug}`);
-              } else if (profileAuthorId) {
-                navigate(`/user/${profileAuthorId}`);
-              }
-            }}
-            visitProfileLabel={(() => {
-              const isShared = !!item.shared_from_post_id;
-              const displayName = isShared && item.shared_from_user_name ? item.shared_from_user_name : item.author_name;
-              return displayName || "Visit Profile";
-            })()}
-          />
+                if (profileSource === "store" && profileStoreSlug) {
+                  navigate(`/grocery/shop/${profileStoreSlug}`);
+                } else if (profileAuthorId) {
+                  navigate(`/user/${profileAuthorId}`);
+                }
+              }}
+              visitProfileLabel={(() => {
+                const isShared = !!item.shared_from_post_id;
+                const displayName = isShared && item.shared_from_user_name ? item.shared_from_user_name : item.author_name;
+                return displayName || "Visit Profile";
+              })()}
+            />
+           </Suspense>
         )}
       </AnimatePresence>
       {/* Unfollow confirm dialog */}
