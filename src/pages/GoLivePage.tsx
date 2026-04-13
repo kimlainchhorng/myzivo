@@ -624,9 +624,6 @@ export default function GoLivePage() {
             </button>
             {giftsReceived > 0 && <span className="text-yellow-300 text-[10px] -mt-1 font-medium">{giftsReceived}</span>}
 
-            <button onClick={() => { navigator.share?.({ title: `Watch ${title} live on ZIVO!`, url: window.location.href }).catch(() => {}); }} className="w-12 h-12 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center border border-white/5">
-              <Share2 className="h-5 w-5 text-white/70" />
-            </button>
           </div>
 
           {/* Quick reaction bar */}
