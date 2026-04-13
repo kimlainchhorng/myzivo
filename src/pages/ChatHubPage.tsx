@@ -5,25 +5,53 @@
  */
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft, Trash2, X, Bell, Users, Plus, Edit3, Check, CheckCheck, Image as ImageIcon, Mic, MapPin, Phone, Video } from "lucide-react";
-import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
+import MessageCircleIcon from "lucide-react/dist/esm/icons/message-circle";
+import StoreIcon from "lucide-react/dist/esm/icons/store";
+import Headphones from "lucide-react/dist/esm/icons/headphones";
+import Car from "lucide-react/dist/esm/icons/car";
+import Search from "lucide-react/dist/esm/icons/search";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import X from "lucide-react/dist/esm/icons/x";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import Users from "lucide-react/dist/esm/icons/users";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import Edit3 from "lucide-react/dist/esm/icons/edit-3";
+import Check from "lucide-react/dist/esm/icons/check";
+import CheckCheck from "lucide-react/dist/esm/icons/check-check";
+import ImageIcon from "lucide-react/dist/esm/icons/image";
+import Mic from "lucide-react/dist/esm/icons/mic";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Phone from "lucide-react/dist/esm/icons/phone";
+import Video from "lucide-react/dist/esm/icons/video";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import GroupChat from "@/components/chat/GroupChat";
-import CreateGroupModal from "@/components/chat/CreateGroupModal";
 import { withRedirectParam } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, isToday, isYesterday } from "date-fns";
-import ChatStories from "@/components/chat/ChatStories";
 import { toast } from "sonner";
-import StoreLiveChat from "@/components/grocery/StoreLiveChat";
-import PersonalChat from "@/components/chat/PersonalChat";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useCallback } from "react";
 import { assessChatMessageRisk, sanitizeOutgoingMessage } from "@/lib/security/chatContentSafety";
 import { validateExternalUrl } from "@/lib/urlSafety";
+
+// Lazy-load heavy sub-pages/components
+const GroupChat = lazy(() => import("@/components/chat/GroupChat"));
+const CreateGroupModal = lazy(() => import("@/components/chat/CreateGroupModal"));
+const StoreLiveChat = lazy(() => import("@/components/grocery/StoreLiveChat"));
+const PersonalChat = lazy(() => import("@/components/chat/PersonalChat"));
+const ChatStories = lazy(() => import("@/components/chat/ChatStories"));
+
+// Lazy-load sticker packs config (300+ PNG imports)
+let _illustratedPacks: any[] | null = null;
+const getIllustratedPacks = () => {
+  if (_illustratedPacks) return _illustratedPacks;
+  import("@/config/illustratedStickers").then(m => { _illustratedPacks = m.ILLUSTRATED_PACKS; });
+  return [];
+};
 
 type ChatCategory = "personal" | "shop" | "support" | "ride";
 

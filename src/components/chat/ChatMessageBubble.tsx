@@ -3,7 +3,7 @@
  * Features: long-press actions (reply/delete/copy/forward/pin), swipe-to-reply, emoji reactions, image/video display
  * Design: Glassmorphic iMessage aesthetic with gradient bubbles, tail shapes, and depth effects
  */
-import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo, lazy, Suspense } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Reply from "lucide-react/dist/esm/icons/reply";
@@ -31,11 +31,14 @@ import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { openExternalUrl } from "@/lib/openExternalUrl";
 import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
-import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
-import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
-import { TransparentStickerVideo } from "./TransparentStickerVideo";
-import { getStickerMotionSpec } from "./stickerMotion";
 
+// Lazy-load heavy sticker configs — these contain 300+ PNG imports and 60+ asset JSON imports
+const loadIllustratedPacks = () => import("@/config/illustratedStickers").then(m => m.ILLUSTRATED_PACKS);
+const loadAnimatedStickerUrl = () => import("@/config/animatedStickerMap").then(m => m.getAnimatedStickerUrl);
+const loadStickerMotion = () => import("./stickerMotion").then(m => m.getStickerMotionSpec);
+
+// Lazy-load TransparentStickerVideo — heavy chroma-key/WebGL component
+const TransparentStickerVideo = lazy(() => import("./TransparentStickerVideo").then(m => ({ default: m.TransparentStickerVideo })));
 const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "🎉", "😍"];
 
 type ParsedStickerMessage = {
