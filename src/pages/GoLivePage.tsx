@@ -278,7 +278,7 @@ export default function GoLivePage() {
     // Trigger full-screen gift animation
     setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
     
-    setShowGiftPanel(false);
+    // Gift panel stays open — user closes manually with X
   }, [spawnFloatingReaction]);
 
   // ── Ended screen ──
