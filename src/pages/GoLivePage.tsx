@@ -1,15 +1,17 @@
 /**
  * GoLivePage — Broadcast a live stream with camera, title, and chat
+ * Premium 2026 redesign with enhanced visuals
  */
-import { useState, useRef, useEffect, useCallback, memo, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Radio, Camera, CameraOff, Mic, MicOff, RotateCcw,
-  Users, Heart, Send, Share2, X, Sparkles, Zap, Gift
+  Users, Heart, Send, Share2, X, Sparkles, Zap, Gift, Eye,
+  Shield, Wifi, WifiOff, Crown, Star, Volume2, VolumeX,
+  MessageCircle, Trophy, TrendingUp, Clock, Flame
 } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -33,15 +35,20 @@ export default function GoLivePage() {
   const [micOn, setMicOn] = useState(true);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [viewerCount, setViewerCount] = useState(0);
+  const [peakViewers, setPeakViewers] = useState(0);
   const [likes, setLikes] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean }[]>([]);
+  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; avatar?: string }[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [cameraError, setCameraError] = useState(false);
   const [showGiftPanel, setShowGiftPanel] = useState(false);
   const [floatingReactions, setFloatingReactions] = useState<{ id: string; emoji: string; x: number }[]>([]);
   const [giftsReceived, setGiftsReceived] = useState(0);
   const [giftTab, setGiftTab] = useState<"gifts" | "interactive" | "exclusive">("gifts");
+  const [beautyMode, setBeautyMode] = useState(false);
+  const [showChat, setShowChat] = useState(true);
+  const [streamQuality, setStreamQuality] = useState<"HD" | "SD">("HD");
+  const [coinsEarned, setCoinsEarned] = useState(0);
 
   const allGifts = useMemo(() => ({
     gifts: [
@@ -94,7 +101,20 @@ export default function GoLivePage() {
 
   const quickReactions = useMemo(() => ["❤️", "🔥", "😍", "👏", "😂", "🎵", "💯", "✨"], []);
 
-  const topics = useMemo(() => ["General", "Music", "Gaming", "Cooking", "Tech", "Fitness", "Art", "Travel", "Fashion", "Comedy"], []);
+  const topicConfig = useMemo(() => [
+    { name: "General", icon: "🌐" },
+    { name: "Music", icon: "🎵" },
+    { name: "Gaming", icon: "🎮" },
+    { name: "Cooking", icon: "🍳" },
+    { name: "Tech", icon: "💻" },
+    { name: "Fitness", icon: "💪" },
+    { name: "Art", icon: "🎨" },
+    { name: "Travel", icon: "✈️" },
+    { name: "Fashion", icon: "👗" },
+    { name: "Comedy", icon: "😂" },
+    { name: "Education", icon: "📚" },
+    { name: "Sports", icon: "⚽" },
+  ], []);
 
   // Start camera
   const startCamera = useCallback(async () => {
@@ -103,7 +123,7 @@ export default function GoLivePage() {
         streamRef.current.getTracks().forEach((t) => t.stop());
       }
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode },
+        video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: true,
       });
       streamRef.current = stream;
@@ -113,7 +133,6 @@ export default function GoLivePage() {
       setCameraError(false);
     } catch {
       setCameraError(true);
-      console.warn("Camera access denied or unavailable");
     }
   }, [facingMode]);
 
@@ -124,42 +143,39 @@ export default function GoLivePage() {
     };
   }, [startCamera]);
 
-  // Toggle camera
-  const toggleCamera = () => {
+  const toggleCamera = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getVideoTracks().forEach((t) => (t.enabled = !t.enabled));
       setCameraOn((p) => !p);
     }
-  };
+  }, []);
 
-  // Toggle mic
-  const toggleMic = () => {
+  const toggleMic = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getAudioTracks().forEach((t) => (t.enabled = !t.enabled));
       setMicOn((p) => !p);
     }
-  };
+  }, []);
 
-  // Flip camera
-  const flipCamera = () => {
+  const flipCamera = useCallback(() => {
     setFacingMode((p) => (p === "user" ? "environment" : "user"));
-  };
+  }, []);
 
-  // Go live
-  const goLive = () => {
+  const goLive = useCallback(() => {
     if (!title.trim()) {
       toast.error("Please add a title for your stream");
       return;
     }
     setPhase("live");
     toast.success("You're live! 🔴");
-  };
+  }, [title]);
 
-  // Simulate viewers & likes while live — use single rAF-based loop instead of 4 setIntervals
+  // Simulate viewers & likes
   useEffect(() => {
     if (phase !== "live") return;
-    const names = ["Alex", "Jordan", "Sam", "Taylor", "Morgan", "Riley", "Casey"];
-    const msgs = ["🔥🔥🔥", "This is amazing!", "Hello from NYC!", "Love this!", "First time here ❤️", "Keep going!", "Wow 😍", "👏👏👏"];
+    const names = ["Alex", "Jordan", "Sam", "Taylor", "Morgan", "Riley", "Casey", "Mia", "Luna", "Kai"];
+    const msgs = ["🔥🔥🔥", "This is amazing!", "Hello from NYC!", "Love this!", "First time here ❤️", "Keep going!", "Wow 😍", "👏👏👏", "You're amazing!", "Can't stop watching 🤩"];
+    const avatarColors = ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500", "bg-cyan-500"];
 
     let lastViewer = 0, lastLike = 0, lastElapsed = 0, lastChat = 0;
     let raf: number;
@@ -173,7 +189,9 @@ export default function GoLivePage() {
       if (now - lastViewer >= 3000) {
         setViewerCount((p) => {
           const delta = Math.random() > 0.4 ? Math.floor(Math.random() * 3) : -Math.floor(Math.random() * 2);
-          return Math.max(0, p + delta);
+          const next = Math.max(0, p + delta);
+          setPeakViewers((pk) => Math.max(pk, next));
+          return next;
         });
         lastViewer = now;
       }
@@ -181,11 +199,17 @@ export default function GoLivePage() {
         if (Math.random() > 0.5) setLikes((p) => p + 1);
         lastLike = now;
       }
-      if (now - lastChat >= 4000) {
-        if (Math.random() > 0.6) {
+      if (now - lastChat >= 3500) {
+        if (Math.random() > 0.5) {
+          const name = names[Math.floor(Math.random() * names.length)];
           setChatMessages((prev) => [
             ...prev.slice(-20),
-            { id: now.toString(), user: names[Math.floor(Math.random() * names.length)], text: msgs[Math.floor(Math.random() * msgs.length)] },
+            {
+              id: now.toString(),
+              user: name,
+              text: msgs[Math.floor(Math.random() * msgs.length)],
+              avatar: avatarColors[Math.floor(Math.random() * avatarColors.length)]
+            },
           ]);
         }
         lastChat = now;
@@ -196,24 +220,25 @@ export default function GoLivePage() {
     return () => cancelAnimationFrame(raf);
   }, [phase]);
 
-  // End stream
-  const endStream = () => {
+  const endStream = useCallback(() => {
     setPhase("ended");
     streamRef.current?.getTracks().forEach((t) => t.stop());
-    toast("Stream ended", { description: `Duration: ${formatTime(elapsed)} · ${viewerCount} viewers` });
-  };
+    toast("Stream ended", { description: `Duration: ${formatTime(elapsed)} · ${peakViewers} peak viewers` });
+  }, [elapsed, peakViewers]);
 
   const formatTime = (s: number) => {
-    const m = Math.floor(s / 60);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
     const sec = s % 60;
+    if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
     return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
   };
 
-  const sendChat = () => {
+  const sendChat = useCallback(() => {
     if (!chatInput.trim()) return;
-    setChatMessages((prev) => [...prev.slice(-20), { id: Date.now().toString(), user: "You (Host)", text: chatInput }]);
+    setChatMessages((prev) => [...prev.slice(-20), { id: Date.now().toString(), user: "You (Host)", text: chatInput, avatar: "bg-red-500" }]);
     setChatInput("");
-  };
+  }, [chatInput]);
 
   const spawnFloatingReaction = useCallback((emoji: string) => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -229,12 +254,13 @@ export default function GoLivePage() {
 
   const sendGift = useCallback((gift: { icon: string; name: string; coins: number }) => {
     setGiftsReceived((p) => p + 1);
+    setCoinsEarned((p) => p + gift.coins);
     spawnFloatingReaction(gift.icon);
     const senders = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
     const sender = senders[Math.floor(Math.random() * senders.length)];
     setChatMessages((prev) => [
       ...prev.slice(-20),
-      { id: Date.now().toString(), user: sender, text: `sent ${gift.icon} ${gift.name} (${gift.coins} coins)`, isGift: true },
+      { id: Date.now().toString(), user: sender, text: `sent ${gift.icon} ${gift.name} (${gift.coins} coins)`, isGift: true, avatar: "bg-amber-500" },
     ]);
     toast(`${gift.icon} ${gift.name} sent!`, { description: `${gift.coins} coins` });
     setShowGiftPanel(false);
@@ -243,35 +269,68 @@ export default function GoLivePage() {
   // ── Ended screen ──
   if (phase === "ended") {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="space-y-6">
-          <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
-            <Radio className="h-10 w-10 text-red-500" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">Stream Ended</h1>
-          <div className="flex gap-5 justify-center text-center flex-wrap">
-            <div>
-              <p className="text-2xl font-bold text-foreground">{formatTime(elapsed)}</p>
-              <p className="text-xs text-muted-foreground">Duration</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{viewerCount}</p>
-              <p className="text-xs text-muted-foreground">Peak Viewers</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{likes}</p>
-              <p className="text-xs text-muted-foreground">Reactions</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{giftsReceived}</p>
-              <p className="text-xs text-muted-foreground">Gifts</p>
+      <div className="min-h-screen bg-gradient-to-b from-zinc-900 via-black to-zinc-900 flex flex-col items-center justify-center p-6 text-center">
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", damping: 20 }} className="space-y-6 w-full max-w-sm">
+          {/* Animated success icon */}
+          <div className="relative mx-auto w-24 h-24">
+            <div className="absolute inset-0 rounded-full bg-red-500/20 animate-ping" />
+            <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/30">
+              <Radio className="h-10 w-10 text-white" />
             </div>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={() => navigate("/live")} className="rounded-full flex-1">
+
+          <div>
+            <h1 className="text-2xl font-bold text-white">Stream Ended</h1>
+            <p className="text-white/50 text-sm mt-1">{title || "Untitled Stream"}</p>
+          </div>
+
+          {/* Stats grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <Clock className="h-5 w-5 text-blue-400 mx-auto mb-1" />
+              <p className="text-xl font-bold text-white">{formatTime(elapsed)}</p>
+              <p className="text-[10px] text-white/40 uppercase tracking-wider">Duration</p>
+            </div>
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <Eye className="h-5 w-5 text-green-400 mx-auto mb-1" />
+              <p className="text-xl font-bold text-white">{peakViewers}</p>
+              <p className="text-[10px] text-white/40 uppercase tracking-wider">Peak Viewers</p>
+            </div>
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <Heart className="h-5 w-5 text-red-400 mx-auto mb-1" />
+              <p className="text-xl font-bold text-white">{likes}</p>
+              <p className="text-[10px] text-white/40 uppercase tracking-wider">Reactions</p>
+            </div>
+            <div className="bg-gradient-to-br from-amber-500/20 to-yellow-500/10 rounded-2xl p-4 border border-amber-500/20">
+              <Trophy className="h-5 w-5 text-amber-400 mx-auto mb-1" />
+              <p className="text-xl font-bold text-amber-300">{coinsEarned}</p>
+              <p className="text-[10px] text-amber-400/60 uppercase tracking-wider">Coins Earned</p>
+            </div>
+          </div>
+
+          {/* Engagement summary */}
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-white/50">Gifts Received</span>
+              <span className="text-sm font-semibold text-white">{giftsReceived} 🎁</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-white/50">Chat Messages</span>
+              <span className="text-sm font-semibold text-white">{chatMessages.length} 💬</span>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button variant="outline" onClick={() => navigate("/live")} className="rounded-full flex-1 border-white/20 text-white hover:bg-white/10">
               Back to Live
             </Button>
-            <Button onClick={() => { setPhase("setup"); setElapsed(0); setViewerCount(0); setLikes(0); setChatMessages([]); startCamera(); }} className="rounded-full flex-1 bg-red-500 hover:bg-red-600 text-white">
+            <Button
+              onClick={() => {
+                setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); startCamera();
+              }}
+              className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
+            >
               Go Live Again
             </Button>
           </div>
@@ -286,12 +345,17 @@ export default function GoLivePage() {
       {/* Camera preview */}
       <div className="absolute inset-0 z-0">
         {cameraError ? (
-          <div className="w-full h-full bg-gradient-to-br from-violet-900/50 via-black to-rose-900/40 flex items-center justify-center">
-            <div className="text-center space-y-3">
-              <CameraOff className="h-12 w-12 text-white/30 mx-auto" />
-              <p className="text-white/50 text-sm">Camera unavailable</p>
-              <Button size="sm" variant="outline" onClick={startCamera} className="text-white border-white/20">
-                Retry
+          <div className="w-full h-full bg-gradient-to-br from-violet-950/80 via-black to-rose-950/60 flex items-center justify-center">
+            <div className="text-center space-y-4">
+              <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto border border-white/10">
+                <CameraOff className="h-8 w-8 text-white/20" />
+              </div>
+              <div>
+                <p className="text-white/50 text-sm font-medium">Camera unavailable</p>
+                <p className="text-white/30 text-xs mt-1">Check permissions or try another device</p>
+              </div>
+              <Button size="sm" variant="outline" onClick={startCamera} className="text-white border-white/20 rounded-full">
+                <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Retry
               </Button>
             </div>
           </div>
@@ -301,92 +365,205 @@ export default function GoLivePage() {
             autoPlay
             playsInline
             muted
-            className={cn("w-full h-full object-contain bg-black", facingMode === "user" && "scale-x-[-1]")}
+            className={cn(
+              "w-full h-full object-cover bg-black",
+              facingMode === "user" && "scale-x-[-1]",
+              beautyMode && "brightness-105 contrast-[1.02] saturate-[1.1]"
+            )}
           />
         )}
-        {/* Dark overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80" />
+        {/* Cinematic overlays */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/90" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
       </div>
 
       {/* Top bar */}
       <div className="relative z-10 flex items-center gap-2 px-4 pt-3" style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 12px), 12px)" }}>
-        <button onClick={() => { streamRef.current?.getTracks().forEach((t) => t.stop()); phase === "live" ? endStream() : navigate(-1); }} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+        <button
+          onClick={() => { streamRef.current?.getTracks().forEach((t) => t.stop()); phase === "live" ? endStream() : navigate(-1); }}
+          className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10"
+        >
           {phase === "live" ? <X className="h-5 w-5 text-white" /> : <ArrowLeft className="h-5 w-5 text-white" />}
         </button>
 
         {phase === "live" && (
           <>
-            <Badge className="bg-red-500 text-white border-0 gap-1 animate-pulse">
-              <Radio className="h-3 w-3" /> LIVE
-            </Badge>
-            <Badge variant="secondary" className="bg-white/15 text-white border-0 gap-1 backdrop-blur-sm">
-              <Users className="h-3 w-3" /> {viewerCount}
-            </Badge>
-            <span className="text-white/70 text-xs font-mono ml-auto">{formatTime(elapsed)}</span>
+            <div className="flex items-center gap-1.5 bg-red-500 rounded-full px-2.5 py-1 shadow-lg shadow-red-500/30">
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              <span className="text-white text-[10px] font-bold uppercase tracking-wider">Live</span>
+            </div>
+            <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md rounded-full px-2.5 py-1 border border-white/10">
+              <Eye className="h-3 w-3 text-white/70" />
+              <span className="text-white text-xs font-medium">{viewerCount.toLocaleString()}</span>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md rounded-full px-2 py-1 border border-white/10">
+                <Wifi className="h-3 w-3 text-green-400" />
+                <span className="text-white/70 text-[10px] font-medium">{streamQuality}</span>
+              </div>
+              <span className="text-white/70 text-xs font-mono bg-black/40 backdrop-blur-md rounded-full px-2.5 py-1 border border-white/10">
+                {formatTime(elapsed)}
+              </span>
+            </div>
           </>
         )}
       </div>
 
-      {/* Setup form (only in setup phase) */}
+      {/* Live host info bar */}
+      {phase === "live" && (
+        <div className="relative z-10 px-4 mt-3">
+          <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-2xl px-3 py-2 border border-white/5">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-red-500/20">
+              {user?.email?.[0]?.toUpperCase() || "Z"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-sm font-semibold truncate">{title}</p>
+              <div className="flex items-center gap-2">
+                <span className="text-white/40 text-[10px]">{topic}</span>
+                {giftsReceived > 0 && (
+                  <span className="text-amber-300 text-[10px] flex items-center gap-0.5">
+                    <img src={goldCoinIcon} alt="" className="w-3 h-3" /> {coinsEarned}
+                  </span>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => setShowChat((p) => !p)}
+              className={cn("w-8 h-8 rounded-full flex items-center justify-center", showChat ? "bg-white/15" : "bg-white/5")}
+            >
+              <MessageCircle className="h-4 w-4 text-white/60" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Setup form */}
       {phase === "setup" && (
         <div className="relative z-10 flex-1 flex flex-col justify-end p-4 pb-8 space-y-4">
-          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.2 }} className="space-y-4">
-            <div className="bg-black/50 backdrop-blur-xl rounded-2xl p-4 space-y-4 border border-white/10">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="h-4 w-4 text-red-400" />
-                <span className="text-white font-semibold text-sm">Stream Setup</span>
+          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.25 }} className="space-y-4">
+            {/* Stream setup card */}
+            <div className="bg-black/60 backdrop-blur-xl rounded-3xl p-5 space-y-5 border border-white/10 shadow-2xl shadow-black/50">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center">
+                  <Sparkles className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <span className="text-white font-semibold text-sm">Stream Setup</span>
+                  <p className="text-white/30 text-[10px]">Configure your broadcast</p>
+                </div>
               </div>
 
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Give your stream a title..."
-                maxLength={100}
-                className="bg-white/10 border-white/10 text-white placeholder:text-white/40 text-sm rounded-xl"
-              />
+              {/* Title input */}
+              <div className="relative">
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Give your stream a title..."
+                  maxLength={100}
+                  className="bg-white/8 border-white/10 text-white placeholder:text-white/30 text-sm rounded-xl h-11 pl-4 pr-12 focus:border-red-500/50 focus:ring-red-500/20"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 text-[10px]">{title.length}/100</span>
+              </div>
 
-              {/* Topic chips */}
+              {/* Topic chips with icons */}
               <div>
-                <p className="text-white/50 text-xs mb-2">Topic</p>
+                <p className="text-white/40 text-xs mb-2.5 font-medium">Topic</p>
                 <div className="flex flex-wrap gap-2">
-                  {topics.map((t) => (
+                  {topicConfig.map((t) => (
                     <button
-                      key={t}
-                      onClick={() => setTopic(t)}
+                      key={t.name}
+                      onClick={() => setTopic(t.name)}
                       className={cn(
-                        "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
-                        topic === t ? "bg-red-500 text-white" : "bg-white/10 text-white/60 hover:bg-white/20"
+                        "px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1",
+                        topic === t.name
+                          ? "bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg shadow-red-500/20 scale-105"
+                          : "bg-white/8 text-white/50 hover:bg-white/15 hover:text-white/70"
                       )}
                     >
-                      {t}
+                      <span className="text-[10px]">{t.icon}</span> {t.name}
                     </button>
                   ))}
                 </div>
               </div>
+
+              {/* Settings toggles */}
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  onClick={() => setBeautyMode((p) => !p)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+                    beautyMode
+                      ? "bg-gradient-to-r from-pink-500/30 to-purple-500/30 text-pink-300 border border-pink-500/30"
+                      : "bg-white/8 text-white/40 border border-transparent"
+                  )}
+                >
+                  <Sparkles className="h-3 w-3" /> Beauty
+                </button>
+                <button
+                  onClick={() => setStreamQuality((p) => p === "HD" ? "SD" : "HD")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white/8 text-white/40"
+                >
+                  <Wifi className="h-3 w-3" /> {streamQuality}
+                </button>
+                <button
+                  onClick={() => {}}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white/8 text-white/40"
+                >
+                  <Shield className="h-3 w-3" /> Private
+                </button>
+              </div>
             </div>
 
-            {/* Camera controls */}
-            <div className="flex justify-center gap-4">
-              <button onClick={toggleCamera} className={cn("w-12 h-12 rounded-full flex items-center justify-center", cameraOn ? "bg-white/20" : "bg-red-500/60")}>
-                {cameraOn ? <Camera className="h-5 w-5 text-white" /> : <CameraOff className="h-5 w-5 text-white" />}
-              </button>
-              <button onClick={toggleMic} className={cn("w-12 h-12 rounded-full flex items-center justify-center", micOn ? "bg-white/20" : "bg-red-500/60")}>
-                {micOn ? <Mic className="h-5 w-5 text-white" /> : <MicOff className="h-5 w-5 text-white" />}
-              </button>
-              <button onClick={flipCamera} className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                <RotateCcw className="h-5 w-5 text-white" />
-              </button>
+            {/* Camera controls — redesigned */}
+            <div className="flex justify-center gap-5">
+              <div className="flex flex-col items-center gap-1">
+                <button
+                  onClick={toggleCamera}
+                  className={cn(
+                    "w-14 h-14 rounded-2xl flex items-center justify-center transition-all border",
+                    cameraOn
+                      ? "bg-white/15 border-white/20 hover:bg-white/25"
+                      : "bg-red-500/30 border-red-500/40"
+                  )}
+                >
+                  {cameraOn ? <Camera className="h-5 w-5 text-white" /> : <CameraOff className="h-5 w-5 text-red-300" />}
+                </button>
+                <span className="text-[9px] text-white/30">{cameraOn ? "Camera" : "Off"}</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <button
+                  onClick={toggleMic}
+                  className={cn(
+                    "w-14 h-14 rounded-2xl flex items-center justify-center transition-all border",
+                    micOn
+                      ? "bg-white/15 border-white/20 hover:bg-white/25"
+                      : "bg-red-500/30 border-red-500/40"
+                  )}
+                >
+                  {micOn ? <Mic className="h-5 w-5 text-white" /> : <MicOff className="h-5 w-5 text-red-300" />}
+                </button>
+                <span className="text-[9px] text-white/30">{micOn ? "Audio" : "Muted"}</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <button onClick={flipCamera} className="w-14 h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center hover:bg-white/25 transition-all">
+                  <RotateCcw className="h-5 w-5 text-white" />
+                </button>
+                <span className="text-[9px] text-white/30">Flip</span>
+              </div>
             </div>
 
-            {/* Go Live button */}
-            <Button onClick={goLive} className="w-full rounded-full h-12 bg-red-500 hover:bg-red-600 text-white text-base font-bold gap-2 shadow-lg shadow-red-500/30">
+            {/* Go Live button — enhanced */}
+            <Button
+              onClick={goLive}
+              className="w-full rounded-2xl h-14 bg-gradient-to-r from-red-500 via-red-500 to-rose-500 hover:from-red-600 hover:via-red-600 hover:to-rose-600 text-white text-base font-bold gap-2.5 shadow-xl shadow-red-500/30 border-0 transition-all active:scale-[0.98]"
+            >
               <Zap className="h-5 w-5" /> Go Live
             </Button>
           </motion.div>
         </div>
       )}
 
-      {/* Live phase: chat overlay + actions */}
+      {/* Live phase */}
       {phase === "live" && (
         <div className="relative z-10 flex-1 flex flex-col justify-end">
           {/* Floating reactions */}
@@ -405,29 +582,29 @@ export default function GoLivePage() {
           </AnimatePresence>
 
           {/* Side actions */}
-          <div className="absolute right-3 bottom-52 flex flex-col gap-3 items-center z-20">
-            <button onClick={() => sendReaction("❤️")} className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform">
+          <div className="absolute right-3 bottom-56 flex flex-col gap-3 items-center z-20">
+            <button onClick={() => sendReaction("❤️")} className="w-12 h-12 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
               <Heart className="h-5 w-5 text-red-400" />
             </button>
-            <span className="text-white text-[10px] -mt-1">{likes}</span>
+            <span className="text-white text-[10px] -mt-1 font-medium">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>
 
-            <button onClick={() => setShowGiftPanel(true)} className="w-11 h-11 rounded-full bg-gradient-to-br from-amber-500/40 to-yellow-500/40 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform">
+            <button onClick={() => setShowGiftPanel(true)} className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-amber-500/20">
               <Gift className="h-5 w-5 text-yellow-300" />
             </button>
-            {giftsReceived > 0 && <span className="text-yellow-300 text-[10px] -mt-1">{giftsReceived}</span>}
+            {giftsReceived > 0 && <span className="text-yellow-300 text-[10px] -mt-1 font-medium">{giftsReceived}</span>}
 
-            <button onClick={() => { navigator.share?.({ title: `Watch ${title} live on ZIVO!`, url: window.location.href }).catch(() => {}); }} className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-              <Share2 className="h-5 w-5 text-white" />
+            <button onClick={() => { navigator.share?.({ title: `Watch ${title} live on ZIVO!`, url: window.location.href }).catch(() => {}); }} className="w-12 h-12 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center border border-white/5">
+              <Share2 className="h-5 w-5 text-white/70" />
             </button>
           </div>
 
           {/* Quick reaction bar */}
-          <div className="px-4 mb-2 flex gap-1 overflow-x-auto scrollbar-hide">
+          <div className="px-4 mb-2 flex gap-1.5 overflow-x-auto scrollbar-hide">
             {quickReactions.map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => sendReaction(emoji)}
-                className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center shrink-0 active:scale-75 transition-transform text-lg"
+                className="w-10 h-10 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center shrink-0 active:scale-75 transition-transform text-lg border border-white/5"
               >
                 {emoji}
               </button>
@@ -435,23 +612,25 @@ export default function GoLivePage() {
           </div>
 
           {/* Chat messages overlay */}
-          <div className="px-4 mb-2 max-h-[180px] overflow-y-auto space-y-2 pointer-events-none">
-            {chatMessages.slice(-6).map((msg) => (
-              <div
-                key={msg.id}
-                className={cn(
-                  "flex items-center gap-2 rounded-full px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200",
-                  msg.isGift ? "bg-amber-500/20 border border-amber-500/30" : "bg-black/30"
-                )}
-              >
-                <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                  <span className="text-[9px] text-primary font-bold">{msg.user[0]}</span>
+          {showChat && (
+            <div className="px-4 mb-2 max-h-[180px] overflow-y-auto space-y-1.5 pointer-events-none">
+              {chatMessages.slice(-6).map((msg) => (
+                <div
+                  key={msg.id}
+                  className={cn(
+                    "flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200",
+                    msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" : "bg-black/40 backdrop-blur-sm"
+                  )}
+                >
+                  <div className={cn("h-6 w-6 rounded-full flex items-center justify-center shrink-0", msg.avatar || "bg-primary/20")}>
+                    <span className="text-[9px] text-white font-bold">{msg.user[0]}</span>
+                  </div>
+                  <span className="text-xs text-white/80 font-medium">{msg.user}</span>
+                  <span className={cn("text-xs", msg.isGift ? "text-amber-300" : "text-white/90")}>{msg.text}</span>
                 </div>
-                <span className="text-xs text-white/80 font-medium">{msg.user}</span>
-                <span className={cn("text-xs", msg.isGift ? "text-amber-300" : "text-white")}>{msg.text}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Chat input + End button */}
           <div className="px-3 pb-4 flex gap-2 items-center" style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 16px), 16px)" }}>
@@ -459,13 +638,13 @@ export default function GoLivePage() {
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendChat()}
-              placeholder="Comment..."
-              className="bg-white/10 border-white/10 text-white placeholder:text-white/40 text-sm rounded-full flex-1"
+              placeholder="Say something..."
+              className="bg-white/10 border-white/10 text-white placeholder:text-white/30 text-sm rounded-2xl flex-1 h-10 focus:border-white/20"
             />
-            <Button size="icon" onClick={sendChat} className="rounded-full bg-white/15 hover:bg-white/25 shrink-0">
+            <Button size="icon" onClick={sendChat} className="rounded-2xl bg-white/15 hover:bg-white/25 shrink-0 h-10 w-10">
               <Send className="h-4 w-4 text-white" />
             </Button>
-            <Button onClick={endStream} size="sm" variant="destructive" className="rounded-full text-xs font-bold shrink-0">
+            <Button onClick={endStream} size="sm" className="rounded-2xl text-xs font-bold shrink-0 bg-red-500/80 hover:bg-red-500 text-white h-10 px-4">
               End
             </Button>
           </div>
@@ -481,21 +660,26 @@ export default function GoLivePage() {
                 className="absolute bottom-0 left-0 right-0 z-40 bg-zinc-900/98 backdrop-blur-xl rounded-t-3xl border-t border-white/10"
                 style={{ maxHeight: "55vh" }}
               >
+                {/* Handle bar */}
+                <div className="flex justify-center py-2">
+                  <div className="w-10 h-1 rounded-full bg-white/20" />
+                </div>
+
                 {/* Scrolling banner */}
-                <div className="overflow-hidden border-b border-white/5 py-2.5 px-4 flex items-center gap-3">
-                  <Gift className="h-5 w-5 text-white/70 shrink-0" />
+                <div className="overflow-hidden border-b border-white/5 py-2 px-4 flex items-center gap-3">
+                  <Gift className="h-4 w-4 text-amber-400 shrink-0" />
                   <div className="overflow-hidden flex-1">
-                    <p className="text-xs text-white/50 whitespace-nowrap animate-[marquee_8s_linear_infinite]">
+                    <p className="text-xs text-white/40 whitespace-nowrap animate-[marquee_8s_linear_infinite]">
                       Unlock Gifts and Coin rewards with your first purchase &nbsp;&nbsp;&nbsp; Unlock Gifts and Coin rewards with your first purchase
                     </p>
                   </div>
-                  <button onClick={() => setShowGiftPanel(false)} className="text-white/40 text-xs shrink-0">
-                    <X className="h-4 w-4" />
+                  <button onClick={() => setShowGiftPanel(false)} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                    <X className="h-3.5 w-3.5 text-white/60" />
                   </button>
                 </div>
 
                 {/* Gift grid */}
-                <div className="overflow-y-auto px-2 py-3" style={{ maxHeight: "calc(55vh - 100px)" }}>
+                <div className="overflow-y-auto px-2 py-3" style={{ maxHeight: "calc(55vh - 120px)" }}>
                   <div className="grid grid-cols-4 gap-1.5">
                     {allGifts[giftTab].map((gift) => (
                       <button
@@ -505,7 +689,7 @@ export default function GoLivePage() {
                       >
                         {gift.badge && (
                           <span className={cn(
-                            "absolute top-1 right-1 text-[8px] font-bold px-1.5 py-0.5 rounded-full z-10",
+                            "absolute top-1 right-1 text-[7px] font-bold px-1.5 py-0.5 rounded-full z-10",
                             gift.badge === "Popular" ? "bg-pink-500 text-white" :
                             gift.badge === "NEW" ? "bg-red-500 text-white" :
                             gift.badge === "Unlock" ? "bg-pink-500 text-white" :
@@ -539,17 +723,16 @@ export default function GoLivePage() {
                       onClick={() => setGiftTab(tab)}
                       className={cn(
                         "px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors",
-                        giftTab === tab ? "text-white" : "text-white/40"
+                        giftTab === tab ? "text-white bg-white/10" : "text-white/40"
                       )}
                     >
-                      {tab === "gifts" ? "Gifts ↕" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      {tab === "gifts" ? "🎁 Gifts" : tab === "interactive" ? "⚡ Interactive" : "👑 Exclusive"}
                     </button>
                   ))}
                   <div className="flex-1" />
-                  <button className="flex items-center gap-1.5 bg-zinc-800 rounded-full px-4 py-2 border border-white/10">
+                  <button className="flex items-center gap-1.5 bg-gradient-to-r from-amber-600 to-yellow-500 rounded-full px-3.5 py-1.5 shadow-lg shadow-amber-500/20">
                     <span className="text-sm">🪙</span>
-                    <span className="text-xs text-white font-bold">Recharge</span>
-                    <span className="text-white/40 text-xs">›</span>
+                    <span className="text-[11px] text-white font-bold">Recharge</span>
                   </button>
                 </div>
               </motion.div>
