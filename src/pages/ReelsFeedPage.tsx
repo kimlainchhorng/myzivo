@@ -2868,13 +2868,15 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Tip Sheet */}
-      <TipSheet
-        open={!!tipTarget}
-        onClose={() => setTipTarget(null)}
-        creatorId={tipTarget?.id || ""}
-        creatorName={tipTarget?.name || ""}
-      />
+      {/* Tip Sheet — lazy loaded to avoid pulling in Stripe on feed */}
+      <Suspense fallback={null}>
+        <TipSheet
+          open={!!tipTarget}
+          onClose={() => setTipTarget(null)}
+          creatorId={tipTarget?.id || ""}
+          creatorName={tipTarget?.name || ""}
+        />
+      </Suspense>
 
       {/* Unfollow confirm dialog */}
       <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
