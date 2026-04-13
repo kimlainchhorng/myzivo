@@ -841,6 +841,7 @@ export default function ReelsFeedPage() {
               />
             )}
           </AnimatePresence>
+          </Suspense>
 
           {/* TikTok/Reels-style Fullscreen Video Viewer */}
           <AnimatePresence>
