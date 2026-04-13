@@ -6,12 +6,34 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ArrowLeft, Radio, Camera, CameraOff, Mic, MicOff, RotateCcw,
-  Users, Heart, Send, Share2, X, Sparkles, Zap, Gift, Eye,
-  Shield, Wifi, WifiOff, Crown, Star, Volume2, VolumeX,
-  MessageCircle, Trophy, TrendingUp, Clock, Flame
-} from "lucide-react";
+import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import Radio from "lucide-react/dist/esm/icons/radio";
+import Camera from "lucide-react/dist/esm/icons/camera";
+import CameraOff from "lucide-react/dist/esm/icons/camera-off";
+import Mic from "lucide-react/dist/esm/icons/mic";
+import MicOff from "lucide-react/dist/esm/icons/mic-off";
+import RotateCcw from "lucide-react/dist/esm/icons/rotate-ccw";
+import Users from "lucide-react/dist/esm/icons/users";
+import Heart from "lucide-react/dist/esm/icons/heart";
+import Send from "lucide-react/dist/esm/icons/send";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
+import X from "lucide-react/dist/esm/icons/x";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Zap from "lucide-react/dist/esm/icons/zap";
+import Gift from "lucide-react/dist/esm/icons/gift";
+import Eye from "lucide-react/dist/esm/icons/eye";
+import Shield from "lucide-react/dist/esm/icons/shield";
+import Wifi from "lucide-react/dist/esm/icons/wifi";
+import WifiOff from "lucide-react/dist/esm/icons/wifi-off";
+import Crown from "lucide-react/dist/esm/icons/crown";
+import Star from "lucide-react/dist/esm/icons/star";
+import Volume2 from "lucide-react/dist/esm/icons/volume-2";
+import VolumeX from "lucide-react/dist/esm/icons/volume-x";
+import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
+import Trophy from "lucide-react/dist/esm/icons/trophy";
+import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import Flame from "lucide-react/dist/esm/icons/flame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";

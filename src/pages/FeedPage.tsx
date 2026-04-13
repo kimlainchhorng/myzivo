@@ -12,12 +12,31 @@ import { useI18n } from "@/hooks/useI18n";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import NavBar from "@/components/home/NavBar";
 import CreatePostModal from "@/components/social/CreatePostModal";
-import {
-  Loader2, Heart, MessageCircle, Share2, Store,
-  Play, Volume2, VolumeX, RefreshCw, Send, X as XIcon, Eye,
-  Copy, Link2, ShieldCheck, Search, ArrowLeft, UserCircle,
-  MoreHorizontal, ChevronUp, ChevronDown, Music, UserPlus, UserCheck, Radio,
-} from "lucide-react";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import Heart from "lucide-react/dist/esm/icons/heart";
+import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
+import Store from "lucide-react/dist/esm/icons/store";
+import Play from "lucide-react/dist/esm/icons/play";
+import Volume2 from "lucide-react/dist/esm/icons/volume-2";
+import VolumeX from "lucide-react/dist/esm/icons/volume-x";
+import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
+import Send from "lucide-react/dist/esm/icons/send";
+import XIcon from "lucide-react/dist/esm/icons/x";
+import Eye from "lucide-react/dist/esm/icons/eye";
+import Copy from "lucide-react/dist/esm/icons/copy";
+import Link2 from "lucide-react/dist/esm/icons/link-2";
+import ShieldCheck from "lucide-react/dist/esm/icons/shield-check";
+import Search from "lucide-react/dist/esm/icons/search";
+import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import UserCircle from "lucide-react/dist/esm/icons/user-circle";
+import MoreHorizontal from "lucide-react/dist/esm/icons/more-horizontal";
+import ChevronUp from "lucide-react/dist/esm/icons/chevron-up";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
+import Music from "lucide-react/dist/esm/icons/music";
+import UserPlus from "lucide-react/dist/esm/icons/user-plus";
+import UserCheck from "lucide-react/dist/esm/icons/user-check";
+import Radio from "lucide-react/dist/esm/icons/radio";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
