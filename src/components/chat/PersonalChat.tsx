@@ -362,6 +362,29 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setCallEvents((callRes.data || []).map((c: any) => ({ ...c, _isCallEvent: true as const })));
       setLoading(false);
 
+      // Batch-load all reactions in ONE query instead of per-message
+      const msgIds = data.filter((m: Message) => !m.id.startsWith("opt-")).map((m: Message) => m.id);
+      if (msgIds.length > 0) {
+        const { data: reactionsData } = await (supabase as any)
+          .from("message_reactions")
+          .select("message_id, emoji, user_id")
+          .in("message_id", msgIds);
+        if (reactionsData) {
+          const grouped: Record<string, Record<string, { count: number; hasMyReaction: boolean }>> = {};
+          for (const r of reactionsData) {
+            if (!grouped[r.message_id]) grouped[r.message_id] = {};
+            if (!grouped[r.message_id][r.emoji]) grouped[r.message_id][r.emoji] = { count: 0, hasMyReaction: false };
+            grouped[r.message_id][r.emoji].count++;
+            if (r.user_id === user.id) grouped[r.message_id][r.emoji].hasMyReaction = true;
+          }
+          const map: Record<string, { emoji: string; count: number; hasMyReaction: boolean }[]> = {};
+          for (const [msgId, emojis] of Object.entries(grouped)) {
+            map[msgId] = Object.entries(emojis).map(([emoji, v]) => ({ emoji, ...v }));
+          }
+          setReactionsMap(map);
+        }
+      }
+
       if (data?.length) {
         const unread = data.filter((m: Message) => m.receiver_id === user.id && !m.is_read);
         if (unread.length) {
