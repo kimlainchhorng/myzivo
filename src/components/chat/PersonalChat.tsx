@@ -131,6 +131,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     };
   }, [recipientId]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [reactionsMap, setReactionsMap] = useState<Record<string, { emoji: string; count: number; hasMyReaction: boolean }[]>>({});
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
