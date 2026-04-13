@@ -1,7 +1,9 @@
 /**
  * PartnerLogosSection - Trust badges with token-based colors
  */
-import { Shield, CreditCard, Award } from "lucide-react";
+import Shield from "lucide-react/dist/esm/icons/shield";
+import CreditCard from "lucide-react/dist/esm/icons/credit-card";
+import Award from "lucide-react/dist/esm/icons/award";
 
 const partners = [
   { name: "United Airlines", category: "Airlines" },

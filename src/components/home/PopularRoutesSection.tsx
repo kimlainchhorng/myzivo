@@ -4,7 +4,13 @@
  */
 
 import { useNavigate } from "react-router-dom";
-import { TrendingUp, ArrowRight, Sparkles, Loader2, Plane, Calendar, Clock } from "lucide-react";
+import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
+import Clock from "lucide-react/dist/esm/icons/clock";
 import { motion } from "framer-motion";
 import { useTravelpayoutsPopularRoutes, type TravelpayoutsRoutePrice } from "@/hooks/useTravelpayoutsPopularRoutes";
 import { usePopularRoutePrices } from "@/hooks/usePopularRoutePrices";
