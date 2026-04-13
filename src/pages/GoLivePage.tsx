@@ -695,7 +695,7 @@ export default function GoLivePage() {
           </AnimatePresence>
 
           {/* Side actions */}
-          <div className="absolute right-3 bottom-56 flex flex-col gap-3 items-center z-20">
+          <div className="absolute right-3 bottom-56 flex flex-col gap-3 items-center z-30">
             <button onClick={() => sendReaction("❤️")} className="w-12 h-12 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
               <Heart className="h-5 w-5 text-red-400" />
             </button>
