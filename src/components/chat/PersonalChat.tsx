@@ -938,23 +938,24 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         {activeCall && (
           <Suspense fallback={null}>
             <CallScreen
-            recipientName={recipientName}
-            recipientAvatar={recipientAvatar}
-            recipientId={recipientId}
-            callType={activeCall}
-            minimized={pipMode}
-            onEnd={() => { setActiveCall(null); setPipMode(false); setPipData(null); setPipControls(null); }}
-            onMinimize={(data) => {
-              setPipData(data);
-              setPipMode(true);
-            }}
-            onPipStateChange={(data) => {
-              setPipData(data);
-            }}
-            onPipControlsChange={(controls) => {
-              setPipControls(controls);
-            }}
-          />
+              recipientName={recipientName}
+              recipientAvatar={recipientAvatar}
+              recipientId={recipientId}
+              callType={activeCall}
+              minimized={pipMode}
+              onEnd={() => { setActiveCall(null); setPipMode(false); setPipData(null); setPipControls(null); }}
+              onMinimize={(data) => {
+                setPipData(data);
+                setPipMode(true);
+              }}
+              onPipStateChange={(data) => {
+                setPipData(data);
+              }}
+              onPipControlsChange={(controls) => {
+                setPipControls(controls);
+              }}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
