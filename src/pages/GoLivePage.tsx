@@ -281,7 +281,7 @@ export default function GoLivePage() {
     ]);
     // Trigger full-screen gift animation
     setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
-    toast(`${gift.icon} ${gift.name} sent!`, { description: `${gift.coins} coins` });
+    
     setShowGiftPanel(false);
   }, [spawnFloatingReaction]);
 
