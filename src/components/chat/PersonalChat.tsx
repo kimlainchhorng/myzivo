@@ -55,12 +55,12 @@ const LockedMediaPricePicker = lazy(() => import("./LockedMediaPricePicker"));
 const ChatContactInfo = lazy(() => import("./ChatContactInfo"));
 const MessageScheduler = lazy(() => import("./MessageScheduler"));
 const PinnedMessagesPanel = lazy(() => import("./PinnedMessagesPanel"));
+import { detectMessageEffect, type EffectType } from "./MessageEffects";
 const MessageEffects = lazy(() => import("./MessageEffects"));
 import { toast } from "sonner";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { useChatDraft } from "@/hooks/useChatDraft";
-import MessageEffects, { detectMessageEffect, type EffectType } from "./MessageEffects";
 
 const StickerKeyboard = lazy(() => import("./StickerKeyboard"));
 

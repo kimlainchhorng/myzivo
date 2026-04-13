@@ -3,7 +3,19 @@
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PhoneOff, Mic, MicOff, Video, VideoOff, Volume2, Monitor, MonitorOff, Minimize2, MessageCircle, WifiOff, SwitchCamera, Sparkles } from "lucide-react";
+import PhoneOff from "lucide-react/dist/esm/icons/phone-off";
+import Mic from "lucide-react/dist/esm/icons/mic";
+import MicOff from "lucide-react/dist/esm/icons/mic-off";
+import Video from "lucide-react/dist/esm/icons/video";
+import VideoOff from "lucide-react/dist/esm/icons/video-off";
+import Volume2 from "lucide-react/dist/esm/icons/volume-2";
+import Monitor from "lucide-react/dist/esm/icons/monitor";
+import MonitorOff from "lucide-react/dist/esm/icons/monitor-off";
+import Minimize2 from "lucide-react/dist/esm/icons/minimize-2";
+import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
+import WifiOff from "lucide-react/dist/esm/icons/wifi-off";
+import SwitchCamera from "lucide-react/dist/esm/icons/switch-camera";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWebRTC, CallRole, WebRTCFailure, classifyWebRTCFailure } from "@/hooks/useWebRTC";
 import { useCallQuality } from "@/hooks/useCallQuality";

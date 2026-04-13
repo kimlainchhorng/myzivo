@@ -3,7 +3,18 @@
  * Full-screen immersive viewer with auto-progress, swipe navigation
  */
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Plus, X, Eye, Trash2, Camera, Heart, Send, ChevronUp, MessageCircle, Pause, Play, Users } from "lucide-react";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import X from "lucide-react/dist/esm/icons/x";
+import Eye from "lucide-react/dist/esm/icons/eye";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import Camera from "lucide-react/dist/esm/icons/camera";
+import Heart from "lucide-react/dist/esm/icons/heart";
+import Send from "lucide-react/dist/esm/icons/send";
+import ChevronUp from "lucide-react/dist/esm/icons/chevron-up";
+import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
+import Pause from "lucide-react/dist/esm/icons/pause";
+import Play from "lucide-react/dist/esm/icons/play";
+import Users from "lucide-react/dist/esm/icons/users";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
