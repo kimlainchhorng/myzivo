@@ -3,7 +3,11 @@
  */
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { DollarSign, Lock, X, Image as ImageIcon, Film } from "lucide-react";
+import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
+import Lock from "lucide-react/dist/esm/icons/lock";
+import X from "lucide-react/dist/esm/icons/x";
+import ImageIcon from "lucide-react/dist/esm/icons/image";
+import Film from "lucide-react/dist/esm/icons/film";
 import { Button } from "@/components/ui/button";
 
 const PRESET_PRICES = [0.99, 1.99, 4.99, 9.99, 19.99, 49.99];

@@ -4,7 +4,11 @@
  */
 import React, { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ImagePlus, Video, MapPin, Timer, Lock } from "lucide-react";
+import ImagePlus from "lucide-react/dist/esm/icons/image-plus";
+import Video from "lucide-react/dist/esm/icons/video";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Timer from "lucide-react/dist/esm/icons/timer";
+import Lock from "lucide-react/dist/esm/icons/lock";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";

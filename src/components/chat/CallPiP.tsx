@@ -2,7 +2,12 @@
  * CallPiP — Floating picture-in-picture mini call overlay (FaceTime 2026 style)
  */
 import { useState, useRef, useEffect } from "react";
-import { PhoneOff, Maximize2, Mic, MicOff, Video, VideoOff } from "lucide-react";
+import PhoneOff from "lucide-react/dist/esm/icons/phone-off";
+import Maximize2 from "lucide-react/dist/esm/icons/maximize-2";
+import Mic from "lucide-react/dist/esm/icons/mic";
+import MicOff from "lucide-react/dist/esm/icons/mic-off";
+import Video from "lucide-react/dist/esm/icons/video";
+import VideoOff from "lucide-react/dist/esm/icons/video-off";
 import { motion } from "framer-motion";
 
 interface CallPiPProps {

@@ -5,7 +5,9 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { BarChart3, CheckCircle2, Users } from "lucide-react";
+import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
+import CheckCircle2 from "lucide-react/dist/esm/icons/check-circle-2";
+import Users from "lucide-react/dist/esm/icons/users";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 

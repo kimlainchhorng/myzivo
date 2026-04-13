@@ -4,7 +4,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { X, Check, Users, Loader2 } from "lucide-react";
+import X from "lucide-react/dist/esm/icons/x";
+import Check from "lucide-react/dist/esm/icons/check";
+import Users from "lucide-react/dist/esm/icons/users";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";

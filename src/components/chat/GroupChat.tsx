@@ -4,7 +4,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Send, Loader2, Users, ImagePlus, X, Mic, Square } from "lucide-react";
+import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import Send from "lucide-react/dist/esm/icons/send";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import Users from "lucide-react/dist/esm/icons/users";
+import ImagePlus from "lucide-react/dist/esm/icons/image-plus";
+import X from "lucide-react/dist/esm/icons/x";
+import Mic from "lucide-react/dist/esm/icons/mic";
+import Square from "lucide-react/dist/esm/icons/square";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";

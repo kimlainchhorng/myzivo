@@ -3,7 +3,12 @@
  */
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BellOff, Bell, Volume2, Clock, X, Check } from "lucide-react";
+import BellOff from "lucide-react/dist/esm/icons/bell-off";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import Volume2 from "lucide-react/dist/esm/icons/volume-2";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import X from "lucide-react/dist/esm/icons/x";
+import Check from "lucide-react/dist/esm/icons/check";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";

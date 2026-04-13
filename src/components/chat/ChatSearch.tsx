@@ -3,7 +3,10 @@
  */
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, ArrowUp, ArrowDown } from "lucide-react";
+import Search from "lucide-react/dist/esm/icons/search";
+import X from "lucide-react/dist/esm/icons/x";
+import ArrowUp from "lucide-react/dist/esm/icons/arrow-up";
+import ArrowDown from "lucide-react/dist/esm/icons/arrow-down";
 
 interface ChatSearchProps {
   messages: { id: string; message: string; sender_id: string; created_at: string }[];

@@ -2,7 +2,15 @@
  * GroupCallScreen — Multi-party video/voice call with participant grid (FaceTime 2026 style)
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { PhoneOff, Mic, MicOff, Video, VideoOff, Monitor, Users, UserPlus, MonitorOff } from "lucide-react";
+import PhoneOff from "lucide-react/dist/esm/icons/phone-off";
+import Mic from "lucide-react/dist/esm/icons/mic";
+import MicOff from "lucide-react/dist/esm/icons/mic-off";
+import Video from "lucide-react/dist/esm/icons/video";
+import VideoOff from "lucide-react/dist/esm/icons/video-off";
+import Monitor from "lucide-react/dist/esm/icons/monitor";
+import Users from "lucide-react/dist/esm/icons/users";
+import UserPlus from "lucide-react/dist/esm/icons/user-plus";
+import MonitorOff from "lucide-react/dist/esm/icons/monitor-off";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import CallQualityBadge from "./CallQualityBadge";

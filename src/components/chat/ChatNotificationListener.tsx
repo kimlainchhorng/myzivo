@@ -7,7 +7,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { MessageSquare } from "lucide-react";
+import MessageSquare from "lucide-react/dist/esm/icons/message-square";
 
 const SOUND_URL = "/sounds/chat-notification.wav";
 const NOTIFICATION_COOLDOWN_MS = 2000; // Don't spam sounds

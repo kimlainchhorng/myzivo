@@ -2,7 +2,8 @@
  * PinnedMessagesPanel — View all pinned messages in a chat
  */
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Pin } from "lucide-react";
+import X from "lucide-react/dist/esm/icons/x";
+import Pin from "lucide-react/dist/esm/icons/pin";
 
 interface PinnedMessage {
   id: string;

@@ -3,7 +3,15 @@
  */
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Palette, Type, ImageIcon, Check, Plus, Trash2, Sparkles, Eye } from "lucide-react";
+import X from "lucide-react/dist/esm/icons/x";
+import Palette from "lucide-react/dist/esm/icons/palette";
+import Type from "lucide-react/dist/esm/icons/type";
+import ImageIcon from "lucide-react/dist/esm/icons/image";
+import Check from "lucide-react/dist/esm/icons/check";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Eye from "lucide-react/dist/esm/icons/eye";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";

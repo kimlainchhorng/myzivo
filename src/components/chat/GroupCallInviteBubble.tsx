@@ -1,7 +1,9 @@
 /**
  * GroupCallInviteBubble — Chat message bubble for group call invitations
  */
-import { Phone, Video, Users } from "lucide-react";
+import Phone from "lucide-react/dist/esm/icons/phone";
+import Video from "lucide-react/dist/esm/icons/video";
+import Users from "lucide-react/dist/esm/icons/users";
 import { motion } from "framer-motion";
 
 interface GroupCallInviteBubbleProps {

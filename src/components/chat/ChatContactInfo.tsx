@@ -14,33 +14,31 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import ChatBackupExport from "./ChatBackupExport";
-import {
-  ArrowLeft,
-  Bell,
-  BellOff,
-  Search,
-  Image as ImageIcon,
-  FileText,
-  Link2,
-  UserRound,
-  Palette,
-  Shield,
-  Ban,
-  Flag,
-  Trash2,
-  Phone,
-  Video,
-  ChevronRight,
-  History,
-  Zap,
-  Clock,
-  MessageCircle,
-  Star,
-  StarOff,
-  Users,
-  Copy,
-  ExternalLink,
-} from "lucide-react";
+import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import BellOff from "lucide-react/dist/esm/icons/bell-off";
+import Search from "lucide-react/dist/esm/icons/search";
+import ImageIcon from "lucide-react/dist/esm/icons/image";
+import FileText from "lucide-react/dist/esm/icons/file-text";
+import Link2 from "lucide-react/dist/esm/icons/link-2";
+import UserRound from "lucide-react/dist/esm/icons/user-round";
+import Palette from "lucide-react/dist/esm/icons/palette";
+import Shield from "lucide-react/dist/esm/icons/shield";
+import Ban from "lucide-react/dist/esm/icons/ban";
+import Flag from "lucide-react/dist/esm/icons/flag";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import Phone from "lucide-react/dist/esm/icons/phone";
+import Video from "lucide-react/dist/esm/icons/video";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import History from "lucide-react/dist/esm/icons/history";
+import Zap from "lucide-react/dist/esm/icons/zap";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
+import Star from "lucide-react/dist/esm/icons/star";
+import StarOff from "lucide-react/dist/esm/icons/star-off";
+import Users from "lucide-react/dist/esm/icons/users";
+import Copy from "lucide-react/dist/esm/icons/copy";
+import ExternalLink from "lucide-react/dist/esm/icons/external-link";
 import { toast } from "sonner";
 
 interface ChatContactInfoProps {
