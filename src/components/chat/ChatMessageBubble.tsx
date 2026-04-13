@@ -179,7 +179,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   const [showReactions, setShowReactions] = useState(false);
   const [showDeleteSub, setShowDeleteSub] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
-  const messageRisk = assessChatMessageRisk(message || "");
+  const messageRisk = useMemo(() => isMe ? { warnings: [] } : assessChatMessageRisk(message || ""), [message, isMe]);
   const isLockedType = messageType === "locked_image" || messageType === "locked_video";
   const [isLocked, setIsLocked] = useState(isLockedType && !isMe);
   const [unlockLoading, setUnlockLoading] = useState(false);
