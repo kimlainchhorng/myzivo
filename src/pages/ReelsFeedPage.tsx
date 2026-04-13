@@ -1545,18 +1545,22 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         )}
       </AnimatePresence>
       {/* Unfollow confirm dialog */}
-      <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unfollow?</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to unfollow {item.author_name}?</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { executeReelUnfollow(); setShowUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {showUnfollowConfirm && (
+        <Suspense fallback={null}>
+          <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Unfollow?</AlertDialogTitle>
+                <AlertDialogDescription>Are you sure you want to unfollow {item.author_name}?</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => { executeReelUnfollow(); setShowUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </Suspense>
+      )}
     </div>
   );
 }
@@ -2936,30 +2940,38 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       )}
 
       {/* Unfollow confirm dialog */}
-      <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unfollow?</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to unfollow {item.author_name}?</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { executeFeedUnfollow(); setShowUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      <AlertDialog open={showSharedUnfollowConfirm} onOpenChange={setShowSharedUnfollowConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unfollow?</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to unfollow {sharedAuthorName}?</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { executeSharedFeedUnfollow(); setShowSharedUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {showUnfollowConfirm && (
+        <Suspense fallback={null}>
+          <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Unfollow?</AlertDialogTitle>
+                <AlertDialogDescription>Are you sure you want to unfollow {item.author_name}?</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => { executeFeedUnfollow(); setShowUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </Suspense>
+      )}
+      {showSharedUnfollowConfirm && (
+        <Suspense fallback={null}>
+          <AlertDialog open={showSharedUnfollowConfirm} onOpenChange={setShowSharedUnfollowConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Unfollow?</AlertDialogTitle>
+                <AlertDialogDescription>Are you sure you want to unfollow {sharedAuthorName}?</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => { executeSharedFeedUnfollow(); setShowSharedUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </Suspense>
+      )}
     </div>
   );
 }
