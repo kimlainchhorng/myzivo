@@ -228,20 +228,22 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     });
   }, []);
 
+  const timelineLengthRef = useRef(0);
+
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     isNearBottomRef.current = distanceFromBottom < 150;
 
-    if (el.scrollTop < 120 && timeline.length > visibleTimelineCount && !expandingTimelineRef.current) {
+    if (el.scrollTop < 120 && timelineLengthRef.current > visibleTimelineCount && !expandingTimelineRef.current) {
       expandingTimelineRef.current = true;
-      setVisibleTimelineCount((prev) => Math.min(prev + VISIBLE_TIMELINE_STEP, timeline.length));
+      setVisibleTimelineCount((prev) => Math.min(prev + VISIBLE_TIMELINE_STEP, timelineLengthRef.current));
       requestAnimationFrame(() => {
         expandingTimelineRef.current = false;
       });
     }
-  }, [timeline.length, visibleTimelineCount]);
+  }, [visibleTimelineCount]);
 
   useEffect(() => {
     const scroller = scrollRef.current;
