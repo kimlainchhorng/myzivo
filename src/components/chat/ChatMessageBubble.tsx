@@ -32,10 +32,9 @@ import { Capacitor } from "@capacitor/core";
 import { openExternalUrl } from "@/lib/openExternalUrl";
 import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
 
-// Lazy-load heavy sticker configs — these contain 300+ PNG imports and 60+ asset JSON imports
-const loadIllustratedPacks = () => import("@/config/illustratedStickers").then(m => m.ILLUSTRATED_PACKS);
-const loadAnimatedStickerUrl = () => import("@/config/animatedStickerMap").then(m => m.getAnimatedStickerUrl);
-const loadStickerMotion = () => import("./stickerMotion").then(m => m.getStickerMotionSpec);
+import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
+import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
+import { getStickerMotionSpec } from "./stickerMotion";
 
 // Lazy-load TransparentStickerVideo — heavy chroma-key/WebGL component
 const TransparentStickerVideo = lazy(() => import("./TransparentStickerVideo").then(m => ({ default: m.TransparentStickerVideo })));
