@@ -91,3 +91,8 @@ export function useI18n() {
     t,
   };
 }
+
+/** Alias for compatibility — namespace param is ignored (flat key lookup) */
+export function useTranslation(_ns?: string) {
+  return useI18n();
+}
