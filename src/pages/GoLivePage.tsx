@@ -277,10 +277,17 @@ export default function GoLivePage() {
     spawnFloatingReaction(gift.icon);
     const senders = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
     const sender = senders[Math.floor(Math.random() * senders.length)];
-    // Trigger full-screen gift animation
-    setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
     
-    // Gift panel stays open — user closes manually with X
+    // Combo tracking — same gift within 5s increments combo
+    const now = Date.now();
+    if (lastGiftRef.current.name === gift.name && now - lastGiftRef.current.time < 5000) {
+      setGiftCombo((c) => c + 1);
+    } else {
+      setGiftCombo(1);
+    }
+    lastGiftRef.current = { name: gift.name, time: now };
+    
+    setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
   }, [spawnFloatingReaction]);
 
   // ── Ended screen ──
@@ -770,8 +777,9 @@ export default function GoLivePage() {
       {/* Full-screen gift animation overlay */}
       <GiftAnimationOverlay
         activeGift={activeGiftAnim}
-        onComplete={() => setActiveGiftAnim(null)}
+        onComplete={() => { setActiveGiftAnim(null); setGiftCombo(0); }}
         giftPanelOpen={showGiftPanel}
+        comboCount={giftCombo}
       />
     </div>
   );
