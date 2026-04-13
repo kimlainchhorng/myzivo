@@ -439,11 +439,11 @@ export default function GoLivePage() {
 
       {/* Setup form */}
       {phase === "setup" && (
-        <div className="relative z-10 flex-1 flex flex-col justify-end p-4 pb-8 space-y-4">
-          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.25 }} className="space-y-4">
+        <div className="relative z-10 flex-1 flex flex-col justify-end p-4 pb-6 space-y-3">
+          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.25 }} className="space-y-3">
             {/* Stream setup card */}
-            <div className="bg-black/60 backdrop-blur-xl rounded-3xl p-5 space-y-5 border border-white/10 shadow-2xl shadow-black/50">
-              <div className="flex items-center gap-2">
+            <div className="bg-zinc-900/90 backdrop-blur-xl rounded-3xl p-4 space-y-4 border border-white/10 shadow-2xl shadow-black/50">
+              <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center">
                   <Sparkles className="h-4 w-4 text-white" />
                 </div>
@@ -460,24 +460,26 @@ export default function GoLivePage() {
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Give your stream a title..."
                   maxLength={100}
-                  className="bg-white/8 border-white/10 text-white placeholder:text-white/30 text-sm rounded-xl h-11 pl-4 pr-12 focus:border-red-500/50 focus:ring-red-500/20"
+                  className="bg-zinc-800/80 border-zinc-700/50 text-white placeholder:text-zinc-500 text-sm rounded-xl h-11 pl-4 pr-12 focus:border-red-500/50 focus:ring-red-500/20"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 text-[10px]">{title.length}/100</span>
+                {title.length > 0 && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px]">{title.length}/100</span>
+                )}
               </div>
 
-              {/* Topic chips with icons */}
+              {/* Topic chips */}
               <div>
-                <p className="text-white/40 text-xs mb-2.5 font-medium">Topic</p>
-                <div className="flex flex-wrap gap-2">
+                <p className="text-zinc-400 text-xs mb-2 font-medium">Topic</p>
+                <div className="flex flex-wrap gap-1.5">
                   {topicConfig.map((t) => (
                     <button
                       key={t.name}
                       onClick={() => setTopic(t.name)}
                       className={cn(
-                        "px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1",
+                        "px-2.5 py-1 rounded-full text-[11px] font-medium transition-all flex items-center gap-1",
                         topic === t.name
-                          ? "bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg shadow-red-500/20 scale-105"
-                          : "bg-white/8 text-white/50 hover:bg-white/15 hover:text-white/70"
+                          ? "bg-red-500 text-white shadow-md shadow-red-500/25"
+                          : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-300"
                       )}
                     >
                       <span className="text-[10px]">{t.icon}</span> {t.name}
@@ -486,76 +488,86 @@ export default function GoLivePage() {
                 </div>
               </div>
 
-              {/* Settings toggles */}
-              <div className="flex items-center gap-3 pt-1">
-                <button
-                  onClick={() => setBeautyMode((p) => !p)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
-                    beautyMode
-                      ? "bg-gradient-to-r from-pink-500/30 to-purple-500/30 text-pink-300 border border-pink-500/30"
-                      : "bg-white/8 text-white/40 border border-transparent"
-                  )}
-                >
-                  <Sparkles className="h-3 w-3" /> Beauty
-                </button>
-                <button
-                  onClick={() => setStreamQuality((p) => p === "HD" ? "SD" : "HD")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white/8 text-white/40"
-                >
-                  <Wifi className="h-3 w-3" /> {streamQuality}
-                </button>
-                <button
-                  onClick={() => {}}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white/8 text-white/40"
-                >
-                  <Shield className="h-3 w-3" /> Private
-                </button>
+              {/* Settings toggles — separated row with divider */}
+              <div className="border-t border-white/5 pt-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setBeautyMode((p) => !p)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all border",
+                      beautyMode
+                        ? "bg-pink-500/15 text-pink-300 border-pink-500/30"
+                        : "bg-zinc-800 text-zinc-500 border-zinc-700/50 hover:text-zinc-400"
+                    )}
+                  >
+                    <Sparkles className="h-3 w-3" /> Beauty
+                  </button>
+                  <button
+                    onClick={() => setStreamQuality((p) => p === "HD" ? "SD" : "HD")}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all border",
+                      streamQuality === "HD"
+                        ? "bg-green-500/10 text-green-400 border-green-500/20"
+                        : "bg-zinc-800 text-zinc-500 border-zinc-700/50"
+                    )}
+                  >
+                    <Wifi className="h-3 w-3" /> {streamQuality}
+                  </button>
+                  <button
+                    onClick={() => {}}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium bg-zinc-800 text-zinc-500 border border-zinc-700/50 hover:text-zinc-400 transition-all"
+                  >
+                    <Shield className="h-3 w-3" /> Private
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Camera controls — redesigned */}
-            <div className="flex justify-center gap-5">
+            {/* Camera controls */}
+            <div className="flex justify-center gap-4">
               <div className="flex flex-col items-center gap-1">
                 <button
                   onClick={toggleCamera}
                   className={cn(
-                    "w-14 h-14 rounded-2xl flex items-center justify-center transition-all border",
+                    "w-13 h-13 rounded-2xl flex items-center justify-center transition-all",
                     cameraOn
-                      ? "bg-white/15 border-white/20 hover:bg-white/25"
-                      : "bg-red-500/30 border-red-500/40"
+                      ? "bg-zinc-800/80 hover:bg-zinc-700/80 text-white"
+                      : "bg-red-500/30 text-red-300"
                   )}
+                  style={{ width: 52, height: 52 }}
                 >
-                  {cameraOn ? <Camera className="h-5 w-5 text-white" /> : <CameraOff className="h-5 w-5 text-red-300" />}
+                  {cameraOn ? <Camera className="h-5 w-5" /> : <CameraOff className="h-5 w-5" />}
                 </button>
-                <span className="text-[9px] text-white/30">{cameraOn ? "Camera" : "Off"}</span>
+                <span className="text-[9px] text-zinc-500">{cameraOn ? "Camera" : "Off"}</span>
               </div>
               <div className="flex flex-col items-center gap-1">
                 <button
                   onClick={toggleMic}
                   className={cn(
-                    "w-14 h-14 rounded-2xl flex items-center justify-center transition-all border",
+                    "w-13 h-13 rounded-2xl flex items-center justify-center transition-all",
                     micOn
-                      ? "bg-white/15 border-white/20 hover:bg-white/25"
-                      : "bg-red-500/30 border-red-500/40"
+                      ? "bg-zinc-800/80 hover:bg-zinc-700/80 text-white"
+                      : "bg-red-500/30 text-red-300"
                   )}
+                  style={{ width: 52, height: 52 }}
                 >
-                  {micOn ? <Mic className="h-5 w-5 text-white" /> : <MicOff className="h-5 w-5 text-red-300" />}
+                  {micOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
                 </button>
-                <span className="text-[9px] text-white/30">{micOn ? "Audio" : "Muted"}</span>
+                <span className="text-[9px] text-zinc-500">{micOn ? "Audio" : "Muted"}</span>
               </div>
               <div className="flex flex-col items-center gap-1">
-                <button onClick={flipCamera} className="w-14 h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center hover:bg-white/25 transition-all">
-                  <RotateCcw className="h-5 w-5 text-white" />
+                <button onClick={flipCamera} className="rounded-2xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-white transition-all" style={{ width: 52, height: 52 }}>
+                  <RotateCcw className="h-5 w-5" />
                 </button>
-                <span className="text-[9px] text-white/30">Flip</span>
+                <span className="text-[9px] text-zinc-500">Flip</span>
               </div>
             </div>
 
-            {/* Go Live button — enhanced */}
+            {/* Go Live button */}
             <Button
               onClick={goLive}
-              className="w-full rounded-2xl h-14 bg-gradient-to-r from-red-500 via-red-500 to-rose-500 hover:from-red-600 hover:via-red-600 hover:to-rose-600 text-white text-base font-bold gap-2.5 shadow-xl shadow-red-500/30 border-0 transition-all active:scale-[0.98]"
+              className="w-full rounded-2xl h-13 bg-gradient-to-r from-red-500 via-red-500 to-rose-500 hover:from-red-600 hover:via-red-600 hover:to-rose-600 text-white text-[15px] font-bold gap-2.5 shadow-xl shadow-red-500/30 border-0 transition-all active:scale-[0.98]"
+              style={{ height: 52 }}
             >
               <Zap className="h-5 w-5" /> Go Live
             </Button>
