@@ -1046,13 +1046,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           </div>
         ) : (
           <div ref={timelineRef} className="mt-auto space-y-2">
-            {(() => {
-              const timeline: TimelineItem[] = [
-                ...messages,
-                ...callEvents,
-              ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-
-              return timeline.map((item) => {
+            {timeline.map((item) => {
                 if (isCallEvent(item)) {
                   return (
                     <CallEventBubble
@@ -1064,18 +1058,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       durationSeconds={item.duration_seconds}
                       createdAt={item.created_at}
                       onCallback={() => handleStartCall(item.call_type as "voice" | "video")}
-                      onDelete={async (callId) => {
-                        await (supabase as any).from("call_events").delete().eq("id", callId);
-                        setCallEvents(prev => prev.filter(c => c.id !== callId));
-                        toast.success("Call deleted");
-                      }}
-                      onDeleteAll={async () => {
-                        const ids = callEvents.map(c => c.id);
-                        if (ids.length === 0) return;
-                        await (supabase as any).from("call_events").delete().in("id", ids);
-                        setCallEvents([]);
-                        toast.success(`${ids.length} call${ids.length > 1 ? "s" : ""} deleted`);
-                      }}
+                      onDelete={handleCallDelete}
+                      onDeleteAll={handleCallDeleteAll}
                     />
                   );
                 }
@@ -1147,7 +1131,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                     )}
                   </div>
                 );
-              });
+            })
             })()}
 
             {/* Typing indicator — 2026 style */}
