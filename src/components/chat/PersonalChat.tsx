@@ -1340,54 +1340,70 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       </AnimatePresence>
 
       {/* Notification settings */}
-      <ChatNotificationSettings
-        open={showNotifSettings}
-        onClose={() => setShowNotifSettings(false)}
-        chatPartnerId={recipientId}
-        chatPartnerName={recipientName}
-      />
+      {showNotifSettings && (
+        <Suspense fallback={null}>
+          <ChatNotificationSettings
+            open={showNotifSettings}
+            onClose={() => setShowNotifSettings(false)}
+            chatPartnerId={recipientId}
+            chatPartnerName={recipientName}
+          />
+        </Suspense>
+      )}
 
       {/* Media gallery */}
-      <AnimatePresence>
-        {showMediaGallery && (
+      {showMediaGallery && (
+        <Suspense fallback={null}>
           <ChatMediaGallery
             open={showMediaGallery}
             onClose={() => setShowMediaGallery(false)}
             recipientId={recipientId}
             recipientName={recipientName}
           />
-        )}
-      </AnimatePresence>
+        </Suspense>
+      )}
 
       {/* Personalization */}
-      <ChatPersonalization
-        open={showPersonalization}
-        onClose={() => setShowPersonalization(false)}
-        chatPartnerId={recipientId}
-        chatPartnerName={recipientName}
-        onApply={(s) => setChatStyle(s)}
-      />
+      {showPersonalization && (
+        <Suspense fallback={null}>
+          <ChatPersonalization
+            open={showPersonalization}
+            onClose={() => setShowPersonalization(false)}
+            chatPartnerId={recipientId}
+            chatPartnerName={recipientName}
+            onApply={(s) => setChatStyle(s)}
+          />
+        </Suspense>
+      )}
 
       {/* Mini Apps */}
-      <ChatMiniApps
-        open={showMiniApps}
-        onClose={() => setShowMiniApps(false)}
-        chatPartnerId={recipientId}
-        chatPartnerName={recipientName}
-      />
+      {showMiniApps && (
+        <Suspense fallback={null}>
+          <ChatMiniApps
+            open={showMiniApps}
+            onClose={() => setShowMiniApps(false)}
+            chatPartnerId={recipientId}
+            chatPartnerName={recipientName}
+          />
+        </Suspense>
+      )}
 
       {/* Security */}
-      <ChatSecurity
-        open={showSecurity}
-        onClose={() => setShowSecurity(false)}
-        chatPartnerId={recipientId}
-        chatPartnerName={recipientName}
-        onBlock={onClose}
-      />
+      {showSecurity && (
+        <Suspense fallback={null}>
+          <ChatSecurity
+            open={showSecurity}
+            onClose={() => setShowSecurity(false)}
+            chatPartnerId={recipientId}
+            chatPartnerName={recipientName}
+            onBlock={onClose}
+          />
+        </Suspense>
+      )}
 
       {/* Call History */}
-      <AnimatePresence>
-        {showCallHistory && (
+      {showCallHistory && (
+        <Suspense fallback={null}>
           <CallHistoryPage
             onClose={() => setShowCallHistory(false)}
             onCallUser={(userId, type) => {
@@ -1395,12 +1411,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               handleStartCall(type);
             }}
           />
-        )}
-      </AnimatePresence>
+        </Suspense>
+      )}
 
       {/* Contact Info */}
-      <AnimatePresence>
-        {showContactInfo && (
+      {showContactInfo && (
+        <Suspense fallback={null}>
           <ChatContactInfo
             recipientId={recipientId}
             recipientName={recipientName}
@@ -1417,50 +1433,62 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             onOpenMiniApps={() => { setShowContactInfo(false); setShowMiniApps(true); }}
             onOpenNotifSettings={() => { setShowContactInfo(false); setShowNotifSettings(true); }}
           />
-        )}
-      </AnimatePresence>
+        </Suspense>
+      )}
 
       {/* Message Scheduler */}
-      <MessageScheduler
-        open={showScheduler}
-        onClose={() => setShowScheduler(false)}
-        message={input}
-        onSchedule={async (scheduledAt) => {
-          if (!user?.id || !input.trim()) return;
-          try {
-            await (supabase as any).from("scheduled_messages").insert({
-              sender_id: user.id,
-              receiver_id: recipientId,
-              message: input.trim(),
-              scheduled_at: scheduledAt.toISOString(),
-            });
-            setInput("");
-            clearDraft();
-            setShowScheduler(false);
-            toast.success(`Message scheduled for ${format(scheduledAt, "MMM d, h:mm a")}`);
-          } catch {
-            toast.error("Failed to schedule message");
-          }
-        }}
-      />
+      {showScheduler && (
+        <Suspense fallback={null}>
+          <MessageScheduler
+            open={showScheduler}
+            onClose={() => setShowScheduler(false)}
+            message={input}
+            onSchedule={async (scheduledAt) => {
+              if (!user?.id || !input.trim()) return;
+              try {
+                await (supabase as any).from("scheduled_messages").insert({
+                  sender_id: user.id,
+                  receiver_id: recipientId,
+                  message: input.trim(),
+                  scheduled_at: scheduledAt.toISOString(),
+                });
+                setInput("");
+                clearDraft();
+                setShowScheduler(false);
+                toast.success(`Message scheduled for ${format(scheduledAt, "MMM d, h:mm a")}`);
+              } catch {
+                toast.error("Failed to schedule message");
+              }
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Pinned Messages Panel */}
-      <PinnedMessagesPanel
-        open={showPinnedPanel}
-        onClose={() => setShowPinnedPanel(false)}
-        messages={pinnedMessages.map(m => ({
-          id: m.id,
-          message: m.message,
-          sender_name: m.sender_id === user?.id ? "You" : recipientName,
-          time: formatMsgTime(m.created_at),
-          isMe: m.sender_id === user?.id,
-        }))}
-        onJumpToMessage={scrollToMessage}
-        onUnpin={(id) => handlePin(id, false)}
-      />
+      {showPinnedPanel && (
+        <Suspense fallback={null}>
+          <PinnedMessagesPanel
+            open={showPinnedPanel}
+            onClose={() => setShowPinnedPanel(false)}
+            messages={pinnedMessages.map(m => ({
+              id: m.id,
+              message: m.message,
+              sender_name: m.sender_id === user?.id ? "You" : recipientName,
+              time: formatMsgTime(m.created_at),
+              isMe: m.sender_id === user?.id,
+            }))}
+            onJumpToMessage={scrollToMessage}
+            onUnpin={(id) => handlePin(id, false)}
+          />
+        </Suspense>
+      )}
 
       {/* Message effects overlay */}
-      <MessageEffects effect={activeEffect} onComplete={() => setActiveEffect(null)} />
+      {activeEffect && (
+        <Suspense fallback={null}>
+          <MessageEffects effect={activeEffect} onComplete={() => setActiveEffect(null)} />
+        </Suspense>
+      )}
     </motion.div>
   );
 }
