@@ -4,7 +4,7 @@
  * quick actions, promos, rewards, and personalized content.
  * @module AppHome
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
@@ -13,15 +13,42 @@ import { cn } from "@/lib/utils";
 import Search from "lucide-react/dist/esm/icons/search";
 import Plane from "lucide-react/dist/esm/icons/plane";
 import Car from "lucide-react/dist/esm/icons/car";
-import Utensils from "lucide-react/dist/esm/icons/utensils";
 import BedDouble from "lucide-react/dist/esm/icons/bed-double";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
-import Bell from "lucide-react/dist/esm/icons/bell";
 import Package from "lucide-react/dist/esm/icons/package";
 import Star from "lucide-react/dist/esm/icons/star";
-import Sparkles from "lucide-react/dist/esm/icons/sparkles";
-import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
 import Heart from "lucide-react/dist/esm/icons/heart";
+import Home from "lucide-react/dist/esm/icons/home";
+import Briefcase from "lucide-react/dist/esm/icons/briefcase";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import type { LucideIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePersonalizedHome, HomeRestaurant } from "@/hooks/usePersonalizedHome";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import zivoRideIcon from "@/assets/zivo-ride-icon.png";
+import zivoEatsIcon from "@/assets/zivo-eats-icon.png";
+import zivoFlightsIcon from "@/assets/zivo-flights-icon.png";
+import zivoHotelsIcon from "@/assets/zivo-hotels-icon.png";
+import zivoRentalCarIcon from "@/assets/zivo-rental-car.png";
+import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
+import zivoShoppingIcon from "@/assets/zivo-shopping.png";
+
+// Lazy-load below-fold heavy components
+const LiveTripTracker = lazy(() => import("@/components/home/widgets/LiveTripTracker"));
+const TrendingNearYou = lazy(() => import("@/components/home/TrendingNearYou"));
+const QuickReorderCarousel = lazy(() => import("@/components/home/widgets/QuickReorderCarousel"));
+const PriceAlertsWidget = lazy(() => import("@/components/home/widgets/PriceAlertsWidget"));
+const AISmartDeals = lazy(() => import("@/components/home/AISmartDeals"));
+const TravelItineraryCard = lazy(() => import("@/components/home/widgets/TravelItineraryCard"));
+const ActivityTimeline = lazy(() => import("@/components/shared/ActivityTimeline"));
+const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
+const UniversalSearchOverlay = lazy(() => import("@/components/search/UniversalSearchOverlay"));
+
+// Icons used below-fold (still small, but needed)
+import Utensils from "lucide-react/dist/esm/icons/utensils";
 import History from "lucide-react/dist/esm/icons/history";
 import Hotel from "lucide-react/dist/esm/icons/hotel";
 import Gift from "lucide-react/dist/esm/icons/gift";
@@ -30,15 +57,11 @@ import Share2 from "lucide-react/dist/esm/icons/share-2";
 import Clock from "lucide-react/dist/esm/icons/clock";
 import Wallet from "lucide-react/dist/esm/icons/wallet";
 import CreditCard from "lucide-react/dist/esm/icons/credit-card";
-import Home from "lucide-react/dist/esm/icons/home";
-import Briefcase from "lucide-react/dist/esm/icons/briefcase";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import Timer from "lucide-react/dist/esm/icons/timer";
 import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
 import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
 import Navigation from "lucide-react/dist/esm/icons/navigation";
-import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
-import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
 import Zap from "lucide-react/dist/esm/icons/zap";
 import Shield from "lucide-react/dist/esm/icons/shield";
 import Globe from "lucide-react/dist/esm/icons/globe";
@@ -46,12 +69,10 @@ import Crown from "lucide-react/dist/esm/icons/crown";
 import Flame from "lucide-react/dist/esm/icons/flame";
 import Calendar from "lucide-react/dist/esm/icons/calendar";
 import Activity from "lucide-react/dist/esm/icons/activity";
-import type { LucideIcon } from "lucide-react";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import { usePersonalizedHome, HomeRestaurant } from "@/hooks/usePersonalizedHome";
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
 import { useUserRewards } from "@/hooks/useUserRewards";
 import { ZIVO_TIERS, getTierFromPoints, getPointsToNextTier, type ZivoTier } from "@/config/zivoPoints";
@@ -60,34 +81,17 @@ import { REFERRAL_REWARDS } from "@/config/referralProgram";
 import { useScheduledBookingsQuery } from "@/hooks/useScheduledBookings";
 import { useCustomerWallet } from "@/hooks/useCustomerWallet";
 import { useLocalPaymentMethods } from "@/hooks/useLocalPaymentMethods";
-import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRecommendedDeals } from "@/hooks/useRecommendedDeals";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { useCustomerActivityFeed } from "@/hooks/useCustomerActivityFeed";
-import ActivityTimeline from "@/components/shared/ActivityTimeline";
 import { destinationPhotos } from "@/config/photos";
 import { useDestinationPrices } from "@/hooks/useDestinationPrices";
 import { useHotDeals, type HotDeal } from "@/hooks/useHotDeals";
 import { getRestaurantPhoto } from "@/config/restaurantPhotos";
 import { formatDistanceToNow, format } from "date-fns";
 import useEmblaCarousel from "embla-carousel-react";
-import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
 import { useDeviceIntegrityCheck } from "@/hooks/useDeviceIntegrityCheck";
-import LiveTripTracker from "@/components/home/widgets/LiveTripTracker";
-import AISmartDeals from "@/components/home/AISmartDeals";
-import PriceAlertsWidget from "@/components/home/widgets/PriceAlertsWidget";
-import TravelItineraryCard from "@/components/home/widgets/TravelItineraryCard";
-import QuickReorderCarousel from "@/components/home/widgets/QuickReorderCarousel";
-import TrendingNearYou from "@/components/home/TrendingNearYou";
-import zivoRideIcon from "@/assets/zivo-ride-icon.png";
-import zivoEatsIcon from "@/assets/zivo-eats-icon.png";
-import zivoFlightsIcon from "@/assets/zivo-flights-icon.png";
-import zivoHotelsIcon from "@/assets/zivo-hotels-icon.png";
-import zivoRentalCarIcon from "@/assets/zivo-rental-car.png";
-import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
-import zivoShoppingIcon from "@/assets/zivo-shopping.png";
 
 import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
 import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
@@ -354,6 +358,8 @@ const AppHome = () => {
                 <motion.button
                   key={tab.id}
                   onClick={() => setActiveHomeTab(tab.id)}
+                  aria-label={tab.label}
+                  aria-pressed={isActive}
                   whileTap={{ scale: 0.92, rotateX: 5 }}
                   layout
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
@@ -369,6 +375,8 @@ const AppHome = () => {
                   <img
                     src={tabBgMap[tab.id]}
                     alt=""
+                    width={120}
+                    height={44}
                     className="absolute inset-0 w-full h-full object-cover rounded-full"
                     style={{
                       opacity: isActive ? 0.75 : 0.15,
@@ -413,6 +421,7 @@ const AppHome = () => {
             <motion.button
               whileTap={{ scale: 0.98, rotateX: 3 }}
               whileHover={{ y: -2, scale: 1.01 }}
+              aria-label={getSearchPlaceholder(activeHomeTab)}
               onClick={() => {
                 const routes: Record<string, string> = {
                   rides: "/rides",
@@ -508,16 +517,16 @@ const AppHome = () => {
         <div className="px-5 space-y-8">
 
           {/* ─── LIVE TRIP TRACKER ─── */}
-          <LiveTripTracker />
+          <Suspense fallback={null}><LiveTripTracker /></Suspense>
 
           {/* ─── TRENDING NEAR YOU (AI) ─── */}
-          <TrendingNearYou />
+          <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/30 animate-pulse" />}><TrendingNearYou /></Suspense>
 
           {/* ─── QUICK REORDER CAROUSEL ─── */}
-          <QuickReorderCarousel />
+          <Suspense fallback={null}><QuickReorderCarousel /></Suspense>
 
           {/* ─── PRICE ALERTS WIDGET ─── */}
-          <PriceAlertsWidget />
+          <Suspense fallback={null}><PriceAlertsWidget /></Suspense>
 
           {/* ─── ORDER AGAIN ─── */}
           {user && orderAgain.length > 0 && (
@@ -559,7 +568,7 @@ const AppHome = () => {
           {user && activityItems.length > 0 && (
             <div>
               <SectionHeader icon={Clock} iconColor="text-primary" title={t("home.recent_activity")} actionLabel={t("home.see_all")} onSeeAll={() => navigate("/trips")} />
-              <ActivityTimeline
+              <Suspense fallback={null}><ActivityTimeline
                 items={activityItems.map((a: any) => ({
                   id: a.id,
                   icon: Activity,
@@ -571,7 +580,7 @@ const AppHome = () => {
                 }))}
                 maxHeight="280px"
                 emptyMessage="No recent activity"
-              />
+              /></Suspense>
             </div>
           )}
 
@@ -654,7 +663,7 @@ const AppHome = () => {
           </div>
 
           {/* ─── AI SMART DEALS ─── */}
-          <AISmartDeals />
+          <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/30 animate-pulse" />}><AISmartDeals /></Suspense>
 
           {/* ─── HOT DEALS ─── */}
           <div>
@@ -760,12 +769,13 @@ const AppHome = () => {
         </div>
       </div>
 
-      {/* Search Overlay */}
-      <UniversalSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <Suspense fallback={null}>
+        <UniversalSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      </Suspense>
     </div>
 
     {/* Bottom Nav — outside perspective container so position:fixed works */}
-    <ZivoMobileNav />
+    <Suspense fallback={<div className="h-16" />}><ZivoMobileNav /></Suspense>
     </>
   );
 };
