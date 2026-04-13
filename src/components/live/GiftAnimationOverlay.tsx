@@ -11,9 +11,10 @@ import { giftAnimationVideos } from "@/config/giftAnimations";
 interface GiftAnimationOverlayProps {
   activeGift: { name: string; coins: number; senderName?: string } | null;
   onComplete: () => void;
+  giftPanelOpen?: boolean;
 }
 
-export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAnimationOverlayProps) {
+export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen }: GiftAnimationOverlayProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const onCompleteRef = useRef(onComplete);
   const [animKey, setAnimKey] = useState(0);
@@ -69,11 +70,11 @@ export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAni
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-[60] pointer-events-none overflow-hidden"
+        className="fixed inset-0 z-[100] pointer-events-none overflow-hidden"
       >
         {/* ── Central gift image with effects ── */}
         {giftImg && (
-          <div className="absolute inset-0 flex items-center justify-center" style={{ marginTop: "-5%" }}>
+          <div className="absolute inset-0 flex items-center justify-center" style={{ marginTop: giftPanelOpen ? "-45%" : "-5%" }}>
             {/* Sparkle particles */}
             {sparkles.map((s) => (
               <motion.div
@@ -134,7 +135,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAni
           exit={{ x: -350, opacity: 0 }}
           transition={{ type: "spring", damping: 22, stiffness: 200, delay: 0.2 }}
           className="absolute left-0"
-          style={{ top: "25%" }}
+          style={{ top: giftPanelOpen ? "10%" : "25%" }}
         >
           <div
             className="flex items-center gap-2 pl-2 pr-6 py-2 rounded-r-full"
@@ -170,7 +171,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAni
           animate={{ scale: [0, 1.8, 1], opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
           className="absolute right-5"
-          style={{ top: "38%" }}
+          style={{ top: giftPanelOpen ? "18%" : "38%" }}
         >
           <motion.span
             animate={{ scale: [1, 1.2, 1] }}
