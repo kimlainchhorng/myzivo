@@ -279,6 +279,8 @@ export default function GoLivePage() {
       ...prev.slice(-20),
       { id: Date.now().toString(), user: sender, text: `sent ${gift.icon} ${gift.name} (${gift.coins} coins)`, isGift: true, avatar: "bg-amber-500" },
     ]);
+    // Trigger full-screen gift animation
+    setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
     toast(`${gift.icon} ${gift.name} sent!`, { description: `${gift.coins} coins` });
     setShowGiftPanel(false);
   }, [spawnFloatingReaction]);
