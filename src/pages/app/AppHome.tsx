@@ -374,6 +374,8 @@ const AppHome = () => {
                   <img
                     src={tabBgMap[tab.id]}
                     alt=""
+                    width={120}
+                    height={44}
                     className="absolute inset-0 w-full h-full object-cover rounded-full"
                     style={{
                       opacity: isActive ? 0.75 : 0.15,
