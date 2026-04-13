@@ -15,26 +15,24 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Sparkles,
-  MapPin,
-  Calendar as CalendarIcon,
-  Users,
-  DollarSign,
-  Plane,
-  Building2,
-  Compass,
-  ChevronRight,
-  ChevronLeft,
-  Loader2,
-  Share2,
-  Bookmark,
-  Check,
-  Sun,
-  Cloud,
-  Umbrella,
-  Star,
-} from "lucide-react";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import CalendarIcon from "lucide-react/dist/esm/icons/calendar";
+import Users from "lucide-react/dist/esm/icons/users";
+import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Building2 from "lucide-react/dist/esm/icons/building-2";
+import Compass from "lucide-react/dist/esm/icons/compass";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
+import Bookmark from "lucide-react/dist/esm/icons/bookmark";
+import Check from "lucide-react/dist/esm/icons/check";
+import Sun from "lucide-react/dist/esm/icons/sun";
+import Cloud from "lucide-react/dist/esm/icons/cloud";
+import Umbrella from "lucide-react/dist/esm/icons/umbrella";
+import Star from "lucide-react/dist/esm/icons/star";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import NavBar from "@/components/home/NavBar";

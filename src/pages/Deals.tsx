@@ -13,37 +13,35 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import {
-  Flame,
-  Search,
-  Bell,
-  Sparkles,
-  Clock,
-  Gift,
-  Plane,
-  BedDouble,
-  Car,
-  Timer,
-  ArrowRight,
-  Crown,
-  Zap,
-  Shield,
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  Star,
-  MapPin,
-  Calendar,
-  ChevronRight,
-  Heart,
-  Eye,
-  DollarSign,
-  Percent,
-  Target,
-  Leaf,
-  Loader2,
-  Package,
-} from "lucide-react";
+import Flame from "lucide-react/dist/esm/icons/flame";
+import Search from "lucide-react/dist/esm/icons/search";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import Gift from "lucide-react/dist/esm/icons/gift";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import BedDouble from "lucide-react/dist/esm/icons/bed-double";
+import Car from "lucide-react/dist/esm/icons/car";
+import Timer from "lucide-react/dist/esm/icons/timer";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Crown from "lucide-react/dist/esm/icons/crown";
+import Zap from "lucide-react/dist/esm/icons/zap";
+import Shield from "lucide-react/dist/esm/icons/shield";
+import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
+import TrendingDown from "lucide-react/dist/esm/icons/trending-down";
+import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
+import Star from "lucide-react/dist/esm/icons/star";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import Heart from "lucide-react/dist/esm/icons/heart";
+import Eye from "lucide-react/dist/esm/icons/eye";
+import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
+import Percent from "lucide-react/dist/esm/icons/percent";
+import Target from "lucide-react/dist/esm/icons/target";
+import Leaf from "lucide-react/dist/esm/icons/leaf";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import Package from "lucide-react/dist/esm/icons/package";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useRecommendedDeals, type DealCategory } from "@/hooks/useRecommendedDeals";

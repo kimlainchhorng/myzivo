@@ -5,17 +5,52 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useDragControls, PanInfo } from "framer-motion";
-import {
-  MapPin, Navigation, ChevronRight, ArrowLeft, Home,
-  Building2, Car, Crown, Users, Zap,
-  CheckCircle, History, ChevronDown, Clock,
-  CreditCard, User, CalendarClock, Map,
-  Star, Phone, MessageSquare, Shield, Banknote,
-  Smartphone, Wallet, X, Baby, Sparkles,
-  Route, Timer, Bell, Package, Plane, Hotel, TrendingDown, Gem,
-  PawPrint, Accessibility, Plus, ShoppingCart, Fuel, UtensilsCrossed, Store, Pill,
-  Globe, Bike
-} from "lucide-react";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Navigation from "lucide-react/dist/esm/icons/navigation";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import Home from "lucide-react/dist/esm/icons/home";
+import Building2 from "lucide-react/dist/esm/icons/building-2";
+import Car from "lucide-react/dist/esm/icons/car";
+import Crown from "lucide-react/dist/esm/icons/crown";
+import Users from "lucide-react/dist/esm/icons/users";
+import Zap from "lucide-react/dist/esm/icons/zap";
+import CheckCircle from "lucide-react/dist/esm/icons/check-circle";
+import History from "lucide-react/dist/esm/icons/history";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import CreditCard from "lucide-react/dist/esm/icons/credit-card";
+import User from "lucide-react/dist/esm/icons/user";
+import CalendarClock from "lucide-react/dist/esm/icons/calendar-clock";
+import Map from "lucide-react/dist/esm/icons/map";
+import Star from "lucide-react/dist/esm/icons/star";
+import Phone from "lucide-react/dist/esm/icons/phone";
+import MessageSquare from "lucide-react/dist/esm/icons/message-square";
+import Shield from "lucide-react/dist/esm/icons/shield";
+import Banknote from "lucide-react/dist/esm/icons/banknote";
+import Smartphone from "lucide-react/dist/esm/icons/smartphone";
+import Wallet from "lucide-react/dist/esm/icons/wallet";
+import X from "lucide-react/dist/esm/icons/x";
+import Baby from "lucide-react/dist/esm/icons/baby";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Route from "lucide-react/dist/esm/icons/route";
+import Timer from "lucide-react/dist/esm/icons/timer";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import Package from "lucide-react/dist/esm/icons/package";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import TrendingDown from "lucide-react/dist/esm/icons/trending-down";
+import Gem from "lucide-react/dist/esm/icons/gem";
+import PawPrint from "lucide-react/dist/esm/icons/paw-print";
+import Accessibility from "lucide-react/dist/esm/icons/accessibility";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart";
+import Fuel from "lucide-react/dist/esm/icons/fuel";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import Store from "lucide-react/dist/esm/icons/store";
+import Pill from "lucide-react/dist/esm/icons/pill";
+import Globe from "lucide-react/dist/esm/icons/globe";
+import Bike from "lucide-react/dist/esm/icons/bike";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
@@ -37,7 +72,10 @@ import RidePaymentSection from "@/components/rides/RidePaymentSection";
 import CancelRideModal from "@/components/rides/CancelRideModal";
 import { Input } from "@/components/ui/input";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
-import { Tag, Percent, CheckCircle2, Loader2 } from "lucide-react";
+import Tag from "lucide-react/dist/esm/icons/tag";
+import Percent from "lucide-react/dist/esm/icons/percent";
+import CheckCircle2 from "lucide-react/dist/esm/icons/check-circle-2";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import PlaceLogo from "@/components/rides/PlaceLogo";
 import { useCityPricing } from "@/hooks/useCityPricing";
 import { useDriverLocation } from "@/hooks/useDriverLocation";

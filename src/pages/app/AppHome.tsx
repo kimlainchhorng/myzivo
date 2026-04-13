@@ -10,14 +10,43 @@ import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import {
-  Search, Plane, Car, Utensils, BedDouble,
-  MapPin, Bell, LucideIcon, Package, Star, Sparkles,
-  UtensilsCrossed, Heart, History, Hotel, Gift, Users, Share2, Clock,
-  Wallet, CreditCard, Home, Briefcase, Plus, Timer, DollarSign,
-  TrendingUp, Navigation, ChevronRight, ArrowRight, Zap, Shield,
-  Globe, Crown, Flame, Calendar, Activity
-} from "lucide-react";
+import Search from "lucide-react/dist/esm/icons/search";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Car from "lucide-react/dist/esm/icons/car";
+import Utensils from "lucide-react/dist/esm/icons/utensils";
+import BedDouble from "lucide-react/dist/esm/icons/bed-double";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import Package from "lucide-react/dist/esm/icons/package";
+import Star from "lucide-react/dist/esm/icons/star";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import Heart from "lucide-react/dist/esm/icons/heart";
+import History from "lucide-react/dist/esm/icons/history";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import Gift from "lucide-react/dist/esm/icons/gift";
+import Users from "lucide-react/dist/esm/icons/users";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import Wallet from "lucide-react/dist/esm/icons/wallet";
+import CreditCard from "lucide-react/dist/esm/icons/credit-card";
+import Home from "lucide-react/dist/esm/icons/home";
+import Briefcase from "lucide-react/dist/esm/icons/briefcase";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import Timer from "lucide-react/dist/esm/icons/timer";
+import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
+import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
+import Navigation from "lucide-react/dist/esm/icons/navigation";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Zap from "lucide-react/dist/esm/icons/zap";
+import Shield from "lucide-react/dist/esm/icons/shield";
+import Globe from "lucide-react/dist/esm/icons/globe";
+import Crown from "lucide-react/dist/esm/icons/crown";
+import Flame from "lucide-react/dist/esm/icons/flame";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
+import Activity from "lucide-react/dist/esm/icons/activity";
+import type { LucideIcon } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
