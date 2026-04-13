@@ -1,13 +1,13 @@
 /**
  * GoLivePage — Broadcast a live stream with camera, title, and chat
  */
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, memo, useMemo } from "react";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Radio, Camera, CameraOff, Mic, MicOff, RotateCcw,
-  Users, Heart, MessageCircle, Send, Share2, X, Sparkles, Zap, Gift, Star, Crown, Flame, ThumbsUp
+  Users, Heart, Send, Share2, X, Sparkles, Zap, Gift
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,7 @@ export default function GoLivePage() {
   const [giftsReceived, setGiftsReceived] = useState(0);
   const [giftTab, setGiftTab] = useState<"gifts" | "interactive" | "exclusive">("gifts");
 
-  const allGifts = {
+  const allGifts = useMemo(() => ({
     gifts: [
       { icon: "🎁", name: "Gift Pack", coins: 1, badge: "Unlock", bg: "from-pink-400 to-purple-400" },
       { icon: "🌹", name: "Rose", coins: 1, badge: "Popular", bg: "from-rose-400 to-pink-400" },
@@ -90,11 +90,11 @@ export default function GoLivePage() {
       { icon: "✈️", name: "Private Jet", coins: 4888, bg: "from-sky-400 to-blue-400" },
       { icon: "🌹", name: "Rose Hand", coins: 199, bg: "from-red-400 to-pink-400" },
     ],
-  };
+  }), []);
 
-  const quickReactions = ["❤️", "🔥", "😍", "👏", "😂", "🎵", "💯", "✨"];
+  const quickReactions = useMemo(() => ["❤️", "🔥", "😍", "👏", "😂", "🎵", "💯", "✨"], []);
 
-  const topics = ["General", "Music", "Gaming", "Cooking", "Tech", "Fitness", "Art", "Travel", "Fashion", "Comedy"];
+  const topics = useMemo(() => ["General", "Music", "Gaming", "Cooking", "Tech", "Fitness", "Art", "Travel", "Fashion", "Comedy"], []);
 
   // Start camera
   const startCamera = useCallback(async () => {
@@ -155,40 +155,45 @@ export default function GoLivePage() {
     toast.success("You're live! 🔴");
   };
 
-  // Simulate viewers & likes while live
+  // Simulate viewers & likes while live — use single rAF-based loop instead of 4 setIntervals
   useEffect(() => {
     if (phase !== "live") return;
-    const viewerInterval = setInterval(() => {
-      setViewerCount((p) => {
-        const delta = Math.random() > 0.4 ? Math.floor(Math.random() * 3) : -Math.floor(Math.random() * 2);
-        return Math.max(0, p + delta);
-      });
-    }, 3000);
+    const names = ["Alex", "Jordan", "Sam", "Taylor", "Morgan", "Riley", "Casey"];
+    const msgs = ["🔥🔥🔥", "This is amazing!", "Hello from NYC!", "Love this!", "First time here ❤️", "Keep going!", "Wow 😍", "👏👏👏"];
 
-    const likeInterval = setInterval(() => {
-      if (Math.random() > 0.5) setLikes((p) => p + 1);
-    }, 2500);
+    let lastViewer = 0, lastLike = 0, lastElapsed = 0, lastChat = 0;
+    let raf: number;
+    const tick = (now: number) => {
+      if (!lastViewer) { lastViewer = lastLike = lastElapsed = lastChat = now; }
 
-    const elapsedInterval = setInterval(() => setElapsed((p) => p + 1), 1000);
-
-    // Simulate chat messages
-    const chatInterval = setInterval(() => {
-      if (Math.random() > 0.6) {
-        const names = ["Alex", "Jordan", "Sam", "Taylor", "Morgan", "Riley", "Casey"];
-        const msgs = ["🔥🔥🔥", "This is amazing!", "Hello from NYC!", "Love this!", "First time here ❤️", "Keep going!", "Wow 😍", "👏👏👏"];
-        setChatMessages((prev) => [
-          ...prev.slice(-20),
-          { id: Date.now().toString(), user: names[Math.floor(Math.random() * names.length)], text: msgs[Math.floor(Math.random() * msgs.length)] },
-        ]);
+      if (now - lastElapsed >= 1000) {
+        setElapsed((p) => p + 1);
+        lastElapsed = now;
       }
-    }, 4000);
-
-    return () => {
-      clearInterval(viewerInterval);
-      clearInterval(likeInterval);
-      clearInterval(elapsedInterval);
-      clearInterval(chatInterval);
+      if (now - lastViewer >= 3000) {
+        setViewerCount((p) => {
+          const delta = Math.random() > 0.4 ? Math.floor(Math.random() * 3) : -Math.floor(Math.random() * 2);
+          return Math.max(0, p + delta);
+        });
+        lastViewer = now;
+      }
+      if (now - lastLike >= 2500) {
+        if (Math.random() > 0.5) setLikes((p) => p + 1);
+        lastLike = now;
+      }
+      if (now - lastChat >= 4000) {
+        if (Math.random() > 0.6) {
+          setChatMessages((prev) => [
+            ...prev.slice(-20),
+            { id: now.toString(), user: names[Math.floor(Math.random() * names.length)], text: msgs[Math.floor(Math.random() * msgs.length)] },
+          ]);
+        }
+        lastChat = now;
+      }
+      raf = requestAnimationFrame(tick);
     };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   }, [phase]);
 
   // End stream
@@ -210,30 +215,30 @@ export default function GoLivePage() {
     setChatInput("");
   };
 
-  const spawnFloatingReaction = (emoji: string) => {
+  const spawnFloatingReaction = useCallback((emoji: string) => {
     const id = `${Date.now()}-${Math.random()}`;
     const x = Math.random() * 60 - 30;
-    setFloatingReactions((prev) => [...prev.slice(-12), { id, emoji, x }]);
+    setFloatingReactions((prev) => [...prev.slice(-8), { id, emoji, x }]);
     setTimeout(() => setFloatingReactions((prev) => prev.filter((r) => r.id !== id)), 2500);
-  };
+  }, []);
 
-  const sendReaction = (emoji: string) => {
+  const sendReaction = useCallback((emoji: string) => {
     spawnFloatingReaction(emoji);
     setLikes((p) => p + 1);
-  };
+  }, [spawnFloatingReaction]);
 
-  const sendGift = (gift: { icon: string; name: string; coins: number }) => {
+  const sendGift = useCallback((gift: { icon: string; name: string; coins: number }) => {
     setGiftsReceived((p) => p + 1);
     spawnFloatingReaction(gift.icon);
-    const names = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
-    const sender = names[Math.floor(Math.random() * names.length)];
+    const senders = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
+    const sender = senders[Math.floor(Math.random() * senders.length)];
     setChatMessages((prev) => [
       ...prev.slice(-20),
       { id: Date.now().toString(), user: sender, text: `sent ${gift.icon} ${gift.name} (${gift.coins} coins)`, isGift: true },
     ]);
     toast(`${gift.icon} ${gift.name} sent!`, { description: `${gift.coins} coins` });
     setShowGiftPanel(false);
-  };
+  }, [spawnFloatingReaction]);
 
   // ── Ended screen ──
   if (phase === "ended") {
@@ -325,7 +330,7 @@ export default function GoLivePage() {
       {/* Setup form (only in setup phase) */}
       {phase === "setup" && (
         <div className="relative z-10 flex-1 flex flex-col justify-end p-4 pb-8 space-y-4">
-          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-4">
+          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.2 }} className="space-y-4">
             <div className="bg-black/50 backdrop-blur-xl rounded-2xl p-4 space-y-4 border border-white/10">
               <div className="flex items-center gap-2 mb-1">
                 <Sparkles className="h-4 w-4 text-red-400" />
@@ -385,15 +390,14 @@ export default function GoLivePage() {
       {phase === "live" && (
         <div className="relative z-10 flex-1 flex flex-col justify-end">
           {/* Floating reactions */}
-          <AnimatePresence>
+          <AnimatePresence initial={false}>
             {floatingReactions.map((r) => (
               <motion.div
                 key={r.id}
-                initial={{ opacity: 1, y: 0, scale: 1 }}
-                animate={{ opacity: 0, y: -280, x: r.x, scale: 1.4 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 2.5, ease: "easeOut" }}
-                className="absolute bottom-44 right-8 text-2xl pointer-events-none z-30"
+                initial={{ opacity: 1, y: 0 }}
+                animate={{ opacity: 0, y: -280, x: r.x }}
+                transition={{ duration: 2, ease: "easeOut" }}
+                className="absolute bottom-44 right-8 text-2xl pointer-events-none z-30 will-change-transform"
               >
                 {r.emoji}
               </motion.div>
@@ -432,26 +436,21 @@ export default function GoLivePage() {
 
           {/* Chat messages overlay */}
           <div className="px-4 mb-2 max-h-[180px] overflow-y-auto space-y-2 pointer-events-none">
-            <AnimatePresence initial={false}>
-              {chatMessages.slice(-8).map((msg) => (
-                <motion.div
-                  key={msg.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  className={cn(
-                    "flex items-center gap-2 backdrop-blur-sm rounded-full px-3 py-1.5 w-fit max-w-[80%]",
-                    msg.isGift ? "bg-amber-500/20 border border-amber-500/30" : "bg-black/30"
-                  )}
-                >
-                  <Avatar className="h-6 w-6">
-                    <AvatarFallback className="text-[9px] bg-primary/20 text-primary font-bold">{msg.user[0]}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-xs text-white/80 font-medium">{msg.user}</span>
-                  <span className={cn("text-xs", msg.isGift ? "text-amber-300" : "text-white")}>{msg.text}</span>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+            {chatMessages.slice(-6).map((msg) => (
+              <div
+                key={msg.id}
+                className={cn(
+                  "flex items-center gap-2 rounded-full px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200",
+                  msg.isGift ? "bg-amber-500/20 border border-amber-500/30" : "bg-black/30"
+                )}
+              >
+                <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <span className="text-[9px] text-primary font-bold">{msg.user[0]}</span>
+                </div>
+                <span className="text-xs text-white/80 font-medium">{msg.user}</span>
+                <span className={cn("text-xs", msg.isGift ? "text-amber-300" : "text-white")}>{msg.text}</span>
+              </div>
+            ))}
           </div>
 
           {/* Chat input + End button */}
@@ -486,13 +485,9 @@ export default function GoLivePage() {
                 <div className="overflow-hidden border-b border-white/5 py-2.5 px-4 flex items-center gap-3">
                   <Gift className="h-5 w-5 text-white/70 shrink-0" />
                   <div className="overflow-hidden flex-1">
-                    <motion.p
-                      animate={{ x: [0, -300] }}
-                      transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                      className="text-xs text-white/50 whitespace-nowrap"
-                    >
+                    <p className="text-xs text-white/50 whitespace-nowrap animate-[marquee_8s_linear_infinite]">
                       Unlock Gifts and Coin rewards with your first purchase &nbsp;&nbsp;&nbsp; Unlock Gifts and Coin rewards with your first purchase
-                    </motion.p>
+                    </p>
                   </div>
                   <button onClick={() => setShowGiftPanel(false)} className="text-white/40 text-xs shrink-0">
                     <X className="h-4 w-4" />
