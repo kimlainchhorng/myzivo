@@ -5,12 +5,32 @@
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { forwardRef } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Plane, Hotel, CarFront, Car, UtensilsCrossed, Package,
-  Menu, X, User, ChevronDown, HelpCircle,
-  Sparkles, Users, Award, Crown, LogOut, UserCircle, Briefcase, Globe, Check,
-  Newspaper, Film, MapPin, MessageCircle, Rss, Search,
-} from "lucide-react";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import CarFront from "lucide-react/dist/esm/icons/car-front";
+import Car from "lucide-react/dist/esm/icons/car";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import Package from "lucide-react/dist/esm/icons/package";
+import Menu from "lucide-react/dist/esm/icons/menu";
+import X from "lucide-react/dist/esm/icons/x";
+import User from "lucide-react/dist/esm/icons/user";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
+import HelpCircle from "lucide-react/dist/esm/icons/help-circle";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Users from "lucide-react/dist/esm/icons/users";
+import Award from "lucide-react/dist/esm/icons/award";
+import Crown from "lucide-react/dist/esm/icons/crown";
+import LogOut from "lucide-react/dist/esm/icons/log-out";
+import UserCircle from "lucide-react/dist/esm/icons/user-circle";
+import Briefcase from "lucide-react/dist/esm/icons/briefcase";
+import Globe from "lucide-react/dist/esm/icons/globe";
+import Check from "lucide-react/dist/esm/icons/check";
+import Newspaper from "lucide-react/dist/esm/icons/newspaper";
+import Film from "lucide-react/dist/esm/icons/film";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
+import Rss from "lucide-react/dist/esm/icons/rss";
+import Search from "lucide-react/dist/esm/icons/search";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";

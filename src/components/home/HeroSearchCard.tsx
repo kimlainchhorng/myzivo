@@ -2,7 +2,17 @@
  * HeroSearchCard - 3D Spatial floating tabbed search card
  */
 import { useState } from "react";
-import { Plane, Hotel, CarFront, Car, UtensilsCrossed, Search, MapPin, Calendar, Users, Clock, ArrowLeftRight } from "lucide-react";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import CarFront from "lucide-react/dist/esm/icons/car-front";
+import Car from "lucide-react/dist/esm/icons/car";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import Search from "lucide-react/dist/esm/icons/search";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
+import Users from "lucide-react/dist/esm/icons/users";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import ArrowLeftRight from "lucide-react/dist/esm/icons/arrow-left-right";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";

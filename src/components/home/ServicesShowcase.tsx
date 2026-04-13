@@ -2,7 +2,14 @@
  * ServicesShowcase — Premium 3D/4D Ad-Style Marketing Cards
  * Cinematic bento grid with auto-scrolling ticker, holographic depth, and floating animations
  */
-import { Plane, Hotel, CarFront, Car, UtensilsCrossed, ArrowRight, Sparkles, Star } from "lucide-react";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import CarFront from "lucide-react/dist/esm/icons/car-front";
+import Car from "lucide-react/dist/esm/icons/car";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Star from "lucide-react/dist/esm/icons/star";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
