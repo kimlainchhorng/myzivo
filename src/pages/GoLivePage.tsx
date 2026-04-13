@@ -275,10 +275,6 @@ export default function GoLivePage() {
     spawnFloatingReaction(gift.icon);
     const senders = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
     const sender = senders[Math.floor(Math.random() * senders.length)];
-    setChatMessages((prev) => [
-      ...prev.slice(-20),
-      { id: Date.now().toString(), user: sender, text: `sent ${gift.icon} ${gift.name} (${gift.coins} coins)`, isGift: true, avatar: "bg-amber-500" },
-    ]);
     // Trigger full-screen gift animation
     setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
     
