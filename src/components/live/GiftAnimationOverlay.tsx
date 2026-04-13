@@ -1,6 +1,7 @@
 /**
  * GiftAnimationOverlay — Premium gift animation over live stream
  * TikTok/Bigo-level: dramatic entrance, pulsing combo, polished sender banner
+ * + Premium video animations for expensive gifts
  */
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,6 +18,7 @@ interface GiftAnimationOverlayProps {
 export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCount = 1 }: GiftAnimationOverlayProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const onCompleteRef = useRef(onComplete);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [animKey, setAnimKey] = useState(0);
 
   onCompleteRef.current = onComplete;
@@ -58,7 +60,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
   useEffect(() => {
     if (!activeGift) return;
     const isPremium = !!giftAnimationVideos[activeGift.name];
-    timeoutRef.current = setTimeout(dismiss, isPremium ? 5000 : 4000);
+    timeoutRef.current = setTimeout(dismiss, isPremium ? 6000 : 4000);
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -70,7 +72,8 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
   if (!activeGift) return null;
 
   const giftImg = giftImages[activeGift.name];
-  const isPremium = !!giftAnimationVideos[activeGift.name];
+  const videoUrl = giftAnimationVideos[activeGift.name];
+  const isPremium = !!videoUrl;
 
   // Combo intensity scales with count
   const comboIntensity = Math.min(comboCount, 20);
@@ -87,15 +90,37 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
         transition={{ duration: 0.15 }}
         className="fixed inset-0 z-[100] pointer-events-none overflow-hidden"
       >
+        {/* ── Premium video animation for expensive gifts ── */}
+        {isPremium && videoUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 z-[1] flex items-center justify-center"
+          >
+            <video
+              ref={videoRef}
+              src={videoUrl}
+              autoPlay
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+              style={{ mixBlendMode: "screen", opacity: 0.85 }}
+              onEnded={dismiss}
+            />
+          </motion.div>
+        )}
+
         {/* ── Central gift image with effects ── */}
         {giftImg && (
-          <div className="absolute inset-0 flex items-center justify-center" style={{ marginTop: giftPanelOpen ? "-45%" : "-5%" }}>
+          <div className="absolute inset-0 flex items-center justify-center z-[2]" style={{ marginTop: giftPanelOpen ? "-45%" : "-5%" }}>
             {/* Expanding ring pulses */}
             {rings.map((r) => (
               <motion.div
                 key={`ring-${r.id}`}
                 className="absolute rounded-full border"
-                style={{ width: r.size, height: r.size, borderColor: "rgba(255,200,0,0.3)" }}
+                style={{ width: r.size, height: r.size, borderColor: isPremium ? "rgba(255,150,0,0.4)" : "rgba(255,200,0,0.3)" }}
                 initial={{ scale: 0, opacity: 0.8 }}
                 animate={{ scale: [0, 2.5], opacity: [0.6, 0] }}
                 transition={{ duration: 1.5, delay: r.delay, ease: "easeOut" }}
@@ -110,14 +135,14 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
                 initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
                 animate={{
                   opacity: [0, 1, 0.6, 0],
-                  x: Math.cos(s.angle) * s.dist,
-                  y: Math.sin(s.angle) * s.dist,
+                  x: Math.cos(s.angle) * s.dist * (isPremium ? 1.3 : 1),
+                  y: Math.sin(s.angle) * s.dist * (isPremium ? 1.3 : 1),
                   scale: [0, 1.5, 0.5, 0],
                   rotate: [0, 180],
                 }}
                 transition={{ duration: s.dur, delay: s.delay, ease: "easeOut" }}
               >
-                <svg viewBox="0 0 24 24" fill={s.color} style={{ width: s.size, height: s.size, filter: `drop-shadow(0 0 4px ${s.color})` }}>
+                <svg viewBox="0 0 24 24" fill={s.color} style={{ width: s.size * (isPremium ? 1.3 : 1), height: s.size * (isPremium ? 1.3 : 1), filter: `drop-shadow(0 0 4px ${s.color})` }}>
                   <path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41L12 0Z" />
                 </svg>
               </motion.div>
@@ -127,9 +152,11 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
             <motion.div
               className="absolute rounded-full"
               style={{
-                width: isPremium ? 280 : 220,
-                height: isPremium ? 280 : 220,
-                background: "radial-gradient(circle, hsla(42, 100%, 55%, 0.3) 0%, hsla(42, 100%, 55%, 0.08) 50%, transparent 70%)",
+                width: isPremium ? 320 : 220,
+                height: isPremium ? 320 : 220,
+                background: isPremium
+                  ? "radial-gradient(circle, hsla(30, 100%, 55%, 0.4) 0%, hsla(30, 100%, 55%, 0.1) 50%, transparent 70%)"
+                  : "radial-gradient(circle, hsla(42, 100%, 55%, 0.3) 0%, hsla(42, 100%, 55%, 0.08) 50%, transparent 70%)",
               }}
               animate={{ scale: [0.7, 1.4, 0.9, 1.2], opacity: [0.2, 0.8, 0.4, 0.6] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
@@ -145,9 +172,11 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               <motion.img
                 src={giftImg}
                 alt={activeGift.name}
-                className={isPremium ? "w-48 h-48 object-contain" : "w-40 h-40 object-contain"}
+                className={isPremium ? "w-52 h-52 object-contain" : "w-40 h-40 object-contain"}
                 style={{
-                  filter: "drop-shadow(0 0 35px rgba(255,200,0,0.55)) drop-shadow(0 10px 25px rgba(0,0,0,0.45))",
+                  filter: isPremium
+                    ? "drop-shadow(0 0 45px rgba(255,150,0,0.7)) drop-shadow(0 10px 30px rgba(0,0,0,0.5))"
+                    : "drop-shadow(0 0 35px rgba(255,200,0,0.55)) drop-shadow(0 10px 25px rgba(0,0,0,0.45))",
                 }}
                 animate={{
                   y: [0, -12, 0],
@@ -166,15 +195,19 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -400, opacity: 0 }}
           transition={{ type: "spring", damping: 20, stiffness: 180, delay: 0.15 }}
-          className="absolute left-0"
+          className="absolute left-0 z-[3]"
           style={{ top: giftPanelOpen ? "10%" : "25%" }}
         >
           <div
             className="flex items-center gap-2.5 pl-2.5 pr-7 py-2.5 rounded-r-full"
             style={{
-              background: "linear-gradient(95deg, rgba(120,80,10,0.92) 0%, rgba(180,130,30,0.8) 25%, rgba(220,170,50,0.55) 60%, transparent 100%)",
+              background: isPremium
+                ? "linear-gradient(95deg, rgba(180,80,0,0.95) 0%, rgba(220,130,20,0.85) 25%, rgba(255,170,50,0.6) 60%, transparent 100%)"
+                : "linear-gradient(95deg, rgba(120,80,10,0.92) 0%, rgba(180,130,30,0.8) 25%, rgba(220,170,50,0.55) 60%, transparent 100%)",
               backdropFilter: "blur(12px)",
-              boxShadow: "0 4px 24px rgba(255,170,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.15)",
+              boxShadow: isPremium
+                ? "0 4px 30px rgba(255,130,0,0.45), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.2)"
+                : "0 4px 24px rgba(255,170,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.15)",
               borderTop: "1px solid rgba(255,220,100,0.2)",
               borderBottom: "1px solid rgba(100,60,0,0.3)",
             }}
@@ -231,14 +264,14 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
           </div>
         </motion.div>
 
-        {/* ── Combo counter — dramatic scaling with color intensity ── */}
-        {comboCount >= 1 && (
+        {/* ── Combo counter — only show ×2+ (×1 is not a combo) ── */}
+        {comboCount >= 2 && (
           <motion.div
             key={`combo-${comboCount}`}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: [0, 2.2, 1], opacity: 1 }}
             transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
-            className="absolute right-5"
+            className="absolute right-5 z-[3]"
             style={{ top: giftPanelOpen ? "18%" : "38%" }}
           >
             {/* Combo glow ring */}
@@ -261,16 +294,14 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
 
             <motion.div className="flex flex-col items-center">
               {/* Combo label */}
-              {comboCount >= 2 && (
-                <motion.span
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-[10px] font-bold uppercase tracking-widest mb-[-2px]"
-                  style={{ color: comboColor, textShadow: `0 0 8px ${comboColor}80` }}
-                >
-                  combo
-                </motion.span>
-              )}
+              <motion.span
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-[10px] font-bold uppercase tracking-widest mb-[-2px]"
+                style={{ color: comboColor, textShadow: `0 0 8px ${comboColor}80` }}
+              >
+                combo
+              </motion.span>
 
               <motion.span
                 key={comboCount}

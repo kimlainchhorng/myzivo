@@ -5,6 +5,8 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
+import { playGiftSound, playPremiumGiftSound } from "@/utils/giftSounds";
+import { giftAnimationVideos } from "@/config/giftAnimations";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
@@ -74,6 +76,7 @@ export default function GoLivePage() {
   const [coinsEarned, setCoinsEarned] = useState(0);
   const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
   const [giftCombo, setGiftCombo] = useState(0);
+  const [viewerGiftNotif, setViewerGiftNotif] = useState<{ id: string; sender: string; giftName: string; coins: number } | null>(null);
   const lastGiftRef = useRef<{ name: string; time: number }>({ name: "", time: 0 });
 
   const allGifts = useMemo(() => ({
@@ -239,6 +242,31 @@ export default function GoLivePage() {
     return () => cancelAnimationFrame(raf);
   }, [phase]);
 
+  // Simulate random viewer gifts every 15-30s
+  useEffect(() => {
+    if (phase !== "live") return;
+    const giftNames = ["Baby Dragon", "Cute Panda", "Crystal Unicorn", "Lucky Cat", "Phoenix Rising", "Diamond Bear"];
+    const giftCoins = [1, 1, 10, 1, 50, 99];
+    const viewers = ["Luna", "Kai", "Mia", "Nora", "Zara", "Leo", "Aria"];
+    let timerRef: ReturnType<typeof setTimeout>;
+    const scheduleNext = () => {
+      const delay = 15000 + Math.random() * 15000;
+      timerRef = setTimeout(() => {
+        const idx = Math.floor(Math.random() * giftNames.length);
+        const sender = viewers[Math.floor(Math.random() * viewers.length)];
+        const notif = { id: Date.now().toString(), sender, giftName: giftNames[idx], coins: giftCoins[idx] };
+        setViewerGiftNotif(notif);
+        setGiftsReceived((p) => p + 1);
+        setCoinsEarned((p) => p + giftCoins[idx]);
+        playGiftSound(1);
+        setTimeout(() => setViewerGiftNotif((cur) => cur?.id === notif.id ? null : cur), 4000);
+        scheduleNext();
+      }, delay);
+    };
+    scheduleNext();
+    return () => clearTimeout(timerRef);
+  }, [phase]);
+
   const endStream = useCallback(() => {
     setPhase("ended");
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -280,15 +308,25 @@ export default function GoLivePage() {
     
     // Combo tracking — same gift within 5s increments combo
     const now = Date.now();
+    let newCombo = 1;
     if (lastGiftRef.current.name === gift.name && now - lastGiftRef.current.time < 5000) {
-      setGiftCombo((c) => c + 1);
+      newCombo = giftCombo + 1;
+      setGiftCombo(newCombo);
     } else {
       setGiftCombo(1);
     }
     lastGiftRef.current = { name: gift.name, time: now };
     
+    // Play sound effects
+    const isPremium = !!giftAnimationVideos[gift.name];
+    if (isPremium) {
+      playPremiumGiftSound();
+    } else {
+      playGiftSound(newCombo);
+    }
+    
     setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
-  }, [spawnFloatingReaction]);
+  }, [spawnFloatingReaction, giftCombo]);
 
   // ── Ended screen ──
   if (phase === "ended") {
@@ -615,6 +653,45 @@ export default function GoLivePage() {
                 {r.emoji}
               </motion.div>
             ))}
+          </AnimatePresence>
+
+          {/* Viewer gift notification — animated toast at top */}
+          <AnimatePresence>
+            {viewerGiftNotif && (
+              <motion.div
+                key={viewerGiftNotif.id}
+                initial={{ x: -300, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -300, opacity: 0 }}
+                transition={{ type: "spring", damping: 20, stiffness: 200 }}
+                className="absolute top-28 left-3 right-16 z-30"
+              >
+                <div
+                  className="flex items-center gap-2 px-3 py-2 rounded-2xl"
+                  style={{
+                    background: "linear-gradient(95deg, rgba(120,80,10,0.85) 0%, rgba(180,130,30,0.7) 40%, rgba(220,170,50,0.4) 80%, transparent 100%)",
+                    backdropFilter: "blur(10px)",
+                    boxShadow: "0 4px 20px rgba(255,170,0,0.25)",
+                    border: "1px solid rgba(255,200,80,0.15)",
+                  }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                    {viewerGiftNotif.sender[0]}
+                  </div>
+                  {giftImages[viewerGiftNotif.giftName] && (
+                    <img src={giftImages[viewerGiftNotif.giftName]} alt="" className="w-7 h-7 object-contain -ml-3 mb-[-6px] relative z-10" style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.4))" }} />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white text-[11px] font-bold truncate">{viewerGiftNotif.sender}</p>
+                    <p className="text-amber-100/80 text-[10px]">sent <span className="text-white font-semibold">{viewerGiftNotif.giftName}</span></p>
+                  </div>
+                  <div className="flex items-center gap-0.5 bg-black/25 rounded-full px-2 py-0.5">
+                    <span className="text-[8px]">🪙</span>
+                    <span className="text-amber-200 text-[10px] font-bold">{viewerGiftNotif.coins}</span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
 
           {/* Side actions */}
