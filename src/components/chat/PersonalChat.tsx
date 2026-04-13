@@ -1254,11 +1254,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <input ref={lockedImageInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleLockedMediaSelect} />
 
             {/* Locked media price picker */}
-            <LockedMediaPricePicker
-              open={showLockedPricePicker}
-              onClose={() => { setShowLockedPricePicker(false); setPendingLockedFile(null); }}
-              onConfirm={handleLockedMediaConfirm}
-            />
+            {showLockedPricePicker && (
+              <Suspense fallback={null}>
+                <LockedMediaPricePicker
+                  open={showLockedPricePicker}
+                  onClose={() => { setShowLockedPricePicker(false); setPendingLockedFile(null); }}
+                  onConfirm={handleLockedMediaConfirm}
+                />
+              </Suspense>
+            )}
 
             {/* Document upload */}
             <ChatMediaUploader
