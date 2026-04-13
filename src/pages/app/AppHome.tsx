@@ -422,6 +422,7 @@ const AppHome = () => {
             <motion.button
               whileTap={{ scale: 0.98, rotateX: 3 }}
               whileHover={{ y: -2, scale: 1.01 }}
+              aria-label={getSearchPlaceholder(activeHomeTab)}
               onClick={() => {
                 const routes: Record<string, string> = {
                   rides: "/rides",
