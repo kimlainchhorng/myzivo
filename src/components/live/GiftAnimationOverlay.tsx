@@ -138,7 +138,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
             {/* Gift image — dramatic spring entrance from below */}
             <motion.div
               initial={{ scale: 0, opacity: 0, y: 200, rotate: -20 }}
-              animate={{ scale: [0, 1.25, 0.9, 1.05, 1], opacity: 1, y: 0, rotate: [−20, 8, -3, 0] }}
+              animate={{ scale: [0, 1.25, 0.9, 1.05, 1], opacity: 1, y: 0, rotate: [-20, 8, -3, 0] }}
               transition={{ type: "spring", damping: 8, stiffness: 140, mass: 0.8, delay: 0.05 }}
               className="relative z-10"
             >
