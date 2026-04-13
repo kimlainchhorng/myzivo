@@ -609,7 +609,7 @@ export default function ReelsFeedPage() {
     <>
       {/* Desktop NavBar */}
       <div className="hidden lg:block relative z-[1200]">
-        <NavBar />
+        <Suspense fallback={null}><NavBar /></Suspense>
       </div>
 
       <div className={cn(
@@ -761,10 +761,10 @@ export default function ReelsFeedPage() {
           </button>
 
           {/* Story Rings */}
-          <FeedStoryRing />
+           <Suspense fallback={null}><FeedStoryRing /></Suspense>
 
-          {/* Suggested Users */}
-          <SuggestedUsersCarousel />
+           {/* Suggested Users */}
+           <Suspense fallback={null}><SuggestedUsersCarousel /></Suspense>
 
 
           {/* Posts */}
@@ -810,7 +810,7 @@ export default function ReelsFeedPage() {
                     }
                   }} />
                   {/* Inject suggested users after 3rd post */}
-                  {idx === 2 && <SuggestedUsersCarousel variant="inline" />}
+                  {idx === 2 && <Suspense fallback={null}><SuggestedUsersCarousel variant="inline" /></Suspense>}
                 </div>
               ))}
             </div>
@@ -896,13 +896,13 @@ export default function ReelsFeedPage() {
                   >
                     <FeedCard key={post.id} item={post} currentUserId={userId} detailMode />
                   </div>
-                  <ZivoMobileNav />
+                   <Suspense fallback={null}><ZivoMobileNav /></Suspense>
                 </motion.div>
               );
             })()}
           </AnimatePresence>
 
-          <ZivoMobileNav />
+           <Suspense fallback={null}><ZivoMobileNav /></Suspense>
         </PullToRefresh>
       </div>
 
@@ -1335,14 +1335,16 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           className="absolute left-4 right-20"
           style={{ bottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 5.5rem), 7rem)' }}
         >
-          <FloatingProductCard
-            commerceLink={item.commerce_link}
-            shopName={item.author_name}
-            storeSlug={item.store_slug}
-            postId={item.id}
-            currentUserId={currentUserId}
-            onNavigate={onClose}
-          />
+          <Suspense fallback={null}>
+            <FloatingProductCard
+              commerceLink={item.commerce_link}
+              shopName={item.author_name}
+              storeSlug={item.store_slug}
+              postId={item.id}
+              currentUserId={currentUserId}
+              onNavigate={onClose}
+            />
+          </Suspense>
         </div>
       )}
 
@@ -1469,7 +1471,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       {/* Share Sheet */}
       <AnimatePresence>
         {showShareSheet && (
-          <UnifiedShareSheet
+           <Suspense fallback={null}><UnifiedShareSheet
             shareUrl={shareUrl}
             shareText={item.caption || `Check out this post by ${item.author_name}`}
             shareMediaUrl={mediaUrl}
