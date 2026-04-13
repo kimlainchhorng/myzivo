@@ -2,7 +2,13 @@
  * FeaturedHotelsSection - Hotel cards with premium hover effects
  */
 import { useState } from "react";
-import { Star, MapPin, ArrowRight, Heart, Wifi, Waves, Dumbbell } from "lucide-react";
+import Star from "lucide-react/dist/esm/icons/star";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Heart from "lucide-react/dist/esm/icons/heart";
+import Wifi from "lucide-react/dist/esm/icons/wifi";
+import Waves from "lucide-react/dist/esm/icons/waves";
+import Dumbbell from "lucide-react/dist/esm/icons/dumbbell";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";

@@ -2,7 +2,11 @@
  * FeaturedCarsSection - Car rental cards with filter chips
  */
 import { useState } from "react";
-import { Star, Users, Fuel, ArrowRight, DoorOpen } from "lucide-react";
+import Star from "lucide-react/dist/esm/icons/star";
+import Users from "lucide-react/dist/esm/icons/users";
+import Fuel from "lucide-react/dist/esm/icons/fuel";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import DoorOpen from "lucide-react/dist/esm/icons/door-open";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";

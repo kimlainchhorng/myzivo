@@ -1,7 +1,7 @@
 /**
  * HeroTrustBar - Clean trust chips
  */
-import { CheckCircle } from "lucide-react";
+import CheckCircle from "lucide-react/dist/esm/icons/check-circle";
 import { cn } from "@/lib/utils";
 
 const trustItems = [
