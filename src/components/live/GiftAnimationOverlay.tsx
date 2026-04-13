@@ -184,7 +184,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               WebkitTextStroke: "1.5px rgba(255,255,255,0.25)",
             }}
           >
-            ×1
+            ×{comboCount}
           </motion.span>
         </motion.div>
 
