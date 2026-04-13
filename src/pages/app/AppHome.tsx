@@ -564,7 +564,7 @@ const AppHome = () => {
           {user && activityItems.length > 0 && (
             <div>
               <SectionHeader icon={Clock} iconColor="text-primary" title={t("home.recent_activity")} actionLabel={t("home.see_all")} onSeeAll={() => navigate("/trips")} />
-              <ActivityTimeline
+              <Suspense fallback={null}><ActivityTimeline
                 items={activityItems.map((a: any) => ({
                   id: a.id,
                   icon: Activity,
@@ -576,7 +576,7 @@ const AppHome = () => {
                 }))}
                 maxHeight="280px"
                 emptyMessage="No recent activity"
-              />
+              /></Suspense>
             </div>
           )}
 
@@ -659,7 +659,7 @@ const AppHome = () => {
           </div>
 
           {/* ─── AI SMART DEALS ─── */}
-          <AISmartDeals />
+          <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/30 animate-pulse" />}><AISmartDeals /></Suspense>
 
           {/* ─── HOT DEALS ─── */}
           <div>
@@ -765,12 +765,13 @@ const AppHome = () => {
         </div>
       </div>
 
-      {/* Search Overlay */}
-      <UniversalSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <Suspense fallback={null}>
+        <UniversalSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      </Suspense>
     </div>
 
     {/* Bottom Nav — outside perspective container so position:fixed works */}
-    <ZivoMobileNav />
+    <Suspense fallback={<div className="h-16" />}><ZivoMobileNav /></Suspense>
     </>
   );
 };
