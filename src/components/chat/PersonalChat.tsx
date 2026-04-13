@@ -380,7 +380,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           .select(msgColumns)
           .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
           .order("created_at", { ascending: false })
-          .limit(200),
+          .limit(100),
         (supabase as any)
           .from("call_history")
           .select(callColumns)
