@@ -1448,19 +1448,21 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       </div>
 
       {/* Comments Bottom Sheet */}
-      <CommentsSheet
-        open={showComments}
-        onClose={() => {
-          setShowComments(false);
-          void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
-        }}
-        postId={interactionPostId}
-        postSource={item.source}
-        currentUserId={currentUserId}
-        commentsCount={localComments}
-        onCommentsCountChange={setLocalComments}
-        dark
-      />
+      <Suspense fallback={null}>
+        <CommentsSheet
+          open={showComments}
+          onClose={() => {
+            setShowComments(false);
+            void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+          }}
+          postId={interactionPostId}
+          postSource={item.source}
+          currentUserId={currentUserId}
+          commentsCount={localComments}
+          onCommentsCountChange={setLocalComments}
+          dark
+        />
+      </Suspense>
 
       {/* Share Sheet */}
       <AnimatePresence>
@@ -2499,18 +2501,20 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       ) : null}
 
       {/* Comments Sheet */}
-      <CommentsSheet
-        open={showComments}
-        onClose={() => {
-          setShowComments(false);
-          void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
-        }}
-        postId={interactionPostId}
-        postSource={item.source}
-        currentUserId={currentUserId}
-        commentsCount={localComments}
-        onCommentsCountChange={setLocalComments}
-      />
+      <Suspense fallback={null}>
+        <CommentsSheet
+          open={showComments}
+          onClose={() => {
+            setShowComments(false);
+            void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+          }}
+          postId={interactionPostId}
+          postSource={item.source}
+          currentUserId={currentUserId}
+          commentsCount={localComments}
+          onCommentsCountChange={setLocalComments}
+        />
+      </Suspense>
 
       {/* Views */}
       {item.media_type === "video" && item.views_count > 0 && (
