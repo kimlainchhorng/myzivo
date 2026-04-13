@@ -701,7 +701,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             </div>
           )}
 
-          {!embedded && <ChatStories />}
+          {!embedded && <Suspense fallback={null}><ChatStories /></Suspense>}
 
           <div className={cn("flex-1 min-h-0", embedded ? "overflow-y-auto" : "") }>
             <AnimatePresence mode="wait">
@@ -979,48 +979,56 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
       {/* Inline Shop Chat */}
       {openShopChat && (
-        <StoreLiveChat
-          storeId={openShopChat.storeId}
-          storeName={openShopChat.name}
-          storeLogo={openShopChat.logo}
-          open={true}
-          onClose={() => setOpenShopChat(null)}
-        />
+        <Suspense fallback={null}>
+          <StoreLiveChat
+            storeId={openShopChat.storeId}
+            storeName={openShopChat.name}
+            storeLogo={openShopChat.logo}
+            open={true}
+            onClose={() => setOpenShopChat(null)}
+          />
+        </Suspense>
       )}
       {/* Inline Personal Chat */}
       <AnimatePresence>
         {openPersonalChat && (
-          <PersonalChat
-            recipientId={openPersonalChat.id}
-            recipientName={openPersonalChat.name}
-            recipientAvatar={openPersonalChat.avatar}
-            onClose={() => { setOpenPersonalChat(null); setPendingCall(null); queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] }); }}
-            autoStartCall={pendingCall}
-            onCallStarted={() => setPendingCall(null)}
-            inline={embedded}
-          />
+          <Suspense fallback={null}>
+            <PersonalChat
+              recipientId={openPersonalChat.id}
+              recipientName={openPersonalChat.name}
+              recipientAvatar={openPersonalChat.avatar}
+              onClose={() => { setOpenPersonalChat(null); setPendingCall(null); queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] }); }}
+              autoStartCall={pendingCall}
+              onCallStarted={() => setPendingCall(null)}
+              inline={embedded}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
       {/* Inline Group Chat */}
       <AnimatePresence>
         {openGroupChat && (
-          <GroupChat
-            groupId={openGroupChat.id}
-            groupName={openGroupChat.name}
-            groupAvatar={openGroupChat.avatar}
-            onClose={() => setOpenGroupChat(null)}
-          />
+          <Suspense fallback={null}>
+            <GroupChat
+              groupId={openGroupChat.id}
+              groupName={openGroupChat.name}
+              groupAvatar={openGroupChat.avatar}
+              onClose={() => setOpenGroupChat(null)}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
       {/* Create Group Modal */}
-      <CreateGroupModal
-        open={showCreateGroup}
-        onClose={() => setShowCreateGroup(false)}
-        onCreated={(group) => {
-          setOpenGroupChat({ id: group.id, name: group.name, avatar: group.avatar });
-          queryClient.invalidateQueries({ queryKey: ["chat-hub-groups"] });
-        }}
-      />
+      <Suspense fallback={null}>
+        <CreateGroupModal
+          open={showCreateGroup}
+          onClose={() => setShowCreateGroup(false)}
+          onCreated={(group) => {
+            setOpenGroupChat({ id: group.id, name: group.name, avatar: group.avatar });
+            queryClient.invalidateQueries({ queryKey: ["chat-hub-groups"] });
+          }}
+        />
+      </Suspense>
     </div>
   );
 
