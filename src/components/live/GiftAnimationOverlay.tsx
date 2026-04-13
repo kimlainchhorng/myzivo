@@ -14,7 +14,7 @@ interface GiftAnimationOverlayProps {
   giftPanelOpen?: boolean;
 }
 
-export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAnimationOverlayProps) {
+export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen }: GiftAnimationOverlayProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const onCompleteRef = useRef(onComplete);
   const [animKey, setAnimKey] = useState(0);
