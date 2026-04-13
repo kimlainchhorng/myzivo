@@ -49,7 +49,7 @@ const ChatStories = lazy(() => import("@/components/chat/ChatStories"));
 let _illustratedPacks: any[] | null = null;
 const getIllustratedPacks = () => {
   if (_illustratedPacks) return _illustratedPacks;
-  import("@/config/illustratedStickers").then(m => { _illustratedPacks = m.ILLUSTRATED_PACKS; });
+  import("@/config/illustratedStickers").then(m => { _illustratedPacks = m.getIllustratedPacks(); });
   return [];
 };
 
@@ -58,15 +58,15 @@ type ChatCategory = "personal" | "shop" | "support" | "ride";
 interface CategoryTab {
   id: ChatCategory;
   label: string;
-  icon: typeof MessageCircle;
+  icon: typeof MessageCircleIcon;
   emptyTitle: string;
   emptyDesc: string;
   emptyIcon: string;
 }
 
 const categories: CategoryTab[] = [
-  { id: "personal", label: "Personal", icon: MessageCircle, emptyTitle: "No conversations yet", emptyDesc: "Start chatting with friends and family", emptyIcon: "💬" },
-  { id: "shop", label: "Shop", icon: Store, emptyTitle: "No shop chats", emptyDesc: "Your conversations with stores will appear here", emptyIcon: "🛍️" },
+  { id: "personal", label: "Personal", icon: MessageCircleIcon, emptyTitle: "No conversations yet", emptyDesc: "Start chatting with friends and family", emptyIcon: "💬" },
+  { id: "shop", label: "Shop", icon: StoreIcon, emptyTitle: "No shop chats", emptyDesc: "Your conversations with stores will appear here", emptyIcon: "🛍️" },
   { id: "support", label: "Support", icon: Headphones, emptyTitle: "Need help?", emptyDesc: "Contact our support team anytime", emptyIcon: "🎧" },
   { id: "ride", label: "Ride", icon: Car, emptyTitle: "No ride chats", emptyDesc: "Messages from your drivers will show here", emptyIcon: "🚗" },
 ];
@@ -78,7 +78,7 @@ function formatChatTime(dateStr: string) {
   return format(d, "MMM d");
 }
 
-const STICKER_LOOKUP = ILLUSTRATED_PACKS
+const STICKER_LOOKUP = getIllustratedPacks()
   .flatMap((p) => p.stickers)
   .reduce<Record<string, { src: string; alt: string }>>((acc, s) => {
     acc[s.id.toLowerCase()] = { src: s.src, alt: s.alt };
@@ -572,7 +572,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
         <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-5">
-          <MessageCircle className="w-9 h-9 text-primary" />
+          <MessageCircleIcon className="w-9 h-9 text-primary" />
         </div>
         <p className="text-xl font-bold text-foreground mb-2">Sign in to chat</p>
         <p className="text-sm text-muted-foreground mb-6 max-w-[260px]">Connect with friends, shops, and support — all in one place</p>
@@ -685,7 +685,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             <div className={cn("px-5 pt-3", embedded && "px-4 pt-3")}>
               <div className="p-3.5 rounded-2xl bg-primary/8 border border-primary/15 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
-                  <MessageCircle className="w-5 h-5 text-primary" />
+                  <MessageCircleIcon className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-primary">Share to chat</p>
@@ -821,7 +821,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                   {(chat.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
                                 </span>
                               ) : active === "shop" ? (
-                                <Store className="w-5 h-5 text-muted-foreground" />
+                                <StoreIcon className="w-5 h-5 text-muted-foreground" />
                               ) : active === "support" ? (
                                 <Headphones className="w-5 h-5 text-muted-foreground" />
                               ) : (
