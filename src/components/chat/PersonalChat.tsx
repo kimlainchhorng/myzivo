@@ -1144,7 +1144,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       isOutgoing={item.caller_id === user?.id}
                       durationSeconds={item.duration_seconds}
                       createdAt={item.created_at}
-                      onCallback={() => handleStartCall(item.call_type as "voice" | "video")}
+                      onCallback={handleStartCall.bind(null, item.call_type as "voice" | "video")}
                       onDelete={handleCallDelete}
                       onDeleteAll={handleCallDeleteAll}
                     />
