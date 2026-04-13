@@ -282,15 +282,25 @@ export default function GoLivePage() {
     
     // Combo tracking — same gift within 5s increments combo
     const now = Date.now();
+    let newCombo = 1;
     if (lastGiftRef.current.name === gift.name && now - lastGiftRef.current.time < 5000) {
-      setGiftCombo((c) => c + 1);
+      newCombo = giftCombo + 1;
+      setGiftCombo(newCombo);
     } else {
       setGiftCombo(1);
     }
     lastGiftRef.current = { name: gift.name, time: now };
     
+    // Play sound effects
+    const isPremium = !!giftAnimationVideos[gift.name];
+    if (isPremium) {
+      playPremiumGiftSound();
+    } else {
+      playGiftSound(newCombo);
+    }
+    
     setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
-  }, [spawnFloatingReaction]);
+  }, [spawnFloatingReaction, giftCombo]);
 
   // ── Ended screen ──
   if (phase === "ended") {
