@@ -794,6 +794,27 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     inputRef.current?.focus();
   }, [recipientId, scrollToBottom, sendChatPush, sending, user?.id]);
 
+  // Pinned messages
+  const pinnedMessages = useMemo(() => messages.filter((m) => m.is_pinned), [messages]);
+
+  const messageMap = useMemo(() => {
+    return new Map(messages.map((message) => [message.id, message]));
+  }, [messages]);
+
+  // Memoize merged + sorted timeline to avoid re-sorting on every render
+  const timeline = useMemo<TimelineItem[]>(() => {
+    return [...messages, ...callEvents].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+  }, [messages, callEvents]);
+
+  // Keep ref in sync for handleScroll
+  useEffect(() => { timelineLengthRef.current = timeline.length; }, [timeline.length]);
+
+  const visibleTimeline = useMemo(() => {
+    return timeline.slice(-visibleTimelineCount);
+  }, [timeline, visibleTimelineCount]);
+
   const scrollToMessage = useCallback((id: string) => {
     const index = timeline.findIndex((item) => !isCallEvent(item) && item.id === id);
     if (index >= 0) {
@@ -810,24 +831,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       }
     });
   }, [timeline]);
-
-  // Pinned messages
-  const pinnedMessages = useMemo(() => messages.filter((m) => m.is_pinned), [messages]);
-
-  const messageMap = useMemo(() => {
-    return new Map(messages.map((message) => [message.id, message]));
-  }, [messages]);
-
-  // Memoize merged + sorted timeline to avoid re-sorting on every render
-  const timeline = useMemo<TimelineItem[]>(() => {
-    return [...messages, ...callEvents].sort(
-      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    );
-  }, [messages, callEvents]);
-
-  const visibleTimeline = useMemo(() => {
-    return timeline.slice(-visibleTimelineCount);
-  }, [timeline, visibleTimelineCount]);
 
   const latestMissedCall = useMemo(() => {
     return [...callEvents]
