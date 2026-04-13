@@ -3,7 +3,7 @@
  * Features: long-press actions (reply/delete/copy/forward/pin), swipe-to-reply, emoji reactions, image/video display
  * Design: Glassmorphic iMessage aesthetic with gradient bubbles, tail shapes, and depth effects
  */
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Reply from "lucide-react/dist/esm/icons/reply";
@@ -165,7 +165,7 @@ interface ChatMessageBubbleProps {
   onPin?: (id: string, pinned: boolean) => void;
 }
 
-export default function ChatMessageBubble({
+const ChatMessageBubble = memo(function ChatMessageBubble({
   id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt, messageType, senderId, lockedPriceCents,
   onReply, onDelete, onForward, onPin,
 }: ChatMessageBubbleProps) {
@@ -1258,4 +1258,6 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
       </div>
     </div>
   );
-}
+});
+
+export default ChatMessageBubble;
