@@ -35,11 +35,11 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import FloatingProductCard from "@/components/reels/FloatingProductCard";
-import CommentsSheet from "@/components/social/CommentsSheet";
+const CommentsSheet = lazy(() => import("@/components/social/CommentsSheet"));
 import FeedStoryRing from "@/components/social/FeedStoryRing";
 import SuggestedUsersCarousel from "@/components/social/SuggestedUsersCarousel";
-import CreatePostModal from "@/components/social/CreatePostModal";
-import FeedSidebar from "@/components/social/FeedSidebar";
+const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
+const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 
 interface FeedItem {
