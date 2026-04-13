@@ -4,7 +4,7 @@
  * voice messages, reply threads, message search, disappearing messages, forward, pin, location sharing,
  * message effects (confetti, fireworks, hearts, lasers)
  */
-import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
