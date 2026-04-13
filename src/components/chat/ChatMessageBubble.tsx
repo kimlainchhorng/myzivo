@@ -384,7 +384,6 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
         onPointerMove={handlePointerMove}
         onClick={handleTap}
         className={`${parsedSticker ? "w-fit max-w-none" : "max-w-[78%]"} select-none touch-pan-y ${isOptimistic ? "opacity-60" : ""}`}
-        whileTap={{ scale: 0.97 }}
       >
         {/* Pin indicator */}
         {isPinned && (
@@ -408,7 +407,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                 src={`${videoUrl}#t=0.1`}
                 className={`w-full aspect-[4/5] object-cover transition-all duration-300 ${isLocked ? "blur-xl scale-105" : ""}`}
                 playsInline
-                preload="auto"
+                preload="none"
                 muted
                 crossOrigin="anonymous"
                 style={{ pointerEvents: "none" }}

@@ -245,22 +245,25 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     }
   }, [visibleTimelineCount]);
 
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
   useEffect(() => {
     const scroller = scrollRef.current;
     const timeline = timelineRef.current;
     if (!scroller || !timeline || typeof ResizeObserver === "undefined") return;
 
-    const observer = new ResizeObserver(() => {
-      if (!isNearBottomRef.current) return;
-      scroller.scrollTop = scroller.scrollHeight;
-      requestAnimationFrame(() => {
+    if (!resizeObserverRef.current) {
+      resizeObserverRef.current = new ResizeObserver(() => {
+        if (!isNearBottomRef.current) return;
         scroller.scrollTop = scroller.scrollHeight;
+        requestAnimationFrame(() => {
+          scroller.scrollTop = scroller.scrollHeight;
+        });
       });
-    });
+    }
 
-    observer.observe(timeline);
-    return () => observer.disconnect();
-  }, [messages.length, callEvents.length]);
+    resizeObserverRef.current.observe(timeline);
+    return () => resizeObserverRef.current?.disconnect();
+  }, []);
 
   useEffect(() => {
     const previousBodyOverscroll = document.body.style.overscrollBehavior;
