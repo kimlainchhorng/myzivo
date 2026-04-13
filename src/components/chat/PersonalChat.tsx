@@ -962,33 +962,34 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       {/* Picture-in-Picture floating call */}
       <AnimatePresence>
         {activeCall && pipMode && (
-          <CallPiP
-            remoteStream={pipData?.remoteStream || null}
-            recipientName={recipientName}
-            isMuted={pipData?.isMuted || false}
-            duration={pipData?.duration || 0}
-            callType={pipData?.callType}
-            isCameraOff={pipData?.isCameraOff}
-            onExpand={() => setPipMode(false)}
-            onEndCall={() => {
-              if (pipControls) {
-                pipControls.endCall();
-                return;
-              }
-
-              setActiveCall(null);
-              setPipMode(false);
-              setPipData(null);
-            }}
-            onToggleMute={() => {
-              pipControls?.toggleMute();
-            }}
-            onToggleCamera={() => {
-              if ((pipData?.callType || activeCall) === "video") {
-                pipControls?.toggleCamera();
-              }
-            }}
-          />
+          <Suspense fallback={null}>
+            <CallPiP
+              remoteStream={pipData?.remoteStream || null}
+              recipientName={recipientName}
+              isMuted={pipData?.isMuted || false}
+              duration={pipData?.duration || 0}
+              callType={pipData?.callType}
+              isCameraOff={pipData?.isCameraOff}
+              onExpand={() => setPipMode(false)}
+              onEndCall={() => {
+                if (pipControls) {
+                  pipControls.endCall();
+                  return;
+                }
+                setActiveCall(null);
+                setPipMode(false);
+                setPipData(null);
+              }}
+              onToggleMute={() => {
+                pipControls?.toggleMute();
+              }}
+              onToggleCamera={() => {
+                if ((pipData?.callType || activeCall) === "video") {
+                  pipControls?.toggleCamera();
+                }
+              }}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
