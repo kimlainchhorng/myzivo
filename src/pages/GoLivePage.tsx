@@ -76,6 +76,7 @@ export default function GoLivePage() {
   const [coinsEarned, setCoinsEarned] = useState(0);
   const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
   const [giftCombo, setGiftCombo] = useState(0);
+  const [viewerGiftNotif, setViewerGiftNotif] = useState<{ id: string; sender: string; giftName: string; coins: number } | null>(null);
   const lastGiftRef = useRef<{ name: string; time: number }>({ name: "", time: 0 });
 
   const allGifts = useMemo(() => ({
