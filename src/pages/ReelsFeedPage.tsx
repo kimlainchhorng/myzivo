@@ -3,13 +3,14 @@
  * Full-width cards with author info, media, captions, and engagement
  * Everyone can post photos/videos that show up here
  */
+import { lazy, Suspense } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import UnifiedShareSheet from "@/components/shared/ShareSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import NavBar from "@/components/home/NavBar";
-import TipSheet from "@/components/social/TipSheet";
+const TipSheet = lazy(() => import("@/components/social/TipSheet"));
 import {
   Loader2, Heart, MessageCircle, Share2, Eye, Bookmark,
   MoreHorizontal, Play, Volume2, VolumeX, Image as ImageIcon,
@@ -34,11 +35,11 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import FloatingProductCard from "@/components/reels/FloatingProductCard";
-import CommentsSheet from "@/components/social/CommentsSheet";
+const CommentsSheet = lazy(() => import("@/components/social/CommentsSheet"));
 import FeedStoryRing from "@/components/social/FeedStoryRing";
 import SuggestedUsersCarousel from "@/components/social/SuggestedUsersCarousel";
-import CreatePostModal from "@/components/social/CreatePostModal";
-import FeedSidebar from "@/components/social/FeedSidebar";
+const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
+const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 
 interface FeedItem {
@@ -616,7 +617,7 @@ export default function ReelsFeedPage() {
         chatOpen && "lg:pr-[400px] xl:pr-[420px] 2xl:pr-[440px]"
       )}>
         {/* Desktop Sidebar */}
-        <FeedSidebar />
+        <Suspense fallback={null}><FeedSidebar /></Suspense>
 
         {/* Main Feed Content */}
         <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pb-0 flex-1 lg:max-w-2xl lg:mx-auto">
@@ -817,6 +818,7 @@ export default function ReelsFeedPage() {
           })()}
 
           {/* Create Post Modal */}
+          <Suspense fallback={null}>
           <AnimatePresence>
             {showCreate && userId && (
               <CreatePostModal
@@ -839,6 +841,7 @@ export default function ReelsFeedPage() {
               />
             )}
           </AnimatePresence>
+          </Suspense>
 
           {/* TikTok/Reels-style Fullscreen Video Viewer */}
           <AnimatePresence>
@@ -1445,19 +1448,21 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       </div>
 
       {/* Comments Bottom Sheet */}
-      <CommentsSheet
-        open={showComments}
-        onClose={() => {
-          setShowComments(false);
-          void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
-        }}
-        postId={interactionPostId}
-        postSource={item.source}
-        currentUserId={currentUserId}
-        commentsCount={localComments}
-        onCommentsCountChange={setLocalComments}
-        dark
-      />
+      <Suspense fallback={null}>
+        <CommentsSheet
+          open={showComments}
+          onClose={() => {
+            setShowComments(false);
+            void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+          }}
+          postId={interactionPostId}
+          postSource={item.source}
+          currentUserId={currentUserId}
+          commentsCount={localComments}
+          onCommentsCountChange={setLocalComments}
+          dark
+        />
+      </Suspense>
 
       {/* Share Sheet */}
       <AnimatePresence>
@@ -2496,18 +2501,20 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       ) : null}
 
       {/* Comments Sheet */}
-      <CommentsSheet
-        open={showComments}
-        onClose={() => {
-          setShowComments(false);
-          void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
-        }}
-        postId={interactionPostId}
-        postSource={item.source}
-        currentUserId={currentUserId}
-        commentsCount={localComments}
-        onCommentsCountChange={setLocalComments}
-      />
+      <Suspense fallback={null}>
+        <CommentsSheet
+          open={showComments}
+          onClose={() => {
+            setShowComments(false);
+            void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+          }}
+          postId={interactionPostId}
+          postSource={item.source}
+          currentUserId={currentUserId}
+          commentsCount={localComments}
+          onCommentsCountChange={setLocalComments}
+        />
+      </Suspense>
 
       {/* Views */}
       {item.media_type === "video" && item.views_count > 0 && (
@@ -2867,13 +2874,15 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Tip Sheet */}
-      <TipSheet
-        open={!!tipTarget}
-        onClose={() => setTipTarget(null)}
-        creatorId={tipTarget?.id || ""}
-        creatorName={tipTarget?.name || ""}
-      />
+      {/* Tip Sheet — lazy loaded to avoid pulling in Stripe on feed */}
+      <Suspense fallback={null}>
+        <TipSheet
+          open={!!tipTarget}
+          onClose={() => setTipTarget(null)}
+          creatorId={tipTarget?.id || ""}
+          creatorName={tipTarget?.name || ""}
+        />
+      </Suspense>
 
       {/* Unfollow confirm dialog */}
       <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
