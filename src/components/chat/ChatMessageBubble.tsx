@@ -754,7 +754,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
       </AnimatePresence>
     </div>
   );
-}
+});
 
 /** Reel-style fullscreen video player */
 function ReelVideoPlayer({ videoUrl, onClose }: { videoUrl: string; onClose: () => void }) {
@@ -1258,6 +1258,6 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
       </div>
     </div>
   );
-});
+}
 
 export default ChatMessageBubble;
