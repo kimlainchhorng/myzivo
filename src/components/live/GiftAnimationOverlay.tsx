@@ -11,6 +11,7 @@ import { giftAnimationVideos } from "@/config/giftAnimations";
 interface GiftAnimationOverlayProps {
   activeGift: { name: string; coins: number; senderName?: string } | null;
   onComplete: () => void;
+  giftPanelOpen?: boolean;
 }
 
 export default function GiftAnimationOverlay({ activeGift, onComplete }: GiftAnimationOverlayProps) {
