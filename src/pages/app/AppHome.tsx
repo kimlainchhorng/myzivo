@@ -359,6 +359,8 @@ const AppHome = () => {
                 <motion.button
                   key={tab.id}
                   onClick={() => setActiveHomeTab(tab.id)}
+                  aria-label={tab.label}
+                  aria-pressed={isActive}
                   whileTap={{ scale: 0.92, rotateX: 5 }}
                   layout
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
