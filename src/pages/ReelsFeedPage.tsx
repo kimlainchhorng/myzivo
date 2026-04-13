@@ -617,7 +617,7 @@ export default function ReelsFeedPage() {
         chatOpen && "lg:pr-[400px] xl:pr-[420px] 2xl:pr-[440px]"
       )}>
         {/* Desktop Sidebar */}
-        <FeedSidebar />
+        <Suspense fallback={null}><FeedSidebar /></Suspense>
 
         {/* Main Feed Content */}
         <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pb-0 flex-1 lg:max-w-2xl lg:mx-auto">
@@ -818,6 +818,7 @@ export default function ReelsFeedPage() {
           })()}
 
           {/* Create Post Modal */}
+          <Suspense fallback={null}>
           <AnimatePresence>
             {showCreate && userId && (
               <CreatePostModal
