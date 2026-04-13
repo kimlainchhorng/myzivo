@@ -655,6 +655,45 @@ export default function GoLivePage() {
             ))}
           </AnimatePresence>
 
+          {/* Viewer gift notification — animated toast at top */}
+          <AnimatePresence>
+            {viewerGiftNotif && (
+              <motion.div
+                key={viewerGiftNotif.id}
+                initial={{ x: -300, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -300, opacity: 0 }}
+                transition={{ type: "spring", damping: 20, stiffness: 200 }}
+                className="absolute top-28 left-3 right-16 z-30"
+              >
+                <div
+                  className="flex items-center gap-2 px-3 py-2 rounded-2xl"
+                  style={{
+                    background: "linear-gradient(95deg, rgba(120,80,10,0.85) 0%, rgba(180,130,30,0.7) 40%, rgba(220,170,50,0.4) 80%, transparent 100%)",
+                    backdropFilter: "blur(10px)",
+                    boxShadow: "0 4px 20px rgba(255,170,0,0.25)",
+                    border: "1px solid rgba(255,200,80,0.15)",
+                  }}
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                    {viewerGiftNotif.sender[0]}
+                  </div>
+                  {giftImages[viewerGiftNotif.giftName] && (
+                    <img src={giftImages[viewerGiftNotif.giftName]} alt="" className="w-7 h-7 object-contain -ml-3 mb-[-6px] relative z-10" style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.4))" }} />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white text-[11px] font-bold truncate">{viewerGiftNotif.sender}</p>
+                    <p className="text-amber-100/80 text-[10px]">sent <span className="text-white font-semibold">{viewerGiftNotif.giftName}</span></p>
+                  </div>
+                  <div className="flex items-center gap-0.5 bg-black/25 rounded-full px-2 py-0.5">
+                    <span className="text-[8px]">🪙</span>
+                    <span className="text-amber-200 text-[10px] font-bold">{viewerGiftNotif.coins}</span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Side actions */}
           <div className="absolute right-3 bottom-56 flex flex-col gap-3 items-center z-20">
             <button onClick={() => sendReaction("❤️")} className="w-12 h-12 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
