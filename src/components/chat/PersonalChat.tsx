@@ -372,16 +372,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     initialScrollDone.current = false;
     const load = async () => {
       setLoading(true);
+      const msgColumns = "id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents";
+      const callColumns = "id,caller_id,callee_id,call_type,status,duration_seconds,created_at";
       const [msgRes, callRes] = await Promise.all([
         (supabase as any)
           .from("direct_messages")
-          .select("*")
+          .select(msgColumns)
           .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
           .order("created_at", { ascending: false })
           .limit(200),
         (supabase as any)
           .from("call_history")
-          .select("*")
+          .select(callColumns)
           .or(`and(caller_id.eq.${user.id},callee_id.eq.${recipientId}),and(caller_id.eq.${recipientId},callee_id.eq.${user.id})`)
           .order("created_at", { ascending: true })
           .limit(50),
