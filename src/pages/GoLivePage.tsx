@@ -771,7 +771,6 @@ export default function GoLivePage() {
           </AnimatePresence>
         </div>
       )}
-      )}
 
       {/* Full-screen gift animation overlay */}
       <GiftAnimationOverlay
