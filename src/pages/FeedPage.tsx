@@ -397,7 +397,7 @@ function ReelCard({
           playsInline
           loop
           muted={globalMuted}
-          preload={isActive ? "auto" : "metadata"}
+          preload={isActive ? "auto" : "none"}
           onLoadedData={(e) => {
             setHasLoadedFrame(true);
             setHasPlaybackError(false);

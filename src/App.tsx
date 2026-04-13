@@ -32,7 +32,7 @@ const RuntimeSecurityGuard = lazy(() => import("@/components/security/RuntimeSec
 const SpatialCursor = lazy(() => import("./components/ui/SpatialCursor").then(m => ({ default: m.SpatialCursor })));
 
 import { SkipToContent } from "./components/shared/SkipToContent";
-import RoutePrefetcher from "./components/shared/RoutePrefetcher";
+const RoutePrefetcher = lazy(() => import("./components/shared/RoutePrefetcher"));
 import { GlobalViewportMeta } from "@/components/shared/GlobalViewportMeta";
 import { categorizeError } from "@/lib/supabaseErrors";
 import { useBrand } from "@/hooks/useBrand";
@@ -471,12 +471,11 @@ function PushNotificationsBootstrap() {
   return null;
 }
 
-/** Background geofence check for boosted shops nearby */
-import { useGeofenceNotifications } from "@/hooks/useGeofenceNotifications";
-function GeofenceBootstrap() {
-  useGeofenceNotifications();
-  return null;
-}
+/** Background geofence check for boosted shops nearby — lazy loaded */
+const GeofenceBootstrap = lazy(() => import("@/hooks/useGeofenceNotifications").then(m => {
+  function GeofenceComp() { m.useGeofenceNotifications(); return null; }
+  return { default: GeofenceComp };
+}));
 
 const App = () => (
   <ErrorBoundary>
@@ -492,10 +491,10 @@ const App = () => (
               <BrowserRouter>
                 <PageViewTracker />
                 <GeoDetector />
-                <RoutePrefetcher />
+                <Suspense fallback={null}><RoutePrefetcher /></Suspense>
                 <AuthProvider>
                   <PushNotificationsBootstrap />
-                  <GeofenceBootstrap />
+                  <Suspense fallback={null}><GeofenceBootstrap /></Suspense>
                    <RemoteConfigProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
