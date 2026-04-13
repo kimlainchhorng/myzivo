@@ -6,7 +6,8 @@ import "./index.css";
 createRoot(document.getElementById("root")!).render(<App />);
 
 // Defer non-critical setup to after first paint
-requestIdleCallback(() => {
+const idle = window.requestIdleCallback || ((cb: () => void) => setTimeout(cb, 200));
+idle(() => {
   import("@/lib/security/errorReporting").then(m => m.setupGlobalErrorHandlers());
   
   import("@capacitor/core").then(({ Capacitor }) => {
