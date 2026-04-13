@@ -11,25 +11,64 @@ import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 const NavBar = lazy(() => import("@/components/home/NavBar"));
 const TipSheet = lazy(() => import("@/components/social/TipSheet"));
-import {
-  Loader2, Heart, MessageCircle, Share2, Eye, Bookmark,
-  MoreHorizontal, Play, Volume2, VolumeX, Image as ImageIcon,
-  Plus, Camera, X as XIcon, Send, Film, Radio,
-  Globe, Users, Lock, FolderPlus, MapPin, Hash, ChevronDown,
-  Flag, Bell, BellOff, Link2, EyeOff, AlertTriangle, ShieldAlert,
-  UserX, Ban, Skull, HelpCircle, ChevronLeft, ChevronRight, MessageSquareOff,
-  MessageSquare, UserCheck, Settings2, Search, Trash2,
-} from "lucide-react";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import Heart from "lucide-react/dist/esm/icons/heart";
+import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
+import Eye from "lucide-react/dist/esm/icons/eye";
+import Bookmark from "lucide-react/dist/esm/icons/bookmark";
+import MoreHorizontal from "lucide-react/dist/esm/icons/more-horizontal";
+import Play from "lucide-react/dist/esm/icons/play";
+import Volume2 from "lucide-react/dist/esm/icons/volume-2";
+import VolumeX from "lucide-react/dist/esm/icons/volume-x";
+import ImageIcon from "lucide-react/dist/esm/icons/image";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import Camera from "lucide-react/dist/esm/icons/camera";
+import XIcon from "lucide-react/dist/esm/icons/x";
+import Send from "lucide-react/dist/esm/icons/send";
+import Film from "lucide-react/dist/esm/icons/film";
+import Radio from "lucide-react/dist/esm/icons/radio";
+import Globe from "lucide-react/dist/esm/icons/globe";
+import Users from "lucide-react/dist/esm/icons/users";
+import Lock from "lucide-react/dist/esm/icons/lock";
+import FolderPlus from "lucide-react/dist/esm/icons/folder-plus";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Hash from "lucide-react/dist/esm/icons/hash";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
+import Flag from "lucide-react/dist/esm/icons/flag";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import BellOff from "lucide-react/dist/esm/icons/bell-off";
+import Link2 from "lucide-react/dist/esm/icons/link-2";
+import EyeOff from "lucide-react/dist/esm/icons/eye-off";
+import AlertTriangle from "lucide-react/dist/esm/icons/alert-triangle";
+import ShieldAlert from "lucide-react/dist/esm/icons/shield-alert";
+import UserX from "lucide-react/dist/esm/icons/user-x";
+import Ban from "lucide-react/dist/esm/icons/ban";
+import Skull from "lucide-react/dist/esm/icons/skull";
+import HelpCircle from "lucide-react/dist/esm/icons/help-circle";
+import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import MessageSquareOff from "lucide-react/dist/esm/icons/message-square-off";
+import MessageSquare from "lucide-react/dist/esm/icons/message-square";
+import UserCheck from "lucide-react/dist/esm/icons/user-check";
+import Settings2 from "lucide-react/dist/esm/icons/settings-2";
+import Search from "lucide-react/dist/esm/icons/search";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+const AlertDialog = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialog })));
+const AlertDialogAction = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogAction })));
+const AlertDialogCancel = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogCancel })));
+const AlertDialogContent = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogContent })));
+const AlertDialogDescription = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogDescription })));
+const AlertDialogFooter = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogFooter })));
+const AlertDialogHeader = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogHeader })));
+const AlertDialogTitle = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogTitle })));
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
-import { trackInitiateCheckout } from "@/services/metaConversion";
+const trackInitiateCheckout = (input: Record<string, unknown>) =>
+  import("@/services/metaConversion").then((m) => m.trackInitiateCheckout(input as any));
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1506,18 +1545,22 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         )}
       </AnimatePresence>
       {/* Unfollow confirm dialog */}
-      <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unfollow?</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to unfollow {item.author_name}?</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { executeReelUnfollow(); setShowUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {showUnfollowConfirm && (
+        <Suspense fallback={null}>
+          <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Unfollow?</AlertDialogTitle>
+                <AlertDialogDescription>Are you sure you want to unfollow {item.author_name}?</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => { executeReelUnfollow(); setShowUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </Suspense>
+      )}
     </div>
   );
 }
@@ -2897,30 +2940,38 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       )}
 
       {/* Unfollow confirm dialog */}
-      <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unfollow?</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to unfollow {item.author_name}?</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { executeFeedUnfollow(); setShowUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      <AlertDialog open={showSharedUnfollowConfirm} onOpenChange={setShowSharedUnfollowConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unfollow?</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to unfollow {sharedAuthorName}?</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { executeSharedFeedUnfollow(); setShowSharedUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {showUnfollowConfirm && (
+        <Suspense fallback={null}>
+          <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Unfollow?</AlertDialogTitle>
+                <AlertDialogDescription>Are you sure you want to unfollow {item.author_name}?</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => { executeFeedUnfollow(); setShowUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </Suspense>
+      )}
+      {showSharedUnfollowConfirm && (
+        <Suspense fallback={null}>
+          <AlertDialog open={showSharedUnfollowConfirm} onOpenChange={setShowSharedUnfollowConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Unfollow?</AlertDialogTitle>
+                <AlertDialogDescription>Are you sure you want to unfollow {sharedAuthorName}?</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => { executeSharedFeedUnfollow(); setShowSharedUnfollowConfirm(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, unfollow</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </Suspense>
+      )}
     </div>
   );
 }
