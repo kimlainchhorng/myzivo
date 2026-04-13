@@ -1447,22 +1447,24 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         )}
       </div>
 
-      {/* Comments Bottom Sheet */}
-      <Suspense fallback={null}>
-        <CommentsSheet
-          open={showComments}
-          onClose={() => {
-            setShowComments(false);
-            void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
-          }}
-          postId={interactionPostId}
-          postSource={item.source}
-          currentUserId={currentUserId}
-          commentsCount={localComments}
-          onCommentsCountChange={setLocalComments}
-          dark
-        />
-      </Suspense>
+      {/* Comments Bottom Sheet — only mount when open */}
+      {showComments && (
+        <Suspense fallback={null}>
+          <CommentsSheet
+            open
+            onClose={() => {
+              setShowComments(false);
+              void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+            }}
+            postId={interactionPostId}
+            postSource={item.source}
+            currentUserId={currentUserId}
+            commentsCount={localComments}
+            onCommentsCountChange={setLocalComments}
+            dark
+          />
+        </Suspense>
+      )}
 
       {/* Share Sheet */}
       <AnimatePresence>
@@ -2500,21 +2502,23 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
         </button>
       ) : null}
 
-      {/* Comments Sheet */}
-      <Suspense fallback={null}>
-        <CommentsSheet
-          open={showComments}
-          onClose={() => {
-            setShowComments(false);
-            void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
-          }}
-          postId={interactionPostId}
-          postSource={item.source}
-          currentUserId={currentUserId}
-          commentsCount={localComments}
-          onCommentsCountChange={setLocalComments}
-        />
-      </Suspense>
+      {/* Comments Sheet — only mount when open */}
+      {showComments && (
+        <Suspense fallback={null}>
+          <CommentsSheet
+            open
+            onClose={() => {
+              setShowComments(false);
+              void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+            }}
+            postId={interactionPostId}
+            postSource={item.source}
+            currentUserId={currentUserId}
+            commentsCount={localComments}
+            onCommentsCountChange={setLocalComments}
+          />
+        </Suspense>
+      )}
 
       {/* Views */}
       {item.media_type === "video" && item.views_count > 0 && (
