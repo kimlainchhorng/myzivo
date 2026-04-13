@@ -64,8 +64,8 @@ import { useChatDraft } from "@/hooks/useChatDraft";
 
 const StickerKeyboard = lazy(() => import("./StickerKeyboard"));
 
-const INITIAL_VISIBLE_TIMELINE_ITEMS = 40;
-const VISIBLE_TIMELINE_STEP = 40;
+const INITIAL_VISIBLE_TIMELINE_ITEMS = 25;
+const VISIBLE_TIMELINE_STEP = 30;
 
 interface PersonalChatProps {
   recipientId: string;
@@ -290,26 +290,31 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     }
   }, [autoStartCall, loading, handleStartCall, onCallStarted]);
 
+  // Cache sender profile to avoid re-fetching on every message send
+  const senderProfileRef = useRef<{ name: string; avatar: string } | null>(null);
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      try {
+        const { data: profile } = await (supabase as any)
+          .from("profiles")
+          .select("full_name, avatar_url")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        senderProfileRef.current = {
+          name: profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Someone",
+          avatar: profile?.avatar_url || "",
+        };
+      } catch { /* ignore */ }
+    })();
+  }, [user?.id]);
+
   const sendChatPush = useCallback(async (messageType: string, messageText: string) => {
     if (!user?.id || !recipientId || recipientId === user.id) return;
 
-    let senderName =
-      user.user_metadata?.full_name ||
-      user.user_metadata?.name ||
-      user.email?.split("@")[0] ||
-      "Someone";
-
-    // Fetch sender's profile for accurate name & avatar
-    let senderAvatarUrl = "";
-    try {
-      const { data: profile } = await (supabase as any)
-        .from("profiles")
-        .select("full_name, avatar_url")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (profile?.full_name) senderName = profile.full_name;
-      senderAvatarUrl = profile?.avatar_url || "";
-    } catch { /* ignore */ }
+    const cached = senderProfileRef.current;
+    const senderName = cached?.name || user.user_metadata?.full_name || user.email?.split("@")[0] || "Someone";
+    const senderAvatarUrl = cached?.avatar || "";
 
     let preview = "";
     if (messageType === "image") preview = "Sent you a photo 📷";
@@ -732,11 +737,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     }
   }, [user?.id, recipientId]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-    updateDraft(e.target.value);
-    setTyping(!!e.target.value.trim());
-  };
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInput(val);
+    updateDraft(val);
+    // Debounce typing indicator to reduce Supabase presence updates
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    const hasText = !!val.trim();
+    setTyping(hasText);
+    if (hasText) {
+      typingTimerRef.current = setTimeout(() => setTyping(false), 3000);
+    }
+  }, [updateDraft, setTyping]);
 
   const handleQuickPanelSend = useCallback(async (payload: StickerSendPayload) => {
     if (!user?.id || sending) return;
@@ -1131,7 +1144,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       isOutgoing={item.caller_id === user?.id}
                       durationSeconds={item.duration_seconds}
                       createdAt={item.created_at}
-                      onCallback={() => handleStartCall(item.call_type as "voice" | "video")}
+                      onCallback={handleStartCall.bind(null, item.call_type as "voice" | "video")}
                       onDelete={handleCallDelete}
                       onDeleteAll={handleCallDeleteAll}
                     />
