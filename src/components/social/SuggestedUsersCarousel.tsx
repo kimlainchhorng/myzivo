@@ -7,8 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserPlus, X, Shield, Users } from "lucide-react";
-import { useState } from "react";
+import { X, Shield, Users } from "lucide-react";
+import { useState, memo, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,7 +18,7 @@ interface SuggestedUsersCarouselProps {
   variant?: "default" | "inline";
 }
 
-export default function SuggestedUsersCarousel({ variant = "default" }: SuggestedUsersCarouselProps) {
+const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCarouselProps>(function SuggestedUsersCarousel({ variant = "default" }, ref) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
@@ -36,6 +36,9 @@ export default function SuggestedUsersCarousel({ variant = "default" }: Suggeste
       return (data || []).sort(() => Math.random() - 0.5).slice(0, 12);
     },
     enabled: !!user,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
+    refetchOnWindowFocus: false,
   });
 
   const handleFollow = async (profileId: string) => {
@@ -192,4 +195,6 @@ export default function SuggestedUsersCarousel({ variant = "default" }: Suggeste
       </div>
     </div>
   );
-}
+}));
+
+export default SuggestedUsersCarousel;
