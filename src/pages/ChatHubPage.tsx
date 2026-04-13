@@ -5,40 +5,68 @@
  */
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Store, Headphones, Car, Search, ChevronRight, ArrowLeft, Trash2, X, Bell, Users, Plus, Edit3, Check, CheckCheck, Image as ImageIcon, Mic, MapPin, Phone, Video } from "lucide-react";
-import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
+import MessageCircleIcon from "lucide-react/dist/esm/icons/message-circle";
+import StoreIcon from "lucide-react/dist/esm/icons/store";
+import Headphones from "lucide-react/dist/esm/icons/headphones";
+import Car from "lucide-react/dist/esm/icons/car";
+import Search from "lucide-react/dist/esm/icons/search";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import X from "lucide-react/dist/esm/icons/x";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import Users from "lucide-react/dist/esm/icons/users";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import Edit3 from "lucide-react/dist/esm/icons/edit-3";
+import Check from "lucide-react/dist/esm/icons/check";
+import CheckCheck from "lucide-react/dist/esm/icons/check-check";
+import ImageIcon from "lucide-react/dist/esm/icons/image";
+import Mic from "lucide-react/dist/esm/icons/mic";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Phone from "lucide-react/dist/esm/icons/phone";
+import Video from "lucide-react/dist/esm/icons/video";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import GroupChat from "@/components/chat/GroupChat";
-import CreateGroupModal from "@/components/chat/CreateGroupModal";
 import { withRedirectParam } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, isToday, isYesterday } from "date-fns";
-import ChatStories from "@/components/chat/ChatStories";
 import { toast } from "sonner";
-import StoreLiveChat from "@/components/grocery/StoreLiveChat";
-import PersonalChat from "@/components/chat/PersonalChat";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useCallback } from "react";
 import { assessChatMessageRisk, sanitizeOutgoingMessage } from "@/lib/security/chatContentSafety";
 import { validateExternalUrl } from "@/lib/urlSafety";
+
+// Lazy-load heavy sub-pages/components
+const GroupChat = lazy(() => import("@/components/chat/GroupChat"));
+const CreateGroupModal = lazy(() => import("@/components/chat/CreateGroupModal"));
+const StoreLiveChat = lazy(() => import("@/components/grocery/StoreLiveChat"));
+const PersonalChat = lazy(() => import("@/components/chat/PersonalChat"));
+const ChatStories = lazy(() => import("@/components/chat/ChatStories"));
+
+// Lazy-load sticker packs config (300+ PNG imports)
+let _illustratedPacks: any[] | null = null;
+const getIllustratedPacks = () => {
+  if (_illustratedPacks) return _illustratedPacks;
+  import("@/config/illustratedStickers").then(m => { _illustratedPacks = m.ILLUSTRATED_PACKS; });
+  return [];
+};
 
 type ChatCategory = "personal" | "shop" | "support" | "ride";
 
 interface CategoryTab {
   id: ChatCategory;
   label: string;
-  icon: typeof MessageCircle;
+  icon: typeof MessageCircleIcon;
   emptyTitle: string;
   emptyDesc: string;
   emptyIcon: string;
 }
 
 const categories: CategoryTab[] = [
-  { id: "personal", label: "Personal", icon: MessageCircle, emptyTitle: "No conversations yet", emptyDesc: "Start chatting with friends and family", emptyIcon: "💬" },
-  { id: "shop", label: "Shop", icon: Store, emptyTitle: "No shop chats", emptyDesc: "Your conversations with stores will appear here", emptyIcon: "🛍️" },
+  { id: "personal", label: "Personal", icon: MessageCircleIcon, emptyTitle: "No conversations yet", emptyDesc: "Start chatting with friends and family", emptyIcon: "💬" },
+  { id: "shop", label: "Shop", icon: StoreIcon, emptyTitle: "No shop chats", emptyDesc: "Your conversations with stores will appear here", emptyIcon: "🛍️" },
   { id: "support", label: "Support", icon: Headphones, emptyTitle: "Need help?", emptyDesc: "Contact our support team anytime", emptyIcon: "🎧" },
   { id: "ride", label: "Ride", icon: Car, emptyTitle: "No ride chats", emptyDesc: "Messages from your drivers will show here", emptyIcon: "🚗" },
 ];
@@ -50,7 +78,7 @@ function formatChatTime(dateStr: string) {
   return format(d, "MMM d");
 }
 
-const STICKER_LOOKUP = ILLUSTRATED_PACKS
+const STICKER_LOOKUP = getIllustratedPacks()
   .flatMap((p) => p.stickers)
   .reduce<Record<string, { src: string; alt: string }>>((acc, s) => {
     acc[s.id.toLowerCase()] = { src: s.src, alt: s.alt };
@@ -544,7 +572,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
         <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-5">
-          <MessageCircle className="w-9 h-9 text-primary" />
+          <MessageCircleIcon className="w-9 h-9 text-primary" />
         </div>
         <p className="text-xl font-bold text-foreground mb-2">Sign in to chat</p>
         <p className="text-sm text-muted-foreground mb-6 max-w-[260px]">Connect with friends, shops, and support — all in one place</p>
@@ -657,7 +685,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             <div className={cn("px-5 pt-3", embedded && "px-4 pt-3")}>
               <div className="p-3.5 rounded-2xl bg-primary/8 border border-primary/15 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
-                  <MessageCircle className="w-5 h-5 text-primary" />
+                  <MessageCircleIcon className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-primary">Share to chat</p>
@@ -673,7 +701,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             </div>
           )}
 
-          {!embedded && <ChatStories />}
+          {!embedded && <Suspense fallback={null}><ChatStories /></Suspense>}
 
           <div className={cn("flex-1 min-h-0", embedded ? "overflow-y-auto" : "") }>
             <AnimatePresence mode="wait">
@@ -793,7 +821,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                   {(chat.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
                                 </span>
                               ) : active === "shop" ? (
-                                <Store className="w-5 h-5 text-muted-foreground" />
+                                <StoreIcon className="w-5 h-5 text-muted-foreground" />
                               ) : active === "support" ? (
                                 <Headphones className="w-5 h-5 text-muted-foreground" />
                               ) : (
@@ -951,48 +979,56 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
       {/* Inline Shop Chat */}
       {openShopChat && (
-        <StoreLiveChat
-          storeId={openShopChat.storeId}
-          storeName={openShopChat.name}
-          storeLogo={openShopChat.logo}
-          open={true}
-          onClose={() => setOpenShopChat(null)}
-        />
+        <Suspense fallback={null}>
+          <StoreLiveChat
+            storeId={openShopChat.storeId}
+            storeName={openShopChat.name}
+            storeLogo={openShopChat.logo}
+            open={true}
+            onClose={() => setOpenShopChat(null)}
+          />
+        </Suspense>
       )}
       {/* Inline Personal Chat */}
       <AnimatePresence>
         {openPersonalChat && (
-          <PersonalChat
-            recipientId={openPersonalChat.id}
-            recipientName={openPersonalChat.name}
-            recipientAvatar={openPersonalChat.avatar}
-            onClose={() => { setOpenPersonalChat(null); setPendingCall(null); queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] }); }}
-            autoStartCall={pendingCall}
-            onCallStarted={() => setPendingCall(null)}
-            inline={embedded}
-          />
+          <Suspense fallback={null}>
+            <PersonalChat
+              recipientId={openPersonalChat.id}
+              recipientName={openPersonalChat.name}
+              recipientAvatar={openPersonalChat.avatar}
+              onClose={() => { setOpenPersonalChat(null); setPendingCall(null); queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] }); }}
+              autoStartCall={pendingCall}
+              onCallStarted={() => setPendingCall(null)}
+              inline={embedded}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
       {/* Inline Group Chat */}
       <AnimatePresence>
         {openGroupChat && (
-          <GroupChat
-            groupId={openGroupChat.id}
-            groupName={openGroupChat.name}
-            groupAvatar={openGroupChat.avatar}
-            onClose={() => setOpenGroupChat(null)}
-          />
+          <Suspense fallback={null}>
+            <GroupChat
+              groupId={openGroupChat.id}
+              groupName={openGroupChat.name}
+              groupAvatar={openGroupChat.avatar}
+              onClose={() => setOpenGroupChat(null)}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
       {/* Create Group Modal */}
-      <CreateGroupModal
-        open={showCreateGroup}
-        onClose={() => setShowCreateGroup(false)}
-        onCreated={(group) => {
-          setOpenGroupChat({ id: group.id, name: group.name, avatar: group.avatar });
-          queryClient.invalidateQueries({ queryKey: ["chat-hub-groups"] });
-        }}
-      />
+      <Suspense fallback={null}>
+        <CreateGroupModal
+          open={showCreateGroup}
+          onClose={() => setShowCreateGroup(false)}
+          onCreated={(group) => {
+            setOpenGroupChat({ id: group.id, name: group.name, avatar: group.avatar });
+            queryClient.invalidateQueries({ queryKey: ["chat-hub-groups"] });
+          }}
+        />
+      </Suspense>
     </div>
   );
 

@@ -3,7 +3,7 @@
  * Features: long-press actions (reply/delete/copy/forward/pin), swipe-to-reply, emoji reactions, image/video display
  * Design: Glassmorphic iMessage aesthetic with gradient bubbles, tail shapes, and depth effects
  */
-import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo, lazy, Suspense } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Reply from "lucide-react/dist/esm/icons/reply";
@@ -31,11 +31,13 @@ import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { openExternalUrl } from "@/lib/openExternalUrl";
 import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
+
 import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
-import { TransparentStickerVideo } from "./TransparentStickerVideo";
 import { getStickerMotionSpec } from "./stickerMotion";
 
+// Lazy-load TransparentStickerVideo — heavy chroma-key/WebGL component
+const TransparentStickerVideo = lazy(() => import("./TransparentStickerVideo").then(m => ({ default: m.TransparentStickerVideo })));
 const REACTION_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🔥", "🎉", "😍"];
 
 type ParsedStickerMessage = {
@@ -525,14 +527,16 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
               <div className="py-1">
                 <div className="h-24 w-24 sm:h-28 sm:w-28 bg-transparent">
                     {hasAnimatedSticker ? (
-                      <TransparentStickerVideo
-                        src={parsedSticker.animatedSrc!}
-                        fallbackSrc={stickerFallbackSrc}
-                        alt={parsedSticker.id}
-                        preload="auto"
-                        renderMode="webgl"
-                        whiteKeyEnabled={true}
-                      />
+                      <Suspense fallback={<div className="h-full w-full bg-muted/20 rounded-2xl animate-pulse" />}>
+                        <TransparentStickerVideo
+                          src={parsedSticker.animatedSrc!}
+                          fallbackSrc={stickerFallbackSrc}
+                          alt={parsedSticker.id}
+                          preload="auto"
+                          renderMode="webgl"
+                          whiteKeyEnabled={true}
+                        />
+                      </Suspense>
                     ) : stickerFallbackSrc ? (
                       <motion.div
                         className="relative h-full w-full"
