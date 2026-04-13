@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plane, ArrowRight, TrendingUp, Heart } from "lucide-react";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
+import Heart from "lucide-react/dist/esm/icons/heart";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 

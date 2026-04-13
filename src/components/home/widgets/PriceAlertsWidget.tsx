@@ -3,7 +3,12 @@
  */
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plane, Hotel, TrendingDown, Bell, ChevronRight, ArrowRight } from "lucide-react";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import TrendingDown from "lucide-react/dist/esm/icons/trending-down";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";

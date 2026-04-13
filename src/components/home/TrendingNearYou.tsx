@@ -4,7 +4,12 @@
  */
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sparkles, Star, MapPin, TrendingUp, ChevronRight, Store } from "lucide-react";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Star from "lucide-react/dist/esm/icons/star";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import Store from "lucide-react/dist/esm/icons/store";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useTrendingNearYou, type TrendingStore } from "@/hooks/useTrendingNearYou";

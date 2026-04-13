@@ -2,7 +2,11 @@
  * FeaturedEatsSection - Food delivery cards with quick order
  */
 import { useState } from "react";
-import { Star, Clock, ArrowRight, Truck, ShoppingCart } from "lucide-react";
+import Star from "lucide-react/dist/esm/icons/star";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Truck from "lucide-react/dist/esm/icons/truck";
+import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";

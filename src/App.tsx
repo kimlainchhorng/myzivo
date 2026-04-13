@@ -33,7 +33,7 @@ import { GlobalViewportMeta } from "@/components/shared/GlobalViewportMeta";
 import IncomingCallListener from "@/components/chat/IncomingCallListener";
 import ChatNotificationListener from "@/components/chat/ChatNotificationListener";
 import RuntimeSecurityGuard from "@/components/security/RuntimeSecurityGuard";
-import { Loader2 } from "lucide-react";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import { categorizeError } from "@/lib/supabaseErrors";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
 import { useBrand } from "@/hooks/useBrand";
@@ -41,9 +41,9 @@ import { applyBrandTheme, resetBrandTheme } from "@/lib/brandTheme";
 import { lazyRetry } from "@/lib/lazyRetry";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 
-// Eager load critical pages
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+// Auth pages — lazy loaded (not always the entry point)
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
 
 const Index = lazy(() => lazyRetry(() => import("./pages/Index")));
 

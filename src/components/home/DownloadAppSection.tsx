@@ -2,7 +2,14 @@
  * Download App Section - Premium phone mockup with token-based colors
  */
 import { motion } from "framer-motion";
-import { Plane, Bell, Shield, Star, Download, Hotel, CarFront, UtensilsCrossed } from "lucide-react";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import Shield from "lucide-react/dist/esm/icons/shield";
+import Star from "lucide-react/dist/esm/icons/star";
+import Download from "lucide-react/dist/esm/icons/download";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import CarFront from "lucide-react/dist/esm/icons/car-front";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
 
 const features = [
   { icon: Plane, text: "Book flights, hotels & cars on the go", colorVar: "--flights" },

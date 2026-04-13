@@ -4,7 +4,10 @@
  */
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Flame, Calendar, Plane, ChevronRight } from "lucide-react";
+import Flame from "lucide-react/dist/esm/icons/flame";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import { Badge } from "@/components/ui/badge";
 import { useHotDeals } from "@/hooks/useHotDeals";
 import { destinationPhotos } from "@/config/photos";

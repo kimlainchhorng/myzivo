@@ -4,7 +4,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Car, UtensilsCrossed, Package, MapPin, Clock, Navigation, ChevronRight } from "lucide-react";
+import Car from "lucide-react/dist/esm/icons/car";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import Package from "lucide-react/dist/esm/icons/package";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import Navigation from "lucide-react/dist/esm/icons/navigation";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";

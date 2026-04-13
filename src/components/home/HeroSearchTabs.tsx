@@ -5,7 +5,9 @@
  */
 
 import { useState } from "react";
-import { Plane, Hotel, CarFront } from "lucide-react";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import CarFront from "lucide-react/dist/esm/icons/car-front";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { FlightSearchFormPro, HotelSearchFormPro, CarSearchFormPro } from "@/components/search";
