@@ -49,7 +49,7 @@ const ChatStories = lazy(() => import("@/components/chat/ChatStories"));
 let _illustratedPacks: any[] | null = null;
 const getIllustratedPacks = () => {
   if (_illustratedPacks) return _illustratedPacks;
-  import("@/config/illustratedStickers").then(m => { _illustratedPacks = m.getIllustratedPacks(); });
+  import("@/config/illustratedStickers").then(m => { _illustratedPacks = m.ILLUSTRATED_PACKS; });
   return [];
 };
 
