@@ -380,7 +380,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           .select(msgColumns)
           .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
           .order("created_at", { ascending: false })
-          .limit(200),
+          .limit(100),
         (supabase as any)
           .from("call_history")
           .select(callColumns)
@@ -1235,21 +1235,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
             {/* Typing indicator — 2026 style */}
             {recipientTyping && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.9 }}
-                className="flex justify-start px-1"
-              >
+              <div className="flex justify-start px-1 animate-in fade-in slide-in-from-bottom-2 duration-200">
                 <div className="bg-muted/70 backdrop-blur-xl rounded-[22px] rounded-bl-[6px] px-4 py-3 flex items-center gap-2 shadow-sm border border-border/10">
                   <div className="flex items-center gap-1">
-                    <motion.span className="h-[6px] w-[6px] rounded-full bg-primary/60" animate={{ y: [0, -6, 0], scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1, ease: "easeInOut", delay: 0 }} />
-                    <motion.span className="h-[6px] w-[6px] rounded-full bg-primary/60" animate={{ y: [0, -6, 0], scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1, ease: "easeInOut", delay: 0.15 }} />
-                    <motion.span className="h-[6px] w-[6px] rounded-full bg-primary/60" animate={{ y: [0, -6, 0], scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1, ease: "easeInOut", delay: 0.3 }} />
+                    <span className="h-[6px] w-[6px] rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms", animationDuration: "1s" }} />
+                    <span className="h-[6px] w-[6px] rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms", animationDuration: "1s" }} />
+                    <span className="h-[6px] w-[6px] rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "300ms", animationDuration: "1s" }} />
                   </div>
                   <span className="text-[10px] text-muted-foreground/60 font-medium">{recipientName.split(" ")[0]} is typing</span>
                 </div>
-              </motion.div>
+              </div>
             )}
           </div>
         )}
