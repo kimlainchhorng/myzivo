@@ -5,11 +5,11 @@
  */
 import { lazy, Suspense } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import UnifiedShareSheet from "@/components/shared/ShareSheet";
+const UnifiedShareSheet = lazy(() => import("@/components/shared/ShareSheet"));
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
-import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import NavBar from "@/components/home/NavBar";
+const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
+const NavBar = lazy(() => import("@/components/home/NavBar"));
 const TipSheet = lazy(() => import("@/components/social/TipSheet"));
 import {
   Loader2, Heart, MessageCircle, Share2, Eye, Bookmark,
@@ -34,10 +34,10 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
-import FloatingProductCard from "@/components/reels/FloatingProductCard";
+const FloatingProductCard = lazy(() => import("@/components/reels/FloatingProductCard"));
 const CommentsSheet = lazy(() => import("@/components/social/CommentsSheet"));
-import FeedStoryRing from "@/components/social/FeedStoryRing";
-import SuggestedUsersCarousel from "@/components/social/SuggestedUsersCarousel";
+const FeedStoryRing = lazy(() => import("@/components/social/FeedStoryRing"));
+const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
 const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
