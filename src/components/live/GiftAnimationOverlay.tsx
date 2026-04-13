@@ -135,7 +135,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
           exit={{ x: -350, opacity: 0 }}
           transition={{ type: "spring", damping: 22, stiffness: 200, delay: 0.2 }}
           className="absolute left-0"
-          style={{ top: "25%" }}
+          style={{ top: giftPanelOpen ? "10%" : "25%" }}
         >
           <div
             className="flex items-center gap-2 pl-2 pr-6 py-2 rounded-r-full"
@@ -171,7 +171,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
           animate={{ scale: [0, 1.8, 1], opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
           className="absolute right-5"
-          style={{ top: "38%" }}
+          style={{ top: giftPanelOpen ? "18%" : "38%" }}
         >
           <motion.span
             animate={{ scale: [1, 1.2, 1] }}

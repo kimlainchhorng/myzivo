@@ -769,6 +769,7 @@ export default function GoLivePage() {
       <GiftAnimationOverlay
         activeGift={activeGiftAnim}
         onComplete={() => setActiveGiftAnim(null)}
+        giftPanelOpen={showGiftPanel}
       />
     </div>
   );
