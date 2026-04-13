@@ -27,4 +27,4 @@ idle(() => {
       new MutationObserver(update).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
     });
   });
-}, { timeout: 2000 });
+});
