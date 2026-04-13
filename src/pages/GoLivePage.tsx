@@ -73,6 +73,8 @@ export default function GoLivePage() {
   const [streamQuality, setStreamQuality] = useState<"HD" | "SD">("HD");
   const [coinsEarned, setCoinsEarned] = useState(0);
   const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
+  const [giftCombo, setGiftCombo] = useState(0);
+  const lastGiftRef = useRef<{ name: string; time: number }>({ name: "", time: 0 });
 
   const allGifts = useMemo(() => ({
     gifts: [
