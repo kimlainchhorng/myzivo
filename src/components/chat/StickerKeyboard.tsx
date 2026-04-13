@@ -4,29 +4,27 @@
  */
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Smile,
-  Image as ImageIcon,
-  UserRound,
-  Music2,
-  Store,
-  Search,
-  Sparkles,
-  Play,
-  Pause,
-  Shuffle,
-  Heart,
-  Download,
-  Check,
-  Rocket,
-  Send,
-  Volume2,
-  Clock,
-  Mic,
-  Camera,
-  Link2,
-  X,
-} from "lucide-react";
+import Smile from "lucide-react/dist/esm/icons/smile";
+import ImageIcon from "lucide-react/dist/esm/icons/image";
+import UserRound from "lucide-react/dist/esm/icons/user-round";
+import Music2 from "lucide-react/dist/esm/icons/music-2";
+import Store from "lucide-react/dist/esm/icons/store";
+import Search from "lucide-react/dist/esm/icons/search";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Play from "lucide-react/dist/esm/icons/play";
+import Pause from "lucide-react/dist/esm/icons/pause";
+import Shuffle from "lucide-react/dist/esm/icons/shuffle";
+import Heart from "lucide-react/dist/esm/icons/heart";
+import Download from "lucide-react/dist/esm/icons/download";
+import Check from "lucide-react/dist/esm/icons/check";
+import Rocket from "lucide-react/dist/esm/icons/rocket";
+import Send from "lucide-react/dist/esm/icons/send";
+import Volume2 from "lucide-react/dist/esm/icons/volume-2";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import Mic from "lucide-react/dist/esm/icons/mic";
+import Camera from "lucide-react/dist/esm/icons/camera";
+import Link2 from "lucide-react/dist/esm/icons/link-2";
+import X from "lucide-react/dist/esm/icons/x";
 import { supabase } from "@/integrations/supabase/client";
 import { ILLUSTRATED_PACKS, type IllustratedStickerPack } from "@/config/illustratedStickers";
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
