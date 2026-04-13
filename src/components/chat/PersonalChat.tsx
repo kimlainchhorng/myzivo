@@ -231,9 +231,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    // Consider "near bottom" if within 150px of the bottom
-    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
-  }, []);
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    isNearBottomRef.current = distanceFromBottom < 150;
+
+    if (el.scrollTop < 120 && timeline.length > visibleTimelineCount && !expandingTimelineRef.current) {
+      expandingTimelineRef.current = true;
+      setVisibleTimelineCount((prev) => Math.min(prev + VISIBLE_TIMELINE_STEP, timeline.length));
+      requestAnimationFrame(() => {
+        expandingTimelineRef.current = false;
+      });
+    }
+  }, [timeline.length, visibleTimelineCount]);
 
   useEffect(() => {
     const scroller = scrollRef.current;
@@ -785,16 +793,28 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   }, [recipientId, scrollToBottom, sendChatPush, sending, user?.id]);
 
   const scrollToMessage = useCallback((id: string) => {
-    setHighlightedMsgId(id);
-    const el = messageRefs.current.get(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      setTimeout(() => setHighlightedMsgId(null), 2000);
+    const index = timeline.findIndex((item) => !isCallEvent(item) && item.id === id);
+    if (index >= 0) {
+      const requiredVisibleCount = timeline.length - index;
+      setVisibleTimelineCount((prev) => Math.max(prev, requiredVisibleCount));
     }
-  }, []);
+
+    setHighlightedMsgId(id);
+    requestAnimationFrame(() => {
+      const el = messageRefs.current.get(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => setHighlightedMsgId(null), 2000);
+      }
+    });
+  }, [timeline]);
 
   // Pinned messages
   const pinnedMessages = useMemo(() => messages.filter((m) => m.is_pinned), [messages]);
+
+  const messageMap = useMemo(() => {
+    return new Map(messages.map((message) => [message.id, message]));
+  }, [messages]);
 
   // Memoize merged + sorted timeline to avoid re-sorting on every render
   const timeline = useMemo<TimelineItem[]>(() => {
@@ -802,6 +822,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
   }, [messages, callEvents]);
+
+  const visibleTimeline = useMemo(() => {
+    return timeline.slice(-visibleTimelineCount);
+  }, [timeline, visibleTimelineCount]);
 
   const latestMissedCall = useMemo(() => {
     return [...callEvents]
@@ -1081,7 +1105,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           </div>
         ) : (
           <div ref={timelineRef} className="mt-auto space-y-2">
-            {timeline.map((item) => {
+            {timeline.length > visibleTimelineCount && (
+              <div className="flex justify-center pb-2">
+                <button
+                  onClick={() => setVisibleTimelineCount((prev) => Math.min(prev + VISIBLE_TIMELINE_STEP, timeline.length))}
+                  className="rounded-full border border-border/40 bg-background/80 px-3 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/40"
+                >
+                  Load earlier messages
+                </button>
+              </div>
+            )}
+            {visibleTimeline.map((item) => {
                 if (isCallEvent(item)) {
                   return (
                     <CallEventBubble
@@ -1101,7 +1135,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
                 const msg = item as Message;
                 const isMe = msg.sender_id === user?.id;
-                const repliedMsg = msg.reply_to_id ? messages.find((m) => m.id === msg.reply_to_id) : null;
+                const repliedMsg = msg.reply_to_id ? messageMap.get(msg.reply_to_id) ?? null : null;
                 const isHighlighted = highlightedMsgId === msg.id;
 
                 return (
