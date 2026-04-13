@@ -264,9 +264,9 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
     }
   }, [id, senderId, unlockPrice, unlockLoading]);
 
-  // Load reactions
+  // Load reactions only if not pre-loaded from parent
   useEffect(() => {
-    if (!id || id.startsWith("opt-")) return;
+    if (!id || id.startsWith("opt-") || initialReactions) return;
     const load = async () => {
       const { data } = await (supabase as any)
         .from("message_reactions")
@@ -283,7 +283,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
       }
     };
     load();
-  }, [id, user?.id]);
+  }, [id, user?.id, initialReactions]);
 
   const toggleReaction = async (emoji: string) => {
     if (!user?.id || id.startsWith("opt-")) return;
