@@ -72,6 +72,7 @@ export default function GoLivePage() {
   const [showChat, setShowChat] = useState(true);
   const [streamQuality, setStreamQuality] = useState<"HD" | "SD">("HD");
   const [coinsEarned, setCoinsEarned] = useState(0);
+  const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
 
   const allGifts = useMemo(() => ({
     gifts: [
