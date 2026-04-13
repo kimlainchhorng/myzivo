@@ -527,14 +527,16 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
               <div className="py-1">
                 <div className="h-24 w-24 sm:h-28 sm:w-28 bg-transparent">
                     {hasAnimatedSticker ? (
-                      <TransparentStickerVideo
-                        src={parsedSticker.animatedSrc!}
-                        fallbackSrc={stickerFallbackSrc}
-                        alt={parsedSticker.id}
-                        preload="auto"
-                        renderMode="webgl"
-                        whiteKeyEnabled={true}
-                      />
+                      <Suspense fallback={<div className="h-full w-full bg-muted/20 rounded-2xl animate-pulse" />}>
+                        <TransparentStickerVideo
+                          src={parsedSticker.animatedSrc!}
+                          fallbackSrc={stickerFallbackSrc}
+                          alt={parsedSticker.id}
+                          preload="auto"
+                          renderMode="webgl"
+                          whiteKeyEnabled={true}
+                        />
+                      </Suspense>
                     ) : stickerFallbackSrc ? (
                       <motion.div
                         className="relative h-full w-full"
