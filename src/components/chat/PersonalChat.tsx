@@ -927,14 +927,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       {/* Search bar */}
       <AnimatePresence>
         {showSearch && (
-          <ChatSearch messages={messages} onClose={() => setShowSearch(false)} onScrollToMessage={scrollToMessage} currentUserId={user?.id} />
+          <Suspense fallback={null}>
+            <ChatSearch messages={messages} onClose={() => setShowSearch(false)} onScrollToMessage={scrollToMessage} currentUserId={user?.id} />
+          </Suspense>
         )}
       </AnimatePresence>
 
       {/* Call overlay */}
       <AnimatePresence>
         {activeCall && (
-          <CallScreen
+          <Suspense fallback={null}>
+            <CallScreen
             recipientName={recipientName}
             recipientAvatar={recipientAvatar}
             recipientId={recipientId}
