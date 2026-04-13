@@ -64,6 +64,9 @@ import { useChatDraft } from "@/hooks/useChatDraft";
 
 const StickerKeyboard = lazy(() => import("./StickerKeyboard"));
 
+const INITIAL_VISIBLE_TIMELINE_ITEMS = 40;
+const VISIBLE_TIMELINE_STEP = 40;
+
 interface PersonalChatProps {
   recipientId: string;
   recipientName: string;
@@ -161,6 +164,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
   const [dismissedMissedCallId, setDismissedMissedCallId] = useState<string | null>(null);
   const [activeEffect, setActiveEffect] = useState<EffectType>(null);
+  const [visibleTimelineCount, setVisibleTimelineCount] = useState(INITIAL_VISIBLE_TIMELINE_ITEMS);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -168,6 +172,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const lockedImageInputRef = useRef<HTMLInputElement>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const timelineRef = useRef<HTMLDivElement>(null);
+  const expandingTimelineRef = useRef(false);
 
   const { isTyping: recipientTyping, isOnline: recipientOnline, lastSeen: recipientLastSeen, setTyping } = useChatPresence(user?.id, recipientId);
   const voice = useVoiceRecorder();
@@ -177,6 +182,12 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   useEffect(() => {
     if (draft && !input) setInput(draft);
   }, [draft]);
+
+  useEffect(() => {
+    setVisibleTimelineCount(INITIAL_VISIBLE_TIMELINE_ITEMS);
+    messageRefs.current.clear();
+    expandingTimelineRef.current = false;
+  }, [recipientId]);
 
   // Load saved chat personalization on mount
   useEffect(() => {
