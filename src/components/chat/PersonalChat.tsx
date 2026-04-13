@@ -245,22 +245,25 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     }
   }, [visibleTimelineCount]);
 
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
   useEffect(() => {
     const scroller = scrollRef.current;
     const timeline = timelineRef.current;
     if (!scroller || !timeline || typeof ResizeObserver === "undefined") return;
 
-    const observer = new ResizeObserver(() => {
-      if (!isNearBottomRef.current) return;
-      scroller.scrollTop = scroller.scrollHeight;
-      requestAnimationFrame(() => {
+    if (!resizeObserverRef.current) {
+      resizeObserverRef.current = new ResizeObserver(() => {
+        if (!isNearBottomRef.current) return;
         scroller.scrollTop = scroller.scrollHeight;
+        requestAnimationFrame(() => {
+          scroller.scrollTop = scroller.scrollHeight;
+        });
       });
-    });
+    }
 
-    observer.observe(timeline);
-    return () => observer.disconnect();
-  }, [messages.length, callEvents.length]);
+    resizeObserverRef.current.observe(timeline);
+    return () => resizeObserverRef.current?.disconnect();
+  }, []);
 
   useEffect(() => {
     const previousBodyOverscroll = document.body.style.overscrollBehavior;
@@ -369,16 +372,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     initialScrollDone.current = false;
     const load = async () => {
       setLoading(true);
+      const msgColumns = "id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents";
+      const callColumns = "id,caller_id,callee_id,call_type,status,duration_seconds,created_at";
       const [msgRes, callRes] = await Promise.all([
         (supabase as any)
           .from("direct_messages")
-          .select("*")
+          .select(msgColumns)
           .or(`and(sender_id.eq.${user.id},receiver_id.eq.${recipientId}),and(sender_id.eq.${recipientId},receiver_id.eq.${user.id})`)
           .order("created_at", { ascending: false })
           .limit(200),
         (supabase as any)
           .from("call_history")
-          .select("*")
+          .select(callColumns)
           .or(`and(caller_id.eq.${user.id},callee_id.eq.${recipientId}),and(caller_id.eq.${recipientId},callee_id.eq.${user.id})`)
           .order("created_at", { ascending: true })
           .limit(50),
@@ -388,40 +393,47 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setCallEvents((callRes.data || []).map((c: any) => ({ ...c, _isCallEvent: true as const })));
       setLoading(false);
 
-      // Batch-load all reactions in ONE query instead of per-message
+      // Fire reactions + mark-read in parallel (non-blocking after UI shows)
       const msgIds = data.filter((m: Message) => !m.id.startsWith("opt-")).map((m: Message) => m.id);
+      const hasUnread = data.some((m: Message) => m.receiver_id === user.id && !m.is_read);
+
+      const bgTasks: Promise<void>[] = [];
+
       if (msgIds.length > 0) {
-        const { data: reactionsData } = await (supabase as any)
-          .from("message_reactions")
-          .select("message_id, emoji, user_id")
-          .in("message_id", msgIds);
-        if (reactionsData) {
-          const grouped: Record<string, Record<string, { count: number; hasMyReaction: boolean }>> = {};
-          for (const r of reactionsData) {
-            if (!grouped[r.message_id]) grouped[r.message_id] = {};
-            if (!grouped[r.message_id][r.emoji]) grouped[r.message_id][r.emoji] = { count: 0, hasMyReaction: false };
-            grouped[r.message_id][r.emoji].count++;
-            if (r.user_id === user.id) grouped[r.message_id][r.emoji].hasMyReaction = true;
+        bgTasks.push((async () => {
+          const { data: reactionsData } = await (supabase as any)
+            .from("message_reactions")
+            .select("message_id, emoji, user_id")
+            .in("message_id", msgIds);
+          if (reactionsData) {
+            const grouped: Record<string, Record<string, { count: number; hasMyReaction: boolean }>> = {};
+            for (const r of reactionsData) {
+              if (!grouped[r.message_id]) grouped[r.message_id] = {};
+              if (!grouped[r.message_id][r.emoji]) grouped[r.message_id][r.emoji] = { count: 0, hasMyReaction: false };
+              grouped[r.message_id][r.emoji].count++;
+              if (r.user_id === user.id) grouped[r.message_id][r.emoji].hasMyReaction = true;
+            }
+            const map: Record<string, { emoji: string; count: number; hasMyReaction: boolean }[]> = {};
+            for (const [msgId, emojis] of Object.entries(grouped)) {
+              map[msgId] = Object.entries(emojis).map(([emoji, v]) => ({ emoji, ...v }));
+            }
+            setReactionsMap(map);
           }
-          const map: Record<string, { emoji: string; count: number; hasMyReaction: boolean }[]> = {};
-          for (const [msgId, emojis] of Object.entries(grouped)) {
-            map[msgId] = Object.entries(emojis).map(([emoji, v]) => ({ emoji, ...v }));
-          }
-          setReactionsMap(map);
-        }
+        })());
       }
 
-      if (data?.length) {
-        const unread = data.filter((m: Message) => m.receiver_id === user.id && !m.is_read);
-        if (unread.length) {
-          await (supabase as any)
-            .from("direct_messages")
-            .update({ is_read: true })
-            .eq("receiver_id", user.id)
-            .eq("sender_id", recipientId)
-            .eq("is_read", false);
-        }
+      if (hasUnread) {
+        bgTasks.push((supabase as any)
+          .from("direct_messages")
+          .update({ is_read: true })
+          .eq("receiver_id", user.id)
+          .eq("sender_id", recipientId)
+          .eq("is_read", false)
+          .then(() => {})
+        );
       }
+
+      void Promise.all(bgTasks);
     };
     load();
   }, [user?.id, recipientId, scrollToBottom]);
