@@ -496,7 +496,85 @@ export default function GoLivePage() {
     }
   }, [coinsEarned, streamGoal, goalCelebrated, spawnFloatingReaction]);
 
-  const sendReaction = useCallback((emoji: string) => {
+  // ── PK Battle simulation ──
+  useEffect(() => {
+    if (!pkBattle?.active || phase !== "live") return;
+    const iv = setInterval(() => {
+      setPkBattle((prev) => {
+        if (!prev || !prev.active) return prev;
+        if (Date.now() > prev.endsAt) {
+          const winner = prev.hostScore >= prev.opponentScore ? "You" : prev.opponentName;
+          setChatMessages((p) => [...p.slice(-20), { id: `pk-end-${Date.now()}`, user: "⚔️", text: `PK Battle ended! ${winner} wins! 🏆`, isSystem: true }]);
+          toast.success(`⚔️ ${winner} won the PK Battle!`);
+          return { ...prev, active: false, winner };
+        }
+        // Opponent scores randomly
+        const oppDelta = Math.random() > 0.6 ? Math.floor(Math.random() * 5) + 1 : 0;
+        return { ...prev, opponentScore: prev.opponentScore + oppDelta };
+      });
+    }, 3000);
+    return () => clearInterval(iv);
+  }, [pkBattle?.active, phase]);
+
+  // PK: gifts during battle add to host score
+  const addPkScore = useCallback((coins: number) => {
+    setPkBattle((prev) => prev?.active ? { ...prev, hostScore: prev.hostScore + coins } : prev);
+  }, []);
+
+  // ── Treasure Chest countdown ──
+  useEffect(() => {
+    if (!treasureChest?.active || treasureChest.winner) return;
+    // Auto-add fake participants
+    const joinIv = setInterval(() => {
+      setTreasureChest((prev) => {
+        if (!prev || !prev.active) return prev;
+        const names = ["Luna", "Kai", "Mia", "Nora", "Leo", "Aria", "Zara", "Sam"];
+        if (prev.participants.length < 8 && Math.random() > 0.4) {
+          const n = names.filter((n) => !prev.participants.includes(n));
+          if (n.length > 0) return { ...prev, participants: [...prev.participants, n[Math.floor(Math.random() * n.length)]] };
+        }
+        return prev;
+      });
+    }, 2000);
+    // Countdown
+    const cdIv = setInterval(() => {
+      setTreasureChest((prev) => {
+        if (!prev || !prev.active) return prev;
+        if (prev.countdown <= 1) {
+          const allP = prev.participants.length > 0 ? prev.participants : ["Lucky Viewer"];
+          const winner = allP[Math.floor(Math.random() * allP.length)];
+          const prize = [10, 25, 50, 100][Math.floor(Math.random() * 4)];
+          setChatMessages((p) => [...p.slice(-20), { id: `chest-win-${Date.now()}`, user: "🎁", text: `${winner} won ${prize} Z Coins from the Treasure Chest! 🎉`, isSystem: true }]);
+          toast.success(`🎁 ${winner} won ${prize} Z Coins!`);
+          return { ...prev, active: false, winner, countdown: 0 };
+        }
+        return { ...prev, countdown: prev.countdown - 1 };
+      });
+    }, 1000);
+    return () => { clearInterval(joinIv); clearInterval(cdIv); };
+  }, [treasureChest?.active, treasureChest?.winner]);
+
+  // ── VIP entrance simulation ──
+  useEffect(() => {
+    if (phase !== "live") return;
+    const vipNames = [{ name: "Diamond_VIP 💎", level: 50 }, { name: "King_Whale 👑", level: 80 }, { name: "Platinum_Star ⭐", level: 65 }];
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      timer = setTimeout(() => {
+        if (Math.random() > 0.7) {
+          const vip = vipNames[Math.floor(Math.random() * vipNames.length)];
+          setVipEntrance(vip);
+          setChatMessages((p) => [...p.slice(-20), { id: `vip-${Date.now()}`, user: "👑", text: `${vip.name} (Lv.${vip.level}) entered the stream!`, isSystem: true }]);
+          setTimeout(() => setVipEntrance(null), 4000);
+        }
+        schedule();
+      }, 40000 + Math.random() * 30000);
+    };
+    schedule();
+    return () => clearTimeout(timer);
+  }, [phase]);
+
+
     spawnFloatingReaction(emoji);
     setLikes((p) => p + 1);
   }, [spawnFloatingReaction]);
