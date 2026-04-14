@@ -72,8 +72,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
   if (!activeGift) return null;
 
   const giftImg = giftImages[activeGift.name];
-  const videoUrl = giftAnimationVideos[activeGift.name];
-  const isPremium = !!videoUrl;
+  const isPremium = !!giftAnimationVideos[activeGift.name];
 
   // Combo intensity scales with count
   const comboIntensity = Math.min(comboCount, 20);
