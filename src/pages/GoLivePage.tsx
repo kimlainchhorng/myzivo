@@ -1089,13 +1089,18 @@ export default function GoLivePage() {
                 </div>
 
                 {/* Gift grid */}
-                <div className="overflow-y-auto px-2 py-3" style={{ maxHeight: "calc(55vh - 120px)" }}>
+                <div className="overflow-y-auto px-2 py-3" style={{ maxHeight: selectedGift ? "calc(55vh - 180px)" : "calc(55vh - 120px)" }}>
                   <div className="grid grid-cols-4 gap-1.5">
                     {allGifts[giftTab].map((gift) => (
                       <button
                         key={gift.name}
-                        onClick={() => sendGift(gift)}
-                        className="relative flex flex-col items-center gap-0.5 py-2.5 px-1 rounded-xl hover:bg-white/5 active:scale-90 transition-all"
+                        onClick={() => setSelectedGift(selectedGift?.name === gift.name ? null : gift)}
+                        className={cn(
+                          "relative flex flex-col items-center gap-0.5 py-2.5 px-1 rounded-xl transition-all",
+                          selectedGift?.name === gift.name
+                            ? "bg-amber-500/15 ring-2 ring-amber-500/40 scale-105"
+                            : "hover:bg-white/5 active:scale-90"
+                        )}
                       >
                         {gift.badge && (
                           <span className={cn(
@@ -1124,6 +1129,42 @@ export default function GoLivePage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Selected gift send bar */}
+                <AnimatePresence>
+                  {selectedGift && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden border-t border-white/10"
+                    >
+                      <div className="flex items-center gap-3 px-4 py-2.5">
+                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br overflow-hidden shrink-0", selectedGift.coins >= 100 ? "from-amber-400 to-orange-500" : "from-violet-400 to-purple-500")}>
+                          {giftImages[selectedGift.name] ? (
+                            <img src={giftImages[selectedGift.name]} alt="" className="w-7 h-7 object-contain" />
+                          ) : (
+                            <span className="text-xl">{selectedGift.icon}</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-xs font-semibold truncate">{selectedGift.name}</p>
+                          <div className="flex items-center gap-1">
+                            <img src={goldCoinIcon} alt="" className="w-3 h-3" />
+                            <span className="text-amber-300 text-[11px] font-bold">{selectedGift.coins.toLocaleString()}</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => { sendGift(selectedGift); setSelectedGift(null); }}
+                          className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full px-5 py-2 shadow-lg shadow-amber-500/25 active:scale-95 transition-transform"
+                        >
+                          <Send className="h-3.5 w-3.5 text-white" />
+                          <span className="text-white text-xs font-bold">Send</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Bottom tabs */}
                 <div className="flex items-center border-t border-white/10 px-2 py-2 gap-1" style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 8px), 8px)" }}>
