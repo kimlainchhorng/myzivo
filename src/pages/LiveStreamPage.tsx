@@ -73,7 +73,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   ]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [showGiftPanel, setShowGiftPanel] = useState(false);
-  const [selectedGift, setSelectedGift] = useState<{ icon: string; name: string; coins: number; badge?: string; bg?: string } | null>(null);
+  const [selectedGift, setSelectedGift] = useState<GiftItem | null>(null);
   const [giftQty, setGiftQty] = useState(1);
   const [giftTab, setGiftTab] = useState<"gifts" | "interactive" | "exclusive">("gifts");
   const [floatingReactions, setFloatingReactions] = useState<{ id: string; emoji: string; x: number }[]>([]);
