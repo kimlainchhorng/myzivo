@@ -336,10 +336,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       )}
 
       {/* ── Pinned Message ── */}
-      <div className="relative z-10 px-4 mt-1.5">
-        <div className="flex items-center gap-1.5 bg-primary/15 backdrop-blur-sm rounded-lg px-2.5 py-1.5 max-w-[75%]">
+      <div className="relative z-10 px-3 mt-1.5">
+        <div className="flex items-center gap-1.5 bg-primary/15 backdrop-blur-sm rounded-lg px-2.5 py-1.5 max-w-[90%]">
           <span className="text-[9px] font-bold bg-primary/30 text-primary px-1 py-0.5 rounded shrink-0">PINNED</span>
-          <p className="text-[10px] text-white/80 truncate">{pinnedMessage}</p>
+          <p className="text-[10px] text-white/80 line-clamp-2">{pinnedMessage}</p>
         </div>
       </div>
 
