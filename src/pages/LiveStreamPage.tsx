@@ -93,14 +93,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
 
   const fakeViewerNames = useMemo(() => ["Luna ✨", "Kai 🔥", "Mia 💜", "Nora 🌸", "Zara 💎", "Leo 🦁", "Aria 🎵", "Alex 🎮", "Jordan 🏀", "Sam 🌊"], []);
 
-  // Simulate chat messages
+  // Simulate chat messages + viewer joins
   useEffect(() => {
     const msgs = [
       "Hi everyone! 👋", "Love this stream!", "❤️❤️❤️", "You're amazing!",
       "First time here 🎉", "Let's gooo!", "So cool!", "Where are you from?",
       "Can you do a shoutout?", "This is fire 🔥", "Following!", "Best stream ever",
     ];
-    const interval = setInterval(() => {
+    const chatInterval = setInterval(() => {
       const name = fakeViewerNames[Math.floor(Math.random() * fakeViewerNames.length)];
       const msg = msgs[Math.floor(Math.random() * msgs.length)];
       const level = Math.floor(Math.random() * 30) + 1;
@@ -111,7 +111,21 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         level,
       }]);
     }, 2500 + Math.random() * 3000);
-    return () => clearInterval(interval);
+
+    // Viewer join notifications
+    const joinInterval = setInterval(() => {
+      if (Math.random() < 0.4) {
+        const joiner = fakeViewerNames[Math.floor(Math.random() * fakeViewerNames.length)];
+        setChatMessages(prev => [...prev.slice(-30), {
+          id: `join-${Date.now()}`,
+          user: joiner,
+          text: "joined the stream 👋",
+          isSystem: true,
+        }]);
+      }
+    }, 6000 + Math.random() * 4000);
+
+    return () => { clearInterval(chatInterval); clearInterval(joinInterval); };
   }, [fakeViewerNames]);
 
   // Simulate viewer count
