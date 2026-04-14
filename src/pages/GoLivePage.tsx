@@ -188,8 +188,9 @@ export default function GoLivePage() {
   }, []);
 
   const goLive = useCallback(() => {
+    const streamTitle = title.trim() || "My Live Stream";
     if (!title.trim()) {
-      setTitle("My Live Stream");
+      setTitle(streamTitle);
     }
     // Start countdown
     setPhase("countdown");
@@ -203,7 +204,7 @@ export default function GoLivePage() {
         setChatMessages([{
           id: "welcome",
           user: "ZIVO",
-          text: `Welcome to "${title}"! Be respectful and have fun 🎉`,
+          text: `Welcome to "${streamTitle}"! Be respectful and have fun 🎉`,
           isSystem: true,
           isPinned: true,
           avatar: "bg-red-500",
