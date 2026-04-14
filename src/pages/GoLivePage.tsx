@@ -2222,12 +2222,31 @@ export default function GoLivePage() {
                         <button
                           onClick={() => { sendGift(selectedGift, giftQty); setSelectedGift(null); }}
                           className={cn(
-                            "flex items-center gap-1.5 rounded-full px-4 py-2 shadow-lg active:scale-95 transition-transform shrink-0",
+                            "relative flex items-center gap-1.5 rounded-full px-4 py-2.5 shadow-lg active:scale-90 transition-all shrink-0 overflow-hidden",
                             selectedGift.coins >= 500
                               ? "bg-gradient-to-r from-red-500 to-rose-500 shadow-red-500/25"
                               : "bg-gradient-to-r from-amber-500 to-yellow-400 shadow-amber-500/25"
                           )}
                         >
+                          {/* Send sparkle burst */}
+                          {sendSparkle && (
+                            <>
+                              {[...Array(8)].map((_, i) => (
+                                <motion.div
+                                  key={i}
+                                  className="absolute w-1 h-1 rounded-full bg-white"
+                                  initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+                                  animate={{
+                                    opacity: 0,
+                                    x: Math.cos((i / 8) * Math.PI * 2) * 30,
+                                    y: Math.sin((i / 8) * Math.PI * 2) * 30,
+                                    scale: 0,
+                                  }}
+                                  transition={{ duration: 0.5, delay: i * 0.03 }}
+                                />
+                              ))}
+                            </>
+                          )}
                           <Send className="h-3.5 w-3.5 text-white" />
                           <span className="text-white text-xs font-bold">
                             {giftQty > 1 ? `x${giftQty}` : selectedGift.coins >= 500 ? "Send!" : "Send"}
