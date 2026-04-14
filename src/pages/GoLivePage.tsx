@@ -444,12 +444,16 @@ export default function GoLivePage() {
             ]);
           }, 1500);
         }
-        // Gift streak flash
+        // Gift streak flash + counter
         const now = Date.now();
         if (now - lastGiftTimeRef.current < 8000) {
           setGiftStreakFlash(true);
           setTimeout(() => setGiftStreakFlash(false), 1500);
         }
+        // ── NEW: Gift Streak Counter ──
+        setGiftStreakCount((p) => p + 1);
+        if (giftStreakTimerRef.current) clearTimeout(giftStreakTimerRef.current);
+        giftStreakTimerRef.current = setTimeout(() => setGiftStreakCount(0), 10000);
         lastGiftTimeRef.current = now;
         setTimeout(() => setViewerGiftNotif((cur) => cur?.id === notif.id ? null : cur), 4000);
         scheduleNext();
