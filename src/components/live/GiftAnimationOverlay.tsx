@@ -18,8 +18,11 @@ interface GiftAnimationOverlayProps {
 
 export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCount = 1 }: GiftAnimationOverlayProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const onCompleteRef = useRef(onComplete);
   const [animKey, setAnimKey] = useState(0);
+  const [videoReady, setVideoReady] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
 
   onCompleteRef.current = onComplete;
 
@@ -54,13 +57,28 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
   [animKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (activeGift) setAnimKey((k) => k + 1);
+    if (!activeGift) return;
+    setVideoReady(false);
+    setVideoFailed(false);
+    setAnimKey((k) => k + 1);
   }, [activeGift]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !activeGift || !giftAnimationVideos[activeGift.name] || videoFailed) return;
+
+    const playPromise = video.play();
+    if (playPromise) {
+      void playPromise.catch(() => {
+        // Muted inline autoplay should usually work; keep the image fallback if it doesn't.
+      });
+    }
+  }, [animKey, activeGift, videoFailed]);
 
   useEffect(() => {
     if (!activeGift) return;
     const isPremium = !!giftAnimationVideos[activeGift.name];
-    timeoutRef.current = setTimeout(dismiss, isPremium ? 6000 : 4000);
+    timeoutRef.current = setTimeout(dismiss, isPremium ? 6500 : 4000);
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -72,7 +90,10 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
   if (!activeGift) return null;
 
   const giftImg = giftImages[activeGift.name];
-  const isPremium = !!giftAnimationVideos[activeGift.name];
+  const videoUrl = giftAnimationVideos[activeGift.name];
+  const isPremium = !!videoUrl;
+  const showVideo = Boolean(videoUrl) && !videoFailed;
+  const isLegendary = activeGift.coins >= 20000;
 
   // Combo intensity scales with count
   const comboIntensity = Math.min(comboCount, 20);
@@ -106,6 +127,39 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
         {/* ── Central gift image with effects ── */}
         {giftImg && (
           <div className="absolute inset-0 flex items-center justify-center z-[2]" style={{ marginTop: giftPanelOpen ? "-45%" : "-5%" }}>
+            {/* Premium video animation — blended so dark backgrounds disappear over the live stream */}
+            {showVideo && (
+              <motion.div
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: videoReady ? 1 : 0.45 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="absolute flex items-center justify-center"
+              >
+                <video
+                  key={`${animKey}-${videoUrl}`}
+                  ref={videoRef}
+                  src={videoUrl}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  onCanPlay={() => setVideoReady(true)}
+                  onLoadedData={() => setVideoReady(true)}
+                  onError={() => setVideoFailed(true)}
+                  className={isLegendary ? "w-[18rem] h-[18rem] sm:w-[24rem] sm:h-[24rem] object-contain" : "w-[14rem] h-[14rem] sm:w-[20rem] sm:h-[20rem] object-contain"}
+                  style={{
+                    mixBlendMode: "screen",
+                    opacity: videoReady ? 0.96 : 0,
+                    filter: isLegendary
+                      ? "brightness(1.08) contrast(1.12) saturate(1.2) drop-shadow(0 0 22px rgba(255,180,50,0.55))"
+                      : "brightness(1.04) contrast(1.08) saturate(1.15) drop-shadow(0 0 16px rgba(255,180,50,0.42))",
+                    transform: "translateZ(0)",
+                  }}
+                />
+              </motion.div>
+            )}
+
             {/* Expanding ring pulses */}
             {rings.map((r) => (
               <motion.div
@@ -163,7 +217,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               <motion.img
                 src={giftImg}
                 alt={activeGift.name}
-                className={isPremium ? "w-24 h-24 object-contain" : "w-20 h-20 object-contain"}
+                className={showVideo ? "w-14 h-14 sm:w-16 sm:h-16 object-contain" : isPremium ? "w-24 h-24 object-contain" : "w-20 h-20 object-contain"}
                 style={{
                   filter: isPremium
                     ? "drop-shadow(0 0 20px rgba(255,150,0,0.6)) drop-shadow(0 4px 12px rgba(0,0,0,0.4))"
