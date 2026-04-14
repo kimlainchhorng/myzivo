@@ -1087,7 +1087,7 @@ export default function LiveStreamPage() {
   // Demo streams shown when no DB data
   const demoStreams: LiveStream[] = useMemo(() => [
     { id: "demo-1", host_id: "d1", host_name: "Sofia", host_avatar: null, title: "Late Night Chill & Chat", topic: "Music", viewer_count: 1247, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "music" },
-    { id: "demo-2", host_id: "d2", host_name: "Tyler Gaming", host_avatar: null, title: "Ranked Grind — Road to Diamond ", topic: "Gaming", viewer_count: 3891, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "gamepad" },
+    { id: "demo-2", host_id: "d2", host_name: "Tyler Gaming", host_avatar: null, title: "Ranked Grind — Road to Diamond", topic: "Gaming", viewer_count: 3891, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "gamepad" },
     { id: "demo-3", host_id: "d3", host_name: "Chef Amara", host_avatar: null, title: "Making Pasta from Scratch", topic: "Cooking", viewer_count: 682, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "chef" },
     { id: "demo-4", host_id: "d4", host_name: "Zen Yoga", host_avatar: null, title: "Morning Flow — 30 Min Session", topic: "Fitness", viewer_count: 415, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "dumbbell" },
     { id: "demo-5", host_id: "d5", host_name: "DJ Pulse", host_avatar: null, title: "House Mix Live from Miami", topic: "Music", viewer_count: 5200, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "music" },
