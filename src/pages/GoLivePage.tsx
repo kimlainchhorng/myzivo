@@ -219,6 +219,19 @@ export default function GoLivePage() {
           const delta = Math.random() > 0.4 ? Math.floor(Math.random() * 3) : -Math.floor(Math.random() * 2);
           const next = Math.max(0, p + delta);
           setPeakViewers((pk) => Math.max(pk, next));
+          // Milestone celebrations
+          const milestones = [10, 25, 50, 100, 250, 500];
+          for (const m of milestones) {
+            if (next >= m && p < m && m > lastMilestoneRef.current) {
+              lastMilestoneRef.current = m;
+              setChatMessages((prev) => [
+                ...prev.slice(-20),
+                { id: `milestone-${m}`, user: "🎉", text: `${m} viewers! Amazing!`, isSystem: true },
+              ]);
+              toast.success(`🎉 ${m} viewers milestone reached!`);
+              break;
+            }
+          }
           // Viewer join notification (occasionally)
           if (delta > 0 && Math.random() > 0.6) {
             const joinName = names[Math.floor(Math.random() * names.length)];
