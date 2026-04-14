@@ -59,6 +59,7 @@ export default function GoLivePage() {
   const [chatInput, setChatInput] = useState("");
   const [cameraError, setCameraError] = useState(false);
   const [showGiftPanel, setShowGiftPanel] = useState(false);
+  const [selectedGift, setSelectedGift] = useState<{ icon: string; name: string; coins: number } | null>(null);
   const [floatingReactions, setFloatingReactions] = useState<{ id: string; emoji: string; x: number }[]>([]);
   const [giftsReceived, setGiftsReceived] = useState(0);
   const [giftTab, setGiftTab] = useState<"gifts" | "interactive" | "exclusive">("gifts");
