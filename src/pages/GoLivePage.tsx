@@ -2365,11 +2365,11 @@ export default function GoLivePage() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 300, opacity: 0 }}
             transition={{ type: "spring", damping: 22, stiffness: 250 }}
-            className="fixed right-3 z-50 w-48"
-            style={{ top: "calc(env(safe-area-inset-top, 0px) + 210px)" }}
+            className="fixed right-3 z-50 w-56"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 180px)" }}
           >
             <div
-              className="rounded-2xl px-3 py-2.5 space-y-1"
+              className="rounded-2xl px-3 py-3 space-y-1.5"
               style={{
                 background: "linear-gradient(135deg, rgba(20,30,50,0.95) 0%, rgba(25,35,60,0.92) 100%)",
                 backdropFilter: "blur(16px)",
@@ -2377,26 +2377,69 @@ export default function GoLivePage() {
                 boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
               }}
             >
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">
                   <Users className="h-3.5 w-3.5 text-blue-400" />
-                  <span className="text-[11px] font-bold text-blue-300 uppercase tracking-wider">Viewers ({viewerCount})</span>
+                  <span className="text-[11px] font-bold text-blue-300 uppercase tracking-wider">Viewers</span>
+                  <span className="text-[9px] bg-green-500/20 text-green-300 px-1.5 py-0.5 rounded-full font-bold">{viewerCount}</span>
                 </div>
                 <button onClick={() => setShowViewerList(false)} className="text-white/30 hover:text-white/60">
-                  <X className="h-3 w-3" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
-              {fakeViewerNames.slice(0, Math.min(viewerCount, 10)).map((name, i) => (
-                <div key={name} className="flex items-center gap-2 py-0.5">
-                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[8px] text-white font-bold", ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][i % 5])}>
-                    {name[0]}
-                  </div>
-                  <span className="text-[11px] text-white/80 flex-1 truncate">{name}</span>
-                  {i === 0 && <span className="text-[7px] bg-amber-500/30 text-amber-300 px-1 py-0.5 rounded-full font-bold">TOP</span>}
+              {/* Stats bar */}
+              <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/5">
+                <div className="flex-1 text-center">
+                  <p className="text-[8px] text-white/30 uppercase">Peak</p>
+                  <p className="text-[11px] text-white/80 font-bold">{peakViewers}</p>
                 </div>
-              ))}
+                <div className="w-px h-5 bg-white/10" />
+                <div className="flex-1 text-center">
+                  <p className="text-[8px] text-white/30 uppercase">New</p>
+                  <p className="text-[11px] text-green-300 font-bold">+{newFollowersCount}</p>
+                </div>
+                <div className="w-px h-5 bg-white/10" />
+                <div className="flex-1 text-center">
+                  <p className="text-[8px] text-white/30 uppercase">Shared</p>
+                  <p className="text-[11px] text-blue-300 font-bold">{shareCount}</p>
+                </div>
+              </div>
+              <div className="max-h-[200px] overflow-y-auto space-y-1 scrollbar-hide">
+                {fakeViewerNames.slice(0, Math.min(viewerCount, 10)).map((name, i) => {
+                  const isTopGifter = topGifterName === name.split(" ")[0];
+                  const isMuted = mutedUsers.has(name);
+                  return (
+                    <div key={name} className="flex items-center gap-2 py-1 group">
+                      <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-[9px] text-white font-bold shrink-0", ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][i % 5])}>
+                        {name[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1">
+                          <span className={cn("text-[11px] font-medium truncate", isMuted ? "text-white/30 line-through" : "text-white/80")}>{name}</span>
+                          {isTopGifter && <span className="text-[7px] bg-amber-500/30 text-amber-300 px-1 py-0.5 rounded-full font-bold shrink-0">⭐ Top</span>}
+                          {i === 0 && !isTopGifter && <span className="text-[7px] bg-green-500/20 text-green-300 px-1 py-0.5 rounded-full font-bold shrink-0">Early</span>}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (isMuted) {
+                            setMutedUsers((prev) => { const n = new Set(prev); n.delete(name); return n; });
+                            toast(`🔊 Unmuted ${name}`);
+                          } else {
+                            setMutedUsers((prev) => new Set(prev).add(name));
+                            toast(`🔇 Muted ${name}`);
+                          }
+                        }}
+                        className="opacity-0 group-hover:opacity-100 text-white/30 hover:text-white/60 transition-opacity"
+                      >
+                        <span className="text-[10px]">{isMuted ? "🔊" : "🔇"}</span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
               {viewerCount > 10 && (
-                <p className="text-[9px] text-white/30 text-center pt-1">+{viewerCount - 10} more</p>
+                <p className="text-[9px] text-white/30 text-center pt-1 border-t border-white/5 mt-1">+{viewerCount - 10} more watching</p>
               )}
             </div>
           </motion.div>
