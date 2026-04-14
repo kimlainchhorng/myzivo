@@ -913,31 +913,33 @@ export default function GoLivePage() {
           </AnimatePresence>
 
           {/* Side actions — separated with clear spacing */}
-          <div className="absolute right-3 bottom-56 flex flex-col gap-3 items-center z-30">
-            {/* Live hardware controls */}
-            <button onClick={flipCamera} className="w-10 h-10 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
-              <RotateCcw className="h-4 w-4 text-white/70" />
-            </button>
-            <button onClick={toggleCamera} className={cn("w-10 h-10 rounded-2xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", cameraOn ? "bg-black/30" : "bg-red-500/30")}>
-              {cameraOn ? <Camera className="h-4 w-4 text-white/70" /> : <CameraOff className="h-4 w-4 text-red-300" />}
-            </button>
-            <button onClick={toggleMic} className={cn("w-10 h-10 rounded-2xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", micOn ? "bg-black/30" : "bg-red-500/30")}>
-              {micOn ? <Mic className="h-4 w-4 text-white/70" /> : <MicOff className="h-4 w-4 text-red-300" />}
+          <div className="absolute right-2 bottom-52 flex flex-col gap-2 items-center z-30">
+            {/* Live hardware controls — compact row */}
+            <div className="flex flex-col gap-1.5 items-center">
+              <button onClick={flipCamera} className="w-9 h-9 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
+                <RotateCcw className="h-3.5 w-3.5 text-white/60" />
+              </button>
+              <button onClick={toggleCamera} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", cameraOn ? "bg-black/30" : "bg-red-500/30")}>
+                {cameraOn ? <Camera className="h-3.5 w-3.5 text-white/60" /> : <CameraOff className="h-3.5 w-3.5 text-red-300" />}
+              </button>
+              <button onClick={toggleMic} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", micOn ? "bg-black/30" : "bg-red-500/30")}>
+                {micOn ? <Mic className="h-3.5 w-3.5 text-white/60" /> : <MicOff className="h-3.5 w-3.5 text-red-300" />}
+              </button>
+            </div>
+
+            <div className="w-5 border-t border-white/10" />
+
+            {/* Engagement actions */}
+            <button onClick={() => setShowLeaderboard((p) => !p)} className="w-10 h-10 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
+              <Trophy className="h-4 w-4 text-amber-400" />
             </button>
 
-            <div className="w-6 border-t border-white/10" />
-
-            {/* Leaderboard button */}
-            <button onClick={() => setShowLeaderboard((p) => !p)} className="w-11 h-11 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
-              <Trophy className="h-4.5 w-4.5 text-amber-400" />
-            </button>
-
-            <button onClick={() => sendReaction("❤️")} className="w-12 h-12 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
+            <button onClick={() => sendReaction("❤️")} className="w-11 h-11 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
               <Heart className="h-5 w-5 text-red-400" />
             </button>
-            <span className="text-white text-[10px] -mt-2 font-medium">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>
+            <span className="text-white text-[9px] -mt-1 font-medium">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>
 
-            <button onClick={() => setShowGiftPanel(true)} className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-amber-500/20 relative" data-testid="gift-btn">
+            <button onClick={() => setShowGiftPanel(true)} className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-amber-500/20 relative" data-testid="gift-btn">
               <Gift className="h-5 w-5 text-yellow-300" />
               {giftsReceived > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">{giftsReceived > 99 ? "99+" : giftsReceived}</span>
