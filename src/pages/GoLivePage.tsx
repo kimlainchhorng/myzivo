@@ -366,8 +366,11 @@ export default function GoLivePage() {
       }
       if (now - lastViewer >= 3000) {
         setViewerCount((p) => {
-          const delta = Math.random() > 0.4 ? Math.floor(Math.random() * 3) : -Math.floor(Math.random() * 2);
-          const next = Math.max(0, Math.min(50, p + delta));
+          const growthPhase = p < 20;
+          const delta = growthPhase
+            ? Math.floor(Math.random() * 4) + 1
+            : Math.random() > 0.35 ? Math.floor(Math.random() * 3) + 1 : -Math.floor(Math.random() * 2);
+          const next = Math.max(0, Math.min(500, p + delta));
           setPeakViewers((pk) => Math.max(pk, next));
           if (next !== p) { setViewerPulse(true); setTimeout(() => setViewerPulse(false), 600); }
           const milestones = [10, 25, 50, 100, 250, 500];
