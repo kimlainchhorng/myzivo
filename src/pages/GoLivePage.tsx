@@ -63,7 +63,7 @@ export default function GoLivePage() {
   const [peakViewers, setPeakViewers] = useState(0);
   const [likes, setLikes] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; isSystem?: boolean; avatar?: string }[]>([]);
+  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; isSystem?: boolean; isPinned?: boolean; avatar?: string; level?: number }[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [cameraError, setCameraError] = useState(false);
   const [showGiftPanel, setShowGiftPanel] = useState(false);
@@ -80,10 +80,13 @@ export default function GoLivePage() {
   const lastGiftRef = useRef<{ name: string; time: number }>({ name: "", time: 0 });
   const [topGifters, setTopGifters] = useState<Record<string, number>>({});
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [streamGoal] = useState(500); // coin goal for the stream
+  const [streamGoal] = useState(500);
   const [giftStreakFlash, setGiftStreakFlash] = useState(false);
+  const [goalCelebrated, setGoalCelebrated] = useState(false);
   const lastGiftTimeRef = useRef(0);
   const lastMilestoneRef = useRef(0);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const fakeFollowers = useRef(Math.floor(Math.random() * 800) + 200);
 
   const allGifts = useMemo(() => ({
     gifts: [
@@ -195,8 +198,23 @@ export default function GoLivePage() {
       return;
     }
     setPhase("live");
+    // Pinned welcome message
+    setChatMessages([{
+      id: "welcome",
+      user: "ZIVO",
+      text: `Welcome to "${title}"! Be respectful and have fun 🎉`,
+      isSystem: true,
+      isPinned: true,
+      avatar: "bg-red-500",
+    }]);
     toast.success("You're live! 🔴");
   }, [title]);
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
+
 
   // Simulate viewers & likes
   useEffect(() => {
@@ -257,7 +275,8 @@ export default function GoLivePage() {
               id: now.toString(),
               user: name,
               text: msgs[Math.floor(Math.random() * msgs.length)],
-              avatar: avatarColors[Math.floor(Math.random() * avatarColors.length)]
+              avatar: avatarColors[Math.floor(Math.random() * avatarColors.length)],
+              level: Math.floor(Math.random() * 50) + 1,
             },
           ]);
         }
@@ -328,6 +347,17 @@ export default function GoLivePage() {
     setFloatingReactions((prev) => [...prev.slice(-8), { id, emoji, x }]);
     setTimeout(() => setFloatingReactions((prev) => prev.filter((r) => r.id !== id)), 2500);
   }, []);
+
+  // Goal celebration
+  useEffect(() => {
+    if (coinsEarned >= streamGoal && !goalCelebrated) {
+      setGoalCelebrated(true);
+      toast.success("🎉 Stream goal reached! Amazing!", { duration: 5000 });
+      ["🎉", "🥳", "✨", "🎊", "💎"].forEach((e, i) => {
+        setTimeout(() => spawnFloatingReaction(e), i * 200);
+      });
+    }
+  }, [coinsEarned, streamGoal, goalCelebrated, spawnFloatingReaction]);
 
   const sendReaction = useCallback((emoji: string) => {
     spawnFloatingReaction(emoji);
@@ -427,6 +457,16 @@ export default function GoLivePage() {
               <span className="text-xs text-white/50">Chat Messages</span>
               <span className="text-sm font-semibold text-white">{chatMessages.length} 💬</span>
             </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-white/50">Engagement Rate</span>
+              <span className="text-sm font-semibold text-green-400">
+                {peakViewers > 0 ? Math.round(((likes + giftsReceived + chatMessages.length) / peakViewers) * 100) : 0}% 📊
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-white/50">Avg Watch Time</span>
+              <span className="text-sm font-semibold text-white">{formatTime(Math.round(elapsed * 0.6))} ⏱️</span>
+            </div>
           </div>
 
           {/* Top Gifters on ended screen */}
@@ -459,7 +499,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -562,6 +602,8 @@ export default function GoLivePage() {
               <p className="text-white text-sm font-semibold truncate">{title}</p>
               <div className="flex items-center gap-2">
                 <span className="text-white/40 text-[10px]">{topic}</span>
+                <span className="text-white/25 text-[10px]">·</span>
+                <span className="text-white/40 text-[10px]">{fakeFollowers.current.toLocaleString()} followers</span>
                 {giftsReceived > 0 && (
                   <span className="text-amber-300 text-[10px] flex items-center gap-0.5">
                     <img src={goldCoinIcon} alt="" className="w-3 h-3" /> {coinsEarned}
@@ -842,26 +884,49 @@ export default function GoLivePage() {
 
           {/* Chat messages overlay */}
           {showChat && (
-            <div className="px-4 mb-2 max-h-[180px] overflow-y-auto space-y-1.5 pointer-events-none">
-              {chatMessages.slice(-6).map((msg) => (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    "flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200",
-                    msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" :
-                    msg.isSystem ? "bg-transparent" :
-                    "bg-black/40 backdrop-blur-sm"
-                  )}
-                >
-                  {!msg.isSystem && (
-                    <div className={cn("h-6 w-6 rounded-full flex items-center justify-center shrink-0", msg.avatar || "bg-primary/20")}>
-                      <span className="text-[9px] text-white font-bold">{msg.user[0]}</span>
-                    </div>
-                  )}
-                  <span className={cn("text-xs font-medium", msg.isSystem ? "text-white/40 italic" : "text-white/80")}>{msg.user}</span>
-                  <span className={cn("text-xs", msg.isGift ? "text-amber-300" : msg.isSystem ? "text-white/30 italic" : "text-white/90")}>{msg.text}</span>
-                </div>
-              ))}
+            <div className="relative px-4 mb-2 max-h-[200px]">
+              {/* Gradient fade at top */}
+              <div className="absolute top-0 left-4 right-4 h-8 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none rounded-t-2xl" />
+              <div className="overflow-y-auto max-h-[200px] space-y-1.5 pointer-events-none scroll-smooth">
+                {/* Pinned message */}
+                {chatMessages.find((m) => m.isPinned) && (
+                  <div className="flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[85%] bg-red-500/15 border border-red-500/20 mb-1">
+                    <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold uppercase">Pinned</span>
+                    <span className="text-[11px] text-white/70">{chatMessages.find((m) => m.isPinned)?.text}</span>
+                  </div>
+                )}
+                {chatMessages.filter((m) => !m.isPinned).slice(-8).map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      "flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200",
+                      msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" :
+                      msg.isSystem ? "bg-transparent" :
+                      "bg-black/40 backdrop-blur-sm"
+                    )}
+                  >
+                    {!msg.isSystem && (
+                      <div className={cn("h-6 w-6 rounded-full flex items-center justify-center shrink-0", msg.avatar || "bg-primary/20")}>
+                        <span className="text-[9px] text-white font-bold">{msg.user[0]}</span>
+                      </div>
+                    )}
+                    {/* Level badge */}
+                    {msg.level && (
+                      <span className={cn(
+                        "text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0",
+                        msg.level >= 30 ? "bg-amber-500/30 text-amber-300" :
+                        msg.level >= 15 ? "bg-blue-500/30 text-blue-300" :
+                        "bg-white/10 text-white/50"
+                      )}>
+                        Lv.{msg.level}
+                      </span>
+                    )}
+                    <span className={cn("text-xs font-medium", msg.isSystem ? "text-white/40 italic" : "text-white/80")}>{msg.user}</span>
+                    <span className={cn("text-xs", msg.isGift ? "text-amber-300" : msg.isSystem ? "text-white/30 italic" : "text-white/90")}>{msg.text}</span>
+                  </div>
+                ))}
+                <div ref={chatEndRef} />
+              </div>
             </div>
           )}
 
