@@ -237,6 +237,20 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     return () => clearInterval(interval);
   }, [fakeViewerNames]);
 
+  // Simulate poll from host
+  useEffect(() => {
+    const pollTimer = setTimeout(() => {
+      setActivePoll({
+        question: "What should we do next? 🤔",
+        options: ["Q&A Session", "Play a Game", "Sing a Song"],
+        votes: [42, 67, 31],
+        totalVotes: 140,
+        voted: null,
+      });
+    }, 25000 + Math.random() * 15000);
+    return () => clearTimeout(pollTimer);
+  }, []);
+
   // Auto-scroll chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
