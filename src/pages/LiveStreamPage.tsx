@@ -458,30 +458,51 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         </div>
       </div>
 
-      {/* ── Gift notifications (left side, TikTok style) ── */}
-      <div className="absolute left-3 z-30 flex flex-col gap-1.5" style={{ top: "calc(env(safe-area-inset-top, 0px) + 100px)" }}>
+      {/* ── Gift notifications (left side, gold gradient like streamer) ── */}
+      <div className="absolute left-2 z-30 flex flex-col gap-2 items-start w-[200px]" style={{ top: "calc(env(safe-area-inset-top, 0px) + 100px)" }}>
         <AnimatePresence>
-          {giftNotifQueue.map((notif) => (
+          {giftNotifQueue.map((notif, idx) => (
             <motion.div
               key={notif.id}
-              initial={{ x: -100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -100, opacity: 0 }}
-              className="flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full pr-3 pl-1.5 py-1"
+              initial={{ x: -200, opacity: 0, scale: 0.7 }}
+              animate={{ x: 0, opacity: idx === 0 ? 1 : 0.7 - idx * 0.15, scale: idx === 0 ? 1 : 0.92 - idx * 0.04 }}
+              exit={{ x: -200, opacity: 0, scale: 0.5 }}
+              transition={{ type: "spring", damping: 18, stiffness: 220 }}
+              className="w-full"
             >
-              <Avatar className="h-6 w-6">
-                <AvatarFallback className="text-[9px] bg-primary/20 text-primary font-bold">{notif.sender[0]}</AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="text-[10px] text-white/70 truncate max-w-[100px]">{notif.sender}</p>
-                <p className="text-[10px] text-amber-300 font-bold">sent {notif.giftName}</p>
-              </div>
-              <div className="w-7 h-7 flex items-center justify-center">
-                {giftImages[notif.giftName] ? (
-                  <img src={giftImages[notif.giftName]} alt="" className="w-6 h-6 object-contain" />
-                ) : (
-                  <span className="text-base">🎁</span>
+              <div
+                className="flex items-center gap-1.5 px-2.5 py-2 rounded-2xl"
+                style={{
+                  background: idx === 0
+                    ? "linear-gradient(260deg, rgba(120,80,10,0.9) 0%, rgba(180,130,30,0.75) 50%, rgba(220,170,50,0.45) 90%, transparent 100%)"
+                    : "linear-gradient(260deg, rgba(80,60,10,0.7) 0%, rgba(140,100,20,0.5) 60%, transparent 100%)",
+                  backdropFilter: "blur(10px)",
+                  boxShadow: idx === 0 ? "0 4px 20px rgba(255,170,0,0.3)" : "0 2px 10px rgba(255,170,0,0.1)",
+                  border: "1px solid rgba(255,200,80,0.15)",
+                }}
+              >
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center text-white font-bold text-[10px] shrink-0 ring-1 ring-amber-300/30">
+                  {notif.sender[0]}
+                </div>
+                {giftImages[notif.giftName] && (
+                  <motion.img
+                    src={giftImages[notif.giftName]}
+                    alt=""
+                    className="w-6 h-6 object-contain -ml-2 mb-[-4px] relative z-10"
+                    style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.4))" }}
+                    initial={{ scale: 0, rotate: -20 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", delay: 0.1 }}
+                  />
                 )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-white text-[10px] font-bold truncate leading-tight">{notif.sender}</p>
+                  <p className="text-amber-100/70 text-[9px] leading-tight">sent <span className="text-white font-semibold">{notif.giftName}</span></p>
+                </div>
+                <div className="flex items-center gap-0.5 bg-black/30 rounded-full px-1.5 py-0.5 shrink-0">
+                  <img src={goldCoinIcon} alt="" className="w-2.5 h-2.5" />
+                  <span className="text-amber-200 text-[9px] font-bold">{notif.coins}</span>
+                </div>
               </div>
             </motion.div>
           ))}
