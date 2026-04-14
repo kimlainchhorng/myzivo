@@ -83,6 +83,9 @@ export default function GoLivePage() {
   const [streamGoal] = useState(500);
   const [giftStreakFlash, setGiftStreakFlash] = useState(false);
   const [goalCelebrated, setGoalCelebrated] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [newFollower, setNewFollower] = useState<string | null>(null);
+  const [viewerPulse, setViewerPulse] = useState(false);
   const lastGiftTimeRef = useRef(0);
   const lastMilestoneRef = useRef(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
