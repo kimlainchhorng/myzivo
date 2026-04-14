@@ -1588,10 +1588,12 @@ export default function GoLivePage() {
                     {/* Level badge */}
                     {msg.level && (
                       <span className={cn(
-                        "text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0",
-                        msg.level >= 30 ? "bg-amber-500/30 text-amber-300" :
-                        msg.level >= 15 ? "bg-blue-500/30 text-blue-300" :
-                        "bg-white/10 text-white/50"
+                        "text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0 border",
+                        msg.level >= 40 ? "bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border-amber-500/30 shadow-sm shadow-amber-500/10" :
+                        msg.level >= 30 ? "bg-gradient-to-r from-purple-500/40 to-pink-500/30 text-purple-200 border-purple-500/30" :
+                        msg.level >= 20 ? "bg-gradient-to-r from-blue-500/40 to-cyan-500/30 text-blue-200 border-blue-500/30" :
+                        msg.level >= 10 ? "bg-gradient-to-r from-green-500/30 to-emerald-500/20 text-green-300 border-green-500/20" :
+                        "bg-white/10 text-white/50 border-white/10"
                       )}>
                         Lv.{msg.level}
                       </span>
