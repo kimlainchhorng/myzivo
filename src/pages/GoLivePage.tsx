@@ -1273,6 +1273,10 @@ export default function GoLivePage() {
                         Lv.{msg.level}
                       </span>
                     )}
+                    {/* Top Fan badge */}
+                    {topGifterName && msg.user === topGifterName && (
+                      <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full shrink-0 bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border border-amber-500/30">⭐ Top Fan</span>
+                    )}
                     <span className={cn("text-xs font-medium", msg.isSystem ? "text-white/40 italic" : "text-white/80")}>{msg.user}</span>
                     <span className={cn("text-xs", msg.isGift ? "text-amber-300" : msg.isSystem ? "text-white/30 italic" : "text-white/90")}>{msg.text}</span>
                   </div>
