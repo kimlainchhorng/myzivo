@@ -63,8 +63,16 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const [likes, setLikes] = useState(0);
   const [muted, setMuted] = useState(false);
   const [giftNotifQueue, setGiftNotifQueue] = useState<{ id: string; sender: string; giftName: string; coins: number; icon: string }[]>([]);
-  const [topGifters, setTopGifters] = useState<{ name: string; coins: number }[]>([]);
+  const [topGifters, setTopGifters] = useState<{ name: string; coins: number }[]>([
+    { name: "Luna ✨", coins: 520 },
+    { name: "Kai 🔥", coins: 310 },
+    { name: "Mia 💜", coins: 180 },
+  ]);
+  const [elapsed, setElapsed] = useState(0);
+  const [doubleTapHeart, setDoubleTapHeart] = useState<{ id: string; x: number; y: number } | null>(null);
+  const lastTapRef = useRef<number>(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const pinnedMessage = useMemo(() => `Welcome to ${stream.host_name}'s stream! Be respectful and have fun 🎉`, [stream.host_name]);
 
   const quickReactions = useMemo(() => ["❤️", "🔥", "😍", "👏", "😂"], []);
 
@@ -114,6 +122,12 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     return () => clearInterval(interval);
   }, []);
 
+  // Stream elapsed timer
+  useEffect(() => {
+    const interval = setInterval(() => setElapsed(prev => prev + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Simulate gift notifications from other viewers
   useEffect(() => {
     const interval = setInterval(() => {
@@ -122,6 +136,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         const gift = giftCatalog[Math.floor(Math.random() * 4)];
         const notif = { id: Date.now().toString(), sender, giftName: gift.name, coins: gift.coins, icon: gift.icon };
         setGiftNotifQueue(prev => [...prev.slice(-2), notif]);
+        // Update top gifters
+        setTopGifters(prev => {
+          const existing = prev.find(g => g.name === sender);
+          if (existing) {
+            return prev.map(g => g.name === sender ? { ...g, coins: g.coins + gift.coins } : g).sort((a, b) => b.coins - a.coins);
+          }
+          return [...prev, { name: sender, coins: gift.coins }].sort((a, b) => b.coins - a.coins).slice(0, 3);
+        });
         setTimeout(() => {
           setGiftNotifQueue(prev => prev.filter(n => n.id !== notif.id));
         }, 3000);
@@ -186,16 +208,53 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     return "from-zinc-400 to-zinc-500";
   };
 
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  };
+
+  const handleDoubleTap = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      // Double tap detected
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const clientX = "touches" in e ? e.touches[0]?.clientX ?? rect.width / 2 : (e as React.MouseEvent).clientX;
+      const clientY = "touches" in e ? e.touches[0]?.clientY ?? rect.height / 2 : (e as React.MouseEvent).clientY;
+      const heart = { id: Date.now().toString(), x: clientX - rect.left, y: clientY - rect.top };
+      setDoubleTapHeart(heart);
+      sendReaction("❤️");
+      setTimeout(() => setDoubleTapHeart(null), 1000);
+    }
+    lastTapRef.current = now;
+  }, [sendReaction]);
+
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
-      {/* Full-screen video background */}
-      <div className="absolute inset-0">
+      {/* Full-screen video background — double tap to like */}
+      <div className="absolute inset-0" onClick={handleDoubleTap} onTouchEnd={handleDoubleTap}>
         <div className="absolute inset-0 bg-gradient-to-br from-violet-900/80 via-black to-rose-900/60" />
         <div className="absolute top-1/4 left-1/3 w-60 h-60 bg-primary/15 rounded-full blur-[80px] animate-pulse" />
         <div className="absolute bottom-1/3 right-1/4 w-48 h-48 bg-rose-500/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: "1.5s" }} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[120px] opacity-20 select-none">
           {stream.thumbnail_emoji}
         </div>
+        {/* Double-tap heart animation */}
+        <AnimatePresence>
+          {doubleTapHeart && (
+            <motion.div
+              key={doubleTapHeart.id}
+              initial={{ scale: 0, opacity: 1 }}
+              animate={{ scale: 1.5, opacity: 0, y: -60 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="absolute text-5xl pointer-events-none z-40"
+              style={{ left: doubleTapHeart.x - 24, top: doubleTapHeart.y - 24 }}
+            >
+              ❤️
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* ── Top bar (overlay) ── */}
@@ -236,13 +295,37 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         </div>
       </div>
 
-      {/* LIVE badge + stream title */}
+      {/* LIVE badge + stream title + duration */}
       <div className="relative z-10 px-4 mt-2">
         <div className="flex items-center gap-2">
           <Badge className="bg-red-500 text-white border-0 text-[10px] gap-1 px-2 py-0.5 animate-pulse">
             <Radio className="h-2.5 w-2.5" /> LIVE
           </Badge>
-          <p className="text-white/80 text-xs font-medium truncate">{stream.title}</p>
+          <p className="text-white/80 text-xs font-medium truncate flex-1">{stream.title}</p>
+          <span className="text-white/50 text-[10px] font-mono">{formatTime(elapsed)}</span>
+        </div>
+      </div>
+
+      {/* ── Top Gifters Mini-Widget ── */}
+      {topGifters.length > 0 && (
+        <div className="relative z-10 px-4 mt-1.5">
+          <div className="flex items-center gap-1.5 bg-black/30 backdrop-blur-sm rounded-full px-2.5 py-1 w-fit">
+            <Crown className="h-3 w-3 text-amber-400" />
+            {topGifters.slice(0, 3).map((g, i) => (
+              <div key={g.name} className="flex items-center gap-0.5">
+                <span className="text-[9px] text-amber-300/80 font-bold">{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</span>
+                <span className="text-[9px] text-white/70 truncate max-w-[50px]">{g.name.split(" ")[0]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Pinned Message ── */}
+      <div className="relative z-10 px-4 mt-1.5">
+        <div className="flex items-center gap-1.5 bg-primary/15 backdrop-blur-sm rounded-lg px-2.5 py-1.5 max-w-[75%]">
+          <span className="text-[9px] font-bold bg-primary/30 text-primary px-1 py-0.5 rounded shrink-0">PINNED</span>
+          <p className="text-[10px] text-white/80 truncate">{pinnedMessage}</p>
         </div>
       </div>
 
