@@ -63,7 +63,7 @@ export default function GoLivePage() {
   const [peakViewers, setPeakViewers] = useState(0);
   const [likes, setLikes] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; avatar?: string }[]>([]);
+  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; isSystem?: boolean; avatar?: string }[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [cameraError, setCameraError] = useState(false);
   const [showGiftPanel, setShowGiftPanel] = useState(false);
