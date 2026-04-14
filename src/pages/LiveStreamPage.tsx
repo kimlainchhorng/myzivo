@@ -168,6 +168,21 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     return () => clearInterval(interval);
   }, [fakeViewerNames, giftCatalog]);
 
+  // Simulate super chats from viewers
+  useEffect(() => {
+    const superChatMsgs = ["Love this stream! 🔥", "Keep going! 💪", "You're the best! ⭐", "Shoutout please! 🎤", "Amazing content! 💯"];
+    const interval = setInterval(() => {
+      if (Math.random() < 0.15) {
+        const user = fakeViewerNames[Math.floor(Math.random() * fakeViewerNames.length)];
+        const text = superChatMsgs[Math.floor(Math.random() * superChatMsgs.length)];
+        const coins = [50, 100, 200, 500][Math.floor(Math.random() * 4)];
+        setSuperChatMsg({ id: `sc-${Date.now()}`, user, text, coins });
+        setTimeout(() => setSuperChatMsg(null), 5000);
+      }
+    }, 12000);
+    return () => clearInterval(interval);
+  }, [fakeViewerNames]);
+
   // Auto-scroll chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
