@@ -78,6 +78,8 @@ export default function GoLivePage() {
   const [giftCombo, setGiftCombo] = useState(0);
   const [viewerGiftNotif, setViewerGiftNotif] = useState<{ id: string; sender: string; giftName: string; coins: number } | null>(null);
   const lastGiftRef = useRef<{ name: string; time: number }>({ name: "", time: 0 });
+  const [topGifters, setTopGifters] = useState<Record<string, number>>({});
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   const allGifts = useMemo(() => ({
     gifts: [
