@@ -1046,13 +1046,21 @@ export default function GoLivePage() {
 
                 {/* Coin balance + Scrolling banner */}
                 <div className="overflow-hidden border-b border-white/5 py-2 px-4 flex items-center gap-3">
-                  <div className="flex items-center gap-1 bg-amber-500/15 rounded-full px-2.5 py-1 border border-amber-500/20 shrink-0">
-                    <img src={goldCoinIcon} alt="coins" className="w-4 h-4" />
-                    <span className="text-amber-300 text-[11px] font-bold">{coinsEarned.toLocaleString()}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1 bg-amber-500/15 rounded-full px-2.5 py-1 border border-amber-500/20">
+                      <img src={goldCoinIcon} alt="coins" className="w-4 h-4" />
+                      <span className="text-amber-300 text-[11px] font-bold">{coinsEarned.toLocaleString()}</span>
+                    </div>
+                    <button
+                      onClick={() => toast("💰 Coin Recharge coming soon!", { description: "Purchase Z Coins to send gifts to your favorite creators." })}
+                      className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 active:scale-90 transition-transform"
+                    >
+                      <span className="text-amber-300 text-xs font-bold leading-none">+</span>
+                    </button>
                   </div>
                   <div className="overflow-hidden flex-1">
                     <p className="text-xs text-white/40 whitespace-nowrap animate-[marquee_8s_linear_infinite]">
-                      Unlock Gifts and Coin rewards with your first purchase &nbsp;&nbsp;&nbsp; Unlock Gifts and Coin rewards with your first purchase
+                      🪙 Send gifts to support your favorite creators! &nbsp;&nbsp;&nbsp; 🪙 Send gifts to support your favorite creators!
                     </p>
                   </div>
                   <button onClick={() => setShowGiftPanel(false)} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center shrink-0">
