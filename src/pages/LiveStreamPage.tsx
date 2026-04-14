@@ -72,10 +72,27 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const [doubleTapHeart, setDoubleTapHeart] = useState<{ id: string; x: number; y: number } | null>(null);
   const [showRanking, setShowRanking] = useState(false);
   const [superChatMsg, setSuperChatMsg] = useState<{ id: string; user: string; text: string; coins: number } | null>(null);
+  // ── NEW: Viewer list panel ──
+  const [showViewerList, setShowViewerList] = useState(false);
+  const [fakeViewers] = useState(() => [
+    { name: "Luna ✨", level: 28, badge: "⭐ Top Fan" },
+    { name: "Kai 🔥", level: 15, badge: null },
+    { name: "Mia 💜", level: 22, badge: "⭐ Top Fan" },
+    { name: "Nora 🌸", level: 8, badge: null },
+    { name: "Zara 💎", level: 45, badge: "👑 VIP" },
+    { name: "Leo 🦁", level: 12, badge: null },
+    { name: "Aria 🎵", level: 33, badge: null },
+    { name: "Alex 🎮", level: 6, badge: null },
+    { name: "Jordan 🏀", level: 19, badge: null },
+    { name: "Sam 🌊", level: 10, badge: null },
+    { name: "Taylor 🌺", level: 4, badge: null },
+    { name: "Morgan 🎭", level: 7, badge: null },
+  ]);
+  // ── NEW: Host level (derived from top gifter coins) ──
+  const hostLevel = useMemo(() => Math.min(99, Math.floor(topGifters.reduce((a, b) => a + b.coins, 0) / 20) + 1), [topGifters]);
   const lastTapRef = useRef<number>(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const pinnedMessage = useMemo(() => `Welcome to ${stream.host_name}'s stream! Be respectful and have fun 🎉`, [stream.host_name]);
-
   const quickReactions = useMemo(() => ["❤️", "🔥", "😍", "👏", "😂"], []);
 
   const giftCatalog = useMemo(() => [
@@ -296,12 +313,23 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         </button>
 
         <div className="flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1 flex-1 min-w-0">
-          <Avatar className="h-8 w-8 border-2 border-red-500 shrink-0">
-            <AvatarImage src={stream.host_avatar || undefined} />
-            <AvatarFallback className="bg-red-500/20 text-red-400 text-xs font-bold">
-              {stream.host_name[0]}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-8 w-8 border-2 border-red-500 shrink-0">
+              <AvatarImage src={stream.host_avatar || undefined} />
+              <AvatarFallback className="bg-red-500/20 text-red-400 text-xs font-bold">
+                {stream.host_name[0]}
+              </AvatarFallback>
+            </Avatar>
+            {/* Host Level Badge */}
+            <span className={cn(
+              "absolute -bottom-0.5 -right-0.5 text-[6px] font-bold px-1 py-0.5 rounded-full border",
+              hostLevel >= 30 ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-white border-amber-300/50" :
+              hostLevel >= 15 ? "bg-gradient-to-r from-blue-500 to-cyan-400 text-white border-blue-300/50" :
+              "bg-white/20 text-white/80 border-white/20"
+            )}>
+              {hostLevel}
+            </span>
+          </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-xs font-bold truncate leading-tight">{stream.host_name}</p>
             <p className="text-white/50 text-[10px] leading-tight">{stream.topic}</p>
@@ -435,6 +463,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           <Heart className="h-4 w-4 text-red-400 fill-red-400" />
           {likes > 0 && <span className="text-[8px] text-white/60 -mt-0.5">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>}
         </button>
+        {/* Viewer list */}
+        <button
+          onClick={() => setShowViewerList(!showViewerList)}
+          className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center"
+        >
+          <Users className="h-4 w-4 text-white/70" />
+          <span className="text-[7px] text-white/50 -mt-0.5">{viewerCount > 999 ? `${(viewerCount / 1000).toFixed(1)}k` : viewerCount}</span>
+        </button>
         {/* Gift (large, primary CTA) */}
         <button
           onClick={() => setShowGiftPanel(true)}
@@ -443,6 +479,50 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           <Gift className="h-5 w-5 text-white" />
         </button>
       </div>
+
+      {/* ── Viewer List Panel ── */}
+      <AnimatePresence>
+        {showViewerList && (
+          <motion.div
+            initial={{ x: 200, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 200, opacity: 0 }}
+            transition={{ type: "spring", damping: 20 }}
+            className="absolute right-2 z-40 w-56 bg-black/80 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 80px)" }}
+          >
+            <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
+              <div className="flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-white/70" />
+                <span className="text-xs font-bold text-white">Viewers</span>
+                <span className="text-[9px] text-white/40 bg-white/10 rounded-full px-1.5">{viewerCount}</span>
+              </div>
+              <button onClick={() => setShowViewerList(false)} className="text-white/40">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="p-2 space-y-0.5 max-h-[250px] overflow-y-auto scrollbar-hide">
+              {fakeViewers.slice(0, Math.min(fakeViewers.length, 12)).map((v) => (
+                <div key={v.name} className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-white/5 transition-colors">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center text-[9px] text-white font-bold shrink-0">
+                    {v.name[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[11px] text-white font-medium truncate block">{v.name}</span>
+                  </div>
+                  <span className={cn(
+                    "text-[8px] px-1 py-0.5 rounded font-bold bg-gradient-to-r text-white shrink-0",
+                    v.level >= 20 ? "from-amber-400 to-yellow-500" : v.level >= 10 ? "from-violet-400 to-purple-500" : "from-zinc-400 to-zinc-500"
+                  )}>Lv.{v.level}</span>
+                  {v.badge && (
+                    <span className="text-[7px] text-amber-300 font-bold shrink-0">{v.badge}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Ranking/Leaderboard Panel ── */}
       <AnimatePresence>
@@ -887,6 +967,18 @@ export default function LiveStreamPage() {
                       <Radio className="h-2.5 w-2.5" /> LIVE
                     </Badge>
                   )}
+                  {/* Hot badge for high viewer streams */}
+                  {stream.status === "live" && stream.viewer_count >= 3000 && (
+                    <Badge className="absolute top-3 left-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 text-[10px] gap-0.5 ml-1">
+                      🔥 Hot
+                    </Badge>
+                  )}
+                  {/* Daily Pick for first stream */}
+                  {i === 0 && stream.status === "live" && (
+                    <Badge className="absolute top-10 left-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 text-[9px] gap-0.5">
+                      ⭐ Daily Pick
+                    </Badge>
+                  )}
                   {stream.status === "scheduled" && (
                     <Badge className="absolute top-3 left-3 bg-amber-500 text-white border-0 text-[10px]">
                       📅 Scheduled
@@ -913,7 +1005,12 @@ export default function LiveStreamPage() {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-foreground text-sm truncate">{stream.title}</h3>
-                    <p className="text-xs text-muted-foreground truncate">{stream.host_name} · {stream.topic}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs text-muted-foreground truncate">{stream.host_name} · {stream.topic}</p>
+                      {stream.status === "live" && (
+                        <span className="text-[9px] text-muted-foreground/60 shrink-0">• streaming now</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </button>
