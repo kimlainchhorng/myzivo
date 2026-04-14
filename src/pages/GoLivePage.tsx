@@ -147,6 +147,17 @@ export default function GoLivePage() {
 
   const fakeViewerNames = useMemo(() => ["Luna ✨", "Kai 🔥", "Mia 💜", "Nora 🌸", "Zara 💎", "Leo 🦁", "Aria 🎵", "Alex 🎮", "Jordan 🏀", "Sam 🌊"], []);
 
+  const faceStickers = useMemo(() => [
+    { id: "dog", emoji: "🐶", label: "Dog Ears", filter: "drop-shadow(0 0 8px rgba(255,200,100,0.5))" },
+    { id: "hearts", emoji: "💕", label: "Love", filter: "drop-shadow(0 0 8px rgba(255,100,150,0.5))" },
+    { id: "crown", emoji: "👑", label: "Crown", filter: "drop-shadow(0 0 8px rgba(255,215,0,0.5))" },
+    { id: "stars", emoji: "🌟", label: "Stars", filter: "drop-shadow(0 0 8px rgba(200,200,255,0.5))" },
+    { id: "bunny", emoji: "🐰", label: "Bunny", filter: "drop-shadow(0 0 8px rgba(255,180,200,0.5))" },
+    { id: "devil", emoji: "😈", label: "Devil", filter: "drop-shadow(0 0 8px rgba(200,50,100,0.5))" },
+    { id: "angel", emoji: "😇", label: "Angel", filter: "drop-shadow(0 0 8px rgba(180,220,255,0.5))" },
+    { id: "fire", emoji: "🔥", label: "Fire", filter: "drop-shadow(0 0 8px rgba(255,100,0,0.5))" },
+  ], []);
+
   const allGifts = useMemo(() => ({
     gifts: [
       { icon: "🐉", name: "Baby Dragon", coins: 1, badge: "Popular", bg: "from-orange-400 to-red-400" },
