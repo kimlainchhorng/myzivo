@@ -1096,18 +1096,18 @@ export default function GoLivePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/90" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
 
-        {/* ── NEW: Face Sticker Overlay ── */}
+        {/* ── Face Sticker Overlay ── */}
         {phase === "live" && activeSticker && (
           <div className="absolute inset-0 z-[2] pointer-events-none flex items-start justify-center pt-[15%]">
-            <motion.span
+            <motion.div
               key={activeSticker}
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: 0 }}
-              className="text-[80px]"
+              className="w-20 h-20"
               style={{ filter: faceStickers.find(s => s.id === activeSticker)?.filter }}
             >
-              {faceStickers.find(s => s.id === activeSticker)?.emoji}
-            </motion.span>
+              {faceStickers.find(s => s.id === activeSticker)?.icon}
+            </motion.div>
           </div>
         )}
 
@@ -1897,15 +1897,15 @@ export default function GoLivePage() {
             )}
           </AnimatePresence>
 
-          {/* Quick reaction bar — compact 5 emojis */}
+          {/* Quick reaction bar */}
           <div className="px-3 pr-[56px] mb-2 flex gap-1 justify-start">
-            {quickReactions.map((emoji) => (
+            {quickReactions.map((r) => (
               <button
-                key={emoji}
-                onClick={() => sendReaction(emoji)}
+                key={r.key}
+                onClick={() => sendReaction(r.key)}
                 className="w-8 h-8 rounded-lg bg-black/30 backdrop-blur-md flex items-center justify-center shrink-0 active:scale-75 transition-transform text-sm border border-white/5"
               >
-                {emoji}
+                {r.icon}
               </button>
             ))}
           </div>
@@ -2631,13 +2631,13 @@ export default function GoLivePage() {
                 {faceStickers.map((s) => (
                   <button
                     key={s.id}
-                    onClick={() => { setActiveSticker((prev) => prev === s.id ? null : s.id); toast(`${s.emoji} ${activeSticker === s.id ? "Removed" : s.label}`, { duration: 1200 }); }}
+                    onClick={() => { setActiveSticker((prev) => prev === s.id ? null : s.id); toast(`${s.label} ${activeSticker === s.id ? "Removed" : "Applied"}`, { duration: 1200 }); }}
                     className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center text-xl active:scale-90 transition-all border",
+                      "w-10 h-10 rounded-xl flex items-center justify-center active:scale-90 transition-all border",
                       activeSticker === s.id ? "bg-pink-500/30 border-pink-500/30 shadow-lg shadow-pink-500/20" : "bg-white/5 border-white/10"
                     )}
                   >
-                    {s.emoji}
+                    {s.icon}
                   </button>
                 ))}
               </div>
