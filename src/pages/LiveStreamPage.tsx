@@ -186,8 +186,18 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         const gift = allPool[Math.floor(Math.random() * allPool.length)];
         const notif = { id: Date.now().toString(), sender, giftName: gift.name, coins: gift.coins, icon: gift.icon };
         setGiftNotifQueue(prev => [...prev.slice(-2), notif]);
-        // Play sound for simulated gifts
-        playGiftSound(1, gift.coins);
+        // Play tier-appropriate sound for simulated gifts
+        if (gift.coins >= 20000) {
+          playLegendaryGiftSound();
+        } else if (gift.coins >= 500) {
+          playPremiumGiftSound();
+        } else {
+          playGiftSound(1, gift.coins);
+        }
+        // Trigger premium animation for high-value simulated gifts (rare)
+        if (giftAnimationVideos[gift.name] && Math.random() < 0.5) {
+          setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
+        }
         // Update top gifters
         setTopGifters(prev => {
           const existing = prev.find(g => g.name === sender);
