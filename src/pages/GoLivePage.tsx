@@ -37,6 +37,7 @@ import VolumeX from "lucide-react/dist/esm/icons/volume-x";
 import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
 import Monitor from "lucide-react/dist/esm/icons/monitor";
 import Timer from "lucide-react/dist/esm/icons/timer";
+import MoreHorizontal from "lucide-react/dist/esm/icons/more-horizontal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
