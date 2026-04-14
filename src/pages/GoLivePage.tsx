@@ -1959,6 +1959,119 @@ export default function GoLivePage() {
         )}
       </AnimatePresence>
 
+      {/* ── VIP Entrance Effect ── */}
+      <AnimatePresence>
+        {phase === "live" && vipEntrance && (
+          <motion.div
+            initial={{ x: -400, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 400, opacity: 0 }}
+            transition={{ type: "spring", damping: 18, stiffness: 160 }}
+            className="fixed left-0 right-0 z-50"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 130px)" }}
+          >
+            <div
+              className="mx-3 flex items-center gap-3 px-4 py-2.5 rounded-2xl"
+              style={{
+                background: "linear-gradient(95deg, rgba(120,50,180,0.9) 0%, rgba(200,100,255,0.7) 40%, rgba(255,180,50,0.5) 80%, transparent 100%)",
+                backdropFilter: "blur(12px)",
+                boxShadow: "0 4px 30px rgba(150,50,255,0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
+                border: "1px solid rgba(200,150,255,0.2)",
+              }}
+            >
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 0.5, repeat: 2 }}
+                className="text-2xl"
+              >
+                👑
+              </motion.div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-bold truncate" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}>
+                  {vipEntrance.name}
+                </p>
+                <p className="text-purple-200/80 text-[10px]">
+                  Level {vipEntrance.level} VIP entered the stream!
+                </p>
+              </div>
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+                className="text-lg"
+              >
+                ✨
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Guest Invite Panel ── */}
+      <AnimatePresence>
+        {phase === "live" && showGuestInvite && (
+          <motion.div
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 300, opacity: 0 }}
+            transition={{ type: "spring", damping: 22, stiffness: 250 }}
+            className="fixed right-3 z-50 w-52"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 210px)" }}
+          >
+            <div
+              className="rounded-2xl px-3 py-2.5 space-y-1.5"
+              style={{
+                background: "linear-gradient(135deg, rgba(50,20,80,0.95) 0%, rgba(60,30,90,0.92) 100%)",
+                backdropFilter: "blur(16px)",
+                border: "1px solid rgba(180,100,255,0.15)",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+              }}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">👥</span>
+                  <span className="text-[11px] font-bold text-purple-300 uppercase tracking-wider">Invite Guest</span>
+                </div>
+                <button onClick={() => setShowGuestInvite(false)} className="text-white/30 hover:text-white/60">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              <p className="text-[9px] text-white/30 mb-2">Invite a viewer to co-host with you</p>
+              {fakeViewerNames.slice(0, Math.min(viewerCount, 5)).map((name) => {
+                const isCoHost = coHosts.some((h) => h.name === name);
+                return (
+                  <div key={name} className="flex items-center gap-2 py-1">
+                    <div className="w-5 h-5 rounded-full bg-purple-500/30 flex items-center justify-center text-[8px] text-white font-bold">
+                      {name[0]}
+                    </div>
+                    <span className="text-[11px] text-white/80 flex-1 truncate">{name}</span>
+                    <button
+                      onClick={() => {
+                        if (isCoHost) {
+                          setCoHosts((p) => p.filter((h) => h.name !== name));
+                          toast(`Removed ${name} from co-host`);
+                        } else if (coHosts.length < 3) {
+                          setCoHosts((p) => [...p, { name, avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500"][p.length % 3] }]);
+                          setChatMessages((prev) => [...prev.slice(-20), { id: `cohost-${Date.now()}`, user: "🎙️", text: `${name} joined as co-host!`, isSystem: true }]);
+                          toast.success(`🎙️ ${name} is now co-hosting!`);
+                        } else {
+                          toast.error("Max 3 co-hosts");
+                        }
+                      }}
+                      className={cn(
+                        "text-[9px] font-bold px-2 py-0.5 rounded-full transition-all",
+                        isCoHost ? "bg-red-500/20 text-red-300" : "bg-purple-500/20 text-purple-300"
+                      )}
+                    >
+                      {isCoHost ? "Remove" : "Invite"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* End stream confirmation dialog */}
       <AnimatePresence>
         {showEndConfirm && (
