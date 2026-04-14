@@ -934,10 +934,12 @@ export default function GoLivePage() {
               <Trophy className="h-4 w-4 text-amber-400" />
             </button>
 
-            <button onClick={() => sendReaction("❤️")} className="w-11 h-11 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
-              <Heart className="h-5 w-5 text-red-400" />
-            </button>
-            <span className="text-white text-[9px] -mt-1 font-medium">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>
+            <div className="flex flex-col items-center">
+              <button onClick={() => sendReaction("❤️")} className="w-11 h-11 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5 relative">
+                <Heart className="h-5 w-5 text-red-400" />
+              </button>
+              <span className="text-white text-[9px] mt-0.5 font-medium">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>
+            </div>
 
             <button onClick={() => setShowGiftPanel(true)} className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-amber-500/20 relative" data-testid="gift-btn">
               <Gift className="h-5 w-5 text-yellow-300" />
