@@ -217,17 +217,17 @@ export default function GoLivePage() {
     vintage: "sepia(0.4) contrast(0.9) brightness(1.1) hue-rotate(-10deg)",
   }), []);
 
-  const fakeViewerNames = useMemo(() => ["Luna ✨", "Kai 🔥", "Mia 💜", "Nora 🌸", "Zara 💎", "Leo 🦁", "Aria 🎵", "Alex 🎮", "Jordan 🏀", "Sam 🌊"], []);
+  const fakeViewerNames = useMemo(() => ["Luna", "Kai", "Mia", "Nora", "Zara", "Leo", "Aria", "Alex", "Jordan", "Sam"], []);
 
   const faceStickers = useMemo(() => [
-    { id: "dog", emoji: "🐶", label: "Dog Ears", filter: "drop-shadow(0 0 8px rgba(255,200,100,0.5))" },
-    { id: "hearts", emoji: "💕", label: "Love", filter: "drop-shadow(0 0 8px rgba(255,100,150,0.5))" },
-    { id: "crown", emoji: "👑", label: "Crown", filter: "drop-shadow(0 0 8px rgba(255,215,0,0.5))" },
-    { id: "stars", emoji: "🌟", label: "Stars", filter: "drop-shadow(0 0 8px rgba(200,200,255,0.5))" },
-    { id: "bunny", emoji: "🐰", label: "Bunny", filter: "drop-shadow(0 0 8px rgba(255,180,200,0.5))" },
-    { id: "devil", emoji: "😈", label: "Devil", filter: "drop-shadow(0 0 8px rgba(200,50,100,0.5))" },
-    { id: "angel", emoji: "😇", label: "Angel", filter: "drop-shadow(0 0 8px rgba(180,220,255,0.5))" },
-    { id: "fire", emoji: "🔥", label: "Fire", filter: "drop-shadow(0 0 8px rgba(255,100,0,0.5))" },
+    { id: "dog", icon: <span className="text-amber-300"><Heart className="h-5 w-5" /></span>, label: "Dog Ears", filter: "drop-shadow(0 0 8px rgba(255,200,100,0.5))" },
+    { id: "hearts", icon: <Heart className="h-5 w-5 text-pink-400" />, label: "Love", filter: "drop-shadow(0 0 8px rgba(255,100,150,0.5))" },
+    { id: "crown", icon: <Crown className="h-5 w-5 text-amber-400" />, label: "Crown", filter: "drop-shadow(0 0 8px rgba(255,215,0,0.5))" },
+    { id: "stars", icon: <Star className="h-5 w-5 text-blue-300" />, label: "Stars", filter: "drop-shadow(0 0 8px rgba(200,200,255,0.5))" },
+    { id: "bunny", icon: <Sparkles className="h-5 w-5 text-pink-300" />, label: "Bunny", filter: "drop-shadow(0 0 8px rgba(255,180,200,0.5))" },
+    { id: "devil", icon: <Flame className="h-5 w-5 text-red-400" />, label: "Devil", filter: "drop-shadow(0 0 8px rgba(200,50,100,0.5))" },
+    { id: "angel", icon: <Sparkles className="h-5 w-5 text-sky-300" />, label: "Angel", filter: "drop-shadow(0 0 8px rgba(180,220,255,0.5))" },
+    { id: "fire", icon: <Flame className="h-5 w-5 text-orange-400" />, label: "Fire", filter: "drop-shadow(0 0 8px rgba(255,100,0,0.5))" },
   ], []);
 
   const allGifts = useMemo(() => ({
@@ -272,21 +272,27 @@ export default function GoLivePage() {
     ],
   }), []);
 
-  const quickReactions = useMemo(() => ["❤️", "🔥", "😍", "👏", "😂"], []);
+  const quickReactions = useMemo(() => [
+    { icon: <Heart className="h-4 w-4 text-red-400" />, key: "heart" },
+    { icon: <Flame className="h-4 w-4 text-orange-400" />, key: "fire" },
+    { icon: <Star className="h-4 w-4 text-yellow-400" />, key: "star" },
+    { icon: <Hand className="h-4 w-4 text-white/80" />, key: "clap" },
+    { icon: <Laugh className="h-4 w-4 text-amber-300" />, key: "laugh" },
+  ], []);
 
   const topicConfig = useMemo(() => [
-    { name: "General", icon: "🌐" },
-    { name: "Music", icon: "🎵" },
-    { name: "Gaming", icon: "🎮" },
-    { name: "Cooking", icon: "🍳" },
-    { name: "Tech", icon: "💻" },
-    { name: "Fitness", icon: "💪" },
-    { name: "Art", icon: "🎨" },
-    { name: "Travel", icon: "✈️" },
-    { name: "Fashion", icon: "👗" },
-    { name: "Comedy", icon: "😂" },
-    { name: "Education", icon: "📚" },
-    { name: "Sports", icon: "⚽" },
+    { name: "General", icon: <Globe className="h-3.5 w-3.5" /> },
+    { name: "Music", icon: <Music className="h-3.5 w-3.5" /> },
+    { name: "Gaming", icon: <Gamepad2 className="h-3.5 w-3.5" /> },
+    { name: "Cooking", icon: <ChefHat className="h-3.5 w-3.5" /> },
+    { name: "Tech", icon: <Laptop className="h-3.5 w-3.5" /> },
+    { name: "Fitness", icon: <Dumbbell className="h-3.5 w-3.5" /> },
+    { name: "Art", icon: <PaintBucket className="h-3.5 w-3.5" /> },
+    { name: "Travel", icon: <Plane className="h-3.5 w-3.5" /> },
+    { name: "Fashion", icon: <Shirt className="h-3.5 w-3.5" /> },
+    { name: "Comedy", icon: <Laugh className="h-3.5 w-3.5" /> },
+    { name: "Education", icon: <BookOpen className="h-3.5 w-3.5" /> },
+    { name: "Sports", icon: <CircleDot className="h-3.5 w-3.5" /> },
   ], []);
 
   // Start camera
