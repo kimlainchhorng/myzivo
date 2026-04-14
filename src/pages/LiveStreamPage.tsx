@@ -63,8 +63,16 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const [likes, setLikes] = useState(0);
   const [muted, setMuted] = useState(false);
   const [giftNotifQueue, setGiftNotifQueue] = useState<{ id: string; sender: string; giftName: string; coins: number; icon: string }[]>([]);
-  const [topGifters, setTopGifters] = useState<{ name: string; coins: number }[]>([]);
+  const [topGifters, setTopGifters] = useState<{ name: string; coins: number }[]>([
+    { name: "Luna ✨", coins: 520 },
+    { name: "Kai 🔥", coins: 310 },
+    { name: "Mia 💜", coins: 180 },
+  ]);
+  const [elapsed, setElapsed] = useState(0);
+  const [doubleTapHeart, setDoubleTapHeart] = useState<{ id: string; x: number; y: number } | null>(null);
+  const lastTapRef = useRef<number>(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const pinnedMessage = useMemo(() => `Welcome to ${stream.host_name}'s stream! Be respectful and have fun 🎉`, [stream.host_name]);
 
   const quickReactions = useMemo(() => ["❤️", "🔥", "😍", "👏", "😂"], []);
 
