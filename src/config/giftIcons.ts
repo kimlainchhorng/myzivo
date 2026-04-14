@@ -83,4 +83,6 @@ export const giftImages: Record<string, string> = {
   "Diamond Dragon": diamondDragon,
   "Luxury Yacht": luxuryYacht,
   "Private Island": privateIsland,
+  "Galaxy Crown": galaxyCrown,
+  "Golden Castle": goldenCastle,
 };
