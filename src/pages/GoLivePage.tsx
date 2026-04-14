@@ -30,6 +30,8 @@ import Wifi from "lucide-react/dist/esm/icons/wifi";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
 import Trophy from "lucide-react/dist/esm/icons/trophy";
 import Clock from "lucide-react/dist/esm/icons/clock";
+import Palette from "lucide-react/dist/esm/icons/palette";
+import CalendarPlus from "lucide-react/dist/esm/icons/calendar-plus";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
