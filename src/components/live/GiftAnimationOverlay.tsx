@@ -135,7 +135,11 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
                 initial={{ scale: 0.85, opacity: 0 }}
                 animate={{ scale: 1, opacity: videoReady ? 1 : 0.45 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
-                className="absolute flex items-center justify-center"
+                className="absolute flex items-center justify-center overflow-hidden rounded-3xl"
+                style={{
+                  WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 50%, transparent 100%)",
+                  maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 50%, transparent 100%)",
+                }}
               >
                 <video
                   key={`${animKey}-${videoUrl}`}
@@ -150,16 +154,14 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
                   onLoadedData={() => setVideoReady(true)}
                   onError={() => {
                     videoErrorCountRef.current += 1;
-                    // Only treat as fatal after multiple failures (browser aborts initial range requests)
                     if (videoErrorCountRef.current >= 3) setVideoFailed(true);
                   }}
-                  className={isLegendary ? "w-[18rem] h-[18rem] sm:w-[24rem] sm:h-[24rem] object-contain" : "w-[14rem] h-[14rem] sm:w-[20rem] sm:h-[20rem] object-contain"}
+                  className={isLegendary ? "w-[20rem] h-[20rem] sm:w-[26rem] sm:h-[26rem] object-cover" : "w-[16rem] h-[16rem] sm:w-[22rem] sm:h-[22rem] object-cover"}
                   style={{
-                    mixBlendMode: "screen",
-                    opacity: videoReady ? 0.96 : 0,
+                    opacity: videoReady ? 1 : 0,
                     filter: isLegendary
-                      ? "brightness(1.08) contrast(1.12) saturate(1.2) drop-shadow(0 0 22px rgba(255,180,50,0.55))"
-                      : "brightness(1.04) contrast(1.08) saturate(1.15) drop-shadow(0 0 16px rgba(255,180,50,0.42))",
+                      ? "brightness(1.08) contrast(1.12) saturate(1.2)"
+                      : "brightness(1.04) contrast(1.08) saturate(1.15)",
                     transform: "translateZ(0)",
                   }}
                 />
