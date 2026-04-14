@@ -295,13 +295,37 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         </div>
       </div>
 
-      {/* LIVE badge + stream title */}
+      {/* LIVE badge + stream title + duration */}
       <div className="relative z-10 px-4 mt-2">
         <div className="flex items-center gap-2">
           <Badge className="bg-red-500 text-white border-0 text-[10px] gap-1 px-2 py-0.5 animate-pulse">
             <Radio className="h-2.5 w-2.5" /> LIVE
           </Badge>
-          <p className="text-white/80 text-xs font-medium truncate">{stream.title}</p>
+          <p className="text-white/80 text-xs font-medium truncate flex-1">{stream.title}</p>
+          <span className="text-white/50 text-[10px] font-mono">{formatTime(elapsed)}</span>
+        </div>
+      </div>
+
+      {/* ── Top Gifters Mini-Widget ── */}
+      {topGifters.length > 0 && (
+        <div className="relative z-10 px-4 mt-1.5">
+          <div className="flex items-center gap-1.5 bg-black/30 backdrop-blur-sm rounded-full px-2.5 py-1 w-fit">
+            <Crown className="h-3 w-3 text-amber-400" />
+            {topGifters.slice(0, 3).map((g, i) => (
+              <div key={g.name} className="flex items-center gap-0.5">
+                <span className="text-[9px] text-amber-300/80 font-bold">{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</span>
+                <span className="text-[9px] text-white/70 truncate max-w-[50px]">{g.name.split(" ")[0]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Pinned Message ── */}
+      <div className="relative z-10 px-4 mt-1.5">
+        <div className="flex items-center gap-1.5 bg-primary/15 backdrop-blur-sm rounded-lg px-2.5 py-1.5 max-w-[75%]">
+          <span className="text-[9px] font-bold bg-primary/30 text-primary px-1 py-0.5 rounded shrink-0">PINNED</span>
+          <p className="text-[10px] text-white/80 truncate">{pinnedMessage}</p>
         </div>
       </div>
 
