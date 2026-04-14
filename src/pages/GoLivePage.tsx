@@ -45,7 +45,7 @@ import { giftImages } from "@/config/giftIcons";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
-type LivePhase = "setup" | "live" | "ended";
+type LivePhase = "setup" | "countdown" | "live" | "ended";
 
 export default function GoLivePage() {
   const navigate = useNavigate();
