@@ -68,6 +68,7 @@ import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
 import Coins from "lucide-react/dist/esm/icons/coins";
 import CircleDot from "lucide-react/dist/esm/icons/circle-dot";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
+import { ReactionIcon, MedalIcon, QUICK_REACTIONS } from "@/utils/reactionIcons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -1615,7 +1616,7 @@ export default function GoLivePage() {
                 transition={{ duration: 2, ease: "easeOut" }}
                 className="absolute bottom-40 right-6 text-2xl pointer-events-none z-30 will-change-transform"
               >
-                {r.emoji}
+                <ReactionIcon name={r.emoji} className="h-6 w-6" />
               </motion.div>
             ))}
           </AnimatePresence>
