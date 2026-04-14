@@ -82,6 +82,9 @@ export default function GoLivePage() {
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [newFollowersCount, setNewFollowersCount] = useState(0);
   const [shareCount, setShareCount] = useState(0);
+  const [giftQty, setGiftQty] = useState(1);
+  const [recentGifts, setRecentGifts] = useState<{ icon: string; name: string; coins: number }[]>([]);
+  const [pinnedChatMsg, setPinnedChatMsg] = useState<string | null>(null);
   const lastGiftTimeRef = useRef(0);
   const lastMilestoneRef = useRef(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
