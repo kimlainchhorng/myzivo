@@ -349,6 +349,7 @@ export default function GoLivePage() {
   }, [phase]);
 
   const endStream = useCallback(() => {
+    setShowEndConfirm(false);
     setPhase("ended");
     streamRef.current?.getTracks().forEach((t) => t.stop());
     toast("Stream ended", { description: `Duration: ${formatTime(elapsed)} · ${peakViewers} peak viewers`, duration: 3000 });
@@ -482,16 +483,20 @@ export default function GoLivePage() {
               <span className="text-xs text-white/50">Chat Messages</span>
               <span className="text-sm font-semibold text-white">{chatMessages.length} 💬</span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-white/50">Engagement Rate</span>
-              <span className="text-sm font-semibold text-green-400">
-                {peakViewers > 0 ? Math.min(95, Math.round((giftsReceived / peakViewers) * 40 + (likes / Math.max(1, elapsed / 30)) * 5)) : 0}% 📊
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-white/50">Avg Watch Time</span>
-              <span className="text-sm font-semibold text-white">{formatTime(Math.round(elapsed * 0.6))} ⏱️</span>
-            </div>
+             <div className="flex items-center justify-between">
+478:               <span className="text-xs text-white/50">New Followers</span>
+479:               <span className="text-sm font-semibold text-purple-400">{newFollowersCount} 💜</span>
+480:             </div>
+             <div className="flex items-center justify-between">
+               <span className="text-xs text-white/50">Engagement Rate</span>
+               <span className="text-sm font-semibold text-green-400">
+                 {peakViewers > 0 ? Math.min(95, Math.round((giftsReceived / peakViewers) * 40 + (likes / Math.max(1, elapsed / 30)) * 5)) : 0}% 📊
+               </span>
+             </div>
+             <div className="flex items-center justify-between">
+               <span className="text-xs text-white/50">Avg Watch Time</span>
+               <span className="text-sm font-semibold text-white">{formatTime(Math.round(elapsed * 0.6))} ⏱️</span>
+             </div>
           </div>
 
           {/* Top Gifters on ended screen */}
@@ -524,7 +529,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); lastMilestoneRef.current = 0; startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -586,7 +591,7 @@ export default function GoLivePage() {
       {/* Top bar */}
       <div className="relative z-10 flex items-center gap-2 px-4 pt-3" style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 12px), 12px)" }}>
         <button
-          onClick={() => { streamRef.current?.getTracks().forEach((t) => t.stop()); phase === "live" ? endStream() : navigate(-1); }}
+          onClick={() => { streamRef.current?.getTracks().forEach((t) => t.stop()); phase === "live" ? setShowEndConfirm(true) : navigate(-1); }}
           className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10"
         >
           {phase === "live" ? <X className="h-5 w-5 text-white" /> : <ArrowLeft className="h-5 w-5 text-white" />}
