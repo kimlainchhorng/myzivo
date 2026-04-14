@@ -68,6 +68,7 @@ import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
 import Coins from "lucide-react/dist/esm/icons/coins";
 import CircleDot from "lucide-react/dist/esm/icons/circle-dot";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
+import PartyPopper from "lucide-react/dist/esm/icons/party-popper";
 import { ReactionIcon, MedalIcon, QUICK_REACTIONS } from "@/utils/reactionIcons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -508,7 +509,7 @@ export default function GoLivePage() {
           setTimeout(() => {
             setChatMessages((prev) => [
               ...prev.slice(-20),
-              { id: `thx-${Date.now()}`, user: "You (Host)", text: `Thank you ${sender} for the ${giftNames[idx]}! ❤️`, avatar: "bg-red-500" },
+              { id: `thx-${Date.now()}`, user: "You (Host)", text: `Thank you ${sender} for the ${giftNames[idx]}!`, avatar: "bg-red-500" },
             ]);
           }, 1500);
         }
@@ -551,7 +552,7 @@ export default function GoLivePage() {
   const sendChat = useCallback(() => {
     if (!chatInput.trim()) return;
     if (slowMode && slowModeCooldown > 0) {
-      toast(`⏳ Slow mode: wait ${slowModeCooldown}s`, { duration: 1500 });
+      toast(`Slow mode: wait ${slowModeCooldown}s`, { duration: 1500 });
       return;
     }
     setChatMessages((prev) => [...prev.slice(-20), { id: Date.now().toString(), user: "You (Host)", text: chatInput, avatar: "bg-red-500" }]);
@@ -609,7 +610,7 @@ export default function GoLivePage() {
       toast.success("Stream goal reached! Amazing!", { duration: 5000 });
       setMilestoneEffect("confetti");
       setTimeout(() => setMilestoneEffect(null), 4000);
-      ["🎉", "🥳", "✨", "🎊", ""].forEach((e, i) => {
+      ["heart", "party", "sparkle", "star", "crown"].forEach((e, i) => {
         setTimeout(() => spawnFloatingReaction(e), i * 200);
       });
     }
@@ -813,7 +814,7 @@ export default function GoLivePage() {
 
     // ── NEW: Combo Multiplier Visual ──
     if (newCombo >= 2) {
-      const comboLabels = ["", "", "COMBO x2 🔥", "COMBO x3 ", "COMBO x4 💥", "MEGA x5 🌟", "ULTRA x6 ", "SUPREME x7 👑"];
+      const comboLabels = ["", "", "COMBO x2", "COMBO x3", "COMBO x4", "MEGA x5", "ULTRA x6", "SUPREME x7"];
       const label = newCombo < comboLabels.length ? comboLabels[newCombo] : `GODLIKE x${newCombo}`;
       setComboMultiplierText({ text: label, id: `combo-${now}` });
       setTimeout(() => setComboMultiplierText(null), 2500);
@@ -1046,7 +1047,7 @@ export default function GoLivePage() {
 
           {/* Schedule Next Stream */}
           <button
-            onClick={() => toast("📅 Stream scheduling coming soon!", { description: "Set a time and notify your followers automatically." })}
+            onClick={() => toast("Stream scheduling coming soon!", { description: "Set a time and notify your followers automatically." })}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-white/5 border border-white/10 active:scale-[0.98] transition-transform"
           >
             <CalendarPlus className="h-4 w-4 text-blue-400" />
@@ -1226,7 +1227,7 @@ export default function GoLivePage() {
               />
             </div>
             {coinsEarned >= streamGoal && (
-              <p className="text-[9px] text-amber-300 mt-1 text-center animate-pulse">🎉 Goal reached!</p>
+              <p className="text-[9px] text-amber-300 mt-1 text-center animate-pulse flex items-center justify-center gap-0.5"><PartyPopper className="h-3 w-3" /> Goal reached!</p>
             )}
           </div>
 
@@ -1240,7 +1241,7 @@ export default function GoLivePage() {
                 className="mt-2 bg-black/40 backdrop-blur-md rounded-2xl px-3 py-2 border border-red-500/20"
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">⚔️ PK Battle</span>
+                  <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider flex items-center gap-0.5"><Swords className="h-3 w-3" /> PK Battle</span>
                   <span className="text-[9px] text-white/40">{Math.max(0, Math.round((pkBattle.endsAt - Date.now()) / 1000))}s left</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1706,7 +1707,7 @@ export default function GoLivePage() {
                   )}
                   <div>
                     <p className="text-white text-[11px] font-bold">
-                      ✓ Gift Sent!{sentGiftFlyout.qty > 1 ? ` x${sentGiftFlyout.qty}` : ""}
+                      <Check className="h-3 w-3 inline mr-0.5" /> Gift Sent!{sentGiftFlyout.qty > 1 ? ` x${sentGiftFlyout.qty}` : ""}
                     </p>
                     <div className="flex items-center gap-1">
                       <img src={goldCoinIcon} alt="" className="w-3 h-3" />
@@ -1976,7 +1977,7 @@ export default function GoLivePage() {
                     )}
                     {/* Top Fan badge */}
                     {topGifterName && msg.user === topGifterName && (
-                      <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full shrink-0 bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border border-amber-500/30">⭐ Top Fan</span>
+                      <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full shrink-0 bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border border-amber-500/30 flex items-center gap-0.5"><Star className="h-2 w-2 fill-amber-300 text-amber-300" /> Top Fan</span>
                     )}
                     <span className={cn("text-xs font-medium", msg.isSystem ? "text-white/40 italic" : "text-white/80")}>{msg.user}</span>
                     <span className={cn("text-xs", msg.isGift ? "text-amber-300" : msg.isSystem ? "text-white/30 italic" : "text-white/90")}>{msg.text}</span>
@@ -2086,7 +2087,7 @@ export default function GoLivePage() {
           {/* Chat input + End button */}
           <div className="px-3 pb-4 flex gap-2 items-center" style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 16px), 16px)" }}>
             {slowMode && slowModeCooldown > 0 && (
-              <span className="text-[9px] text-blue-300 font-medium absolute -top-5 left-4">⏳ Slow mode: {slowModeCooldown}s</span>
+              <span className="text-[9px] text-blue-300 font-medium absolute -top-5 left-4 flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" /> Slow mode: {slowModeCooldown}s</span>
             )}
             <Input
               value={chatInput}
@@ -2372,7 +2373,7 @@ export default function GoLivePage() {
                 </button>
               </div>
               {Object.keys(topGifters).length === 0 ? (
-                <p className="text-[10px] text-white/30 text-center py-2">No gifters yet — be the first! </p>
+                <p className="text-[10px] text-white/30 text-center py-2">No gifters yet — be the first!</p>
               ) : (
                 Object.entries(topGifters)
                   .sort(([, a], [, b]) => b - a)
@@ -2456,7 +2457,7 @@ export default function GoLivePage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1">
                           <span className={cn("text-[11px] font-medium truncate", isMuted ? "text-white/30 line-through" : "text-white/80")}>{name}</span>
-                          {isTopGifter && <span className="text-[7px] bg-amber-500/30 text-amber-300 px-1 py-0.5 rounded-full font-bold shrink-0">⭐ Top</span>}
+                          {isTopGifter && <span className="text-[7px] bg-amber-500/30 text-amber-300 px-1 py-0.5 rounded-full font-bold shrink-0 flex items-center gap-0.5"><Star className="h-2 w-2 fill-amber-300 text-amber-300" /> Top</span>}
                           {i === 0 && !isTopGifter && <span className="text-[7px] bg-green-500/20 text-green-300 px-1 py-0.5 rounded-full font-bold shrink-0">Early</span>}
                         </div>
                       </div>
@@ -2742,7 +2743,7 @@ export default function GoLivePage() {
           >
             <div className="rounded-2xl overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(255,180,0,0.9) 0%, rgba(255,120,0,0.85) 100%)", boxShadow: "0 4px 30px rgba(255,150,0,0.4)" }}>
               <div className="px-3 py-1.5 flex items-center gap-2 border-b border-white/20">
-                <span className="text-white text-[10px] font-black uppercase tracking-wider">💬 Super Chat</span>
+                <span className="text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-0.5"><MessageCircle className="h-3 w-3" /> Super Chat</span>
                 <span className="text-white/80 text-[10px] font-bold ml-auto flex items-center gap-1"><img src={goldCoinIcon} alt="" className="w-3 h-3" />{superChat.coins}</span>
               </div>
               <div className="px-3 py-2">
@@ -2855,7 +2856,7 @@ export default function GoLivePage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-white/50">Projected (1hr)</span>
-                  <span className="text-[11px] font-semibold text-emerald-200">{elapsed > 30 ? Math.round((coinsEarned / elapsed) * 3600).toLocaleString() : "—"} </span>
+                  <span className="text-[11px] font-semibold text-emerald-200">{elapsed > 30 ? Math.round((coinsEarned / elapsed) * 3600).toLocaleString() : "—"}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-white/50">Gifts</span>
@@ -2950,9 +2951,9 @@ export default function GoLivePage() {
                 transition={{ duration: 2 + Math.random() * 2, delay: Math.random() * 0.5 }}
                 className="absolute text-xl"
               >
-                {screenEffect === "confetti" ? ["🎊", "🎉", "⭐", "✨", "🌟"][i % 5] :
-                 screenEffect === "hearts" ? ["❤️", "💕", "💖", "💗", "💝"][i % 5] :
-                 ["🔥", "💥", "", "🌋", "☄️"][i % 5]}
+                {screenEffect === "confetti" ? <ReactionIcon name={["party", "sparkle", "star", "crown", "gem"][i % 5]} className="h-5 w-5" /> :
+                 screenEffect === "hearts" ? <ReactionIcon name="heart" className="h-5 w-5" /> :
+                 <ReactionIcon name={["fire", "zap", "flame", "trending", "star"][i % 5]} className="h-5 w-5" />}
               </motion.span>
             ))}
           </motion.div>
