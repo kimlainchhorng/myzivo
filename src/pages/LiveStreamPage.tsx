@@ -313,12 +313,23 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         </button>
 
         <div className="flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1 flex-1 min-w-0">
-          <Avatar className="h-8 w-8 border-2 border-red-500 shrink-0">
-            <AvatarImage src={stream.host_avatar || undefined} />
-            <AvatarFallback className="bg-red-500/20 text-red-400 text-xs font-bold">
-              {stream.host_name[0]}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-8 w-8 border-2 border-red-500 shrink-0">
+              <AvatarImage src={stream.host_avatar || undefined} />
+              <AvatarFallback className="bg-red-500/20 text-red-400 text-xs font-bold">
+                {stream.host_name[0]}
+              </AvatarFallback>
+            </Avatar>
+            {/* Host Level Badge */}
+            <span className={cn(
+              "absolute -bottom-0.5 -right-0.5 text-[6px] font-bold px-1 py-0.5 rounded-full border",
+              hostLevel >= 30 ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-white border-amber-300/50" :
+              hostLevel >= 15 ? "bg-gradient-to-r from-blue-500 to-cyan-400 text-white border-blue-300/50" :
+              "bg-white/20 text-white/80 border-white/20"
+            )}>
+              {hostLevel}
+            </span>
+          </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-xs font-bold truncate leading-tight">{stream.host_name}</p>
             <p className="text-white/50 text-[10px] leading-tight">{stream.topic}</p>
