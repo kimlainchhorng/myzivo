@@ -314,12 +314,12 @@ export default function GoLivePage() {
   // Simulate random viewer gifts every 15-30s
   useEffect(() => {
     if (phase !== "live") return;
-    const giftNames = ["Baby Dragon", "Cute Panda", "Crystal Unicorn", "Lucky Cat", "Phoenix Rising", "Diamond Bear"];
-    const giftCoins = [1, 1, 10, 1, 50, 99];
+    const giftNames = ["Baby Dragon", "Cute Panda", "Lucky Cat", "Crystal Unicorn", "King Cobra"];
+    const giftCoins = [1, 1, 1, 10, 5];
     const viewers = ["Luna", "Kai", "Mia", "Nora", "Zara", "Leo", "Aria"];
     let timerRef: ReturnType<typeof setTimeout>;
     const scheduleNext = () => {
-      const delay = 15000 + Math.random() * 15000;
+      const delay = 25000 + Math.random() * 25000;
       timerRef = setTimeout(() => {
         const idx = Math.floor(Math.random() * giftNames.length);
         const sender = viewers[Math.floor(Math.random() * viewers.length)];
