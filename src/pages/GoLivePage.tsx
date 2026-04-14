@@ -1453,7 +1453,11 @@ export default function GoLivePage() {
               <Trophy className="h-3.5 w-3.5 text-amber-400" />
             </button>
 
-            {/* Sound toggle */}
+            {/* ── NEW: Revenue mini-dashboard toggle ── */}
+            <button onClick={() => setShowRevenueDash((p) => !p)} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", showRevenueDash ? "bg-emerald-500/25 border-emerald-500/20" : "bg-black/30")}>
+              <span className="text-[10px]">💰</span>
+            </button>
+
             <button onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "🔇 Muted" : "🔊 Sound on", { duration: 1200 }); }} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", soundEnabled ? "bg-black/30" : "bg-red-500/20")}>
               {soundEnabled ? <Volume2 className="h-3.5 w-3.5 text-white/70" /> : <VolumeX className="h-3.5 w-3.5 text-red-300" />}
             </button>
