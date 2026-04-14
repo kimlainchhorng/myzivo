@@ -448,6 +448,8 @@ export default function GoLivePage() {
         const sender = viewers[Math.floor(Math.random() * viewers.length)];
         const notif = { id: Date.now().toString(), sender, giftName: giftNames[idx], coins: giftCoins[idx] };
         setViewerGiftNotif(notif);
+        // Push to right-side queue (max 3)
+        setGiftNotifQueue((prev) => [notif, ...prev].slice(0, 3));
         setGiftsReceived((p) => p + 1);
         setCoinsEarned((p) => p + giftCoins[idx]);
         setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + giftCoins[idx] }));
@@ -478,6 +480,8 @@ export default function GoLivePage() {
         giftStreakTimerRef.current = setTimeout(() => setGiftStreakCount(0), 10000);
         lastGiftTimeRef.current = now;
         setTimeout(() => setViewerGiftNotif((cur) => cur?.id === notif.id ? null : cur), 4000);
+        // Remove from queue after 5s
+        setTimeout(() => setGiftNotifQueue((prev) => prev.filter((n) => n.id !== notif.id)), 5000);
         scheduleNext();
       }, delay);
     };
