@@ -847,7 +847,7 @@ export default function GoLivePage() {
                 initial={{ y: -50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -50, opacity: 0 }}
-                className="absolute top-[110px] left-3 z-30"
+                className="absolute top-[170px] left-3 z-30"
               >
                 <div className="flex items-center gap-2 bg-gradient-to-r from-purple-600/80 to-pink-500/60 backdrop-blur-md rounded-full px-3 py-1.5 border border-purple-400/20 shadow-lg shadow-purple-500/20">
                   <Users className="h-3.5 w-3.5 text-white" />
@@ -866,7 +866,7 @@ export default function GoLivePage() {
                 initial={{ opacity: 1, y: 0 }}
                 animate={{ opacity: 0, y: -280, x: r.x }}
                 transition={{ duration: 2, ease: "easeOut" }}
-                className="absolute bottom-44 right-8 text-2xl pointer-events-none z-30 will-change-transform"
+                className="absolute bottom-40 right-6 text-2xl pointer-events-none z-30 will-change-transform"
               >
                 {r.emoji}
               </motion.div>
@@ -882,7 +882,7 @@ export default function GoLivePage() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -300, opacity: 0 }}
                 transition={{ type: "spring", damping: 20, stiffness: 200 }}
-                className="absolute top-28 left-3 right-16 z-30"
+                className="absolute top-[210px] left-3 right-16 z-30"
               >
                 <div
                   className="flex items-center gap-2 px-3 py-2 rounded-2xl"
