@@ -45,7 +45,7 @@ import { giftImages } from "@/config/giftIcons";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
-type LivePhase = "setup" | "live" | "ended";
+type LivePhase = "setup" | "countdown" | "live" | "ended";
 
 export default function GoLivePage() {
   const navigate = useNavigate();
@@ -83,6 +83,9 @@ export default function GoLivePage() {
   const [streamGoal] = useState(500);
   const [giftStreakFlash, setGiftStreakFlash] = useState(false);
   const [goalCelebrated, setGoalCelebrated] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [newFollower, setNewFollower] = useState<string | null>(null);
+  const [viewerPulse, setViewerPulse] = useState(false);
   const lastGiftTimeRef = useRef(0);
   const lastMilestoneRef = useRef(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -197,17 +200,28 @@ export default function GoLivePage() {
       toast.error("Please add a title for your stream");
       return;
     }
-    setPhase("live");
-    // Pinned welcome message
-    setChatMessages([{
-      id: "welcome",
-      user: "ZIVO",
-      text: `Welcome to "${title}"! Be respectful and have fun 🎉`,
-      isSystem: true,
-      isPinned: true,
-      avatar: "bg-red-500",
-    }]);
-    toast.success("You're live! 🔴");
+    // Start countdown
+    setPhase("countdown");
+    setCountdown(3);
+    let c = 3;
+    const iv = setInterval(() => {
+      c -= 1;
+      if (c <= 0) {
+        clearInterval(iv);
+        setPhase("live");
+        setChatMessages([{
+          id: "welcome",
+          user: "ZIVO",
+          text: `Welcome to "${title}"! Be respectful and have fun 🎉`,
+          isSystem: true,
+          isPinned: true,
+          avatar: "bg-red-500",
+        }]);
+        toast.success("You're live! 🔴");
+      } else {
+        setCountdown(c);
+      }
+    }, 1000);
   }, [title]);
 
   // Auto-scroll chat to bottom
@@ -237,7 +251,7 @@ export default function GoLivePage() {
           const delta = Math.random() > 0.4 ? Math.floor(Math.random() * 3) : -Math.floor(Math.random() * 2);
           const next = Math.max(0, p + delta);
           setPeakViewers((pk) => Math.max(pk, next));
-          // Milestone celebrations
+          if (next !== p) { setViewerPulse(true); setTimeout(() => setViewerPulse(false), 600); }
           const milestones = [10, 25, 50, 100, 250, 500];
           for (const m of milestones) {
             if (next >= m && p < m && m > lastMilestoneRef.current) {
@@ -288,6 +302,23 @@ export default function GoLivePage() {
     return () => cancelAnimationFrame(raf);
   }, [phase]);
 
+  // Simulate new follower notifications every 20-40s
+  useEffect(() => {
+    if (phase !== "live") return;
+    const followerNames = ["Sophia", "Ethan", "Olivia", "Mason", "Ava", "Liam", "Emma", "Noah"];
+    let timer: ReturnType<typeof setTimeout>;
+    const scheduleFollower = () => {
+      timer = setTimeout(() => {
+        const name = followerNames[Math.floor(Math.random() * followerNames.length)];
+        setNewFollower(name);
+        fakeFollowers.current += 1;
+        setTimeout(() => setNewFollower(null), 3000);
+        scheduleFollower();
+      }, 20000 + Math.random() * 20000);
+    };
+    scheduleFollower();
+    return () => clearTimeout(timer);
+  }, [phase]);
   // Simulate random viewer gifts every 15-30s
   useEffect(() => {
     if (phase !== "live") return;
@@ -380,8 +411,6 @@ export default function GoLivePage() {
       setTimeout(() => setGiftStreakFlash(false), 1500);
     }
     lastGiftTimeRef.current = now2;
-    
-    // Combo tracking — same gift within 5s increments combo
     
     // Combo tracking — same gift within 5s increments combo
     const now = Date.now();
@@ -549,13 +578,12 @@ export default function GoLivePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
         {/* Double-tap to heart */}
         {phase === "live" && (
-          <div
-            className="absolute inset-0 z-[1]"
-            onDoubleClick={() => {
-              sendReaction("❤️");
-              setLikes((p) => p + 1);
-            }}
-          />
+           <div
+             className="absolute inset-0 z-[1]"
+             onDoubleClick={() => {
+               spawnFloatingReaction("❤️");
+             }}
+           />
         )}
       </div>
 
@@ -574,9 +602,9 @@ export default function GoLivePage() {
               <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
               <span className="text-white text-[10px] font-bold uppercase tracking-wider">Live</span>
             </div>
-            <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md rounded-full px-2.5 py-1 border border-white/10">
+            <div className={cn("flex items-center gap-1 bg-black/40 backdrop-blur-md rounded-full px-2.5 py-1 border border-white/10 transition-all", viewerPulse && "scale-110 bg-green-500/20 border-green-500/30")}>
               <Eye className="h-3 w-3 text-white/70" />
-              <span className="text-white text-xs font-medium">{viewerCount.toLocaleString()}</span>
+              <span className={cn("text-white text-xs font-medium transition-colors", viewerPulse && "text-green-300")}>{viewerCount.toLocaleString()}</span>
             </div>
             <div className="ml-auto flex items-center gap-2">
               <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md rounded-full px-2 py-1 border border-white/10">
@@ -791,9 +819,43 @@ export default function GoLivePage() {
         </div>
       )}
 
+      {/* Countdown overlay */}
+      {phase === "countdown" && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <motion.div
+            key={countdown}
+            initial={{ scale: 2, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.5, opacity: 0 }}
+            transition={{ type: "spring", damping: 15, stiffness: 300 }}
+            className="text-8xl font-black text-white drop-shadow-[0_0_40px_rgba(255,50,50,0.5)]"
+          >
+            {countdown}
+          </motion.div>
+        </div>
+      )}
+
       {/* Live phase */}
       {phase === "live" && (
         <div className="relative z-10 flex-1 flex flex-col justify-end">
+          {/* New follower notification */}
+          <AnimatePresence>
+            {newFollower && (
+              <motion.div
+                initial={{ y: -50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -50, opacity: 0 }}
+                className="absolute top-[110px] left-3 z-30"
+              >
+                <div className="flex items-center gap-2 bg-gradient-to-r from-purple-600/80 to-pink-500/60 backdrop-blur-md rounded-full px-3 py-1.5 border border-purple-400/20 shadow-lg shadow-purple-500/20">
+                  <Users className="h-3.5 w-3.5 text-white" />
+                  <span className="text-white text-[11px] font-semibold">{newFollower}</span>
+                  <span className="text-white/60 text-[11px]">followed you</span>
+                  <span className="text-sm">💜</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           {/* Floating reactions */}
           <AnimatePresence initial={false}>
             {floatingReactions.map((r) => (
