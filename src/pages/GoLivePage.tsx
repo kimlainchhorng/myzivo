@@ -484,9 +484,9 @@ export default function GoLivePage() {
               <span className="text-sm font-semibold text-white">{chatMessages.length} 💬</span>
             </div>
              <div className="flex items-center justify-between">
-478:               <span className="text-xs text-white/50">New Followers</span>
-479:               <span className="text-sm font-semibold text-purple-400">{newFollowersCount} 💜</span>
-480:             </div>
+               <span className="text-xs text-white/50">New Followers</span>
+               <span className="text-sm font-semibold text-purple-400">{newFollowersCount} 💜</span>
+             </div>
              <div className="flex items-center justify-between">
                <span className="text-xs text-white/50">Engagement Rate</span>
                <span className="text-sm font-semibold text-green-400">
