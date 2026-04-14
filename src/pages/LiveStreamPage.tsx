@@ -96,6 +96,11 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   // ── Gift animation overlay for premium gifts ──
   const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
   const [giftCombo, setGiftCombo] = useState(0);
+  // ── Combo multiplier text ──
+  const [comboMultiplierText, setComboMultiplierText] = useState<{ text: string; id: string } | null>(null);
+  // ── Recent gifts ──
+  const [recentGifts, setRecentGifts] = useState<GiftItem[]>([]);
+  const lastGiftRef = useRef<{ name: string; time: number }>({ name: "", time: 0 });
   // ── Active Poll (from host) ──
   const [activePoll, setActivePoll] = useState<{ question: string; options: string[]; votes: number[]; totalVotes: number; voted: number | null } | null>(null);
   const [fakeViewers] = useState(() => [
@@ -174,24 +179,34 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
 
   // Simulate gift notifications from other viewers
   useEffect(() => {
+    const allPool = [...allGifts.gifts, ...allGifts.interactive.slice(0, 3)];
     const interval = setInterval(() => {
       if (Math.random() < 0.3) {
         const sender = fakeViewerNames[Math.floor(Math.random() * fakeViewerNames.length)];
-        const giftPool = allGifts.gifts;
-        const gift = giftPool[Math.floor(Math.random() * 4)];
+        const gift = allPool[Math.floor(Math.random() * allPool.length)];
         const notif = { id: Date.now().toString(), sender, giftName: gift.name, coins: gift.coins, icon: gift.icon };
         setGiftNotifQueue(prev => [...prev.slice(-2), notif]);
+        // Play sound for simulated gifts
+        playGiftSound(1, gift.coins);
         // Update top gifters
         setTopGifters(prev => {
           const existing = prev.find(g => g.name === sender);
           if (existing) {
             return prev.map(g => g.name === sender ? { ...g, coins: g.coins + gift.coins } : g).sort((a, b) => b.coins - a.coins);
           }
-          return [...prev, { name: sender, coins: gift.coins }].sort((a, b) => b.coins - a.coins).slice(0, 3);
+          return [...prev, { name: sender, coins: gift.coins }].sort((a, b) => b.coins - a.coins).slice(0, 5);
         });
+        // Add to chat
+        setChatMessages(prev => [...prev.slice(-30), {
+          id: `vgift-${Date.now()}`,
+          user: sender,
+          text: `sent ${gift.name}`,
+          isGift: true,
+          level: Math.floor(Math.random() * 20) + 1,
+        }]);
         setTimeout(() => {
           setGiftNotifQueue(prev => prev.filter(n => n.id !== notif.id));
-        }, 3000);
+        }, 4000);
       }
     }, 5000);
     return () => clearInterval(interval);
@@ -248,35 +263,79 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const sendGift = useCallback(() => {
     if (!selectedGift) return;
     const totalCoins = selectedGift.coins * giftQty;
+
+    // Haptic feedback
+    try { navigator.vibrate?.(giftQty > 1 ? [50, 30, 50] : [50]); } catch {} // eslint-disable-line no-empty
+
     // Chat message
     setChatMessages(prev => [...prev, {
       id: Date.now().toString(),
       user: "You",
-      text: `sent ${giftQty}x ${selectedGift.name}`,
+      text: giftQty > 1 ? `sent ${selectedGift.name} x${giftQty} (${totalCoins.toLocaleString()} coins)` : `sent ${selectedGift.name} (${selectedGift.coins} coins)`,
       isGift: true,
       level: 5,
     }]);
+
+    // Track recent gifts (unique, max 4)
+    setRecentGifts(prev => {
+      const filtered = prev.filter(g => g.name !== selectedGift.name);
+      return [selectedGift, ...filtered].slice(0, 4);
+    });
+
+    // Floating reaction
+    sendReaction("gift");
+
+    // Combo tracking — same gift within 5s increments combo
+    const now = Date.now();
+    let newCombo = 1;
+    if (lastGiftRef.current.name === selectedGift.name && now - lastGiftRef.current.time < 5000) {
+      newCombo = giftCombo + 1;
+      setGiftCombo(newCombo);
+    } else {
+      setGiftCombo(1);
+    }
+    lastGiftRef.current = { name: selectedGift.name, time: now };
+
+    // Combo Multiplier Visual
+    if (newCombo >= 2) {
+      const comboLabels = ["", "", "COMBO x2", "COMBO x3", "COMBO x4", "MEGA x5", "ULTRA x6", "SUPREME x7"];
+      const label = newCombo < comboLabels.length ? comboLabels[newCombo] : `GODLIKE x${newCombo}`;
+      setComboMultiplierText({ text: label, id: `combo-${now}` });
+      setTimeout(() => setComboMultiplierText(null), 2500);
+    }
+
     // Gift-sent flyout
-    const flyout = { id: Date.now().toString(), giftName: selectedGift.name, coins: totalCoins, qty: giftQty };
-    setSentGiftFlyout(flyout);
-    setTimeout(() => setSentGiftFlyout(null), 2500);
+    const flyoutId = `sent-${Date.now()}`;
+    setSentGiftFlyout({ id: flyoutId, giftName: selectedGift.name, coins: totalCoins, qty: giftQty });
+    setTimeout(() => setSentGiftFlyout(cur => cur?.id === flyoutId ? null : cur), 2500);
+
     // Play sound
     if (selectedGift.coins >= 20000) {
       playLegendaryGiftSound();
-    } else if (selectedGift.coins >= 500 && giftAnimationVideos[selectedGift.name]) {
+    } else if (giftAnimationVideos[selectedGift.name]) {
       playPremiumGiftSound();
     } else {
-      playGiftSound(1, selectedGift.coins);
+      playGiftSound(newCombo, selectedGift.coins);
     }
-    // Trigger premium animation for 500+ coin gifts
-    if (selectedGift.coins >= 500 && giftAnimationVideos[selectedGift.name]) {
+
+    // Trigger premium animation for gifts with video
+    if (giftAnimationVideos[selectedGift.name]) {
       setActiveGiftAnim({ name: selectedGift.name, coins: totalCoins, senderName: "You" });
-      setGiftCombo(prev => prev + 1);
     }
+
+    // Update top gifters
+    setTopGifters(prev => {
+      const existing = prev.find(g => g.name === "You");
+      if (existing) {
+        return prev.map(g => g.name === "You" ? { ...g, coins: g.coins + totalCoins } : g).sort((a, b) => b.coins - a.coins);
+      }
+      return [...prev, { name: "You", coins: totalCoins }].sort((a, b) => b.coins - a.coins).slice(0, 5);
+    });
+
     setSelectedGift(null);
     setGiftQty(1);
     setShowGiftPanel(false);
-  }, [selectedGift, giftQty]);
+  }, [selectedGift, giftQty, giftCombo, sendReaction]);
 
   const votePoll = useCallback((optIndex: number) => {
     setActivePoll(prev => {
@@ -1034,6 +1093,31 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 </div>
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Combo Multiplier Overlay ── */}
+      <AnimatePresence>
+        {comboMultiplierText && (
+          <motion.div
+            key={comboMultiplierText.id}
+            initial={{ scale: 0.3, opacity: 0, y: 40 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 1.5, opacity: 0, y: -30 }}
+            transition={{ type: "spring", damping: 12, stiffness: 300 }}
+            className="fixed left-0 right-0 z-50 flex items-center justify-center pointer-events-none"
+            style={{ top: "40%" }}
+          >
+            <span
+              className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-orange-400"
+              style={{
+                textShadow: "0 0 40px rgba(255,200,0,0.6), 0 0 80px rgba(255,150,0,0.3)",
+                WebkitTextStroke: "1px rgba(255,200,80,0.3)",
+              }}
+            >
+              {comboMultiplierText.text}
+            </span>
           </motion.div>
         )}
       </AnimatePresence>

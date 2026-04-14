@@ -443,50 +443,43 @@ export default function GoLivePage() {
   // Simulate random viewer gifts every 15-30s
   useEffect(() => {
     if (phase !== "live") return;
-    const giftNames = ["Baby Dragon", "Cute Panda", "Lucky Cat", "Crystal Unicorn", "King Cobra"];
-    const giftCoins = [1, 1, 1, 10, 5];
+    const giftPool = [...allGifts.gifts, ...allGifts.interactive.slice(0, 3)];
     const viewers = ["Luna", "Kai", "Mia", "Nora", "Zara", "Leo", "Aria"];
     let timerRef: ReturnType<typeof setTimeout>;
     const scheduleNext = () => {
       const delay = 25000 + Math.random() * 25000;
       timerRef = setTimeout(() => {
-        const idx = Math.floor(Math.random() * giftNames.length);
+        const gift = giftPool[Math.floor(Math.random() * giftPool.length)];
         const sender = viewers[Math.floor(Math.random() * viewers.length)];
-        const notif = { id: Date.now().toString(), sender, giftName: giftNames[idx], coins: giftCoins[idx] };
+        const notif = { id: Date.now().toString(), sender, giftName: gift.name, coins: gift.coins };
         setViewerGiftNotif(notif);
-        // Push to right-side queue (max 3)
         setGiftNotifQueue((prev) => [notif, ...prev].slice(0, 3));
         setGiftsReceived((p) => p + 1);
-        setCoinsEarned((p) => p + giftCoins[idx]);
-        setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + giftCoins[idx] }));
-        // Add to chat feed
+        setCoinsEarned((p) => p + gift.coins);
+        setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + gift.coins }));
         setChatMessages((prev) => [
           ...prev.slice(-20),
-          { id: `vgift-${Date.now()}`, user: sender, text: `sent ${giftNames[idx]}`, isGift: true, avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][Math.floor(Math.random() * 5)] },
+          { id: `vgift-${Date.now()}`, user: sender, text: `sent ${gift.name} (${gift.coins} coins)`, isGift: true, avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][Math.floor(Math.random() * 5)] },
         ]);
-        if (soundEnabled) playGiftSound(1);
-        // Auto thank-you
+        if (soundEnabled) playGiftSound(1, gift.coins);
         if (autoThank) {
           setTimeout(() => {
             setChatMessages((prev) => [
               ...prev.slice(-20),
-              { id: `thx-${Date.now()}`, user: "You (Host)", text: `Thank you ${sender} for the ${giftNames[idx]}!`, avatar: "bg-red-500" },
+              { id: `thx-${Date.now()}`, user: "You (Host)", text: `Thank you ${sender} for the ${gift.name}!`, avatar: "bg-red-500" },
             ]);
           }, 1500);
         }
-        // Gift streak flash + counter
         const now = Date.now();
         if (now - lastGiftTimeRef.current < 8000) {
           setGiftStreakFlash(true);
           setTimeout(() => setGiftStreakFlash(false), 1500);
         }
-        // ── NEW: Gift Streak Counter ──
         setGiftStreakCount((p) => p + 1);
         if (giftStreakTimerRef.current) clearTimeout(giftStreakTimerRef.current);
         giftStreakTimerRef.current = setTimeout(() => setGiftStreakCount(0), 10000);
         lastGiftTimeRef.current = now;
         setTimeout(() => setViewerGiftNotif((cur) => cur?.id === notif.id ? null : cur), 4000);
-        // Remove from queue after 5s
         setTimeout(() => setGiftNotifQueue((prev) => prev.filter((n) => n.id !== notif.id)), 5000);
         scheduleNext();
       }, delay);
@@ -734,7 +727,7 @@ export default function GoLivePage() {
     setGiftsReceived((p) => p + qty);
     setCoinsEarned((p) => p + totalCoins);
     setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + totalCoins }));
-    spawnFloatingReaction(gift.icon);
+    spawnFloatingReaction("gift");
 
     // Track recent gifts (unique, max 4)
     setRecentGifts((prev) => {
