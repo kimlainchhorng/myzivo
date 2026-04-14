@@ -1692,9 +1692,8 @@ export default function GoLivePage() {
             )}
           </AnimatePresence>
 
-          {/* Side actions — clean compact sidebar */}
-          <div className="absolute right-2 bottom-44 flex flex-col gap-1.5 items-center z-30">
-            {/* Core controls — always visible */}
+          {/* Side actions — minimal 4-button sidebar like TikTok */}
+          <div className="absolute right-2 bottom-44 flex flex-col gap-2 items-center z-30">
             <button onClick={flipCamera} className="w-9 h-9 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
               <RotateCcw className="h-3.5 w-3.5 text-white/60" />
             </button>
@@ -1702,105 +1701,14 @@ export default function GoLivePage() {
               {micOn ? <Mic className="h-3.5 w-3.5 text-white/60" /> : <MicOff className="h-3.5 w-3.5 text-red-300" />}
             </button>
 
-            {/* "More Tools" expandable */}
-            <AnimatePresence>
-              {showMoreTools && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex flex-col gap-1 items-center overflow-hidden"
-                >
-                  <button onClick={toggleCamera} className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", cameraOn ? "bg-black/30" : "bg-red-500/30")}>
-                    {cameraOn ? <Camera className="h-3 w-3 text-white/60" /> : <CameraOff className="h-3 w-3 text-red-300" />}
-                  </button>
-                  <button onClick={() => setBeautyMode((p) => !p)} className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", beautyMode ? "bg-pink-500/30 border-pink-500/20" : "bg-black/30")}>
-                    <Sparkles className={cn("h-3 w-3", beautyMode ? "text-pink-300" : "text-white/60")} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      const filters: Array<"none" | "warm" | "cool" | "bw" | "vintage"> = ["none", "warm", "cool", "bw", "vintage"];
-                      const idx = filters.indexOf(cameraFilter);
-                      setCameraFilter(filters[(idx + 1) % filters.length]);
-                      toast(`🎨 Filter: ${filters[(idx + 1) % filters.length] === "none" ? "Off" : filters[(idx + 1) % filters.length]}`, { duration: 1500 });
-                    }}
-                    className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", cameraFilter !== "none" ? "bg-cyan-500/30 border-cyan-500/20" : "bg-black/30")}
-                  >
-                    <Palette className={cn("h-3 w-3", cameraFilter !== "none" ? "text-cyan-300" : "text-white/60")} />
-                  </button>
-                  <button onClick={() => setShowStickerPanel((p) => !p)} className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", activeSticker ? "bg-yellow-500/30 border-yellow-500/20" : "bg-black/30")}>
-                    <span className="text-[10px]">🎭</span>
-                  </button>
-                  <button onClick={() => { setClipSaved(true); toast.success("📸 Clip saved!"); setTimeout(() => setClipSaved(false), 3000); }} className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", clipSaved ? "bg-green-500/30 border-green-500/20" : "bg-black/30")}>
-                    <span className="text-[10px]">{clipSaved ? "✅" : "📸"}</span>
-                  </button>
-                  <button onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "🔇 Muted" : "🔊 Sound on", { duration: 1200 }); }} className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", !soundEnabled ? "bg-red-500/20" : "bg-black/30")}>
-                    {soundEnabled ? <Volume2 className="h-3 w-3 text-white/60" /> : <VolumeX className="h-3 w-3 text-red-300" />}
-                  </button>
-                  <button
-                    onClick={() => {
-                      const tracks = [null, "🎶 Chill Lo-fi", "🎸 Acoustic", "🎹 Piano Vibes", "🥁 Upbeat Pop"];
-                      const idx = tracks.indexOf(bgMusic);
-                      const next = tracks[(idx + 1) % tracks.length];
-                      setBgMusic(next);
-                      toast(next ? `🎵 ${next}` : "🔇 Music off", { duration: 1500 });
-                    }}
-                    className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", bgMusic ? "bg-violet-500/25 border-violet-500/20" : "bg-black/30")}
-                  >
-                    <span className="text-[10px]">🎵</span>
-                  </button>
-                  <div className="flex gap-1">
-                    <button onClick={() => setShowPollCreator((p) => !p)} className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", activePoll ? "bg-blue-500/25 border-blue-500/20" : "bg-black/30")}>
-                      <BarChart3 className={cn("h-3 w-3", activePoll ? "text-blue-300" : "text-white/70")} />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (pkBattle?.active) { toast("⚔️ Battle already in progress!"); return; }
-                        const opponents = ["DJ_Luna", "KingAlex", "StarMia", "ProGamer99"];
-                        const opp = opponents[Math.floor(Math.random() * opponents.length)];
-                        setPkBattle({ active: true, hostScore: 0, opponentScore: 0, opponentName: opp, endsAt: Date.now() + 120000, winner: null });
-                        setChatMessages((prev) => [...prev.slice(-20), { id: `pk-${Date.now()}`, user: "⚔️", text: `PK Battle started vs ${opp}!`, isSystem: true }]);
-                        toast.success(`⚔️ PK Battle vs ${opp}!`);
-                      }}
-                      className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", pkBattle?.active ? "bg-red-500/25 border-red-500/20" : "bg-black/30")}
-                    >
-                      <span className="text-[10px]">⚔️</span>
-                    </button>
-                  </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => {
-                        if (treasureChest?.active) return;
-                        setTreasureChest({ active: true, countdown: 15, participants: [], winner: null });
-                        setChatMessages((prev) => [...prev.slice(-20), { id: `chest-${Date.now()}`, user: "🎁", text: "Treasure Chest opened! Tap to join!", isSystem: true }]);
-                        toast("🎁 Treasure Chest! 15s to join!", { duration: 3000 });
-                      }}
-                      className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", treasureChest?.active ? "bg-amber-500/25 border-amber-500/20" : "bg-black/30")}
-                    >
-                      <span className="text-[10px]">🎁</span>
-                    </button>
-                    <button onClick={() => setShowGuestInvite((p) => !p)} className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", coHosts.length > 0 ? "bg-purple-500/25 border-purple-500/20" : "bg-black/30")}>
-                      <span className="text-[10px]">👥</span>
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* "More" toggle */}
+            {/* "More" toggle — opens bottom sheet */}
             <button onClick={() => setShowMoreTools((p) => !p)} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", showMoreTools ? "bg-white/15" : "bg-black/30")}>
               {showMoreTools ? <X className="h-3.5 w-3.5 text-white/70" /> : <MoreHorizontal className="h-3.5 w-3.5 text-white/70" />}
             </button>
 
             <div className="w-5 border-t border-white/10" />
 
-            {/* Always visible — Viewers, Heart, Gift */}
-            <button onClick={() => setShowViewerList((p) => !p)} className="w-9 h-9 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5 relative">
-              <Users className="h-3.5 w-3.5 text-white/70" />
-              <span className="absolute -top-0.5 -right-0.5 min-w-[12px] h-3 bg-green-500 text-white text-[6px] font-bold rounded-full flex items-center justify-center px-0.5">{viewerCount}</span>
-            </button>
-
+            {/* Heart + Gift — always visible */}
             <div className="flex flex-col items-center">
               <button onClick={() => sendReaction("❤️")} className="w-10 h-10 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
                 <Heart className="h-4 w-4 text-red-400" />
@@ -1816,14 +1724,147 @@ export default function GoLivePage() {
             </button>
           </div>
 
+          {/* "More Tools" bottom sheet overlay — grid layout */}
+          <AnimatePresence>
+            {showMoreTools && (
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="absolute bottom-0 left-0 right-0 z-40 bg-black/90 backdrop-blur-xl rounded-t-2xl border-t border-white/10 p-4 pb-6"
+              >
+                <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-4" />
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-white/80 text-xs font-semibold">Stream Tools</span>
+                  <button onClick={() => setShowMoreTools(false)} className="text-white/40 hover:text-white/70">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-5 gap-3">
+                  {/* Row 1 */}
+                  <button onClick={() => setShowViewerList((p) => !p)} className="flex flex-col items-center gap-1">
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center relative">
+                      <Users className="h-4 w-4 text-white/70" />
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[12px] h-3 bg-green-500 text-white text-[6px] font-bold rounded-full flex items-center justify-center px-0.5">{viewerCount}</span>
+                    </div>
+                    <span className="text-white/50 text-[9px]">Viewers</span>
+                  </button>
+                  <button onClick={toggleCamera} className="flex flex-col items-center gap-1">
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", cameraOn ? "bg-white/10" : "bg-red-500/30")}>
+                      {cameraOn ? <Camera className="h-4 w-4 text-white/70" /> : <CameraOff className="h-4 w-4 text-red-300" />}
+                    </div>
+                    <span className="text-white/50 text-[9px]">Camera</span>
+                  </button>
+                  <button onClick={() => setBeautyMode((p) => !p)} className="flex flex-col items-center gap-1">
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", beautyMode ? "bg-pink-500/30" : "bg-white/10")}>
+                      <Sparkles className={cn("h-4 w-4", beautyMode ? "text-pink-300" : "text-white/70")} />
+                    </div>
+                    <span className="text-white/50 text-[9px]">Beauty</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const filters: Array<"none" | "warm" | "cool" | "bw" | "vintage"> = ["none", "warm", "cool", "bw", "vintage"];
+                      const idx = filters.indexOf(cameraFilter);
+                      setCameraFilter(filters[(idx + 1) % filters.length]);
+                      toast(`🎨 Filter: ${filters[(idx + 1) % filters.length] === "none" ? "Off" : filters[(idx + 1) % filters.length]}`, { duration: 1500 });
+                    }}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", cameraFilter !== "none" ? "bg-cyan-500/30" : "bg-white/10")}>
+                      <Palette className={cn("h-4 w-4", cameraFilter !== "none" ? "text-cyan-300" : "text-white/70")} />
+                    </div>
+                    <span className="text-white/50 text-[9px]">Filter</span>
+                  </button>
+                  <button onClick={() => setShowStickerPanel((p) => !p)} className="flex flex-col items-center gap-1">
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", activeSticker ? "bg-yellow-500/30" : "bg-white/10")}>
+                      <span className="text-base">🎭</span>
+                    </div>
+                    <span className="text-white/50 text-[9px]">Sticker</span>
+                  </button>
+                  {/* Row 2 */}
+                  <button onClick={() => { setClipSaved(true); toast.success("📸 Clip saved!"); setTimeout(() => setClipSaved(false), 3000); }} className="flex flex-col items-center gap-1">
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", clipSaved ? "bg-green-500/30" : "bg-white/10")}>
+                      <span className="text-base">{clipSaved ? "✅" : "📸"}</span>
+                    </div>
+                    <span className="text-white/50 text-[9px]">Clip</span>
+                  </button>
+                  <button onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "🔇 Muted" : "🔊 Sound on", { duration: 1200 }); }} className="flex flex-col items-center gap-1">
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", !soundEnabled ? "bg-red-500/20" : "bg-white/10")}>
+                      {soundEnabled ? <Volume2 className="h-4 w-4 text-white/70" /> : <VolumeX className="h-4 w-4 text-red-300" />}
+                    </div>
+                    <span className="text-white/50 text-[9px]">Sound</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const tracks = [null, "🎶 Chill Lo-fi", "🎸 Acoustic", "🎹 Piano Vibes", "🥁 Upbeat Pop"];
+                      const idx = tracks.indexOf(bgMusic);
+                      const next = tracks[(idx + 1) % tracks.length];
+                      setBgMusic(next);
+                      toast(next ? `🎵 ${next}` : "🔇 Music off", { duration: 1500 });
+                    }}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", bgMusic ? "bg-violet-500/25" : "bg-white/10")}>
+                      <span className="text-base">🎵</span>
+                    </div>
+                    <span className="text-white/50 text-[9px]">Music</span>
+                  </button>
+                  <button onClick={() => setShowPollCreator((p) => !p)} className="flex flex-col items-center gap-1">
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", activePoll ? "bg-blue-500/25" : "bg-white/10")}>
+                      <BarChart3 className={cn("h-4 w-4", activePoll ? "text-blue-300" : "text-white/70")} />
+                    </div>
+                    <span className="text-white/50 text-[9px]">Poll</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (pkBattle?.active) { toast("⚔️ Battle already in progress!"); return; }
+                      const opponents = ["DJ_Luna", "KingAlex", "StarMia", "ProGamer99"];
+                      const opp = opponents[Math.floor(Math.random() * opponents.length)];
+                      setPkBattle({ active: true, hostScore: 0, opponentScore: 0, opponentName: opp, endsAt: Date.now() + 120000, winner: null });
+                      setChatMessages((prev) => [...prev.slice(-20), { id: `pk-${Date.now()}`, user: "⚔️", text: `PK Battle started vs ${opp}!`, isSystem: true }]);
+                      toast.success(`⚔️ PK Battle vs ${opp}!`);
+                    }}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", pkBattle?.active ? "bg-red-500/25" : "bg-white/10")}>
+                      <span className="text-base">⚔️</span>
+                    </div>
+                    <span className="text-white/50 text-[9px]">PK</span>
+                  </button>
+                  {/* Row 3 */}
+                  <button
+                    onClick={() => {
+                      if (treasureChest?.active) return;
+                      setTreasureChest({ active: true, countdown: 15, participants: [], winner: null });
+                      setChatMessages((prev) => [...prev.slice(-20), { id: `chest-${Date.now()}`, user: "🎁", text: "Treasure Chest opened! Tap to join!", isSystem: true }]);
+                      toast("🎁 Treasure Chest! 15s to join!", { duration: 3000 });
+                    }}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", treasureChest?.active ? "bg-amber-500/25" : "bg-white/10")}>
+                      <span className="text-base">🎁</span>
+                    </div>
+                    <span className="text-white/50 text-[9px]">Chest</span>
+                  </button>
+                  <button onClick={() => setShowGuestInvite((p) => !p)} className="flex flex-col items-center gap-1">
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", coHosts.length > 0 ? "bg-purple-500/25" : "bg-white/10")}>
+                      <span className="text-base">👥</span>
+                    </div>
+                    <span className="text-white/50 text-[9px]">Guests</span>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* Quick reaction bar — leave room for side action buttons */}
-          <div className="px-3 pr-[60px] mb-2 flex gap-1.5 overflow-x-auto scrollbar-hide">
+          {/* Quick reaction bar — compact 5 emojis */}
+          <div className="px-3 pr-[56px] mb-2 flex gap-1 justify-start">
             {quickReactions.map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => sendReaction(emoji)}
-                className="w-10 h-10 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center shrink-0 active:scale-75 transition-transform text-lg border border-white/5"
+                className="w-8 h-8 rounded-lg bg-black/30 backdrop-blur-md flex items-center justify-center shrink-0 active:scale-75 transition-transform text-sm border border-white/5"
               >
                 {emoji}
               </button>
