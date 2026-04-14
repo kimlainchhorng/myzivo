@@ -342,6 +342,11 @@ export default function GoLivePage() {
         setGiftsReceived((p) => p + 1);
         setCoinsEarned((p) => p + giftCoins[idx]);
         setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + giftCoins[idx] }));
+        // Add to chat feed
+        setChatMessages((prev) => [
+          ...prev.slice(-20),
+          { id: `vgift-${Date.now()}`, user: sender, text: `sent ${giftNames[idx]} 🎁`, isGift: true, avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][Math.floor(Math.random() * 5)] },
+        ]);
         playGiftSound(1);
         // Gift streak flash
         const now = Date.now();
