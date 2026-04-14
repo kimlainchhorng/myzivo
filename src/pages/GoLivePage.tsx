@@ -217,6 +217,7 @@ export default function GoLivePage() {
 
 
   // Simulate viewers & likes
+  useEffect(() => {
     if (phase !== "live") return;
     const names = ["Alex", "Jordan", "Sam", "Taylor", "Morgan", "Riley", "Casey", "Mia", "Luna", "Kai"];
     const msgs = ["🔥🔥🔥", "This is amazing!", "Hello from NYC!", "Love this!", "First time here ❤️", "Keep going!", "Wow 😍", "👏👏👏", "You're amazing!", "Can't stop watching 🤩"];
