@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { giftImages } from "@/config/giftIcons";
 import { giftAnimationVideos } from "@/config/giftAnimations";
+import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 
 interface GiftAnimationOverlayProps {
   activeGift: { name: string; coins: number; senderName?: string } | null;
@@ -258,7 +259,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               transition={{ type: "spring", delay: 0.45, stiffness: 280 }}
               className="flex items-center gap-0.5 bg-black/30 backdrop-blur-sm rounded-full px-2.5 py-1 ml-1 border border-amber-400/25"
             >
-              <span className="text-[10px]">💎</span>
+              <img src={goldCoinIcon} alt="" className="w-3.5 h-3.5" />
               <span className="text-amber-200 text-[11px] font-bold">{activeGift.coins.toLocaleString()}</span>
             </motion.div>
           </div>
