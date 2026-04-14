@@ -1006,7 +1006,7 @@ export default function GoLivePage() {
             <Button size="icon" onClick={sendChat} className="rounded-2xl bg-white/15 hover:bg-white/25 shrink-0 h-10 w-10">
               <Send className="h-4 w-4 text-white" />
             </Button>
-            <Button onClick={endStream} size="sm" className="rounded-2xl text-xs font-bold shrink-0 bg-red-500/80 hover:bg-red-500 text-white h-10 px-4">
+            <Button onClick={() => setShowEndConfirm(true)} size="sm" className="rounded-2xl text-xs font-bold shrink-0 bg-red-500/80 hover:bg-red-500 text-white h-10 px-4">
               End
             </Button>
           </div>
