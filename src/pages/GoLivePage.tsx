@@ -218,6 +218,14 @@ export default function GoLivePage() {
           const delta = Math.random() > 0.4 ? Math.floor(Math.random() * 3) : -Math.floor(Math.random() * 2);
           const next = Math.max(0, p + delta);
           setPeakViewers((pk) => Math.max(pk, next));
+          // Viewer join notification (occasionally)
+          if (delta > 0 && Math.random() > 0.6) {
+            const joinName = names[Math.floor(Math.random() * names.length)];
+            setChatMessages((prev) => [
+              ...prev.slice(-20),
+              { id: `join-${now}`, user: joinName, text: "joined the stream 👋", isSystem: true, avatar: avatarColors[Math.floor(Math.random() * avatarColors.length)] },
+            ]);
+          }
           return next;
         });
         lastViewer = now;
