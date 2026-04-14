@@ -688,31 +688,103 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
 
       {/* ── Chat overlay (bottom-left) ── */}
       <div className="absolute left-0 right-16 z-20" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 60px)" }}>
+        {/* Poll widget for voting */}
+        <AnimatePresence>
+          {activePoll && (
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 30, opacity: 0 }}
+              className="px-3 mb-2"
+            >
+              <div className="bg-blue-950/70 backdrop-blur-md rounded-2xl p-3 border border-blue-500/20">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs">📊</span>
+                    <span className="text-[11px] font-bold text-blue-300">POLL</span>
+                  </div>
+                  <span className="text-[9px] text-white/40">{activePoll.totalVotes} votes</span>
+                </div>
+                <p className="text-white text-xs font-semibold mb-2">{activePoll.question}</p>
+                <div className="space-y-1.5">
+                  {activePoll.options.map((opt, i) => {
+                    const pct = activePoll.totalVotes > 0 ? Math.round((activePoll.votes[i] / activePoll.totalVotes) * 100) : 0;
+                    const isVoted = activePoll.voted === i;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => votePoll(i)}
+                        disabled={activePoll.voted !== null}
+                        className="relative w-full text-left"
+                      >
+                        <div className={cn("h-7 rounded-lg overflow-hidden border", isVoted ? "border-blue-400/40 bg-blue-500/15" : "border-white/10 bg-white/5")}>
+                          <motion.div
+                            className="h-full rounded-lg bg-blue-500/25"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${pct}%` }}
+                            transition={{ type: "spring", damping: 20 }}
+                          />
+                        </div>
+                        <div className="absolute inset-0 flex items-center justify-between px-2.5">
+                          <span className="text-[11px] text-white/80 font-medium">{opt}</span>
+                          <span className="text-[10px] text-blue-300 font-bold">{pct}%</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {activePoll.voted !== null && (
+                  <p className="text-[9px] text-blue-300/50 text-center mt-1.5">✓ You voted for "{activePoll.options[activePoll.voted]}"</p>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Messages */}
         <div className="px-3 max-h-[160px] overflow-y-auto scrollbar-hide space-y-1 mask-gradient-top flex flex-col">
           {chatMessages.slice(-7).map((msg) => {
             const isJoin = msg.isSystem && msg.text.includes("joined");
+            const isTopFan = topGifters.length > 0 && msg.user === topGifters[0].name;
             return (
               <motion.div
                 key={msg.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className={cn(
-                  "flex items-start gap-1.5 px-2 py-1 rounded-lg max-w-[85%] w-fit",
-                  isJoin ? "bg-green-500/15" : msg.isSystem ? "bg-primary/20" : msg.isGift ? "bg-amber-500/20" : "bg-black/30 backdrop-blur-sm"
+                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-2xl max-w-[85%] w-fit",
+                  isJoin ? "bg-green-500/15" :
+                  msg.isSystem ? "bg-primary/20" :
+                  msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" :
+                  msg.level && msg.level >= 40 ? "bg-gradient-to-r from-amber-900/40 to-yellow-900/20 border border-amber-500/15" :
+                  msg.level && msg.level >= 30 ? "bg-gradient-to-r from-purple-900/40 to-pink-900/20 border border-purple-500/15" :
+                  msg.level && msg.level >= 20 ? "bg-gradient-to-r from-blue-900/40 to-cyan-900/20 border border-blue-500/10" :
+                  msg.level && msg.level >= 10 ? "bg-gradient-to-r from-green-900/30 to-emerald-900/15 border border-green-500/10" :
+                  "bg-black/40 backdrop-blur-sm"
                 )}
               >
+                {!msg.isSystem && (
+                  <div className={cn("h-6 w-6 rounded-full flex items-center justify-center shrink-0", "bg-primary/20")}>
+                    <span className="text-[9px] text-white font-bold">{msg.user[0]}</span>
+                  </div>
+                )}
                 {msg.level && !msg.isSystem && (
-                  <span className={cn("text-[8px] px-1 py-0.5 rounded font-bold bg-gradient-to-r text-white shrink-0 mt-0.5", getLevelColor(msg.level))}>
+                  <span className={cn(
+                    "text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0 border",
+                    msg.level >= 40 ? "bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border-amber-500/30" :
+                    msg.level >= 30 ? "bg-gradient-to-r from-purple-500/40 to-pink-500/30 text-purple-200 border-purple-500/30" :
+                    msg.level >= 20 ? "bg-gradient-to-r from-blue-500/40 to-cyan-500/30 text-blue-200 border-blue-500/30" :
+                    msg.level >= 10 ? "bg-gradient-to-r from-green-500/30 to-emerald-500/20 text-green-300 border-green-500/20" :
+                    "bg-white/10 text-white/50 border-white/10"
+                  )}>
                     Lv.{msg.level}
                   </span>
                 )}
-                <div className="min-w-0">
-                  <span className={cn("text-[11px] font-bold mr-1", isJoin ? "text-green-300" : msg.isSystem ? "text-primary" : msg.isGift ? "text-amber-300" : "text-white/70")}>
-                    {msg.user}
-                  </span>
-                  <span className={cn("text-[11px] break-words", isJoin ? "text-green-200/70" : "text-white")}>{msg.text}</span>
-                </div>
+                {isTopFan && !msg.isSystem && (
+                  <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full shrink-0 bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border border-amber-500/30">⭐ Top Fan</span>
+                )}
+                <span className={cn("text-xs font-medium", msg.isSystem ? "text-white/40 italic" : "text-white/80")}>{msg.user}</span>
+                <span className={cn("text-xs", msg.isGift ? "text-amber-300" : msg.isSystem ? "text-white/30 italic" : "text-white/90")}>{msg.text}</span>
               </motion.div>
             );
           })}
@@ -725,7 +797,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
             <button
               key={emoji}
               onClick={() => sendReaction(emoji)}
-              className="w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-base hover:scale-110 transition-transform active:scale-95"
+              className="w-8 h-8 rounded-lg bg-black/30 backdrop-blur-md flex items-center justify-center text-sm active:scale-75 transition-transform border border-white/5"
             >
               {emoji}
             </button>
