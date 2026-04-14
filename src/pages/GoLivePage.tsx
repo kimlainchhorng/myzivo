@@ -63,7 +63,7 @@ export default function GoLivePage() {
   const [peakViewers, setPeakViewers] = useState(0);
   const [likes, setLikes] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; avatar?: string }[]>([]);
+  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; isSystem?: boolean; avatar?: string }[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [cameraError, setCameraError] = useState(false);
   const [showGiftPanel, setShowGiftPanel] = useState(false);
@@ -80,6 +80,9 @@ export default function GoLivePage() {
   const lastGiftRef = useRef<{ name: string; time: number }>({ name: "", time: 0 });
   const [topGifters, setTopGifters] = useState<Record<string, number>>({});
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [streamGoal] = useState(500); // coin goal for the stream
+  const [giftStreakFlash, setGiftStreakFlash] = useState(false);
+  const lastGiftTimeRef = useRef(0);
 
   const allGifts = useMemo(() => ({
     gifts: [
@@ -215,6 +218,14 @@ export default function GoLivePage() {
           const delta = Math.random() > 0.4 ? Math.floor(Math.random() * 3) : -Math.floor(Math.random() * 2);
           const next = Math.max(0, p + delta);
           setPeakViewers((pk) => Math.max(pk, next));
+          // Viewer join notification (occasionally)
+          if (delta > 0 && Math.random() > 0.6) {
+            const joinName = names[Math.floor(Math.random() * names.length)];
+            setChatMessages((prev) => [
+              ...prev.slice(-20),
+              { id: `join-${now}`, user: joinName, text: "joined the stream 👋", isSystem: true, avatar: avatarColors[Math.floor(Math.random() * avatarColors.length)] },
+            ]);
+          }
           return next;
         });
         lastViewer = now;
@@ -262,6 +273,13 @@ export default function GoLivePage() {
         setCoinsEarned((p) => p + giftCoins[idx]);
         setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + giftCoins[idx] }));
         playGiftSound(1);
+        // Gift streak flash
+        const now = Date.now();
+        if (now - lastGiftTimeRef.current < 8000) {
+          setGiftStreakFlash(true);
+          setTimeout(() => setGiftStreakFlash(false), 1500);
+        }
+        lastGiftTimeRef.current = now;
         setTimeout(() => setViewerGiftNotif((cur) => cur?.id === notif.id ? null : cur), 4000);
         scheduleNext();
       }, delay);
@@ -305,12 +323,21 @@ export default function GoLivePage() {
   const sendGift = useCallback((gift: { icon: string; name: string; coins: number }) => {
     // Haptic feedback on mobile
     try { navigator.vibrate?.(50); } catch {} // eslint-disable-line no-empty
+    const senders = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
+    const sender = senders[Math.floor(Math.random() * senders.length)];
     setGiftsReceived((p) => p + 1);
     setCoinsEarned((p) => p + gift.coins);
     setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + gift.coins }));
     spawnFloatingReaction(gift.icon);
-    const senders = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
-    const sender = senders[Math.floor(Math.random() * senders.length)];
+    // Gift streak flash
+    const now2 = Date.now();
+    if (now2 - lastGiftTimeRef.current < 8000) {
+      setGiftStreakFlash(true);
+      setTimeout(() => setGiftStreakFlash(false), 1500);
+    }
+    lastGiftTimeRef.current = now2;
+    
+    // Combo tracking — same gift within 5s increments combo
     
     // Combo tracking — same gift within 5s increments combo
     const now = Date.now();
@@ -418,7 +445,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -432,7 +459,7 @@ export default function GoLivePage() {
 
   // ── Setup & Live ──
   return (
-    <div className="min-h-screen bg-black flex flex-col relative overflow-hidden">
+    <div className={cn("min-h-screen bg-black flex flex-col relative overflow-hidden transition-shadow duration-500", giftStreakFlash && "shadow-[inset_0_0_60px_rgba(255,170,0,0.3)]")} style={giftStreakFlash ? { boxShadow: "inset 0 0 80px rgba(255,170,0,0.25), 0 0 40px rgba(255,170,0,0.1)" } : undefined}>
       {/* Camera preview */}
       <div className="absolute inset-0 z-0">
         {cameraError ? (
@@ -466,6 +493,16 @@ export default function GoLivePage() {
         {/* Cinematic overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/90" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
+        {/* Double-tap to heart */}
+        {phase === "live" && (
+          <div
+            className="absolute inset-0 z-[1]"
+            onDoubleClick={() => {
+              sendReaction("❤️");
+              setLikes((p) => p + 1);
+            }}
+          />
+        )}
       </div>
 
       {/* Top bar */}
@@ -524,6 +561,25 @@ export default function GoLivePage() {
             >
               <MessageCircle className="h-4 w-4 text-white/60" />
             </button>
+          </div>
+
+          {/* Stream Goal Progress Bar */}
+          <div className="mt-2 bg-black/30 backdrop-blur-md rounded-xl px-3 py-2 border border-white/5">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-white/50 font-medium">🎯 Stream Goal</span>
+              <span className="text-[10px] text-amber-300 font-bold">{Math.min(coinsEarned, streamGoal)}/{streamGoal}</span>
+            </div>
+            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-400"
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min((coinsEarned / streamGoal) * 100, 100)}%` }}
+                transition={{ type: "spring", damping: 20 }}
+              />
+            </div>
+            {coinsEarned >= streamGoal && (
+              <p className="text-[9px] text-amber-300 mt-1 text-center animate-pulse">🎉 Goal reached!</p>
+            )}
           </div>
         </div>
       )}
@@ -745,13 +801,13 @@ export default function GoLivePage() {
 
           {/* Top Gifter Leaderboard */}
           <AnimatePresence>
-            {showLeaderboard && Object.keys(topGifters).length > 0 && (
+            {showLeaderboard && (
               <motion.div
                 initial={{ x: 300, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: 300, opacity: 0 }}
                 transition={{ type: "spring", damping: 22, stiffness: 250 }}
-                className="absolute right-3 top-32 z-30 w-44"
+                className="absolute right-3 top-44 z-30 w-44"
               >
                 <div
                   className="rounded-2xl px-3 py-2.5 space-y-1.5"
@@ -766,23 +822,27 @@ export default function GoLivePage() {
                     <Trophy className="h-3.5 w-3.5 text-amber-400" />
                     <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider">Top Gifters</span>
                   </div>
-                  {Object.entries(topGifters)
-                    .sort(([, a], [, b]) => b - a)
-                    .slice(0, 3)
-                    .map(([name, coins], i) => {
-                      const medals = ["🥇", "🥈", "🥉"];
-                      const colors = ["text-amber-300", "text-gray-300", "text-orange-400"];
-                      return (
-                        <div key={name} className="flex items-center gap-2">
-                          <span className="text-sm">{medals[i]}</span>
-                          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-                            <span className="text-[8px] text-white font-bold">{name[0]}</span>
+                  {Object.keys(topGifters).length === 0 ? (
+                    <p className="text-[10px] text-white/30 text-center py-2">No gifters yet — be the first! 🎁</p>
+                  ) : (
+                    Object.entries(topGifters)
+                      .sort(([, a], [, b]) => b - a)
+                      .slice(0, 3)
+                      .map(([name, coins], i) => {
+                        const medals = ["🥇", "🥈", "🥉"];
+                        const colors = ["text-amber-300", "text-gray-300", "text-orange-400"];
+                        return (
+                          <div key={name} className="flex items-center gap-2">
+                            <span className="text-sm">{medals[i]}</span>
+                            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                              <span className="text-[8px] text-white font-bold">{name[0]}</span>
+                            </div>
+                            <span className="text-[11px] text-white/80 font-medium truncate flex-1">{name}</span>
+                            <span className={cn("text-[10px] font-bold", colors[i])}>{coins.toLocaleString()}</span>
                           </div>
-                          <span className="text-[11px] text-white/80 font-medium truncate flex-1">{name}</span>
-                          <span className={cn("text-[10px] font-bold", colors[i])}>{coins.toLocaleString()}</span>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                  )}
                 </div>
               </motion.div>
             )}
@@ -809,14 +869,18 @@ export default function GoLivePage() {
                   key={msg.id}
                   className={cn(
                     "flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200",
-                    msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" : "bg-black/40 backdrop-blur-sm"
+                    msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" :
+                    msg.isSystem ? "bg-transparent" :
+                    "bg-black/40 backdrop-blur-sm"
                   )}
                 >
-                  <div className={cn("h-6 w-6 rounded-full flex items-center justify-center shrink-0", msg.avatar || "bg-primary/20")}>
-                    <span className="text-[9px] text-white font-bold">{msg.user[0]}</span>
-                  </div>
-                  <span className="text-xs text-white/80 font-medium">{msg.user}</span>
-                  <span className={cn("text-xs", msg.isGift ? "text-amber-300" : "text-white/90")}>{msg.text}</span>
+                  {!msg.isSystem && (
+                    <div className={cn("h-6 w-6 rounded-full flex items-center justify-center shrink-0", msg.avatar || "bg-primary/20")}>
+                      <span className="text-[9px] text-white font-bold">{msg.user[0]}</span>
+                    </div>
+                  )}
+                  <span className={cn("text-xs font-medium", msg.isSystem ? "text-white/40 italic" : "text-white/80")}>{msg.user}</span>
+                  <span className={cn("text-xs", msg.isGift ? "text-amber-300" : msg.isSystem ? "text-white/30 italic" : "text-white/90")}>{msg.text}</span>
                 </div>
               ))}
             </div>
