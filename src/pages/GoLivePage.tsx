@@ -1587,9 +1587,9 @@ export default function GoLivePage() {
               {giftNotifQueue.map((notif, idx) => (
                 <motion.div
                   key={notif.id}
-                  initial={{ x: 200, opacity: 0, scale: 0.7 }}
+                  initial={{ x: -200, opacity: 0, scale: 0.7 }}
                   animate={{ x: 0, opacity: idx === 0 ? 1 : 0.7 - idx * 0.15, scale: idx === 0 ? 1 : 0.92 - idx * 0.04 }}
-                  exit={{ x: 200, opacity: 0, scale: 0.5 }}
+                  exit={{ x: -200, opacity: 0, scale: 0.5 }}
                   transition={{ type: "spring", damping: 18, stiffness: 220 }}
                   className="w-full"
                 >
