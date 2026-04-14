@@ -700,19 +700,70 @@ export default function GoLivePage() {
             )}
           </AnimatePresence>
 
-          {/* Side actions */}
-          <div className="absolute right-3 bottom-56 flex flex-col gap-3 items-center z-30">
+          {/* Side actions — separated with clear spacing */}
+          <div className="absolute right-3 bottom-56 flex flex-col gap-4 items-center z-30">
+            {/* Leaderboard button */}
+            <button onClick={() => setShowLeaderboard((p) => !p)} className="w-11 h-11 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
+              <Trophy className="h-4.5 w-4.5 text-amber-400" />
+            </button>
+
             <button onClick={() => sendReaction("❤️")} className="w-12 h-12 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
               <Heart className="h-5 w-5 text-red-400" />
             </button>
-            <span className="text-white text-[10px] -mt-1 font-medium">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>
+            <span className="text-white text-[10px] -mt-2 font-medium">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>
 
-            <button onClick={() => setShowGiftPanel(true)} className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-amber-500/20">
+            <button onClick={() => setShowGiftPanel(true)} className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-amber-500/20 relative" data-testid="gift-btn">
               <Gift className="h-5 w-5 text-yellow-300" />
+              {giftsReceived > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">{giftsReceived}</span>
+              )}
             </button>
-            {giftsReceived > 0 && <span className="text-yellow-300 text-[10px] -mt-1 font-medium">{giftsReceived}</span>}
-
           </div>
+
+          {/* Top Gifter Leaderboard */}
+          <AnimatePresence>
+            {showLeaderboard && Object.keys(topGifters).length > 0 && (
+              <motion.div
+                initial={{ x: 300, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 300, opacity: 0 }}
+                transition={{ type: "spring", damping: 22, stiffness: 250 }}
+                className="absolute right-3 top-32 z-30 w-44"
+              >
+                <div
+                  className="rounded-2xl px-3 py-2.5 space-y-1.5"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(30,20,50,0.92) 0%, rgba(40,25,60,0.88) 100%)",
+                    backdropFilter: "blur(16px)",
+                    border: "1px solid rgba(255,200,80,0.15)",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                  }}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Trophy className="h-3.5 w-3.5 text-amber-400" />
+                    <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider">Top Gifters</span>
+                  </div>
+                  {Object.entries(topGifters)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 3)
+                    .map(([name, coins], i) => {
+                      const medals = ["🥇", "🥈", "🥉"];
+                      const colors = ["text-amber-300", "text-gray-300", "text-orange-400"];
+                      return (
+                        <div key={name} className="flex items-center gap-2">
+                          <span className="text-sm">{medals[i]}</span>
+                          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                            <span className="text-[8px] text-white font-bold">{name[0]}</span>
+                          </div>
+                          <span className="text-[11px] text-white/80 font-medium truncate flex-1">{name}</span>
+                          <span className={cn("text-[10px] font-bold", colors[i])}>{coins.toLocaleString()}</span>
+                        </div>
+                      );
+                    })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Quick reaction bar — leave room for side action buttons */}
           <div className="px-4 pr-16 mb-2 flex gap-1.5 overflow-x-auto scrollbar-hide">
