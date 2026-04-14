@@ -38,6 +38,37 @@ import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
 import Monitor from "lucide-react/dist/esm/icons/monitor";
 import Timer from "lucide-react/dist/esm/icons/timer";
 import MoreHorizontal from "lucide-react/dist/esm/icons/more-horizontal";
+import Crown from "lucide-react/dist/esm/icons/crown";
+import Flame from "lucide-react/dist/esm/icons/flame";
+import Star from "lucide-react/dist/esm/icons/star";
+import Medal from "lucide-react/dist/esm/icons/medal";
+import Swords from "lucide-react/dist/esm/icons/swords";
+import Music from "lucide-react/dist/esm/icons/music";
+import Gamepad2 from "lucide-react/dist/esm/icons/gamepad-2";
+import ChefHat from "lucide-react/dist/esm/icons/chef-hat";
+import Laptop from "lucide-react/dist/esm/icons/laptop";
+import Dumbbell from "lucide-react/dist/esm/icons/dumbbell";
+import PaintBucket from "lucide-react/dist/esm/icons/paintbrush";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Shirt from "lucide-react/dist/esm/icons/shirt";
+import Laugh from "lucide-react/dist/esm/icons/laugh";
+import BookOpen from "lucide-react/dist/esm/icons/book-open";
+import Briefcase from "lucide-react/dist/esm/icons/briefcase";
+import Globe from "lucide-react/dist/esm/icons/globe";
+import Target from "lucide-react/dist/esm/icons/target";
+import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
+import Link from "lucide-react/dist/esm/icons/link";
+import Gem from "lucide-react/dist/esm/icons/gem";
+import Clapperboard from "lucide-react/dist/esm/icons/clapperboard";
+import Check from "lucide-react/dist/esm/icons/check";
+import ImageIcon from "lucide-react/dist/esm/icons/image";
+import Waves from "lucide-react/dist/esm/icons/waves";
+import Hand from "lucide-react/dist/esm/icons/hand";
+import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
+import Coins from "lucide-react/dist/esm/icons/coins";
+import CircleDot from "lucide-react/dist/esm/icons/circle-dot";
+import UserPlus from "lucide-react/dist/esm/icons/user-plus";
+import { ReactionIcon, MedalIcon, QUICK_REACTIONS } from "@/utils/reactionIcons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -187,17 +218,17 @@ export default function GoLivePage() {
     vintage: "sepia(0.4) contrast(0.9) brightness(1.1) hue-rotate(-10deg)",
   }), []);
 
-  const fakeViewerNames = useMemo(() => ["Luna ✨", "Kai 🔥", "Mia 💜", "Nora 🌸", "Zara 💎", "Leo 🦁", "Aria 🎵", "Alex 🎮", "Jordan 🏀", "Sam 🌊"], []);
+  const fakeViewerNames = useMemo(() => ["Luna", "Kai", "Mia", "Nora", "Zara", "Leo", "Aria", "Alex", "Jordan", "Sam"], []);
 
   const faceStickers = useMemo(() => [
-    { id: "dog", emoji: "🐶", label: "Dog Ears", filter: "drop-shadow(0 0 8px rgba(255,200,100,0.5))" },
-    { id: "hearts", emoji: "💕", label: "Love", filter: "drop-shadow(0 0 8px rgba(255,100,150,0.5))" },
-    { id: "crown", emoji: "👑", label: "Crown", filter: "drop-shadow(0 0 8px rgba(255,215,0,0.5))" },
-    { id: "stars", emoji: "🌟", label: "Stars", filter: "drop-shadow(0 0 8px rgba(200,200,255,0.5))" },
-    { id: "bunny", emoji: "🐰", label: "Bunny", filter: "drop-shadow(0 0 8px rgba(255,180,200,0.5))" },
-    { id: "devil", emoji: "😈", label: "Devil", filter: "drop-shadow(0 0 8px rgba(200,50,100,0.5))" },
-    { id: "angel", emoji: "😇", label: "Angel", filter: "drop-shadow(0 0 8px rgba(180,220,255,0.5))" },
-    { id: "fire", emoji: "🔥", label: "Fire", filter: "drop-shadow(0 0 8px rgba(255,100,0,0.5))" },
+    { id: "dog", icon: <span className="text-amber-300"><Heart className="h-5 w-5" /></span>, label: "Dog Ears", filter: "drop-shadow(0 0 8px rgba(255,200,100,0.5))" },
+    { id: "hearts", icon: <Heart className="h-5 w-5 text-pink-400" />, label: "Love", filter: "drop-shadow(0 0 8px rgba(255,100,150,0.5))" },
+    { id: "crown", icon: <Crown className="h-5 w-5 text-amber-400" />, label: "Crown", filter: "drop-shadow(0 0 8px rgba(255,215,0,0.5))" },
+    { id: "stars", icon: <Star className="h-5 w-5 text-blue-300" />, label: "Stars", filter: "drop-shadow(0 0 8px rgba(200,200,255,0.5))" },
+    { id: "bunny", icon: <Sparkles className="h-5 w-5 text-pink-300" />, label: "Bunny", filter: "drop-shadow(0 0 8px rgba(255,180,200,0.5))" },
+    { id: "devil", icon: <Flame className="h-5 w-5 text-red-400" />, label: "Devil", filter: "drop-shadow(0 0 8px rgba(200,50,100,0.5))" },
+    { id: "angel", icon: <Sparkles className="h-5 w-5 text-sky-300" />, label: "Angel", filter: "drop-shadow(0 0 8px rgba(180,220,255,0.5))" },
+    { id: "fire", icon: <Flame className="h-5 w-5 text-orange-400" />, label: "Fire", filter: "drop-shadow(0 0 8px rgba(255,100,0,0.5))" },
   ], []);
 
   const allGifts = useMemo(() => ({
@@ -207,7 +238,7 @@ export default function GoLivePage() {
       { icon: "🐍", name: "King Cobra", coins: 5, bg: "from-purple-400 to-violet-400" },
       { icon: "🦄", name: "Crystal Unicorn", coins: 10, bg: "from-pink-300 to-fuchsia-300" },
       { icon: "🔥", name: "Phoenix Rising", coins: 50, badge: "NEW", bg: "from-orange-500 to-red-500" },
-      { icon: "💎", name: "Diamond Bear", coins: 99, bg: "from-sky-200 to-blue-200" },
+      { icon: "", name: "Diamond Bear", coins: 99, bg: "from-sky-200 to-blue-200" },
       { icon: "🐱", name: "Lucky Cat", coins: 1, bg: "from-amber-200 to-yellow-200" },
       { icon: "🐺", name: "Mystic Wolf", coins: 30, bg: "from-blue-300 to-indigo-300" },
       { icon: "🦋", name: "Rainbow Butterfly", coins: 5, bg: "from-violet-300 to-pink-300" },
@@ -224,7 +255,7 @@ export default function GoLivePage() {
       { icon: "🏎️", name: "Luxury Lambo", coins: 2000, bg: "from-red-500 to-rose-500" },
       { icon: "🏎️", name: "Gold Ferrari", coins: 3000, bg: "from-yellow-400 to-amber-400" },
       { icon: "🚗", name: "Rolls Royce", coins: 5000, badge: "Luxury", bg: "from-gray-200 to-slate-200" },
-      { icon: "💎", name: "Diamond Rain", coins: 1500, bg: "from-sky-300 to-blue-300" },
+      { icon: "", name: "Diamond Rain", coins: 1500, bg: "from-sky-300 to-blue-300" },
       { icon: "🪙", name: "Gold Fountain", coins: 999, bg: "from-yellow-300 to-amber-300" },
       { icon: "🐉", name: "Treasure Dragon", coins: 2500, bg: "from-green-400 to-emerald-400" },
       { icon: "🚁", name: "Gold Helicopter", coins: 3500, bg: "from-amber-400 to-yellow-400" },
@@ -242,21 +273,27 @@ export default function GoLivePage() {
     ],
   }), []);
 
-  const quickReactions = useMemo(() => ["❤️", "🔥", "😍", "👏", "😂"], []);
+  const quickReactions = useMemo(() => [
+    { icon: <Heart className="h-4 w-4 text-red-400" />, key: "heart" },
+    { icon: <Flame className="h-4 w-4 text-orange-400" />, key: "fire" },
+    { icon: <Star className="h-4 w-4 text-yellow-400" />, key: "star" },
+    { icon: <Hand className="h-4 w-4 text-white/80" />, key: "clap" },
+    { icon: <Laugh className="h-4 w-4 text-amber-300" />, key: "laugh" },
+  ], []);
 
   const topicConfig = useMemo(() => [
-    { name: "General", icon: "🌐" },
-    { name: "Music", icon: "🎵" },
-    { name: "Gaming", icon: "🎮" },
-    { name: "Cooking", icon: "🍳" },
-    { name: "Tech", icon: "💻" },
-    { name: "Fitness", icon: "💪" },
-    { name: "Art", icon: "🎨" },
-    { name: "Travel", icon: "✈️" },
-    { name: "Fashion", icon: "👗" },
-    { name: "Comedy", icon: "😂" },
-    { name: "Education", icon: "📚" },
-    { name: "Sports", icon: "⚽" },
+    { name: "General", icon: <Globe className="h-3.5 w-3.5" /> },
+    { name: "Music", icon: <Music className="h-3.5 w-3.5" /> },
+    { name: "Gaming", icon: <Gamepad2 className="h-3.5 w-3.5" /> },
+    { name: "Cooking", icon: <ChefHat className="h-3.5 w-3.5" /> },
+    { name: "Tech", icon: <Laptop className="h-3.5 w-3.5" /> },
+    { name: "Fitness", icon: <Dumbbell className="h-3.5 w-3.5" /> },
+    { name: "Art", icon: <PaintBucket className="h-3.5 w-3.5" /> },
+    { name: "Travel", icon: <Plane className="h-3.5 w-3.5" /> },
+    { name: "Fashion", icon: <Shirt className="h-3.5 w-3.5" /> },
+    { name: "Comedy", icon: <Laugh className="h-3.5 w-3.5" /> },
+    { name: "Education", icon: <BookOpen className="h-3.5 w-3.5" /> },
+    { name: "Sports", icon: <CircleDot className="h-3.5 w-3.5" /> },
   ], []);
 
   // Start camera
@@ -321,12 +358,12 @@ export default function GoLivePage() {
         setChatMessages([{
           id: "welcome",
           user: "ZIVO",
-          text: `Welcome to "${streamTitle}"! Be respectful and have fun 🎉`,
+          text: `Welcome to "${streamTitle}"! Be respectful and have fun!`,
           isSystem: true,
           isPinned: true,
           avatar: "bg-red-500",
         }]);
-        toast.success("You're live! 🔴");
+        toast.success("You're live!");
       } else {
         setCountdown(c);
       }
@@ -343,7 +380,7 @@ export default function GoLivePage() {
   useEffect(() => {
     if (phase !== "live") return;
     const names = ["Alex", "Jordan", "Sam", "Taylor", "Morgan", "Riley", "Casey", "Mia", "Luna", "Kai"];
-    const msgs = ["🔥🔥🔥", "This is amazing!", "Hello from NYC!", "Love this!", "First time here ❤️", "Keep going!", "Wow 😍", "👏👏👏", "You're amazing!", "Can't stop watching 🤩"];
+    const msgs = ["Amazing!", "This is amazing!", "Hello from NYC!", "Love this!", "First time here!", "Keep going!", "Wow!", "Amazing work!", "You're amazing!", "Can't stop watching!"];
     const avatarColors = ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500", "bg-cyan-500"];
 
     let lastViewer = 0, lastLike = 0, lastElapsed = 0, lastChat = 0;
@@ -355,9 +392,9 @@ export default function GoLivePage() {
         setElapsed((p) => {
           const next = p + 1;
           // Duration milestones
-          const durationMilestones: Record<number, string> = { 300: "⏱️ 5 minutes! Great start!", 900: "🔥 15 minutes! You're on fire!", 1800: "🏆 30 minutes! Incredible stream!", 3600: "👑 1 hour! Legendary broadcaster!" };
+          const durationMilestones: Record<number, string> = { 300: "5 minutes! Great start!", 900: "15 minutes! You're on fire!", 1800: "30 minutes! Incredible stream!", 3600: "1 hour! Legendary broadcaster!" };
           if (durationMilestones[next]) {
-            setChatMessages((prev) => [...prev.slice(-20), { id: `dur-${next}`, user: "🎯", text: durationMilestones[next], isSystem: true }]);
+            setChatMessages((prev) => [...prev.slice(-20), { id: `dur-${next}`, user: "System", text: durationMilestones[next], isSystem: true }]);
             toast.success(durationMilestones[next]);
           }
           return next;
@@ -379,9 +416,9 @@ export default function GoLivePage() {
               lastMilestoneRef.current = m;
               setChatMessages((prev) => [
                 ...prev.slice(-20),
-                { id: `milestone-${m}`, user: "🎉", text: `${m} viewers! Amazing!`, isSystem: true },
+                { id: `milestone-${m}`, user: "System", text: `${m} viewers! Amazing!`, isSystem: true },
               ]);
-              toast.success(`🎉 ${m} viewers milestone reached!`);
+              toast.success(`${m} viewers milestone reached!`);
               break;
             }
           }
@@ -390,7 +427,7 @@ export default function GoLivePage() {
             const joinName = names[Math.floor(Math.random() * names.length)];
             setChatMessages((prev) => [
               ...prev.slice(-20),
-              { id: `join-${now}`, user: joinName, text: "joined the stream 👋", isSystem: true, avatar: avatarColors[Math.floor(Math.random() * avatarColors.length)] },
+              { id: `join-${now}`, user: joinName, text: "joined the stream", isSystem: true, avatar: avatarColors[Math.floor(Math.random() * avatarColors.length)] },
             ]);
           }
           return next;
@@ -463,7 +500,7 @@ export default function GoLivePage() {
         // Add to chat feed
         setChatMessages((prev) => [
           ...prev.slice(-20),
-          { id: `vgift-${Date.now()}`, user: sender, text: `sent ${giftNames[idx]} 🎁`, isGift: true, avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][Math.floor(Math.random() * 5)] },
+          { id: `vgift-${Date.now()}`, user: sender, text: `sent ${giftNames[idx]}`, isGift: true, avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][Math.floor(Math.random() * 5)] },
         ]);
         if (soundEnabled) playGiftSound(1);
         // Auto thank-you
@@ -543,8 +580,8 @@ export default function GoLivePage() {
     setShowPollCreator(false);
     setPollQuestion("");
     setPollOptions(["", ""]);
-    setChatMessages((prev) => [...prev.slice(-20), { id: `poll-${Date.now()}`, user: "📊", text: `Poll: "${q}" — Vote now!`, isSystem: true }]);
-    toast.success("📊 Poll created!");
+    setChatMessages((prev) => [...prev.slice(-20), { id: `poll-${Date.now()}`, user: "System", text: `Poll: "${q}" — Vote now!`, isSystem: true }]);
+    toast.success("Poll created!");
     // Auto simulate votes
     const voteIv = setInterval(() => {
       setActivePoll((prev) => {
@@ -569,10 +606,10 @@ export default function GoLivePage() {
   useEffect(() => {
     if (coinsEarned >= streamGoal && !goalCelebrated) {
       setGoalCelebrated(true);
-      toast.success("🎉 Stream goal reached! Amazing!", { duration: 5000 });
+      toast.success("Stream goal reached! Amazing!", { duration: 5000 });
       setMilestoneEffect("confetti");
       setTimeout(() => setMilestoneEffect(null), 4000);
-      ["🎉", "🥳", "✨", "🎊", "💎"].forEach((e, i) => {
+      ["🎉", "🥳", "✨", "🎊", ""].forEach((e, i) => {
         setTimeout(() => spawnFloatingReaction(e), i * 200);
       });
     }
@@ -582,13 +619,13 @@ export default function GoLivePage() {
   useEffect(() => {
     if (phase !== "live") return;
     const superChatMsgs = [
-      { text: "You're the BEST streamer! 🌟", coins: 50 },
-      { text: "Keep going! Love from Brazil 🇧🇷", coins: 25 },
-      { text: "This stream is FIRE 🔥🔥🔥", coins: 100 },
-      { text: "Happy birthday to me! 🎂", coins: 30 },
-      { text: "First super chat! Am I famous? 😂", coins: 10 },
+      { text: "You're the BEST streamer!", coins: 50 },
+      { text: "Keep going! Love from Brazil!", coins: 25 },
+      { text: "This stream is FIRE!", coins: 100 },
+      { text: "Happy birthday to me!", coins: 30 },
+      { text: "First super chat! Am I famous?", coins: 10 },
     ];
-    const names = ["Luna ✨", "Kai 🔥", "VIP_Star 💎", "Diamond_Alex 👑"];
+    const names = ["Luna", "Kai", "VIP_Star", "Diamond_Alex"];
     let timer: ReturnType<typeof setTimeout>;
     const schedule = () => {
       timer = setTimeout(() => {
@@ -597,7 +634,7 @@ export default function GoLivePage() {
           const name = names[Math.floor(Math.random() * names.length)];
           setSuperChat({ user: name, text: msg.text, coins: msg.coins, id: Date.now().toString() });
           setCoinsEarned((p) => p + msg.coins);
-          setChatMessages((prev) => [...prev.slice(-20), { id: `sc-${Date.now()}`, user: name, text: `💬 SUPER CHAT: ${msg.text}`, isGift: true, avatar: "bg-amber-500" }]);
+          setChatMessages((prev) => [...prev.slice(-20), { id: `sc-${Date.now()}`, user: name, text: `SUPER CHAT: ${msg.text}`, isGift: true, avatar: "bg-amber-500" }]);
           setTimeout(() => setSuperChat(null), 6000);
         }
         schedule();
@@ -633,7 +670,7 @@ export default function GoLivePage() {
       timer = setTimeout(() => {
         if (viewerCount >= 3 && Math.random() > 0.7) {
           setWaveActive(true);
-          setChatMessages((prev) => [...prev.slice(-20), { id: `wave-${Date.now()}`, user: "🌊", text: "Viewers started a WAVE! 👋👋👋", isSystem: true }]);
+          setChatMessages((prev) => [...prev.slice(-20), { id: `wave-${Date.now()}`, user: "System", text: "Viewers started a WAVE!", isSystem: true }]);
           setTimeout(() => setWaveActive(false), 3000);
         }
         schedule();
@@ -651,8 +688,8 @@ export default function GoLivePage() {
         if (!prev || !prev.active) return prev;
         if (Date.now() > prev.endsAt) {
           const winner = prev.hostScore >= prev.opponentScore ? "You" : prev.opponentName;
-          setChatMessages((p) => [...p.slice(-20), { id: `pk-end-${Date.now()}`, user: "⚔️", text: `PK Battle ended! ${winner} wins! 🏆`, isSystem: true }]);
-          toast.success(`⚔️ ${winner} won the PK Battle!`);
+          setChatMessages((p) => [...p.slice(-20), { id: `pk-end-${Date.now()}`, user: "System", text: `PK Battle ended! ${winner} wins!`, isSystem: true }]);
+          toast.success(`${winner} won the PK Battle!`);
           return { ...prev, active: false, winner };
         }
         // Opponent scores randomly
@@ -691,8 +728,8 @@ export default function GoLivePage() {
           const allP = prev.participants.length > 0 ? prev.participants : ["Lucky Viewer"];
           const winner = allP[Math.floor(Math.random() * allP.length)];
           const prize = [10, 25, 50, 100][Math.floor(Math.random() * 4)];
-          setChatMessages((p) => [...p.slice(-20), { id: `chest-win-${Date.now()}`, user: "🎁", text: `${winner} won ${prize} Z Coins from the Treasure Chest! 🎉`, isSystem: true }]);
-          toast.success(`🎁 ${winner} won ${prize} Z Coins!`);
+          setChatMessages((p) => [...p.slice(-20), { id: `chest-win-${Date.now()}`, user: "System", text: `${winner} won ${prize} Z Coins from the Treasure Chest!`, isSystem: true }]);
+          toast.success(`${winner} won ${prize} Z Coins!`);
           return { ...prev, active: false, winner, countdown: 0 };
         }
         return { ...prev, countdown: prev.countdown - 1 };
@@ -704,14 +741,14 @@ export default function GoLivePage() {
   // ── VIP entrance simulation ──
   useEffect(() => {
     if (phase !== "live") return;
-    const vipNames = [{ name: "Diamond_VIP 💎", level: 50 }, { name: "King_Whale 👑", level: 80 }, { name: "Platinum_Star ⭐", level: 65 }];
+    const vipNames = [{ name: "Diamond_VIP", level: 50 }, { name: "King_Whale", level: 80 }, { name: "Platinum_Star", level: 65 }];
     let timer: ReturnType<typeof setTimeout>;
     const schedule = () => {
       timer = setTimeout(() => {
         if (Math.random() > 0.7) {
           const vip = vipNames[Math.floor(Math.random() * vipNames.length)];
           setVipEntrance(vip);
-          setChatMessages((p) => [...p.slice(-20), { id: `vip-${Date.now()}`, user: "👑", text: `${vip.name} (Lv.${vip.level}) entered the stream!`, isSystem: true }]);
+          setChatMessages((p) => [...p.slice(-20), { id: `vip-${Date.now()}`, user: "System", text: `${vip.name} (Lv.${vip.level}) entered the stream!`, isSystem: true }]);
           setTimeout(() => setVipEntrance(null), 4000);
         }
         schedule();
@@ -749,7 +786,7 @@ export default function GoLivePage() {
       {
         id: `gift-${Date.now()}`,
         user: sender,
-        text: qty > 1 ? `sent ${gift.name} x${qty} (${totalCoins.toLocaleString()} coins) 🎁` : `sent ${gift.name} (${gift.coins} coins) 🎁`,
+        text: qty > 1 ? `sent ${gift.name} x${qty} (${totalCoins.toLocaleString()} coins)` : `sent ${gift.name} (${gift.coins} coins)`,
         isGift: true,
         avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][Math.floor(Math.random() * 5)],
       },
@@ -776,8 +813,8 @@ export default function GoLivePage() {
 
     // ── NEW: Combo Multiplier Visual ──
     if (newCombo >= 2) {
-      const comboLabels = ["", "", "COMBO x2 🔥", "COMBO x3 ⚡", "COMBO x4 💥", "MEGA x5 🌟", "ULTRA x6 💎", "SUPREME x7 👑"];
-      const label = newCombo < comboLabels.length ? comboLabels[newCombo] : `GODLIKE x${newCombo} 🏆`;
+      const comboLabels = ["", "", "COMBO x2 🔥", "COMBO x3 ", "COMBO x4 💥", "MEGA x5 🌟", "ULTRA x6 ", "SUPREME x7 👑"];
+      const label = newCombo < comboLabels.length ? comboLabels[newCombo] : `GODLIKE x${newCombo}`;
       setComboMultiplierText({ text: label, id: `combo-${now}` });
       setTimeout(() => setComboMultiplierText(null), 2500);
     }
@@ -875,29 +912,29 @@ export default function GoLivePage() {
           <div className="bg-white/5 rounded-2xl p-4 border border-white/10 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs text-white/50">Gifts Received</span>
-              <span className="text-sm font-semibold text-white">{giftsReceived} 🎁</span>
+              <span className="text-sm font-semibold text-white">{giftsReceived}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-white/50">Chat Messages</span>
-              <span className="text-sm font-semibold text-white">{chatMessages.length} 💬</span>
+              <span className="text-sm font-semibold text-white">{chatMessages.length}</span>
             </div>
              <div className="flex items-center justify-between">
                <span className="text-xs text-white/50">New Followers</span>
-               <span className="text-sm font-semibold text-purple-400">{newFollowersCount} 💜</span>
+               <span className="text-sm font-semibold text-purple-400">{newFollowersCount}</span>
              </div>
              <div className="flex items-center justify-between">
                <span className="text-xs text-white/50">Shares</span>
-               <span className="text-sm font-semibold text-blue-400">{shareCount} 🔗</span>
+               <span className="text-sm font-semibold text-blue-400">{shareCount}</span>
              </div>
              <div className="flex items-center justify-between">
                <span className="text-xs text-white/50">Engagement Rate</span>
                <span className="text-sm font-semibold text-green-400">
-                 {peakViewers > 0 ? Math.min(95, Math.round((giftsReceived / peakViewers) * 40 + (likes / Math.max(1, elapsed / 30)) * 5)) : 0}% 📊
+                 {peakViewers > 0 ? Math.min(95, Math.round((giftsReceived / peakViewers) * 40 + (likes / Math.max(1, elapsed / 30)) * 5)) : 0}% 
                </span>
              </div>
              <div className="flex items-center justify-between">
                <span className="text-xs text-white/50">Avg Watch Time</span>
-               <span className="text-sm font-semibold text-white">{formatTime(Math.round(elapsed * 0.6))} ⏱️</span>
+               <span className="text-sm font-semibold text-white">{formatTime(Math.round(elapsed * 0.6))} </span>
              </div>
           </div>
 
@@ -912,7 +949,7 @@ export default function GoLivePage() {
                 .sort(([, a], [, b]) => b - a)
                 .slice(0, 3)
                 .map(([name, coins], i) => {
-                  const medals = ["🥇", "🥈", "🥉"];
+                  const medals = ["#1", "#2", "#3"];
                   return (
                     <div key={name} className="flex items-center gap-2">
                       <span className="text-sm">{medals[i]}</span>
@@ -978,10 +1015,10 @@ export default function GoLivePage() {
 
           {/* ── NEW: Save Highlights & Replay ── */}
           <button
-            onClick={() => toast.success("🎬 Highlights saved! Access them from your profile.", { duration: 3000 })}
+            onClick={() => toast.success("Highlights saved! Access them from your profile.", { duration: 3000 })}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r from-purple-500/15 to-pink-500/10 border border-purple-500/20 active:scale-[0.98] transition-transform"
           >
-            <span className="text-lg">🎬</span>
+            <Clapperboard className="h-5 w-5 text-purple-300" />
             <span className="text-purple-300 text-sm font-semibold">Save Highlights & Replay</span>
           </button>
 
@@ -992,18 +1029,18 @@ export default function GoLivePage() {
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
-                  onClick={() => { setStreamRating(star); toast.success(`Rated ${star} ⭐`); }}
+                  onClick={() => { setStreamRating(star); toast.success(`Rated ${star}/5`); }}
                   className={cn(
                     "text-2xl transition-all duration-200",
                     star <= streamRating ? "scale-110" : "opacity-30 hover:opacity-60"
                   )}
                 >
-                  ⭐
+                  <Star className={cn("h-5 w-5", star <= streamRating ? "text-amber-400 fill-amber-400" : "text-white/30")} />
                 </button>
               ))}
             </div>
             {streamRating > 0 && (
-              <p className="text-[10px] text-white/30">{streamRating >= 4 ? "Amazing stream! 🎉" : streamRating >= 3 ? "Good work! Keep going 💪" : "Every stream makes you better! 📈"}</p>
+              <p className="text-[10px] text-white/30">{streamRating >= 4 ? "Amazing stream!" : streamRating >= 3 ? "Good work! Keep going!" : "Every stream makes you better!"}</p>
             )}
           </div>
 
@@ -1060,18 +1097,18 @@ export default function GoLivePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/90" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
 
-        {/* ── NEW: Face Sticker Overlay ── */}
+        {/* ── Face Sticker Overlay ── */}
         {phase === "live" && activeSticker && (
           <div className="absolute inset-0 z-[2] pointer-events-none flex items-start justify-center pt-[15%]">
-            <motion.span
+            <motion.div
               key={activeSticker}
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: 0 }}
-              className="text-[80px]"
+              className="w-20 h-20"
               style={{ filter: faceStickers.find(s => s.id === activeSticker)?.filter }}
             >
-              {faceStickers.find(s => s.id === activeSticker)?.emoji}
-            </motion.span>
+              {faceStickers.find(s => s.id === activeSticker)?.icon}
+            </motion.div>
           </div>
         )}
 
@@ -1080,7 +1117,7 @@ export default function GoLivePage() {
            <div
              className="absolute inset-0 z-[1]"
              onDoubleClick={() => {
-               spawnFloatingReaction("❤️");
+               spawnFloatingReaction("heart");
              }}
            />
         )}
@@ -1177,7 +1214,7 @@ export default function GoLivePage() {
           {/* Stream Goal Progress Bar */}
           <div className="mt-2 bg-black/30 backdrop-blur-md rounded-xl px-3 py-2 border border-white/5">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] text-white/50 font-medium">🎯 Stream Goal</span>
+              <span className="text-[10px] text-white/50 font-medium"> Stream Goal</span>
               <span className="text-[10px] text-amber-300 font-bold">{Math.min(coinsEarned, streamGoal)}/{streamGoal}</span>
             </div>
             <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -1219,7 +1256,7 @@ export default function GoLivePage() {
                       />
                     </div>
                   </div>
-                  <span className="text-lg font-black text-red-400">⚔️</span>
+                  <Swords className="h-5 w-5 text-red-400" />
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-0.5">
                       <span className="text-[10px] text-white/80 font-semibold">{pkBattle.opponentName}</span>
@@ -1233,7 +1270,7 @@ export default function GoLivePage() {
                     </div>
                   </div>
                 </div>
-                <p className="text-[9px] text-white/30 text-center mt-1">Send gifts to help win! 🎁</p>
+                <p className="text-[9px] text-white/30 text-center mt-1">Send gifts to help win! </p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -1248,7 +1285,7 @@ export default function GoLivePage() {
                 className="mt-2 bg-gradient-to-r from-amber-900/60 to-yellow-900/40 backdrop-blur-md rounded-2xl px-3 py-2 border border-amber-500/20"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">🎁 Treasure Chest</span>
+                  <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider"> Treasure Chest</span>
                   <motion.span
                     key={treasureChest.countdown}
                     initial={{ scale: 1.3 }}
@@ -1420,7 +1457,7 @@ export default function GoLivePage() {
                     <Shield className="h-3 w-3" /> Private
                   </button>
                   <button
-                    onClick={() => { setAutoThank((p) => !p); toast(autoThank ? "Auto-thank disabled" : "Auto-thank enabled ❤️", { duration: 1500 }); }}
+                    onClick={() => { setAutoThank((p) => !p); toast(autoThank ? "Auto-thank disabled" : "Auto-thank enabled", { duration: 1500 }); }}
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all border",
                       autoThank
@@ -1431,7 +1468,7 @@ export default function GoLivePage() {
                     <Heart className="h-3 w-3" /> Thank
                   </button>
                   <button
-                    onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "🔇 Sounds muted" : "🔊 Sounds on", { duration: 1500 }); }}
+                    onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "Sounds muted" : "Sounds on", { duration: 1500 }); }}
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all border",
                       soundEnabled
@@ -1442,7 +1479,7 @@ export default function GoLivePage() {
                     {soundEnabled ? <Volume2 className="h-3 w-3" /> : <VolumeX className="h-3 w-3" />} Sound
                   </button>
                   <button
-                    onClick={() => { setSlowMode((p) => !p); toast(slowMode ? "Slow mode off" : "⏳ Slow mode on (5s)", { duration: 1500 }); }}
+                    onClick={() => { setSlowMode((p) => !p); toast(slowMode ? "Slow mode off" : "Slow mode on (5s)", { duration: 1500 }); }}
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all border",
                       slowMode
@@ -1456,7 +1493,7 @@ export default function GoLivePage() {
                 {/* Second row */}
                 <div className="flex items-center gap-2 mt-2">
                   <button
-                    onClick={() => toast("📡 Screen share coming soon!", { description: "Share your screen with viewers" })}
+                    onClick={() => toast("Screen share coming soon!", { description: "Share your screen with viewers" })}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium bg-zinc-800 text-zinc-500 border border-zinc-700/50 hover:text-zinc-400 transition-all"
                   >
                     <Monitor className="h-3 w-3" /> Screen
@@ -1564,7 +1601,7 @@ export default function GoLivePage() {
                   <Users className="h-3.5 w-3.5 text-white" />
                   <span className="text-white text-[11px] font-semibold">{newFollower}</span>
                   <span className="text-white/60 text-[11px]">followed you</span>
-                  <span className="text-sm">💜</span>
+                  <Heart className="h-3.5 w-3.5 text-purple-400" />
                 </div>
               </motion.div>
             )}
@@ -1579,7 +1616,7 @@ export default function GoLivePage() {
                 transition={{ duration: 2, ease: "easeOut" }}
                 className="absolute bottom-40 right-6 text-2xl pointer-events-none z-30 will-change-transform"
               >
-                {r.emoji}
+                <ReactionIcon name={r.emoji} className="h-6 w-6" />
               </motion.div>
             ))}
           </AnimatePresence>
@@ -1665,7 +1702,7 @@ export default function GoLivePage() {
                       transition={{ duration: 0.5 }}
                     />
                   ) : (
-                    <span className="text-2xl">🎁</span>
+                    <Gift className="h-6 w-6 text-amber-300" />
                   )}
                   <div>
                     <p className="text-white text-[11px] font-bold">
@@ -1713,7 +1750,7 @@ export default function GoLivePage() {
 
             {/* Heart + Gift — always visible */}
             <div className="flex flex-col items-center">
-              <button onClick={() => sendReaction("❤️")} className="w-10 h-10 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
+              <button onClick={() => sendReaction("heart")} className="w-10 h-10 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
                 <Heart className="h-4 w-4 text-red-400" />
               </button>
               <span className="text-white text-[8px] mt-0.5 font-medium">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>
@@ -1770,7 +1807,7 @@ export default function GoLivePage() {
                       const filters: Array<"none" | "warm" | "cool" | "bw" | "vintage"> = ["none", "warm", "cool", "bw", "vintage"];
                       const idx = filters.indexOf(cameraFilter);
                       setCameraFilter(filters[(idx + 1) % filters.length]);
-                      toast(`🎨 Filter: ${filters[(idx + 1) % filters.length] === "none" ? "Off" : filters[(idx + 1) % filters.length]}`, { duration: 1500 });
+                      toast(`Filter: ${filters[(idx + 1) % filters.length] === "none" ? "Off" : filters[(idx + 1) % filters.length]}`, { duration: 1500 });
                     }}
                     className="flex flex-col items-center gap-1"
                   >
@@ -1781,18 +1818,18 @@ export default function GoLivePage() {
                   </button>
                   <button onClick={() => setShowStickerPanel((p) => !p)} className="flex flex-col items-center gap-1">
                     <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", activeSticker ? "bg-yellow-500/30" : "bg-white/10")}>
-                      <span className="text-base">🎭</span>
+                      <Sparkles className="h-4 w-4 text-pink-300" />
                     </div>
                     <span className="text-white/50 text-[9px]">Sticker</span>
                   </button>
                   {/* Row 2 */}
-                  <button onClick={() => { setClipSaved(true); toast.success("📸 Clip saved!"); setTimeout(() => setClipSaved(false), 3000); }} className="flex flex-col items-center gap-1">
+                  <button onClick={() => { setClipSaved(true); toast.success("Clip saved!"); setTimeout(() => setClipSaved(false), 3000); }} className="flex flex-col items-center gap-1">
                     <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", clipSaved ? "bg-green-500/30" : "bg-white/10")}>
-                      <span className="text-base">{clipSaved ? "✅" : "📸"}</span>
+                      {clipSaved ? <Check className="h-4 w-4 text-green-300" /> : <ImageIcon className="h-4 w-4 text-white/70" />}
                     </div>
                     <span className="text-white/50 text-[9px]">Clip</span>
                   </button>
-                  <button onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "🔇 Muted" : "🔊 Sound on", { duration: 1200 }); }} className="flex flex-col items-center gap-1">
+                  <button onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "Muted" : "Sound on", { duration: 1200 }); }} className="flex flex-col items-center gap-1">
                     <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", !soundEnabled ? "bg-red-500/20" : "bg-white/10")}>
                       {soundEnabled ? <Volume2 className="h-4 w-4 text-white/70" /> : <VolumeX className="h-4 w-4 text-red-300" />}
                     </div>
@@ -1800,16 +1837,16 @@ export default function GoLivePage() {
                   </button>
                   <button
                     onClick={() => {
-                      const tracks = [null, "🎶 Chill Lo-fi", "🎸 Acoustic", "🎹 Piano Vibes", "🥁 Upbeat Pop"];
+                      const tracks = [null, "Chill Lo-fi", "Acoustic", "Piano Vibes", "Upbeat Pop"];
                       const idx = tracks.indexOf(bgMusic);
                       const next = tracks[(idx + 1) % tracks.length];
                       setBgMusic(next);
-                      toast(next ? `🎵 ${next}` : "🔇 Music off", { duration: 1500 });
+                      toast(next ? `Music: ${next}` : "Music off", { duration: 1500 });
                     }}
                     className="flex flex-col items-center gap-1"
                   >
                     <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", bgMusic ? "bg-violet-500/25" : "bg-white/10")}>
-                      <span className="text-base">🎵</span>
+                      <Music className="h-4 w-4 text-violet-300" />
                     </div>
                     <span className="text-white/50 text-[9px]">Music</span>
                   </button>
@@ -1821,17 +1858,17 @@ export default function GoLivePage() {
                   </button>
                   <button
                     onClick={() => {
-                      if (pkBattle?.active) { toast("⚔️ Battle already in progress!"); return; }
+                      if (pkBattle?.active) { toast("Battle already in progress!"); return; }
                       const opponents = ["DJ_Luna", "KingAlex", "StarMia", "ProGamer99"];
                       const opp = opponents[Math.floor(Math.random() * opponents.length)];
                       setPkBattle({ active: true, hostScore: 0, opponentScore: 0, opponentName: opp, endsAt: Date.now() + 120000, winner: null });
-                      setChatMessages((prev) => [...prev.slice(-20), { id: `pk-${Date.now()}`, user: "⚔️", text: `PK Battle started vs ${opp}!`, isSystem: true }]);
-                      toast.success(`⚔️ PK Battle vs ${opp}!`);
+                      setChatMessages((prev) => [...prev.slice(-20), { id: `pk-${Date.now()}`, user: "System", text: `PK Battle started vs ${opp}!`, isSystem: true }]);
+                      toast.success(`PK Battle vs ${opp}!`);
                     }}
                     className="flex flex-col items-center gap-1"
                   >
                     <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", pkBattle?.active ? "bg-red-500/25" : "bg-white/10")}>
-                      <span className="text-base">⚔️</span>
+                      <span className="text-base">VS</span>
                     </div>
                     <span className="text-white/50 text-[9px]">PK</span>
                   </button>
@@ -1840,19 +1877,19 @@ export default function GoLivePage() {
                     onClick={() => {
                       if (treasureChest?.active) return;
                       setTreasureChest({ active: true, countdown: 15, participants: [], winner: null });
-                      setChatMessages((prev) => [...prev.slice(-20), { id: `chest-${Date.now()}`, user: "🎁", text: "Treasure Chest opened! Tap to join!", isSystem: true }]);
-                      toast("🎁 Treasure Chest! 15s to join!", { duration: 3000 });
+                      setChatMessages((prev) => [...prev.slice(-20), { id: `chest-${Date.now()}`, user: "System", text: "Treasure Chest opened! Tap to join!", isSystem: true }]);
+                      toast("Treasure Chest! 15s to join!", { duration: 3000 });
                     }}
                     className="flex flex-col items-center gap-1"
                   >
                     <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", treasureChest?.active ? "bg-amber-500/25" : "bg-white/10")}>
-                      <span className="text-base">🎁</span>
+                      <span className="text-base"></span>
                     </div>
                     <span className="text-white/50 text-[9px]">Chest</span>
                   </button>
                   <button onClick={() => setShowGuestInvite((p) => !p)} className="flex flex-col items-center gap-1">
                     <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", coHosts.length > 0 ? "bg-purple-500/25" : "bg-white/10")}>
-                      <span className="text-base">👥</span>
+                      <Users className="h-4 w-4 text-white/70" />
                     </div>
                     <span className="text-white/50 text-[9px]">Guests</span>
                   </button>
@@ -1861,15 +1898,15 @@ export default function GoLivePage() {
             )}
           </AnimatePresence>
 
-          {/* Quick reaction bar — compact 5 emojis */}
+          {/* Quick reaction bar */}
           <div className="px-3 pr-[56px] mb-2 flex gap-1 justify-start">
-            {quickReactions.map((emoji) => (
+            {quickReactions.map((r) => (
               <button
-                key={emoji}
-                onClick={() => sendReaction(emoji)}
+                key={r.key}
+                onClick={() => sendReaction(r.key)}
                 className="w-8 h-8 rounded-lg bg-black/30 backdrop-blur-md flex items-center justify-center shrink-0 active:scale-75 transition-transform text-sm border border-white/5"
               >
-                {emoji}
+                {r.icon}
               </button>
             ))}
           </div>
@@ -1898,14 +1935,14 @@ export default function GoLivePage() {
                     onClick={() => {
                       if (!msg.isSystem && !msg.isGift) {
                         setPinnedChatMsg(`${msg.user}: ${msg.text}`);
-                        toast.success(`📌 Pinned message from ${msg.user}`);
+                        toast.success(`Pinned message from ${msg.user}`);
                       }
                     }}
                     onContextMenu={(e) => {
                       e.preventDefault();
                       if (!msg.isSystem && msg.user !== "You (Host)") {
                         setMutedUsers((prev) => new Set(prev).add(msg.user));
-                        toast(`🔇 Muted ${msg.user}`, { duration: 2000 });
+                        toast(`Muted ${msg.user}`, { duration: 2000 });
                       }
                     }}
                     className={cn(
@@ -2010,7 +2047,7 @@ export default function GoLivePage() {
               >
                 <div className="bg-zinc-900/90 backdrop-blur-md rounded-2xl p-3 border border-white/10 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-white/70">📊 Create Poll</span>
+                    <span className="text-[11px] font-bold text-white/70"> Create Poll</span>
                     <button onClick={() => setShowPollCreator(false)} className="text-white/30 hover:text-white/60">
                       <X className="h-3 w-3" />
                     </button>
@@ -2093,7 +2130,7 @@ export default function GoLivePage() {
                       <span className="text-[8px] text-amber-400/50 uppercase tracking-wider font-medium">Earned</span>
                     </div>
                     <button
-                      onClick={() => toast("💰 Coin Recharge coming soon!", { description: "You'll be able to purchase Z Coins to send premium gifts." })}
+                      onClick={() => toast("Coin Recharge coming soon!", { description: "You'll be able to purchase Z Coins to send premium gifts." })}
                       className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 active:scale-90 transition-transform"
                     >
                       <span className="text-amber-300 text-xs font-bold leading-none">+</span>
@@ -2101,7 +2138,7 @@ export default function GoLivePage() {
                   </div>
                   <div className="overflow-hidden flex-1">
                     <p className="text-xs text-white/40 whitespace-nowrap animate-[marquee_8s_linear_infinite]">
-                      ✨ Send gifts to support your favorite creators! &nbsp;&nbsp;&nbsp; ✨ Send gifts to support your favorite creators!
+                      Send gifts to support your favorite creators! &nbsp;&nbsp;&nbsp; Send gifts to support your favorite creators!
                     </p>
                   </div>
                   <button onClick={() => setShowGiftPanel(false)} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center shrink-0">
@@ -2136,12 +2173,12 @@ export default function GoLivePage() {
                           const allItems = allGifts[giftTab];
                           const lucky = allItems[Math.floor(Math.random() * allItems.length)];
                           sendGift(lucky);
-                          toast(`🎲 Lucky! You sent ${lucky.name}!`);
+                          toast(`Lucky! You sent ${lucky.name}!`);
                         }}
                         className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform"
                       >
                         <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20 flex items-center justify-center">
-                          <span className="text-xl">🎲</span>
+                          <Sparkles className="h-5 w-5 text-purple-300" />
                         </div>
                         <span className="text-[8px] text-purple-300">Lucky</span>
                       </button>
@@ -2181,7 +2218,7 @@ export default function GoLivePage() {
                             <span className="text-3xl">{gift.icon}</span>
                           )}
                           {giftAnimationVideos[gift.name] && (
-                            <span className="absolute bottom-0.5 left-0.5 text-[7px] bg-black/50 text-white/80 px-1 py-0.5 rounded-md font-bold backdrop-blur-sm">🎬</span>
+                            <span className="absolute bottom-0.5 left-0.5 text-[7px] bg-black/50 text-white/80 px-1 py-0.5 rounded-md font-bold backdrop-blur-sm flex items-center"><Clapperboard className="h-2 w-2" /></span>
                           )}
                         </div>
                         <span className="text-[10px] text-white/70 truncate w-full text-center leading-tight mt-0.5">{gift.name}</span>
@@ -2287,12 +2324,12 @@ export default function GoLivePage() {
                         giftTab === tab ? "text-white bg-white/10" : "text-white/40"
                       )}
                     >
-                      {tab === "gifts" ? "🎁 Gifts" : tab === "interactive" ? "⚡ Interactive" : "👑 Exclusive"}
+                      {tab === "gifts" ? "Gifts" : tab === "interactive" ? "Interactive" : "Exclusive"}
                     </button>
                   ))}
                   <div className="flex-1" />
                   <button
-                    onClick={() => toast("💰 Coin Recharge coming soon!", { description: "You'll be able to purchase Z Coins to send premium gifts." })}
+                    onClick={() => toast("Coin Recharge coming soon!", { description: "You'll be able to purchase Z Coins to send premium gifts." })}
                     className="flex items-center gap-1.5 bg-gradient-to-r from-amber-600 to-yellow-500 rounded-full px-3.5 py-1.5 shadow-lg shadow-amber-500/20 active:scale-95 transition-transform"
                   >
                     <img src={goldCoinIcon} alt="" className="w-4 h-4" />
@@ -2335,13 +2372,13 @@ export default function GoLivePage() {
                 </button>
               </div>
               {Object.keys(topGifters).length === 0 ? (
-                <p className="text-[10px] text-white/30 text-center py-2">No gifters yet — be the first! 🎁</p>
+                <p className="text-[10px] text-white/30 text-center py-2">No gifters yet — be the first! </p>
               ) : (
                 Object.entries(topGifters)
                   .sort(([, a], [, b]) => b - a)
                   .slice(0, 5)
                   .map(([name, coins], i) => {
-                    const medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"];
+                    const medals = ["#1", "#2", "#3", "#4", "#5"];
                     const colors = ["text-amber-300", "text-gray-300", "text-orange-400", "text-white/60", "text-white/60"];
                     return (
                       <div key={name} className="flex items-center gap-2">
@@ -2427,15 +2464,15 @@ export default function GoLivePage() {
                         onClick={() => {
                           if (isMuted) {
                             setMutedUsers((prev) => { const n = new Set(prev); n.delete(name); return n; });
-                            toast(`🔊 Unmuted ${name}`);
+                            toast(`Unmuted ${name}`);
                           } else {
                             setMutedUsers((prev) => new Set(prev).add(name));
-                            toast(`🔇 Muted ${name}`);
+                            toast(`Muted ${name}`);
                           }
                         }}
                         className="opacity-0 group-hover:opacity-100 text-white/30 hover:text-white/60 transition-opacity"
                       >
-                        <span className="text-[10px]">{isMuted ? "🔊" : "🔇"}</span>
+                        {isMuted ? <Volume2 className="h-3 w-3 text-green-300" /> : <VolumeX className="h-3 w-3 text-white/40" />}
                       </button>
                     </div>
                   );
@@ -2474,7 +2511,7 @@ export default function GoLivePage() {
                 transition={{ duration: 0.5, repeat: 2 }}
                 className="text-2xl"
               >
-                👑
+                <Crown className="h-6 w-6 text-amber-400" />
               </motion.div>
               <div className="flex-1 min-w-0">
                 <p className="text-white text-sm font-bold truncate" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}>
@@ -2489,7 +2526,7 @@ export default function GoLivePage() {
                 transition={{ duration: 1, repeat: Infinity }}
                 className="text-lg"
               >
-                ✨
+                <Sparkles className="h-5 w-5 text-purple-200" />
               </motion.div>
             </div>
           </motion.div>
@@ -2518,7 +2555,7 @@ export default function GoLivePage() {
             >
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm">👥</span>
+                  <Users className="h-3.5 w-3.5 text-purple-300" />
                   <span className="text-[11px] font-bold text-purple-300 uppercase tracking-wider">Invite Guest</span>
                 </div>
                 <button onClick={() => setShowGuestInvite(false)} className="text-white/30 hover:text-white/60">
@@ -2541,8 +2578,8 @@ export default function GoLivePage() {
                           toast(`Removed ${name} from co-host`);
                         } else if (coHosts.length < 3) {
                           setCoHosts((p) => [...p, { name, avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500"][p.length % 3] }]);
-                          setChatMessages((prev) => [...prev.slice(-20), { id: `cohost-${Date.now()}`, user: "🎙️", text: `${name} joined as co-host!`, isSystem: true }]);
-                          toast.success(`🎙️ ${name} is now co-hosting!`);
+                          setChatMessages((prev) => [...prev.slice(-20), { id: `cohost-${Date.now()}`, user: "System", text: `${name} joined as co-host!`, isSystem: true }]);
+                          toast.success(`${name} is now co-hosting!`);
                         } else {
                           toast.error("Max 3 co-hosts");
                         }
@@ -2584,7 +2621,7 @@ export default function GoLivePage() {
             >
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm">🎭</span>
+                  <Sparkles className="h-3.5 w-3.5 text-pink-300" />
                   <span className="text-[11px] font-bold text-pink-300 uppercase tracking-wider">Stickers</span>
                 </div>
                 <button onClick={() => setShowStickerPanel(false)} className="text-white/30 hover:text-white/60">
@@ -2595,13 +2632,13 @@ export default function GoLivePage() {
                 {faceStickers.map((s) => (
                   <button
                     key={s.id}
-                    onClick={() => { setActiveSticker((prev) => prev === s.id ? null : s.id); toast(`${s.emoji} ${activeSticker === s.id ? "Removed" : s.label}`, { duration: 1200 }); }}
+                    onClick={() => { setActiveSticker((prev) => prev === s.id ? null : s.id); toast(`${s.label} ${activeSticker === s.id ? "Removed" : "Applied"}`, { duration: 1200 }); }}
                     className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center text-xl active:scale-90 transition-all border",
+                      "w-10 h-10 rounded-xl flex items-center justify-center active:scale-90 transition-all border",
                       activeSticker === s.id ? "bg-pink-500/30 border-pink-500/30 shadow-lg shadow-pink-500/20" : "bg-white/5 border-white/10"
                     )}
                   >
-                    {s.emoji}
+                    {s.icon}
                   </button>
                 ))}
               </div>
@@ -2631,7 +2668,7 @@ export default function GoLivePage() {
               .sort(([, a], [, b]) => b - a)
               .slice(0, 3)
               .map(([name, coins], i) => {
-                const medals = ["🥇", "🥈", "🥉"];
+                const medals = ["#1", "#2", "#3"];
                 return (
                   <div key={name} className="flex items-center gap-1">
                     <span className="text-[10px]">{medals[i]}</span>
@@ -2681,7 +2718,7 @@ export default function GoLivePage() {
             style={{ top: "calc(env(safe-area-inset-top, 0px) + 200px)" }}
           >
             <div className="flex items-center gap-2 bg-gradient-to-r from-red-600/80 to-orange-500/70 backdrop-blur-md rounded-2xl px-3 py-2 border border-red-400/30 shadow-lg shadow-red-500/30">
-              <motion.span animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 0.4, repeat: Infinity }} className="text-xl">🔥</motion.span>
+              <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 0.4, repeat: Infinity }}><Flame className="h-5 w-5 text-orange-400" /></motion.div>
               <div>
                 <p className="text-white text-xs font-black">GIFT STREAK</p>
                 <p className="text-amber-200 text-lg font-black leading-none">{giftStreakCount}x</p>
@@ -2734,7 +2771,7 @@ export default function GoLivePage() {
                 transition={{ duration: 2 + Math.random() * 2, delay: Math.random() * 0.5, ease: "easeOut" }}
                 className="absolute text-2xl"
               >
-                {["🎉", "🎊", "✨", "⭐", "💛", "🥳", "🎆"][i % 7]}
+                ""
               </motion.div>
             ))}
           </motion.div>
@@ -2759,7 +2796,7 @@ export default function GoLivePage() {
                   transition={{ duration: 0.5, delay: i * 0.1, repeat: 3 }}
                   className="text-2xl"
                 >
-                  👋
+                  <Hand className="h-5 w-5 text-white/70" />
                 </motion.span>
               ))}
             </div>
@@ -2771,7 +2808,7 @@ export default function GoLivePage() {
       {phase === "live" && trendingWord && (
         <div className="fixed left-3 z-40 pointer-events-none" style={{ top: "calc(env(safe-area-inset-top, 0px) + 195px)" }}>
           <div className="flex items-center gap-1 bg-blue-500/20 backdrop-blur-sm rounded-full px-2 py-0.5 border border-blue-500/20">
-            <span className="text-[8px]">🔥</span>
+            <Flame className="h-2.5 w-2.5 text-orange-400" />
             <span className="text-[8px] text-blue-300 font-bold uppercase">Trending:</span>
             <span className="text-[9px] text-white/80 font-semibold">{trendingWord}</span>
           </div>
@@ -2800,7 +2837,7 @@ export default function GoLivePage() {
             >
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm">💰</span>
+                  <DollarSign className="h-3.5 w-3.5 text-emerald-300" />
                   <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider">Revenue</span>
                 </div>
                 <button onClick={() => setShowRevenueDash(false)} className="text-white/30 hover:text-white/60">
@@ -2814,19 +2851,19 @@ export default function GoLivePage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-white/50">Coins/min</span>
-                  <span className="text-[11px] font-semibold text-emerald-300">{elapsed > 60 ? (coinsEarned / (elapsed / 60)).toFixed(1) : coinsEarned.toString()} ⚡</span>
+                  <span className="text-[11px] font-semibold text-emerald-300">{elapsed > 60 ? (coinsEarned / (elapsed / 60)).toFixed(1) : coinsEarned.toString()} </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-white/50">Projected (1hr)</span>
-                  <span className="text-[11px] font-semibold text-emerald-200">{elapsed > 30 ? Math.round((coinsEarned / elapsed) * 3600).toLocaleString() : "—"} 🎯</span>
+                  <span className="text-[11px] font-semibold text-emerald-200">{elapsed > 30 ? Math.round((coinsEarned / elapsed) * 3600).toLocaleString() : "—"} </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-white/50">Gifts</span>
-                  <span className="text-[11px] font-semibold text-white/70">{giftsReceived} 🎁</span>
+                  <span className="text-[11px] font-semibold text-white/70">{giftsReceived}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-white/50">Top Gift Value</span>
-                  <span className="text-[11px] font-semibold text-amber-200">{Object.values(topGifters).length > 0 ? Math.max(...Object.values(topGifters)).toLocaleString() : "0"} 💎</span>
+                  <span className="text-[11px] font-semibold text-amber-200">{Object.values(topGifters).length > 0 ? Math.max(...Object.values(topGifters)).toLocaleString() : "0"} </span>
                 </div>
               </div>
               <div className="border-t border-white/5 pt-1.5">
@@ -2915,7 +2952,7 @@ export default function GoLivePage() {
               >
                 {screenEffect === "confetti" ? ["🎊", "🎉", "⭐", "✨", "🌟"][i % 5] :
                  screenEffect === "hearts" ? ["❤️", "💕", "💖", "💗", "💝"][i % 5] :
-                 ["🔥", "💥", "⚡", "🌋", "☄️"][i % 5]}
+                 ["🔥", "💥", "", "🌋", "☄️"][i % 5]}
               </motion.span>
             ))}
           </motion.div>
@@ -2938,7 +2975,7 @@ export default function GoLivePage() {
                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                 className="text-xs"
               >
-                🎵
+                <Music className="h-3 w-3 text-violet-200" />
               </motion.span>
               <span className="text-[10px] text-violet-200 font-medium truncate max-w-[100px]">{bgMusic}</span>
               <button onClick={() => setBgMusic(null)} className="text-white/30 hover:text-white/60">
