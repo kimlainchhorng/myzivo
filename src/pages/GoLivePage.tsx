@@ -347,7 +347,7 @@ export default function GoLivePage() {
   const endStream = useCallback(() => {
     setPhase("ended");
     streamRef.current?.getTracks().forEach((t) => t.stop());
-    toast("Stream ended", { description: `Duration: ${formatTime(elapsed)} · ${peakViewers} peak viewers` });
+    toast("Stream ended", { description: `Duration: ${formatTime(elapsed)} · ${peakViewers} peak viewers`, duration: 3000 });
   }, [elapsed, peakViewers]);
 
   const formatTime = (s: number) => {
