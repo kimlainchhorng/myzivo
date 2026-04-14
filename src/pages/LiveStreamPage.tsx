@@ -93,14 +93,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
 
   const fakeViewerNames = useMemo(() => ["Luna ✨", "Kai 🔥", "Mia 💜", "Nora 🌸", "Zara 💎", "Leo 🦁", "Aria 🎵", "Alex 🎮", "Jordan 🏀", "Sam 🌊"], []);
 
-  // Simulate chat messages
+  // Simulate chat messages + viewer joins
   useEffect(() => {
     const msgs = [
       "Hi everyone! 👋", "Love this stream!", "❤️❤️❤️", "You're amazing!",
       "First time here 🎉", "Let's gooo!", "So cool!", "Where are you from?",
       "Can you do a shoutout?", "This is fire 🔥", "Following!", "Best stream ever",
     ];
-    const interval = setInterval(() => {
+    const chatInterval = setInterval(() => {
       const name = fakeViewerNames[Math.floor(Math.random() * fakeViewerNames.length)];
       const msg = msgs[Math.floor(Math.random() * msgs.length)];
       const level = Math.floor(Math.random() * 30) + 1;
@@ -111,7 +111,21 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         level,
       }]);
     }, 2500 + Math.random() * 3000);
-    return () => clearInterval(interval);
+
+    // Viewer join notifications
+    const joinInterval = setInterval(() => {
+      if (Math.random() < 0.4) {
+        const joiner = fakeViewerNames[Math.floor(Math.random() * fakeViewerNames.length)];
+        setChatMessages(prev => [...prev.slice(-30), {
+          id: `join-${Date.now()}`,
+          user: joiner,
+          text: "joined the stream 👋",
+          isSystem: true,
+        }]);
+      }
+    }, 6000 + Math.random() * 4000);
+
+    return () => { clearInterval(chatInterval); clearInterval(joinInterval); };
   }, [fakeViewerNames]);
 
   // Simulate viewer count
@@ -406,10 +420,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       </div>
 
       {/* ── Chat overlay (bottom-left) ── */}
-      <div className="absolute bottom-0 left-0 right-16 z-20" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 56px)" }}>
+      <div className="absolute left-0 right-16 z-20" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 60px)" }}>
         {/* Messages */}
-        <div className="px-3 max-h-[180px] overflow-y-auto scrollbar-hide space-y-1 mask-gradient-top">
-          {chatMessages.slice(-8).map((msg) => (
+        <div className="px-3 max-h-[160px] overflow-y-auto scrollbar-hide space-y-1 mask-gradient-top">
+          {chatMessages.slice(-7).map((msg) => (
             <motion.div
               key={msg.id}
               initial={{ opacity: 0, x: -20 }}
@@ -450,7 +464,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       </div>
 
       {/* ── Chat input bar (bottom) ── */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 px-3 py-2 bg-gradient-to-t from-black/80 to-transparent" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}>
+      <div className="absolute bottom-0 left-0 right-0 z-30 px-3 py-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}>
         <div className="flex items-center gap-2">
           <div className="flex-1 relative">
             <input
@@ -461,6 +475,12 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               className="w-full px-3 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-white/20 border border-white/10"
             />
           </div>
+          <button
+            onClick={() => setShowGiftPanel(true)}
+            className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20"
+          >
+            <Gift className="h-4 w-4 text-white" />
+          </button>
           <button
             onClick={sendChat}
             className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0"
@@ -494,6 +514,12 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   <img src={goldCoinIcon} alt="" className="w-3.5 h-3.5" />
                   <span className="text-amber-300 text-[11px] font-bold">1,250</span>
                 </div>
+                <button
+                  onClick={() => toast.info("Top Up coming soon!", { description: "Purchase Z Coins" })}
+                  className="text-[10px] font-bold text-primary bg-primary/15 rounded-full px-2.5 py-0.5 hover:bg-primary/25 transition-colors"
+                >
+                  + Top Up
+                </button>
               </div>
               <button onClick={() => { setShowGiftPanel(false); setSelectedGift(null); }} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
                 <X className="h-4 w-4 text-white/70" />

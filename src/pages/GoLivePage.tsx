@@ -1581,15 +1581,15 @@ export default function GoLivePage() {
             ))}
           </AnimatePresence>
 
-          {/* ── Right-side stacked gift notification queue (TikTok-style) ── */}
-          <div className="absolute right-2 z-30 flex flex-col gap-2 items-end w-[180px]" style={{ top: "calc(env(safe-area-inset-top, 0px) + 230px)" }}>
+          {/* ── Left-side stacked gift notification queue (TikTok-style) ── */}
+          <div className="absolute left-2 z-30 flex flex-col gap-2 items-start w-[200px]" style={{ top: "calc(env(safe-area-inset-top, 0px) + 180px)" }}>
             <AnimatePresence>
               {giftNotifQueue.map((notif, idx) => (
                 <motion.div
                   key={notif.id}
-                  initial={{ x: 200, opacity: 0, scale: 0.7 }}
+                  initial={{ x: -200, opacity: 0, scale: 0.7 }}
                   animate={{ x: 0, opacity: idx === 0 ? 1 : 0.7 - idx * 0.15, scale: idx === 0 ? 1 : 0.92 - idx * 0.04 }}
-                  exit={{ x: 200, opacity: 0, scale: 0.5 }}
+                  exit={{ x: -200, opacity: 0, scale: 0.5 }}
                   transition={{ type: "spring", damping: 18, stiffness: 220 }}
                   className="w-full"
                 >
