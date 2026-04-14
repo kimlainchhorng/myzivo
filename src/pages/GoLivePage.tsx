@@ -413,8 +413,6 @@ export default function GoLivePage() {
     lastGiftTimeRef.current = now2;
     
     // Combo tracking — same gift within 5s increments combo
-    
-    // Combo tracking — same gift within 5s increments combo
     const now = Date.now();
     let newCombo = 1;
     if (lastGiftRef.current.name === gift.name && now - lastGiftRef.current.time < 5000) {
