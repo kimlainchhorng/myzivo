@@ -429,7 +429,7 @@ export default function GoLivePage() {
   // ── Ended screen ──
   if (phase === "ended") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-zinc-900 via-black to-zinc-900 flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-gradient-to-b from-zinc-900 via-black to-zinc-900 flex flex-col items-center p-6 pt-12 pb-10 text-center overflow-y-auto">
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", damping: 20 }} className="space-y-6 w-full max-w-sm">
           {/* Animated success icon */}
           <div className="relative mx-auto w-24 h-24">
@@ -481,7 +481,7 @@ export default function GoLivePage() {
             <div className="flex items-center justify-between">
               <span className="text-xs text-white/50">Engagement Rate</span>
               <span className="text-sm font-semibold text-green-400">
-                {peakViewers > 0 ? Math.min(99, Math.round(((likes + giftsReceived) / (peakViewers * Math.max(1, elapsed / 60))) * 100)) : 0}% 📊
+                {peakViewers > 0 ? Math.min(95, Math.round((giftsReceived / peakViewers) * 40 + (likes / Math.max(1, elapsed / 30)) * 5)) : 0}% 📊
               </span>
             </div>
             <div className="flex items-center justify-between">
