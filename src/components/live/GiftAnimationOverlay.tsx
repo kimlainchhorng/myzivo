@@ -23,6 +23,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
   const [animKey, setAnimKey] = useState(0);
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
+  const videoErrorCountRef = useRef(0);
 
   onCompleteRef.current = onComplete;
 
