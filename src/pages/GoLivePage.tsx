@@ -775,9 +775,12 @@ export default function GoLivePage() {
                   <div className="w-10 h-1 rounded-full bg-white/20" />
                 </div>
 
-                {/* Scrolling banner */}
+                {/* Coin balance + Scrolling banner */}
                 <div className="overflow-hidden border-b border-white/5 py-2 px-4 flex items-center gap-3">
-                  <Gift className="h-4 w-4 text-amber-400 shrink-0" />
+                  <div className="flex items-center gap-1 bg-amber-500/15 rounded-full px-2.5 py-1 border border-amber-500/20 shrink-0">
+                    <img src={goldCoinIcon} alt="coins" className="w-4 h-4" />
+                    <span className="text-amber-300 text-[11px] font-bold">{coinsEarned.toLocaleString()}</span>
+                  </div>
                   <div className="overflow-hidden flex-1">
                     <p className="text-xs text-white/40 whitespace-nowrap animate-[marquee_8s_linear_infinite]">
                       Unlock Gifts and Coin rewards with your first purchase &nbsp;&nbsp;&nbsp; Unlock Gifts and Coin rewards with your first purchase
