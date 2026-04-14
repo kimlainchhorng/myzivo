@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import { giftImages } from "@/config/giftIcons";
+import { giftAnimationVideos } from "@/config/giftAnimations";
 
 interface LiveStream {
   id: string;
@@ -56,8 +57,9 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   ]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [showGiftPanel, setShowGiftPanel] = useState(false);
-  const [selectedGift, setSelectedGift] = useState<{ icon: string; name: string; coins: number } | null>(null);
+  const [selectedGift, setSelectedGift] = useState<{ icon: string; name: string; coins: number; badge?: string; bg?: string } | null>(null);
   const [giftQty, setGiftQty] = useState(1);
+  const [giftTab, setGiftTab] = useState<"gifts" | "interactive" | "exclusive">("gifts");
   const [floatingReactions, setFloatingReactions] = useState<{ id: string; emoji: string; x: number }[]>([]);
   const [viewerCount, setViewerCount] = useState(stream.viewer_count || Math.floor(Math.random() * 500) + 50);
   const [likes, setLikes] = useState(0);
@@ -95,20 +97,47 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const pinnedMessage = useMemo(() => `Welcome to ${stream.host_name}'s stream! Be respectful and have fun 🎉`, [stream.host_name]);
   const quickReactions = useMemo(() => ["❤️", "🔥", "😍", "👏", "😂"], []);
 
-  const giftCatalog = useMemo(() => [
-    { icon: "rose", name: "Rose", coins: 1 },
-    { icon: "heart_lollipop", name: "Heart Lollipop", coins: 5 },
-    { icon: "doughnut", name: "Doughnut", coins: 10 },
-    { icon: "crown", name: "Crown", coins: 50 },
-    { icon: "rocket", name: "Rocket", coins: 100 },
-    { icon: "diamond", name: "Diamond", coins: 200 },
-    { icon: "lion", name: "Lion", coins: 500 },
-    { icon: "sports_car", name: "Sports Car", coins: 1000 },
-    { icon: "castle", name: "Castle", coins: 2000 },
-    { icon: "planet", name: "Planet", coins: 5000 },
-    { icon: "universe", name: "Universe", coins: 10000 },
-    { icon: "galaxy", name: "Galaxy", coins: 20000 },
-  ], []);
+  const allGifts = useMemo(() => ({
+    gifts: [
+      { icon: "🐉", name: "Baby Dragon", coins: 1, badge: "Popular", bg: "from-orange-400 to-red-400" },
+      { icon: "🐼", name: "Cute Panda", coins: 1, bg: "from-green-300 to-emerald-300" },
+      { icon: "🐍", name: "King Cobra", coins: 5, bg: "from-purple-400 to-violet-400" },
+      { icon: "🦄", name: "Crystal Unicorn", coins: 10, bg: "from-pink-300 to-fuchsia-300" },
+      { icon: "🔥", name: "Phoenix Rising", coins: 50, badge: "NEW", bg: "from-orange-500 to-red-500" },
+      { icon: "💎", name: "Diamond Bear", coins: 99, bg: "from-sky-200 to-blue-200" },
+      { icon: "🐱", name: "Lucky Cat", coins: 1, bg: "from-amber-200 to-yellow-200" },
+      { icon: "🐺", name: "Mystic Wolf", coins: 30, bg: "from-blue-300 to-indigo-300" },
+      { icon: "🦋", name: "Rainbow Butterfly", coins: 5, bg: "from-violet-300 to-pink-300" },
+      { icon: "🐯", name: "Thunder Tiger", coins: 199, bg: "from-amber-400 to-orange-400" },
+      { icon: "🦊", name: "Star Fox", coins: 10, bg: "from-orange-300 to-amber-300" },
+      { icon: "🐧", name: "Ice Penguin", coins: 5, bg: "from-cyan-200 to-sky-200" },
+      { icon: "🐰", name: "Magic Rabbit", coins: 15, bg: "from-purple-300 to-indigo-300" },
+      { icon: "🐬", name: "Neon Dolphin", coins: 30, bg: "from-blue-400 to-cyan-400" },
+      { icon: "🐍", name: "Snake Dance", coins: 20, bg: "from-green-400 to-lime-400" },
+      { icon: "🐉", name: "Fire Dragon", coins: 299, badge: "Interaction", bg: "from-red-500 to-orange-500" },
+    ],
+    interactive: [
+      { icon: "🐼", name: "Panda Party", coins: 100, badge: "NEW", bg: "from-green-300 to-teal-300" },
+      { icon: "🏎️", name: "Luxury Lambo", coins: 2000, bg: "from-red-500 to-rose-500" },
+      { icon: "🏎️", name: "Gold Ferrari", coins: 3000, bg: "from-yellow-400 to-amber-400" },
+      { icon: "🚗", name: "Rolls Royce", coins: 5000, badge: "Luxury", bg: "from-gray-200 to-slate-200" },
+      { icon: "💎", name: "Diamond Rain", coins: 1500, bg: "from-sky-300 to-blue-300" },
+      { icon: "🪙", name: "Gold Fountain", coins: 999, bg: "from-yellow-300 to-amber-300" },
+      { icon: "🐉", name: "Treasure Dragon", coins: 2500, bg: "from-green-400 to-emerald-400" },
+      { icon: "🚁", name: "Gold Helicopter", coins: 3500, bg: "from-amber-400 to-yellow-400" },
+      { icon: "🦢", name: "Sapphire Swan", coins: 699, bg: "from-blue-200 to-sky-200" },
+      { icon: "🦅", name: "Emerald Eagle", coins: 1200, bg: "from-green-500 to-emerald-500" },
+      { icon: "👑", name: "Royal Crown", coins: 888, bg: "from-yellow-400 to-amber-500" },
+      { icon: "🐼", name: "Platinum Panda", coins: 1999, bg: "from-gray-300 to-slate-300" },
+    ],
+    exclusive: [
+      { icon: "🐆", name: "Black Panther", coins: 4999, badge: "NEW", bg: "from-purple-900 to-indigo-900" },
+      { icon: "🏎️", name: "Bugatti", coins: 9999, badge: "Luxury", bg: "from-blue-500 to-cyan-500" },
+      { icon: "🐉", name: "Diamond Dragon", coins: 15000, bg: "from-sky-300 to-blue-300" },
+      { icon: "🛥️", name: "Luxury Yacht", coins: 19999, bg: "from-blue-400 to-indigo-400" },
+      { icon: "🏝️", name: "Private Island", coins: 29999, badge: "Ultimate", bg: "from-green-400 to-teal-400" },
+    ],
+  }), []);
 
   const fakeViewerNames = useMemo(() => ["Luna ✨", "Kai 🔥", "Mia 💜", "Nora 🌸", "Zara 💎", "Leo 🦁", "Aria 🎵", "Alex 🎮", "Jordan 🏀", "Sam 🌊"], []);
 
@@ -166,7 +195,8 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     const interval = setInterval(() => {
       if (Math.random() < 0.3) {
         const sender = fakeViewerNames[Math.floor(Math.random() * fakeViewerNames.length)];
-        const gift = giftCatalog[Math.floor(Math.random() * 4)];
+        const giftPool = allGifts.gifts;
+        const gift = giftPool[Math.floor(Math.random() * 4)];
         const notif = { id: Date.now().toString(), sender, giftName: gift.name, coins: gift.coins, icon: gift.icon };
         setGiftNotifQueue(prev => [...prev.slice(-2), notif]);
         // Update top gifters
@@ -183,7 +213,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       }
     }, 5000);
     return () => clearInterval(interval);
-  }, [fakeViewerNames, giftCatalog]);
+  }, [fakeViewerNames, allGifts]);
 
   // Simulate super chats from viewers
   useEffect(() => {
@@ -407,8 +437,8 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 <p className="text-[10px] text-amber-300 font-bold">sent {notif.giftName}</p>
               </div>
               <div className="w-7 h-7 flex items-center justify-center">
-                {giftImages[notif.icon] ? (
-                  <img src={giftImages[notif.icon]} alt="" className="w-6 h-6 object-contain" />
+                {giftImages[notif.giftName] ? (
+                  <img src={giftImages[notif.giftName]} alt="" className="w-6 h-6 object-contain" />
                 ) : (
                   <span className="text-base">🎁</span>
                 )}
@@ -677,105 +707,169 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="absolute bottom-0 left-0 right-0 z-50 bg-zinc-900/95 backdrop-blur-xl rounded-t-3xl border-t border-white/10"
-            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
+            className="absolute bottom-0 left-0 right-0 z-50 bg-zinc-900/98 backdrop-blur-xl rounded-t-3xl border-t border-white/10"
+            style={{ maxHeight: "55vh", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
           >
             {/* Handle */}
-            <div className="flex justify-center pt-2 pb-1">
+            <div className="flex justify-center py-2">
               <div className="w-10 h-1 rounded-full bg-white/20" />
             </div>
 
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 pb-2">
-              <div className="flex items-center gap-2">
-                <h3 className="text-white font-bold text-sm">Send Gift</h3>
-                <div className="flex items-center gap-1 bg-amber-500/20 rounded-full px-2 py-0.5">
-                  <img src={goldCoinIcon} alt="" className="w-3.5 h-3.5" />
+            {/* Header with coin balance */}
+            <div className="overflow-hidden border-b border-white/5 py-2 px-4 flex items-center gap-3">
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1 bg-amber-500/15 rounded-full px-2.5 py-1 border border-amber-500/20">
+                  <img src={goldCoinIcon} alt="coins" className="w-4 h-4" />
                   <span className="text-amber-300 text-[11px] font-bold">1,250</span>
                 </div>
                 <button
                   onClick={() => toast.info("Top Up coming soon!", { description: "Purchase Z Coins" })}
-                  className="text-[10px] font-bold text-primary bg-primary/15 rounded-full px-2.5 py-0.5 hover:bg-primary/25 transition-colors"
+                  className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 active:scale-90 transition-transform"
                 >
-                  + Top Up
+                  <span className="text-amber-300 text-xs font-bold leading-none">+</span>
                 </button>
               </div>
-              <button onClick={() => { setShowGiftPanel(false); setSelectedGift(null); }} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                <X className="h-4 w-4 text-white/70" />
+              <div className="overflow-hidden flex-1">
+                <p className="text-xs text-white/40 whitespace-nowrap animate-[marquee_8s_linear_infinite]">
+                  ✨ Send gifts to support your favorite creators! &nbsp;&nbsp;&nbsp; ✨ Send gifts to support your favorite creators!
+                </p>
+              </div>
+              <button onClick={() => { setShowGiftPanel(false); setSelectedGift(null); }} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                <X className="h-3.5 w-3.5 text-white/60" />
               </button>
             </div>
 
             {/* Gift grid */}
-            <div className="grid grid-cols-4 gap-2 px-4 py-2 max-h-[200px] overflow-y-auto scrollbar-hide">
-              {giftCatalog.map((gift) => (
-                <button
-                  key={gift.icon}
-                  onClick={() => setSelectedGift(gift)}
-                  className={cn(
-                    "flex flex-col items-center gap-1 p-2 rounded-xl transition-all",
-                    selectedGift?.icon === gift.icon ? "bg-primary/20 ring-1 ring-primary scale-105" : "bg-white/5 hover:bg-white/10"
-                  )}
-                >
-                  <div className="w-10 h-10 flex items-center justify-center">
-                    {giftImages[gift.icon] ? (
-                      <img src={giftImages[gift.icon]} alt={gift.name} className="w-9 h-9 object-contain" />
-                    ) : (
-                      <span className="text-2xl">🎁</span>
+            <div className="overflow-y-auto px-2 py-3" style={{ maxHeight: selectedGift ? "calc(55vh - 210px)" : "calc(55vh - 140px)" }}>
+              <div className="grid grid-cols-4 gap-1.5">
+                {allGifts[giftTab].map((gift) => (
+                  <button
+                    key={gift.name}
+                    onClick={() => { setSelectedGift(selectedGift?.name === gift.name ? null : gift); setGiftQty(1); }}
+                    className={cn(
+                      "relative flex flex-col items-center gap-0.5 py-2.5 px-1 rounded-xl transition-all",
+                      selectedGift?.name === gift.name
+                        ? "bg-amber-500/15 ring-2 ring-amber-500/40 scale-105"
+                        : "hover:bg-white/5 active:scale-90"
                     )}
-                  </div>
-                  <p className="text-[10px] text-white/70 truncate w-full text-center">{gift.name}</p>
-                  <div className="flex items-center gap-0.5">
-                    <img src={goldCoinIcon} alt="" className="w-2.5 h-2.5" />
-                    <span className="text-[9px] text-amber-300 font-bold">{gift.coins.toLocaleString()}</span>
-                  </div>
-                </button>
-              ))}
+                  >
+                    {gift.badge && (
+                      <span className={cn(
+                        "absolute top-1 right-1 text-[7px] font-bold px-1.5 py-0.5 rounded-full z-10",
+                        gift.badge === "Popular" ? "bg-pink-500 text-white" :
+                        gift.badge === "NEW" ? "bg-red-500 text-white" :
+                        gift.badge === "Ultimate" ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-white" :
+                        "bg-blue-500/80 text-white"
+                      )}>
+                        {gift.badge}
+                      </span>
+                    )}
+                    <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br overflow-hidden relative", gift.bg)}>
+                      {giftImages[gift.name] ? (
+                        <img src={giftImages[gift.name]} alt={gift.name} className="w-10 h-10 object-contain" loading="lazy" />
+                      ) : (
+                        <span className="text-3xl">{gift.icon}</span>
+                      )}
+                      {giftAnimationVideos[gift.name] && (
+                        <span className="absolute bottom-0.5 left-0.5 text-[7px] bg-black/50 text-white/80 px-1 py-0.5 rounded-md font-bold backdrop-blur-sm">🎬</span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-white/70 truncate w-full text-center leading-tight mt-0.5">{gift.name}</span>
+                    <div className="flex items-center gap-0.5">
+                      <img src={goldCoinIcon} alt="coin" className="w-3 h-3 object-contain" loading="lazy" />
+                      <span className="text-[10px] text-yellow-400 font-semibold">{gift.coins.toLocaleString()}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Send bar */}
-            {selectedGift && (
-              <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="mx-4 mt-2 mb-2 flex items-center gap-2 bg-white/5 rounded-xl p-2"
-              >
-                <div className="w-8 h-8 flex items-center justify-center">
-                  {giftImages[selectedGift.icon] ? (
-                    <img src={giftImages[selectedGift.icon]} alt="" className="w-7 h-7 object-contain" />
-                  ) : (
-                    <span className="text-xl">🎁</span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-white font-bold">{selectedGift.name}</p>
-                  <div className="flex items-center gap-0.5">
-                    <img src={goldCoinIcon} alt="" className="w-2.5 h-2.5" />
-                    <span className="text-[10px] text-amber-300">{(selectedGift.coins * giftQty).toLocaleString()}</span>
-                  </div>
-                </div>
-                {/* Qty */}
-                <div className="flex items-center gap-1 bg-white/10 rounded-lg px-1">
-                  {[1, 5, 10, 99].map((q) => (
+            {/* Selected gift send bar */}
+            <AnimatePresence>
+              {selectedGift && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden border-t border-white/10"
+                >
+                  <div className="flex items-center gap-2 px-4 py-2.5">
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br overflow-hidden shrink-0", selectedGift.coins >= 100 ? "from-amber-400 to-orange-500" : "from-violet-400 to-purple-500")}>
+                      {giftImages[selectedGift.name] ? (
+                        <img src={giftImages[selectedGift.name]} alt="" className="w-7 h-7 object-contain" />
+                      ) : (
+                        <span className="text-xl">{selectedGift.icon}</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-xs font-semibold truncate">{selectedGift.name}</p>
+                      <div className="flex items-center gap-1">
+                        <img src={goldCoinIcon} alt="" className="w-3 h-3" />
+                        <span className="text-amber-300 text-[11px] font-bold">{(selectedGift.coins * giftQty).toLocaleString()}</span>
+                        {selectedGift.coins >= 500 && (
+                          <span className="text-[9px] text-red-400 font-medium ml-1">Premium</span>
+                        )}
+                      </div>
+                    </div>
+                    {/* Quantity selector */}
+                    <div className="flex gap-1 shrink-0">
+                      {[1, 5, 10, 99].map((q) => (
+                        <button
+                          key={q}
+                          onClick={() => setGiftQty(q)}
+                          className={cn(
+                            "w-8 h-7 rounded-lg text-[10px] font-bold transition-all",
+                            giftQty === q
+                              ? "bg-amber-500/30 text-amber-300 border border-amber-500/40"
+                              : "bg-white/5 text-white/40 border border-white/10"
+                          )}
+                        >
+                          x{q}
+                        </button>
+                      ))}
+                    </div>
                     <button
-                      key={q}
-                      onClick={() => setGiftQty(q)}
+                      onClick={sendGift}
                       className={cn(
-                        "px-2 py-1 rounded text-[10px] font-bold transition-colors",
-                        giftQty === q ? "bg-primary text-primary-foreground" : "text-white/50 hover:text-white"
+                        "flex items-center gap-1.5 rounded-full px-4 py-2.5 shadow-lg active:scale-90 transition-all shrink-0",
+                        selectedGift.coins >= 500
+                          ? "bg-gradient-to-r from-red-500 to-rose-500 shadow-red-500/25"
+                          : "bg-gradient-to-r from-amber-500 to-yellow-400 shadow-amber-500/25"
                       )}
                     >
-                      x{q}
+                      <Send className="h-3.5 w-3.5 text-white" />
+                      <span className="text-white text-xs font-bold">
+                        {giftQty > 1 ? `x${giftQty}` : selectedGift.coins >= 500 ? "Send!" : "Send"}
+                      </span>
                     </button>
-                  ))}
-                </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Bottom tabs */}
+            <div className="flex items-center border-t border-white/10 px-2 py-2 gap-1">
+              {(["gifts", "interactive", "exclusive"] as const).map((tab) => (
                 <button
-                  onClick={sendGift}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold shadow-lg"
+                  key={tab}
+                  onClick={() => { setGiftTab(tab); setSelectedGift(null); }}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors",
+                    giftTab === tab ? "text-white bg-white/10" : "text-white/40"
+                  )}
                 >
-                  Send
+                  {tab === "gifts" ? "🎁 Gifts" : tab === "interactive" ? "⚡ Interactive" : "👑 Exclusive"}
                 </button>
-              </motion.div>
-            )}
+              ))}
+              <div className="flex-1" />
+              <button
+                onClick={() => toast.info("Top Up coming soon!", { description: "Purchase Z Coins" })}
+                className="flex items-center gap-1.5 bg-gradient-to-r from-amber-600 to-yellow-500 rounded-full px-3.5 py-1.5 shadow-lg shadow-amber-500/20 active:scale-95 transition-transform"
+              >
+                <img src={goldCoinIcon} alt="" className="w-4 h-4" />
+                <span className="text-[11px] text-white font-bold">Recharge</span>
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
