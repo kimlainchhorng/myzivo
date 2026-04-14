@@ -536,6 +536,32 @@ export default function GoLivePage() {
             </div>
           )}
 
+          {/* Share prompt */}
+          {shareCount === 0 && (
+            <div className="bg-white/5 rounded-2xl p-3 border border-white/10 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-500/15 flex items-center justify-center shrink-0">
+                <Share2 className="h-5 w-5 text-blue-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white text-xs font-semibold">Share your stream highlights!</p>
+                <p className="text-white/40 text-[10px]">Let your audience know about your next stream</p>
+              </div>
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({ title: `Watch ${title} on ZIVO Live!`, url: window.location.origin + "/live" }).catch(() => {});
+                  } else {
+                    navigator.clipboard?.writeText(window.location.origin + "/live");
+                    toast.success("Link copied!");
+                  }
+                }}
+                className="px-3 py-1.5 rounded-full bg-blue-500 text-white text-[11px] font-bold shrink-0 active:scale-95 transition-transform"
+              >
+                Share
+              </button>
+            </div>
+          )}
+
           <div className="flex gap-3 pt-2">
             <Button variant="outline" onClick={() => navigate("/live")} className="rounded-full flex-1 border-white/20 text-white hover:bg-white/10">
               Back to Live
@@ -543,7 +569,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); lastMilestoneRef.current = 0; startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -570,9 +596,11 @@ export default function GoLivePage() {
                 <p className="text-white/50 text-sm font-medium">Camera unavailable</p>
                 <p className="text-white/30 text-xs mt-1">Check permissions or try another device</p>
               </div>
-              <Button size="sm" variant="outline" onClick={startCamera} className="text-white border-white/20 rounded-full">
-                <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Retry
-              </Button>
+              {phase === "setup" && (
+                <Button size="sm" variant="outline" onClick={startCamera} className="text-white border-white/20 rounded-full">
+                  <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Retry
+                </Button>
+              )}
             </div>
           </div>
         ) : (
@@ -1272,9 +1300,16 @@ export default function GoLivePage() {
                 <Radio className="h-6 w-6 text-red-400" />
               </div>
               <h3 className="text-white text-lg font-bold text-center">End Stream?</h3>
-              <p className="text-white/50 text-sm text-center mt-1.5 mb-5">
-                You have {viewerCount} viewers watching. Are you sure you want to end?
+              <p className="text-white/50 text-sm text-center mt-1.5">
+                You have {viewerCount} viewers watching.
               </p>
+              {coinsEarned > 0 && (
+                <div className="flex items-center justify-center gap-1.5 mt-2 mb-3">
+                  <img src={goldCoinIcon} alt="" className="w-4 h-4" />
+                  <span className="text-amber-300 text-sm font-bold">{coinsEarned} Z Coins earned</span>
+                </div>
+              )}
+              <p className="text-white/30 text-xs text-center mb-5">Are you sure you want to end?</p>
               <div className="flex gap-3">
                 <Button
                   onClick={() => setShowEndConfirm(false)}
