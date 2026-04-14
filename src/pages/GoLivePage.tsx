@@ -5,8 +5,9 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
-import { playGiftSound, playPremiumGiftSound } from "@/utils/giftSounds";
+import { playGiftSound, playPremiumGiftSound, playLegendaryGiftSound } from "@/utils/giftSounds";
 import { giftAnimationVideos } from "@/config/giftAnimations";
+import { giftCatalog, getLevelColor, getLevelBg, type GiftItem } from "@/config/giftCatalog";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
