@@ -1174,6 +1174,51 @@ export default function GoLivePage() {
         )}
       </AnimatePresence>
 
+      {/* End stream confirmation dialog */}
+      <AnimatePresence>
+        {showEndConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+            onClick={() => setShowEndConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: "spring", damping: 22 }}
+              className="bg-zinc-900 rounded-3xl p-6 mx-6 max-w-sm w-full border border-white/10 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-14 h-14 rounded-full bg-red-500/15 flex items-center justify-center mx-auto mb-4">
+                <Radio className="h-6 w-6 text-red-400" />
+              </div>
+              <h3 className="text-white text-lg font-bold text-center">End Stream?</h3>
+              <p className="text-white/50 text-sm text-center mt-1.5 mb-5">
+                You have {viewerCount} viewers watching. Are you sure you want to end?
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowEndConfirm(false)}
+                  variant="outline"
+                  className="flex-1 rounded-2xl border-white/20 text-white hover:bg-white/10"
+                >
+                  Keep Going
+                </Button>
+                <Button
+                  onClick={endStream}
+                  className="flex-1 rounded-2xl bg-red-500 hover:bg-red-600 text-white"
+                >
+                  End Stream
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Full-screen gift animation overlay */}
       <GiftAnimationOverlay
         activeGift={activeGiftAnim}
