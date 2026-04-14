@@ -122,6 +122,12 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     return () => clearInterval(interval);
   }, []);
 
+  // Stream elapsed timer
+  useEffect(() => {
+    const interval = setInterval(() => setElapsed(prev => prev + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Simulate gift notifications from other viewers
   useEffect(() => {
     const interval = setInterval(() => {
@@ -130,6 +136,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         const gift = giftCatalog[Math.floor(Math.random() * 4)];
         const notif = { id: Date.now().toString(), sender, giftName: gift.name, coins: gift.coins, icon: gift.icon };
         setGiftNotifQueue(prev => [...prev.slice(-2), notif]);
+        // Update top gifters
+        setTopGifters(prev => {
+          const existing = prev.find(g => g.name === sender);
+          if (existing) {
+            return prev.map(g => g.name === sender ? { ...g, coins: g.coins + gift.coins } : g).sort((a, b) => b.coins - a.coins);
+          }
+          return [...prev, { name: sender, coins: gift.coins }].sort((a, b) => b.coins - a.coins).slice(0, 3);
+        });
         setTimeout(() => {
           setGiftNotifQueue(prev => prev.filter(n => n.id !== notif.id));
         }, 3000);
