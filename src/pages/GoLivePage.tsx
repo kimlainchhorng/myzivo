@@ -68,6 +68,7 @@ import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
 import Coins from "lucide-react/dist/esm/icons/coins";
 import CircleDot from "lucide-react/dist/esm/icons/circle-dot";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
+import PartyPopper from "lucide-react/dist/esm/icons/party-popper";
 import { ReactionIcon, MedalIcon, QUICK_REACTIONS } from "@/utils/reactionIcons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
