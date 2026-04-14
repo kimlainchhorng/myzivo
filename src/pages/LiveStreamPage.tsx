@@ -208,16 +208,53 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     return "from-zinc-400 to-zinc-500";
   };
 
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  };
+
+  const handleDoubleTap = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      // Double tap detected
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const clientX = "touches" in e ? e.touches[0]?.clientX ?? rect.width / 2 : (e as React.MouseEvent).clientX;
+      const clientY = "touches" in e ? e.touches[0]?.clientY ?? rect.height / 2 : (e as React.MouseEvent).clientY;
+      const heart = { id: Date.now().toString(), x: clientX - rect.left, y: clientY - rect.top };
+      setDoubleTapHeart(heart);
+      sendReaction("❤️");
+      setTimeout(() => setDoubleTapHeart(null), 1000);
+    }
+    lastTapRef.current = now;
+  }, [sendReaction]);
+
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
-      {/* Full-screen video background */}
-      <div className="absolute inset-0">
+      {/* Full-screen video background — double tap to like */}
+      <div className="absolute inset-0" onClick={handleDoubleTap} onTouchEnd={handleDoubleTap}>
         <div className="absolute inset-0 bg-gradient-to-br from-violet-900/80 via-black to-rose-900/60" />
         <div className="absolute top-1/4 left-1/3 w-60 h-60 bg-primary/15 rounded-full blur-[80px] animate-pulse" />
         <div className="absolute bottom-1/3 right-1/4 w-48 h-48 bg-rose-500/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: "1.5s" }} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[120px] opacity-20 select-none">
           {stream.thumbnail_emoji}
         </div>
+        {/* Double-tap heart animation */}
+        <AnimatePresence>
+          {doubleTapHeart && (
+            <motion.div
+              key={doubleTapHeart.id}
+              initial={{ scale: 0, opacity: 1 }}
+              animate={{ scale: 1.5, opacity: 0, y: -60 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="absolute text-5xl pointer-events-none z-40"
+              style={{ left: doubleTapHeart.x - 24, top: doubleTapHeart.y - 24 }}
+            >
+              ❤️
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* ── Top bar (overlay) ── */}
