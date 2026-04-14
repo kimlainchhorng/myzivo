@@ -70,6 +70,8 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   ]);
   const [elapsed, setElapsed] = useState(0);
   const [doubleTapHeart, setDoubleTapHeart] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [showRanking, setShowRanking] = useState(false);
+  const [superChatMsg, setSuperChatMsg] = useState<{ id: string; user: string; text: string; coins: number } | null>(null);
   const lastTapRef = useRef<number>(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const pinnedMessage = useMemo(() => `Welcome to ${stream.host_name}'s stream! Be respectful and have fun 🎉`, [stream.host_name]);
