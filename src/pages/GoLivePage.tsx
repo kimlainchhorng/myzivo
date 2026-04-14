@@ -640,6 +640,15 @@ export default function GoLivePage() {
               <span className="text-amber-300 text-sm font-semibold">View Wallet & Earnings</span>
             </button>
           )}
+
+          {/* Schedule Next Stream */}
+          <button
+            onClick={() => toast("📅 Stream scheduling coming soon!", { description: "Set a time and notify your followers automatically." })}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-white/5 border border-white/10 active:scale-[0.98] transition-transform"
+          >
+            <CalendarPlus className="h-4 w-4 text-blue-400" />
+            <span className="text-white/70 text-sm font-medium">Schedule Next Stream</span>
+          </button>
         </motion.div>
       </div>
     );
@@ -874,6 +883,17 @@ export default function GoLivePage() {
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium bg-zinc-800 text-zinc-500 border border-zinc-700/50 hover:text-zinc-400 transition-all"
                   >
                     <Shield className="h-3 w-3" /> Private
+                  </button>
+                  <button
+                    onClick={() => { setAutoThank((p) => !p); toast(autoThank ? "Auto-thank disabled" : "Auto-thank enabled ❤️", { duration: 1500 }); }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all border",
+                      autoThank
+                        ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                        : "bg-zinc-800 text-zinc-500 border-zinc-700/50 hover:text-zinc-400"
+                    )}
+                  >
+                    <Heart className="h-3 w-3" /> Thank
                   </button>
                 </div>
               </div>
