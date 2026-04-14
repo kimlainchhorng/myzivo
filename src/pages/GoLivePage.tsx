@@ -137,6 +137,22 @@ export default function GoLivePage() {
   // ── NEW: Combo multiplier text ──
   const [comboMultiplierText, setComboMultiplierText] = useState<{ text: string; id: string } | null>(null);
 
+  // ── NEW v3: Gift Streak Counter ──
+  const [giftStreakCount, setGiftStreakCount] = useState(0);
+  const giftStreakTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── NEW v3: Super Chat ──
+  const [superChat, setSuperChat] = useState<{ user: string; text: string; coins: number; id: string } | null>(null);
+
+  // ── NEW v3: Milestone Celebrations ──
+  const [milestoneEffect, setMilestoneEffect] = useState<"confetti" | "firework" | null>(null);
+
+  // ── NEW v3: Wave animation ──
+  const [waveActive, setWaveActive] = useState(false);
+
+  // ── NEW v3: Chat Trending Words ──
+  const [trendingWord, setTrendingWord] = useState<string | null>(null);
+
   const cameraFilters: Record<string, string> = useMemo(() => ({
     none: "",
     warm: "sepia(0.25) saturate(1.3) brightness(1.05)",
@@ -428,12 +444,16 @@ export default function GoLivePage() {
             ]);
           }, 1500);
         }
-        // Gift streak flash
+        // Gift streak flash + counter
         const now = Date.now();
         if (now - lastGiftTimeRef.current < 8000) {
           setGiftStreakFlash(true);
           setTimeout(() => setGiftStreakFlash(false), 1500);
         }
+        // ── NEW: Gift Streak Counter ──
+        setGiftStreakCount((p) => p + 1);
+        if (giftStreakTimerRef.current) clearTimeout(giftStreakTimerRef.current);
+        giftStreakTimerRef.current = setTimeout(() => setGiftStreakCount(0), 10000);
         lastGiftTimeRef.current = now;
         setTimeout(() => setViewerGiftNotif((cur) => cur?.id === notif.id ? null : cur), 4000);
         scheduleNext();
@@ -512,16 +532,83 @@ export default function GoLivePage() {
     setTimeout(() => setFloatingReactions((prev) => prev.filter((r) => r.id !== id)), 2500);
   }, []);
 
-  // Goal celebration
+  // Goal celebration + milestone effects
   useEffect(() => {
     if (coinsEarned >= streamGoal && !goalCelebrated) {
       setGoalCelebrated(true);
       toast.success("🎉 Stream goal reached! Amazing!", { duration: 5000 });
+      setMilestoneEffect("confetti");
+      setTimeout(() => setMilestoneEffect(null), 4000);
       ["🎉", "🥳", "✨", "🎊", "💎"].forEach((e, i) => {
         setTimeout(() => spawnFloatingReaction(e), i * 200);
       });
     }
   }, [coinsEarned, streamGoal, goalCelebrated, spawnFloatingReaction]);
+
+  // ── NEW: Super Chat simulation (random viewer sends highlighted message) ──
+  useEffect(() => {
+    if (phase !== "live") return;
+    const superChatMsgs = [
+      { text: "You're the BEST streamer! 🌟", coins: 50 },
+      { text: "Keep going! Love from Brazil 🇧🇷", coins: 25 },
+      { text: "This stream is FIRE 🔥🔥🔥", coins: 100 },
+      { text: "Happy birthday to me! 🎂", coins: 30 },
+      { text: "First super chat! Am I famous? 😂", coins: 10 },
+    ];
+    const names = ["Luna ✨", "Kai 🔥", "VIP_Star 💎", "Diamond_Alex 👑"];
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      timer = setTimeout(() => {
+        if (Math.random() > 0.5) {
+          const msg = superChatMsgs[Math.floor(Math.random() * superChatMsgs.length)];
+          const name = names[Math.floor(Math.random() * names.length)];
+          setSuperChat({ user: name, text: msg.text, coins: msg.coins, id: Date.now().toString() });
+          setCoinsEarned((p) => p + msg.coins);
+          setChatMessages((prev) => [...prev.slice(-20), { id: `sc-${Date.now()}`, user: name, text: `💬 SUPER CHAT: ${msg.text}`, isGift: true, avatar: "bg-amber-500" }]);
+          setTimeout(() => setSuperChat(null), 6000);
+        }
+        schedule();
+      }, 45000 + Math.random() * 35000);
+    };
+    schedule();
+    return () => clearTimeout(timer);
+  }, [phase]);
+
+  // ── NEW: Trending words detection from chat ──
+  useEffect(() => {
+    if (phase !== "live" || chatMessages.length < 5) return;
+    const words: Record<string, number> = {};
+    const recent = chatMessages.slice(-10);
+    for (const msg of recent) {
+      if (msg.isSystem || msg.isGift) continue;
+      const tokens = msg.text.toLowerCase().split(/\s+/).filter((w) => w.length > 2 && !["the", "and", "you", "this", "are", "for", "was"].includes(w));
+      for (const t of tokens) words[t] = (words[t] || 0) + 1;
+    }
+    const top = Object.entries(words).sort(([, a], [, b]) => b - a)[0];
+    if (top && top[1] >= 2) {
+      setTrendingWord(top[0]);
+    } else {
+      setTrendingWord(null);
+    }
+  }, [chatMessages, phase]);
+
+  // ── NEW: Wave animation trigger (simulated) ──
+  useEffect(() => {
+    if (phase !== "live") return;
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      timer = setTimeout(() => {
+        if (viewerCount >= 3 && Math.random() > 0.7) {
+          setWaveActive(true);
+          setChatMessages((prev) => [...prev.slice(-20), { id: `wave-${Date.now()}`, user: "🌊", text: "Viewers started a WAVE! 👋👋👋", isSystem: true }]);
+          setTimeout(() => setWaveActive(false), 3000);
+        }
+        schedule();
+      }, 50000 + Math.random() * 40000);
+    };
+    schedule();
+    return () => clearTimeout(timer);
+  }, [phase, viewerCount]);
 
   // ── PK Battle simulation ──
   useEffect(() => {
@@ -806,7 +893,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); setPkBattle(null); setTreasureChest(null); setCoHosts([]); setShowGuestInvite(false); setVipEntrance(null); setMutedUsers(new Set()); setActiveSticker(null); setShowStickerPanel(false); setClipSaved(false); setShowRevenueDash(false); setShowTop3Banner(true); setComboMultiplierText(null); lastMilestoneRef.current = 0; startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); setPkBattle(null); setTreasureChest(null); setCoHosts([]); setShowGuestInvite(false); setVipEntrance(null); setMutedUsers(new Set()); setActiveSticker(null); setShowStickerPanel(false); setClipSaved(false); setShowRevenueDash(false); setShowTop3Banner(true); setComboMultiplierText(null); setGiftStreakCount(0); setSuperChat(null); setMilestoneEffect(null); setWaveActive(false); setTrendingWord(null); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -2267,6 +2354,115 @@ export default function GoLivePage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── NEW v3: Gift Streak Counter ── */}
+      <AnimatePresence>
+        {phase === "live" && giftStreakCount >= 2 && (
+          <motion.div
+            key={`streak-${giftStreakCount}`}
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.5, opacity: 0 }}
+            className="fixed left-4 z-50 pointer-events-none"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 200px)" }}
+          >
+            <div className="flex items-center gap-2 bg-gradient-to-r from-red-600/80 to-orange-500/70 backdrop-blur-md rounded-2xl px-3 py-2 border border-red-400/30 shadow-lg shadow-red-500/30">
+              <motion.span animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 0.4, repeat: Infinity }} className="text-xl">🔥</motion.span>
+              <div>
+                <p className="text-white text-xs font-black">GIFT STREAK</p>
+                <p className="text-amber-200 text-lg font-black leading-none">{giftStreakCount}x</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW v3: Super Chat Overlay ── */}
+      <AnimatePresence>
+        {phase === "live" && superChat && (
+          <motion.div
+            key={superChat.id}
+            initial={{ y: 50, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -30, opacity: 0 }}
+            transition={{ type: "spring", damping: 20 }}
+            className="fixed left-3 right-14 z-50"
+            style={{ bottom: "280px" }}
+          >
+            <div className="rounded-2xl overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(255,180,0,0.9) 0%, rgba(255,120,0,0.85) 100%)", boxShadow: "0 4px 30px rgba(255,150,0,0.4)" }}>
+              <div className="px-3 py-1.5 flex items-center gap-2 border-b border-white/20">
+                <span className="text-white text-[10px] font-black uppercase tracking-wider">💬 Super Chat</span>
+                <span className="text-white/80 text-[10px] font-bold ml-auto flex items-center gap-1"><img src={goldCoinIcon} alt="" className="w-3 h-3" />{superChat.coins}</span>
+              </div>
+              <div className="px-3 py-2">
+                <p className="text-white text-[11px] font-bold">{superChat.user}</p>
+                <p className="text-white text-sm font-semibold mt-0.5">{superChat.text}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW v3: Milestone Confetti/Firework Effect ── */}
+      <AnimatePresence>
+        {phase === "live" && milestoneEffect && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[45] pointer-events-none overflow-hidden"
+          >
+            {Array.from({ length: 20 }).map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ y: -20, x: Math.random() * 400, opacity: 1, scale: 0 }}
+                animate={{ y: 800, opacity: 0, scale: 1, rotate: Math.random() * 720 }}
+                transition={{ duration: 2 + Math.random() * 2, delay: Math.random() * 0.5, ease: "easeOut" }}
+                className="absolute text-2xl"
+              >
+                {["🎉", "🎊", "✨", "⭐", "💛", "🥳", "🎆"][i % 7]}
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW v3: Wave Animation ── */}
+      <AnimatePresence>
+        {phase === "live" && waveActive && (
+          <motion.div
+            initial={{ opacity: 0, x: -100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            className="fixed left-3 right-14 z-50 pointer-events-none"
+            style={{ bottom: "240px" }}
+          >
+            <div className="flex items-center gap-1 justify-center">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <motion.span
+                  key={i}
+                  animate={{ y: [0, -15, 0] }}
+                  transition={{ duration: 0.5, delay: i * 0.1, repeat: 3 }}
+                  className="text-2xl"
+                >
+                  👋
+                </motion.span>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW v3: Trending Word Indicator ── */}
+      {phase === "live" && trendingWord && (
+        <div className="fixed left-3 z-40 pointer-events-none" style={{ top: "calc(env(safe-area-inset-top, 0px) + 195px)" }}>
+          <div className="flex items-center gap-1 bg-blue-500/20 backdrop-blur-sm rounded-full px-2 py-0.5 border border-blue-500/20">
+            <span className="text-[8px]">🔥</span>
+            <span className="text-[8px] text-blue-300 font-bold uppercase">Trending:</span>
+            <span className="text-[9px] text-white/80 font-semibold">{trendingWord}</span>
+          </div>
+        </div>
+      )}
 
       {/* ── NEW: Revenue Mini-Dashboard ── */}
       <AnimatePresence>
