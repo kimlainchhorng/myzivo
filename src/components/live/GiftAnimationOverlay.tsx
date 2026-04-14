@@ -61,6 +61,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
     if (!activeGift) return;
     setVideoReady(false);
     setVideoFailed(false);
+    videoErrorCountRef.current = 0;
     setAnimKey((k) => k + 1);
   }, [activeGift]);
 
