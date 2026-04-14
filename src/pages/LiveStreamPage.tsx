@@ -336,10 +336,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       )}
 
       {/* ── Pinned Message ── */}
-      <div className="relative z-10 px-4 mt-1.5">
-        <div className="flex items-center gap-1.5 bg-primary/15 backdrop-blur-sm rounded-lg px-2.5 py-1.5 max-w-[75%]">
+      <div className="relative z-10 px-3 mt-1.5">
+        <div className="flex items-center gap-1.5 bg-primary/15 backdrop-blur-sm rounded-lg px-2.5 py-1.5 max-w-[90%]">
           <span className="text-[9px] font-bold bg-primary/30 text-primary px-1 py-0.5 rounded shrink-0">PINNED</span>
-          <p className="text-[10px] text-white/80 truncate">{pinnedMessage}</p>
+          <p className="text-[10px] text-white/80 line-clamp-2">{pinnedMessage}</p>
         </div>
       </div>
 
@@ -422,30 +422,33 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       {/* ── Chat overlay (bottom-left) ── */}
       <div className="absolute left-0 right-16 z-20" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 60px)" }}>
         {/* Messages */}
-        <div className="px-3 max-h-[160px] overflow-y-auto scrollbar-hide space-y-1 mask-gradient-top">
-          {chatMessages.slice(-7).map((msg) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className={cn(
-                "inline-flex items-start gap-1.5 px-2 py-1 rounded-lg max-w-[85%]",
-                msg.isSystem ? "bg-primary/20" : msg.isGift ? "bg-amber-500/20" : "bg-black/30 backdrop-blur-sm"
-              )}
-            >
-              {msg.level && !msg.isSystem && (
-                <span className={cn("text-[8px] px-1 py-0.5 rounded font-bold bg-gradient-to-r text-white shrink-0 mt-0.5", getLevelColor(msg.level))}>
-                  Lv.{msg.level}
-                </span>
-              )}
-              <div className="min-w-0">
-                <span className={cn("text-[11px] font-bold mr-1", msg.isSystem ? "text-primary" : msg.isGift ? "text-amber-300" : "text-white/70")}>
-                  {msg.user}
-                </span>
-                <span className="text-[11px] text-white break-words">{msg.text}</span>
-              </div>
-            </motion.div>
-          ))}
+        <div className="px-3 max-h-[160px] overflow-y-auto scrollbar-hide space-y-1 mask-gradient-top flex flex-col">
+          {chatMessages.slice(-7).map((msg) => {
+            const isJoin = msg.isSystem && msg.text.includes("joined");
+            return (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={cn(
+                  "flex items-start gap-1.5 px-2 py-1 rounded-lg max-w-[85%] w-fit",
+                  isJoin ? "bg-green-500/15" : msg.isSystem ? "bg-primary/20" : msg.isGift ? "bg-amber-500/20" : "bg-black/30 backdrop-blur-sm"
+                )}
+              >
+                {msg.level && !msg.isSystem && (
+                  <span className={cn("text-[8px] px-1 py-0.5 rounded font-bold bg-gradient-to-r text-white shrink-0 mt-0.5", getLevelColor(msg.level))}>
+                    Lv.{msg.level}
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <span className={cn("text-[11px] font-bold mr-1", isJoin ? "text-green-300" : msg.isSystem ? "text-primary" : msg.isGift ? "text-amber-300" : "text-white/70")}>
+                    {msg.user}
+                  </span>
+                  <span className={cn("text-[11px] break-words", isJoin ? "text-green-200/70" : "text-white")}>{msg.text}</span>
+                </div>
+              </motion.div>
+            );
+          })}
           <div ref={chatEndRef} />
         </div>
 
@@ -611,7 +614,17 @@ export default function LiveStreamPage() {
   const [filter, setFilter] = useState<"all" | "live" | "scheduled">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: streams = [], isLoading } = useQuery({
+  // Demo streams shown when no DB data
+  const demoStreams: LiveStream[] = useMemo(() => [
+    { id: "demo-1", host_id: "d1", host_name: "Sofia ✨", host_avatar: null, title: "Late Night Chill & Chat 🌙", topic: "Music", viewer_count: 1247, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "🎵" },
+    { id: "demo-2", host_id: "d2", host_name: "Tyler Gaming", host_avatar: null, title: "Ranked Grind — Road to Diamond 💎", topic: "Gaming", viewer_count: 3891, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "🎮" },
+    { id: "demo-3", host_id: "d3", host_name: "Chef Amara", host_avatar: null, title: "Making Pasta from Scratch 🍝", topic: "Cooking", viewer_count: 682, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "🍳" },
+    { id: "demo-4", host_id: "d4", host_name: "Zen Yoga", host_avatar: null, title: "Morning Flow — 30 Min Session", topic: "Fitness", viewer_count: 415, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "💪" },
+    { id: "demo-5", host_id: "d5", host_name: "DJ Pulse", host_avatar: null, title: "House Mix Live from Miami 🌴", topic: "Music", viewer_count: 5200, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "🎵" },
+    { id: "demo-6", host_id: "d6", host_name: "ArtByLuna", host_avatar: null, title: "Painting a Sunset — Oil on Canvas", topic: "Art", viewer_count: 328, status: "scheduled", started_at: new Date(Date.now() + 3600000).toISOString(), thumbnail_emoji: "🎨" },
+  ], []);
+
+  const { data: dbStreams = [], isLoading } = useQuery({
     queryKey: ["live-streams"],
     queryFn: async () => {
       const { data: amaSessions } = await (supabase as any)
@@ -655,6 +668,9 @@ export default function LiveStreamPage() {
     },
     staleTime: 15_000,
   });
+
+  // Use DB streams if available, otherwise show demos
+  const streams = dbStreams.length > 0 ? dbStreams : demoStreams;
 
   const filteredStreams = streams.filter((s) => {
     if (filter === "live" && s.status !== "live") return false;
