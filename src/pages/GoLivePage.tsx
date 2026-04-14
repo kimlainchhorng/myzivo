@@ -965,7 +965,7 @@ export default function GoLivePage() {
 
           {/* Chat messages overlay */}
           {showChat && (
-            <div className="relative px-4 mb-2 max-h-[200px]">
+            <div className="relative pl-4 pr-14 mb-2 max-h-[200px]">
               {/* Gradient fade at top */}
               <div className="absolute top-0 left-4 right-4 h-8 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none rounded-t-2xl" />
               <div className="overflow-y-auto max-h-[200px] space-y-1.5 pointer-events-none scroll-smooth scrollbar-hide">
