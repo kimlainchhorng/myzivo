@@ -100,7 +100,7 @@ export default function GoLivePage() {
   const [chatInput, setChatInput] = useState("");
   const [cameraError, setCameraError] = useState(false);
   const [showGiftPanel, setShowGiftPanel] = useState(false);
-  const [selectedGift, setSelectedGift] = useState<{ icon: string; name: string; coins: number } | null>(null);
+  const [selectedGift, setSelectedGift] = useState<GiftItem | null>(null);
   const [floatingReactions, setFloatingReactions] = useState<{ id: string; emoji: string; x: number }[]>([]);
   const [giftsReceived, setGiftsReceived] = useState(0);
   const [giftTab, setGiftTab] = useState<"gifts" | "interactive" | "exclusive">("gifts");
@@ -233,47 +233,7 @@ export default function GoLivePage() {
     { id: "fire", icon: <Flame className="h-5 w-5 text-orange-400" />, label: "Fire", filter: "drop-shadow(0 0 8px rgba(255,100,0,0.5))" },
   ], []);
 
-  const allGifts = useMemo(() => ({
-    gifts: [
-      { icon: "🐉", name: "Baby Dragon", coins: 1, badge: "Popular", bg: "from-orange-400 to-red-400" },
-      { icon: "🐼", name: "Cute Panda", coins: 1, bg: "from-green-300 to-emerald-300" },
-      { icon: "🐍", name: "King Cobra", coins: 5, bg: "from-purple-400 to-violet-400" },
-      { icon: "🦄", name: "Crystal Unicorn", coins: 10, bg: "from-pink-300 to-fuchsia-300" },
-      { icon: "🔥", name: "Phoenix Rising", coins: 50, badge: "NEW", bg: "from-orange-500 to-red-500" },
-      { icon: "", name: "Diamond Bear", coins: 99, bg: "from-sky-200 to-blue-200" },
-      { icon: "🐱", name: "Lucky Cat", coins: 1, bg: "from-amber-200 to-yellow-200" },
-      { icon: "🐺", name: "Mystic Wolf", coins: 30, bg: "from-blue-300 to-indigo-300" },
-      { icon: "🦋", name: "Rainbow Butterfly", coins: 5, bg: "from-violet-300 to-pink-300" },
-      { icon: "🐯", name: "Thunder Tiger", coins: 199, bg: "from-amber-400 to-orange-400" },
-      { icon: "🦊", name: "Star Fox", coins: 10, bg: "from-orange-300 to-amber-300" },
-      { icon: "🐧", name: "Ice Penguin", coins: 5, bg: "from-cyan-200 to-sky-200" },
-      { icon: "🐰", name: "Magic Rabbit", coins: 15, bg: "from-purple-300 to-indigo-300" },
-      { icon: "🐬", name: "Neon Dolphin", coins: 30, bg: "from-blue-400 to-cyan-400" },
-      { icon: "🐍", name: "Snake Dance", coins: 20, bg: "from-green-400 to-lime-400" },
-      { icon: "🐉", name: "Fire Dragon", coins: 299, badge: "Interaction", bg: "from-red-500 to-orange-500" },
-    ],
-    interactive: [
-      { icon: "🐼", name: "Panda Party", coins: 100, badge: "NEW", bg: "from-green-300 to-teal-300" },
-      { icon: "🏎️", name: "Luxury Lambo", coins: 2000, bg: "from-red-500 to-rose-500" },
-      { icon: "🏎️", name: "Gold Ferrari", coins: 3000, bg: "from-yellow-400 to-amber-400" },
-      { icon: "🚗", name: "Rolls Royce", coins: 5000, badge: "Luxury", bg: "from-gray-200 to-slate-200" },
-      { icon: "", name: "Diamond Rain", coins: 1500, bg: "from-sky-300 to-blue-300" },
-      { icon: "🪙", name: "Gold Fountain", coins: 999, bg: "from-yellow-300 to-amber-300" },
-      { icon: "🐉", name: "Treasure Dragon", coins: 2500, bg: "from-green-400 to-emerald-400" },
-      { icon: "🚁", name: "Gold Helicopter", coins: 3500, bg: "from-amber-400 to-yellow-400" },
-      { icon: "🦢", name: "Sapphire Swan", coins: 699, bg: "from-blue-200 to-sky-200" },
-      { icon: "🦅", name: "Emerald Eagle", coins: 1200, bg: "from-green-500 to-emerald-500" },
-      { icon: "👑", name: "Royal Crown", coins: 888, bg: "from-yellow-400 to-amber-500" },
-      { icon: "🐼", name: "Platinum Panda", coins: 1999, bg: "from-gray-300 to-slate-300" },
-    ],
-    exclusive: [
-      { icon: "🐆", name: "Black Panther", coins: 4999, badge: "NEW", bg: "from-purple-900 to-indigo-900" },
-      { icon: "🏎️", name: "Bugatti", coins: 9999, badge: "Luxury", bg: "from-blue-500 to-cyan-500" },
-      { icon: "🐉", name: "Diamond Dragon", coins: 15000, bg: "from-sky-300 to-blue-300" },
-      { icon: "🛥️", name: "Luxury Yacht", coins: 19999, bg: "from-blue-400 to-indigo-400" },
-      { icon: "🏝️", name: "Private Island", coins: 29999, badge: "Ultimate", bg: "from-green-400 to-teal-400" },
-    ],
-  }), []);
+  const allGifts = useMemo(() => giftCatalog, []);
 
   const quickReactions = useMemo(() => [
     { icon: <Heart className="h-4 w-4 text-red-400" />, key: "heart" },
