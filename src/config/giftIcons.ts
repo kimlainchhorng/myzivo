@@ -39,6 +39,8 @@ import bugatti from "@/assets/gifts/bugatti.png";
 import diamondDragon from "@/assets/gifts/diamond-dragon.png";
 import luxuryYacht from "@/assets/gifts/luxury-yacht.png";
 import privateIsland from "@/assets/gifts/private-island.png";
+import galaxyCrown from "@/assets/gifts/galaxy-crown.png";
+import goldenCastle from "@/assets/gifts/golden-castle.png";
 
 export { goldCoin };
 
@@ -81,4 +83,6 @@ export const giftImages: Record<string, string> = {
   "Diamond Dragon": diamondDragon,
   "Luxury Yacht": luxuryYacht,
   "Private Island": privateIsland,
+  "Galaxy Crown": galaxyCrown,
+  "Golden Castle": goldenCastle,
 };
