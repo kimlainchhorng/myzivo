@@ -48,7 +48,7 @@ import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import { giftImages } from "@/config/giftIcons";
 import { giftAnimationVideos } from "@/config/giftAnimations";
-import { ReactionIcon } from "@/utils/reactionIcons";
+import { ReactionIcon, StreamTopicIcon } from "@/utils/reactionIcons";
 
 interface LiveStream {
   id: string;
@@ -367,8 +367,8 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         <div className="absolute inset-0 bg-gradient-to-br from-violet-900/80 via-black to-rose-900/60" />
         <div className="absolute top-1/4 left-1/3 w-60 h-60 bg-primary/15 rounded-full blur-[80px] animate-pulse" />
         <div className="absolute bottom-1/3 right-1/4 w-48 h-48 bg-rose-500/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: "1.5s" }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[120px] opacity-20 select-none">
-          {stream.thumbnail_emoji}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20 select-none">
+          <StreamTopicIcon topic={stream.thumbnail_emoji} className="h-32 w-32" />
         </div>
         {/* Double-tap heart animation */}
         <AnimatePresence>
@@ -1255,7 +1255,7 @@ export default function LiveStreamPage() {
               >
                 {/* Thumbnail */}
                 <div className="relative aspect-video bg-gradient-to-br from-violet-900/30 via-background to-rose-900/20 flex items-center justify-center">
-                  <div className="text-5xl group-hover:scale-110 transition-transform">{stream.thumbnail_emoji}</div>
+                  <StreamTopicIcon topic={stream.thumbnail_emoji} className="h-12 w-12 group-hover:scale-110 transition-transform" />
                   {stream.status === "live" && (
                     <Badge className="absolute top-3 left-3 bg-red-500 text-white border-0 text-[10px] gap-1 animate-pulse">
                       <Radio className="h-2.5 w-2.5" /> LIVE

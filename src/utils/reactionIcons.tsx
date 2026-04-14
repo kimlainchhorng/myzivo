@@ -25,6 +25,17 @@ import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
 import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
 import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
+import Gamepad2 from "lucide-react/dist/esm/icons/gamepad-2";
+import ChefHat from "lucide-react/dist/esm/icons/chef-hat";
+import Laptop from "lucide-react/dist/esm/icons/laptop";
+import Dumbbell from "lucide-react/dist/esm/icons/dumbbell";
+import Palette from "lucide-react/dist/esm/icons/palette";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Shirt from "lucide-react/dist/esm/icons/shirt";
+import BookOpen from "lucide-react/dist/esm/icons/book-open";
+import Briefcase from "lucide-react/dist/esm/icons/briefcase";
+import Tv from "lucide-react/dist/esm/icons/tv";
+import Globe from "lucide-react/dist/esm/icons/globe";
 
 /** Quick reaction definitions for reaction bar */
 export const QUICK_REACTIONS = [
@@ -72,5 +83,25 @@ export function MedalIcon({ position, className = "h-4 w-4" }: { position: numbe
     case 1: return <Medal className={`${className} text-gray-300`} />;
     case 2: return <Medal className={`${className} text-orange-400`} />;
     default: return <span className="text-[10px] text-white/50 font-bold">{position + 1}</span>;
+  }
+}
+
+/** Stream topic/thumbnail icon */
+export function StreamTopicIcon({ topic, className = "h-12 w-12" }: { topic: string; className?: string }) {
+  const iconClass = `${className} text-white/25`;
+  switch (topic) {
+    case "music": return <Music className={iconClass} />;
+    case "gamepad": case "gaming": return <Gamepad2 className={iconClass} />;
+    case "chef": case "cooking": return <ChefHat className={iconClass} />;
+    case "laptop": case "tech": return <Laptop className={iconClass} />;
+    case "dumbbell": case "fitness": return <Dumbbell className={iconClass} />;
+    case "palette": case "art": return <Palette className={iconClass} />;
+    case "plane": case "travel": return <Plane className={iconClass} />;
+    case "shirt": case "fashion": return <Shirt className={iconClass} />;
+    case "book": case "education": return <BookOpen className={iconClass} />;
+    case "briefcase": case "business": return <Briefcase className={iconClass} />;
+    case "laugh": case "comedy": return <Laugh className={iconClass} />;
+    case "globe": case "general": return <Globe className={iconClass} />;
+    case "tv": default: return <Tv className={iconClass} />;
   }
 }
