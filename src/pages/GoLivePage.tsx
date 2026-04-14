@@ -107,6 +107,20 @@ export default function GoLivePage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fakeFollowers = useRef(Math.floor(Math.random() * 800) + 200);
 
+  // ── PK Battle Mode ──
+  const [pkBattle, setPkBattle] = useState<{ active: boolean; hostScore: number; opponentScore: number; opponentName: string; endsAt: number; winner: string | null } | null>(null);
+  // ── Treasure Chest / Lucky Draw ──
+  const [treasureChest, setTreasureChest] = useState<{ active: boolean; countdown: number; participants: string[]; winner: string | null } | null>(null);
+  // ── Multi-Guest Co-Host ──
+  const [coHosts, setCoHosts] = useState<{ name: string; avatar: string }[]>([]);
+  const [showGuestInvite, setShowGuestInvite] = useState(false);
+  // ── VIP entrance ──
+  const [vipEntrance, setVipEntrance] = useState<{ name: string; level: number } | null>(null);
+  // ── Host level ──
+  const hostLevel = useMemo(() => Math.min(99, Math.floor(coinsEarned / 50) + 1), [coinsEarned]);
+  // ── Chat mute/ban ──
+  const [mutedUsers, setMutedUsers] = useState<Set<string>>(new Set());
+
   const cameraFilters: Record<string, string> = useMemo(() => ({
     none: "",
     warm: "sepia(0.25) saturate(1.3) brightness(1.05)",
