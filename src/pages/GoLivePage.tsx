@@ -1477,13 +1477,20 @@ export default function GoLivePage() {
                     )}
                   </div>
                 )}
-                {chatMessages.filter((m) => !m.isPinned).slice(-8).map((msg) => (
+                {chatMessages.filter((m) => !m.isPinned && !mutedUsers.has(m.user)).slice(-8).map((msg) => (
                   <div
                     key={msg.id}
                     onClick={() => {
                       if (!msg.isSystem && !msg.isGift) {
                         setPinnedChatMsg(`${msg.user}: ${msg.text}`);
                         toast.success(`📌 Pinned message from ${msg.user}`);
+                      }
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      if (!msg.isSystem && msg.user !== "You (Host)") {
+                        setMutedUsers((prev) => new Set(prev).add(msg.user));
+                        toast(`🔇 Muted ${msg.user}`, { duration: 2000 });
                       }
                     }}
                     className={cn(
