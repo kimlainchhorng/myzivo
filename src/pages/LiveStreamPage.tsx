@@ -422,30 +422,33 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       {/* ── Chat overlay (bottom-left) ── */}
       <div className="absolute left-0 right-16 z-20" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 60px)" }}>
         {/* Messages */}
-        <div className="px-3 max-h-[160px] overflow-y-auto scrollbar-hide space-y-1 mask-gradient-top">
-          {chatMessages.slice(-7).map((msg) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className={cn(
-                "inline-flex items-start gap-1.5 px-2 py-1 rounded-lg max-w-[85%]",
-                msg.isSystem ? "bg-primary/20" : msg.isGift ? "bg-amber-500/20" : "bg-black/30 backdrop-blur-sm"
-              )}
-            >
-              {msg.level && !msg.isSystem && (
-                <span className={cn("text-[8px] px-1 py-0.5 rounded font-bold bg-gradient-to-r text-white shrink-0 mt-0.5", getLevelColor(msg.level))}>
-                  Lv.{msg.level}
-                </span>
-              )}
-              <div className="min-w-0">
-                <span className={cn("text-[11px] font-bold mr-1", msg.isSystem ? "text-primary" : msg.isGift ? "text-amber-300" : "text-white/70")}>
-                  {msg.user}
-                </span>
-                <span className="text-[11px] text-white break-words">{msg.text}</span>
-              </div>
-            </motion.div>
-          ))}
+        <div className="px-3 max-h-[160px] overflow-y-auto scrollbar-hide space-y-1 mask-gradient-top flex flex-col">
+          {chatMessages.slice(-7).map((msg) => {
+            const isJoin = msg.isSystem && msg.text.includes("joined");
+            return (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={cn(
+                  "flex items-start gap-1.5 px-2 py-1 rounded-lg max-w-[85%] w-fit",
+                  isJoin ? "bg-green-500/15" : msg.isSystem ? "bg-primary/20" : msg.isGift ? "bg-amber-500/20" : "bg-black/30 backdrop-blur-sm"
+                )}
+              >
+                {msg.level && !msg.isSystem && (
+                  <span className={cn("text-[8px] px-1 py-0.5 rounded font-bold bg-gradient-to-r text-white shrink-0 mt-0.5", getLevelColor(msg.level))}>
+                    Lv.{msg.level}
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <span className={cn("text-[11px] font-bold mr-1", isJoin ? "text-green-300" : msg.isSystem ? "text-primary" : msg.isGift ? "text-amber-300" : "text-white/70")}>
+                    {msg.user}
+                  </span>
+                  <span className={cn("text-[11px] break-words", isJoin ? "text-green-200/70" : "text-white")}>{msg.text}</span>
+                </div>
+              </motion.div>
+            );
+          })}
           <div ref={chatEndRef} />
         </div>
 
