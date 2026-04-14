@@ -59,6 +59,7 @@ export default function GoLivePage() {
   const [chatInput, setChatInput] = useState("");
   const [cameraError, setCameraError] = useState(false);
   const [showGiftPanel, setShowGiftPanel] = useState(false);
+  const [selectedGift, setSelectedGift] = useState<{ icon: string; name: string; coins: number } | null>(null);
   const [floatingReactions, setFloatingReactions] = useState<{ id: string; emoji: string; x: number }[]>([]);
   const [giftsReceived, setGiftsReceived] = useState(0);
   const [giftTab, setGiftTab] = useState<"gifts" | "interactive" | "exclusive">("gifts");
@@ -238,7 +239,16 @@ export default function GoLivePage() {
       if (!lastViewer) { lastViewer = lastLike = lastElapsed = lastChat = now; }
 
       if (now - lastElapsed >= 1000) {
-        setElapsed((p) => p + 1);
+        setElapsed((p) => {
+          const next = p + 1;
+          // Duration milestones
+          const durationMilestones: Record<number, string> = { 300: "⏱️ 5 minutes! Great start!", 900: "🔥 15 minutes! You're on fire!", 1800: "🏆 30 minutes! Incredible stream!", 3600: "👑 1 hour! Legendary broadcaster!" };
+          if (durationMilestones[next]) {
+            setChatMessages((prev) => [...prev.slice(-20), { id: `dur-${next}`, user: "🎯", text: durationMilestones[next], isSystem: true }]);
+            toast.success(durationMilestones[next]);
+          }
+          return next;
+        });
         lastElapsed = now;
       }
       if (now - lastViewer >= 3000) {
@@ -526,6 +536,32 @@ export default function GoLivePage() {
             </div>
           )}
 
+          {/* Share prompt */}
+          {shareCount === 0 && (
+            <div className="bg-white/5 rounded-2xl p-3 border border-white/10 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-500/15 flex items-center justify-center shrink-0">
+                <Share2 className="h-5 w-5 text-blue-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white text-xs font-semibold">Share your stream highlights!</p>
+                <p className="text-white/40 text-[10px]">Let your audience know about your next stream</p>
+              </div>
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({ title: `Watch ${title} on ZIVO Live!`, url: window.location.origin + "/live" }).catch(() => {});
+                  } else {
+                    navigator.clipboard?.writeText(window.location.origin + "/live");
+                    toast.success("Link copied!");
+                  }
+                }}
+                className="px-3 py-1.5 rounded-full bg-blue-500 text-white text-[11px] font-bold shrink-0 active:scale-95 transition-transform"
+              >
+                Share
+              </button>
+            </div>
+          )}
+
           <div className="flex gap-3 pt-2">
             <Button variant="outline" onClick={() => navigate("/live")} className="rounded-full flex-1 border-white/20 text-white hover:bg-white/10">
               Back to Live
@@ -533,7 +569,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); lastMilestoneRef.current = 0; startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -560,9 +596,11 @@ export default function GoLivePage() {
                 <p className="text-white/50 text-sm font-medium">Camera unavailable</p>
                 <p className="text-white/30 text-xs mt-1">Check permissions or try another device</p>
               </div>
-              <Button size="sm" variant="outline" onClick={startCamera} className="text-white border-white/20 rounded-full">
-                <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Retry
-              </Button>
+              {phase === "setup" && (
+                <Button size="sm" variant="outline" onClick={startCamera} className="text-white border-white/20 rounded-full">
+                  <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Retry
+                </Button>
+              )}
             </div>
           </div>
         ) : (
@@ -1079,13 +1117,18 @@ export default function GoLivePage() {
                 </div>
 
                 {/* Gift grid */}
-                <div className="overflow-y-auto px-2 py-3" style={{ maxHeight: "calc(55vh - 120px)" }}>
+                <div className="overflow-y-auto px-2 py-3" style={{ maxHeight: selectedGift ? "calc(55vh - 180px)" : "calc(55vh - 120px)" }}>
                   <div className="grid grid-cols-4 gap-1.5">
                     {allGifts[giftTab].map((gift) => (
                       <button
                         key={gift.name}
-                        onClick={() => sendGift(gift)}
-                        className="relative flex flex-col items-center gap-0.5 py-2.5 px-1 rounded-xl hover:bg-white/5 active:scale-90 transition-all"
+                        onClick={() => setSelectedGift(selectedGift?.name === gift.name ? null : gift)}
+                        className={cn(
+                          "relative flex flex-col items-center gap-0.5 py-2.5 px-1 rounded-xl transition-all",
+                          selectedGift?.name === gift.name
+                            ? "bg-amber-500/15 ring-2 ring-amber-500/40 scale-105"
+                            : "hover:bg-white/5 active:scale-90"
+                        )}
                       >
                         {gift.badge && (
                           <span className={cn(
@@ -1115,12 +1158,48 @@ export default function GoLivePage() {
                   </div>
                 </div>
 
+                {/* Selected gift send bar */}
+                <AnimatePresence>
+                  {selectedGift && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden border-t border-white/10"
+                    >
+                      <div className="flex items-center gap-3 px-4 py-2.5">
+                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br overflow-hidden shrink-0", selectedGift.coins >= 100 ? "from-amber-400 to-orange-500" : "from-violet-400 to-purple-500")}>
+                          {giftImages[selectedGift.name] ? (
+                            <img src={giftImages[selectedGift.name]} alt="" className="w-7 h-7 object-contain" />
+                          ) : (
+                            <span className="text-xl">{selectedGift.icon}</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-xs font-semibold truncate">{selectedGift.name}</p>
+                          <div className="flex items-center gap-1">
+                            <img src={goldCoinIcon} alt="" className="w-3 h-3" />
+                            <span className="text-amber-300 text-[11px] font-bold">{selectedGift.coins.toLocaleString()}</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => { sendGift(selectedGift); setSelectedGift(null); }}
+                          className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full px-5 py-2 shadow-lg shadow-amber-500/25 active:scale-95 transition-transform"
+                        >
+                          <Send className="h-3.5 w-3.5 text-white" />
+                          <span className="text-white text-xs font-bold">Send</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 {/* Bottom tabs */}
                 <div className="flex items-center border-t border-white/10 px-2 py-2 gap-1" style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 8px), 8px)" }}>
                   {(["gifts", "interactive", "exclusive"] as const).map((tab) => (
                     <button
                       key={tab}
-                      onClick={() => setGiftTab(tab)}
+                      onClick={() => { setGiftTab(tab); setSelectedGift(null); }}
                       className={cn(
                         "px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors",
                         giftTab === tab ? "text-white bg-white/10" : "text-white/40"
@@ -1221,9 +1300,16 @@ export default function GoLivePage() {
                 <Radio className="h-6 w-6 text-red-400" />
               </div>
               <h3 className="text-white text-lg font-bold text-center">End Stream?</h3>
-              <p className="text-white/50 text-sm text-center mt-1.5 mb-5">
-                You have {viewerCount} viewers watching. Are you sure you want to end?
+              <p className="text-white/50 text-sm text-center mt-1.5">
+                You have {viewerCount} viewers watching.
               </p>
+              {coinsEarned > 0 && (
+                <div className="flex items-center justify-center gap-1.5 mt-2 mb-3">
+                  <img src={goldCoinIcon} alt="" className="w-4 h-4" />
+                  <span className="text-amber-300 text-sm font-bold">{coinsEarned} Z Coins earned</span>
+                </div>
+              )}
+              <p className="text-white/30 text-xs text-center mb-5">Are you sure you want to end?</p>
               <div className="flex gap-3">
                 <Button
                   onClick={() => setShowEndConfirm(false)}
