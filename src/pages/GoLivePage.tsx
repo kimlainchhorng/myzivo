@@ -302,6 +302,23 @@ export default function GoLivePage() {
     return () => cancelAnimationFrame(raf);
   }, [phase]);
 
+  // Simulate new follower notifications every 20-40s
+  useEffect(() => {
+    if (phase !== "live") return;
+    const followerNames = ["Sophia", "Ethan", "Olivia", "Mason", "Ava", "Liam", "Emma", "Noah"];
+    let timer: ReturnType<typeof setTimeout>;
+    const scheduleFollower = () => {
+      timer = setTimeout(() => {
+        const name = followerNames[Math.floor(Math.random() * followerNames.length)];
+        setNewFollower(name);
+        fakeFollowers.current += 1;
+        setTimeout(() => setNewFollower(null), 3000);
+        scheduleFollower();
+      }, 20000 + Math.random() * 20000);
+    };
+    scheduleFollower();
+    return () => clearTimeout(timer);
+  }, [phase]);
   // Simulate random viewer gifts every 15-30s
   useEffect(() => {
     if (phase !== "live") return;
