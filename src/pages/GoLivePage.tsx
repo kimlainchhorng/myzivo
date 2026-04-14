@@ -836,7 +836,14 @@ export default function GoLivePage() {
             </div>
             <div className="bg-gradient-to-br from-amber-500/20 to-yellow-500/10 rounded-2xl p-4 border border-amber-500/20">
               <img src={goldCoinIcon} alt="coins" className="h-6 w-6 mx-auto mb-1" />
-              <p className="text-xl font-bold text-amber-300">{coinsEarned}</p>
+              <motion.p
+                key={displayedCoins}
+                initial={{ scale: 1.1 }}
+                animate={{ scale: 1 }}
+                className="text-xl font-bold text-amber-300"
+              >
+                {displayedCoins.toLocaleString()}
+              </motion.p>
               <p className="text-[10px] text-amber-400/60 uppercase tracking-wider">Z Coins Earned</p>
             </div>
           </div>
