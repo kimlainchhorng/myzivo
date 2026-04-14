@@ -1758,6 +1758,10 @@ export default function GoLivePage() {
                       "flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200 pointer-events-auto cursor-pointer",
                       msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" :
                       msg.isSystem ? "bg-transparent pointer-events-none" :
+                      msg.level && msg.level >= 40 ? "bg-gradient-to-r from-amber-900/40 to-yellow-900/20 border border-amber-500/15 shadow-sm shadow-amber-500/10" :
+                      msg.level && msg.level >= 30 ? "bg-gradient-to-r from-purple-900/40 to-pink-900/20 border border-purple-500/15" :
+                      msg.level && msg.level >= 20 ? "bg-gradient-to-r from-blue-900/40 to-cyan-900/20 border border-blue-500/10" :
+                      msg.level && msg.level >= 10 ? "bg-gradient-to-r from-green-900/30 to-emerald-900/15 border border-green-500/10" :
                       "bg-black/40 backdrop-blur-sm"
                     )}
                   >
