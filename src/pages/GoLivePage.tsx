@@ -959,6 +959,101 @@ export default function GoLivePage() {
               <p className="text-[9px] text-amber-300 mt-1 text-center animate-pulse">🎉 Goal reached!</p>
             )}
           </div>
+
+          {/* ── PK Battle Bar ── */}
+          <AnimatePresence>
+            {pkBattle?.active && (
+              <motion.div
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -20, opacity: 0 }}
+                className="mt-2 bg-black/40 backdrop-blur-md rounded-2xl px-3 py-2 border border-red-500/20"
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">⚔️ PK Battle</span>
+                  <span className="text-[9px] text-white/40">{Math.max(0, Math.round((pkBattle.endsAt - Date.now()) / 1000))}s left</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[10px] text-white/80 font-semibold">You</span>
+                      <span className="text-[10px] text-amber-300 font-bold">{pkBattle.hostScore}</span>
+                    </div>
+                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400"
+                        animate={{ width: `${pkBattle.hostScore + pkBattle.opponentScore > 0 ? (pkBattle.hostScore / (pkBattle.hostScore + pkBattle.opponentScore)) * 100 : 50}%` }}
+                      />
+                    </div>
+                  </div>
+                  <span className="text-lg font-black text-red-400">⚔️</span>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[10px] text-white/80 font-semibold">{pkBattle.opponentName}</span>
+                      <span className="text-[10px] text-amber-300 font-bold">{pkBattle.opponentScore}</span>
+                    </div>
+                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full bg-gradient-to-r from-rose-500 to-red-400"
+                        animate={{ width: `${pkBattle.hostScore + pkBattle.opponentScore > 0 ? (pkBattle.opponentScore / (pkBattle.hostScore + pkBattle.opponentScore)) * 100 : 50}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[9px] text-white/30 text-center mt-1">Send gifts to help win! 🎁</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Treasure Chest Widget ── */}
+          <AnimatePresence>
+            {treasureChest?.active && !treasureChest.winner && (
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="mt-2 bg-gradient-to-r from-amber-900/60 to-yellow-900/40 backdrop-blur-md rounded-2xl px-3 py-2 border border-amber-500/20"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">🎁 Treasure Chest</span>
+                  <motion.span
+                    key={treasureChest.countdown}
+                    initial={{ scale: 1.3 }}
+                    animate={{ scale: 1 }}
+                    className="text-sm font-black text-amber-200"
+                  >
+                    {treasureChest.countdown}s
+                  </motion.span>
+                </div>
+                <div className="flex items-center gap-1 mb-1">
+                  {treasureChest.participants.map((p) => (
+                    <div key={p} className="w-6 h-6 rounded-full bg-amber-500/30 flex items-center justify-center text-[8px] text-white font-bold border border-amber-500/20">
+                      {p[0]}
+                    </div>
+                  ))}
+                  {treasureChest.participants.length === 0 && <span className="text-[9px] text-white/30">Waiting for participants...</span>}
+                </div>
+                <p className="text-[8px] text-amber-200/50">{treasureChest.participants.length} joined · Drawing soon!</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Co-Host Grid ── */}
+          {coHosts.length > 0 && (
+            <div className="mt-2 flex gap-2 px-1">
+              {coHosts.map((host) => (
+                <div key={host.name} className="flex items-center gap-1.5 bg-purple-500/15 backdrop-blur-md rounded-full px-2.5 py-1 border border-purple-500/20">
+                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[8px] text-white font-bold", host.avatar)}>
+                    {host.name[0]}
+                  </div>
+                  <span className="text-[10px] text-white/80 font-medium">{host.name}</span>
+                  <button onClick={() => setCoHosts((p) => p.filter((h) => h.name !== host.name))} className="text-white/30 hover:text-white/60">
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
