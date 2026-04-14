@@ -336,8 +336,8 @@ export default function GoLivePage() {
       setTimeout(() => setGiftStreakFlash(false), 1500);
     }
     lastGiftTimeRef.current = now2;
-    const senders = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
-    const sender = senders[Math.floor(Math.random() * senders.length)];
+    
+    // Combo tracking — same gift within 5s increments combo
     
     // Combo tracking — same gift within 5s increments combo
     const now = Date.now();
