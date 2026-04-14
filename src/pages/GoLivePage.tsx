@@ -493,6 +493,16 @@ export default function GoLivePage() {
         {/* Cinematic overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/90" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
+        {/* Double-tap to heart */}
+        {phase === "live" && (
+          <div
+            className="absolute inset-0 z-[1]"
+            onDoubleClick={() => {
+              sendReaction("❤️");
+              setLikes((p) => p + 1);
+            }}
+          />
+        )}
       </div>
 
       {/* Top bar */}
