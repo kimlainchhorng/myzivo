@@ -78,6 +78,9 @@ export default function GoLivePage() {
   const [countdown, setCountdown] = useState(0);
   const [newFollower, setNewFollower] = useState<string | null>(null);
   const [viewerPulse, setViewerPulse] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [newFollowersCount, setNewFollowersCount] = useState(0);
+  const [shareCount, setShareCount] = useState(0);
   const lastGiftTimeRef = useRef(0);
   const lastMilestoneRef = useRef(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -304,6 +307,7 @@ export default function GoLivePage() {
         const name = followerNames[Math.floor(Math.random() * followerNames.length)];
         setNewFollower(name);
         fakeFollowers.current += 1;
+        setNewFollowersCount((p) => p + 1);
         setTimeout(() => setNewFollower(null), 3000);
         scheduleFollower();
       }, 20000 + Math.random() * 20000);
@@ -345,6 +349,7 @@ export default function GoLivePage() {
   }, [phase]);
 
   const endStream = useCallback(() => {
+    setShowEndConfirm(false);
     setPhase("ended");
     streamRef.current?.getTracks().forEach((t) => t.stop());
     toast("Stream ended", { description: `Duration: ${formatTime(elapsed)} · ${peakViewers} peak viewers`, duration: 3000 });
@@ -478,16 +483,20 @@ export default function GoLivePage() {
               <span className="text-xs text-white/50">Chat Messages</span>
               <span className="text-sm font-semibold text-white">{chatMessages.length} 💬</span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-white/50">Engagement Rate</span>
-              <span className="text-sm font-semibold text-green-400">
-                {peakViewers > 0 ? Math.min(95, Math.round((giftsReceived / peakViewers) * 40 + (likes / Math.max(1, elapsed / 30)) * 5)) : 0}% 📊
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-white/50">Avg Watch Time</span>
-              <span className="text-sm font-semibold text-white">{formatTime(Math.round(elapsed * 0.6))} ⏱️</span>
-            </div>
+             <div className="flex items-center justify-between">
+               <span className="text-xs text-white/50">New Followers</span>
+               <span className="text-sm font-semibold text-purple-400">{newFollowersCount} 💜</span>
+             </div>
+             <div className="flex items-center justify-between">
+               <span className="text-xs text-white/50">Engagement Rate</span>
+               <span className="text-sm font-semibold text-green-400">
+                 {peakViewers > 0 ? Math.min(95, Math.round((giftsReceived / peakViewers) * 40 + (likes / Math.max(1, elapsed / 30)) * 5)) : 0}% 📊
+               </span>
+             </div>
+             <div className="flex items-center justify-between">
+               <span className="text-xs text-white/50">Avg Watch Time</span>
+               <span className="text-sm font-semibold text-white">{formatTime(Math.round(elapsed * 0.6))} ⏱️</span>
+             </div>
           </div>
 
           {/* Top Gifters on ended screen */}
@@ -520,7 +529,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); lastMilestoneRef.current = 0; startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -582,7 +591,7 @@ export default function GoLivePage() {
       {/* Top bar */}
       <div className="relative z-10 flex items-center gap-2 px-4 pt-3" style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 12px), 12px)" }}>
         <button
-          onClick={() => { streamRef.current?.getTracks().forEach((t) => t.stop()); phase === "live" ? endStream() : navigate(-1); }}
+          onClick={() => { streamRef.current?.getTracks().forEach((t) => t.stop()); phase === "live" ? setShowEndConfirm(true) : navigate(-1); }}
           className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10"
         >
           {phase === "live" ? <X className="h-5 w-5 text-white" /> : <ArrowLeft className="h-5 w-5 text-white" />}
@@ -633,6 +642,7 @@ export default function GoLivePage() {
             </div>
             <button
               onClick={() => {
+                setShareCount((p) => p + 1);
                 if (navigator.share) {
                   navigator.share({ title: `Watch ${title} live on ZIVO!`, url: window.location.href }).catch(() => {});
                 } else {
@@ -903,7 +913,20 @@ export default function GoLivePage() {
           </AnimatePresence>
 
           {/* Side actions — separated with clear spacing */}
-          <div className="absolute right-3 bottom-56 flex flex-col gap-4 items-center z-30">
+          <div className="absolute right-3 bottom-56 flex flex-col gap-3 items-center z-30">
+            {/* Live hardware controls */}
+            <button onClick={flipCamera} className="w-10 h-10 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
+              <RotateCcw className="h-4 w-4 text-white/70" />
+            </button>
+            <button onClick={toggleCamera} className={cn("w-10 h-10 rounded-2xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", cameraOn ? "bg-black/30" : "bg-red-500/30")}>
+              {cameraOn ? <Camera className="h-4 w-4 text-white/70" /> : <CameraOff className="h-4 w-4 text-red-300" />}
+            </button>
+            <button onClick={toggleMic} className={cn("w-10 h-10 rounded-2xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", micOn ? "bg-black/30" : "bg-red-500/30")}>
+              {micOn ? <Mic className="h-4 w-4 text-white/70" /> : <MicOff className="h-4 w-4 text-red-300" />}
+            </button>
+
+            <div className="w-6 border-t border-white/10" />
+
             {/* Leaderboard button */}
             <button onClick={() => setShowLeaderboard((p) => !p)} className="w-11 h-11 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
               <Trophy className="h-4.5 w-4.5 text-amber-400" />
@@ -996,7 +1019,7 @@ export default function GoLivePage() {
             <Button size="icon" onClick={sendChat} className="rounded-2xl bg-white/15 hover:bg-white/25 shrink-0 h-10 w-10">
               <Send className="h-4 w-4 text-white" />
             </Button>
-            <Button onClick={endStream} size="sm" className="rounded-2xl text-xs font-bold shrink-0 bg-red-500/80 hover:bg-red-500 text-white h-10 px-4">
+            <Button onClick={() => setShowEndConfirm(true)} size="sm" className="rounded-2xl text-xs font-bold shrink-0 bg-red-500/80 hover:bg-red-500 text-white h-10 px-4">
               End
             </Button>
           </div>
@@ -1147,6 +1170,51 @@ export default function GoLivePage() {
                   })
               )}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* End stream confirmation dialog */}
+      <AnimatePresence>
+        {showEndConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+            onClick={() => setShowEndConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: "spring", damping: 22 }}
+              className="bg-zinc-900 rounded-3xl p-6 mx-6 max-w-sm w-full border border-white/10 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-14 h-14 rounded-full bg-red-500/15 flex items-center justify-center mx-auto mb-4">
+                <Radio className="h-6 w-6 text-red-400" />
+              </div>
+              <h3 className="text-white text-lg font-bold text-center">End Stream?</h3>
+              <p className="text-white/50 text-sm text-center mt-1.5 mb-5">
+                You have {viewerCount} viewers watching. Are you sure you want to end?
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowEndConfirm(false)}
+                  variant="outline"
+                  className="flex-1 rounded-2xl border-white/20 text-white hover:bg-white/10"
+                >
+                  Keep Going
+                </Button>
+                <Button
+                  onClick={endStream}
+                  className="flex-1 rounded-2xl bg-red-500 hover:bg-red-600 text-white"
+                >
+                  End Stream
+                </Button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
