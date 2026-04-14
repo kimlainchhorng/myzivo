@@ -406,10 +406,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       </div>
 
       {/* ── Chat overlay (bottom-left) ── */}
-      <div className="absolute bottom-0 left-0 right-16 z-20" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 56px)" }}>
+      <div className="absolute left-0 right-16 z-20" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 60px)" }}>
         {/* Messages */}
-        <div className="px-3 max-h-[180px] overflow-y-auto scrollbar-hide space-y-1 mask-gradient-top">
-          {chatMessages.slice(-8).map((msg) => (
+        <div className="px-3 max-h-[160px] overflow-y-auto scrollbar-hide space-y-1 mask-gradient-top">
+          {chatMessages.slice(-7).map((msg) => (
             <motion.div
               key={msg.id}
               initial={{ opacity: 0, x: -20 }}
@@ -450,7 +450,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       </div>
 
       {/* ── Chat input bar (bottom) ── */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 px-3 py-2 bg-gradient-to-t from-black/80 to-transparent" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}>
+      <div className="absolute bottom-0 left-0 right-0 z-30 px-3 py-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}>
         <div className="flex items-center gap-2">
           <div className="flex-1 relative">
             <input
@@ -461,6 +461,12 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               className="w-full px-3 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-white/20 border border-white/10"
             />
           </div>
+          <button
+            onClick={() => setShowGiftPanel(true)}
+            className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20"
+          >
+            <Gift className="h-4 w-4 text-white" />
+          </button>
           <button
             onClick={sendChat}
             className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0"
