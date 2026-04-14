@@ -1208,6 +1208,42 @@ export default function GoLivePage() {
               <BarChart3 className={cn("h-4 w-4", activePoll ? "text-blue-300" : "text-white/70")} />
             </button>
 
+            {/* PK Battle button */}
+            <button
+              onClick={() => {
+                if (pkBattle?.active) { toast("⚔️ Battle already in progress!"); return; }
+                const opponents = ["DJ_Luna", "KingAlex", "StarMia", "ProGamer99"];
+                const opp = opponents[Math.floor(Math.random() * opponents.length)];
+                setPkBattle({ active: true, hostScore: 0, opponentScore: 0, opponentName: opp, endsAt: Date.now() + 120000, winner: null });
+                setChatMessages((prev) => [...prev.slice(-20), { id: `pk-${Date.now()}`, user: "⚔️", text: `PK Battle started vs ${opp}! Send gifts to support!`, isSystem: true }]);
+                toast.success(`⚔️ PK Battle vs ${opp}!`);
+              }}
+              className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", pkBattle?.active ? "bg-red-500/25 border-red-500/20" : "bg-black/30")}
+            >
+              <span className="text-sm">⚔️</span>
+            </button>
+
+            {/* Treasure Chest */}
+            <button
+              onClick={() => {
+                if (treasureChest?.active) return;
+                setTreasureChest({ active: true, countdown: 15, participants: [], winner: null });
+                setChatMessages((prev) => [...prev.slice(-20), { id: `chest-${Date.now()}`, user: "🎁", text: "Treasure Chest opened! Tap to join the draw!", isSystem: true }]);
+                toast("🎁 Treasure Chest! 15s to join!", { duration: 3000 });
+              }}
+              className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", treasureChest?.active ? "bg-amber-500/25 border-amber-500/20" : "bg-black/30")}
+            >
+              <span className="text-sm">🎁</span>
+            </button>
+
+            {/* Guest Invite */}
+            <button
+              onClick={() => setShowGuestInvite((p) => !p)}
+              className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", coHosts.length > 0 ? "bg-purple-500/25 border-purple-500/20" : "bg-black/30")}
+            >
+              <span className="text-sm">👥</span>
+            </button>
+
             <div className="flex flex-col items-center">
               <button onClick={() => sendReaction("❤️")} className="w-11 h-11 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5 relative">
                 <Heart className="h-5 w-5 text-red-400" />
