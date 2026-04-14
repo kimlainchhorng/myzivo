@@ -121,6 +121,22 @@ export default function GoLivePage() {
   // ── Chat mute/ban ──
   const [mutedUsers, setMutedUsers] = useState<Set<string>>(new Set());
 
+  // ── NEW: Face Stickers / AR Effects ──
+  const [activeSticker, setActiveSticker] = useState<string | null>(null);
+  const [showStickerPanel, setShowStickerPanel] = useState(false);
+
+  // ── NEW: Clip / Highlight capture ──
+  const [clipSaved, setClipSaved] = useState(false);
+
+  // ── NEW: Revenue mini-dashboard ──
+  const [showRevenueDash, setShowRevenueDash] = useState(false);
+
+  // ── NEW: Top-3 gifter mini-banner always visible ──
+  const [showTop3Banner, setShowTop3Banner] = useState(true);
+
+  // ── NEW: Combo multiplier text ──
+  const [comboMultiplierText, setComboMultiplierText] = useState<{ text: string; id: string } | null>(null);
+
   const cameraFilters: Record<string, string> = useMemo(() => ({
     none: "",
     warm: "sepia(0.25) saturate(1.3) brightness(1.05)",
