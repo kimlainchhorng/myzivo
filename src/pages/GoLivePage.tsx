@@ -63,7 +63,7 @@ export default function GoLivePage() {
   const [peakViewers, setPeakViewers] = useState(0);
   const [likes, setLikes] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; isSystem?: boolean; avatar?: string }[]>([]);
+  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; isSystem?: boolean; isPinned?: boolean; avatar?: string; level?: number }[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [cameraError, setCameraError] = useState(false);
   const [showGiftPanel, setShowGiftPanel] = useState(false);
@@ -80,10 +80,13 @@ export default function GoLivePage() {
   const lastGiftRef = useRef<{ name: string; time: number }>({ name: "", time: 0 });
   const [topGifters, setTopGifters] = useState<Record<string, number>>({});
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [streamGoal] = useState(500); // coin goal for the stream
+  const [streamGoal] = useState(500);
   const [giftStreakFlash, setGiftStreakFlash] = useState(false);
+  const [goalCelebrated, setGoalCelebrated] = useState(false);
   const lastGiftTimeRef = useRef(0);
   const lastMilestoneRef = useRef(0);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const fakeFollowers = useRef(Math.floor(Math.random() * 800) + 200);
 
   const allGifts = useMemo(() => ({
     gifts: [
