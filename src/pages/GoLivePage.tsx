@@ -1056,21 +1056,32 @@ export default function GoLivePage() {
             <div className="relative pl-4 pr-14 mb-2 max-h-[200px]">
               {/* Gradient fade at top */}
               <div className="absolute top-0 left-4 right-4 h-8 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none rounded-t-2xl" />
-              <div className="overflow-y-auto max-h-[200px] space-y-1.5 pointer-events-none scroll-smooth scrollbar-hide">
-                {/* Pinned message */}
-                {chatMessages.find((m) => m.isPinned) && (
-                  <div className="flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[85%] bg-red-500/15 border border-red-500/20 mb-1">
+              <div className="overflow-y-auto max-h-[200px] space-y-1.5 scroll-smooth scrollbar-hide">
+                {/* Pinned message (system or host-pinned) */}
+                {(pinnedChatMsg || chatMessages.find((m) => m.isPinned)) && (
+                  <div className="flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[85%] bg-red-500/15 border border-red-500/20 mb-1 pointer-events-auto">
                     <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold uppercase">Pinned</span>
-                    <span className="text-[11px] text-white/70">{chatMessages.find((m) => m.isPinned)?.text}</span>
+                    <span className="text-[11px] text-white/70">{pinnedChatMsg || chatMessages.find((m) => m.isPinned)?.text}</span>
+                    {pinnedChatMsg && (
+                      <button onClick={() => setPinnedChatMsg(null)} className="text-white/30 hover:text-white/60 ml-1">
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
                   </div>
                 )}
                 {chatMessages.filter((m) => !m.isPinned).slice(-8).map((msg) => (
                   <div
                     key={msg.id}
+                    onClick={() => {
+                      if (!msg.isSystem && !msg.isGift) {
+                        setPinnedChatMsg(`${msg.user}: ${msg.text}`);
+                        toast.success(`📌 Pinned message from ${msg.user}`);
+                      }
+                    }}
                     className={cn(
-                      "flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200",
+                      "flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200 pointer-events-auto cursor-pointer",
                       msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" :
-                      msg.isSystem ? "bg-transparent" :
+                      msg.isSystem ? "bg-transparent pointer-events-none" :
                       "bg-black/40 backdrop-blur-sm"
                     )}
                   >
