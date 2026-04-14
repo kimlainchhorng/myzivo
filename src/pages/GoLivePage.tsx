@@ -602,9 +602,9 @@ export default function GoLivePage() {
               <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
               <span className="text-white text-[10px] font-bold uppercase tracking-wider">Live</span>
             </div>
-            <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md rounded-full px-2.5 py-1 border border-white/10">
+            <div className={cn("flex items-center gap-1 bg-black/40 backdrop-blur-md rounded-full px-2.5 py-1 border border-white/10 transition-all", viewerPulse && "scale-110 bg-green-500/20 border-green-500/30")}>
               <Eye className="h-3 w-3 text-white/70" />
-              <span className="text-white text-xs font-medium">{viewerCount.toLocaleString()}</span>
+              <span className={cn("text-white text-xs font-medium transition-colors", viewerPulse && "text-green-300")}>{viewerCount.toLocaleString()}</span>
             </div>
             <div className="ml-auto flex items-center gap-2">
               <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md rounded-full px-2 py-1 border border-white/10">
