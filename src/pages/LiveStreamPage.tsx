@@ -967,6 +967,18 @@ export default function LiveStreamPage() {
                       <Radio className="h-2.5 w-2.5" /> LIVE
                     </Badge>
                   )}
+                  {/* Hot badge for high viewer streams */}
+                  {stream.status === "live" && stream.viewer_count >= 3000 && (
+                    <Badge className="absolute top-3 left-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 text-[10px] gap-0.5 ml-1">
+                      🔥 Hot
+                    </Badge>
+                  )}
+                  {/* Daily Pick for first stream */}
+                  {i === 0 && stream.status === "live" && (
+                    <Badge className="absolute top-10 left-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 text-[9px] gap-0.5">
+                      ⭐ Daily Pick
+                    </Badge>
+                  )}
                   {stream.status === "scheduled" && (
                     <Badge className="absolute top-3 left-3 bg-amber-500 text-white border-0 text-[10px]">
                       📅 Scheduled
@@ -993,7 +1005,12 @@ export default function LiveStreamPage() {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-foreground text-sm truncate">{stream.title}</h3>
-                    <p className="text-xs text-muted-foreground truncate">{stream.host_name} · {stream.topic}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs text-muted-foreground truncate">{stream.host_name} · {stream.topic}</p>
+                      {stream.status === "live" && (
+                        <span className="text-[9px] text-muted-foreground/60 shrink-0">• streaming now</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </button>
