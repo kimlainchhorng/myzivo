@@ -87,10 +87,23 @@ export default function GoLivePage() {
   const [giftQty, setGiftQty] = useState(1);
   const [recentGifts, setRecentGifts] = useState<{ icon: string; name: string; coins: number }[]>([]);
   const [pinnedChatMsg, setPinnedChatMsg] = useState<string | null>(null);
+  const [cameraFilter, setCameraFilter] = useState<"none" | "warm" | "cool" | "bw" | "vintage">("none");
+  const [showViewerList, setShowViewerList] = useState(false);
+  const [autoThank, setAutoThank] = useState(false);
   const lastGiftTimeRef = useRef(0);
   const lastMilestoneRef = useRef(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fakeFollowers = useRef(Math.floor(Math.random() * 800) + 200);
+
+  const cameraFilters: Record<string, string> = useMemo(() => ({
+    none: "",
+    warm: "sepia(0.25) saturate(1.3) brightness(1.05)",
+    cool: "hue-rotate(15deg) saturate(0.9) brightness(1.05)",
+    bw: "grayscale(1) contrast(1.1)",
+    vintage: "sepia(0.4) contrast(0.9) brightness(1.1) hue-rotate(-10deg)",
+  }), []);
+
+  const fakeViewerNames = useMemo(() => ["Luna ✨", "Kai 🔥", "Mia 💜", "Nora 🌸", "Zara 💎", "Leo 🦁", "Aria 🎵", "Alex 🎮", "Jordan 🏀", "Sam 🌊"], []);
 
   const allGifts = useMemo(() => ({
     gifts: [
