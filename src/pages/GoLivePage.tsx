@@ -197,8 +197,7 @@ export default function GoLivePage() {
 
   const goLive = useCallback(() => {
     if (!title.trim()) {
-      toast.error("Please add a title for your stream");
-      return;
+      setTitle("My Live Stream");
     }
     // Start countdown
     setPhase("countdown");
