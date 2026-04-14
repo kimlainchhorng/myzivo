@@ -1617,7 +1617,37 @@ export default function GoLivePage() {
               <span className="text-[10px]">💰</span>
             </button>
 
-            <button onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "🔇 Muted" : "🔊 Sound on", { duration: 1200 }); }} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", soundEnabled ? "bg-black/30" : "bg-red-500/20")}>
+            {/* ── NEW v4: Background Music toggle ── */}
+            <button
+              onClick={() => {
+                const tracks = [null, "🎶 Chill Lo-fi", "🎸 Acoustic", "🎹 Piano Vibes", "🥁 Upbeat Pop"];
+                const idx = tracks.indexOf(bgMusic);
+                const next = tracks[(idx + 1) % tracks.length];
+                setBgMusic(next);
+                toast(next ? `🎵 ${next}` : "🔇 Music off", { duration: 1500 });
+              }}
+              className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", bgMusic ? "bg-violet-500/25 border-violet-500/20" : "bg-black/30")}
+            >
+              <span className="text-[10px]">🎵</span>
+            </button>
+
+            {/* ── NEW v4: On-demand effects ── */}
+            <button
+              onClick={() => {
+                const effects: Array<"confetti" | "hearts" | "fire" | null> = ["confetti", "hearts", "fire", null];
+                const idx = effects.indexOf(screenEffect);
+                const next = effects[(idx + 1) % effects.length];
+                setScreenEffect(next);
+                if (next) {
+                  toast(`${next === "confetti" ? "🎊" : next === "hearts" ? "💕" : "🔥"} ${next.charAt(0).toUpperCase() + next.slice(1)} effect!`, { duration: 1500 });
+                  setTimeout(() => setScreenEffect(null), 3000);
+                }
+              }}
+              className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", screenEffect ? "bg-pink-500/25 border-pink-500/20" : "bg-black/30")}
+            >
+              <span className="text-[10px]">🎊</span>
+            </button>
+
               {soundEnabled ? <Volume2 className="h-3.5 w-3.5 text-white/70" /> : <VolumeX className="h-3.5 w-3.5 text-red-300" />}
             </button>
 
