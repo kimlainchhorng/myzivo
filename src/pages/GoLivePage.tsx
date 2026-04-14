@@ -669,6 +669,7 @@ export default function GoLivePage() {
               facingMode === "user" && "scale-x-[-1]",
               beautyMode && "brightness-105 contrast-[1.02] saturate-[1.1]"
             )}
+            style={{ filter: cameraFilters[cameraFilter] || undefined }}
           />
         )}
         {/* Cinematic overlays */}
@@ -923,7 +924,14 @@ export default function GoLivePage() {
 
       {/* Countdown overlay */}
       {phase === "countdown" && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm gap-4">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-white/60 text-lg font-semibold tracking-wider uppercase"
+          >
+            Going Live in
+          </motion.p>
           <motion.div
             key={countdown}
             initial={{ scale: 2, opacity: 0 }}
@@ -934,6 +942,14 @@ export default function GoLivePage() {
           >
             {countdown}
           </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-white/30 text-sm"
+          >
+            {topic} · {title || "My Live Stream"}
+          </motion.p>
         </div>
       )}
 
@@ -1028,11 +1044,27 @@ export default function GoLivePage() {
               <button onClick={() => setBeautyMode((p) => !p)} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", beautyMode ? "bg-pink-500/30 border-pink-500/20" : "bg-black/30")}>
                 <Sparkles className={cn("h-3.5 w-3.5", beautyMode ? "text-pink-300" : "text-white/60")} />
               </button>
+              <button
+                onClick={() => {
+                  const filters: Array<"none" | "warm" | "cool" | "bw" | "vintage"> = ["none", "warm", "cool", "bw", "vintage"];
+                  const idx = filters.indexOf(cameraFilter);
+                  setCameraFilter(filters[(idx + 1) % filters.length]);
+                  toast(`🎨 Filter: ${filters[(idx + 1) % filters.length] === "none" ? "Off" : filters[(idx + 1) % filters.length]}`, { duration: 1500 });
+                }}
+                className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", cameraFilter !== "none" ? "bg-cyan-500/30 border-cyan-500/20" : "bg-black/30")}
+              >
+                <Palette className={cn("h-3.5 w-3.5", cameraFilter !== "none" ? "text-cyan-300" : "text-white/60")} />
+              </button>
             </div>
 
             <div className="w-5 border-t border-white/10" />
 
             {/* Engagement actions */}
+            <button onClick={() => setShowViewerList((p) => !p)} className="w-10 h-10 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5 relative">
+              <Users className="h-4 w-4 text-white/70" />
+              <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-3.5 bg-green-500 text-white text-[7px] font-bold rounded-full flex items-center justify-center px-0.5">{viewerCount}</span>
+            </button>
+
             <button onClick={() => setShowLeaderboard((p) => !p)} className="w-10 h-10 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
               <Trophy className="h-4 w-4 text-amber-400" />
             </button>
