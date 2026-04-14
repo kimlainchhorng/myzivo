@@ -153,6 +153,22 @@ export default function GoLivePage() {
   // ── NEW v3: Chat Trending Words ──
   const [trendingWord, setTrendingWord] = useState<string | null>(null);
 
+  // ── NEW v4: Hashtags for discovery ──
+  const [hashtags, setHashtags] = useState<string[]>([]);
+  const [hashtagInput, setHashtagInput] = useState("");
+
+  // ── NEW v4: Background Music ──
+  const [bgMusic, setBgMusic] = useState<string | null>(null);
+
+  // ── NEW v4: On-demand stream effects ──
+  const [screenEffect, setScreenEffect] = useState<"confetti" | "hearts" | "fire" | null>(null);
+
+  // ── NEW v4: Stream Rating (ended phase) ──
+  const [streamRating, setStreamRating] = useState(0);
+
+  // ── NEW v4: Animated coin counter (ended) ──
+  const [displayedCoins, setDisplayedCoins] = useState(0);
+
   const cameraFilters: Record<string, string> = useMemo(() => ({
     none: "",
     warm: "sepia(0.25) saturate(1.3) brightness(1.05)",
@@ -765,6 +781,17 @@ export default function GoLivePage() {
     addPkScore(totalCoins);
   }, [spawnFloatingReaction, giftCombo, addPkScore]);
 
+  // ── Animated coin counter for ended screen ──
+  useEffect(() => {
+    if (phase === "ended" && coinsEarned > 0 && displayedCoins < coinsEarned) {
+      const step = Math.max(1, Math.ceil(coinsEarned / 40));
+      const timer = setTimeout(() => {
+        setDisplayedCoins((p) => Math.min(p + step, coinsEarned));
+      }, 30);
+      return () => clearTimeout(timer);
+    }
+  }, [phase, coinsEarned, displayedCoins]);
+
   // ── Ended screen ──
   if (phase === "ended") {
     return (
@@ -781,6 +808,13 @@ export default function GoLivePage() {
           <div>
             <h1 className="text-2xl font-bold text-white">Stream Ended</h1>
             <p className="text-white/50 text-sm mt-1">{title || "Untitled Stream"}</p>
+            {hashtags.length > 0 && (
+              <div className="flex flex-wrap gap-1 justify-center mt-2">
+                {hashtags.map((tag) => (
+                  <span key={tag} className="text-[10px] text-blue-300/70 bg-blue-500/10 rounded-full px-2 py-0.5">#{tag}</span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Stats grid */}
@@ -802,7 +836,14 @@ export default function GoLivePage() {
             </div>
             <div className="bg-gradient-to-br from-amber-500/20 to-yellow-500/10 rounded-2xl p-4 border border-amber-500/20">
               <img src={goldCoinIcon} alt="coins" className="h-6 w-6 mx-auto mb-1" />
-              <p className="text-xl font-bold text-amber-300">{coinsEarned}</p>
+              <motion.p
+                key={displayedCoins}
+                initial={{ scale: 1.1 }}
+                animate={{ scale: 1 }}
+                className="text-xl font-bold text-amber-300"
+              >
+                {displayedCoins.toLocaleString()}
+              </motion.p>
               <p className="text-[10px] text-amber-400/60 uppercase tracking-wider">Z Coins Earned</p>
             </div>
           </div>
@@ -893,7 +934,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); setPkBattle(null); setTreasureChest(null); setCoHosts([]); setShowGuestInvite(false); setVipEntrance(null); setMutedUsers(new Set()); setActiveSticker(null); setShowStickerPanel(false); setClipSaved(false); setShowRevenueDash(false); setShowTop3Banner(true); setComboMultiplierText(null); setGiftStreakCount(0); setSuperChat(null); setMilestoneEffect(null); setWaveActive(false); setTrendingWord(null); lastMilestoneRef.current = 0; startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); setPkBattle(null); setTreasureChest(null); setCoHosts([]); setShowGuestInvite(false); setVipEntrance(null); setMutedUsers(new Set()); setActiveSticker(null); setShowStickerPanel(false); setClipSaved(false); setShowRevenueDash(false); setShowTop3Banner(true); setComboMultiplierText(null); setGiftStreakCount(0); setSuperChat(null); setMilestoneEffect(null); setWaveActive(false); setTrendingWord(null); setHashtags([]); setHashtagInput(""); setBgMusic(null); setScreenEffect(null); setStreamRating(0); setDisplayedCoins(0); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -920,6 +961,28 @@ export default function GoLivePage() {
             <span className="text-lg">🎬</span>
             <span className="text-purple-300 text-sm font-semibold">Save Highlights & Replay</span>
           </button>
+
+          {/* Stream Rating */}
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 space-y-2">
+            <p className="text-xs text-white/50 font-medium">How was your stream?</p>
+            <div className="flex justify-center gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => { setStreamRating(star); toast.success(`Rated ${star} ⭐`); }}
+                  className={cn(
+                    "text-2xl transition-all duration-200",
+                    star <= streamRating ? "scale-110" : "opacity-30 hover:opacity-60"
+                  )}
+                >
+                  ⭐
+                </button>
+              ))}
+            </div>
+            {streamRating > 0 && (
+              <p className="text-[10px] text-white/30">{streamRating >= 4 ? "Amazing stream! 🎉" : streamRating >= 3 ? "Good work! Keep going 💪" : "Every stream makes you better! 📈"}</p>
+            )}
+          </div>
 
           {/* Schedule Next Stream */}
           <button
@@ -1255,6 +1318,53 @@ export default function GoLivePage() {
                 </div>
               </div>
 
+              {/* Hashtags for discovery */}
+              <div>
+                <p className="text-zinc-400 text-xs mb-2 font-medium">Hashtags</p>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {hashtags.map((tag) => (
+                    <span key={tag} className="flex items-center gap-1 bg-blue-500/15 text-blue-300 text-[11px] font-medium rounded-full px-2.5 py-1 border border-blue-500/20">
+                      #{tag}
+                      <button onClick={() => setHashtags((p) => p.filter((t) => t !== tag))} className="text-blue-400/60 hover:text-blue-300">
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                {hashtags.length < 5 && (
+                  <div className="flex gap-2">
+                    <Input
+                      value={hashtagInput}
+                      onChange={(e) => setHashtagInput(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && hashtagInput.trim()) {
+                          setHashtags((p) => [...p, hashtagInput.trim()]);
+                          setHashtagInput("");
+                        }
+                      }}
+                      placeholder="Add hashtag..."
+                      maxLength={20}
+                      className="bg-zinc-800/80 border-zinc-700/50 text-white placeholder:text-zinc-500 text-xs rounded-xl h-8 flex-1"
+                    />
+                    <button
+                      onClick={() => { if (hashtagInput.trim()) { setHashtags((p) => [...p, hashtagInput.trim()]); setHashtagInput(""); } }}
+                      className="px-3 py-1 rounded-xl bg-blue-500/20 text-blue-300 text-[11px] font-medium border border-blue-500/20"
+                    >
+                      Add
+                    </button>
+                  </div>
+                )}
+                {hashtags.length === 0 && (
+                  <div className="flex gap-1.5 mt-1">
+                    {["trending", "live", "fyp", "viral"].map((suggestion) => (
+                      <button key={suggestion} onClick={() => setHashtags((p) => [...p, suggestion])} className="text-[10px] text-zinc-500 bg-zinc-800/60 rounded-full px-2 py-0.5 hover:text-zinc-400 transition-colors">
+                        #{suggestion}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Settings toggles — separated row with divider */}
               <div className="border-t border-white/5 pt-3">
                 <div className="flex items-center gap-2">
@@ -1554,6 +1664,37 @@ export default function GoLivePage() {
               <span className="text-[10px]">💰</span>
             </button>
 
+            {/* ── NEW v4: Background Music toggle ── */}
+            <button
+              onClick={() => {
+                const tracks = [null, "🎶 Chill Lo-fi", "🎸 Acoustic", "🎹 Piano Vibes", "🥁 Upbeat Pop"];
+                const idx = tracks.indexOf(bgMusic);
+                const next = tracks[(idx + 1) % tracks.length];
+                setBgMusic(next);
+                toast(next ? `🎵 ${next}` : "🔇 Music off", { duration: 1500 });
+              }}
+              className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", bgMusic ? "bg-violet-500/25 border-violet-500/20" : "bg-black/30")}
+            >
+              <span className="text-[10px]">🎵</span>
+            </button>
+
+            {/* ── NEW v4: On-demand effects ── */}
+            <button
+              onClick={() => {
+                const effects: Array<"confetti" | "hearts" | "fire" | null> = ["confetti", "hearts", "fire", null];
+                const idx = effects.indexOf(screenEffect);
+                const next = effects[(idx + 1) % effects.length];
+                setScreenEffect(next);
+                if (next) {
+                  toast(`${next === "confetti" ? "🎊" : next === "hearts" ? "💕" : "🔥"} ${next.charAt(0).toUpperCase() + next.slice(1)} effect!`, { duration: 1500 });
+                  setTimeout(() => setScreenEffect(null), 3000);
+                }
+              }}
+              className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", screenEffect ? "bg-pink-500/25 border-pink-500/20" : "bg-black/30")}
+            >
+              <span className="text-[10px]">🎊</span>
+            </button>
+
             <button onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "🔇 Muted" : "🔊 Sound on", { duration: 1200 }); }} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", soundEnabled ? "bg-black/30" : "bg-red-500/20")}>
               {soundEnabled ? <Volume2 className="h-3.5 w-3.5 text-white/70" /> : <VolumeX className="h-3.5 w-3.5 text-red-300" />}
             </button>
@@ -1664,6 +1805,10 @@ export default function GoLivePage() {
                       "flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200 pointer-events-auto cursor-pointer",
                       msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" :
                       msg.isSystem ? "bg-transparent pointer-events-none" :
+                      msg.level && msg.level >= 40 ? "bg-gradient-to-r from-amber-900/40 to-yellow-900/20 border border-amber-500/15 shadow-sm shadow-amber-500/10" :
+                      msg.level && msg.level >= 30 ? "bg-gradient-to-r from-purple-900/40 to-pink-900/20 border border-purple-500/15" :
+                      msg.level && msg.level >= 20 ? "bg-gradient-to-r from-blue-900/40 to-cyan-900/20 border border-blue-500/10" :
+                      msg.level && msg.level >= 10 ? "bg-gradient-to-r from-green-900/30 to-emerald-900/15 border border-green-500/10" :
                       "bg-black/40 backdrop-blur-sm"
                     )}
                   >
@@ -2574,6 +2719,63 @@ export default function GoLivePage() {
                 </Button>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW v4: Screen Effects Overlay ── */}
+      <AnimatePresence>
+        {phase === "live" && screenEffect && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[45] pointer-events-none overflow-hidden"
+          >
+            {Array.from({ length: screenEffect === "confetti" ? 30 : 20 }).map((_, i) => (
+              <motion.span
+                key={`effect-${i}`}
+                initial={{ y: -20, x: Math.random() * 400, opacity: 1, rotate: 0 }}
+                animate={{
+                  y: 800,
+                  rotate: Math.random() * 360,
+                  opacity: [1, 1, 0],
+                }}
+                transition={{ duration: 2 + Math.random() * 2, delay: Math.random() * 0.5 }}
+                className="absolute text-xl"
+              >
+                {screenEffect === "confetti" ? ["🎊", "🎉", "⭐", "✨", "🌟"][i % 5] :
+                 screenEffect === "hearts" ? ["❤️", "💕", "💖", "💗", "💝"][i % 5] :
+                 ["🔥", "💥", "⚡", "🌋", "☄️"][i % 5]}
+              </motion.span>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW v4: Background Music Indicator ── */}
+      <AnimatePresence>
+        {phase === "live" && bgMusic && (
+          <motion.div
+            initial={{ x: -100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -100, opacity: 0 }}
+            className="fixed left-3 z-40"
+            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 120px)" }}
+          >
+            <div className="flex items-center gap-1.5 bg-violet-900/60 backdrop-blur-md rounded-full px-2.5 py-1 border border-violet-500/20">
+              <motion.span
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                className="text-xs"
+              >
+                🎵
+              </motion.span>
+              <span className="text-[10px] text-violet-200 font-medium truncate max-w-[100px]">{bgMusic}</span>
+              <button onClick={() => setBgMusic(null)} className="text-white/30 hover:text-white/60">
+                <X className="h-2.5 w-2.5" />
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
