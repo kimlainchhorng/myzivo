@@ -239,7 +239,16 @@ export default function GoLivePage() {
       if (!lastViewer) { lastViewer = lastLike = lastElapsed = lastChat = now; }
 
       if (now - lastElapsed >= 1000) {
-        setElapsed((p) => p + 1);
+        setElapsed((p) => {
+          const next = p + 1;
+          // Duration milestones
+          const durationMilestones: Record<number, string> = { 300: "⏱️ 5 minutes! Great start!", 900: "🔥 15 minutes! You're on fire!", 1800: "🏆 30 minutes! Incredible stream!", 3600: "👑 1 hour! Legendary broadcaster!" };
+          if (durationMilestones[next]) {
+            setChatMessages((prev) => [...prev.slice(-20), { id: `dur-${next}`, user: "🎯", text: durationMilestones[next], isSystem: true }]);
+            toast.success(durationMilestones[next]);
+          }
+          return next;
+        });
         lastElapsed = now;
       }
       if (now - lastViewer >= 3000) {
