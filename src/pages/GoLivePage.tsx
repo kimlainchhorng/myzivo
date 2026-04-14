@@ -411,6 +411,19 @@ export default function GoLivePage() {
     setCoinsEarned((p) => p + gift.coins);
     setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + gift.coins }));
     spawnFloatingReaction(gift.icon);
+
+    // Add gift message to chat
+    setChatMessages((prev) => [
+      ...prev.slice(-20),
+      {
+        id: `gift-${Date.now()}`,
+        user: sender,
+        text: `sent ${gift.name} (${gift.coins} coins) 🎁`,
+        isGift: true,
+        avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][Math.floor(Math.random() * 5)],
+      },
+    ]);
+
     // Gift streak flash
     const now2 = Date.now();
     if (now2 - lastGiftTimeRef.current < 8000) {
