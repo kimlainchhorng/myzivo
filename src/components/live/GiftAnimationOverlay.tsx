@@ -33,11 +33,11 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
 
   // Generate sparkle particles
   const sparkles = useMemo(() =>
-    Array.from({ length: 20 }, (_, i) => ({
+    Array.from({ length: 12 }, (_, i) => ({
       id: i,
-      angle: (i / 20) * Math.PI * 2,
-      dist: 70 + Math.random() * 120,
-      size: 3 + Math.random() * 8,
+      angle: (i / 12) * Math.PI * 2,
+      dist: 40 + Math.random() * 60,
+      size: 2 + Math.random() * 5,
       delay: i * 0.04,
       dur: 1.2 + Math.random() * 0.8,
       color: ["#FFD700", "#FF6B6B", "#A78BFA", "#34D399", "#F472B6", "#FBBF24", "#60A5FA", "#FB923C", "#E879F9", "#FCD34D"][i % 10],
@@ -46,10 +46,10 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
 
   // Generate floating ring particles
   const rings = useMemo(() =>
-    Array.from({ length: 6 }, (_, i) => ({
+    Array.from({ length: 4 }, (_, i) => ({
       id: i,
       delay: 0.2 + i * 0.15,
-      size: 60 + i * 30,
+      size: 30 + i * 18,
     })),
   [animKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -143,36 +143,36 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
             <motion.div
               className="absolute rounded-full"
               style={{
-                width: isPremium ? 320 : 220,
-                height: isPremium ? 320 : 220,
+                width: isPremium ? 140 : 100,
+                height: isPremium ? 140 : 100,
                 background: isPremium
-                  ? "radial-gradient(circle, hsla(30, 100%, 55%, 0.4) 0%, hsla(30, 100%, 55%, 0.1) 50%, transparent 70%)"
-                  : "radial-gradient(circle, hsla(42, 100%, 55%, 0.3) 0%, hsla(42, 100%, 55%, 0.08) 50%, transparent 70%)",
+                  ? "radial-gradient(circle, hsla(30, 100%, 55%, 0.35) 0%, hsla(30, 100%, 55%, 0.08) 50%, transparent 70%)"
+                  : "radial-gradient(circle, hsla(42, 100%, 55%, 0.25) 0%, hsla(42, 100%, 55%, 0.06) 50%, transparent 70%)",
               }}
-              animate={{ scale: [0.7, 1.4, 0.9, 1.2], opacity: [0.2, 0.8, 0.4, 0.6] }}
+              animate={{ scale: [0.7, 1.3, 0.9, 1.1], opacity: [0.2, 0.7, 0.4, 0.5] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             />
 
-            {/* Gift image — dramatic spring entrance from below */}
+            {/* Gift image — compact spring entrance */}
             <motion.div
-              initial={{ scale: 0, opacity: 0, y: 200, rotate: -20 }}
-              animate={{ scale: [0, 1.25, 0.9, 1.05, 1], opacity: 1, y: 0, rotate: [-20, 8, -3, 0] }}
-              transition={{ type: "spring", damping: 8, stiffness: 140, mass: 0.8, delay: 0.05 }}
+              initial={{ scale: 0, opacity: 0, y: 80, rotate: -15 }}
+              animate={{ scale: [0, 1.15, 0.9, 1.02, 1], opacity: 1, y: 0, rotate: [-15, 5, -2, 0] }}
+              transition={{ type: "spring", damping: 10, stiffness: 160, mass: 0.6, delay: 0.05 }}
               className="relative z-10"
             >
               <motion.img
                 src={giftImg}
                 alt={activeGift.name}
-                className={isPremium ? "w-52 h-52 object-contain" : "w-40 h-40 object-contain"}
+                className={isPremium ? "w-24 h-24 object-contain" : "w-20 h-20 object-contain"}
                 style={{
                   filter: isPremium
-                    ? "drop-shadow(0 0 45px rgba(255,150,0,0.7)) drop-shadow(0 10px 30px rgba(0,0,0,0.5))"
-                    : "drop-shadow(0 0 35px rgba(255,200,0,0.55)) drop-shadow(0 10px 25px rgba(0,0,0,0.45))",
+                    ? "drop-shadow(0 0 20px rgba(255,150,0,0.6)) drop-shadow(0 4px 12px rgba(0,0,0,0.4))"
+                    : "drop-shadow(0 0 16px rgba(255,200,0,0.5)) drop-shadow(0 4px 10px rgba(0,0,0,0.35))",
                 }}
                 animate={{
-                  y: [0, -12, 0],
-                  scale: [1, 1.06, 1],
-                  rotate: [0, 2, -2, 0],
+                  y: [0, -6, 0],
+                  scale: [1, 1.04, 1],
+                  rotate: [0, 1.5, -1.5, 0],
                 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               />
