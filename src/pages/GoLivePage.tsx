@@ -532,16 +532,83 @@ export default function GoLivePage() {
     setTimeout(() => setFloatingReactions((prev) => prev.filter((r) => r.id !== id)), 2500);
   }, []);
 
-  // Goal celebration
+  // Goal celebration + milestone effects
   useEffect(() => {
     if (coinsEarned >= streamGoal && !goalCelebrated) {
       setGoalCelebrated(true);
       toast.success("🎉 Stream goal reached! Amazing!", { duration: 5000 });
+      setMilestoneEffect("confetti");
+      setTimeout(() => setMilestoneEffect(null), 4000);
       ["🎉", "🥳", "✨", "🎊", "💎"].forEach((e, i) => {
         setTimeout(() => spawnFloatingReaction(e), i * 200);
       });
     }
   }, [coinsEarned, streamGoal, goalCelebrated, spawnFloatingReaction]);
+
+  // ── NEW: Super Chat simulation (random viewer sends highlighted message) ──
+  useEffect(() => {
+    if (phase !== "live") return;
+    const superChatMsgs = [
+      { text: "You're the BEST streamer! 🌟", coins: 50 },
+      { text: "Keep going! Love from Brazil 🇧🇷", coins: 25 },
+      { text: "This stream is FIRE 🔥🔥🔥", coins: 100 },
+      { text: "Happy birthday to me! 🎂", coins: 30 },
+      { text: "First super chat! Am I famous? 😂", coins: 10 },
+    ];
+    const names = ["Luna ✨", "Kai 🔥", "VIP_Star 💎", "Diamond_Alex 👑"];
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      timer = setTimeout(() => {
+        if (Math.random() > 0.5) {
+          const msg = superChatMsgs[Math.floor(Math.random() * superChatMsgs.length)];
+          const name = names[Math.floor(Math.random() * names.length)];
+          setSuperChat({ user: name, text: msg.text, coins: msg.coins, id: Date.now().toString() });
+          setCoinsEarned((p) => p + msg.coins);
+          setChatMessages((prev) => [...prev.slice(-20), { id: `sc-${Date.now()}`, user: name, text: `💬 SUPER CHAT: ${msg.text}`, isGift: true, avatar: "bg-amber-500" }]);
+          setTimeout(() => setSuperChat(null), 6000);
+        }
+        schedule();
+      }, 45000 + Math.random() * 35000);
+    };
+    schedule();
+    return () => clearTimeout(timer);
+  }, [phase]);
+
+  // ── NEW: Trending words detection from chat ──
+  useEffect(() => {
+    if (phase !== "live" || chatMessages.length < 5) return;
+    const words: Record<string, number> = {};
+    const recent = chatMessages.slice(-10);
+    for (const msg of recent) {
+      if (msg.isSystem || msg.isGift) continue;
+      const tokens = msg.text.toLowerCase().split(/\s+/).filter((w) => w.length > 2 && !["the", "and", "you", "this", "are", "for", "was"].includes(w));
+      for (const t of tokens) words[t] = (words[t] || 0) + 1;
+    }
+    const top = Object.entries(words).sort(([, a], [, b]) => b - a)[0];
+    if (top && top[1] >= 2) {
+      setTrendingWord(top[0]);
+    } else {
+      setTrendingWord(null);
+    }
+  }, [chatMessages, phase]);
+
+  // ── NEW: Wave animation trigger (simulated) ──
+  useEffect(() => {
+    if (phase !== "live") return;
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      timer = setTimeout(() => {
+        if (viewerCount >= 3 && Math.random() > 0.7) {
+          setWaveActive(true);
+          setChatMessages((prev) => [...prev.slice(-20), { id: `wave-${Date.now()}`, user: "🌊", text: "Viewers started a WAVE! 👋👋👋", isSystem: true }]);
+          setTimeout(() => setWaveActive(false), 3000);
+        }
+        schedule();
+      }, 50000 + Math.random() * 40000);
+    };
+    schedule();
+    return () => clearTimeout(timer);
+  }, [phase, viewerCount]);
 
   // ── PK Battle simulation ──
   useEffect(() => {
