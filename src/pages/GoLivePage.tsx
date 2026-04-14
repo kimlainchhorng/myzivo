@@ -1184,6 +1184,16 @@ export default function GoLivePage() {
               <Trophy className="h-4 w-4 text-amber-400" />
             </button>
 
+            {/* Sound toggle */}
+            <button onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "🔇 Muted" : "🔊 Sound on", { duration: 1200 }); }} className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", soundEnabled ? "bg-black/30" : "bg-red-500/20")}>
+              {soundEnabled ? <Volume2 className="h-4 w-4 text-white/70" /> : <VolumeX className="h-4 w-4 text-red-300" />}
+            </button>
+
+            {/* Poll button */}
+            <button onClick={() => setShowPollCreator((p) => !p)} className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", activePoll ? "bg-blue-500/25 border-blue-500/20" : "bg-black/30")}>
+              <BarChart3 className={cn("h-4 w-4", activePoll ? "text-blue-300" : "text-white/70")} />
+            </button>
+
             <div className="flex flex-col items-center">
               <button onClick={() => sendReaction("❤️")} className="w-11 h-11 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5 relative">
                 <Heart className="h-5 w-5 text-red-400" />
