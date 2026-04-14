@@ -260,6 +260,7 @@ export default function GoLivePage() {
         setViewerGiftNotif(notif);
         setGiftsReceived((p) => p + 1);
         setCoinsEarned((p) => p + giftCoins[idx]);
+        setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + giftCoins[idx] }));
         playGiftSound(1);
         setTimeout(() => setViewerGiftNotif((cur) => cur?.id === notif.id ? null : cur), 4000);
         scheduleNext();
