@@ -2355,6 +2355,115 @@ export default function GoLivePage() {
         )}
       </AnimatePresence>
 
+      {/* ── NEW v3: Gift Streak Counter ── */}
+      <AnimatePresence>
+        {phase === "live" && giftStreakCount >= 2 && (
+          <motion.div
+            key={`streak-${giftStreakCount}`}
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.5, opacity: 0 }}
+            className="fixed left-4 z-50 pointer-events-none"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 200px)" }}
+          >
+            <div className="flex items-center gap-2 bg-gradient-to-r from-red-600/80 to-orange-500/70 backdrop-blur-md rounded-2xl px-3 py-2 border border-red-400/30 shadow-lg shadow-red-500/30">
+              <motion.span animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 0.4, repeat: Infinity }} className="text-xl">🔥</motion.span>
+              <div>
+                <p className="text-white text-xs font-black">GIFT STREAK</p>
+                <p className="text-amber-200 text-lg font-black leading-none">{giftStreakCount}x</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW v3: Super Chat Overlay ── */}
+      <AnimatePresence>
+        {phase === "live" && superChat && (
+          <motion.div
+            key={superChat.id}
+            initial={{ y: 50, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -30, opacity: 0 }}
+            transition={{ type: "spring", damping: 20 }}
+            className="fixed left-3 right-14 z-50"
+            style={{ bottom: "280px" }}
+          >
+            <div className="rounded-2xl overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(255,180,0,0.9) 0%, rgba(255,120,0,0.85) 100%)", boxShadow: "0 4px 30px rgba(255,150,0,0.4)" }}>
+              <div className="px-3 py-1.5 flex items-center gap-2 border-b border-white/20">
+                <span className="text-white text-[10px] font-black uppercase tracking-wider">💬 Super Chat</span>
+                <span className="text-white/80 text-[10px] font-bold ml-auto flex items-center gap-1"><img src={goldCoinIcon} alt="" className="w-3 h-3" />{superChat.coins}</span>
+              </div>
+              <div className="px-3 py-2">
+                <p className="text-white text-[11px] font-bold">{superChat.user}</p>
+                <p className="text-white text-sm font-semibold mt-0.5">{superChat.text}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW v3: Milestone Confetti/Firework Effect ── */}
+      <AnimatePresence>
+        {phase === "live" && milestoneEffect && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[45] pointer-events-none overflow-hidden"
+          >
+            {Array.from({ length: 20 }).map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ y: -20, x: Math.random() * 400, opacity: 1, scale: 0 }}
+                animate={{ y: 800, opacity: 0, scale: 1, rotate: Math.random() * 720 }}
+                transition={{ duration: 2 + Math.random() * 2, delay: Math.random() * 0.5, ease: "easeOut" }}
+                className="absolute text-2xl"
+              >
+                {["🎉", "🎊", "✨", "⭐", "💛", "🥳", "🎆"][i % 7]}
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW v3: Wave Animation ── */}
+      <AnimatePresence>
+        {phase === "live" && waveActive && (
+          <motion.div
+            initial={{ opacity: 0, x: -100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            className="fixed left-3 right-14 z-50 pointer-events-none"
+            style={{ bottom: "240px" }}
+          >
+            <div className="flex items-center gap-1 justify-center">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <motion.span
+                  key={i}
+                  animate={{ y: [0, -15, 0] }}
+                  transition={{ duration: 0.5, delay: i * 0.1, repeat: 3 }}
+                  className="text-2xl"
+                >
+                  👋
+                </motion.span>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW v3: Trending Word Indicator ── */}
+      {phase === "live" && trendingWord && (
+        <div className="fixed left-3 z-40 pointer-events-none" style={{ top: "calc(env(safe-area-inset-top, 0px) + 195px)" }}>
+          <div className="flex items-center gap-1 bg-blue-500/20 backdrop-blur-sm rounded-full px-2 py-0.5 border border-blue-500/20">
+            <span className="text-[8px]">🔥</span>
+            <span className="text-[8px] text-blue-300 font-bold uppercase">Trending:</span>
+            <span className="text-[9px] text-white/80 font-semibold">{trendingWord}</span>
+          </div>
+        </div>
+      )}
+
       {/* ── NEW: Revenue Mini-Dashboard ── */}
       <AnimatePresence>
         {phase === "live" && showRevenueDash && (
