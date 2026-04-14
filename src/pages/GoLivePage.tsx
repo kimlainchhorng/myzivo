@@ -307,6 +307,7 @@ export default function GoLivePage() {
         const name = followerNames[Math.floor(Math.random() * followerNames.length)];
         setNewFollower(name);
         fakeFollowers.current += 1;
+        setNewFollowersCount((p) => p + 1);
         setTimeout(() => setNewFollower(null), 3000);
         scheduleFollower();
       }, 20000 + Math.random() * 20000);
