@@ -91,8 +91,30 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
         transition={{ duration: 0.15 }}
         className="fixed inset-0 z-[100] pointer-events-none overflow-hidden"
       >
-        {/* ── Premium backdrop glow for expensive gifts (no video) ── */}
-        {isPremium && (
+        {/* ── Premium full-screen video animation ── */}
+        {isPremium && videoUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 z-[1] flex items-center justify-center"
+          >
+            <video
+              ref={videoRef}
+              src={videoUrl}
+              autoPlay
+              muted
+              playsInline
+              onEnded={dismiss}
+              className="w-full h-full object-cover"
+              style={{ mixBlendMode: "screen" }}
+            />
+          </motion.div>
+        )}
+
+        {/* ── Backdrop glow fallback for premium without video ── */}
+        {isPremium && !videoUrl && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
