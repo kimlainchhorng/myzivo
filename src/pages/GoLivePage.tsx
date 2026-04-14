@@ -917,7 +917,7 @@ export default function GoLivePage() {
             <button onClick={() => setShowGiftPanel(true)} className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-amber-500/20 relative" data-testid="gift-btn">
               <Gift className="h-5 w-5 text-yellow-300" />
               {giftsReceived > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">{giftsReceived}</span>
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">{giftsReceived > 99 ? "99+" : giftsReceived}</span>
               )}
             </button>
           </div>
