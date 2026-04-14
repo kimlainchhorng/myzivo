@@ -1171,7 +1171,7 @@ export default function GoLivePage() {
                           <span className="text-[8px] text-white font-bold">{name[0]}</span>
                         </div>
                         <span className="text-[11px] text-white/80 font-medium truncate flex-1">{name}</span>
-                        <span className={cn("text-[10px] font-bold", colors[i])}>{coins.toLocaleString()}</span>
+                        <span className={cn("text-[10px] font-bold flex items-center gap-0.5", colors[i])}><img src={goldCoinIcon} alt="" className="w-3 h-3" />{coins.toLocaleString()}</span>
                       </div>
                     );
                   })
