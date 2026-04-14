@@ -30,23 +30,9 @@ function subscribe(cb: () => void) {
 
 function getSnapshot() { return _lang; }
 
-/* ── Lazy-loaded translations (separate chunk) ── */
-let _translations: Record<string, Record<string, string>> | null = null;
-let _loadPromise: Promise<void> | null = null;
-
-function ensureTranslations() {
-  if (_translations) return;
-  if (!_loadPromise) {
-    _loadPromise = import("@/i18n/translations").then((mod) => {
-      _translations = mod.default;
-      // Trigger re-render for any subscribed components
-      _listeners.forEach((l) => l());
-    });
-  }
-}
-
-// Start loading immediately but don't block
-ensureTranslations();
+/* ── Translations — eagerly imported to prevent flash of raw keys ── */
+import translationsData from "@/i18n/translations";
+const _translations: Record<string, Record<string, string>> = translationsData;
 
 /* ── Available languages ── */
 export const LANGUAGES = [
