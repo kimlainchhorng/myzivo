@@ -1,12 +1,10 @@
 /**
  * GiftAnimationOverlay — Premium gift animation over live stream
  * TikTok/Bigo-level: dramatic entrance, pulsing combo, polished sender banner
- * + Premium video animations for expensive gifts
  */
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { giftImages } from "@/config/giftIcons";
-import { giftAnimationVideos } from "@/config/giftAnimations";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 
 interface GiftAnimationOverlayProps {
@@ -18,12 +16,8 @@ interface GiftAnimationOverlayProps {
 
 export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCount = 1 }: GiftAnimationOverlayProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  const videoRef = useRef<HTMLVideoElement | null>(null);
   const onCompleteRef = useRef(onComplete);
   const [animKey, setAnimKey] = useState(0);
-  const [videoReady, setVideoReady] = useState(false);
-  const [videoFailed, setVideoFailed] = useState(false);
-  const videoErrorCountRef = useRef(0);
 
   onCompleteRef.current = onComplete;
 
@@ -59,28 +53,13 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
 
   useEffect(() => {
     if (!activeGift) return;
-    setVideoReady(false);
-    setVideoFailed(false);
-    videoErrorCountRef.current = 0;
     setAnimKey((k) => k + 1);
   }, [activeGift]);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !activeGift || !giftAnimationVideos[activeGift.name] || videoFailed) return;
-
-    const playPromise = video.play();
-    if (playPromise) {
-      void playPromise.catch(() => {
-        // Muted inline autoplay should usually work; keep the image fallback if it doesn't.
-      });
-    }
-  }, [animKey, activeGift, videoFailed]);
-
-  useEffect(() => {
     if (!activeGift) return;
-    const isPremium = !!giftAnimationVideos[activeGift.name];
-    timeoutRef.current = setTimeout(dismiss, isPremium ? 6500 : 4000);
+    const isPremium = activeGift.coins >= 100;
+    timeoutRef.current = setTimeout(dismiss, isPremium ? 5000 : 4000);
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -92,9 +71,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
   if (!activeGift) return null;
 
   const giftImg = giftImages[activeGift.name];
-  const videoUrl = giftAnimationVideos[activeGift.name];
-  const isPremium = !!videoUrl;
-  const showVideo = Boolean(videoUrl) && !videoFailed;
+  const isPremium = activeGift.coins >= 100;
   const isLegendary = activeGift.coins >= 20000;
 
   // Combo intensity scales with count
@@ -129,45 +106,6 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
         {/* ── Central gift image with effects ── */}
         {giftImg && (
           <div className="absolute inset-0 flex items-center justify-center z-[2]" style={{ marginTop: giftPanelOpen ? "-45%" : "-5%" }}>
-            {/* Premium video animation — blended so dark backgrounds disappear over the live stream */}
-            {showVideo && (
-              <motion.div
-                initial={{ scale: 0.85, opacity: 0 }}
-                animate={{ scale: 1, opacity: videoReady ? 1 : 0.45 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-                className="absolute flex items-center justify-center overflow-hidden rounded-3xl"
-                style={{
-                  WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 50%, transparent 100%)",
-                  maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 50%, transparent 100%)",
-                }}
-              >
-                <video
-                  key={`${animKey}-${videoUrl}`}
-                  ref={videoRef}
-                  src={videoUrl}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="auto"
-                  onCanPlay={() => setVideoReady(true)}
-                  onLoadedData={() => setVideoReady(true)}
-                  onError={() => {
-                    videoErrorCountRef.current += 1;
-                    if (videoErrorCountRef.current >= 3) setVideoFailed(true);
-                  }}
-                  className={isLegendary ? "w-[20rem] h-[20rem] sm:w-[26rem] sm:h-[26rem] object-cover" : "w-[16rem] h-[16rem] sm:w-[22rem] sm:h-[22rem] object-cover"}
-                  style={{
-                    opacity: videoReady ? 1 : 0,
-                    filter: isLegendary
-                      ? "brightness(1.08) contrast(1.12) saturate(1.2)"
-                      : "brightness(1.04) contrast(1.08) saturate(1.15)",
-                    transform: "translateZ(0)",
-                  }}
-                />
-              </motion.div>
-            )}
-
             {/* Expanding ring pulses */}
             {rings.map((r) => (
               <motion.div
@@ -225,7 +163,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               <motion.img
                 src={giftImg}
                 alt={activeGift.name}
-                className={showVideo ? "w-14 h-14 sm:w-16 sm:h-16 object-contain" : isPremium ? "w-24 h-24 object-contain" : "w-20 h-20 object-contain"}
+                className={isLegendary ? "w-28 h-28 sm:w-32 sm:h-32 object-contain" : isPremium ? "w-24 h-24 object-contain" : "w-20 h-20 object-contain"}
                 style={{
                   filter: isPremium
                     ? "drop-shadow(0 0 20px rgba(255,150,0,0.6)) drop-shadow(0 4px 12px rgba(0,0,0,0.4))"
@@ -346,7 +284,6 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
             )}
 
             <motion.div className="flex flex-col items-center">
-              {/* Combo label */}
               <motion.span
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
