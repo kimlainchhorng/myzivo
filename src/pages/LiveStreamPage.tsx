@@ -48,6 +48,7 @@ import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import { giftImages } from "@/config/giftIcons";
 import { giftAnimationVideos } from "@/config/giftAnimations";
+import { ReactionIcon } from "@/utils/reactionIcons";
 
 interface LiveStream {
   id: string;
@@ -534,7 +535,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               className="absolute bottom-0 text-2xl"
               style={{ left: `${r.x - 60}%` }}
             >
-              {r.emoji}
+              <ReactionIcon name={r.emoji} className="h-6 w-6" />
             </motion.div>
           ))}
         </AnimatePresence>
@@ -805,13 +806,13 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
 
         {/* Quick reactions */}
         <div className="flex items-center gap-1.5 px-3 mt-1.5">
-          {quickReactions.map((emoji) => (
+          {quickReactions.map((key) => (
             <button
-              key={emoji}
-              onClick={() => sendReaction(emoji)}
+              key={key}
+              onClick={() => sendReaction(key)}
               className="w-8 h-8 rounded-lg bg-black/30 backdrop-blur-md flex items-center justify-center text-sm active:scale-75 transition-transform border border-white/5"
             >
-              {emoji}
+              <ReactionIcon name={key} className="h-4 w-4" />
             </button>
           ))}
         </div>

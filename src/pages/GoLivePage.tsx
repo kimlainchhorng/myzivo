@@ -508,7 +508,7 @@ export default function GoLivePage() {
           setTimeout(() => {
             setChatMessages((prev) => [
               ...prev.slice(-20),
-              { id: `thx-${Date.now()}`, user: "You (Host)", text: `Thank you ${sender} for the ${giftNames[idx]}! ❤️`, avatar: "bg-red-500" },
+              { id: `thx-${Date.now()}`, user: "You (Host)", text: `Thank you ${sender} for the ${giftNames[idx]}!`, avatar: "bg-red-500" },
             ]);
           }, 1500);
         }
@@ -551,7 +551,7 @@ export default function GoLivePage() {
   const sendChat = useCallback(() => {
     if (!chatInput.trim()) return;
     if (slowMode && slowModeCooldown > 0) {
-      toast(`⏳ Slow mode: wait ${slowModeCooldown}s`, { duration: 1500 });
+      toast(`Slow mode: wait ${slowModeCooldown}s`, { duration: 1500 });
       return;
     }
     setChatMessages((prev) => [...prev.slice(-20), { id: Date.now().toString(), user: "You (Host)", text: chatInput, avatar: "bg-red-500" }]);
@@ -609,7 +609,7 @@ export default function GoLivePage() {
       toast.success("Stream goal reached! Amazing!", { duration: 5000 });
       setMilestoneEffect("confetti");
       setTimeout(() => setMilestoneEffect(null), 4000);
-      ["🎉", "🥳", "✨", "🎊", ""].forEach((e, i) => {
+      ["heart", "party", "sparkle", "star", "crown"].forEach((e, i) => {
         setTimeout(() => spawnFloatingReaction(e), i * 200);
       });
     }
@@ -813,7 +813,7 @@ export default function GoLivePage() {
 
     // ── NEW: Combo Multiplier Visual ──
     if (newCombo >= 2) {
-      const comboLabels = ["", "", "COMBO x2 🔥", "COMBO x3 ", "COMBO x4 💥", "MEGA x5 🌟", "ULTRA x6 ", "SUPREME x7 👑"];
+      const comboLabels = ["", "", "COMBO x2", "COMBO x3", "COMBO x4", "MEGA x5", "ULTRA x6", "SUPREME x7"];
       const label = newCombo < comboLabels.length ? comboLabels[newCombo] : `GODLIKE x${newCombo}`;
       setComboMultiplierText({ text: label, id: `combo-${now}` });
       setTimeout(() => setComboMultiplierText(null), 2500);
@@ -1046,7 +1046,7 @@ export default function GoLivePage() {
 
           {/* Schedule Next Stream */}
           <button
-            onClick={() => toast("📅 Stream scheduling coming soon!", { description: "Set a time and notify your followers automatically." })}
+            onClick={() => toast("Stream scheduling coming soon!", { description: "Set a time and notify your followers automatically." })}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-white/5 border border-white/10 active:scale-[0.98] transition-transform"
           >
             <CalendarPlus className="h-4 w-4 text-blue-400" />
@@ -1226,7 +1226,7 @@ export default function GoLivePage() {
               />
             </div>
             {coinsEarned >= streamGoal && (
-              <p className="text-[9px] text-amber-300 mt-1 text-center animate-pulse">🎉 Goal reached!</p>
+              <p className="text-[9px] text-amber-300 mt-1 text-center animate-pulse flex items-center justify-center gap-0.5"><PartyPopper className="h-3 w-3" /> Goal reached!</p>
             )}
           </div>
 
