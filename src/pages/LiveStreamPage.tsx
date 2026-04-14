@@ -67,9 +67,9 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const [muted, setMuted] = useState(false);
   const [giftNotifQueue, setGiftNotifQueue] = useState<{ id: string; sender: string; giftName: string; coins: number; icon: string }[]>([]);
   const [topGifters, setTopGifters] = useState<{ name: string; coins: number }[]>([
-    { name: "Luna ✨", coins: 520 },
-    { name: "Kai 🔥", coins: 310 },
-    { name: "Mia 💜", coins: 180 },
+    { name: "Luna", coins: 520 },
+    { name: "Kai", coins: 310 },
+    { name: "Mia", coins: 180 },
   ]);
   const [elapsed, setElapsed] = useState(0);
   const [doubleTapHeart, setDoubleTapHeart] = useState<{ id: string; x: number; y: number } | null>(null);
@@ -84,24 +84,24 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   // ── Active Poll (from host) ──
   const [activePoll, setActivePoll] = useState<{ question: string; options: string[]; votes: number[]; totalVotes: number; voted: number | null } | null>(null);
   const [fakeViewers] = useState(() => [
-    { name: "Luna ✨", level: 28, badge: "⭐ Top Fan" },
-    { name: "Kai 🔥", level: 15, badge: null },
-    { name: "Mia 💜", level: 22, badge: "⭐ Top Fan" },
-    { name: "Nora 🌸", level: 8, badge: null },
-    { name: "Zara 💎", level: 45, badge: "👑 VIP" },
-    { name: "Leo 🦁", level: 12, badge: null },
-    { name: "Aria 🎵", level: 33, badge: null },
-    { name: "Alex 🎮", level: 6, badge: null },
-    { name: "Jordan 🏀", level: 19, badge: null },
-    { name: "Sam 🌊", level: 10, badge: null },
-    { name: "Taylor 🌺", level: 4, badge: null },
-    { name: "Morgan 🎭", level: 7, badge: null },
+    { name: "Luna", level: 28, badge: "Top Fan" },
+    { name: "Kai", level: 15, badge: null },
+    { name: "Mia", level: 22, badge: "Top Fan" },
+    { name: "Nora", level: 8, badge: null },
+    { name: "Zara", level: 45, badge: "VIP" },
+    { name: "Leo", level: 12, badge: null },
+    { name: "Aria", level: 33, badge: null },
+    { name: "Alex", level: 6, badge: null },
+    { name: "Jordan", level: 19, badge: null },
+    { name: "Sam", level: 10, badge: null },
+    { name: "Taylor", level: 4, badge: null },
+    { name: "Morgan", level: 7, badge: null },
   ]);
   // ── NEW: Host level (derived from top gifter coins) ──
   const hostLevel = useMemo(() => Math.min(99, Math.floor(topGifters.reduce((a, b) => a + b.coins, 0) / 20) + 1), [topGifters]);
   const lastTapRef = useRef<number>(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const pinnedMessage = useMemo(() => `Welcome to ${stream.host_name}'s stream! Be respectful and have fun 🎉`, [stream.host_name]);
+  const pinnedMessage = useMemo(() => `Welcome to ${stream.host_name}'s stream! Be respectful and have fun!`, [stream.host_name]);
   const quickReactions = useMemo(() => ["❤️", "🔥", "😍", "👏", "😂"], []);
 
   const allGifts = useMemo(() => ({
@@ -111,7 +111,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       { icon: "🐍", name: "King Cobra", coins: 5, bg: "from-purple-400 to-violet-400" },
       { icon: "🦄", name: "Crystal Unicorn", coins: 10, bg: "from-pink-300 to-fuchsia-300" },
       { icon: "🔥", name: "Phoenix Rising", coins: 50, badge: "NEW", bg: "from-orange-500 to-red-500" },
-      { icon: "💎", name: "Diamond Bear", coins: 99, bg: "from-sky-200 to-blue-200" },
+      { icon: "", name: "Diamond Bear", coins: 99, bg: "from-sky-200 to-blue-200" },
       { icon: "🐱", name: "Lucky Cat", coins: 1, bg: "from-amber-200 to-yellow-200" },
       { icon: "🐺", name: "Mystic Wolf", coins: 30, bg: "from-blue-300 to-indigo-300" },
       { icon: "🦋", name: "Rainbow Butterfly", coins: 5, bg: "from-violet-300 to-pink-300" },
@@ -128,7 +128,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       { icon: "🏎️", name: "Luxury Lambo", coins: 2000, bg: "from-red-500 to-rose-500" },
       { icon: "🏎️", name: "Gold Ferrari", coins: 3000, bg: "from-yellow-400 to-amber-400" },
       { icon: "🚗", name: "Rolls Royce", coins: 5000, badge: "Luxury", bg: "from-gray-200 to-slate-200" },
-      { icon: "💎", name: "Diamond Rain", coins: 1500, bg: "from-sky-300 to-blue-300" },
+      { icon: "", name: "Diamond Rain", coins: 1500, bg: "from-sky-300 to-blue-300" },
       { icon: "🪙", name: "Gold Fountain", coins: 999, bg: "from-yellow-300 to-amber-300" },
       { icon: "🐉", name: "Treasure Dragon", coins: 2500, bg: "from-green-400 to-emerald-400" },
       { icon: "🚁", name: "Gold Helicopter", coins: 3500, bg: "from-amber-400 to-yellow-400" },
@@ -146,14 +146,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     ],
   }), []);
 
-  const fakeViewerNames = useMemo(() => ["Luna ✨", "Kai 🔥", "Mia 💜", "Nora 🌸", "Zara 💎", "Leo 🦁", "Aria 🎵", "Alex 🎮", "Jordan 🏀", "Sam 🌊"], []);
+  const fakeViewerNames = useMemo(() => ["Luna", "Kai", "Mia", "Nora", "Zara", "Leo", "Aria", "Alex", "Jordan", "Sam"], []);
 
   // Simulate chat messages + viewer joins
   useEffect(() => {
     const msgs = [
-      "Hi everyone! 👋", "Love this stream!", "❤️❤️❤️", "You're amazing!",
-      "First time here 🎉", "Let's gooo!", "So cool!", "Where are you from?",
-      "Can you do a shoutout?", "This is fire 🔥", "Following!", "Best stream ever",
+      "Hi everyone!", "Love this stream!", "Love this!", "You're amazing!",
+      "First time here!", "Let's gooo!", "So cool!", "Where are you from?",
+      "Can you do a shoutout?", "This is fire!", "Following!", "Best stream ever",
     ];
     const chatInterval = setInterval(() => {
       const name = fakeViewerNames[Math.floor(Math.random() * fakeViewerNames.length)];
@@ -174,7 +174,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         setChatMessages(prev => [...prev.slice(-30), {
           id: `join-${Date.now()}`,
           user: joiner,
-          text: "joined the stream 👋",
+          text: "joined the stream",
           isSystem: true,
         }]);
       }
@@ -224,7 +224,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
 
   // Simulate super chats from viewers
   useEffect(() => {
-    const superChatMsgs = ["Love this stream! 🔥", "Keep going! 💪", "You're the best! ⭐", "Shoutout please! 🎤", "Amazing content! 💯"];
+    const superChatMsgs = ["Love this stream!", "Keep going!", "You're the best!", "Shoutout please!", "Amazing content!"];
     const interval = setInterval(() => {
       if (Math.random() < 0.15) {
         const user = fakeViewerNames[Math.floor(Math.random() * fakeViewerNames.length)];
@@ -241,7 +241,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   useEffect(() => {
     const pollTimer = setTimeout(() => {
       setActivePoll({
-        question: "What should we do next? 🤔",
+        question: "What should we do next?",
         options: ["Q&A Session", "Play a Game", "Sing a Song"],
         votes: [42, 67, 31],
         totalVotes: 140,
@@ -277,7 +277,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     setChatMessages(prev => [...prev, {
       id: Date.now().toString(),
       user: "You",
-      text: `sent ${giftQty}x ${selectedGift.name} 🎁`,
+      text: `sent ${giftQty}x ${selectedGift.name}`,
       isGift: true,
       level: 5,
     }]);
@@ -302,12 +302,12 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       newVotes[optIndex] += 1;
       return { ...prev, votes: newVotes, totalVotes: prev.totalVotes + 1, voted: optIndex };
     });
-    toast.success("Vote submitted! 🗳️");
+    toast.success("Vote submitted!");
   }, []);
 
   const handleFollow = () => {
     setIsFollowing(!isFollowing);
-    toast.success(isFollowing ? "Unfollowed" : `Following ${stream.host_name}! ❤️`);
+    toast.success(isFollowing ? "Unfollowed" : `Following ${stream.host_name}!`);
   };
 
   const handleShare = () => {
@@ -315,7 +315,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       navigator.share({ title: stream.title, text: `Watch ${stream.host_name} live on ZIVO!`, url: window.location.href });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      toast.success("Link copied! 🔗");
+      toast.success("Link copied!");
     }
   };
 
@@ -341,7 +341,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       const clientY = "touches" in e ? e.touches[0]?.clientY ?? rect.height / 2 : (e as React.MouseEvent).clientY;
       const heart = { id: Date.now().toString(), x: clientX - rect.left, y: clientY - rect.top };
       setDoubleTapHeart(heart);
-      sendReaction("❤️");
+      sendReaction("heart");
       setTimeout(() => setDoubleTapHeart(null), 1000);
     }
     lastTapRef.current = now;
@@ -548,7 +548,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         </button>
         {/* Heart / Like */}
         <button
-          onClick={() => sendReaction("❤️")}
+          onClick={() => sendReaction("heart")}
           className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center"
         >
           <Heart className="h-4 w-4 text-red-400 fill-red-400" />
@@ -637,7 +637,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
             </div>
             <div className="p-2 space-y-1">
               {topGifters.length === 0 ? (
-                <p className="text-[10px] text-white/40 text-center py-3">No gifts yet — be the first! 🎁</p>
+                <p className="text-[10px] text-white/40 text-center py-3">No gifts yet — be the first! </p>
               ) : (
                 topGifters.map((g, i) => (
                   <div key={g.name} className={cn(
@@ -656,7 +656,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
             </div>
             {/* Viewer's own rank hint */}
             <div className="px-3 py-2 border-t border-white/10 bg-white/5">
-              <p className="text-[9px] text-white/40 text-center">Send gifts to climb the rankings! 🏆</p>
+              <p className="text-[9px] text-white/40 text-center">Send gifts to climb the rankings!</p>
             </div>
           </motion.div>
         )}
@@ -700,7 +700,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               <div className="bg-blue-950/70 backdrop-blur-md rounded-2xl p-3 border border-blue-500/20">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs">📊</span>
+                    <span className="text-xs"></span>
                     <span className="text-[11px] font-bold text-blue-300">POLL</span>
                   </div>
                   <span className="text-[9px] text-white/40">{activePoll.totalVotes} votes</span>
@@ -864,7 +864,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               </div>
               <div className="overflow-hidden flex-1">
                 <p className="text-xs text-white/40 whitespace-nowrap animate-[marquee_8s_linear_infinite]">
-                  ✨ Send gifts to support your favorite creators! &nbsp;&nbsp;&nbsp; ✨ Send gifts to support your favorite creators!
+                  Send gifts to support your favorite creators! &nbsp;&nbsp;&nbsp; Send gifts to support your favorite creators!
                 </p>
               </div>
               <button onClick={() => { setShowGiftPanel(false); setSelectedGift(null); }} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center shrink-0">
@@ -904,7 +904,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                         <span className="text-3xl">{gift.icon}</span>
                       )}
                       {giftAnimationVideos[gift.name] && (
-                        <span className="absolute bottom-0.5 left-0.5 text-[7px] bg-black/50 text-white/80 px-1 py-0.5 rounded-md font-bold backdrop-blur-sm">🎬</span>
+                        <span className="absolute bottom-0.5 left-0.5 text-[7px] bg-black/50 text-white/80 px-1 py-0.5 rounded-md font-bold backdrop-blur-sm flex items-center"><Clapperboard className="h-2 w-2" /></span>
                       )}
                     </div>
                     <span className="text-[10px] text-white/70 truncate w-full text-center leading-tight mt-0.5">{gift.name}</span>
@@ -991,7 +991,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                     giftTab === tab ? "text-white bg-white/10" : "text-white/40"
                   )}
                 >
-                  {tab === "gifts" ? "🎁 Gifts" : tab === "interactive" ? "⚡ Interactive" : "👑 Exclusive"}
+                  {tab === "gifts" ? "Gifts" : tab === "interactive" ? "Interactive" : "Exclusive"}
                 </button>
               ))}
               <div className="flex-1" />
@@ -1037,7 +1037,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   transition={{ duration: 0.5 }}
                 />
               ) : (
-                <span className="text-2xl">🎁</span>
+                <Gift className="h-6 w-6 text-amber-300" />
               )}
               <div>
                 <p className="text-white text-[11px] font-bold">
@@ -1073,12 +1073,12 @@ export default function LiveStreamPage() {
 
   // Demo streams shown when no DB data
   const demoStreams: LiveStream[] = useMemo(() => [
-    { id: "demo-1", host_id: "d1", host_name: "Sofia ✨", host_avatar: null, title: "Late Night Chill & Chat 🌙", topic: "Music", viewer_count: 1247, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "🎵" },
-    { id: "demo-2", host_id: "d2", host_name: "Tyler Gaming", host_avatar: null, title: "Ranked Grind — Road to Diamond 💎", topic: "Gaming", viewer_count: 3891, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "🎮" },
-    { id: "demo-3", host_id: "d3", host_name: "Chef Amara", host_avatar: null, title: "Making Pasta from Scratch 🍝", topic: "Cooking", viewer_count: 682, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "🍳" },
-    { id: "demo-4", host_id: "d4", host_name: "Zen Yoga", host_avatar: null, title: "Morning Flow — 30 Min Session", topic: "Fitness", viewer_count: 415, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "💪" },
-    { id: "demo-5", host_id: "d5", host_name: "DJ Pulse", host_avatar: null, title: "House Mix Live from Miami 🌴", topic: "Music", viewer_count: 5200, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "🎵" },
-    { id: "demo-6", host_id: "d6", host_name: "ArtByLuna", host_avatar: null, title: "Painting a Sunset — Oil on Canvas", topic: "Art", viewer_count: 328, status: "scheduled", started_at: new Date(Date.now() + 3600000).toISOString(), thumbnail_emoji: "🎨" },
+    { id: "demo-1", host_id: "d1", host_name: "Sofia", host_avatar: null, title: "Late Night Chill & Chat", topic: "Music", viewer_count: 1247, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "music" },
+    { id: "demo-2", host_id: "d2", host_name: "Tyler Gaming", host_avatar: null, title: "Ranked Grind — Road to Diamond ", topic: "Gaming", viewer_count: 3891, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "gamepad" },
+    { id: "demo-3", host_id: "d3", host_name: "Chef Amara", host_avatar: null, title: "Making Pasta from Scratch", topic: "Cooking", viewer_count: 682, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "chef" },
+    { id: "demo-4", host_id: "d4", host_name: "Zen Yoga", host_avatar: null, title: "Morning Flow — 30 Min Session", topic: "Fitness", viewer_count: 415, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "dumbbell" },
+    { id: "demo-5", host_id: "d5", host_name: "DJ Pulse", host_avatar: null, title: "House Mix Live from Miami", topic: "Music", viewer_count: 5200, status: "live", started_at: new Date().toISOString(), thumbnail_emoji: "music" },
+    { id: "demo-6", host_id: "d6", host_name: "ArtByLuna", host_avatar: null, title: "Painting a Sunset — Oil on Canvas", topic: "Art", viewer_count: 328, status: "scheduled", started_at: new Date(Date.now() + 3600000).toISOString(), thumbnail_emoji: "palette" },
   ], []);
 
   const { data: dbStreams = [], isLoading } = useQuery({
@@ -1101,9 +1101,9 @@ export default function LiveStreamPage() {
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
       const topicEmojis: Record<string, string> = {
-        "music": "🎵", "gaming": "🎮", "cooking": "🍳", "tech": "💻",
-        "fitness": "💪", "art": "🎨", "travel": "✈️", "fashion": "👗",
-        "education": "📚", "business": "💼", "comedy": "😂", "sports": "⚽",
+        "music": "music", "gaming": "gamepad", "cooking": "chef", "tech": "laptop",
+        "fitness": "dumbbell", "art": "palette", "travel": "plane", "fashion": "shirt",
+        "education": "book", "business": "briefcase", "comedy": "laugh", "sports": "ball",
       };
 
       return (amaSessions as any[]).map((s: any) => {
@@ -1119,7 +1119,7 @@ export default function LiveStreamPage() {
           viewer_count: s.viewer_count || 0,
           status: s.status === "active" ? "live" : s.status === "scheduled" ? "scheduled" : "ended",
           started_at: s.starts_at || s.created_at,
-          thumbnail_emoji: topicEmojis[topicKey] || "📺",
+          thumbnail_emoji: topicEmojis[topicKey] || "tv",
         } as LiveStream;
       });
     },
@@ -1194,7 +1194,7 @@ export default function LiveStreamPage() {
                   : "bg-muted/50 text-muted-foreground hover:bg-muted"
               )}
             >
-              {f === "all" ? "All" : f === "live" ? `🔴 Live${liveCount > 0 ? ` (${liveCount})` : ""}` : "📅 Scheduled"}
+              {f === "all" ? "All" : f === "live" ? `🔴 Live${liveCount > 0 ? ` (${liveCount})` : ""}` : "Scheduled"}
             </button>
           ))}
         </div>
