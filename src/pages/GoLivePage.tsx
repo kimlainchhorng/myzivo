@@ -1159,13 +1159,53 @@ export default function GoLivePage() {
                   </button>
                 </div>
 
+                {/* Recent gifts quick row */}
+                {recentGifts.length > 0 && (
+                  <div className="px-3 pb-2 border-b border-white/5">
+                    <p className="text-[9px] text-white/30 uppercase tracking-wider font-medium mb-1.5">Recently Sent</p>
+                    <div className="flex gap-2">
+                      {recentGifts.map((g) => (
+                        <button
+                          key={`recent-${g.name}`}
+                          onClick={() => { sendGift(g); }}
+                          className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform"
+                        >
+                          <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+                            {giftImages[g.name] ? (
+                              <img src={giftImages[g.name]} alt="" className="w-8 h-8 object-contain" />
+                            ) : (
+                              <span className="text-xl">{g.icon}</span>
+                            )}
+                          </div>
+                          <span className="text-[8px] text-white/40">{g.coins}</span>
+                        </button>
+                      ))}
+                      {/* Lucky Bag */}
+                      <button
+                        onClick={() => {
+                          const allItems = allGifts[giftTab];
+                          const lucky = allItems[Math.floor(Math.random() * allItems.length)];
+                          sendGift(lucky);
+                          toast(`🎲 Lucky! You sent ${lucky.name}!`);
+                        }}
+                        className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform"
+                      >
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20 flex items-center justify-center">
+                          <span className="text-xl">🎲</span>
+                        </div>
+                        <span className="text-[8px] text-purple-300">Lucky</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Gift grid */}
-                <div className="overflow-y-auto px-2 py-3" style={{ maxHeight: selectedGift ? "calc(55vh - 180px)" : "calc(55vh - 120px)" }}>
+                <div className="overflow-y-auto px-2 py-3" style={{ maxHeight: selectedGift ? "calc(55vh - 210px)" : "calc(55vh - 140px)" }}>
                   <div className="grid grid-cols-4 gap-1.5">
                     {allGifts[giftTab].map((gift) => (
                       <button
                         key={gift.name}
-                        onClick={() => setSelectedGift(selectedGift?.name === gift.name ? null : gift)}
+                        onClick={() => { setSelectedGift(selectedGift?.name === gift.name ? null : gift); setGiftQty(1); }}
                         className={cn(
                           "relative flex flex-col items-center gap-0.5 py-2.5 px-1 rounded-xl transition-all",
                           selectedGift?.name === gift.name
