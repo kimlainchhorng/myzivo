@@ -48,6 +48,8 @@ import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import { giftImages } from "@/config/giftIcons";
 import { giftAnimationVideos } from "@/config/giftAnimations";
+import { giftCatalog, getLevelColor, getLevelBg, type GiftItem } from "@/config/giftCatalog";
+import { playGiftSound, playPremiumGiftSound, playLegendaryGiftSound } from "@/utils/giftSounds";
 import { ReactionIcon, StreamTopicIcon } from "@/utils/reactionIcons";
 
 interface LiveStream {
@@ -117,47 +119,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const pinnedMessage = useMemo(() => `Welcome to ${stream.host_name}'s stream! Be respectful and have fun!`, [stream.host_name]);
   const quickReactions = useMemo(() => ["heart", "fire", "star", "clap", "laugh"], []);
 
-  const allGifts = useMemo(() => ({
-    gifts: [
-      { icon: "🐉", name: "Baby Dragon", coins: 1, badge: "Popular", bg: "from-orange-400 to-red-400" },
-      { icon: "🐼", name: "Cute Panda", coins: 1, bg: "from-green-300 to-emerald-300" },
-      { icon: "🐍", name: "King Cobra", coins: 5, bg: "from-purple-400 to-violet-400" },
-      { icon: "🦄", name: "Crystal Unicorn", coins: 10, bg: "from-pink-300 to-fuchsia-300" },
-      { icon: "🔥", name: "Phoenix Rising", coins: 50, badge: "NEW", bg: "from-orange-500 to-red-500" },
-      { icon: "", name: "Diamond Bear", coins: 99, bg: "from-sky-200 to-blue-200" },
-      { icon: "🐱", name: "Lucky Cat", coins: 1, bg: "from-amber-200 to-yellow-200" },
-      { icon: "🐺", name: "Mystic Wolf", coins: 30, bg: "from-blue-300 to-indigo-300" },
-      { icon: "🦋", name: "Rainbow Butterfly", coins: 5, bg: "from-violet-300 to-pink-300" },
-      { icon: "🐯", name: "Thunder Tiger", coins: 199, bg: "from-amber-400 to-orange-400" },
-      { icon: "🦊", name: "Star Fox", coins: 10, bg: "from-orange-300 to-amber-300" },
-      { icon: "🐧", name: "Ice Penguin", coins: 5, bg: "from-cyan-200 to-sky-200" },
-      { icon: "🐰", name: "Magic Rabbit", coins: 15, bg: "from-purple-300 to-indigo-300" },
-      { icon: "🐬", name: "Neon Dolphin", coins: 30, bg: "from-blue-400 to-cyan-400" },
-      { icon: "🐍", name: "Snake Dance", coins: 20, bg: "from-green-400 to-lime-400" },
-      { icon: "🐉", name: "Fire Dragon", coins: 299, badge: "Interaction", bg: "from-red-500 to-orange-500" },
-    ],
-    interactive: [
-      { icon: "🐼", name: "Panda Party", coins: 100, badge: "NEW", bg: "from-green-300 to-teal-300" },
-      { icon: "🏎️", name: "Luxury Lambo", coins: 2000, bg: "from-red-500 to-rose-500" },
-      { icon: "🏎️", name: "Gold Ferrari", coins: 3000, bg: "from-yellow-400 to-amber-400" },
-      { icon: "🚗", name: "Rolls Royce", coins: 5000, badge: "Luxury", bg: "from-gray-200 to-slate-200" },
-      { icon: "", name: "Diamond Rain", coins: 1500, bg: "from-sky-300 to-blue-300" },
-      { icon: "🪙", name: "Gold Fountain", coins: 999, bg: "from-yellow-300 to-amber-300" },
-      { icon: "🐉", name: "Treasure Dragon", coins: 2500, bg: "from-green-400 to-emerald-400" },
-      { icon: "🚁", name: "Gold Helicopter", coins: 3500, bg: "from-amber-400 to-yellow-400" },
-      { icon: "🦢", name: "Sapphire Swan", coins: 699, bg: "from-blue-200 to-sky-200" },
-      { icon: "🦅", name: "Emerald Eagle", coins: 1200, bg: "from-green-500 to-emerald-500" },
-      { icon: "👑", name: "Royal Crown", coins: 888, bg: "from-yellow-400 to-amber-500" },
-      { icon: "🐼", name: "Platinum Panda", coins: 1999, bg: "from-gray-300 to-slate-300" },
-    ],
-    exclusive: [
-      { icon: "🐆", name: "Black Panther", coins: 4999, badge: "NEW", bg: "from-purple-900 to-indigo-900" },
-      { icon: "🏎️", name: "Bugatti", coins: 9999, badge: "Luxury", bg: "from-blue-500 to-cyan-500" },
-      { icon: "🐉", name: "Diamond Dragon", coins: 15000, bg: "from-sky-300 to-blue-300" },
-      { icon: "🛥️", name: "Luxury Yacht", coins: 19999, bg: "from-blue-400 to-indigo-400" },
-      { icon: "🏝️", name: "Private Island", coins: 29999, badge: "Ultimate", bg: "from-green-400 to-teal-400" },
-    ],
-  }), []);
+  const allGifts = useMemo(() => giftCatalog, []);
 
   const fakeViewerNames = useMemo(() => ["Luna", "Kai", "Mia", "Nora", "Zara", "Leo", "Aria", "Alex", "Jordan", "Sam"], []);
 
@@ -298,6 +260,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     const flyout = { id: Date.now().toString(), giftName: selectedGift.name, coins: totalCoins, qty: giftQty };
     setSentGiftFlyout(flyout);
     setTimeout(() => setSentGiftFlyout(null), 2500);
+    // Play sound
+    if (selectedGift.coins >= 20000) {
+      playLegendaryGiftSound();
+    } else if (selectedGift.coins >= 500 && giftAnimationVideos[selectedGift.name]) {
+      playPremiumGiftSound();
+    } else {
+      playGiftSound(1, selectedGift.coins);
+    }
     // Trigger premium animation for 500+ coin gifts
     if (selectedGift.coins >= 500 && giftAnimationVideos[selectedGift.name]) {
       setActiveGiftAnim({ name: selectedGift.name, coins: totalCoins, senderName: "You" });
