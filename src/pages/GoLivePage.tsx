@@ -346,6 +346,17 @@ export default function GoLivePage() {
     setTimeout(() => setFloatingReactions((prev) => prev.filter((r) => r.id !== id)), 2500);
   }, []);
 
+  // Goal celebration
+  useEffect(() => {
+    if (coinsEarned >= streamGoal && !goalCelebrated) {
+      setGoalCelebrated(true);
+      toast.success("🎉 Stream goal reached! Amazing!", { duration: 5000 });
+      ["🎉", "🥳", "✨", "🎊", "💎"].forEach((e, i) => {
+        setTimeout(() => spawnFloatingReaction(e), i * 200);
+      });
+    }
+  }, [coinsEarned, streamGoal, goalCelebrated, spawnFloatingReaction]);
+
   const sendReaction = useCallback((emoji: string) => {
     spawnFloatingReaction(emoji);
     setLikes((p) => p + 1);
