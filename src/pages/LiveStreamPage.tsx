@@ -1,8 +1,8 @@
 /**
  * LiveStreamPage — Browse and watch live streams
- * Accessible from Reels header, Feed top, and Create Post "Live" button
+ * Full-screen immersive watcher experience with gifts, reactions & engagement
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,13 +18,22 @@ import Search from "lucide-react/dist/esm/icons/search";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import Wifi from "lucide-react/dist/esm/icons/wifi";
 import WifiOff from "lucide-react/dist/esm/icons/wifi-off";
+import Gift from "lucide-react/dist/esm/icons/gift";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
+import UserPlus from "lucide-react/dist/esm/icons/user-plus";
+import UserCheck from "lucide-react/dist/esm/icons/user-check";
+import X from "lucide-react/dist/esm/icons/x";
+import Crown from "lucide-react/dist/esm/icons/crown";
+import Volume2 from "lucide-react/dist/esm/icons/volume-2";
+import VolumeX from "lucide-react/dist/esm/icons/volume-x";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import goldCoinIcon from "@/assets/gifts/gold-coin.png";
+import { giftImages } from "@/config/giftIcons";
 
 interface LiveStream {
   id: string;
@@ -39,15 +48,460 @@ interface LiveStream {
   thumbnail_emoji: string;
 }
 
+/* ─────────── Watcher Component ─────────── */
+function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => void }) {
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; isSystem?: boolean; avatar?: string; level?: number }[]>([
+    { id: "sys-1", user: "System", text: `Welcome to ${stream.host_name}'s stream! 🎉`, isSystem: true },
+  ]);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [showGiftPanel, setShowGiftPanel] = useState(false);
+  const [selectedGift, setSelectedGift] = useState<{ icon: string; name: string; coins: number } | null>(null);
+  const [giftQty, setGiftQty] = useState(1);
+  const [floatingReactions, setFloatingReactions] = useState<{ id: string; emoji: string; x: number }[]>([]);
+  const [viewerCount, setViewerCount] = useState(stream.viewer_count || Math.floor(Math.random() * 500) + 50);
+  const [likes, setLikes] = useState(0);
+  const [muted, setMuted] = useState(false);
+  const [giftNotifQueue, setGiftNotifQueue] = useState<{ id: string; sender: string; giftName: string; coins: number; icon: string }[]>([]);
+  const [topGifters, setTopGifters] = useState<{ name: string; coins: number }[]>([]);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const quickReactions = useMemo(() => ["❤️", "🔥", "😍", "👏", "😂"], []);
+
+  const giftCatalog = useMemo(() => [
+    { icon: "rose", name: "Rose", coins: 1 },
+    { icon: "heart_lollipop", name: "Heart Lollipop", coins: 5 },
+    { icon: "doughnut", name: "Doughnut", coins: 10 },
+    { icon: "crown", name: "Crown", coins: 50 },
+    { icon: "rocket", name: "Rocket", coins: 100 },
+    { icon: "diamond", name: "Diamond", coins: 200 },
+    { icon: "lion", name: "Lion", coins: 500 },
+    { icon: "sports_car", name: "Sports Car", coins: 1000 },
+    { icon: "castle", name: "Castle", coins: 2000 },
+    { icon: "planet", name: "Planet", coins: 5000 },
+    { icon: "universe", name: "Universe", coins: 10000 },
+    { icon: "galaxy", name: "Galaxy", coins: 20000 },
+  ], []);
+
+  const fakeViewerNames = useMemo(() => ["Luna ✨", "Kai 🔥", "Mia 💜", "Nora 🌸", "Zara 💎", "Leo 🦁", "Aria 🎵", "Alex 🎮", "Jordan 🏀", "Sam 🌊"], []);
+
+  // Simulate chat messages
+  useEffect(() => {
+    const msgs = [
+      "Hi everyone! 👋", "Love this stream!", "❤️❤️❤️", "You're amazing!",
+      "First time here 🎉", "Let's gooo!", "So cool!", "Where are you from?",
+      "Can you do a shoutout?", "This is fire 🔥", "Following!", "Best stream ever",
+    ];
+    const interval = setInterval(() => {
+      const name = fakeViewerNames[Math.floor(Math.random() * fakeViewerNames.length)];
+      const msg = msgs[Math.floor(Math.random() * msgs.length)];
+      const level = Math.floor(Math.random() * 30) + 1;
+      setChatMessages(prev => [...prev.slice(-30), {
+        id: Date.now().toString(),
+        user: name,
+        text: msg,
+        level,
+      }]);
+    }, 2500 + Math.random() * 3000);
+    return () => clearInterval(interval);
+  }, [fakeViewerNames]);
+
+  // Simulate viewer count
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setViewerCount(prev => prev + (Math.random() > 0.4 ? 1 : -1));
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Simulate gift notifications from other viewers
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (Math.random() < 0.3) {
+        const sender = fakeViewerNames[Math.floor(Math.random() * fakeViewerNames.length)];
+        const gift = giftCatalog[Math.floor(Math.random() * 4)];
+        const notif = { id: Date.now().toString(), sender, giftName: gift.name, coins: gift.coins, icon: gift.icon };
+        setGiftNotifQueue(prev => [...prev.slice(-2), notif]);
+        setTimeout(() => {
+          setGiftNotifQueue(prev => prev.filter(n => n.id !== notif.id));
+        }, 3000);
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [fakeViewerNames, giftCatalog]);
+
+  // Auto-scroll chat
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
+
+  const sendChat = useCallback(() => {
+    if (!chatInput.trim()) return;
+    setChatMessages(prev => [...prev, { id: Date.now().toString(), user: "You", text: chatInput, level: 5 }]);
+    setChatInput("");
+  }, [chatInput]);
+
+  const sendReaction = useCallback((emoji: string) => {
+    const id = Date.now().toString() + Math.random();
+    const x = 60 + Math.random() * 30;
+    setFloatingReactions(prev => [...prev, { id, emoji, x }]);
+    setLikes(prev => prev + 1);
+    setTimeout(() => setFloatingReactions(prev => prev.filter(r => r.id !== id)), 2200);
+  }, []);
+
+  const sendGift = useCallback(() => {
+    if (!selectedGift) return;
+    const totalCoins = selectedGift.coins * giftQty;
+    toast.success(`🎁 Sent ${giftQty}x ${selectedGift.name}!`, { description: `${totalCoins} coins` });
+    setChatMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      user: "You",
+      text: `sent ${giftQty}x ${selectedGift.name} 🎁`,
+      isGift: true,
+      level: 5,
+    }]);
+    setSelectedGift(null);
+    setGiftQty(1);
+    setShowGiftPanel(false);
+  }, [selectedGift, giftQty]);
+
+  const handleFollow = () => {
+    setIsFollowing(!isFollowing);
+    toast.success(isFollowing ? "Unfollowed" : `Following ${stream.host_name}! ❤️`);
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({ title: stream.title, text: `Watch ${stream.host_name} live on ZIVO!`, url: window.location.href });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied! 🔗");
+    }
+  };
+
+  const getLevelColor = (level: number) => {
+    if (level >= 20) return "from-amber-400 to-yellow-500";
+    if (level >= 10) return "from-violet-400 to-purple-500";
+    if (level >= 5) return "from-sky-400 to-blue-500";
+    return "from-zinc-400 to-zinc-500";
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black flex flex-col">
+      {/* Full-screen video background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-900/80 via-black to-rose-900/60" />
+        <div className="absolute top-1/4 left-1/3 w-60 h-60 bg-primary/15 rounded-full blur-[80px] animate-pulse" />
+        <div className="absolute bottom-1/3 right-1/4 w-48 h-48 bg-rose-500/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: "1.5s" }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[120px] opacity-20 select-none">
+          {stream.thumbnail_emoji}
+        </div>
+      </div>
+
+      {/* ── Top bar (overlay) ── */}
+      <div className="relative z-20 flex items-center gap-2 px-3 pt-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}>
+        {/* Host info pill */}
+        <button onClick={onLeave} className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+          <X className="h-4 w-4 text-white" />
+        </button>
+
+        <div className="flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1 flex-1 min-w-0">
+          <Avatar className="h-8 w-8 border-2 border-red-500 shrink-0">
+            <AvatarImage src={stream.host_avatar || undefined} />
+            <AvatarFallback className="bg-red-500/20 text-red-400 text-xs font-bold">
+              {stream.host_name[0]}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-xs font-bold truncate leading-tight">{stream.host_name}</p>
+            <p className="text-white/50 text-[10px] leading-tight">{stream.topic}</p>
+          </div>
+          <button
+            onClick={handleFollow}
+            className={cn(
+              "px-3 py-1 rounded-full text-[10px] font-bold transition-all",
+              isFollowing
+                ? "bg-white/10 text-white/70"
+                : "bg-red-500 text-white"
+            )}
+          >
+            {isFollowing ? "Following" : "Follow"}
+          </button>
+        </div>
+
+        {/* Viewer count */}
+        <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
+          <Eye className="h-3 w-3 text-white/70" />
+          <span className="text-[11px] text-white font-medium">{viewerCount.toLocaleString()}</span>
+        </div>
+      </div>
+
+      {/* LIVE badge + stream title */}
+      <div className="relative z-10 px-4 mt-2">
+        <div className="flex items-center gap-2">
+          <Badge className="bg-red-500 text-white border-0 text-[10px] gap-1 px-2 py-0.5 animate-pulse">
+            <Radio className="h-2.5 w-2.5" /> LIVE
+          </Badge>
+          <p className="text-white/80 text-xs font-medium truncate">{stream.title}</p>
+        </div>
+      </div>
+
+      {/* ── Gift notifications (left side, TikTok style) ── */}
+      <div className="absolute left-3 z-30 flex flex-col gap-1.5" style={{ top: "calc(env(safe-area-inset-top, 0px) + 100px)" }}>
+        <AnimatePresence>
+          {giftNotifQueue.map((notif) => (
+            <motion.div
+              key={notif.id}
+              initial={{ x: -100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -100, opacity: 0 }}
+              className="flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full pr-3 pl-1.5 py-1"
+            >
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className="text-[9px] bg-primary/20 text-primary font-bold">{notif.sender[0]}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="text-[10px] text-white/70 truncate max-w-[100px]">{notif.sender}</p>
+                <p className="text-[10px] text-amber-300 font-bold">sent {notif.giftName}</p>
+              </div>
+              <div className="w-7 h-7 flex items-center justify-center">
+                {giftImages[notif.icon] ? (
+                  <img src={giftImages[notif.icon]} alt="" className="w-6 h-6 object-contain" />
+                ) : (
+                  <span className="text-base">🎁</span>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      {/* ── Floating reactions ── */}
+      <div className="absolute right-4 bottom-48 z-30 w-10 pointer-events-none">
+        <AnimatePresence>
+          {floatingReactions.map((r) => (
+            <motion.div
+              key={r.id}
+              initial={{ y: 0, opacity: 1, scale: 0.5 }}
+              animate={{ y: -200, opacity: 0, scale: 1.2, x: (Math.random() - 0.5) * 40 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 2, ease: "easeOut" }}
+              className="absolute bottom-0 text-2xl"
+              style={{ left: `${r.x - 60}%` }}
+            >
+              {r.emoji}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      {/* ── Right sidebar actions ── */}
+      <div className="absolute right-3 z-20 flex flex-col gap-3 items-center" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 160px)" }}>
+        {/* Mute */}
+        <button onClick={() => setMuted(!muted)} className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+          {muted ? <VolumeX className="h-5 w-5 text-white/70" /> : <Volume2 className="h-5 w-5 text-white/70" />}
+        </button>
+        {/* Share */}
+        <button onClick={handleShare} className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+          <Share2 className="h-5 w-5 text-white" />
+        </button>
+        {/* Heart */}
+        <button
+          onClick={() => sendReaction("❤️")}
+          className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center"
+        >
+          <Heart className="h-5 w-5 text-red-400 fill-red-400" />
+          {likes > 0 && <span className="text-[9px] text-white/70 -mt-0.5">{likes}</span>}
+        </button>
+        {/* Gift */}
+        <button
+          onClick={() => setShowGiftPanel(true)}
+          className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30"
+        >
+          <Gift className="h-5 w-5 text-white" />
+        </button>
+      </div>
+
+      {/* ── Chat overlay (bottom-left) ── */}
+      <div className="absolute bottom-0 left-0 right-16 z-20" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 56px)" }}>
+        {/* Messages */}
+        <div className="px-3 max-h-[180px] overflow-y-auto scrollbar-hide space-y-1 mask-gradient-top">
+          {chatMessages.slice(-8).map((msg) => (
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className={cn(
+                "inline-flex items-start gap-1.5 px-2 py-1 rounded-lg max-w-[85%]",
+                msg.isSystem ? "bg-primary/20" : msg.isGift ? "bg-amber-500/20" : "bg-black/30 backdrop-blur-sm"
+              )}
+            >
+              {msg.level && !msg.isSystem && (
+                <span className={cn("text-[8px] px-1 py-0.5 rounded font-bold bg-gradient-to-r text-white shrink-0 mt-0.5", getLevelColor(msg.level))}>
+                  Lv.{msg.level}
+                </span>
+              )}
+              <div className="min-w-0">
+                <span className={cn("text-[11px] font-bold mr-1", msg.isSystem ? "text-primary" : msg.isGift ? "text-amber-300" : "text-white/70")}>
+                  {msg.user}
+                </span>
+                <span className="text-[11px] text-white break-words">{msg.text}</span>
+              </div>
+            </motion.div>
+          ))}
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* Quick reactions */}
+        <div className="flex items-center gap-1.5 px-3 mt-1.5">
+          {quickReactions.map((emoji) => (
+            <button
+              key={emoji}
+              onClick={() => sendReaction(emoji)}
+              className="w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-base hover:scale-110 transition-transform active:scale-95"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Chat input bar (bottom) ── */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 px-3 py-2 bg-gradient-to-t from-black/80 to-transparent" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}>
+        <div className="flex items-center gap-2">
+          <div className="flex-1 relative">
+            <input
+              placeholder="Say something..."
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && sendChat()}
+              className="w-full px-3 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-white/20 border border-white/10"
+            />
+          </div>
+          <button
+            onClick={sendChat}
+            className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0"
+          >
+            <Send className="h-4 w-4 text-primary-foreground" />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Gift Panel (bottom sheet) ── */}
+      <AnimatePresence>
+        {showGiftPanel && (
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="absolute bottom-0 left-0 right-0 z-50 bg-zinc-900/95 backdrop-blur-xl rounded-t-3xl border-t border-white/10"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
+          >
+            {/* Handle */}
+            <div className="flex justify-center pt-2 pb-1">
+              <div className="w-10 h-1 rounded-full bg-white/20" />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 pb-2">
+              <div className="flex items-center gap-2">
+                <h3 className="text-white font-bold text-sm">Send Gift</h3>
+                <div className="flex items-center gap-1 bg-amber-500/20 rounded-full px-2 py-0.5">
+                  <img src={goldCoinIcon} alt="" className="w-3.5 h-3.5" />
+                  <span className="text-amber-300 text-[11px] font-bold">1,250</span>
+                </div>
+              </div>
+              <button onClick={() => { setShowGiftPanel(false); setSelectedGift(null); }} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                <X className="h-4 w-4 text-white/70" />
+              </button>
+            </div>
+
+            {/* Gift grid */}
+            <div className="grid grid-cols-4 gap-2 px-4 py-2 max-h-[200px] overflow-y-auto scrollbar-hide">
+              {giftCatalog.map((gift) => (
+                <button
+                  key={gift.icon}
+                  onClick={() => setSelectedGift(gift)}
+                  className={cn(
+                    "flex flex-col items-center gap-1 p-2 rounded-xl transition-all",
+                    selectedGift?.icon === gift.icon ? "bg-primary/20 ring-1 ring-primary scale-105" : "bg-white/5 hover:bg-white/10"
+                  )}
+                >
+                  <div className="w-10 h-10 flex items-center justify-center">
+                    {giftImages[gift.icon] ? (
+                      <img src={giftImages[gift.icon]} alt={gift.name} className="w-9 h-9 object-contain" />
+                    ) : (
+                      <span className="text-2xl">🎁</span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-white/70 truncate w-full text-center">{gift.name}</p>
+                  <div className="flex items-center gap-0.5">
+                    <img src={goldCoinIcon} alt="" className="w-2.5 h-2.5" />
+                    <span className="text-[9px] text-amber-300 font-bold">{gift.coins.toLocaleString()}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Send bar */}
+            {selectedGift && (
+              <motion.div
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="mx-4 mt-2 mb-2 flex items-center gap-2 bg-white/5 rounded-xl p-2"
+              >
+                <div className="w-8 h-8 flex items-center justify-center">
+                  {giftImages[selectedGift.icon] ? (
+                    <img src={giftImages[selectedGift.icon]} alt="" className="w-7 h-7 object-contain" />
+                  ) : (
+                    <span className="text-xl">🎁</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-white font-bold">{selectedGift.name}</p>
+                  <div className="flex items-center gap-0.5">
+                    <img src={goldCoinIcon} alt="" className="w-2.5 h-2.5" />
+                    <span className="text-[10px] text-amber-300">{(selectedGift.coins * giftQty).toLocaleString()}</span>
+                  </div>
+                </div>
+                {/* Qty */}
+                <div className="flex items-center gap-1 bg-white/10 rounded-lg px-1">
+                  {[1, 5, 10, 99].map((q) => (
+                    <button
+                      key={q}
+                      onClick={() => setGiftQty(q)}
+                      className={cn(
+                        "px-2 py-1 rounded text-[10px] font-bold transition-colors",
+                        giftQty === q ? "bg-primary text-primary-foreground" : "text-white/50 hover:text-white"
+                      )}
+                    >
+                      x{q}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={sendGift}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold shadow-lg"
+                >
+                  Send
+                </button>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ─────────── Main Page ─────────── */
 export default function LiveStreamPage() {
   const navigate = useNavigate();
   const [activeStream, setActiveStream] = useState<LiveStream | null>(null);
-  const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; avatar?: string }[]>([]);
   const [filter, setFilter] = useState<"all" | "live" | "scheduled">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Fetch real AMA sessions as live streams
   const { data: streams = [], isLoading } = useQuery({
     queryKey: ["live-streams"],
     queryFn: async () => {
@@ -101,122 +555,11 @@ export default function LiveStreamPage() {
   });
 
   const liveCount = streams.filter((s) => s.status === "live").length;
-
-  const sendChat = () => {
-    if (!chatInput.trim()) return;
-    setChatMessages((prev) => [
-      ...prev,
-      { id: Date.now().toString(), user: "You", text: chatInput },
-    ]);
-    setChatInput("");
-  };
-
-  const handleGoLive = () => {
-    navigate("/go-live");
-  };
+  const handleGoLive = () => navigate("/go-live");
 
   // ── Active stream viewer ──
   if (activeStream) {
-    return (
-      <div className="min-h-screen bg-black flex flex-col">
-        {/* Video area */}
-        <div className="relative aspect-[9/16] max-h-[60vh] bg-gradient-to-br from-violet-900/80 via-black to-rose-900/60 flex items-center justify-center overflow-hidden">
-          {/* Animated background */}
-          <div className="absolute inset-0">
-            <div className="absolute top-1/4 left-1/3 w-40 h-40 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/3 right-1/4 w-32 h-32 bg-rose-500/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-          </div>
-
-          <div className="relative z-10 flex flex-col items-center gap-4">
-            <div className="text-7xl">{activeStream.thumbnail_emoji}</div>
-            <div className="flex items-center gap-2">
-              <Badge className="bg-red-500 text-white border-0 gap-1 animate-pulse">
-                <Radio className="h-3 w-3" /> LIVE
-              </Badge>
-              <Badge variant="secondary" className="gap-1 bg-white/10 text-white border-0">
-                <Eye className="h-3 w-3" /> {activeStream.viewer_count.toLocaleString()}
-              </Badge>
-            </div>
-          </div>
-
-          {/* Back button */}
-          <button
-            onClick={() => setActiveStream(null)}
-            className="absolute top-4 left-4 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center z-20"
-            style={{ top: "calc(env(safe-area-inset-top, 0px) + 16px)" }}
-          >
-            <ArrowLeft className="h-5 w-5 text-white" />
-          </button>
-        </div>
-
-        {/* Stream info */}
-        <div className="px-4 py-3 border-b border-white/10 bg-zinc-900">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 border-2 border-red-500">
-              <AvatarImage src={activeStream.host_avatar || undefined} />
-              <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
-                {activeStream.host_name[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-white font-bold text-sm truncate">{activeStream.title}</h2>
-              <p className="text-white/50 text-xs">{activeStream.host_name} · {activeStream.topic}</p>
-            </div>
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => setActiveStream(null)}
-              className="rounded-full text-xs"
-            >
-              Leave
-            </Button>
-          </div>
-        </div>
-
-        {/* Chat */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-zinc-950 max-h-[300px]">
-          {chatMessages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-white/30 gap-2 py-8">
-              <MessageCircle className="h-8 w-8" />
-              <p className="text-sm">Chat is live — say something!</p>
-            </div>
-          ) : (
-            chatMessages.map((msg) => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-start gap-2"
-              >
-                <Avatar className="h-7 w-7">
-                  <AvatarFallback className="text-[10px] bg-primary/20 text-primary font-bold">
-                    {msg.user[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <span className="text-xs font-bold text-white/70">{msg.user}</span>
-                  <p className="text-sm text-white">{msg.text}</p>
-                </div>
-              </motion.div>
-            ))
-          )}
-        </div>
-
-        {/* Chat input */}
-        <div className="p-3 border-t border-white/10 bg-zinc-900 flex gap-2 pb-safe">
-          <Input
-            placeholder="Say something..."
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendChat()}
-            className="bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm"
-          />
-          <Button size="icon" onClick={sendChat} className="shrink-0 rounded-full bg-primary">
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    );
+    return <LiveWatcher stream={activeStream} onLeave={() => setActiveStream(null)} />;
   }
 
   // ── Stream browser ──
