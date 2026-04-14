@@ -19,7 +19,6 @@ interface GiftAnimationOverlayProps {
 export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCount = 1 }: GiftAnimationOverlayProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const onCompleteRef = useRef(onComplete);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [animKey, setAnimKey] = useState(0);
 
   onCompleteRef.current = onComplete;
@@ -73,8 +72,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
   if (!activeGift) return null;
 
   const giftImg = giftImages[activeGift.name];
-  const videoUrl = giftAnimationVideos[activeGift.name];
-  const isPremium = !!videoUrl;
+  const isPremium = !!giftAnimationVideos[activeGift.name];
 
   // Combo intensity scales with count
   const comboIntensity = Math.min(comboCount, 20);
@@ -91,30 +89,8 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
         transition={{ duration: 0.15 }}
         className="fixed inset-0 z-[100] pointer-events-none overflow-hidden"
       >
-        {/* ── Premium full-screen video animation ── */}
-        {isPremium && videoUrl && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="absolute inset-0 z-[1] flex items-center justify-center"
-          >
-            <video
-              ref={videoRef}
-              src={videoUrl}
-              autoPlay
-              muted
-              playsInline
-              onEnded={dismiss}
-              className="w-full h-full object-cover"
-              style={{ mixBlendMode: "screen" }}
-            />
-          </motion.div>
-        )}
-
-        {/* ── Backdrop glow fallback for premium without video ── */}
-        {isPremium && !videoUrl && (
+        {/* ── Premium backdrop glow ── */}
+        {isPremium && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
