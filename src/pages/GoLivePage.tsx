@@ -574,7 +574,7 @@ export default function GoLivePage() {
     return () => clearTimeout(timer);
   }, [phase]);
 
-
+  const sendReaction = useCallback((emoji: string) => {
     spawnFloatingReaction(emoji);
     setLikes((p) => p + 1);
   }, [spawnFloatingReaction]);
