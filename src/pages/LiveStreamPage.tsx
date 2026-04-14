@@ -500,9 +500,17 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   <img src={goldCoinIcon} alt="" className="w-3.5 h-3.5" />
                   <span className="text-amber-300 text-[11px] font-bold">1,250</span>
                 </div>
+                <button
+                  onClick={() => toast.info("Top Up coming soon!", { description: "Purchase Z Coins" })}
+                  className="text-[10px] font-bold text-primary bg-primary/15 rounded-full px-2.5 py-0.5 hover:bg-primary/25 transition-colors"
+                >
+                  + Top Up
+                </button>
               </div>
               <button onClick={() => { setShowGiftPanel(false); setSelectedGift(null); }} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
                 <X className="h-4 w-4 text-white/70" />
+              </button>
+            </div>
               </button>
             </div>
 
