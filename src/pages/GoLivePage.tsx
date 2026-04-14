@@ -1581,8 +1581,8 @@ export default function GoLivePage() {
             ))}
           </AnimatePresence>
 
-          {/* ── Right-side stacked gift notification queue (TikTok-style) ── */}
-          <div className="absolute right-2 z-30 flex flex-col gap-2 items-end w-[180px]" style={{ top: "calc(env(safe-area-inset-top, 0px) + 230px)" }}>
+          {/* ── Left-side stacked gift notification queue (TikTok-style) ── */}
+          <div className="absolute left-2 z-30 flex flex-col gap-2 items-start w-[200px]" style={{ top: "calc(env(safe-area-inset-top, 0px) + 180px)" }}>
             <AnimatePresence>
               {giftNotifQueue.map((notif, idx) => (
                 <motion.div
