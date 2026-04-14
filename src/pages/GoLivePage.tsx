@@ -307,6 +307,7 @@ export default function GoLivePage() {
     try { navigator.vibrate?.(50); } catch {} // eslint-disable-line no-empty
     setGiftsReceived((p) => p + 1);
     setCoinsEarned((p) => p + gift.coins);
+    setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + gift.coins }));
     spawnFloatingReaction(gift.icon);
     const senders = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
     const sender = senders[Math.floor(Math.random() * senders.length)];
