@@ -642,6 +642,7 @@ export default function GoLivePage() {
             </div>
             <button
               onClick={() => {
+                setShareCount((p) => p + 1);
                 if (navigator.share) {
                   navigator.share({ title: `Watch ${title} live on ZIVO!`, url: window.location.href }).catch(() => {});
                 } else {
