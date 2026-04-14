@@ -137,6 +137,22 @@ export default function GoLivePage() {
   // ── NEW: Combo multiplier text ──
   const [comboMultiplierText, setComboMultiplierText] = useState<{ text: string; id: string } | null>(null);
 
+  // ── NEW v3: Gift Streak Counter ──
+  const [giftStreakCount, setGiftStreakCount] = useState(0);
+  const giftStreakTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── NEW v3: Super Chat ──
+  const [superChat, setSuperChat] = useState<{ user: string; text: string; coins: number; id: string } | null>(null);
+
+  // ── NEW v3: Milestone Celebrations ──
+  const [milestoneEffect, setMilestoneEffect] = useState<"confetti" | "firework" | null>(null);
+
+  // ── NEW v3: Wave animation ──
+  const [waveActive, setWaveActive] = useState(false);
+
+  // ── NEW v3: Chat Trending Words ──
+  const [trendingWord, setTrendingWord] = useState<string | null>(null);
+
   const cameraFilters: Record<string, string> = useMemo(() => ({
     none: "",
     warm: "sepia(0.25) saturate(1.3) brightness(1.05)",
