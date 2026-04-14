@@ -186,8 +186,18 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         const gift = allPool[Math.floor(Math.random() * allPool.length)];
         const notif = { id: Date.now().toString(), sender, giftName: gift.name, coins: gift.coins, icon: gift.icon };
         setGiftNotifQueue(prev => [...prev.slice(-2), notif]);
-        // Play sound for simulated gifts
-        playGiftSound(1, gift.coins);
+        // Play tier-appropriate sound for simulated gifts
+        if (gift.coins >= 20000) {
+          playLegendaryGiftSound();
+        } else if (gift.coins >= 500) {
+          playPremiumGiftSound();
+        } else {
+          playGiftSound(1, gift.coins);
+        }
+        // Trigger premium animation for high-value simulated gifts (rare)
+        if (giftAnimationVideos[gift.name] && Math.random() < 0.5) {
+          setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
+        }
         // Update top gifters
         setTopGifters(prev => {
           const existing = prev.find(g => g.name === sender);
@@ -543,7 +553,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 </div>
                 <div className="flex items-center gap-0.5 bg-black/30 rounded-full px-1.5 py-0.5 shrink-0">
                   <img src={goldCoinIcon} alt="" className="w-2.5 h-2.5" />
-                  <span className="text-amber-200 text-[9px] font-bold">{notif.coins}</span>
+                  <span className="text-amber-200 text-[9px] font-bold">{notif.coins.toLocaleString()}</span>
                 </div>
               </div>
             </motion.div>
@@ -934,6 +944,9 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                         gift.badge === "Popular" ? "bg-pink-500 text-white" :
                         gift.badge === "NEW" ? "bg-red-500 text-white" :
                         gift.badge === "Ultimate" ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-white" :
+                        gift.badge === "Legendary" ? "bg-gradient-to-r from-purple-500 to-violet-500 text-white" :
+                        gift.badge === "Supreme" ? "bg-gradient-to-r from-rose-500 to-red-600 text-white" :
+                        gift.badge === "Luxury" ? "bg-gradient-to-r from-slate-400 to-zinc-500 text-white" :
                         "bg-blue-500/80 text-white"
                       )}>
                         {gift.badge}
