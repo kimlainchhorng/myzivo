@@ -82,6 +82,9 @@ export default function GoLivePage() {
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [newFollowersCount, setNewFollowersCount] = useState(0);
   const [shareCount, setShareCount] = useState(0);
+  const [giftQty, setGiftQty] = useState(1);
+  const [recentGifts, setRecentGifts] = useState<{ icon: string; name: string; coins: number }[]>([]);
+  const [pinnedChatMsg, setPinnedChatMsg] = useState<string | null>(null);
   const lastGiftTimeRef = useRef(0);
   const lastMilestoneRef = useRef(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -407,15 +410,22 @@ export default function GoLivePage() {
     setLikes((p) => p + 1);
   }, [spawnFloatingReaction]);
 
-  const sendGift = useCallback((gift: { icon: string; name: string; coins: number }) => {
+  const sendGift = useCallback((gift: { icon: string; name: string; coins: number }, qty = 1) => {
     // Haptic feedback on mobile
-    try { navigator.vibrate?.(50); } catch {} // eslint-disable-line no-empty
+    try { navigator.vibrate?.(qty > 1 ? [50, 30, 50] : [50]); } catch {} // eslint-disable-line no-empty
     const senders = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
     const sender = senders[Math.floor(Math.random() * senders.length)];
-    setGiftsReceived((p) => p + 1);
-    setCoinsEarned((p) => p + gift.coins);
-    setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + gift.coins }));
+    const totalCoins = gift.coins * qty;
+    setGiftsReceived((p) => p + qty);
+    setCoinsEarned((p) => p + totalCoins);
+    setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + totalCoins }));
     spawnFloatingReaction(gift.icon);
+
+    // Track recent gifts (unique, max 4)
+    setRecentGifts((prev) => {
+      const filtered = prev.filter((g) => g.name !== gift.name);
+      return [gift, ...filtered].slice(0, 4);
+    });
 
     // Add gift message to chat
     setChatMessages((prev) => [
@@ -423,7 +433,7 @@ export default function GoLivePage() {
       {
         id: `gift-${Date.now()}`,
         user: sender,
-        text: `sent ${gift.name} (${gift.coins} coins) 🎁`,
+        text: qty > 1 ? `sent ${gift.name} x${qty} (${totalCoins.toLocaleString()} coins) 🎁` : `sent ${gift.name} (${gift.coins} coins) 🎁`,
         isGift: true,
         avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][Math.floor(Math.random() * 5)],
       },
@@ -456,7 +466,8 @@ export default function GoLivePage() {
       playGiftSound(newCombo);
     }
     
-    setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
+    setActiveGiftAnim({ name: gift.name, coins: totalCoins, senderName: sender });
+    setGiftQty(1); // Reset qty after send
   }, [spawnFloatingReaction, giftCombo]);
 
   // ── Ended screen ──
@@ -587,13 +598,24 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); lastMilestoneRef.current = 0; startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
               Go Live Again
             </Button>
           </div>
+
+          {/* Wallet CTA */}
+          {coinsEarned > 0 && (
+            <button
+              onClick={() => navigate("/wallet")}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r from-amber-500/15 to-yellow-500/10 border border-amber-500/20 active:scale-[0.98] transition-transform mt-1"
+            >
+              <img src={goldCoinIcon} alt="" className="w-5 h-5" />
+              <span className="text-amber-300 text-sm font-semibold">View Wallet & Earnings</span>
+            </button>
+          )}
         </motion.div>
       </div>
     );
@@ -1034,21 +1056,32 @@ export default function GoLivePage() {
             <div className="relative pl-4 pr-14 mb-2 max-h-[200px]">
               {/* Gradient fade at top */}
               <div className="absolute top-0 left-4 right-4 h-8 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none rounded-t-2xl" />
-              <div className="overflow-y-auto max-h-[200px] space-y-1.5 pointer-events-none scroll-smooth scrollbar-hide">
-                {/* Pinned message */}
-                {chatMessages.find((m) => m.isPinned) && (
-                  <div className="flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[85%] bg-red-500/15 border border-red-500/20 mb-1">
+              <div className="overflow-y-auto max-h-[200px] space-y-1.5 scroll-smooth scrollbar-hide">
+                {/* Pinned message (system or host-pinned) */}
+                {(pinnedChatMsg || chatMessages.find((m) => m.isPinned)) && (
+                  <div className="flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[85%] bg-red-500/15 border border-red-500/20 mb-1 pointer-events-auto">
                     <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold uppercase">Pinned</span>
-                    <span className="text-[11px] text-white/70">{chatMessages.find((m) => m.isPinned)?.text}</span>
+                    <span className="text-[11px] text-white/70">{pinnedChatMsg || chatMessages.find((m) => m.isPinned)?.text}</span>
+                    {pinnedChatMsg && (
+                      <button onClick={() => setPinnedChatMsg(null)} className="text-white/30 hover:text-white/60 ml-1">
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
                   </div>
                 )}
                 {chatMessages.filter((m) => !m.isPinned).slice(-8).map((msg) => (
                   <div
                     key={msg.id}
+                    onClick={() => {
+                      if (!msg.isSystem && !msg.isGift) {
+                        setPinnedChatMsg(`${msg.user}: ${msg.text}`);
+                        toast.success(`📌 Pinned message from ${msg.user}`);
+                      }
+                    }}
                     className={cn(
-                      "flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200",
+                      "flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200 pointer-events-auto cursor-pointer",
                       msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" :
-                      msg.isSystem ? "bg-transparent" :
+                      msg.isSystem ? "bg-transparent pointer-events-none" :
                       "bg-black/40 backdrop-blur-sm"
                     )}
                   >
@@ -1137,13 +1170,53 @@ export default function GoLivePage() {
                   </button>
                 </div>
 
+                {/* Recent gifts quick row */}
+                {recentGifts.length > 0 && (
+                  <div className="px-3 pb-2 border-b border-white/5">
+                    <p className="text-[9px] text-white/30 uppercase tracking-wider font-medium mb-1.5">Recently Sent</p>
+                    <div className="flex gap-2">
+                      {recentGifts.map((g) => (
+                        <button
+                          key={`recent-${g.name}`}
+                          onClick={() => { sendGift(g); }}
+                          className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform"
+                        >
+                          <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+                            {giftImages[g.name] ? (
+                              <img src={giftImages[g.name]} alt="" className="w-8 h-8 object-contain" />
+                            ) : (
+                              <span className="text-xl">{g.icon}</span>
+                            )}
+                          </div>
+                          <span className="text-[8px] text-white/40">{g.coins}</span>
+                        </button>
+                      ))}
+                      {/* Lucky Bag */}
+                      <button
+                        onClick={() => {
+                          const allItems = allGifts[giftTab];
+                          const lucky = allItems[Math.floor(Math.random() * allItems.length)];
+                          sendGift(lucky);
+                          toast(`🎲 Lucky! You sent ${lucky.name}!`);
+                        }}
+                        className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform"
+                      >
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20 flex items-center justify-center">
+                          <span className="text-xl">🎲</span>
+                        </div>
+                        <span className="text-[8px] text-purple-300">Lucky</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Gift grid */}
-                <div className="overflow-y-auto px-2 py-3" style={{ maxHeight: selectedGift ? "calc(55vh - 180px)" : "calc(55vh - 120px)" }}>
+                <div className="overflow-y-auto px-2 py-3" style={{ maxHeight: selectedGift ? "calc(55vh - 210px)" : "calc(55vh - 140px)" }}>
                   <div className="grid grid-cols-4 gap-1.5">
                     {allGifts[giftTab].map((gift) => (
                       <button
                         key={gift.name}
-                        onClick={() => setSelectedGift(selectedGift?.name === gift.name ? null : gift)}
+                        onClick={() => { setSelectedGift(selectedGift?.name === gift.name ? null : gift); setGiftQty(1); }}
                         className={cn(
                           "relative flex flex-col items-center gap-0.5 py-2.5 px-1 rounded-xl transition-all",
                           selectedGift?.name === gift.name
@@ -1191,7 +1264,7 @@ export default function GoLivePage() {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden border-t border-white/10"
                     >
-                      <div className="flex items-center gap-3 px-4 py-2.5">
+                      <div className="flex items-center gap-2 px-4 py-2.5">
                         <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br overflow-hidden shrink-0", selectedGift.coins >= 100 ? "from-amber-400 to-orange-500" : "from-violet-400 to-purple-500")}>
                           {giftImages[selectedGift.name] ? (
                             <img src={giftImages[selectedGift.name]} alt="" className="w-7 h-7 object-contain" />
@@ -1203,16 +1276,33 @@ export default function GoLivePage() {
                           <p className="text-white text-xs font-semibold truncate">{selectedGift.name}</p>
                           <div className="flex items-center gap-1">
                             <img src={goldCoinIcon} alt="" className="w-3 h-3" />
-                            <span className="text-amber-300 text-[11px] font-bold">{selectedGift.coins.toLocaleString()}</span>
+                            <span className="text-amber-300 text-[11px] font-bold">{(selectedGift.coins * giftQty).toLocaleString()}</span>
                             {selectedGift.coins >= 500 && (
                               <span className="text-[9px] text-red-400 font-medium ml-1">Premium</span>
                             )}
                           </div>
                         </div>
+                        {/* Quantity selector */}
+                        <div className="flex gap-1 shrink-0">
+                          {[1, 5, 10, 99].map((q) => (
+                            <button
+                              key={q}
+                              onClick={() => setGiftQty(q)}
+                              className={cn(
+                                "w-8 h-7 rounded-lg text-[10px] font-bold transition-all",
+                                giftQty === q
+                                  ? "bg-amber-500/30 text-amber-300 border border-amber-500/40"
+                                  : "bg-white/5 text-white/40 border border-white/10"
+                              )}
+                            >
+                              x{q}
+                            </button>
+                          ))}
+                        </div>
                         <button
-                          onClick={() => { sendGift(selectedGift); setSelectedGift(null); }}
+                          onClick={() => { sendGift(selectedGift, giftQty); setSelectedGift(null); }}
                           className={cn(
-                            "flex items-center gap-1.5 rounded-full px-5 py-2 shadow-lg active:scale-95 transition-transform",
+                            "flex items-center gap-1.5 rounded-full px-4 py-2 shadow-lg active:scale-95 transition-transform shrink-0",
                             selectedGift.coins >= 500
                               ? "bg-gradient-to-r from-red-500 to-rose-500 shadow-red-500/25"
                               : "bg-gradient-to-r from-amber-500 to-yellow-400 shadow-amber-500/25"
@@ -1220,7 +1310,7 @@ export default function GoLivePage() {
                         >
                           <Send className="h-3.5 w-3.5 text-white" />
                           <span className="text-white text-xs font-bold">
-                            {selectedGift.coins >= 500 ? "Send!" : "Send"}
+                            {giftQty > 1 ? `x${giftQty}` : selectedGift.coins >= 500 ? "Send!" : "Send"}
                           </span>
                         </button>
                       </div>
