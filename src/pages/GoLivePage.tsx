@@ -238,7 +238,7 @@ export default function GoLivePage() {
     ],
   }), []);
 
-  const quickReactions = useMemo(() => ["❤️", "🔥", "😍", "👏", "😂", "🎵", "💯", "✨"], []);
+  const quickReactions = useMemo(() => ["❤️", "🔥", "😍", "👏", "😂"], []);
 
   const topicConfig = useMemo(() => [
     { name: "General", icon: "🌐" },
