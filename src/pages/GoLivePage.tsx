@@ -188,8 +188,9 @@ export default function GoLivePage() {
   }, []);
 
   const goLive = useCallback(() => {
+    const streamTitle = title.trim() || "My Live Stream";
     if (!title.trim()) {
-      setTitle("My Live Stream");
+      setTitle(streamTitle);
     }
     // Start countdown
     setPhase("countdown");
@@ -203,7 +204,7 @@ export default function GoLivePage() {
         setChatMessages([{
           id: "welcome",
           user: "ZIVO",
-          text: `Welcome to "${title}"! Be respectful and have fun 🎉`,
+          text: `Welcome to "${streamTitle}"! Be respectful and have fun 🎉`,
           isSystem: true,
           isPinned: true,
           avatar: "bg-red-500",
@@ -480,7 +481,7 @@ export default function GoLivePage() {
             <div className="flex items-center justify-between">
               <span className="text-xs text-white/50">Engagement Rate</span>
               <span className="text-sm font-semibold text-green-400">
-                {peakViewers > 0 ? Math.round(((likes + giftsReceived + chatMessages.length) / peakViewers) * 100) : 0}% 📊
+                {peakViewers > 0 ? Math.min(99, Math.round(((likes + giftsReceived) / (peakViewers * Math.max(1, elapsed / 60))) * 100)) : 0}% 📊
               </span>
             </div>
             <div className="flex items-center justify-between">
