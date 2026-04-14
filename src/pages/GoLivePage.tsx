@@ -874,26 +874,49 @@ export default function GoLivePage() {
 
           {/* Chat messages overlay */}
           {showChat && (
-            <div className="px-4 mb-2 max-h-[180px] overflow-y-auto space-y-1.5 pointer-events-none">
-              {chatMessages.slice(-6).map((msg) => (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    "flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200",
-                    msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" :
-                    msg.isSystem ? "bg-transparent" :
-                    "bg-black/40 backdrop-blur-sm"
-                  )}
-                >
-                  {!msg.isSystem && (
-                    <div className={cn("h-6 w-6 rounded-full flex items-center justify-center shrink-0", msg.avatar || "bg-primary/20")}>
-                      <span className="text-[9px] text-white font-bold">{msg.user[0]}</span>
-                    </div>
-                  )}
-                  <span className={cn("text-xs font-medium", msg.isSystem ? "text-white/40 italic" : "text-white/80")}>{msg.user}</span>
-                  <span className={cn("text-xs", msg.isGift ? "text-amber-300" : msg.isSystem ? "text-white/30 italic" : "text-white/90")}>{msg.text}</span>
-                </div>
-              ))}
+            <div className="relative px-4 mb-2 max-h-[200px]">
+              {/* Gradient fade at top */}
+              <div className="absolute top-0 left-4 right-4 h-8 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none rounded-t-2xl" />
+              <div className="overflow-y-auto max-h-[200px] space-y-1.5 pointer-events-none scroll-smooth">
+                {/* Pinned message */}
+                {chatMessages.find((m) => m.isPinned) && (
+                  <div className="flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[85%] bg-red-500/15 border border-red-500/20 mb-1">
+                    <span className="text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold uppercase">Pinned</span>
+                    <span className="text-[11px] text-white/70">{chatMessages.find((m) => m.isPinned)?.text}</span>
+                  </div>
+                )}
+                {chatMessages.filter((m) => !m.isPinned).slice(-8).map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      "flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200",
+                      msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" :
+                      msg.isSystem ? "bg-transparent" :
+                      "bg-black/40 backdrop-blur-sm"
+                    )}
+                  >
+                    {!msg.isSystem && (
+                      <div className={cn("h-6 w-6 rounded-full flex items-center justify-center shrink-0", msg.avatar || "bg-primary/20")}>
+                        <span className="text-[9px] text-white font-bold">{msg.user[0]}</span>
+                      </div>
+                    )}
+                    {/* Level badge */}
+                    {msg.level && (
+                      <span className={cn(
+                        "text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0",
+                        msg.level >= 30 ? "bg-amber-500/30 text-amber-300" :
+                        msg.level >= 15 ? "bg-blue-500/30 text-blue-300" :
+                        "bg-white/10 text-white/50"
+                      )}>
+                        Lv.{msg.level}
+                      </span>
+                    )}
+                    <span className={cn("text-xs font-medium", msg.isSystem ? "text-white/40 italic" : "text-white/80")}>{msg.user}</span>
+                    <span className={cn("text-xs", msg.isGift ? "text-amber-300" : msg.isSystem ? "text-white/30 italic" : "text-white/90")}>{msg.text}</span>
+                  </div>
+                ))}
+                <div ref={chatEndRef} />
+              </div>
             </div>
           )}
 
