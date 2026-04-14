@@ -622,7 +622,7 @@ export default function GoLivePage() {
 
       {/* Live host info bar */}
       {phase === "live" && (
-        <div className="relative z-10 px-4 mt-3">
+        <div className="relative z-10 pl-4 pr-14 mt-3">
           <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-2xl px-3 py-2 border border-white/5">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-red-500/20">
               {user?.email?.[0]?.toUpperCase() || "Z"}
