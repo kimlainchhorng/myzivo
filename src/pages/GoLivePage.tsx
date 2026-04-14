@@ -121,6 +121,22 @@ export default function GoLivePage() {
   // ── Chat mute/ban ──
   const [mutedUsers, setMutedUsers] = useState<Set<string>>(new Set());
 
+  // ── NEW: Face Stickers / AR Effects ──
+  const [activeSticker, setActiveSticker] = useState<string | null>(null);
+  const [showStickerPanel, setShowStickerPanel] = useState(false);
+
+  // ── NEW: Clip / Highlight capture ──
+  const [clipSaved, setClipSaved] = useState(false);
+
+  // ── NEW: Revenue mini-dashboard ──
+  const [showRevenueDash, setShowRevenueDash] = useState(false);
+
+  // ── NEW: Top-3 gifter mini-banner always visible ──
+  const [showTop3Banner, setShowTop3Banner] = useState(true);
+
+  // ── NEW: Combo multiplier text ──
+  const [comboMultiplierText, setComboMultiplierText] = useState<{ text: string; id: string } | null>(null);
+
   const cameraFilters: Record<string, string> = useMemo(() => ({
     none: "",
     warm: "sepia(0.25) saturate(1.3) brightness(1.05)",
@@ -130,6 +146,17 @@ export default function GoLivePage() {
   }), []);
 
   const fakeViewerNames = useMemo(() => ["Luna ✨", "Kai 🔥", "Mia 💜", "Nora 🌸", "Zara 💎", "Leo 🦁", "Aria 🎵", "Alex 🎮", "Jordan 🏀", "Sam 🌊"], []);
+
+  const faceStickers = useMemo(() => [
+    { id: "dog", emoji: "🐶", label: "Dog Ears", filter: "drop-shadow(0 0 8px rgba(255,200,100,0.5))" },
+    { id: "hearts", emoji: "💕", label: "Love", filter: "drop-shadow(0 0 8px rgba(255,100,150,0.5))" },
+    { id: "crown", emoji: "👑", label: "Crown", filter: "drop-shadow(0 0 8px rgba(255,215,0,0.5))" },
+    { id: "stars", emoji: "🌟", label: "Stars", filter: "drop-shadow(0 0 8px rgba(200,200,255,0.5))" },
+    { id: "bunny", emoji: "🐰", label: "Bunny", filter: "drop-shadow(0 0 8px rgba(255,180,200,0.5))" },
+    { id: "devil", emoji: "😈", label: "Devil", filter: "drop-shadow(0 0 8px rgba(200,50,100,0.5))" },
+    { id: "angel", emoji: "😇", label: "Angel", filter: "drop-shadow(0 0 8px rgba(180,220,255,0.5))" },
+    { id: "fire", emoji: "🔥", label: "Fire", filter: "drop-shadow(0 0 8px rgba(255,100,0,0.5))" },
+  ], []);
 
   const allGifts = useMemo(() => ({
     gifts: [
@@ -626,6 +653,14 @@ export default function GoLivePage() {
       setGiftCombo(1);
     }
     lastGiftRef.current = { name: gift.name, time: now };
+
+    // ── NEW: Combo Multiplier Visual ──
+    if (newCombo >= 2) {
+      const comboLabels = ["", "", "COMBO x2 🔥", "COMBO x3 ⚡", "COMBO x4 💥", "MEGA x5 🌟", "ULTRA x6 💎", "SUPREME x7 👑"];
+      const label = newCombo < comboLabels.length ? comboLabels[newCombo] : `GODLIKE x${newCombo} 🏆`;
+      setComboMultiplierText({ text: label, id: `combo-${now}` });
+      setTimeout(() => setComboMultiplierText(null), 2500);
+    }
     
     // Play sound effects
     if (soundEnabled) {
@@ -771,7 +806,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); setPkBattle(null); setTreasureChest(null); setCoHosts([]); setShowGuestInvite(false); setVipEntrance(null); setMutedUsers(new Set()); lastMilestoneRef.current = 0; startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); setPkBattle(null); setTreasureChest(null); setCoHosts([]); setShowGuestInvite(false); setVipEntrance(null); setMutedUsers(new Set()); setActiveSticker(null); setShowStickerPanel(false); setClipSaved(false); setShowRevenueDash(false); setShowTop3Banner(true); setComboMultiplierText(null); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -789,6 +824,15 @@ export default function GoLivePage() {
               <span className="text-amber-300 text-sm font-semibold">View Wallet & Earnings</span>
             </button>
           )}
+
+          {/* ── NEW: Save Highlights & Replay ── */}
+          <button
+            onClick={() => toast.success("🎬 Highlights saved! Access them from your profile.", { duration: 3000 })}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r from-purple-500/15 to-pink-500/10 border border-purple-500/20 active:scale-[0.98] transition-transform"
+          >
+            <span className="text-lg">🎬</span>
+            <span className="text-purple-300 text-sm font-semibold">Save Highlights & Replay</span>
+          </button>
 
           {/* Schedule Next Stream */}
           <button
@@ -842,6 +886,22 @@ export default function GoLivePage() {
         {/* Cinematic overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/90" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
+
+        {/* ── NEW: Face Sticker Overlay ── */}
+        {phase === "live" && activeSticker && (
+          <div className="absolute inset-0 z-[2] pointer-events-none flex items-start justify-center pt-[15%]">
+            <motion.span
+              key={activeSticker}
+              initial={{ scale: 0, rotate: -20 }}
+              animate={{ scale: 1, rotate: 0 }}
+              className="text-[80px]"
+              style={{ filter: faceStickers.find(s => s.id === activeSticker)?.filter }}
+            >
+              {faceStickers.find(s => s.id === activeSticker)?.emoji}
+            </motion.span>
+          </div>
+        )}
+
         {/* Double-tap to heart */}
         {phase === "live" && (
            <div
@@ -1370,6 +1430,24 @@ export default function GoLivePage() {
               >
                 <Palette className={cn("h-3 w-3", cameraFilter !== "none" ? "text-cyan-300" : "text-white/60")} />
               </button>
+              {/* ── NEW: Face Sticker toggle ── */}
+              <button
+                onClick={() => setShowStickerPanel((p) => !p)}
+                className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", activeSticker ? "bg-yellow-500/30 border-yellow-500/20" : "bg-black/30")}
+              >
+                <span className="text-[10px]">🎭</span>
+              </button>
+              {/* ── NEW: Clip/Highlight button ── */}
+              <button
+                onClick={() => {
+                  setClipSaved(true);
+                  toast.success("📸 Clip saved! View in highlights after stream.");
+                  setTimeout(() => setClipSaved(false), 3000);
+                }}
+                className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", clipSaved ? "bg-green-500/30 border-green-500/20" : "bg-black/30")}
+              >
+                <span className="text-[10px]">{clipSaved ? "✅" : "📸"}</span>
+              </button>
             </div>
 
             <div className="w-4 border-t border-white/10" />
@@ -1384,7 +1462,11 @@ export default function GoLivePage() {
               <Trophy className="h-3.5 w-3.5 text-amber-400" />
             </button>
 
-            {/* Sound toggle */}
+            {/* ── NEW: Revenue mini-dashboard toggle ── */}
+            <button onClick={() => setShowRevenueDash((p) => !p)} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", showRevenueDash ? "bg-emerald-500/25 border-emerald-500/20" : "bg-black/30")}>
+              <span className="text-[10px]">💰</span>
+            </button>
+
             <button onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "🔇 Muted" : "🔊 Sound on", { duration: 1200 }); }} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", soundEnabled ? "bg-black/30" : "bg-red-500/20")}>
               {soundEnabled ? <Volume2 className="h-3.5 w-3.5 text-white/70" /> : <VolumeX className="h-3.5 w-3.5 text-red-300" />}
             </button>
@@ -1506,10 +1588,12 @@ export default function GoLivePage() {
                     {/* Level badge */}
                     {msg.level && (
                       <span className={cn(
-                        "text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0",
-                        msg.level >= 30 ? "bg-amber-500/30 text-amber-300" :
-                        msg.level >= 15 ? "bg-blue-500/30 text-blue-300" :
-                        "bg-white/10 text-white/50"
+                        "text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0 border",
+                        msg.level >= 40 ? "bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border-amber-500/30 shadow-sm shadow-amber-500/10" :
+                        msg.level >= 30 ? "bg-gradient-to-r from-purple-500/40 to-pink-500/30 text-purple-200 border-purple-500/30" :
+                        msg.level >= 20 ? "bg-gradient-to-r from-blue-500/40 to-cyan-500/30 text-blue-200 border-blue-500/30" :
+                        msg.level >= 10 ? "bg-gradient-to-r from-green-500/30 to-emerald-500/20 text-green-300 border-green-500/20" :
+                        "bg-white/10 text-white/50 border-white/10"
                       )}>
                         Lv.{msg.level}
                       </span>
@@ -2072,6 +2156,175 @@ export default function GoLivePage() {
                   </div>
                 );
               })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW: Face Sticker Panel ── */}
+      <AnimatePresence>
+        {phase === "live" && showStickerPanel && (
+          <motion.div
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 300, opacity: 0 }}
+            transition={{ type: "spring", damping: 22, stiffness: 250 }}
+            className="fixed right-3 z-50 w-48"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 210px)" }}
+          >
+            <div
+              className="rounded-2xl px-3 py-2.5 space-y-1.5"
+              style={{
+                background: "linear-gradient(135deg, rgba(60,30,80,0.95) 0%, rgba(80,40,100,0.92) 100%)",
+                backdropFilter: "blur(16px)",
+                border: "1px solid rgba(255,180,255,0.15)",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+              }}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">🎭</span>
+                  <span className="text-[11px] font-bold text-pink-300 uppercase tracking-wider">Stickers</span>
+                </div>
+                <button onClick={() => setShowStickerPanel(false)} className="text-white/30 hover:text-white/60">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {faceStickers.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => { setActiveSticker((prev) => prev === s.id ? null : s.id); toast(`${s.emoji} ${activeSticker === s.id ? "Removed" : s.label}`, { duration: 1200 }); }}
+                    className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center text-xl active:scale-90 transition-all border",
+                      activeSticker === s.id ? "bg-pink-500/30 border-pink-500/30 shadow-lg shadow-pink-500/20" : "bg-white/5 border-white/10"
+                    )}
+                  >
+                    {s.emoji}
+                  </button>
+                ))}
+              </div>
+              {activeSticker && (
+                <button onClick={() => { setActiveSticker(null); toast("Sticker removed"); }} className="w-full text-[9px] text-pink-300/60 text-center mt-1">
+                  Tap active sticker to remove
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW: Top-3 Gifter Mini-Banner (persistent during live) ── */}
+      {phase === "live" && showTop3Banner && Object.keys(topGifters).length > 0 && !showLeaderboard && (
+        <div className="fixed left-3 z-40" style={{ top: "calc(env(safe-area-inset-top, 0px) + 170px)" }}>
+          <div
+            className="rounded-xl px-2.5 py-1.5 flex items-center gap-2"
+            style={{
+              background: "linear-gradient(135deg, rgba(40,25,10,0.85) 0%, rgba(60,35,15,0.8) 100%)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid rgba(255,200,80,0.12)",
+            }}
+          >
+            <span className="text-[8px] text-amber-400 font-bold uppercase">Top</span>
+            {Object.entries(topGifters)
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 3)
+              .map(([name, coins], i) => {
+                const medals = ["🥇", "🥈", "🥉"];
+                return (
+                  <div key={name} className="flex items-center gap-1">
+                    <span className="text-[10px]">{medals[i]}</span>
+                    <span className="text-[9px] text-white/70 font-medium max-w-[40px] truncate">{name}</span>
+                    <span className="text-[8px] text-amber-300 font-bold">{coins}</span>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
+      {/* ── NEW: Combo Multiplier Overlay ── */}
+      <AnimatePresence>
+        {phase === "live" && comboMultiplierText && (
+          <motion.div
+            key={comboMultiplierText.id}
+            initial={{ scale: 0.3, opacity: 0, y: 40 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 1.5, opacity: 0, y: -30 }}
+            transition={{ type: "spring", damping: 12, stiffness: 300 }}
+            className="fixed left-0 right-0 z-50 flex items-center justify-center pointer-events-none"
+            style={{ top: "40%" }}
+          >
+            <span
+              className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-orange-400"
+              style={{
+                textShadow: "0 0 40px rgba(255,200,0,0.6), 0 0 80px rgba(255,150,0,0.3)",
+                WebkitTextStroke: "1px rgba(255,200,80,0.3)",
+              }}
+            >
+              {comboMultiplierText.text}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW: Revenue Mini-Dashboard ── */}
+      <AnimatePresence>
+        {phase === "live" && showRevenueDash && (
+          <motion.div
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 300, opacity: 0 }}
+            transition={{ type: "spring", damping: 22, stiffness: 250 }}
+            className="fixed right-3 z-50 w-52"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 210px)" }}
+          >
+            <div
+              className="rounded-2xl px-3 py-2.5 space-y-2"
+              style={{
+                background: "linear-gradient(135deg, rgba(10,40,20,0.95) 0%, rgba(15,50,25,0.92) 100%)",
+                backdropFilter: "blur(16px)",
+                border: "1px solid rgba(80,200,120,0.15)",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+              }}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">💰</span>
+                  <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider">Revenue</span>
+                </div>
+                <button onClick={() => setShowRevenueDash(false)} className="text-white/30 hover:text-white/60">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/50">Total Earned</span>
+                  <span className="text-sm font-bold text-amber-300 flex items-center gap-1"><img src={goldCoinIcon} alt="" className="w-3.5 h-3.5" />{coinsEarned.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/50">Coins/min</span>
+                  <span className="text-[11px] font-semibold text-emerald-300">{elapsed > 60 ? (coinsEarned / (elapsed / 60)).toFixed(1) : coinsEarned.toString()} ⚡</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/50">Projected (1hr)</span>
+                  <span className="text-[11px] font-semibold text-emerald-200">{elapsed > 30 ? Math.round((coinsEarned / elapsed) * 3600).toLocaleString() : "—"} 🎯</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/50">Gifts</span>
+                  <span className="text-[11px] font-semibold text-white/70">{giftsReceived} 🎁</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/50">Top Gift Value</span>
+                  <span className="text-[11px] font-semibold text-amber-200">{Object.values(topGifters).length > 0 ? Math.max(...Object.values(topGifters)).toLocaleString() : "0"} 💎</span>
+                </div>
+              </div>
+              <div className="border-t border-white/5 pt-1.5">
+                <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-green-400" style={{ width: `${Math.min((coinsEarned / streamGoal) * 100, 100)}%` }} />
+                </div>
+                <p className="text-[8px] text-white/30 text-center mt-0.5">{Math.min(coinsEarned, streamGoal)}/{streamGoal} Goal</p>
+              </div>
             </div>
           </motion.div>
         )}
