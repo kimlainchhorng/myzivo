@@ -459,7 +459,7 @@ export default function GoLivePage() {
 
   // ── Setup & Live ──
   return (
-    <div className="min-h-screen bg-black flex flex-col relative overflow-hidden">
+    <div className={cn("min-h-screen bg-black flex flex-col relative overflow-hidden transition-shadow duration-500", giftStreakFlash && "shadow-[inset_0_0_60px_rgba(255,170,0,0.3)]")} style={giftStreakFlash ? { boxShadow: "inset 0 0 80px rgba(255,170,0,0.25), 0 0 40px rgba(255,170,0,0.1)" } : undefined}>
       {/* Camera preview */}
       <div className="absolute inset-0 z-0">
         {cameraError ? (
