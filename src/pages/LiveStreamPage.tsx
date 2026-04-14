@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import { giftImages } from "@/config/giftIcons";
 import { giftAnimationVideos } from "@/config/giftAnimations";
@@ -74,8 +75,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const [doubleTapHeart, setDoubleTapHeart] = useState<{ id: string; x: number; y: number } | null>(null);
   const [showRanking, setShowRanking] = useState(false);
   const [superChatMsg, setSuperChatMsg] = useState<{ id: string; user: string; text: string; coins: number } | null>(null);
-  // ── NEW: Viewer list panel ──
   const [showViewerList, setShowViewerList] = useState(false);
+  // ── Gift-sent flyout ──
+  const [sentGiftFlyout, setSentGiftFlyout] = useState<{ id: string; giftName: string; coins: number; qty: number } | null>(null);
+  // ── Gift animation overlay for premium gifts ──
+  const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
+  const [giftCombo, setGiftCombo] = useState(0);
+  // ── Active Poll (from host) ──
+  const [activePoll, setActivePoll] = useState<{ question: string; options: string[]; votes: number[]; totalVotes: number; voted: number | null } | null>(null);
   const [fakeViewers] = useState(() => [
     { name: "Luna ✨", level: 28, badge: "⭐ Top Fan" },
     { name: "Kai 🔥", level: 15, badge: null },
@@ -230,6 +237,20 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     return () => clearInterval(interval);
   }, [fakeViewerNames]);
 
+  // Simulate poll from host
+  useEffect(() => {
+    const pollTimer = setTimeout(() => {
+      setActivePoll({
+        question: "What should we do next? 🤔",
+        options: ["Q&A Session", "Play a Game", "Sing a Song"],
+        votes: [42, 67, 31],
+        totalVotes: 140,
+        voted: null,
+      });
+    }, 25000 + Math.random() * 15000);
+    return () => clearTimeout(pollTimer);
+  }, []);
+
   // Auto-scroll chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -252,7 +273,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const sendGift = useCallback(() => {
     if (!selectedGift) return;
     const totalCoins = selectedGift.coins * giftQty;
-    toast.success(`🎁 Sent ${giftQty}x ${selectedGift.name}!`, { description: `${totalCoins} coins` });
+    // Chat message
     setChatMessages(prev => [...prev, {
       id: Date.now().toString(),
       user: "You",
@@ -260,10 +281,29 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       isGift: true,
       level: 5,
     }]);
+    // Gift-sent flyout
+    const flyout = { id: Date.now().toString(), giftName: selectedGift.name, coins: totalCoins, qty: giftQty };
+    setSentGiftFlyout(flyout);
+    setTimeout(() => setSentGiftFlyout(null), 2500);
+    // Trigger premium animation for 500+ coin gifts
+    if (selectedGift.coins >= 500 && giftAnimationVideos[selectedGift.name]) {
+      setActiveGiftAnim({ name: selectedGift.name, coins: totalCoins, senderName: "You" });
+      setGiftCombo(prev => prev + 1);
+    }
     setSelectedGift(null);
     setGiftQty(1);
     setShowGiftPanel(false);
   }, [selectedGift, giftQty]);
+
+  const votePoll = useCallback((optIndex: number) => {
+    setActivePoll(prev => {
+      if (!prev || prev.voted !== null) return prev;
+      const newVotes = [...prev.votes];
+      newVotes[optIndex] += 1;
+      return { ...prev, votes: newVotes, totalVotes: prev.totalVotes + 1, voted: optIndex };
+    });
+    toast.success("Vote submitted! 🗳️");
+  }, []);
 
   const handleFollow = () => {
     setIsFollowing(!isFollowing);
@@ -418,30 +458,51 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         </div>
       </div>
 
-      {/* ── Gift notifications (left side, TikTok style) ── */}
-      <div className="absolute left-3 z-30 flex flex-col gap-1.5" style={{ top: "calc(env(safe-area-inset-top, 0px) + 100px)" }}>
+      {/* ── Gift notifications (left side, gold gradient like streamer) ── */}
+      <div className="absolute left-2 z-30 flex flex-col gap-2 items-start w-[200px]" style={{ top: "calc(env(safe-area-inset-top, 0px) + 100px)" }}>
         <AnimatePresence>
-          {giftNotifQueue.map((notif) => (
+          {giftNotifQueue.map((notif, idx) => (
             <motion.div
               key={notif.id}
-              initial={{ x: -100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -100, opacity: 0 }}
-              className="flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full pr-3 pl-1.5 py-1"
+              initial={{ x: -200, opacity: 0, scale: 0.7 }}
+              animate={{ x: 0, opacity: idx === 0 ? 1 : 0.7 - idx * 0.15, scale: idx === 0 ? 1 : 0.92 - idx * 0.04 }}
+              exit={{ x: -200, opacity: 0, scale: 0.5 }}
+              transition={{ type: "spring", damping: 18, stiffness: 220 }}
+              className="w-full"
             >
-              <Avatar className="h-6 w-6">
-                <AvatarFallback className="text-[9px] bg-primary/20 text-primary font-bold">{notif.sender[0]}</AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="text-[10px] text-white/70 truncate max-w-[100px]">{notif.sender}</p>
-                <p className="text-[10px] text-amber-300 font-bold">sent {notif.giftName}</p>
-              </div>
-              <div className="w-7 h-7 flex items-center justify-center">
-                {giftImages[notif.giftName] ? (
-                  <img src={giftImages[notif.giftName]} alt="" className="w-6 h-6 object-contain" />
-                ) : (
-                  <span className="text-base">🎁</span>
+              <div
+                className="flex items-center gap-1.5 px-2.5 py-2 rounded-2xl"
+                style={{
+                  background: idx === 0
+                    ? "linear-gradient(260deg, rgba(120,80,10,0.9) 0%, rgba(180,130,30,0.75) 50%, rgba(220,170,50,0.45) 90%, transparent 100%)"
+                    : "linear-gradient(260deg, rgba(80,60,10,0.7) 0%, rgba(140,100,20,0.5) 60%, transparent 100%)",
+                  backdropFilter: "blur(10px)",
+                  boxShadow: idx === 0 ? "0 4px 20px rgba(255,170,0,0.3)" : "0 2px 10px rgba(255,170,0,0.1)",
+                  border: "1px solid rgba(255,200,80,0.15)",
+                }}
+              >
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center text-white font-bold text-[10px] shrink-0 ring-1 ring-amber-300/30">
+                  {notif.sender[0]}
+                </div>
+                {giftImages[notif.giftName] && (
+                  <motion.img
+                    src={giftImages[notif.giftName]}
+                    alt=""
+                    className="w-6 h-6 object-contain -ml-2 mb-[-4px] relative z-10"
+                    style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.4))" }}
+                    initial={{ scale: 0, rotate: -20 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", delay: 0.1 }}
+                  />
                 )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-white text-[10px] font-bold truncate leading-tight">{notif.sender}</p>
+                  <p className="text-amber-100/70 text-[9px] leading-tight">sent <span className="text-white font-semibold">{notif.giftName}</span></p>
+                </div>
+                <div className="flex items-center gap-0.5 bg-black/30 rounded-full px-1.5 py-0.5 shrink-0">
+                  <img src={goldCoinIcon} alt="" className="w-2.5 h-2.5" />
+                  <span className="text-amber-200 text-[9px] font-bold">{notif.coins}</span>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -627,31 +688,103 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
 
       {/* ── Chat overlay (bottom-left) ── */}
       <div className="absolute left-0 right-16 z-20" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 60px)" }}>
+        {/* Poll widget for voting */}
+        <AnimatePresence>
+          {activePoll && (
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 30, opacity: 0 }}
+              className="px-3 mb-2"
+            >
+              <div className="bg-blue-950/70 backdrop-blur-md rounded-2xl p-3 border border-blue-500/20">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs">📊</span>
+                    <span className="text-[11px] font-bold text-blue-300">POLL</span>
+                  </div>
+                  <span className="text-[9px] text-white/40">{activePoll.totalVotes} votes</span>
+                </div>
+                <p className="text-white text-xs font-semibold mb-2">{activePoll.question}</p>
+                <div className="space-y-1.5">
+                  {activePoll.options.map((opt, i) => {
+                    const pct = activePoll.totalVotes > 0 ? Math.round((activePoll.votes[i] / activePoll.totalVotes) * 100) : 0;
+                    const isVoted = activePoll.voted === i;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => votePoll(i)}
+                        disabled={activePoll.voted !== null}
+                        className="relative w-full text-left"
+                      >
+                        <div className={cn("h-7 rounded-lg overflow-hidden border", isVoted ? "border-blue-400/40 bg-blue-500/15" : "border-white/10 bg-white/5")}>
+                          <motion.div
+                            className="h-full rounded-lg bg-blue-500/25"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${pct}%` }}
+                            transition={{ type: "spring", damping: 20 }}
+                          />
+                        </div>
+                        <div className="absolute inset-0 flex items-center justify-between px-2.5">
+                          <span className="text-[11px] text-white/80 font-medium">{opt}</span>
+                          <span className="text-[10px] text-blue-300 font-bold">{pct}%</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {activePoll.voted !== null && (
+                  <p className="text-[9px] text-blue-300/50 text-center mt-1.5">✓ You voted for "{activePoll.options[activePoll.voted]}"</p>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Messages */}
         <div className="px-3 max-h-[160px] overflow-y-auto scrollbar-hide space-y-1 mask-gradient-top flex flex-col">
           {chatMessages.slice(-7).map((msg) => {
             const isJoin = msg.isSystem && msg.text.includes("joined");
+            const isTopFan = topGifters.length > 0 && msg.user === topGifters[0].name;
             return (
               <motion.div
                 key={msg.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className={cn(
-                  "flex items-start gap-1.5 px-2 py-1 rounded-lg max-w-[85%] w-fit",
-                  isJoin ? "bg-green-500/15" : msg.isSystem ? "bg-primary/20" : msg.isGift ? "bg-amber-500/20" : "bg-black/30 backdrop-blur-sm"
+                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-2xl max-w-[85%] w-fit",
+                  isJoin ? "bg-green-500/15" :
+                  msg.isSystem ? "bg-primary/20" :
+                  msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" :
+                  msg.level && msg.level >= 40 ? "bg-gradient-to-r from-amber-900/40 to-yellow-900/20 border border-amber-500/15" :
+                  msg.level && msg.level >= 30 ? "bg-gradient-to-r from-purple-900/40 to-pink-900/20 border border-purple-500/15" :
+                  msg.level && msg.level >= 20 ? "bg-gradient-to-r from-blue-900/40 to-cyan-900/20 border border-blue-500/10" :
+                  msg.level && msg.level >= 10 ? "bg-gradient-to-r from-green-900/30 to-emerald-900/15 border border-green-500/10" :
+                  "bg-black/40 backdrop-blur-sm"
                 )}
               >
+                {!msg.isSystem && (
+                  <div className={cn("h-6 w-6 rounded-full flex items-center justify-center shrink-0", "bg-primary/20")}>
+                    <span className="text-[9px] text-white font-bold">{msg.user[0]}</span>
+                  </div>
+                )}
                 {msg.level && !msg.isSystem && (
-                  <span className={cn("text-[8px] px-1 py-0.5 rounded font-bold bg-gradient-to-r text-white shrink-0 mt-0.5", getLevelColor(msg.level))}>
+                  <span className={cn(
+                    "text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0 border",
+                    msg.level >= 40 ? "bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border-amber-500/30" :
+                    msg.level >= 30 ? "bg-gradient-to-r from-purple-500/40 to-pink-500/30 text-purple-200 border-purple-500/30" :
+                    msg.level >= 20 ? "bg-gradient-to-r from-blue-500/40 to-cyan-500/30 text-blue-200 border-blue-500/30" :
+                    msg.level >= 10 ? "bg-gradient-to-r from-green-500/30 to-emerald-500/20 text-green-300 border-green-500/20" :
+                    "bg-white/10 text-white/50 border-white/10"
+                  )}>
                     Lv.{msg.level}
                   </span>
                 )}
-                <div className="min-w-0">
-                  <span className={cn("text-[11px] font-bold mr-1", isJoin ? "text-green-300" : msg.isSystem ? "text-primary" : msg.isGift ? "text-amber-300" : "text-white/70")}>
-                    {msg.user}
-                  </span>
-                  <span className={cn("text-[11px] break-words", isJoin ? "text-green-200/70" : "text-white")}>{msg.text}</span>
-                </div>
+                {isTopFan && !msg.isSystem && (
+                  <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full shrink-0 bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border border-amber-500/30">⭐ Top Fan</span>
+                )}
+                <span className={cn("text-xs font-medium", msg.isSystem ? "text-white/40 italic" : "text-white/80")}>{msg.user}</span>
+                <span className={cn("text-xs", msg.isGift ? "text-amber-300" : msg.isSystem ? "text-white/30 italic" : "text-white/90")}>{msg.text}</span>
               </motion.div>
             );
           })}
@@ -664,7 +797,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
             <button
               key={emoji}
               onClick={() => sendReaction(emoji)}
-              className="w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-base hover:scale-110 transition-transform active:scale-95"
+              className="w-8 h-8 rounded-lg bg-black/30 backdrop-blur-md flex items-center justify-center text-sm active:scale-75 transition-transform border border-white/5"
             >
               {emoji}
             </button>
@@ -873,6 +1006,60 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Gift-sent flyout ── */}
+      <AnimatePresence>
+        {sentGiftFlyout && (
+          <motion.div
+            key={sentGiftFlyout.id}
+            initial={{ x: 300, opacity: 0, scale: 0.5 }}
+            animate={{ x: 0, opacity: 1, scale: 1 }}
+            exit={{ x: 300, opacity: 0, scale: 0.7 }}
+            transition={{ type: "spring", damping: 16, stiffness: 200 }}
+            className="absolute right-3 bottom-[280px] z-40"
+          >
+            <div
+              className="flex items-center gap-2 px-3 py-2.5 rounded-2xl"
+              style={{
+                background: "linear-gradient(135deg, rgba(16,185,129,0.9) 0%, rgba(5,150,105,0.8) 50%, rgba(4,120,87,0.6) 100%)",
+                backdropFilter: "blur(12px)",
+                boxShadow: "0 4px 24px rgba(16,185,129,0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
+                border: "1px solid rgba(16,185,129,0.3)",
+              }}
+            >
+              {giftImages[sentGiftFlyout.giftName] ? (
+                <motion.img
+                  src={giftImages[sentGiftFlyout.giftName]}
+                  alt=""
+                  className="w-8 h-8 object-contain"
+                  style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}
+                  animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.15, 1] }}
+                  transition={{ duration: 0.5 }}
+                />
+              ) : (
+                <span className="text-2xl">🎁</span>
+              )}
+              <div>
+                <p className="text-white text-[11px] font-bold">
+                  ✓ Gift Sent!{sentGiftFlyout.qty > 1 ? ` x${sentGiftFlyout.qty}` : ""}
+                </p>
+                <div className="flex items-center gap-1">
+                  <img src={goldCoinIcon} alt="" className="w-3 h-3" />
+                  <span className="text-emerald-100 text-[10px] font-semibold">{sentGiftFlyout.coins.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Full-screen gift animation overlay */}
+      <GiftAnimationOverlay
+        activeGift={activeGiftAnim}
+        onComplete={() => { setActiveGiftAnim(null); setGiftCombo(0); }}
+        giftPanelOpen={showGiftPanel}
+        comboCount={giftCombo}
+      />
     </div>
   );
 }
