@@ -892,8 +892,19 @@ export default function GoLivePage() {
       {phase === "live" && (
         <div className="relative z-10 pl-4 pr-14 mt-3">
           <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-2xl px-3 py-2 border border-white/5">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-red-500/20">
-              {user?.email?.[0]?.toUpperCase() || "Z"}
+            <div className="relative">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-red-500/20">
+                {user?.email?.[0]?.toUpperCase() || "Z"}
+              </div>
+              {/* Host Level Badge */}
+              <span className={cn(
+                "absolute -bottom-1 -right-1 text-[7px] font-bold px-1 py-0.5 rounded-full border",
+                hostLevel >= 50 ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-white border-amber-300/50" :
+                hostLevel >= 20 ? "bg-gradient-to-r from-blue-500 to-cyan-400 text-white border-blue-300/50" :
+                "bg-white/20 text-white/80 border-white/20"
+              )}>
+                {hostLevel}
+              </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-semibold truncate">{title}</p>
