@@ -1582,7 +1582,7 @@ export default function GoLivePage() {
           </AnimatePresence>
 
           {/* ── Right-side stacked gift notification queue (TikTok-style) ── */}
-          <div className="absolute right-2 top-[170px] z-30 flex flex-col gap-2 items-end w-[200px]">
+          <div className="absolute right-2 z-30 flex flex-col gap-2 items-end w-[180px]" style={{ top: "calc(env(safe-area-inset-top, 0px) + 230px)" }}>
             <AnimatePresence>
               {giftNotifQueue.map((notif, idx) => (
                 <motion.div
@@ -1873,10 +1873,10 @@ export default function GoLivePage() {
 
           {/* Chat messages overlay */}
           {showChat && (
-            <div className="relative pl-4 pr-14 mb-2 max-h-[200px]">
+            <div className="relative pl-4 pr-14 mb-2 max-h-[160px]">
               {/* Gradient fade at top */}
-              <div className="absolute top-0 left-4 right-4 h-8 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none rounded-t-2xl" />
-              <div className="overflow-y-auto max-h-[200px] space-y-1.5 scroll-smooth scrollbar-hide">
+              <div className="absolute top-0 left-4 right-4 h-6 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none rounded-t-2xl" />
+              <div className="overflow-y-auto max-h-[160px] space-y-1 scroll-smooth scrollbar-hide">
                 {/* Pinned message (system or host-pinned) */}
                 {(pinnedChatMsg || chatMessages.find((m) => m.isPinned)) && (
                   <div className="flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[85%] bg-red-500/15 border border-red-500/20 mb-1 pointer-events-auto">
@@ -1889,7 +1889,7 @@ export default function GoLivePage() {
                     )}
                   </div>
                 )}
-                {chatMessages.filter((m) => !m.isPinned && !mutedUsers.has(m.user)).slice(-8).map((msg) => (
+                {chatMessages.filter((m) => !m.isPinned && !mutedUsers.has(m.user)).slice(-6).map((msg) => (
                   <div
                     key={msg.id}
                     onClick={() => {
