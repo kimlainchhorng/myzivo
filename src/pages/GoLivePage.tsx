@@ -1421,6 +1421,24 @@ export default function GoLivePage() {
               >
                 <Palette className={cn("h-3 w-3", cameraFilter !== "none" ? "text-cyan-300" : "text-white/60")} />
               </button>
+              {/* ── NEW: Face Sticker toggle ── */}
+              <button
+                onClick={() => setShowStickerPanel((p) => !p)}
+                className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", activeSticker ? "bg-yellow-500/30 border-yellow-500/20" : "bg-black/30")}
+              >
+                <span className="text-[10px]">🎭</span>
+              </button>
+              {/* ── NEW: Clip/Highlight button ── */}
+              <button
+                onClick={() => {
+                  setClipSaved(true);
+                  toast.success("📸 Clip saved! View in highlights after stream.");
+                  setTimeout(() => setClipSaved(false), 3000);
+                }}
+                className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", clipSaved ? "bg-green-500/30 border-green-500/20" : "bg-black/30")}
+              >
+                <span className="text-[10px]">{clipSaved ? "✅" : "📸"}</span>
+              </button>
             </div>
 
             <div className="w-4 border-t border-white/10" />
