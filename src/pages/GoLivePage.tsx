@@ -1344,20 +1344,20 @@ export default function GoLivePage() {
           </AnimatePresence>
 
           {/* Side actions — separated with clear spacing */}
-          <div className="absolute right-2 bottom-52 flex flex-col gap-2 items-center z-30">
+          <div className="absolute right-2 bottom-52 flex flex-col gap-1.5 items-center z-30">
             {/* Live hardware controls — compact row */}
-            <div className="flex flex-col gap-1.5 items-center">
-              <button onClick={flipCamera} className="w-9 h-9 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
-                <RotateCcw className="h-3.5 w-3.5 text-white/60" />
+            <div className="flex flex-col gap-1 items-center">
+              <button onClick={flipCamera} className="w-8 h-8 rounded-lg bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
+                <RotateCcw className="h-3 w-3 text-white/60" />
               </button>
-              <button onClick={toggleCamera} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", cameraOn ? "bg-black/30" : "bg-red-500/30")}>
-                {cameraOn ? <Camera className="h-3.5 w-3.5 text-white/60" /> : <CameraOff className="h-3.5 w-3.5 text-red-300" />}
+              <button onClick={toggleCamera} className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", cameraOn ? "bg-black/30" : "bg-red-500/30")}>
+                {cameraOn ? <Camera className="h-3 w-3 text-white/60" /> : <CameraOff className="h-3 w-3 text-red-300" />}
               </button>
-              <button onClick={toggleMic} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", micOn ? "bg-black/30" : "bg-red-500/30")}>
-                {micOn ? <Mic className="h-3.5 w-3.5 text-white/60" /> : <MicOff className="h-3.5 w-3.5 text-red-300" />}
+              <button onClick={toggleMic} className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", micOn ? "bg-black/30" : "bg-red-500/30")}>
+                {micOn ? <Mic className="h-3 w-3 text-white/60" /> : <MicOff className="h-3 w-3 text-red-300" />}
               </button>
-              <button onClick={() => setBeautyMode((p) => !p)} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", beautyMode ? "bg-pink-500/30 border-pink-500/20" : "bg-black/30")}>
-                <Sparkles className={cn("h-3.5 w-3.5", beautyMode ? "text-pink-300" : "text-white/60")} />
+              <button onClick={() => setBeautyMode((p) => !p)} className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", beautyMode ? "bg-pink-500/30 border-pink-500/20" : "bg-black/30")}>
+                <Sparkles className={cn("h-3 w-3", beautyMode ? "text-pink-300" : "text-white/60")} />
               </button>
               <button
                 onClick={() => {
@@ -1366,81 +1366,79 @@ export default function GoLivePage() {
                   setCameraFilter(filters[(idx + 1) % filters.length]);
                   toast(`🎨 Filter: ${filters[(idx + 1) % filters.length] === "none" ? "Off" : filters[(idx + 1) % filters.length]}`, { duration: 1500 });
                 }}
-                className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", cameraFilter !== "none" ? "bg-cyan-500/30 border-cyan-500/20" : "bg-black/30")}
+                className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", cameraFilter !== "none" ? "bg-cyan-500/30 border-cyan-500/20" : "bg-black/30")}
               >
-                <Palette className={cn("h-3.5 w-3.5", cameraFilter !== "none" ? "text-cyan-300" : "text-white/60")} />
+                <Palette className={cn("h-3 w-3", cameraFilter !== "none" ? "text-cyan-300" : "text-white/60")} />
               </button>
             </div>
 
-            <div className="w-5 border-t border-white/10" />
+            <div className="w-4 border-t border-white/10" />
 
-            {/* Engagement actions */}
-            <button onClick={() => setShowViewerList((p) => !p)} className="w-10 h-10 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5 relative">
-              <Users className="h-4 w-4 text-white/70" />
-              <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-3.5 bg-green-500 text-white text-[7px] font-bold rounded-full flex items-center justify-center px-0.5">{viewerCount}</span>
+            {/* Engagement actions — compact */}
+            <button onClick={() => setShowViewerList((p) => !p)} className="w-9 h-9 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5 relative">
+              <Users className="h-3.5 w-3.5 text-white/70" />
+              <span className="absolute -top-0.5 -right-0.5 min-w-[12px] h-3 bg-green-500 text-white text-[6px] font-bold rounded-full flex items-center justify-center px-0.5">{viewerCount}</span>
             </button>
 
-            <button onClick={() => setShowLeaderboard((p) => !p)} className="w-10 h-10 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
-              <Trophy className="h-4 w-4 text-amber-400" />
+            <button onClick={() => setShowLeaderboard((p) => !p)} className="w-9 h-9 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
+              <Trophy className="h-3.5 w-3.5 text-amber-400" />
             </button>
 
             {/* Sound toggle */}
-            <button onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "🔇 Muted" : "🔊 Sound on", { duration: 1200 }); }} className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", soundEnabled ? "bg-black/30" : "bg-red-500/20")}>
-              {soundEnabled ? <Volume2 className="h-4 w-4 text-white/70" /> : <VolumeX className="h-4 w-4 text-red-300" />}
+            <button onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "🔇 Muted" : "🔊 Sound on", { duration: 1200 }); }} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", soundEnabled ? "bg-black/30" : "bg-red-500/20")}>
+              {soundEnabled ? <Volume2 className="h-3.5 w-3.5 text-white/70" /> : <VolumeX className="h-3.5 w-3.5 text-red-300" />}
             </button>
 
-            {/* Poll button */}
-            <button onClick={() => setShowPollCreator((p) => !p)} className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", activePoll ? "bg-blue-500/25 border-blue-500/20" : "bg-black/30")}>
-              <BarChart3 className={cn("h-4 w-4", activePoll ? "text-blue-300" : "text-white/70")} />
-            </button>
-
-            {/* PK Battle button */}
-            <button
-              onClick={() => {
-                if (pkBattle?.active) { toast("⚔️ Battle already in progress!"); return; }
-                const opponents = ["DJ_Luna", "KingAlex", "StarMia", "ProGamer99"];
-                const opp = opponents[Math.floor(Math.random() * opponents.length)];
-                setPkBattle({ active: true, hostScore: 0, opponentScore: 0, opponentName: opp, endsAt: Date.now() + 120000, winner: null });
-                setChatMessages((prev) => [...prev.slice(-20), { id: `pk-${Date.now()}`, user: "⚔️", text: `PK Battle started vs ${opp}! Send gifts to support!`, isSystem: true }]);
-                toast.success(`⚔️ PK Battle vs ${opp}!`);
-              }}
-              className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", pkBattle?.active ? "bg-red-500/25 border-red-500/20" : "bg-black/30")}
-            >
-              <span className="text-sm">⚔️</span>
-            </button>
-
-            {/* Treasure Chest */}
-            <button
-              onClick={() => {
-                if (treasureChest?.active) return;
-                setTreasureChest({ active: true, countdown: 15, participants: [], winner: null });
-                setChatMessages((prev) => [...prev.slice(-20), { id: `chest-${Date.now()}`, user: "🎁", text: "Treasure Chest opened! Tap to join the draw!", isSystem: true }]);
-                toast("🎁 Treasure Chest! 15s to join!", { duration: 3000 });
-              }}
-              className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", treasureChest?.active ? "bg-amber-500/25 border-amber-500/20" : "bg-black/30")}
-            >
-              <span className="text-sm">🎁</span>
-            </button>
-
-            {/* Guest Invite */}
-            <button
-              onClick={() => setShowGuestInvite((p) => !p)}
-              className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", coHosts.length > 0 ? "bg-purple-500/25 border-purple-500/20" : "bg-black/30")}
-            >
-              <span className="text-sm">👥</span>
-            </button>
-
-            <div className="flex flex-col items-center">
-              <button onClick={() => sendReaction("❤️")} className="w-11 h-11 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5 relative">
-                <Heart className="h-5 w-5 text-red-400" />
+            {/* Feature buttons row — PK, Poll, Chest, Guest */}
+            <div className="flex gap-1">
+              <button onClick={() => setShowPollCreator((p) => !p)} className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", activePoll ? "bg-blue-500/25 border-blue-500/20" : "bg-black/30")}>
+                <BarChart3 className={cn("h-3 w-3", activePoll ? "text-blue-300" : "text-white/70")} />
               </button>
-              <span className="text-white text-[9px] mt-0.5 font-medium">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>
+              <button
+                onClick={() => {
+                  if (pkBattle?.active) { toast("⚔️ Battle already in progress!"); return; }
+                  const opponents = ["DJ_Luna", "KingAlex", "StarMia", "ProGamer99"];
+                  const opp = opponents[Math.floor(Math.random() * opponents.length)];
+                  setPkBattle({ active: true, hostScore: 0, opponentScore: 0, opponentName: opp, endsAt: Date.now() + 120000, winner: null });
+                  setChatMessages((prev) => [...prev.slice(-20), { id: `pk-${Date.now()}`, user: "⚔️", text: `PK Battle started vs ${opp}! Send gifts to support!`, isSystem: true }]);
+                  toast.success(`⚔️ PK Battle vs ${opp}!`);
+                }}
+                className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", pkBattle?.active ? "bg-red-500/25 border-red-500/20" : "bg-black/30")}
+              >
+                <span className="text-[10px]">⚔️</span>
+              </button>
+            </div>
+            <div className="flex gap-1">
+              <button
+                onClick={() => {
+                  if (treasureChest?.active) return;
+                  setTreasureChest({ active: true, countdown: 15, participants: [], winner: null });
+                  setChatMessages((prev) => [...prev.slice(-20), { id: `chest-${Date.now()}`, user: "🎁", text: "Treasure Chest opened! Tap to join the draw!", isSystem: true }]);
+                  toast("🎁 Treasure Chest! 15s to join!", { duration: 3000 });
+                }}
+                className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", treasureChest?.active ? "bg-amber-500/25 border-amber-500/20" : "bg-black/30")}
+              >
+                <span className="text-[10px]">🎁</span>
+              </button>
+              <button
+                onClick={() => setShowGuestInvite((p) => !p)}
+                className={cn("w-8 h-8 rounded-lg backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", coHosts.length > 0 ? "bg-purple-500/25 border-purple-500/20" : "bg-black/30")}
+              >
+                <span className="text-[10px]">👥</span>
+              </button>
             </div>
 
-            <button onClick={() => setShowGiftPanel(true)} className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-amber-500/20 relative" data-testid="gift-btn">
-              <Gift className="h-5 w-5 text-yellow-300" />
+            <div className="flex flex-col items-center">
+              <button onClick={() => sendReaction("❤️")} className="w-10 h-10 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5 relative">
+                <Heart className="h-4 w-4 text-red-400" />
+              </button>
+              <span className="text-white text-[8px] mt-0.5 font-medium">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>
+            </div>
+
+            <button onClick={() => setShowGiftPanel(true)} className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-amber-500/20 relative" data-testid="gift-btn">
+              <Gift className="h-4 w-4 text-yellow-300" />
               {giftsReceived > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">{giftsReceived > 99 ? "99+" : giftsReceived}</span>
+                <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center px-0.5">{giftsReceived > 99 ? "99+" : giftsReceived}</span>
               )}
             </button>
           </div>
