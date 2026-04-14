@@ -30,6 +30,8 @@ import Wifi from "lucide-react/dist/esm/icons/wifi";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
 import Trophy from "lucide-react/dist/esm/icons/trophy";
 import Clock from "lucide-react/dist/esm/icons/clock";
+import Palette from "lucide-react/dist/esm/icons/palette";
+import CalendarPlus from "lucide-react/dist/esm/icons/calendar-plus";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -85,10 +87,23 @@ export default function GoLivePage() {
   const [giftQty, setGiftQty] = useState(1);
   const [recentGifts, setRecentGifts] = useState<{ icon: string; name: string; coins: number }[]>([]);
   const [pinnedChatMsg, setPinnedChatMsg] = useState<string | null>(null);
+  const [cameraFilter, setCameraFilter] = useState<"none" | "warm" | "cool" | "bw" | "vintage">("none");
+  const [showViewerList, setShowViewerList] = useState(false);
+  const [autoThank, setAutoThank] = useState(false);
   const lastGiftTimeRef = useRef(0);
   const lastMilestoneRef = useRef(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fakeFollowers = useRef(Math.floor(Math.random() * 800) + 200);
+
+  const cameraFilters: Record<string, string> = useMemo(() => ({
+    none: "",
+    warm: "sepia(0.25) saturate(1.3) brightness(1.05)",
+    cool: "hue-rotate(15deg) saturate(0.9) brightness(1.05)",
+    bw: "grayscale(1) contrast(1.1)",
+    vintage: "sepia(0.4) contrast(0.9) brightness(1.1) hue-rotate(-10deg)",
+  }), []);
+
+  const fakeViewerNames = useMemo(() => ["Luna ✨", "Kai 🔥", "Mia 💜", "Nora 🌸", "Zara 💎", "Leo 🦁", "Aria 🎵", "Alex 🎮", "Jordan 🏀", "Sam 🌊"], []);
 
   const allGifts = useMemo(() => ({
     gifts: [
@@ -351,6 +366,15 @@ export default function GoLivePage() {
           { id: `vgift-${Date.now()}`, user: sender, text: `sent ${giftNames[idx]} 🎁`, isGift: true, avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][Math.floor(Math.random() * 5)] },
         ]);
         playGiftSound(1);
+        // Auto thank-you
+        if (autoThank) {
+          setTimeout(() => {
+            setChatMessages((prev) => [
+              ...prev.slice(-20),
+              { id: `thx-${Date.now()}`, user: "You (Host)", text: `Thank you ${sender} for the ${giftNames[idx]}! ❤️`, avatar: "bg-red-500" },
+            ]);
+          }, 1500);
+        }
         // Gift streak flash
         const now = Date.now();
         if (now - lastGiftTimeRef.current < 8000) {
@@ -598,7 +622,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); lastMilestoneRef.current = 0; startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -616,6 +640,15 @@ export default function GoLivePage() {
               <span className="text-amber-300 text-sm font-semibold">View Wallet & Earnings</span>
             </button>
           )}
+
+          {/* Schedule Next Stream */}
+          <button
+            onClick={() => toast("📅 Stream scheduling coming soon!", { description: "Set a time and notify your followers automatically." })}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-white/5 border border-white/10 active:scale-[0.98] transition-transform"
+          >
+            <CalendarPlus className="h-4 w-4 text-blue-400" />
+            <span className="text-white/70 text-sm font-medium">Schedule Next Stream</span>
+          </button>
         </motion.div>
       </div>
     );
@@ -654,6 +687,7 @@ export default function GoLivePage() {
               facingMode === "user" && "scale-x-[-1]",
               beautyMode && "brightness-105 contrast-[1.02] saturate-[1.1]"
             )}
+            style={{ filter: cameraFilters[cameraFilter] || undefined }}
           />
         )}
         {/* Cinematic overlays */}
@@ -850,6 +884,17 @@ export default function GoLivePage() {
                   >
                     <Shield className="h-3 w-3" /> Private
                   </button>
+                  <button
+                    onClick={() => { setAutoThank((p) => !p); toast(autoThank ? "Auto-thank disabled" : "Auto-thank enabled ❤️", { duration: 1500 }); }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all border",
+                      autoThank
+                        ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                        : "bg-zinc-800 text-zinc-500 border-zinc-700/50 hover:text-zinc-400"
+                    )}
+                  >
+                    <Heart className="h-3 w-3" /> Thank
+                  </button>
                 </div>
               </div>
             </div>
@@ -908,7 +953,14 @@ export default function GoLivePage() {
 
       {/* Countdown overlay */}
       {phase === "countdown" && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm gap-4">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-white/60 text-lg font-semibold tracking-wider uppercase"
+          >
+            Going Live in
+          </motion.p>
           <motion.div
             key={countdown}
             initial={{ scale: 2, opacity: 0 }}
@@ -919,6 +971,14 @@ export default function GoLivePage() {
           >
             {countdown}
           </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-white/30 text-sm"
+          >
+            {topic} · {title || "My Live Stream"}
+          </motion.p>
         </div>
       )}
 
@@ -1013,11 +1073,27 @@ export default function GoLivePage() {
               <button onClick={() => setBeautyMode((p) => !p)} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", beautyMode ? "bg-pink-500/30 border-pink-500/20" : "bg-black/30")}>
                 <Sparkles className={cn("h-3.5 w-3.5", beautyMode ? "text-pink-300" : "text-white/60")} />
               </button>
+              <button
+                onClick={() => {
+                  const filters: Array<"none" | "warm" | "cool" | "bw" | "vintage"> = ["none", "warm", "cool", "bw", "vintage"];
+                  const idx = filters.indexOf(cameraFilter);
+                  setCameraFilter(filters[(idx + 1) % filters.length]);
+                  toast(`🎨 Filter: ${filters[(idx + 1) % filters.length] === "none" ? "Off" : filters[(idx + 1) % filters.length]}`, { duration: 1500 });
+                }}
+                className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", cameraFilter !== "none" ? "bg-cyan-500/30 border-cyan-500/20" : "bg-black/30")}
+              >
+                <Palette className={cn("h-3.5 w-3.5", cameraFilter !== "none" ? "text-cyan-300" : "text-white/60")} />
+              </button>
             </div>
 
             <div className="w-5 border-t border-white/10" />
 
             {/* Engagement actions */}
+            <button onClick={() => setShowViewerList((p) => !p)} className="w-10 h-10 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5 relative">
+              <Users className="h-4 w-4 text-white/70" />
+              <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-3.5 bg-green-500 text-white text-[7px] font-bold rounded-full flex items-center justify-center px-0.5">{viewerCount}</span>
+            </button>
+
             <button onClick={() => setShowLeaderboard((p) => !p)} className="w-10 h-10 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
               <Trophy className="h-4 w-4 text-amber-400" />
             </button>
@@ -1396,6 +1472,52 @@ export default function GoLivePage() {
                       </div>
                     );
                   })
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Viewer List popup */}
+      <AnimatePresence>
+        {phase === "live" && showViewerList && (
+          <motion.div
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 300, opacity: 0 }}
+            transition={{ type: "spring", damping: 22, stiffness: 250 }}
+            className="fixed right-3 z-50 w-48"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 210px)" }}
+          >
+            <div
+              className="rounded-2xl px-3 py-2.5 space-y-1"
+              style={{
+                background: "linear-gradient(135deg, rgba(20,30,50,0.95) 0%, rgba(25,35,60,0.92) 100%)",
+                backdropFilter: "blur(16px)",
+                border: "1px solid rgba(100,200,255,0.12)",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+              }}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5">
+                  <Users className="h-3.5 w-3.5 text-blue-400" />
+                  <span className="text-[11px] font-bold text-blue-300 uppercase tracking-wider">Viewers ({viewerCount})</span>
+                </div>
+                <button onClick={() => setShowViewerList(false)} className="text-white/30 hover:text-white/60">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              {fakeViewerNames.slice(0, Math.min(viewerCount, 10)).map((name, i) => (
+                <div key={name} className="flex items-center gap-2 py-0.5">
+                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[8px] text-white font-bold", ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][i % 5])}>
+                    {name[0]}
+                  </div>
+                  <span className="text-[11px] text-white/80 flex-1 truncate">{name}</span>
+                  {i === 0 && <span className="text-[7px] bg-amber-500/30 text-amber-300 px-1 py-0.5 rounded-full font-bold">TOP</span>}
+                </div>
+              ))}
+              {viewerCount > 10 && (
+                <p className="text-[9px] text-white/30 text-center pt-1">+{viewerCount - 10} more</p>
               )}
             </div>
           </motion.div>
