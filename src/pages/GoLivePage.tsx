@@ -107,6 +107,20 @@ export default function GoLivePage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fakeFollowers = useRef(Math.floor(Math.random() * 800) + 200);
 
+  // ── PK Battle Mode ──
+  const [pkBattle, setPkBattle] = useState<{ active: boolean; hostScore: number; opponentScore: number; opponentName: string; endsAt: number; winner: string | null } | null>(null);
+  // ── Treasure Chest / Lucky Draw ──
+  const [treasureChest, setTreasureChest] = useState<{ active: boolean; countdown: number; participants: string[]; winner: string | null } | null>(null);
+  // ── Multi-Guest Co-Host ──
+  const [coHosts, setCoHosts] = useState<{ name: string; avatar: string }[]>([]);
+  const [showGuestInvite, setShowGuestInvite] = useState(false);
+  // ── VIP entrance ──
+  const [vipEntrance, setVipEntrance] = useState<{ name: string; level: number } | null>(null);
+  // ── Host level ──
+  const hostLevel = useMemo(() => Math.min(99, Math.floor(coinsEarned / 50) + 1), [coinsEarned]);
+  // ── Chat mute/ban ──
+  const [mutedUsers, setMutedUsers] = useState<Set<string>>(new Set());
+
   const cameraFilters: Record<string, string> = useMemo(() => ({
     none: "",
     warm: "sepia(0.25) saturate(1.3) brightness(1.05)",
@@ -482,6 +496,84 @@ export default function GoLivePage() {
     }
   }, [coinsEarned, streamGoal, goalCelebrated, spawnFloatingReaction]);
 
+  // ── PK Battle simulation ──
+  useEffect(() => {
+    if (!pkBattle?.active || phase !== "live") return;
+    const iv = setInterval(() => {
+      setPkBattle((prev) => {
+        if (!prev || !prev.active) return prev;
+        if (Date.now() > prev.endsAt) {
+          const winner = prev.hostScore >= prev.opponentScore ? "You" : prev.opponentName;
+          setChatMessages((p) => [...p.slice(-20), { id: `pk-end-${Date.now()}`, user: "⚔️", text: `PK Battle ended! ${winner} wins! 🏆`, isSystem: true }]);
+          toast.success(`⚔️ ${winner} won the PK Battle!`);
+          return { ...prev, active: false, winner };
+        }
+        // Opponent scores randomly
+        const oppDelta = Math.random() > 0.6 ? Math.floor(Math.random() * 5) + 1 : 0;
+        return { ...prev, opponentScore: prev.opponentScore + oppDelta };
+      });
+    }, 3000);
+    return () => clearInterval(iv);
+  }, [pkBattle?.active, phase]);
+
+  // PK: gifts during battle add to host score
+  const addPkScore = useCallback((coins: number) => {
+    setPkBattle((prev) => prev?.active ? { ...prev, hostScore: prev.hostScore + coins } : prev);
+  }, []);
+
+  // ── Treasure Chest countdown ──
+  useEffect(() => {
+    if (!treasureChest?.active || treasureChest.winner) return;
+    // Auto-add fake participants
+    const joinIv = setInterval(() => {
+      setTreasureChest((prev) => {
+        if (!prev || !prev.active) return prev;
+        const names = ["Luna", "Kai", "Mia", "Nora", "Leo", "Aria", "Zara", "Sam"];
+        if (prev.participants.length < 8 && Math.random() > 0.4) {
+          const n = names.filter((n) => !prev.participants.includes(n));
+          if (n.length > 0) return { ...prev, participants: [...prev.participants, n[Math.floor(Math.random() * n.length)]] };
+        }
+        return prev;
+      });
+    }, 2000);
+    // Countdown
+    const cdIv = setInterval(() => {
+      setTreasureChest((prev) => {
+        if (!prev || !prev.active) return prev;
+        if (prev.countdown <= 1) {
+          const allP = prev.participants.length > 0 ? prev.participants : ["Lucky Viewer"];
+          const winner = allP[Math.floor(Math.random() * allP.length)];
+          const prize = [10, 25, 50, 100][Math.floor(Math.random() * 4)];
+          setChatMessages((p) => [...p.slice(-20), { id: `chest-win-${Date.now()}`, user: "🎁", text: `${winner} won ${prize} Z Coins from the Treasure Chest! 🎉`, isSystem: true }]);
+          toast.success(`🎁 ${winner} won ${prize} Z Coins!`);
+          return { ...prev, active: false, winner, countdown: 0 };
+        }
+        return { ...prev, countdown: prev.countdown - 1 };
+      });
+    }, 1000);
+    return () => { clearInterval(joinIv); clearInterval(cdIv); };
+  }, [treasureChest?.active, treasureChest?.winner]);
+
+  // ── VIP entrance simulation ──
+  useEffect(() => {
+    if (phase !== "live") return;
+    const vipNames = [{ name: "Diamond_VIP 💎", level: 50 }, { name: "King_Whale 👑", level: 80 }, { name: "Platinum_Star ⭐", level: 65 }];
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      timer = setTimeout(() => {
+        if (Math.random() > 0.7) {
+          const vip = vipNames[Math.floor(Math.random() * vipNames.length)];
+          setVipEntrance(vip);
+          setChatMessages((p) => [...p.slice(-20), { id: `vip-${Date.now()}`, user: "👑", text: `${vip.name} (Lv.${vip.level}) entered the stream!`, isSystem: true }]);
+          setTimeout(() => setVipEntrance(null), 4000);
+        }
+        schedule();
+      }, 40000 + Math.random() * 30000);
+    };
+    schedule();
+    return () => clearTimeout(timer);
+  }, [phase]);
+
   const sendReaction = useCallback((emoji: string) => {
     spawnFloatingReaction(emoji);
     setLikes((p) => p + 1);
@@ -547,7 +639,9 @@ export default function GoLivePage() {
     
     setActiveGiftAnim({ name: gift.name, coins: totalCoins, senderName: sender });
     setGiftQty(1); // Reset qty after send
-  }, [spawnFloatingReaction, giftCombo]);
+    // Add to PK Battle score if active
+    addPkScore(totalCoins);
+  }, [spawnFloatingReaction, giftCombo, addPkScore]);
 
   // ── Ended screen ──
   if (phase === "ended") {
@@ -677,7 +771,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); lastMilestoneRef.current = 0; startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); setPkBattle(null); setTreasureChest(null); setCoHosts([]); setShowGuestInvite(false); setVipEntrance(null); setMutedUsers(new Set()); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -798,8 +892,19 @@ export default function GoLivePage() {
       {phase === "live" && (
         <div className="relative z-10 pl-4 pr-14 mt-3">
           <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-2xl px-3 py-2 border border-white/5">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-red-500/20">
-              {user?.email?.[0]?.toUpperCase() || "Z"}
+            <div className="relative">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-red-500/20">
+                {user?.email?.[0]?.toUpperCase() || "Z"}
+              </div>
+              {/* Host Level Badge */}
+              <span className={cn(
+                "absolute -bottom-1 -right-1 text-[7px] font-bold px-1 py-0.5 rounded-full border",
+                hostLevel >= 50 ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-white border-amber-300/50" :
+                hostLevel >= 20 ? "bg-gradient-to-r from-blue-500 to-cyan-400 text-white border-blue-300/50" :
+                "bg-white/20 text-white/80 border-white/20"
+              )}>
+                {hostLevel}
+              </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-semibold truncate">{title}</p>
@@ -854,6 +959,101 @@ export default function GoLivePage() {
               <p className="text-[9px] text-amber-300 mt-1 text-center animate-pulse">🎉 Goal reached!</p>
             )}
           </div>
+
+          {/* ── PK Battle Bar ── */}
+          <AnimatePresence>
+            {pkBattle?.active && (
+              <motion.div
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -20, opacity: 0 }}
+                className="mt-2 bg-black/40 backdrop-blur-md rounded-2xl px-3 py-2 border border-red-500/20"
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">⚔️ PK Battle</span>
+                  <span className="text-[9px] text-white/40">{Math.max(0, Math.round((pkBattle.endsAt - Date.now()) / 1000))}s left</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[10px] text-white/80 font-semibold">You</span>
+                      <span className="text-[10px] text-amber-300 font-bold">{pkBattle.hostScore}</span>
+                    </div>
+                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400"
+                        animate={{ width: `${pkBattle.hostScore + pkBattle.opponentScore > 0 ? (pkBattle.hostScore / (pkBattle.hostScore + pkBattle.opponentScore)) * 100 : 50}%` }}
+                      />
+                    </div>
+                  </div>
+                  <span className="text-lg font-black text-red-400">⚔️</span>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[10px] text-white/80 font-semibold">{pkBattle.opponentName}</span>
+                      <span className="text-[10px] text-amber-300 font-bold">{pkBattle.opponentScore}</span>
+                    </div>
+                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full bg-gradient-to-r from-rose-500 to-red-400"
+                        animate={{ width: `${pkBattle.hostScore + pkBattle.opponentScore > 0 ? (pkBattle.opponentScore / (pkBattle.hostScore + pkBattle.opponentScore)) * 100 : 50}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[9px] text-white/30 text-center mt-1">Send gifts to help win! 🎁</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Treasure Chest Widget ── */}
+          <AnimatePresence>
+            {treasureChest?.active && !treasureChest.winner && (
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="mt-2 bg-gradient-to-r from-amber-900/60 to-yellow-900/40 backdrop-blur-md rounded-2xl px-3 py-2 border border-amber-500/20"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">🎁 Treasure Chest</span>
+                  <motion.span
+                    key={treasureChest.countdown}
+                    initial={{ scale: 1.3 }}
+                    animate={{ scale: 1 }}
+                    className="text-sm font-black text-amber-200"
+                  >
+                    {treasureChest.countdown}s
+                  </motion.span>
+                </div>
+                <div className="flex items-center gap-1 mb-1">
+                  {treasureChest.participants.map((p) => (
+                    <div key={p} className="w-6 h-6 rounded-full bg-amber-500/30 flex items-center justify-center text-[8px] text-white font-bold border border-amber-500/20">
+                      {p[0]}
+                    </div>
+                  ))}
+                  {treasureChest.participants.length === 0 && <span className="text-[9px] text-white/30">Waiting for participants...</span>}
+                </div>
+                <p className="text-[8px] text-amber-200/50">{treasureChest.participants.length} joined · Drawing soon!</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Co-Host Grid ── */}
+          {coHosts.length > 0 && (
+            <div className="mt-2 flex gap-2 px-1">
+              {coHosts.map((host) => (
+                <div key={host.name} className="flex items-center gap-1.5 bg-purple-500/15 backdrop-blur-md rounded-full px-2.5 py-1 border border-purple-500/20">
+                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[8px] text-white font-bold", host.avatar)}>
+                    {host.name[0]}
+                  </div>
+                  <span className="text-[10px] text-white/80 font-medium">{host.name}</span>
+                  <button onClick={() => setCoHosts((p) => p.filter((h) => h.name !== host.name))} className="text-white/30 hover:text-white/60">
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -1194,6 +1394,42 @@ export default function GoLivePage() {
               <BarChart3 className={cn("h-4 w-4", activePoll ? "text-blue-300" : "text-white/70")} />
             </button>
 
+            {/* PK Battle button */}
+            <button
+              onClick={() => {
+                if (pkBattle?.active) { toast("⚔️ Battle already in progress!"); return; }
+                const opponents = ["DJ_Luna", "KingAlex", "StarMia", "ProGamer99"];
+                const opp = opponents[Math.floor(Math.random() * opponents.length)];
+                setPkBattle({ active: true, hostScore: 0, opponentScore: 0, opponentName: opp, endsAt: Date.now() + 120000, winner: null });
+                setChatMessages((prev) => [...prev.slice(-20), { id: `pk-${Date.now()}`, user: "⚔️", text: `PK Battle started vs ${opp}! Send gifts to support!`, isSystem: true }]);
+                toast.success(`⚔️ PK Battle vs ${opp}!`);
+              }}
+              className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", pkBattle?.active ? "bg-red-500/25 border-red-500/20" : "bg-black/30")}
+            >
+              <span className="text-sm">⚔️</span>
+            </button>
+
+            {/* Treasure Chest */}
+            <button
+              onClick={() => {
+                if (treasureChest?.active) return;
+                setTreasureChest({ active: true, countdown: 15, participants: [], winner: null });
+                setChatMessages((prev) => [...prev.slice(-20), { id: `chest-${Date.now()}`, user: "🎁", text: "Treasure Chest opened! Tap to join the draw!", isSystem: true }]);
+                toast("🎁 Treasure Chest! 15s to join!", { duration: 3000 });
+              }}
+              className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", treasureChest?.active ? "bg-amber-500/25 border-amber-500/20" : "bg-black/30")}
+            >
+              <span className="text-sm">🎁</span>
+            </button>
+
+            {/* Guest Invite */}
+            <button
+              onClick={() => setShowGuestInvite((p) => !p)}
+              className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", coHosts.length > 0 ? "bg-purple-500/25 border-purple-500/20" : "bg-black/30")}
+            >
+              <span className="text-sm">👥</span>
+            </button>
+
             <div className="flex flex-col items-center">
               <button onClick={() => sendReaction("❤️")} className="w-11 h-11 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5 relative">
                 <Heart className="h-5 w-5 text-red-400" />
@@ -1241,13 +1477,20 @@ export default function GoLivePage() {
                     )}
                   </div>
                 )}
-                {chatMessages.filter((m) => !m.isPinned).slice(-8).map((msg) => (
+                {chatMessages.filter((m) => !m.isPinned && !mutedUsers.has(m.user)).slice(-8).map((msg) => (
                   <div
                     key={msg.id}
                     onClick={() => {
                       if (!msg.isSystem && !msg.isGift) {
                         setPinnedChatMsg(`${msg.user}: ${msg.text}`);
                         toast.success(`📌 Pinned message from ${msg.user}`);
+                      }
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      if (!msg.isSystem && msg.user !== "You (Host)") {
+                        setMutedUsers((prev) => new Set(prev).add(msg.user));
+                        toast(`🔇 Muted ${msg.user}`, { duration: 2000 });
                       }
                     }}
                     className={cn(
@@ -1718,6 +1961,119 @@ export default function GoLivePage() {
               {viewerCount > 10 && (
                 <p className="text-[9px] text-white/30 text-center pt-1">+{viewerCount - 10} more</p>
               )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── VIP Entrance Effect ── */}
+      <AnimatePresence>
+        {phase === "live" && vipEntrance && (
+          <motion.div
+            initial={{ x: -400, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 400, opacity: 0 }}
+            transition={{ type: "spring", damping: 18, stiffness: 160 }}
+            className="fixed left-0 right-0 z-50"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 130px)" }}
+          >
+            <div
+              className="mx-3 flex items-center gap-3 px-4 py-2.5 rounded-2xl"
+              style={{
+                background: "linear-gradient(95deg, rgba(120,50,180,0.9) 0%, rgba(200,100,255,0.7) 40%, rgba(255,180,50,0.5) 80%, transparent 100%)",
+                backdropFilter: "blur(12px)",
+                boxShadow: "0 4px 30px rgba(150,50,255,0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
+                border: "1px solid rgba(200,150,255,0.2)",
+              }}
+            >
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 0.5, repeat: 2 }}
+                className="text-2xl"
+              >
+                👑
+              </motion.div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-bold truncate" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}>
+                  {vipEntrance.name}
+                </p>
+                <p className="text-purple-200/80 text-[10px]">
+                  Level {vipEntrance.level} VIP entered the stream!
+                </p>
+              </div>
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+                className="text-lg"
+              >
+                ✨
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Guest Invite Panel ── */}
+      <AnimatePresence>
+        {phase === "live" && showGuestInvite && (
+          <motion.div
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 300, opacity: 0 }}
+            transition={{ type: "spring", damping: 22, stiffness: 250 }}
+            className="fixed right-3 z-50 w-52"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 210px)" }}
+          >
+            <div
+              className="rounded-2xl px-3 py-2.5 space-y-1.5"
+              style={{
+                background: "linear-gradient(135deg, rgba(50,20,80,0.95) 0%, rgba(60,30,90,0.92) 100%)",
+                backdropFilter: "blur(16px)",
+                border: "1px solid rgba(180,100,255,0.15)",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+              }}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">👥</span>
+                  <span className="text-[11px] font-bold text-purple-300 uppercase tracking-wider">Invite Guest</span>
+                </div>
+                <button onClick={() => setShowGuestInvite(false)} className="text-white/30 hover:text-white/60">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              <p className="text-[9px] text-white/30 mb-2">Invite a viewer to co-host with you</p>
+              {fakeViewerNames.slice(0, Math.min(viewerCount, 5)).map((name) => {
+                const isCoHost = coHosts.some((h) => h.name === name);
+                return (
+                  <div key={name} className="flex items-center gap-2 py-1">
+                    <div className="w-5 h-5 rounded-full bg-purple-500/30 flex items-center justify-center text-[8px] text-white font-bold">
+                      {name[0]}
+                    </div>
+                    <span className="text-[11px] text-white/80 flex-1 truncate">{name}</span>
+                    <button
+                      onClick={() => {
+                        if (isCoHost) {
+                          setCoHosts((p) => p.filter((h) => h.name !== name));
+                          toast(`Removed ${name} from co-host`);
+                        } else if (coHosts.length < 3) {
+                          setCoHosts((p) => [...p, { name, avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500"][p.length % 3] }]);
+                          setChatMessages((prev) => [...prev.slice(-20), { id: `cohost-${Date.now()}`, user: "🎙️", text: `${name} joined as co-host!`, isSystem: true }]);
+                          toast.success(`🎙️ ${name} is now co-hosting!`);
+                        } else {
+                          toast.error("Max 3 co-hosts");
+                        }
+                      }}
+                      className={cn(
+                        "text-[9px] font-bold px-2 py-0.5 rounded-full transition-all",
+                        isCoHost ? "bg-red-500/20 text-red-300" : "bg-purple-500/20 text-purple-300"
+                      )}
+                    >
+                      {isCoHost ? "Remove" : "Invite"}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
         )}
