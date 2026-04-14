@@ -1097,6 +1097,31 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         )}
       </AnimatePresence>
 
+      {/* ── Combo Multiplier Overlay ── */}
+      <AnimatePresence>
+        {comboMultiplierText && (
+          <motion.div
+            key={comboMultiplierText.id}
+            initial={{ scale: 0.3, opacity: 0, y: 40 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 1.5, opacity: 0, y: -30 }}
+            transition={{ type: "spring", damping: 12, stiffness: 300 }}
+            className="fixed left-0 right-0 z-50 flex items-center justify-center pointer-events-none"
+            style={{ top: "40%" }}
+          >
+            <span
+              className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-orange-400"
+              style={{
+                textShadow: "0 0 40px rgba(255,200,0,0.6), 0 0 80px rgba(255,150,0,0.3)",
+                WebkitTextStroke: "1px rgba(255,200,80,0.3)",
+              }}
+            >
+              {comboMultiplierText.text}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Full-screen gift animation overlay */}
       <GiftAnimationOverlay
         activeGift={activeGiftAnim}
