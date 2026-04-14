@@ -195,7 +195,8 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     const interval = setInterval(() => {
       if (Math.random() < 0.3) {
         const sender = fakeViewerNames[Math.floor(Math.random() * fakeViewerNames.length)];
-        const gift = giftCatalog[Math.floor(Math.random() * 4)];
+        const giftPool = allGifts.gifts;
+        const gift = giftPool[Math.floor(Math.random() * 4)];
         const notif = { id: Date.now().toString(), sender, giftName: gift.name, coins: gift.coins, icon: gift.icon };
         setGiftNotifQueue(prev => [...prev.slice(-2), notif]);
         // Update top gifters
@@ -212,7 +213,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       }
     }, 5000);
     return () => clearInterval(interval);
-  }, [fakeViewerNames, giftCatalog]);
+  }, [fakeViewerNames, allGifts]);
 
   // Simulate super chats from viewers
   useEffect(() => {
