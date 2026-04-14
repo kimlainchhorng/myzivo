@@ -819,9 +819,43 @@ export default function GoLivePage() {
         </div>
       )}
 
+      {/* Countdown overlay */}
+      {phase === "countdown" && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <motion.div
+            key={countdown}
+            initial={{ scale: 2, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.5, opacity: 0 }}
+            transition={{ type: "spring", damping: 15, stiffness: 300 }}
+            className="text-8xl font-black text-white drop-shadow-[0_0_40px_rgba(255,50,50,0.5)]"
+          >
+            {countdown}
+          </motion.div>
+        </div>
+      )}
+
       {/* Live phase */}
       {phase === "live" && (
         <div className="relative z-10 flex-1 flex flex-col justify-end">
+          {/* New follower notification */}
+          <AnimatePresence>
+            {newFollower && (
+              <motion.div
+                initial={{ y: -50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -50, opacity: 0 }}
+                className="absolute top-[110px] left-3 z-30"
+              >
+                <div className="flex items-center gap-2 bg-gradient-to-r from-purple-600/80 to-pink-500/60 backdrop-blur-md rounded-full px-3 py-1.5 border border-purple-400/20 shadow-lg shadow-purple-500/20">
+                  <Users className="h-3.5 w-3.5 text-white" />
+                  <span className="text-white text-[11px] font-semibold">{newFollower}</span>
+                  <span className="text-white/60 text-[11px]">followed you</span>
+                  <span className="text-sm">💜</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           {/* Floating reactions */}
           <AnimatePresence initial={false}>
             {floatingReactions.map((r) => (
