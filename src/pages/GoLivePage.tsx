@@ -488,6 +488,10 @@ export default function GoLivePage() {
                <span className="text-sm font-semibold text-purple-400">{newFollowersCount} 💜</span>
              </div>
              <div className="flex items-center justify-between">
+               <span className="text-xs text-white/50">Shares</span>
+               <span className="text-sm font-semibold text-blue-400">{shareCount} 🔗</span>
+             </div>
+             <div className="flex items-center justify-between">
                <span className="text-xs text-white/50">Engagement Rate</span>
                <span className="text-sm font-semibold text-green-400">
                  {peakViewers > 0 ? Math.min(95, Math.round((giftsReceived / peakViewers) * 40 + (likes / Math.max(1, elapsed / 30)) * 5)) : 0}% 📊
@@ -925,6 +929,9 @@ export default function GoLivePage() {
               <button onClick={toggleMic} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", micOn ? "bg-black/30" : "bg-red-500/30")}>
                 {micOn ? <Mic className="h-3.5 w-3.5 text-white/60" /> : <MicOff className="h-3.5 w-3.5 text-red-300" />}
               </button>
+              <button onClick={() => setBeautyMode((p) => !p)} className={cn("w-9 h-9 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", beautyMode ? "bg-pink-500/30 border-pink-500/20" : "bg-black/30")}>
+                <Sparkles className={cn("h-3.5 w-3.5", beautyMode ? "text-pink-300" : "text-white/60")} />
+              </button>
             </div>
 
             <div className="w-5 border-t border-white/10" />
@@ -1047,12 +1054,15 @@ export default function GoLivePage() {
                 {/* Coin balance + Scrolling banner */}
                 <div className="overflow-hidden border-b border-white/5 py-2 px-4 flex items-center gap-3">
                   <div className="flex items-center gap-2 shrink-0">
-                    <div className="flex items-center gap-1 bg-amber-500/15 rounded-full px-2.5 py-1 border border-amber-500/20">
-                      <img src={goldCoinIcon} alt="coins" className="w-4 h-4" />
-                      <span className="text-amber-300 text-[11px] font-bold">{coinsEarned.toLocaleString()}</span>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <div className="flex items-center gap-1 bg-amber-500/15 rounded-full px-2.5 py-1 border border-amber-500/20">
+                        <img src={goldCoinIcon} alt="coins" className="w-4 h-4" />
+                        <span className="text-amber-300 text-[11px] font-bold">{coinsEarned.toLocaleString()}</span>
+                      </div>
+                      <span className="text-[8px] text-amber-400/50 uppercase tracking-wider font-medium">Earned</span>
                     </div>
                     <button
-                      onClick={() => toast("💰 Coin Recharge coming soon!", { description: "Purchase Z Coins to send gifts to your favorite creators." })}
+                      onClick={() => toast("💰 Coin Recharge coming soon!", { description: "You'll be able to purchase Z Coins to send premium gifts." })}
                       className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 active:scale-90 transition-transform"
                     >
                       <span className="text-amber-300 text-xs font-bold leading-none">+</span>
@@ -1060,7 +1070,7 @@ export default function GoLivePage() {
                   </div>
                   <div className="overflow-hidden flex-1">
                     <p className="text-xs text-white/40 whitespace-nowrap animate-[marquee_8s_linear_infinite]">
-                      🪙 Send gifts to support your favorite creators! &nbsp;&nbsp;&nbsp; 🪙 Send gifts to support your favorite creators!
+                      ✨ Send gifts to support your favorite creators! &nbsp;&nbsp;&nbsp; ✨ Send gifts to support your favorite creators!
                     </p>
                   </div>
                   <button onClick={() => setShowGiftPanel(false)} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center shrink-0">
