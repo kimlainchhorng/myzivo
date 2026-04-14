@@ -934,10 +934,12 @@ export default function GoLivePage() {
               <Trophy className="h-4 w-4 text-amber-400" />
             </button>
 
-            <button onClick={() => sendReaction("❤️")} className="w-11 h-11 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
-              <Heart className="h-5 w-5 text-red-400" />
-            </button>
-            <span className="text-white text-[9px] -mt-1 font-medium">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>
+            <div className="flex flex-col items-center">
+              <button onClick={() => sendReaction("❤️")} className="w-11 h-11 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5 relative">
+                <Heart className="h-5 w-5 text-red-400" />
+              </button>
+              <span className="text-white text-[9px] mt-0.5 font-medium">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>
+            </div>
 
             <button onClick={() => setShowGiftPanel(true)} className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-amber-500/20 relative" data-testid="gift-btn">
               <Gift className="h-5 w-5 text-yellow-300" />
@@ -949,7 +951,7 @@ export default function GoLivePage() {
 
 
           {/* Quick reaction bar — leave room for side action buttons */}
-          <div className="px-4 pr-16 mb-2 flex gap-1.5 overflow-x-auto scrollbar-hide">
+          <div className="px-3 pr-[60px] mb-2 flex gap-1.5 overflow-x-auto scrollbar-hide">
             {quickReactions.map((emoji) => (
               <button
                 key={emoji}
@@ -966,7 +968,7 @@ export default function GoLivePage() {
             <div className="relative px-4 mb-2 max-h-[200px]">
               {/* Gradient fade at top */}
               <div className="absolute top-0 left-4 right-4 h-8 bg-gradient-to-b from-black/60 to-transparent z-10 pointer-events-none rounded-t-2xl" />
-              <div className="overflow-y-auto max-h-[200px] space-y-1.5 pointer-events-none scroll-smooth">
+              <div className="overflow-y-auto max-h-[200px] space-y-1.5 pointer-events-none scroll-smooth scrollbar-hide">
                 {/* Pinned message */}
                 {chatMessages.find((m) => m.isPinned) && (
                   <div className="flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[85%] bg-red-500/15 border border-red-500/20 mb-1">
@@ -1130,7 +1132,7 @@ export default function GoLivePage() {
             exit={{ x: 300, opacity: 0 }}
             transition={{ type: "spring", damping: 22, stiffness: 250 }}
             className="fixed right-3 z-50 w-44"
-            style={{ top: "calc(env(safe-area-inset-top, 0px) + 180px)" }}
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 210px)" }}
           >
             <div
               className="rounded-2xl px-3 py-2.5 space-y-1.5"
