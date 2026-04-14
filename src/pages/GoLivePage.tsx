@@ -388,6 +388,29 @@ export default function GoLivePage() {
             </div>
           </div>
 
+          {/* Top Gifters on ended screen */}
+          {Object.keys(topGifters).length > 0 && (
+            <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/5 rounded-2xl p-4 border border-amber-500/15 space-y-2">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Trophy className="h-4 w-4 text-amber-400" />
+                <span className="text-xs font-bold text-amber-300">Top Gifters</span>
+              </div>
+              {Object.entries(topGifters)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 3)
+                .map(([name, coins], i) => {
+                  const medals = ["🥇", "🥈", "🥉"];
+                  return (
+                    <div key={name} className="flex items-center gap-2">
+                      <span className="text-sm">{medals[i]}</span>
+                      <span className="text-xs text-white/80 font-medium flex-1">{name}</span>
+                      <span className="text-xs text-amber-300 font-bold">{coins.toLocaleString()} 🪙</span>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+
           <div className="flex gap-3 pt-2">
             <Button variant="outline" onClick={() => navigate("/live")} className="rounded-full flex-1 border-white/20 text-white hover:bg-white/10">
               Back to Live
