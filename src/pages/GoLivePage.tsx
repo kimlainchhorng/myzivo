@@ -32,6 +32,11 @@ import Trophy from "lucide-react/dist/esm/icons/trophy";
 import Clock from "lucide-react/dist/esm/icons/clock";
 import Palette from "lucide-react/dist/esm/icons/palette";
 import CalendarPlus from "lucide-react/dist/esm/icons/calendar-plus";
+import Volume2 from "lucide-react/dist/esm/icons/volume-2";
+import VolumeX from "lucide-react/dist/esm/icons/volume-x";
+import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
+import Monitor from "lucide-react/dist/esm/icons/monitor";
+import Timer from "lucide-react/dist/esm/icons/timer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -90,6 +95,13 @@ export default function GoLivePage() {
   const [cameraFilter, setCameraFilter] = useState<"none" | "warm" | "cool" | "bw" | "vintage">("none");
   const [showViewerList, setShowViewerList] = useState(false);
   const [autoThank, setAutoThank] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [slowMode, setSlowMode] = useState(false);
+  const [slowModeCooldown, setSlowModeCooldown] = useState(0);
+  const [activePoll, setActivePoll] = useState<{ question: string; options: string[]; votes: number[]; totalVotes: number; expiresAt: number } | null>(null);
+  const [showPollCreator, setShowPollCreator] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
   const lastGiftTimeRef = useRef(0);
   const lastMilestoneRef = useRef(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -365,7 +377,7 @@ export default function GoLivePage() {
           ...prev.slice(-20),
           { id: `vgift-${Date.now()}`, user: sender, text: `sent ${giftNames[idx]} 🎁`, isGift: true, avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][Math.floor(Math.random() * 5)] },
         ]);
-        playGiftSound(1);
+        if (soundEnabled) playGiftSound(1);
         // Auto thank-you
         if (autoThank) {
           setTimeout(() => {
@@ -407,9 +419,50 @@ export default function GoLivePage() {
 
   const sendChat = useCallback(() => {
     if (!chatInput.trim()) return;
+    if (slowMode && slowModeCooldown > 0) {
+      toast(`⏳ Slow mode: wait ${slowModeCooldown}s`, { duration: 1500 });
+      return;
+    }
     setChatMessages((prev) => [...prev.slice(-20), { id: Date.now().toString(), user: "You (Host)", text: chatInput, avatar: "bg-red-500" }]);
     setChatInput("");
-  }, [chatInput]);
+    if (slowMode) {
+      setSlowModeCooldown(5);
+      const iv = setInterval(() => {
+        setSlowModeCooldown((p) => { if (p <= 1) { clearInterval(iv); return 0; } return p - 1; });
+      }, 1000);
+    }
+  }, [chatInput, slowMode, slowModeCooldown]);
+
+  // Helper: get top gifter name
+  const topGifterName = useMemo(() => {
+    const entries = Object.entries(topGifters);
+    if (entries.length === 0) return null;
+    return entries.sort(([, a], [, b]) => b - a)[0][0];
+  }, [topGifters]);
+
+  // Create poll
+  const createPoll = useCallback(() => {
+    const q = pollQuestion.trim();
+    const opts = pollOptions.filter((o) => o.trim());
+    if (!q || opts.length < 2) { toast.error("Need a question and at least 2 options"); return; }
+    setActivePoll({ question: q, options: opts, votes: opts.map(() => 0), totalVotes: 0, expiresAt: Date.now() + 60000 });
+    setShowPollCreator(false);
+    setPollQuestion("");
+    setPollOptions(["", ""]);
+    setChatMessages((prev) => [...prev.slice(-20), { id: `poll-${Date.now()}`, user: "📊", text: `Poll: "${q}" — Vote now!`, isSystem: true }]);
+    toast.success("📊 Poll created!");
+    // Auto simulate votes
+    const voteIv = setInterval(() => {
+      setActivePoll((prev) => {
+        if (!prev || Date.now() > prev.expiresAt) { clearInterval(voteIv); return null; }
+        const idx = Math.floor(Math.random() * prev.options.length);
+        const newVotes = [...prev.votes];
+        newVotes[idx] += 1;
+        return { ...prev, votes: newVotes, totalVotes: prev.totalVotes + 1 };
+      });
+    }, 3000 + Math.random() * 4000);
+    setTimeout(() => clearInterval(voteIv), 60000);
+  }, [pollQuestion, pollOptions]);
 
   const spawnFloatingReaction = useCallback((emoji: string) => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -483,11 +536,13 @@ export default function GoLivePage() {
     lastGiftRef.current = { name: gift.name, time: now };
     
     // Play sound effects
-    const isPremium = !!giftAnimationVideos[gift.name];
-    if (isPremium) {
-      playPremiumGiftSound();
-    } else {
-      playGiftSound(newCombo);
+    if (soundEnabled) {
+      const isPremium = !!giftAnimationVideos[gift.name];
+      if (isPremium) {
+        playPremiumGiftSound();
+      } else {
+        playGiftSound(newCombo);
+      }
     }
     
     setActiveGiftAnim({ name: gift.name, coins: totalCoins, senderName: sender });
@@ -622,7 +677,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); lastMilestoneRef.current = 0; startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -895,6 +950,37 @@ export default function GoLivePage() {
                   >
                     <Heart className="h-3 w-3" /> Thank
                   </button>
+                  <button
+                    onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "🔇 Sounds muted" : "🔊 Sounds on", { duration: 1500 }); }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all border",
+                      soundEnabled
+                        ? "bg-green-500/10 text-green-400 border-green-500/20"
+                        : "bg-zinc-800 text-zinc-500 border-zinc-700/50 hover:text-zinc-400"
+                    )}
+                  >
+                    {soundEnabled ? <Volume2 className="h-3 w-3" /> : <VolumeX className="h-3 w-3" />} Sound
+                  </button>
+                  <button
+                    onClick={() => { setSlowMode((p) => !p); toast(slowMode ? "Slow mode off" : "⏳ Slow mode on (5s)", { duration: 1500 }); }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all border",
+                      slowMode
+                        ? "bg-blue-500/15 text-blue-300 border-blue-500/30"
+                        : "bg-zinc-800 text-zinc-500 border-zinc-700/50 hover:text-zinc-400"
+                    )}
+                  >
+                    <Timer className="h-3 w-3" /> Slow
+                  </button>
+                </div>
+                {/* Second row */}
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    onClick={() => toast("📡 Screen share coming soon!", { description: "Share your screen with viewers" })}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium bg-zinc-800 text-zinc-500 border border-zinc-700/50 hover:text-zinc-400 transition-all"
+                  >
+                    <Monitor className="h-3 w-3" /> Screen
+                  </button>
                 </div>
               </div>
             </div>
@@ -1098,6 +1184,16 @@ export default function GoLivePage() {
               <Trophy className="h-4 w-4 text-amber-400" />
             </button>
 
+            {/* Sound toggle */}
+            <button onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "🔇 Muted" : "🔊 Sound on", { duration: 1200 }); }} className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", soundEnabled ? "bg-black/30" : "bg-red-500/20")}>
+              {soundEnabled ? <Volume2 className="h-4 w-4 text-white/70" /> : <VolumeX className="h-4 w-4 text-red-300" />}
+            </button>
+
+            {/* Poll button */}
+            <button onClick={() => setShowPollCreator((p) => !p)} className={cn("w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", activePoll ? "bg-blue-500/25 border-blue-500/20" : "bg-black/30")}>
+              <BarChart3 className={cn("h-4 w-4", activePoll ? "text-blue-300" : "text-white/70")} />
+            </button>
+
             <div className="flex flex-col items-center">
               <button onClick={() => sendReaction("❤️")} className="w-11 h-11 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5 relative">
                 <Heart className="h-5 w-5 text-red-400" />
@@ -1177,6 +1273,10 @@ export default function GoLivePage() {
                         Lv.{msg.level}
                       </span>
                     )}
+                    {/* Top Fan badge */}
+                    {topGifterName && msg.user === topGifterName && (
+                      <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full shrink-0 bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border border-amber-500/30">⭐ Top Fan</span>
+                    )}
                     <span className={cn("text-xs font-medium", msg.isSystem ? "text-white/40 italic" : "text-white/80")}>{msg.user}</span>
                     <span className={cn("text-xs", msg.isGift ? "text-amber-300" : msg.isSystem ? "text-white/30 italic" : "text-white/90")}>{msg.text}</span>
                   </div>
@@ -1186,13 +1286,112 @@ export default function GoLivePage() {
             </div>
           )}
 
+          {/* Active Poll Widget */}
+          <AnimatePresence>
+            {activePoll && (
+              <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 30, opacity: 0 }}
+                className="px-3 mb-2"
+              >
+                <div className="bg-blue-950/70 backdrop-blur-md rounded-2xl p-3 border border-blue-500/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <BarChart3 className="h-3.5 w-3.5 text-blue-400" />
+                      <span className="text-[11px] font-bold text-blue-300">POLL</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] text-white/40">{activePoll.totalVotes} votes</span>
+                      <button onClick={() => setActivePoll(null)} className="text-white/30 hover:text-white/60">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-white text-xs font-semibold mb-2">{activePoll.question}</p>
+                  <div className="space-y-1.5">
+                    {activePoll.options.map((opt, i) => {
+                      const pct = activePoll.totalVotes > 0 ? Math.round((activePoll.votes[i] / activePoll.totalVotes) * 100) : 0;
+                      return (
+                        <div key={i} className="relative">
+                          <div className="h-7 rounded-lg bg-white/5 overflow-hidden border border-white/10">
+                            <motion.div
+                              className="h-full rounded-lg bg-blue-500/25"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${pct}%` }}
+                              transition={{ type: "spring", damping: 20 }}
+                            />
+                          </div>
+                          <div className="absolute inset-0 flex items-center justify-between px-2.5">
+                            <span className="text-[11px] text-white/80 font-medium">{opt}</span>
+                            <span className="text-[10px] text-blue-300 font-bold">{pct}%</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Poll Creator */}
+          <AnimatePresence>
+            {showPollCreator && !activePoll && (
+              <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 30, opacity: 0 }}
+                className="px-3 mb-2"
+              >
+                <div className="bg-zinc-900/90 backdrop-blur-md rounded-2xl p-3 border border-white/10 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-white/70">📊 Create Poll</span>
+                    <button onClick={() => setShowPollCreator(false)} className="text-white/30 hover:text-white/60">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                  <Input
+                    value={pollQuestion}
+                    onChange={(e) => setPollQuestion(e.target.value)}
+                    placeholder="Ask a question..."
+                    maxLength={80}
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 text-xs rounded-xl h-8"
+                  />
+                  {pollOptions.map((opt, i) => (
+                    <Input
+                      key={i}
+                      value={opt}
+                      onChange={(e) => { const n = [...pollOptions]; n[i] = e.target.value; setPollOptions(n); }}
+                      placeholder={`Option ${i + 1}`}
+                      maxLength={40}
+                      className="bg-white/5 border-white/10 text-white placeholder:text-white/30 text-xs rounded-xl h-8"
+                    />
+                  ))}
+                  <div className="flex gap-2">
+                    {pollOptions.length < 4 && (
+                      <button onClick={() => setPollOptions((p) => [...p, ""])} className="text-[10px] text-blue-400 font-medium">+ Add option</button>
+                    )}
+                    <div className="flex-1" />
+                    <button onClick={createPoll} className="px-4 py-1.5 rounded-full bg-blue-500 text-white text-[11px] font-bold active:scale-95 transition-transform">
+                      Start Poll
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Chat input + End button */}
           <div className="px-3 pb-4 flex gap-2 items-center" style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 16px), 16px)" }}>
+            {slowMode && slowModeCooldown > 0 && (
+              <span className="text-[9px] text-blue-300 font-medium absolute -top-5 left-4">⏳ Slow mode: {slowModeCooldown}s</span>
+            )}
             <Input
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendChat()}
-              placeholder="Say something..."
+              placeholder={slowMode ? `Slow mode (${slowModeCooldown > 0 ? `${slowModeCooldown}s` : "ready"})` : "Say something..."}
               className="bg-white/10 border-white/10 text-white placeholder:text-white/30 text-sm rounded-2xl flex-1 h-10 focus:border-white/20"
             />
             <Button size="icon" onClick={sendChat} className="rounded-2xl bg-white/15 hover:bg-white/25 shrink-0 h-10 w-10">
