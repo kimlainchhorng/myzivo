@@ -273,6 +273,13 @@ export default function GoLivePage() {
         setCoinsEarned((p) => p + giftCoins[idx]);
         setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + giftCoins[idx] }));
         playGiftSound(1);
+        // Gift streak flash
+        const now = Date.now();
+        if (now - lastGiftTimeRef.current < 8000) {
+          setGiftStreakFlash(true);
+          setTimeout(() => setGiftStreakFlash(false), 1500);
+        }
+        lastGiftTimeRef.current = now;
         setTimeout(() => setViewerGiftNotif((cur) => cur?.id === notif.id ? null : cur), 4000);
         scheduleNext();
       }, delay);
@@ -316,10 +323,19 @@ export default function GoLivePage() {
   const sendGift = useCallback((gift: { icon: string; name: string; coins: number }) => {
     // Haptic feedback on mobile
     try { navigator.vibrate?.(50); } catch {} // eslint-disable-line no-empty
+    const senders = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
+    const sender = senders[Math.floor(Math.random() * senders.length)];
     setGiftsReceived((p) => p + 1);
     setCoinsEarned((p) => p + gift.coins);
     setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + gift.coins }));
     spawnFloatingReaction(gift.icon);
+    // Gift streak flash
+    const now2 = Date.now();
+    if (now2 - lastGiftTimeRef.current < 8000) {
+      setGiftStreakFlash(true);
+      setTimeout(() => setGiftStreakFlash(false), 1500);
+    }
+    lastGiftTimeRef.current = now2;
     const senders = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
     const sender = senders[Math.floor(Math.random() * senders.length)];
     
