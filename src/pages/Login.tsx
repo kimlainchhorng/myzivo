@@ -227,8 +227,8 @@ const Login = () => {
       const msg = (error.message || "").toLowerCase();
       if (msg.includes("already registered") || msg.includes("already been registered") || msg.includes("user already registered")) {
         toast.error("This email is already registered. Please sign in instead.");
-      } else if (msg.includes("password") && (msg.includes("short") || msg.includes("weak") || msg.includes("length"))) {
-        toast.error("Password is too weak. Please use at least 6 characters.");
+      } else if (msg.includes("weak_password") || msg.includes("pwned") || (msg.includes("password") && (msg.includes("short") || msg.includes("weak") || msg.includes("length") || msg.includes("easy to guess")))) {
+        toast.error("🔒 Password is too common or has been exposed in a data breach. Please choose a stronger, unique password.", { duration: 6000 });
       } else if (msg.includes("valid email") || msg.includes("invalid email")) {
         toast.error("Please enter a valid email address.");
       } else if (msg.includes("too many requests") || msg.includes("rate limit")) {
