@@ -66,7 +66,7 @@ interface LiveStream {
 function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => void }) {
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; isSystem?: boolean; avatar?: string; level?: number }[]>([
-    { id: "sys-1", user: "System", text: `Welcome to ${stream.host_name}'s stream! 🎉`, isSystem: true },
+    { id: "sys-1", user: "System", text: `Welcome to ${stream.host_name}'s stream!`, isSystem: true },
   ]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [showGiftPanel, setShowGiftPanel] = useState(false);
@@ -114,7 +114,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const lastTapRef = useRef<number>(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const pinnedMessage = useMemo(() => `Welcome to ${stream.host_name}'s stream! Be respectful and have fun!`, [stream.host_name]);
-  const quickReactions = useMemo(() => ["❤️", "🔥", "😍", "👏", "😂"], []);
+  const quickReactions = useMemo(() => ["heart", "fire", "star", "clap", "laugh"], []);
 
   const allGifts = useMemo(() => ({
     gifts: [
@@ -381,7 +381,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               className="absolute text-5xl pointer-events-none z-40"
               style={{ left: doubleTapHeart.x - 24, top: doubleTapHeart.y - 24 }}
             >
-              ❤️
+              <Heart className="h-12 w-12 text-red-500 fill-red-500" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -454,7 +454,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
             <Crown className="h-3 w-3 text-amber-400" />
             {topGifters.slice(0, 3).map((g, i) => (
               <div key={g.name} className="flex items-center gap-0.5">
-                <span className="text-[9px] text-amber-300/80 font-bold">{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</span>
+                <Medal className={cn("h-3 w-3", i === 0 ? "text-amber-400" : i === 1 ? "text-gray-300" : "text-orange-400")} />
                 <span className="text-[9px] text-white/70 truncate max-w-[50px]">{g.name.split(" ")[0]}</span>
               </div>
             ))}
@@ -649,14 +649,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
             </div>
             <div className="p-2 space-y-1">
               {topGifters.length === 0 ? (
-                <p className="text-[10px] text-white/40 text-center py-3">No gifts yet — be the first! </p>
+                <p className="text-[10px] text-white/40 text-center py-3">No gifts yet — be the first!</p>
               ) : (
                 topGifters.map((g, i) => (
                   <div key={g.name} className={cn(
                     "flex items-center gap-2 px-2 py-1.5 rounded-xl",
                     i === 0 ? "bg-amber-500/15" : "bg-white/5"
                   )}>
-                    <span className="text-sm">{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</span>
+                    <Medal className={cn("h-4 w-4", i === 0 ? "text-amber-400" : i === 1 ? "text-gray-300" : "text-orange-400")} />
                     <span className="text-[11px] text-white font-medium flex-1 truncate">{g.name}</span>
                     <div className="flex items-center gap-0.5">
                       <img src={goldCoinIcon} alt="" className="w-3 h-3" />
@@ -686,7 +686,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
             style={{ top: "calc(env(safe-area-inset-top, 0px) + 160px)" }}
           >
             <div className="flex items-center gap-1.5 mb-0.5">
-              <span className="text-[9px] font-bold bg-amber-500/40 text-amber-200 px-1.5 py-0.5 rounded">💬 SUPER CHAT</span>
+              <span className="text-[9px] font-bold bg-amber-500/40 text-amber-200 px-1.5 py-0.5 rounded flex items-center gap-0.5"><MessageCircle className="h-2.5 w-2.5" /> SUPER CHAT</span>
               <span className="text-[10px] text-amber-300 font-bold">{superChatMsg.user}</span>
               <div className="flex items-center gap-0.5 ml-auto">
                 <img src={goldCoinIcon} alt="" className="w-3 h-3" />
@@ -793,7 +793,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   </span>
                 )}
                 {isTopFan && !msg.isSystem && (
-                  <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full shrink-0 bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border border-amber-500/30">⭐ Top Fan</span>
+                  <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full shrink-0 bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border border-amber-500/30 flex items-center gap-0.5"><Star className="h-2 w-2 fill-amber-300 text-amber-300" /> Top Fan</span>
                 )}
                 <span className={cn("text-xs font-medium", msg.isSystem ? "text-white/40 italic" : "text-white/80")}>{msg.user}</span>
                 <span className={cn("text-xs", msg.isGift ? "text-amber-300" : msg.isSystem ? "text-white/30 italic" : "text-white/90")}>{msg.text}</span>
@@ -1053,7 +1053,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               )}
               <div>
                 <p className="text-white text-[11px] font-bold">
-                  ✓ Gift Sent!{sentGiftFlyout.qty > 1 ? ` x${sentGiftFlyout.qty}` : ""}
+                  <CheckCircle className="h-3 w-3 inline mr-0.5" /> Gift Sent!{sentGiftFlyout.qty > 1 ? ` x${sentGiftFlyout.qty}` : ""}
                 </p>
                 <div className="flex items-center gap-1">
                   <img src={goldCoinIcon} alt="" className="w-3 h-3" />
@@ -1206,7 +1206,7 @@ export default function LiveStreamPage() {
                   : "bg-muted/50 text-muted-foreground hover:bg-muted"
               )}
             >
-              {f === "all" ? "All" : f === "live" ? `🔴 Live${liveCount > 0 ? ` (${liveCount})` : ""}` : "Scheduled"}
+              {f === "all" ? "All" : f === "live" ? <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" /> Live{liveCount > 0 ? ` (${liveCount})` : ""}</span> : "Scheduled"}
             </button>
           ))}
         </div>
@@ -1262,19 +1262,19 @@ export default function LiveStreamPage() {
                   )}
                   {/* Hot badge for high viewer streams */}
                   {stream.status === "live" && stream.viewer_count >= 3000 && (
-                    <Badge className="absolute top-3 left-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 text-[10px] gap-0.5 ml-1">
-                      🔥 Hot
+                  <Badge className="absolute top-3 left-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 text-[10px] gap-0.5 ml-1">
+                      <Flame className="h-2.5 w-2.5" /> Hot
                     </Badge>
                   )}
                   {/* Daily Pick for first stream */}
                   {i === 0 && stream.status === "live" && (
                     <Badge className="absolute top-10 left-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 text-[9px] gap-0.5">
-                      ⭐ Daily Pick
+                      <Star className="h-2.5 w-2.5 fill-white" /> Daily Pick
                     </Badge>
                   )}
                   {stream.status === "scheduled" && (
-                    <Badge className="absolute top-3 left-3 bg-amber-500 text-white border-0 text-[10px]">
-                      📅 Scheduled
+                    <Badge className="absolute top-3 left-3 bg-amber-500 text-white border-0 text-[10px] gap-0.5">
+                      <CalendarDays className="h-2.5 w-2.5" /> Scheduled
                     </Badge>
                   )}
                   {stream.status === "ended" && (
