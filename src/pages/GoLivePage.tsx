@@ -1286,13 +1286,112 @@ export default function GoLivePage() {
             </div>
           )}
 
+          {/* Active Poll Widget */}
+          <AnimatePresence>
+            {activePoll && (
+              <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 30, opacity: 0 }}
+                className="px-3 mb-2"
+              >
+                <div className="bg-blue-950/70 backdrop-blur-md rounded-2xl p-3 border border-blue-500/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <BarChart3 className="h-3.5 w-3.5 text-blue-400" />
+                      <span className="text-[11px] font-bold text-blue-300">POLL</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] text-white/40">{activePoll.totalVotes} votes</span>
+                      <button onClick={() => setActivePoll(null)} className="text-white/30 hover:text-white/60">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-white text-xs font-semibold mb-2">{activePoll.question}</p>
+                  <div className="space-y-1.5">
+                    {activePoll.options.map((opt, i) => {
+                      const pct = activePoll.totalVotes > 0 ? Math.round((activePoll.votes[i] / activePoll.totalVotes) * 100) : 0;
+                      return (
+                        <div key={i} className="relative">
+                          <div className="h-7 rounded-lg bg-white/5 overflow-hidden border border-white/10">
+                            <motion.div
+                              className="h-full rounded-lg bg-blue-500/25"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${pct}%` }}
+                              transition={{ type: "spring", damping: 20 }}
+                            />
+                          </div>
+                          <div className="absolute inset-0 flex items-center justify-between px-2.5">
+                            <span className="text-[11px] text-white/80 font-medium">{opt}</span>
+                            <span className="text-[10px] text-blue-300 font-bold">{pct}%</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Poll Creator */}
+          <AnimatePresence>
+            {showPollCreator && !activePoll && (
+              <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 30, opacity: 0 }}
+                className="px-3 mb-2"
+              >
+                <div className="bg-zinc-900/90 backdrop-blur-md rounded-2xl p-3 border border-white/10 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-white/70">📊 Create Poll</span>
+                    <button onClick={() => setShowPollCreator(false)} className="text-white/30 hover:text-white/60">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                  <Input
+                    value={pollQuestion}
+                    onChange={(e) => setPollQuestion(e.target.value)}
+                    placeholder="Ask a question..."
+                    maxLength={80}
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 text-xs rounded-xl h-8"
+                  />
+                  {pollOptions.map((opt, i) => (
+                    <Input
+                      key={i}
+                      value={opt}
+                      onChange={(e) => { const n = [...pollOptions]; n[i] = e.target.value; setPollOptions(n); }}
+                      placeholder={`Option ${i + 1}`}
+                      maxLength={40}
+                      className="bg-white/5 border-white/10 text-white placeholder:text-white/30 text-xs rounded-xl h-8"
+                    />
+                  ))}
+                  <div className="flex gap-2">
+                    {pollOptions.length < 4 && (
+                      <button onClick={() => setPollOptions((p) => [...p, ""])} className="text-[10px] text-blue-400 font-medium">+ Add option</button>
+                    )}
+                    <div className="flex-1" />
+                    <button onClick={createPoll} className="px-4 py-1.5 rounded-full bg-blue-500 text-white text-[11px] font-bold active:scale-95 transition-transform">
+                      Start Poll
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Chat input + End button */}
           <div className="px-3 pb-4 flex gap-2 items-center" style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 16px), 16px)" }}>
+            {slowMode && slowModeCooldown > 0 && (
+              <span className="text-[9px] text-blue-300 font-medium absolute -top-5 left-4">⏳ Slow mode: {slowModeCooldown}s</span>
+            )}
             <Input
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendChat()}
-              placeholder="Say something..."
+              placeholder={slowMode ? `Slow mode (${slowModeCooldown > 0 ? `${slowModeCooldown}s` : "ready"})` : "Say something..."}
               className="bg-white/10 border-white/10 text-white placeholder:text-white/30 text-sm rounded-2xl flex-1 h-10 focus:border-white/20"
             />
             <Button size="icon" onClick={sendChat} className="rounded-2xl bg-white/15 hover:bg-white/25 shrink-0 h-10 w-10">
