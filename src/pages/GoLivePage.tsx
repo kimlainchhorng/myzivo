@@ -410,15 +410,22 @@ export default function GoLivePage() {
     setLikes((p) => p + 1);
   }, [spawnFloatingReaction]);
 
-  const sendGift = useCallback((gift: { icon: string; name: string; coins: number }) => {
+  const sendGift = useCallback((gift: { icon: string; name: string; coins: number }, qty = 1) => {
     // Haptic feedback on mobile
-    try { navigator.vibrate?.(50); } catch {} // eslint-disable-line no-empty
+    try { navigator.vibrate?.(qty > 1 ? [50, 30, 50] : [50]); } catch {} // eslint-disable-line no-empty
     const senders = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
     const sender = senders[Math.floor(Math.random() * senders.length)];
-    setGiftsReceived((p) => p + 1);
-    setCoinsEarned((p) => p + gift.coins);
-    setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + gift.coins }));
+    const totalCoins = gift.coins * qty;
+    setGiftsReceived((p) => p + qty);
+    setCoinsEarned((p) => p + totalCoins);
+    setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + totalCoins }));
     spawnFloatingReaction(gift.icon);
+
+    // Track recent gifts (unique, max 4)
+    setRecentGifts((prev) => {
+      const filtered = prev.filter((g) => g.name !== gift.name);
+      return [gift, ...filtered].slice(0, 4);
+    });
 
     // Add gift message to chat
     setChatMessages((prev) => [
@@ -426,7 +433,7 @@ export default function GoLivePage() {
       {
         id: `gift-${Date.now()}`,
         user: sender,
-        text: `sent ${gift.name} (${gift.coins} coins) 🎁`,
+        text: qty > 1 ? `sent ${gift.name} x${qty} (${totalCoins.toLocaleString()} coins) 🎁` : `sent ${gift.name} (${gift.coins} coins) 🎁`,
         isGift: true,
         avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][Math.floor(Math.random() * 5)],
       },
@@ -459,7 +466,8 @@ export default function GoLivePage() {
       playGiftSound(newCombo);
     }
     
-    setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
+    setActiveGiftAnim({ name: gift.name, coins: totalCoins, senderName: sender });
+    setGiftQty(1); // Reset qty after send
   }, [spawnFloatingReaction, giftCombo]);
 
   // ── Ended screen ──
