@@ -797,6 +797,13 @@ export default function GoLivePage() {
           <div>
             <h1 className="text-2xl font-bold text-white">Stream Ended</h1>
             <p className="text-white/50 text-sm mt-1">{title || "Untitled Stream"}</p>
+            {hashtags.length > 0 && (
+              <div className="flex flex-wrap gap-1 justify-center mt-2">
+                {hashtags.map((tag) => (
+                  <span key={tag} className="text-[10px] text-blue-300/70 bg-blue-500/10 rounded-full px-2 py-0.5">#{tag}</span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Stats grid */}
