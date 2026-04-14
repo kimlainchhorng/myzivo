@@ -300,6 +300,8 @@ export default function GoLivePage() {
   }, [spawnFloatingReaction]);
 
   const sendGift = useCallback((gift: { icon: string; name: string; coins: number }) => {
+    // Haptic feedback on mobile
+    try { navigator.vibrate?.(50); } catch {} // eslint-disable-line no-empty
     setGiftsReceived((p) => p + 1);
     setCoinsEarned((p) => p + gift.coins);
     spawnFloatingReaction(gift.icon);
