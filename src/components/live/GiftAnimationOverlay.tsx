@@ -148,7 +148,11 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
                   preload="auto"
                   onCanPlay={() => setVideoReady(true)}
                   onLoadedData={() => setVideoReady(true)}
-                  onError={() => setVideoFailed(true)}
+                  onError={() => {
+                    videoErrorCountRef.current += 1;
+                    // Only treat as fatal after multiple failures (browser aborts initial range requests)
+                    if (videoErrorCountRef.current >= 3) setVideoFailed(true);
+                  }}
                   className={isLegendary ? "w-[18rem] h-[18rem] sm:w-[24rem] sm:h-[24rem] object-contain" : "w-[14rem] h-[14rem] sm:w-[20rem] sm:h-[20rem] object-contain"}
                   style={{
                     mixBlendMode: "screen",
