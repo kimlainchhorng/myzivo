@@ -432,10 +432,10 @@ export default function GoLivePage() {
       <div className="min-h-screen bg-gradient-to-b from-zinc-900 via-black to-zinc-900 flex flex-col items-center p-6 pt-10 pb-24 text-center overflow-y-auto">
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", damping: 20 }} className="space-y-6 w-full max-w-sm">
           {/* Animated success icon */}
-          <div className="relative mx-auto w-24 h-24">
+          <div className="relative mx-auto w-20 h-20">
             <div className="absolute inset-0 rounded-full bg-red-500/20 animate-ping" />
-            <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/30">
-              <Radio className="h-10 w-10 text-white" />
+            <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/30">
+              <Radio className="h-8 w-8 text-white" />
             </div>
           </div>
 
