@@ -1006,6 +1006,60 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Gift-sent flyout ── */}
+      <AnimatePresence>
+        {sentGiftFlyout && (
+          <motion.div
+            key={sentGiftFlyout.id}
+            initial={{ x: 300, opacity: 0, scale: 0.5 }}
+            animate={{ x: 0, opacity: 1, scale: 1 }}
+            exit={{ x: 300, opacity: 0, scale: 0.7 }}
+            transition={{ type: "spring", damping: 16, stiffness: 200 }}
+            className="absolute right-3 bottom-[280px] z-40"
+          >
+            <div
+              className="flex items-center gap-2 px-3 py-2.5 rounded-2xl"
+              style={{
+                background: "linear-gradient(135deg, rgba(16,185,129,0.9) 0%, rgba(5,150,105,0.8) 50%, rgba(4,120,87,0.6) 100%)",
+                backdropFilter: "blur(12px)",
+                boxShadow: "0 4px 24px rgba(16,185,129,0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
+                border: "1px solid rgba(16,185,129,0.3)",
+              }}
+            >
+              {giftImages[sentGiftFlyout.giftName] ? (
+                <motion.img
+                  src={giftImages[sentGiftFlyout.giftName]}
+                  alt=""
+                  className="w-8 h-8 object-contain"
+                  style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}
+                  animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.15, 1] }}
+                  transition={{ duration: 0.5 }}
+                />
+              ) : (
+                <span className="text-2xl">🎁</span>
+              )}
+              <div>
+                <p className="text-white text-[11px] font-bold">
+                  ✓ Gift Sent!{sentGiftFlyout.qty > 1 ? ` x${sentGiftFlyout.qty}` : ""}
+                </p>
+                <div className="flex items-center gap-1">
+                  <img src={goldCoinIcon} alt="" className="w-3 h-3" />
+                  <span className="text-emerald-100 text-[10px] font-semibold">{sentGiftFlyout.coins.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Full-screen gift animation overlay */}
+      <GiftAnimationOverlay
+        activeGift={activeGiftAnim}
+        onComplete={() => { setActiveGiftAnim(null); setGiftCombo(0); }}
+        giftPanelOpen={showGiftPanel}
+        comboCount={giftCombo}
+      />
     </div>
   );
 }
