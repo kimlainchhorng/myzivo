@@ -377,7 +377,7 @@ export default function GoLivePage() {
           ...prev.slice(-20),
           { id: `vgift-${Date.now()}`, user: sender, text: `sent ${giftNames[idx]} 🎁`, isGift: true, avatar: ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-amber-500"][Math.floor(Math.random() * 5)] },
         ]);
-        playGiftSound(1);
+        if (soundEnabled) playGiftSound(1);
         // Auto thank-you
         if (autoThank) {
           setTimeout(() => {
