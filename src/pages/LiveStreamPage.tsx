@@ -553,7 +553,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 </div>
                 <div className="flex items-center gap-0.5 bg-black/30 rounded-full px-1.5 py-0.5 shrink-0">
                   <img src={goldCoinIcon} alt="" className="w-2.5 h-2.5" />
-                  <span className="text-amber-200 text-[9px] font-bold">{notif.coins}</span>
+                  <span className="text-amber-200 text-[9px] font-bold">{notif.coins.toLocaleString()}</span>
                 </div>
               </div>
             </motion.div>
