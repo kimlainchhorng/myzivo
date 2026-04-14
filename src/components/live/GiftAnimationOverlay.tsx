@@ -1,10 +1,11 @@
 /**
  * GiftAnimationOverlay — Premium gift animation over live stream
- * TikTok/Bigo-level: dramatic entrance, pulsing combo, polished sender banner
+ * Uses MP4 video animations for premium gifts, icon fallback for others
  */
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { giftImages } from "@/config/giftIcons";
+import { giftAnimationVideos } from "@/config/giftAnimations";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 
 interface GiftAnimationOverlayProps {
@@ -17,7 +18,10 @@ interface GiftAnimationOverlayProps {
 export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCount = 1 }: GiftAnimationOverlayProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const onCompleteRef = useRef(onComplete);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [animKey, setAnimKey] = useState(0);
+  const [videoReady, setVideoReady] = useState(false);
+  const [videoError, setVideoError] = useState(false);
 
   onCompleteRef.current = onComplete;
 
@@ -54,6 +58,8 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
   useEffect(() => {
     if (!activeGift) return;
     setAnimKey((k) => k + 1);
+    setVideoReady(false);
+    setVideoError(false);
   }, [activeGift]);
 
   useEffect(() => {
@@ -71,8 +77,10 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
   if (!activeGift) return null;
 
   const giftImg = giftImages[activeGift.name];
+  const videoUrl = giftAnimationVideos[activeGift.name];
   const isPremium = activeGift.coins >= 100;
   const isLegendary = activeGift.coins >= 20000;
+  const hasVideo = !!videoUrl && !videoError;
 
   // Combo intensity scales with count
   const comboIntensity = Math.min(comboCount, 20);
@@ -103,8 +111,54 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
           />
         )}
 
-        {/* ── Central gift image with effects ── */}
-        {giftImg && (
+        {/* ── Video animation (full-screen, blended) ── */}
+        {hasVideo && (
+          <div
+            className="absolute inset-0 flex items-center justify-center z-[2]"
+            style={{ marginTop: giftPanelOpen ? "-20%" : "0" }}
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: videoReady ? 1 : 0 }}
+              transition={{ type: "spring", damping: 12, stiffness: 120 }}
+              className="relative"
+              style={{
+                mixBlendMode: "screen",
+              }}
+            >
+              <video
+                ref={videoRef}
+                src={videoUrl}
+                autoPlay
+                muted
+                playsInline
+                className={
+                  isLegendary
+                    ? "w-[22rem] h-[22rem] sm:w-[28rem] sm:h-[28rem] object-contain"
+                    : isPremium
+                    ? "w-[18rem] h-[18rem] sm:w-[22rem] sm:h-[22rem] object-contain"
+                    : "w-[14rem] h-[14rem] object-contain"
+                }
+                style={{
+                  opacity: videoReady ? 1 : 0,
+                  transition: "opacity 0.3s ease-in",
+                }}
+                onLoadedData={() => setVideoReady(true)}
+                onError={() => setVideoError(true)}
+                onEnded={() => {
+                  // Loop once then let timeout dismiss
+                  if (videoRef.current) {
+                    videoRef.current.currentTime = 0;
+                    videoRef.current.play().catch(() => {});
+                  }
+                }}
+              />
+            </motion.div>
+          </div>
+        )}
+
+        {/* ── Fallback: icon animation (when no video or video failed) ── */}
+        {(!hasVideo) && giftImg && (
           <div className="absolute inset-0 flex items-center justify-center z-[2]" style={{ marginTop: giftPanelOpen ? "-45%" : "-5%" }}>
             {/* Expanding ring pulses */}
             {rings.map((r) => (
@@ -118,7 +172,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               />
             ))}
 
-            {/* Sparkle particles — burst outward */}
+            {/* Sparkle particles */}
             {sparkles.map((s) => (
               <motion.div
                 key={s.id}
@@ -139,7 +193,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               </motion.div>
             ))}
 
-            {/* Soft golden glow behind gift */}
+            {/* Soft glow */}
             <motion.div
               className="absolute rounded-full"
               style={{
@@ -153,7 +207,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             />
 
-            {/* Gift image — compact spring entrance */}
+            {/* Gift icon */}
             <motion.div
               initial={{ scale: 0, opacity: 0, y: 80, rotate: -15 }}
               animate={{ scale: [0, 1.15, 0.9, 1.02, 1], opacity: 1, y: 0, rotate: [-15, 5, -2, 0] }}
@@ -180,7 +234,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
           </div>
         )}
 
-        {/* ── Sender banner — sleek glassmorphic gold from left ── */}
+        {/* ── Sender banner ── */}
         <motion.div
           initial={{ x: -400, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -203,7 +257,6 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               borderBottom: "1px solid rgba(100,60,0,0.3)",
             }}
           >
-            {/* Sender avatar */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -214,7 +267,6 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               {(activeGift.senderName || "S")[0]}
             </motion.div>
 
-            {/* Small gift icon on avatar */}
             {giftImg && (
               <motion.img
                 src={giftImg}
@@ -227,7 +279,6 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               />
             )}
 
-            {/* Sender name & gift name */}
             <motion.div
               className="min-w-0"
               initial={{ opacity: 0, x: -10 }}
@@ -242,7 +293,6 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               </p>
             </motion.div>
 
-            {/* Coin badge */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -255,7 +305,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
           </div>
         </motion.div>
 
-        {/* ── Combo counter — only show ×2+ (×1 is not a combo) ── */}
+        {/* ── Combo counter ── */}
         {comboCount >= 2 && (
           <motion.div
             key={`combo-${comboCount}`}
@@ -265,24 +315,17 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
             className="absolute right-5 z-[3]"
             style={{ top: giftPanelOpen ? "18%" : "38%" }}
           >
-            {/* Combo glow ring */}
             {comboCount >= 3 && (
               <motion.div
                 className="absolute inset-0 rounded-full"
                 style={{
-                  width: 80,
-                  height: 80,
-                  top: "50%",
-                  left: "50%",
-                  marginTop: -40,
-                  marginLeft: -40,
+                  width: 80, height: 80, top: "50%", left: "50%", marginTop: -40, marginLeft: -40,
                   background: `radial-gradient(circle, ${comboColor}33, transparent 70%)`,
                 }}
                 animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0.8, 0.5] }}
                 transition={{ duration: 0.6, repeat: Infinity }}
               />
             )}
-
             <motion.div className="flex flex-col items-center">
               <motion.span
                 initial={{ opacity: 0, y: 8 }}
@@ -292,7 +335,6 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               >
                 combo
               </motion.span>
-
               <motion.span
                 key={comboCount}
                 animate={{
