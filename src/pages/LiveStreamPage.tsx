@@ -273,7 +273,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const sendGift = useCallback(() => {
     if (!selectedGift) return;
     const totalCoins = selectedGift.coins * giftQty;
-    toast.success(`🎁 Sent ${giftQty}x ${selectedGift.name}!`, { description: `${totalCoins} coins` });
+    // Chat message
     setChatMessages(prev => [...prev, {
       id: Date.now().toString(),
       user: "You",
@@ -281,10 +281,29 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       isGift: true,
       level: 5,
     }]);
+    // Gift-sent flyout
+    const flyout = { id: Date.now().toString(), giftName: selectedGift.name, coins: totalCoins, qty: giftQty };
+    setSentGiftFlyout(flyout);
+    setTimeout(() => setSentGiftFlyout(null), 2500);
+    // Trigger premium animation for 500+ coin gifts
+    if (selectedGift.coins >= 500 && giftAnimationVideos[selectedGift.name]) {
+      setActiveGiftAnim({ name: selectedGift.name, coins: totalCoins, senderName: "You" });
+      setGiftCombo(prev => prev + 1);
+    }
     setSelectedGift(null);
     setGiftQty(1);
     setShowGiftPanel(false);
   }, [selectedGift, giftQty]);
+
+  const votePoll = useCallback((optIndex: number) => {
+    setActivePoll(prev => {
+      if (!prev || prev.voted !== null) return prev;
+      const newVotes = [...prev.votes];
+      newVotes[optIndex] += 1;
+      return { ...prev, votes: newVotes, totalVotes: prev.totalVotes + 1, voted: optIndex };
+    });
+    toast.success("Vote submitted! 🗳️");
+  }, []);
 
   const handleFollow = () => {
     setIsFollowing(!isFollowing);
