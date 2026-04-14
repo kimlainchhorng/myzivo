@@ -2150,6 +2150,175 @@ export default function GoLivePage() {
         )}
       </AnimatePresence>
 
+      {/* ── NEW: Face Sticker Panel ── */}
+      <AnimatePresence>
+        {phase === "live" && showStickerPanel && (
+          <motion.div
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 300, opacity: 0 }}
+            transition={{ type: "spring", damping: 22, stiffness: 250 }}
+            className="fixed right-3 z-50 w-48"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 210px)" }}
+          >
+            <div
+              className="rounded-2xl px-3 py-2.5 space-y-1.5"
+              style={{
+                background: "linear-gradient(135deg, rgba(60,30,80,0.95) 0%, rgba(80,40,100,0.92) 100%)",
+                backdropFilter: "blur(16px)",
+                border: "1px solid rgba(255,180,255,0.15)",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+              }}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">🎭</span>
+                  <span className="text-[11px] font-bold text-pink-300 uppercase tracking-wider">Stickers</span>
+                </div>
+                <button onClick={() => setShowStickerPanel(false)} className="text-white/30 hover:text-white/60">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {faceStickers.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => { setActiveSticker((prev) => prev === s.id ? null : s.id); toast(`${s.emoji} ${activeSticker === s.id ? "Removed" : s.label}`, { duration: 1200 }); }}
+                    className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center text-xl active:scale-90 transition-all border",
+                      activeSticker === s.id ? "bg-pink-500/30 border-pink-500/30 shadow-lg shadow-pink-500/20" : "bg-white/5 border-white/10"
+                    )}
+                  >
+                    {s.emoji}
+                  </button>
+                ))}
+              </div>
+              {activeSticker && (
+                <button onClick={() => { setActiveSticker(null); toast("Sticker removed"); }} className="w-full text-[9px] text-pink-300/60 text-center mt-1">
+                  Tap active sticker to remove
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW: Top-3 Gifter Mini-Banner (persistent during live) ── */}
+      {phase === "live" && showTop3Banner && Object.keys(topGifters).length > 0 && !showLeaderboard && (
+        <div className="fixed left-3 z-40" style={{ top: "calc(env(safe-area-inset-top, 0px) + 170px)" }}>
+          <div
+            className="rounded-xl px-2.5 py-1.5 flex items-center gap-2"
+            style={{
+              background: "linear-gradient(135deg, rgba(40,25,10,0.85) 0%, rgba(60,35,15,0.8) 100%)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid rgba(255,200,80,0.12)",
+            }}
+          >
+            <span className="text-[8px] text-amber-400 font-bold uppercase">Top</span>
+            {Object.entries(topGifters)
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 3)
+              .map(([name, coins], i) => {
+                const medals = ["🥇", "🥈", "🥉"];
+                return (
+                  <div key={name} className="flex items-center gap-1">
+                    <span className="text-[10px]">{medals[i]}</span>
+                    <span className="text-[9px] text-white/70 font-medium max-w-[40px] truncate">{name}</span>
+                    <span className="text-[8px] text-amber-300 font-bold">{coins}</span>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
+      {/* ── NEW: Combo Multiplier Overlay ── */}
+      <AnimatePresence>
+        {phase === "live" && comboMultiplierText && (
+          <motion.div
+            key={comboMultiplierText.id}
+            initial={{ scale: 0.3, opacity: 0, y: 40 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 1.5, opacity: 0, y: -30 }}
+            transition={{ type: "spring", damping: 12, stiffness: 300 }}
+            className="fixed left-0 right-0 z-50 flex items-center justify-center pointer-events-none"
+            style={{ top: "40%" }}
+          >
+            <span
+              className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-orange-400"
+              style={{
+                textShadow: "0 0 40px rgba(255,200,0,0.6), 0 0 80px rgba(255,150,0,0.3)",
+                WebkitTextStroke: "1px rgba(255,200,80,0.3)",
+              }}
+            >
+              {comboMultiplierText.text}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW: Revenue Mini-Dashboard ── */}
+      <AnimatePresence>
+        {phase === "live" && showRevenueDash && (
+          <motion.div
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 300, opacity: 0 }}
+            transition={{ type: "spring", damping: 22, stiffness: 250 }}
+            className="fixed right-3 z-50 w-52"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 210px)" }}
+          >
+            <div
+              className="rounded-2xl px-3 py-2.5 space-y-2"
+              style={{
+                background: "linear-gradient(135deg, rgba(10,40,20,0.95) 0%, rgba(15,50,25,0.92) 100%)",
+                backdropFilter: "blur(16px)",
+                border: "1px solid rgba(80,200,120,0.15)",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+              }}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">💰</span>
+                  <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider">Revenue</span>
+                </div>
+                <button onClick={() => setShowRevenueDash(false)} className="text-white/30 hover:text-white/60">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/50">Total Earned</span>
+                  <span className="text-sm font-bold text-amber-300 flex items-center gap-1"><img src={goldCoinIcon} alt="" className="w-3.5 h-3.5" />{coinsEarned.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/50">Coins/min</span>
+                  <span className="text-[11px] font-semibold text-emerald-300">{elapsed > 60 ? (coinsEarned / (elapsed / 60)).toFixed(1) : coinsEarned.toString()} ⚡</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/50">Projected (1hr)</span>
+                  <span className="text-[11px] font-semibold text-emerald-200">{elapsed > 30 ? Math.round((coinsEarned / elapsed) * 3600).toLocaleString() : "—"} 🎯</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/50">Gifts</span>
+                  <span className="text-[11px] font-semibold text-white/70">{giftsReceived} 🎁</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-white/50">Top Gift Value</span>
+                  <span className="text-[11px] font-semibold text-amber-200">{Object.values(topGifters).length > 0 ? Math.max(...Object.values(topGifters)).toLocaleString() : "0"} 💎</span>
+                </div>
+              </div>
+              <div className="border-t border-white/5 pt-1.5">
+                <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-green-400" style={{ width: `${Math.min((coinsEarned / streamGoal) * 100, 100)}%` }} />
+                </div>
+                <p className="text-[8px] text-white/30 text-center mt-0.5">{Math.min(coinsEarned, streamGoal)}/{streamGoal} Goal</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* End stream confirmation dialog */}
       <AnimatePresence>
         {showEndConfirm && (
