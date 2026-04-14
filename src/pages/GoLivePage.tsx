@@ -457,6 +457,16 @@ export default function GoLivePage() {
               <span className="text-xs text-white/50">Chat Messages</span>
               <span className="text-sm font-semibold text-white">{chatMessages.length} 💬</span>
             </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-white/50">Engagement Rate</span>
+              <span className="text-sm font-semibold text-green-400">
+                {peakViewers > 0 ? Math.round(((likes + giftsReceived + chatMessages.length) / peakViewers) * 100) : 0}% 📊
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-white/50">Avg Watch Time</span>
+              <span className="text-sm font-semibold text-white">{formatTime(Math.round(elapsed * 0.6))} ⏱️</span>
+            </div>
           </div>
 
           {/* Top Gifters on ended screen */}
