@@ -653,6 +653,14 @@ export default function GoLivePage() {
       setGiftCombo(1);
     }
     lastGiftRef.current = { name: gift.name, time: now };
+
+    // ── NEW: Combo Multiplier Visual ──
+    if (newCombo >= 2) {
+      const comboLabels = ["", "", "COMBO x2 🔥", "COMBO x3 ⚡", "COMBO x4 💥", "MEGA x5 🌟", "ULTRA x6 💎", "SUPREME x7 👑"];
+      const label = newCombo < comboLabels.length ? comboLabels[newCombo] : `GODLIKE x${newCombo} 🏆`;
+      setComboMultiplierText({ text: label, id: `combo-${now}` });
+      setTimeout(() => setComboMultiplierText(null), 2500);
+    }
     
     // Play sound effects
     if (soundEnabled) {
