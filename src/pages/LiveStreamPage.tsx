@@ -75,8 +75,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const [doubleTapHeart, setDoubleTapHeart] = useState<{ id: string; x: number; y: number } | null>(null);
   const [showRanking, setShowRanking] = useState(false);
   const [superChatMsg, setSuperChatMsg] = useState<{ id: string; user: string; text: string; coins: number } | null>(null);
-  // ── NEW: Viewer list panel ──
   const [showViewerList, setShowViewerList] = useState(false);
+  // ── Gift-sent flyout ──
+  const [sentGiftFlyout, setSentGiftFlyout] = useState<{ id: string; giftName: string; coins: number; qty: number } | null>(null);
+  // ── Gift animation overlay for premium gifts ──
+  const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
+  const [giftCombo, setGiftCombo] = useState(0);
+  // ── Active Poll (from host) ──
+  const [activePoll, setActivePoll] = useState<{ question: string; options: string[]; votes: number[]; totalVotes: number; voted: number | null } | null>(null);
   const [fakeViewers] = useState(() => [
     { name: "Luna ✨", level: 28, badge: "⭐ Top Fan" },
     { name: "Kai 🔥", level: 15, badge: null },
