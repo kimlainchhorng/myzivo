@@ -279,7 +279,6 @@ export default function GoLivePage() {
               level: Math.floor(Math.random() * 50) + 1,
             },
           ]);
-          ]);
         }
         lastChat = now;
       }
