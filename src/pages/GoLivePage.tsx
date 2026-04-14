@@ -153,6 +153,22 @@ export default function GoLivePage() {
   // ── NEW v3: Chat Trending Words ──
   const [trendingWord, setTrendingWord] = useState<string | null>(null);
 
+  // ── NEW v4: Hashtags for discovery ──
+  const [hashtags, setHashtags] = useState<string[]>([]);
+  const [hashtagInput, setHashtagInput] = useState("");
+
+  // ── NEW v4: Background Music ──
+  const [bgMusic, setBgMusic] = useState<string | null>(null);
+
+  // ── NEW v4: On-demand stream effects ──
+  const [screenEffect, setScreenEffect] = useState<"confetti" | "hearts" | "fire" | null>(null);
+
+  // ── NEW v4: Stream Rating (ended phase) ──
+  const [streamRating, setStreamRating] = useState(0);
+
+  // ── NEW v4: Animated coin counter (ended) ──
+  const [displayedCoins, setDisplayedCoins] = useState(0);
+
   const cameraFilters: Record<string, string> = useMemo(() => ({
     none: "",
     warm: "sepia(0.25) saturate(1.3) brightness(1.05)",
