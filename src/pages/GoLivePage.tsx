@@ -1253,7 +1253,7 @@ export default function GoLivePage() {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden border-t border-white/10"
                     >
-                      <div className="flex items-center gap-3 px-4 py-2.5">
+                      <div className="flex items-center gap-2 px-4 py-2.5">
                         <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br overflow-hidden shrink-0", selectedGift.coins >= 100 ? "from-amber-400 to-orange-500" : "from-violet-400 to-purple-500")}>
                           {giftImages[selectedGift.name] ? (
                             <img src={giftImages[selectedGift.name]} alt="" className="w-7 h-7 object-contain" />
@@ -1265,16 +1265,33 @@ export default function GoLivePage() {
                           <p className="text-white text-xs font-semibold truncate">{selectedGift.name}</p>
                           <div className="flex items-center gap-1">
                             <img src={goldCoinIcon} alt="" className="w-3 h-3" />
-                            <span className="text-amber-300 text-[11px] font-bold">{selectedGift.coins.toLocaleString()}</span>
+                            <span className="text-amber-300 text-[11px] font-bold">{(selectedGift.coins * giftQty).toLocaleString()}</span>
                             {selectedGift.coins >= 500 && (
                               <span className="text-[9px] text-red-400 font-medium ml-1">Premium</span>
                             )}
                           </div>
                         </div>
+                        {/* Quantity selector */}
+                        <div className="flex gap-1 shrink-0">
+                          {[1, 5, 10, 99].map((q) => (
+                            <button
+                              key={q}
+                              onClick={() => setGiftQty(q)}
+                              className={cn(
+                                "w-8 h-7 rounded-lg text-[10px] font-bold transition-all",
+                                giftQty === q
+                                  ? "bg-amber-500/30 text-amber-300 border border-amber-500/40"
+                                  : "bg-white/5 text-white/40 border border-white/10"
+                              )}
+                            >
+                              x{q}
+                            </button>
+                          ))}
+                        </div>
                         <button
-                          onClick={() => { sendGift(selectedGift); setSelectedGift(null); }}
+                          onClick={() => { sendGift(selectedGift, giftQty); setSelectedGift(null); }}
                           className={cn(
-                            "flex items-center gap-1.5 rounded-full px-5 py-2 shadow-lg active:scale-95 transition-transform",
+                            "flex items-center gap-1.5 rounded-full px-4 py-2 shadow-lg active:scale-95 transition-transform shrink-0",
                             selectedGift.coins >= 500
                               ? "bg-gradient-to-r from-red-500 to-rose-500 shadow-red-500/25"
                               : "bg-gradient-to-r from-amber-500 to-yellow-400 shadow-amber-500/25"
@@ -1282,7 +1299,7 @@ export default function GoLivePage() {
                         >
                           <Send className="h-3.5 w-3.5 text-white" />
                           <span className="text-white text-xs font-bold">
-                            {selectedGift.coins >= 500 ? "Send!" : "Send"}
+                            {giftQty > 1 ? `x${giftQty}` : selectedGift.coins >= 500 ? "Send!" : "Send"}
                           </span>
                         </button>
                       </div>
