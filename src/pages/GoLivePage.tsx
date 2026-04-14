@@ -1199,7 +1199,7 @@ export default function GoLivePage() {
                   {(["gifts", "interactive", "exclusive"] as const).map((tab) => (
                     <button
                       key={tab}
-                      onClick={() => setGiftTab(tab)}
+                      onClick={() => { setGiftTab(tab); setSelectedGift(null); }}
                       className={cn(
                         "px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors",
                         giftTab === tab ? "text-white bg-white/10" : "text-white/40"
