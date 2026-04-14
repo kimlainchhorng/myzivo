@@ -639,7 +639,9 @@ export default function GoLivePage() {
     
     setActiveGiftAnim({ name: gift.name, coins: totalCoins, senderName: sender });
     setGiftQty(1); // Reset qty after send
-  }, [spawnFloatingReaction, giftCombo]);
+    // Add to PK Battle score if active
+    addPkScore(totalCoins);
+  }, [spawnFloatingReaction, giftCombo, addPkScore]);
 
   // ── Ended screen ──
   if (phase === "ended") {
