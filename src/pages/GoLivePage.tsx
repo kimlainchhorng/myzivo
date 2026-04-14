@@ -241,7 +241,7 @@ export default function GoLivePage() {
       if (now - lastViewer >= 3000) {
         setViewerCount((p) => {
           const delta = Math.random() > 0.4 ? Math.floor(Math.random() * 3) : -Math.floor(Math.random() * 2);
-          const next = Math.max(0, p + delta);
+          const next = Math.max(0, Math.min(50, p + delta));
           setPeakViewers((pk) => Math.max(pk, next));
           if (next !== p) { setViewerPulse(true); setTimeout(() => setViewerPulse(false), 600); }
           const milestones = [10, 25, 50, 100, 250, 500];
@@ -314,12 +314,12 @@ export default function GoLivePage() {
   // Simulate random viewer gifts every 15-30s
   useEffect(() => {
     if (phase !== "live") return;
-    const giftNames = ["Baby Dragon", "Cute Panda", "Crystal Unicorn", "Lucky Cat", "Phoenix Rising", "Diamond Bear"];
-    const giftCoins = [1, 1, 10, 1, 50, 99];
+    const giftNames = ["Baby Dragon", "Cute Panda", "Lucky Cat", "Crystal Unicorn", "King Cobra"];
+    const giftCoins = [1, 1, 1, 10, 5];
     const viewers = ["Luna", "Kai", "Mia", "Nora", "Zara", "Leo", "Aria"];
     let timerRef: ReturnType<typeof setTimeout>;
     const scheduleNext = () => {
-      const delay = 15000 + Math.random() * 15000;
+      const delay = 25000 + Math.random() * 25000;
       timerRef = setTimeout(() => {
         const idx = Math.floor(Math.random() * giftNames.length);
         const sender = viewers[Math.floor(Math.random() * viewers.length)];
@@ -917,7 +917,7 @@ export default function GoLivePage() {
             <button onClick={() => setShowGiftPanel(true)} className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-amber-500/20 relative" data-testid="gift-btn">
               <Gift className="h-5 w-5 text-yellow-300" />
               {giftsReceived > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">{giftsReceived}</span>
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">{giftsReceived > 99 ? "99+" : giftsReceived}</span>
               )}
             </button>
           </div>
