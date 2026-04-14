@@ -913,7 +913,20 @@ export default function GoLivePage() {
           </AnimatePresence>
 
           {/* Side actions — separated with clear spacing */}
-          <div className="absolute right-3 bottom-56 flex flex-col gap-4 items-center z-30">
+          <div className="absolute right-3 bottom-56 flex flex-col gap-3 items-center z-30">
+            {/* Live hardware controls */}
+            <button onClick={flipCamera} className="w-10 h-10 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
+              <RotateCcw className="h-4 w-4 text-white/70" />
+            </button>
+            <button onClick={toggleCamera} className={cn("w-10 h-10 rounded-2xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", cameraOn ? "bg-black/30" : "bg-red-500/30")}>
+              {cameraOn ? <Camera className="h-4 w-4 text-white/70" /> : <CameraOff className="h-4 w-4 text-red-300" />}
+            </button>
+            <button onClick={toggleMic} className={cn("w-10 h-10 rounded-2xl backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5", micOn ? "bg-black/30" : "bg-red-500/30")}>
+              {micOn ? <Mic className="h-4 w-4 text-white/70" /> : <MicOff className="h-4 w-4 text-red-300" />}
+            </button>
+
+            <div className="w-6 border-t border-white/10" />
+
             {/* Leaderboard button */}
             <button onClick={() => setShowLeaderboard((p) => !p)} className="w-11 h-11 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
               <Trophy className="h-4.5 w-4.5 text-amber-400" />
