@@ -78,6 +78,9 @@ export default function GoLivePage() {
   const [countdown, setCountdown] = useState(0);
   const [newFollower, setNewFollower] = useState<string | null>(null);
   const [viewerPulse, setViewerPulse] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [newFollowersCount, setNewFollowersCount] = useState(0);
+  const [shareCount, setShareCount] = useState(0);
   const lastGiftTimeRef = useRef(0);
   const lastMilestoneRef = useRef(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
