@@ -2723,6 +2723,63 @@ export default function GoLivePage() {
         )}
       </AnimatePresence>
 
+      {/* ── NEW v4: Screen Effects Overlay ── */}
+      <AnimatePresence>
+        {phase === "live" && screenEffect && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[45] pointer-events-none overflow-hidden"
+          >
+            {Array.from({ length: screenEffect === "confetti" ? 30 : 20 }).map((_, i) => (
+              <motion.span
+                key={`effect-${i}`}
+                initial={{ y: -20, x: Math.random() * 400, opacity: 1, rotate: 0 }}
+                animate={{
+                  y: 800,
+                  rotate: Math.random() * 360,
+                  opacity: [1, 1, 0],
+                }}
+                transition={{ duration: 2 + Math.random() * 2, delay: Math.random() * 0.5 }}
+                className="absolute text-xl"
+              >
+                {screenEffect === "confetti" ? ["🎊", "🎉", "⭐", "✨", "🌟"][i % 5] :
+                 screenEffect === "hearts" ? ["❤️", "💕", "💖", "💗", "💝"][i % 5] :
+                 ["🔥", "💥", "⚡", "🌋", "☄️"][i % 5]}
+              </motion.span>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW v4: Background Music Indicator ── */}
+      <AnimatePresence>
+        {phase === "live" && bgMusic && (
+          <motion.div
+            initial={{ x: -100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -100, opacity: 0 }}
+            className="fixed left-3 z-40"
+            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 120px)" }}
+          >
+            <div className="flex items-center gap-1.5 bg-violet-900/60 backdrop-blur-md rounded-full px-2.5 py-1 border border-violet-500/20">
+              <motion.span
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                className="text-xs"
+              >
+                🎵
+              </motion.span>
+              <span className="text-[10px] text-violet-200 font-medium truncate max-w-[100px]">{bgMusic}</span>
+              <button onClick={() => setBgMusic(null)} className="text-white/30 hover:text-white/60">
+                <X className="h-2.5 w-2.5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Full-screen gift animation overlay */}
       <GiftAnimationOverlay
         activeGift={activeGiftAnim}
