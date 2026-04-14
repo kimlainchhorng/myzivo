@@ -877,6 +877,22 @@ export default function GoLivePage() {
         {/* Cinematic overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/90" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
+
+        {/* ── NEW: Face Sticker Overlay ── */}
+        {phase === "live" && activeSticker && (
+          <div className="absolute inset-0 z-[2] pointer-events-none flex items-start justify-center pt-[15%]">
+            <motion.span
+              key={activeSticker}
+              initial={{ scale: 0, rotate: -20 }}
+              animate={{ scale: 1, rotate: 0 }}
+              className="text-[80px]"
+              style={{ filter: faceStickers.find(s => s.id === activeSticker)?.filter }}
+            >
+              {faceStickers.find(s => s.id === activeSticker)?.emoji}
+            </motion.span>
+          </div>
+        )}
+
         {/* Double-tap to heart */}
         {phase === "live" && (
            <div
