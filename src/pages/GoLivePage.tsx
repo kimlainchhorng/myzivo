@@ -77,6 +77,12 @@ export default function GoLivePage() {
   const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
   const [giftCombo, setGiftCombo] = useState(0);
   const [viewerGiftNotif, setViewerGiftNotif] = useState<{ id: string; sender: string; giftName: string; coins: number } | null>(null);
+  // ── Gift notification queue (right-side stacked, TikTok-style) ──
+  const [giftNotifQueue, setGiftNotifQueue] = useState<{ id: string; sender: string; giftName: string; coins: number }[]>([]);
+  // ── "Gift Sent!" flyout when user sends ──
+  const [sentGiftFlyout, setSentGiftFlyout] = useState<{ id: string; giftName: string; coins: number; qty: number } | null>(null);
+  // ── Send button sparkle burst ──
+  const [sendSparkle, setSendSparkle] = useState(false);
   const lastGiftRef = useRef<{ name: string; time: number }>({ name: "", time: 0 });
   const [topGifters, setTopGifters] = useState<Record<string, number>>({});
   const [showLeaderboard, setShowLeaderboard] = useState(false);
