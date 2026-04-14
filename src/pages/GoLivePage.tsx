@@ -869,14 +869,18 @@ export default function GoLivePage() {
                   key={msg.id}
                   className={cn(
                     "flex items-center gap-2 rounded-2xl px-3 py-1.5 w-fit max-w-[80%] animate-in slide-in-from-left-3 fade-in duration-200",
-                    msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" : "bg-black/40 backdrop-blur-sm"
+                    msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" :
+                    msg.isSystem ? "bg-transparent" :
+                    "bg-black/40 backdrop-blur-sm"
                   )}
                 >
-                  <div className={cn("h-6 w-6 rounded-full flex items-center justify-center shrink-0", msg.avatar || "bg-primary/20")}>
-                    <span className="text-[9px] text-white font-bold">{msg.user[0]}</span>
-                  </div>
-                  <span className="text-xs text-white/80 font-medium">{msg.user}</span>
-                  <span className={cn("text-xs", msg.isGift ? "text-amber-300" : "text-white/90")}>{msg.text}</span>
+                  {!msg.isSystem && (
+                    <div className={cn("h-6 w-6 rounded-full flex items-center justify-center shrink-0", msg.avatar || "bg-primary/20")}>
+                      <span className="text-[9px] text-white font-bold">{msg.user[0]}</span>
+                    </div>
+                  )}
+                  <span className={cn("text-xs font-medium", msg.isSystem ? "text-white/40 italic" : "text-white/80")}>{msg.user}</span>
+                  <span className={cn("text-xs", msg.isGift ? "text-amber-300" : msg.isSystem ? "text-white/30 italic" : "text-white/90")}>{msg.text}</span>
                 </div>
               ))}
             </div>
