@@ -95,6 +95,13 @@ export default function GoLivePage() {
   const [cameraFilter, setCameraFilter] = useState<"none" | "warm" | "cool" | "bw" | "vintage">("none");
   const [showViewerList, setShowViewerList] = useState(false);
   const [autoThank, setAutoThank] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [slowMode, setSlowMode] = useState(false);
+  const [slowModeCooldown, setSlowModeCooldown] = useState(0);
+  const [activePoll, setActivePoll] = useState<{ question: string; options: string[]; votes: number[]; totalVotes: number; expiresAt: number } | null>(null);
+  const [showPollCreator, setShowPollCreator] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
   const lastGiftTimeRef = useRef(0);
   const lastMilestoneRef = useRef(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
