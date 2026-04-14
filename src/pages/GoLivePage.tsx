@@ -83,6 +83,7 @@ export default function GoLivePage() {
   const [streamGoal] = useState(500); // coin goal for the stream
   const [giftStreakFlash, setGiftStreakFlash] = useState(false);
   const lastGiftTimeRef = useRef(0);
+  const lastMilestoneRef = useRef(0);
 
   const allGifts = useMemo(() => ({
     gifts: [
@@ -555,6 +556,19 @@ export default function GoLivePage() {
                 )}
               </div>
             </div>
+            <button
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({ title: `Watch ${title} live on ZIVO!`, url: window.location.href }).catch(() => {});
+                } else {
+                  navigator.clipboard?.writeText(window.location.href);
+                  toast.success("Stream link copied!");
+                }
+              }}
+              className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5"
+            >
+              <Share2 className="h-4 w-4 text-white/60" />
+            </button>
             <button
               onClick={() => setShowChat((p) => !p)}
               className={cn("w-8 h-8 rounded-full flex items-center justify-center", showChat ? "bg-white/15" : "bg-white/5")}
