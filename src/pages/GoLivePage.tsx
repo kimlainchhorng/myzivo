@@ -552,6 +552,25 @@ export default function GoLivePage() {
               <MessageCircle className="h-4 w-4 text-white/60" />
             </button>
           </div>
+
+          {/* Stream Goal Progress Bar */}
+          <div className="mt-2 bg-black/30 backdrop-blur-md rounded-xl px-3 py-2 border border-white/5">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-white/50 font-medium">🎯 Stream Goal</span>
+              <span className="text-[10px] text-amber-300 font-bold">{Math.min(coinsEarned, streamGoal)}/{streamGoal}</span>
+            </div>
+            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-400"
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min((coinsEarned / streamGoal) * 100, 100)}%` }}
+                transition={{ type: "spring", damping: 20 }}
+              />
+            </div>
+            {coinsEarned >= streamGoal && (
+              <p className="text-[9px] text-amber-300 mt-1 text-center animate-pulse">🎉 Goal reached!</p>
+            )}
+          </div>
         </div>
       )}
 
