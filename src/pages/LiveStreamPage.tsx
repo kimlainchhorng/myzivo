@@ -452,6 +452,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           <Heart className="h-4 w-4 text-red-400 fill-red-400" />
           {likes > 0 && <span className="text-[8px] text-white/60 -mt-0.5">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>}
         </button>
+        {/* Viewer list */}
+        <button
+          onClick={() => setShowViewerList(!showViewerList)}
+          className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center"
+        >
+          <Users className="h-4 w-4 text-white/70" />
+          <span className="text-[7px] text-white/50 -mt-0.5">{viewerCount > 999 ? `${(viewerCount / 1000).toFixed(1)}k` : viewerCount}</span>
+        </button>
         {/* Gift (large, primary CTA) */}
         <button
           onClick={() => setShowGiftPanel(true)}
@@ -460,6 +468,50 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           <Gift className="h-5 w-5 text-white" />
         </button>
       </div>
+
+      {/* ── Viewer List Panel ── */}
+      <AnimatePresence>
+        {showViewerList && (
+          <motion.div
+            initial={{ x: 200, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 200, opacity: 0 }}
+            transition={{ type: "spring", damping: 20 }}
+            className="absolute right-2 z-40 w-56 bg-black/80 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 80px)" }}
+          >
+            <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
+              <div className="flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-white/70" />
+                <span className="text-xs font-bold text-white">Viewers</span>
+                <span className="text-[9px] text-white/40 bg-white/10 rounded-full px-1.5">{viewerCount}</span>
+              </div>
+              <button onClick={() => setShowViewerList(false)} className="text-white/40">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="p-2 space-y-0.5 max-h-[250px] overflow-y-auto scrollbar-hide">
+              {fakeViewers.slice(0, Math.min(fakeViewers.length, 12)).map((v) => (
+                <div key={v.name} className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-white/5 transition-colors">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center text-[9px] text-white font-bold shrink-0">
+                    {v.name[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[11px] text-white font-medium truncate block">{v.name}</span>
+                  </div>
+                  <span className={cn(
+                    "text-[8px] px-1 py-0.5 rounded font-bold bg-gradient-to-r text-white shrink-0",
+                    v.level >= 20 ? "from-amber-400 to-yellow-500" : v.level >= 10 ? "from-violet-400 to-purple-500" : "from-zinc-400 to-zinc-500"
+                  )}>Lv.{v.level}</span>
+                  {v.badge && (
+                    <span className="text-[7px] text-amber-300 font-bold shrink-0">{v.badge}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Ranking/Leaderboard Panel ── */}
       <AnimatePresence>
