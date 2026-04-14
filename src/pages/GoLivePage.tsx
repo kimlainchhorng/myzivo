@@ -950,6 +950,37 @@ export default function GoLivePage() {
                   >
                     <Heart className="h-3 w-3" /> Thank
                   </button>
+                  <button
+                    onClick={() => { setSoundEnabled((p) => !p); toast(soundEnabled ? "🔇 Sounds muted" : "🔊 Sounds on", { duration: 1500 }); }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all border",
+                      soundEnabled
+                        ? "bg-green-500/10 text-green-400 border-green-500/20"
+                        : "bg-zinc-800 text-zinc-500 border-zinc-700/50 hover:text-zinc-400"
+                    )}
+                  >
+                    {soundEnabled ? <Volume2 className="h-3 w-3" /> : <VolumeX className="h-3 w-3" />} Sound
+                  </button>
+                  <button
+                    onClick={() => { setSlowMode((p) => !p); toast(slowMode ? "Slow mode off" : "⏳ Slow mode on (5s)", { duration: 1500 }); }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all border",
+                      slowMode
+                        ? "bg-blue-500/15 text-blue-300 border-blue-500/30"
+                        : "bg-zinc-800 text-zinc-500 border-zinc-700/50 hover:text-zinc-400"
+                    )}
+                  >
+                    <Timer className="h-3 w-3" /> Slow
+                  </button>
+                </div>
+                {/* Second row */}
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    onClick={() => toast("📡 Screen share coming soon!", { description: "Share your screen with viewers" })}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium bg-zinc-800 text-zinc-500 border border-zinc-700/50 hover:text-zinc-400 transition-all"
+                  >
+                    <Monitor className="h-3 w-3" /> Screen
+                  </button>
                 </div>
               </div>
             </div>
