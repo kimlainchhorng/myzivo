@@ -799,7 +799,6 @@ export default function GoLivePage() {
             </button>
           </div>
 
-          </div>
 
           {/* Quick reaction bar — leave room for side action buttons */}
           <div className="px-4 pr-16 mb-2 flex gap-1.5 overflow-x-auto scrollbar-hide">
