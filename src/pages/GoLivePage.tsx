@@ -950,6 +950,61 @@ export default function GoLivePage() {
         </div>
       )}
 
+      {/* Top Gifter Leaderboard — positioned at page level */}
+      <AnimatePresence>
+        {phase === "live" && showLeaderboard && (
+          <motion.div
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 300, opacity: 0 }}
+            transition={{ type: "spring", damping: 22, stiffness: 250 }}
+            className="fixed right-3 z-50 w-44"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 180px)" }}
+          >
+            <div
+              className="rounded-2xl px-3 py-2.5 space-y-1.5"
+              style={{
+                background: "linear-gradient(135deg, rgba(30,20,50,0.95) 0%, rgba(40,25,60,0.92) 100%)",
+                backdropFilter: "blur(16px)",
+                border: "1px solid rgba(255,200,80,0.15)",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+              }}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5">
+                  <Trophy className="h-3.5 w-3.5 text-amber-400" />
+                  <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider">Top Gifters</span>
+                </div>
+                <button onClick={() => setShowLeaderboard(false)} className="text-white/30 hover:text-white/60">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              {Object.keys(topGifters).length === 0 ? (
+                <p className="text-[10px] text-white/30 text-center py-2">No gifters yet — be the first! 🎁</p>
+              ) : (
+                Object.entries(topGifters)
+                  .sort(([, a], [, b]) => b - a)
+                  .slice(0, 5)
+                  .map(([name, coins], i) => {
+                    const medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"];
+                    const colors = ["text-amber-300", "text-gray-300", "text-orange-400", "text-white/60", "text-white/60"];
+                    return (
+                      <div key={name} className="flex items-center gap-2">
+                        <span className="text-sm">{medals[i]}</span>
+                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                          <span className="text-[8px] text-white font-bold">{name[0]}</span>
+                        </div>
+                        <span className="text-[11px] text-white/80 font-medium truncate flex-1">{name}</span>
+                        <span className={cn("text-[10px] font-bold", colors[i])}>{coins.toLocaleString()}</span>
+                      </div>
+                    );
+                  })
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Full-screen gift animation overlay */}
       <GiftAnimationOverlay
         activeGift={activeGiftAnim}
