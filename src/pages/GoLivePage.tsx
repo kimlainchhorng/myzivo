@@ -78,6 +78,8 @@ export default function GoLivePage() {
   const [giftCombo, setGiftCombo] = useState(0);
   const [viewerGiftNotif, setViewerGiftNotif] = useState<{ id: string; sender: string; giftName: string; coins: number } | null>(null);
   const lastGiftRef = useRef<{ name: string; time: number }>({ name: "", time: 0 });
+  const [topGifters, setTopGifters] = useState<Record<string, number>>({});
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   const allGifts = useMemo(() => ({
     gifts: [
@@ -258,6 +260,7 @@ export default function GoLivePage() {
         setViewerGiftNotif(notif);
         setGiftsReceived((p) => p + 1);
         setCoinsEarned((p) => p + giftCoins[idx]);
+        setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + giftCoins[idx] }));
         playGiftSound(1);
         setTimeout(() => setViewerGiftNotif((cur) => cur?.id === notif.id ? null : cur), 4000);
         scheduleNext();
@@ -304,6 +307,7 @@ export default function GoLivePage() {
     try { navigator.vibrate?.(50); } catch {} // eslint-disable-line no-empty
     setGiftsReceived((p) => p + 1);
     setCoinsEarned((p) => p + gift.coins);
+    setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + gift.coins }));
     spawnFloatingReaction(gift.icon);
     const senders = ["Alex", "Jordan", "Sam", "Taylor", "Morgan"];
     const sender = senders[Math.floor(Math.random() * senders.length)];
@@ -384,6 +388,29 @@ export default function GoLivePage() {
             </div>
           </div>
 
+          {/* Top Gifters on ended screen */}
+          {Object.keys(topGifters).length > 0 && (
+            <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/5 rounded-2xl p-4 border border-amber-500/15 space-y-2">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Trophy className="h-4 w-4 text-amber-400" />
+                <span className="text-xs font-bold text-amber-300">Top Gifters</span>
+              </div>
+              {Object.entries(topGifters)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 3)
+                .map(([name, coins], i) => {
+                  const medals = ["🥇", "🥈", "🥉"];
+                  return (
+                    <div key={name} className="flex items-center gap-2">
+                      <span className="text-sm">{medals[i]}</span>
+                      <span className="text-xs text-white/80 font-medium flex-1">{name}</span>
+                      <span className="text-xs text-amber-300 font-bold">{coins.toLocaleString()} 🪙</span>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+
           <div className="flex gap-3 pt-2">
             <Button variant="outline" onClick={() => navigate("/live")} className="rounded-full flex-1 border-white/20 text-white hover:bg-white/10">
               Back to Live
@@ -391,7 +418,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -696,19 +723,70 @@ export default function GoLivePage() {
             )}
           </AnimatePresence>
 
-          {/* Side actions */}
-          <div className="absolute right-3 bottom-56 flex flex-col gap-3 items-center z-30">
+          {/* Side actions — separated with clear spacing */}
+          <div className="absolute right-3 bottom-56 flex flex-col gap-4 items-center z-30">
+            {/* Leaderboard button */}
+            <button onClick={() => setShowLeaderboard((p) => !p)} className="w-11 h-11 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
+              <Trophy className="h-4.5 w-4.5 text-amber-400" />
+            </button>
+
             <button onClick={() => sendReaction("❤️")} className="w-12 h-12 rounded-2xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
               <Heart className="h-5 w-5 text-red-400" />
             </button>
-            <span className="text-white text-[10px] -mt-1 font-medium">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>
+            <span className="text-white text-[10px] -mt-2 font-medium">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>
 
-            <button onClick={() => setShowGiftPanel(true)} className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-amber-500/20">
+            <button onClick={() => setShowGiftPanel(true)} className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/30 to-yellow-500/20 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-amber-500/20 relative" data-testid="gift-btn">
               <Gift className="h-5 w-5 text-yellow-300" />
+              {giftsReceived > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">{giftsReceived}</span>
+              )}
             </button>
-            {giftsReceived > 0 && <span className="text-yellow-300 text-[10px] -mt-1 font-medium">{giftsReceived}</span>}
-
           </div>
+
+          {/* Top Gifter Leaderboard */}
+          <AnimatePresence>
+            {showLeaderboard && Object.keys(topGifters).length > 0 && (
+              <motion.div
+                initial={{ x: 300, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 300, opacity: 0 }}
+                transition={{ type: "spring", damping: 22, stiffness: 250 }}
+                className="absolute right-3 top-32 z-30 w-44"
+              >
+                <div
+                  className="rounded-2xl px-3 py-2.5 space-y-1.5"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(30,20,50,0.92) 0%, rgba(40,25,60,0.88) 100%)",
+                    backdropFilter: "blur(16px)",
+                    border: "1px solid rgba(255,200,80,0.15)",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                  }}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Trophy className="h-3.5 w-3.5 text-amber-400" />
+                    <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider">Top Gifters</span>
+                  </div>
+                  {Object.entries(topGifters)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 3)
+                    .map(([name, coins], i) => {
+                      const medals = ["🥇", "🥈", "🥉"];
+                      const colors = ["text-amber-300", "text-gray-300", "text-orange-400"];
+                      return (
+                        <div key={name} className="flex items-center gap-2">
+                          <span className="text-sm">{medals[i]}</span>
+                          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                            <span className="text-[8px] text-white font-bold">{name[0]}</span>
+                          </div>
+                          <span className="text-[11px] text-white/80 font-medium truncate flex-1">{name}</span>
+                          <span className={cn("text-[10px] font-bold", colors[i])}>{coins.toLocaleString()}</span>
+                        </div>
+                      );
+                    })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Quick reaction bar — leave room for side action buttons */}
           <div className="px-4 pr-16 mb-2 flex gap-1.5 overflow-x-auto scrollbar-hide">
