@@ -781,6 +781,17 @@ export default function GoLivePage() {
     addPkScore(totalCoins);
   }, [spawnFloatingReaction, giftCombo, addPkScore]);
 
+  // ── Animated coin counter for ended screen ──
+  useEffect(() => {
+    if (phase === "ended" && coinsEarned > 0 && displayedCoins < coinsEarned) {
+      const step = Math.max(1, Math.ceil(coinsEarned / 40));
+      const timer = setTimeout(() => {
+        setDisplayedCoins((p) => Math.min(p + step, coinsEarned));
+      }, 30);
+      return () => clearTimeout(timer);
+    }
+  }, [phase, coinsEarned, displayedCoins]);
+
   // ── Ended screen ──
   if (phase === "ended") {
     return (
