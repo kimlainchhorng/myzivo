@@ -200,17 +200,28 @@ export default function GoLivePage() {
       toast.error("Please add a title for your stream");
       return;
     }
-    setPhase("live");
-    // Pinned welcome message
-    setChatMessages([{
-      id: "welcome",
-      user: "ZIVO",
-      text: `Welcome to "${title}"! Be respectful and have fun 🎉`,
-      isSystem: true,
-      isPinned: true,
-      avatar: "bg-red-500",
-    }]);
-    toast.success("You're live! 🔴");
+    // Start countdown
+    setPhase("countdown");
+    setCountdown(3);
+    let c = 3;
+    const iv = setInterval(() => {
+      c -= 1;
+      if (c <= 0) {
+        clearInterval(iv);
+        setPhase("live");
+        setChatMessages([{
+          id: "welcome",
+          user: "ZIVO",
+          text: `Welcome to "${title}"! Be respectful and have fun 🎉`,
+          isSystem: true,
+          isPinned: true,
+          avatar: "bg-red-500",
+        }]);
+        toast.success("You're live! 🔴");
+      } else {
+        setCountdown(c);
+      }
+    }, 1000);
   }, [title]);
 
   // Auto-scroll chat to bottom
@@ -240,7 +251,7 @@ export default function GoLivePage() {
           const delta = Math.random() > 0.4 ? Math.floor(Math.random() * 3) : -Math.floor(Math.random() * 2);
           const next = Math.max(0, p + delta);
           setPeakViewers((pk) => Math.max(pk, next));
-          // Milestone celebrations
+          if (next !== p) { setViewerPulse(true); setTimeout(() => setViewerPulse(false), 600); }
           const milestones = [10, 25, 50, 100, 250, 500];
           for (const m of milestones) {
             if (next >= m && p < m && m > lastMilestoneRef.current) {
@@ -552,13 +563,12 @@ export default function GoLivePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
         {/* Double-tap to heart */}
         {phase === "live" && (
-          <div
-            className="absolute inset-0 z-[1]"
-            onDoubleClick={() => {
-              sendReaction("❤️");
-              setLikes((p) => p + 1);
-            }}
-          />
+           <div
+             className="absolute inset-0 z-[1]"
+             onDoubleClick={() => {
+               spawnFloatingReaction("❤️");
+             }}
+           />
         )}
       </div>
 
