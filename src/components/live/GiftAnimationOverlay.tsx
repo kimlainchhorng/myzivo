@@ -19,7 +19,6 @@ interface GiftAnimationOverlayProps {
 export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCount = 1 }: GiftAnimationOverlayProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const onCompleteRef = useRef(onComplete);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [animKey, setAnimKey] = useState(0);
 
   onCompleteRef.current = onComplete;
