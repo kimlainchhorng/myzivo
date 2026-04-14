@@ -783,11 +783,12 @@ export default function GoLivePage() {
     
     // Play sound effects
     if (soundEnabled) {
-      const isPremium = !!giftAnimationVideos[gift.name];
-      if (isPremium) {
+      if (gift.coins >= 20000) {
+        playLegendaryGiftSound();
+      } else if (!!giftAnimationVideos[gift.name]) {
         playPremiumGiftSound();
       } else {
-        playGiftSound(newCombo);
+        playGiftSound(newCombo, gift.coins);
       }
     }
     
