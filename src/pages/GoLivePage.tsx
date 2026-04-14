@@ -198,10 +198,34 @@ export default function GoLivePage() {
       return;
     }
     setPhase("live");
+    // Pinned welcome message
+    setChatMessages([{
+      id: "welcome",
+      user: "ZIVO",
+      text: `Welcome to "${title}"! Be respectful and have fun 🎉`,
+      isSystem: true,
+      isPinned: true,
+      avatar: "bg-red-500",
+    }]);
     toast.success("You're live! 🔴");
   }, [title]);
 
-  // Simulate viewers & likes
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
+
+  // Goal celebration
+  useEffect(() => {
+    if (coinsEarned >= streamGoal && !goalCelebrated) {
+      setGoalCelebrated(true);
+      toast.success("🎉 Stream goal reached! Amazing!", { duration: 5000 });
+      // Burst of reactions
+      ["🎉", "🥳", "✨", "🎊", "💎"].forEach((e, i) => {
+        setTimeout(() => spawnFloatingReaction(e), i * 200);
+      });
+    }
+  }, [coinsEarned, streamGoal, goalCelebrated, spawnFloatingReaction]);
   useEffect(() => {
     if (phase !== "live") return;
     const names = ["Alex", "Jordan", "Sam", "Taylor", "Morgan", "Riley", "Casey", "Mia", "Luna", "Kai"];
