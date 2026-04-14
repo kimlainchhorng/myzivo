@@ -215,18 +215,8 @@ export default function GoLivePage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
-  // Goal celebration
-  useEffect(() => {
-    if (coinsEarned >= streamGoal && !goalCelebrated) {
-      setGoalCelebrated(true);
-      toast.success("🎉 Stream goal reached! Amazing!", { duration: 5000 });
-      // Burst of reactions
-      ["🎉", "🥳", "✨", "🎊", "💎"].forEach((e, i) => {
-        setTimeout(() => spawnFloatingReaction(e), i * 200);
-      });
-    }
-  }, [coinsEarned, streamGoal, goalCelebrated, spawnFloatingReaction]);
-  useEffect(() => {
+
+  // Simulate viewers & likes
     if (phase !== "live") return;
     const names = ["Alex", "Jordan", "Sam", "Taylor", "Morgan", "Riley", "Casey", "Mia", "Luna", "Kai"];
     const msgs = ["🔥🔥🔥", "This is amazing!", "Hello from NYC!", "Love this!", "First time here ❤️", "Keep going!", "Wow 😍", "👏👏👏", "You're amazing!", "Can't stop watching 🤩"];
