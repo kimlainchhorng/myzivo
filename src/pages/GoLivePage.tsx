@@ -592,6 +592,8 @@ export default function GoLivePage() {
               <p className="text-white text-sm font-semibold truncate">{title}</p>
               <div className="flex items-center gap-2">
                 <span className="text-white/40 text-[10px]">{topic}</span>
+                <span className="text-white/25 text-[10px]">·</span>
+                <span className="text-white/40 text-[10px]">{fakeFollowers.current.toLocaleString()} followers</span>
                 {giftsReceived > 0 && (
                   <span className="text-amber-300 text-[10px] flex items-center gap-0.5">
                     <img src={goldCoinIcon} alt="" className="w-3 h-3" /> {coinsEarned}
