@@ -437,8 +437,8 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 <p className="text-[10px] text-amber-300 font-bold">sent {notif.giftName}</p>
               </div>
               <div className="w-7 h-7 flex items-center justify-center">
-                {giftImages[notif.icon] ? (
-                  <img src={giftImages[notif.icon]} alt="" className="w-6 h-6 object-contain" />
+                {giftImages[notif.giftName] ? (
+                  <img src={giftImages[notif.giftName]} alt="" className="w-6 h-6 object-contain" />
                 ) : (
                   <span className="text-base">🎁</span>
                 )}
