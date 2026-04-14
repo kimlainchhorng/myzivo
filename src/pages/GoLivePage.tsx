@@ -275,8 +275,10 @@ export default function GoLivePage() {
               id: now.toString(),
               user: name,
               text: msgs[Math.floor(Math.random() * msgs.length)],
-              avatar: avatarColors[Math.floor(Math.random() * avatarColors.length)]
+              avatar: avatarColors[Math.floor(Math.random() * avatarColors.length)],
+              level: Math.floor(Math.random() * 50) + 1,
             },
+          ]);
           ]);
         }
         lastChat = now;
