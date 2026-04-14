@@ -944,6 +944,9 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                         gift.badge === "Popular" ? "bg-pink-500 text-white" :
                         gift.badge === "NEW" ? "bg-red-500 text-white" :
                         gift.badge === "Ultimate" ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-white" :
+                        gift.badge === "Legendary" ? "bg-gradient-to-r from-purple-500 to-violet-500 text-white" :
+                        gift.badge === "Supreme" ? "bg-gradient-to-r from-rose-500 to-red-600 text-white" :
+                        gift.badge === "Luxury" ? "bg-gradient-to-r from-slate-400 to-zinc-500 text-white" :
                         "bg-blue-500/80 text-white"
                       )}>
                         {gift.badge}
