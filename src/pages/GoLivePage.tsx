@@ -1198,14 +1198,24 @@ export default function GoLivePage() {
                           <div className="flex items-center gap-1">
                             <img src={goldCoinIcon} alt="" className="w-3 h-3" />
                             <span className="text-amber-300 text-[11px] font-bold">{selectedGift.coins.toLocaleString()}</span>
+                            {selectedGift.coins >= 500 && (
+                              <span className="text-[9px] text-red-400 font-medium ml-1">Premium</span>
+                            )}
                           </div>
                         </div>
                         <button
                           onClick={() => { sendGift(selectedGift); setSelectedGift(null); }}
-                          className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full px-5 py-2 shadow-lg shadow-amber-500/25 active:scale-95 transition-transform"
+                          className={cn(
+                            "flex items-center gap-1.5 rounded-full px-5 py-2 shadow-lg active:scale-95 transition-transform",
+                            selectedGift.coins >= 500
+                              ? "bg-gradient-to-r from-red-500 to-rose-500 shadow-red-500/25"
+                              : "bg-gradient-to-r from-amber-500 to-yellow-400 shadow-amber-500/25"
+                          )}
                         >
                           <Send className="h-3.5 w-3.5 text-white" />
-                          <span className="text-white text-xs font-bold">Send</span>
+                          <span className="text-white text-xs font-bold">
+                            {selectedGift.coins >= 500 ? "Send!" : "Send"}
+                          </span>
                         </button>
                       </div>
                     </motion.div>
