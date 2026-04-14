@@ -77,6 +77,12 @@ export default function GoLivePage() {
   const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
   const [giftCombo, setGiftCombo] = useState(0);
   const [viewerGiftNotif, setViewerGiftNotif] = useState<{ id: string; sender: string; giftName: string; coins: number } | null>(null);
+  // ── Gift notification queue (right-side stacked, TikTok-style) ──
+  const [giftNotifQueue, setGiftNotifQueue] = useState<{ id: string; sender: string; giftName: string; coins: number }[]>([]);
+  // ── "Gift Sent!" flyout when user sends ──
+  const [sentGiftFlyout, setSentGiftFlyout] = useState<{ id: string; giftName: string; coins: number; qty: number } | null>(null);
+  // ── Send button sparkle burst ──
+  const [sendSparkle, setSendSparkle] = useState(false);
   const lastGiftRef = useRef<{ name: string; time: number }>({ name: "", time: 0 });
   const [topGifters, setTopGifters] = useState<Record<string, number>>({});
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -442,6 +448,8 @@ export default function GoLivePage() {
         const sender = viewers[Math.floor(Math.random() * viewers.length)];
         const notif = { id: Date.now().toString(), sender, giftName: giftNames[idx], coins: giftCoins[idx] };
         setViewerGiftNotif(notif);
+        // Push to right-side queue (max 3)
+        setGiftNotifQueue((prev) => [notif, ...prev].slice(0, 3));
         setGiftsReceived((p) => p + 1);
         setCoinsEarned((p) => p + giftCoins[idx]);
         setTopGifters((prev) => ({ ...prev, [sender]: (prev[sender] || 0) + giftCoins[idx] }));
@@ -472,6 +480,8 @@ export default function GoLivePage() {
         giftStreakTimerRef.current = setTimeout(() => setGiftStreakCount(0), 10000);
         lastGiftTimeRef.current = now;
         setTimeout(() => setViewerGiftNotif((cur) => cur?.id === notif.id ? null : cur), 4000);
+        // Remove from queue after 5s
+        setTimeout(() => setGiftNotifQueue((prev) => prev.filter((n) => n.id !== notif.id)), 5000);
         scheduleNext();
       }, delay);
     };
@@ -777,6 +787,12 @@ export default function GoLivePage() {
     
     setActiveGiftAnim({ name: gift.name, coins: totalCoins, senderName: sender });
     setGiftQty(1); // Reset qty after send
+    // ── "Gift Sent!" flyout on right side ──
+    const flyoutId = `sent-${Date.now()}`;
+    setSentGiftFlyout({ id: flyoutId, giftName: gift.name, coins: totalCoins, qty });
+    setSendSparkle(true);
+    setTimeout(() => setSendSparkle(false), 600);
+    setTimeout(() => setSentGiftFlyout((cur) => cur?.id === flyoutId ? null : cur), 2500);
     // Add to PK Battle score if active
     addPkScore(totalCoins);
   }, [spawnFloatingReaction, giftCombo, addPkScore]);
@@ -934,7 +950,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); setPkBattle(null); setTreasureChest(null); setCoHosts([]); setShowGuestInvite(false); setVipEntrance(null); setMutedUsers(new Set()); setActiveSticker(null); setShowStickerPanel(false); setClipSaved(false); setShowRevenueDash(false); setShowTop3Banner(true); setComboMultiplierText(null); setGiftStreakCount(0); setSuperChat(null); setMilestoneEffect(null); setWaveActive(false); setTrendingWord(null); setHashtags([]); setHashtagInput(""); setBgMusic(null); setScreenEffect(null); setStreamRating(0); setDisplayedCoins(0); lastMilestoneRef.current = 0; startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); setPkBattle(null); setTreasureChest(null); setCoHosts([]); setShowGuestInvite(false); setVipEntrance(null); setMutedUsers(new Set()); setActiveSticker(null); setShowStickerPanel(false); setClipSaved(false); setShowRevenueDash(false); setShowTop3Banner(true); setComboMultiplierText(null); setGiftStreakCount(0); setSuperChat(null); setMilestoneEffect(null); setWaveActive(false); setTrendingWord(null); setHashtags([]); setHashtagInput(""); setBgMusic(null); setScreenEffect(null); setStreamRating(0); setDisplayedCoins(0); setGiftNotifQueue([]); setSentGiftFlyout(null); setSendSparkle(false); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -1561,40 +1577,112 @@ export default function GoLivePage() {
             ))}
           </AnimatePresence>
 
-          {/* Viewer gift notification — animated toast at top */}
+          {/* ── Right-side stacked gift notification queue (TikTok-style) ── */}
+          <div className="absolute right-2 top-[170px] z-30 flex flex-col gap-2 items-end w-[200px]">
+            <AnimatePresence>
+              {giftNotifQueue.map((notif, idx) => (
+                <motion.div
+                  key={notif.id}
+                  initial={{ x: 200, opacity: 0, scale: 0.7 }}
+                  animate={{ x: 0, opacity: idx === 0 ? 1 : 0.7 - idx * 0.15, scale: idx === 0 ? 1 : 0.92 - idx * 0.04 }}
+                  exit={{ x: 200, opacity: 0, scale: 0.5 }}
+                  transition={{ type: "spring", damping: 18, stiffness: 220 }}
+                  className="w-full"
+                >
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-2 rounded-2xl"
+                    style={{
+                      background: idx === 0
+                        ? "linear-gradient(260deg, rgba(120,80,10,0.9) 0%, rgba(180,130,30,0.75) 50%, rgba(220,170,50,0.45) 90%, transparent 100%)"
+                        : "linear-gradient(260deg, rgba(80,60,10,0.7) 0%, rgba(140,100,20,0.5) 60%, transparent 100%)",
+                      backdropFilter: "blur(10px)",
+                      boxShadow: idx === 0 ? "0 4px 20px rgba(255,170,0,0.3)" : "0 2px 10px rgba(255,170,0,0.1)",
+                      border: "1px solid rgba(255,200,80,0.15)",
+                    }}
+                  >
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center text-white font-bold text-[10px] shrink-0 ring-1 ring-amber-300/30">
+                      {notif.sender[0]}
+                    </div>
+                    {giftImages[notif.giftName] && (
+                      <motion.img
+                        src={giftImages[notif.giftName]}
+                        alt=""
+                        className="w-6 h-6 object-contain -ml-2 mb-[-4px] relative z-10"
+                        style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.4))" }}
+                        initial={{ scale: 0, rotate: -20 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: "spring", delay: 0.1 }}
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-white text-[10px] font-bold truncate leading-tight">{notif.sender}</p>
+                      <p className="text-amber-100/70 text-[9px] leading-tight">sent <span className="text-white font-semibold">{notif.giftName}</span></p>
+                    </div>
+                    <div className="flex items-center gap-0.5 bg-black/30 rounded-full px-1.5 py-0.5 shrink-0">
+                      <img src={goldCoinIcon} alt="" className="w-2.5 h-2.5" />
+                      <span className="text-amber-200 text-[9px] font-bold">{notif.coins}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+
+          {/* ── "Gift Sent!" flyout — slides from right when user sends ── */}
           <AnimatePresence>
-            {viewerGiftNotif && (
+            {sentGiftFlyout && (
               <motion.div
-                key={viewerGiftNotif.id}
-                initial={{ x: -300, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -300, opacity: 0 }}
-                transition={{ type: "spring", damping: 20, stiffness: 200 }}
-                className="absolute top-[210px] left-3 right-16 z-30"
+                key={sentGiftFlyout.id}
+                initial={{ x: 300, opacity: 0, scale: 0.5 }}
+                animate={{ x: 0, opacity: 1, scale: 1 }}
+                exit={{ x: 300, opacity: 0, scale: 0.7 }}
+                transition={{ type: "spring", damping: 16, stiffness: 200 }}
+                className="absolute right-3 bottom-[280px] z-40"
               >
                 <div
-                  className="flex items-center gap-2 px-3 py-2 rounded-2xl"
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-2xl"
                   style={{
-                    background: "linear-gradient(95deg, rgba(120,80,10,0.85) 0%, rgba(180,130,30,0.7) 40%, rgba(220,170,50,0.4) 80%, transparent 100%)",
-                    backdropFilter: "blur(10px)",
-                    boxShadow: "0 4px 20px rgba(255,170,0,0.25)",
-                    border: "1px solid rgba(255,200,80,0.15)",
+                    background: "linear-gradient(135deg, rgba(16,185,129,0.9) 0%, rgba(5,150,105,0.8) 50%, rgba(4,120,87,0.6) 100%)",
+                    backdropFilter: "blur(12px)",
+                    boxShadow: "0 4px 24px rgba(16,185,129,0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
+                    border: "1px solid rgba(16,185,129,0.3)",
                   }}
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 flex items-center justify-center text-white font-bold text-xs shrink-0">
-                    {viewerGiftNotif.sender[0]}
-                  </div>
-                  {giftImages[viewerGiftNotif.giftName] && (
-                    <img src={giftImages[viewerGiftNotif.giftName]} alt="" className="w-7 h-7 object-contain -ml-3 mb-[-6px] relative z-10" style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.4))" }} />
+                  {giftImages[sentGiftFlyout.giftName] ? (
+                    <motion.img
+                      src={giftImages[sentGiftFlyout.giftName]}
+                      alt=""
+                      className="w-8 h-8 object-contain"
+                      style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}
+                      animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.15, 1] }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  ) : (
+                    <span className="text-2xl">🎁</span>
                   )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-white text-[11px] font-bold truncate">{viewerGiftNotif.sender}</p>
-                    <p className="text-amber-100/80 text-[10px]">sent <span className="text-white font-semibold">{viewerGiftNotif.giftName}</span></p>
+                  <div>
+                    <p className="text-white text-[11px] font-bold">
+                      ✓ Gift Sent!{sentGiftFlyout.qty > 1 ? ` x${sentGiftFlyout.qty}` : ""}
+                    </p>
+                    <div className="flex items-center gap-1">
+                      <img src={goldCoinIcon} alt="" className="w-3 h-3" />
+                      <span className="text-emerald-100 text-[10px] font-semibold">{sentGiftFlyout.coins.toLocaleString()}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-0.5 bg-black/25 rounded-full px-2 py-0.5">
-                    <img src={goldCoinIcon} alt="" className="w-3 h-3" />
-                    <span className="text-amber-200 text-[10px] font-bold">{viewerGiftNotif.coins}</span>
-                  </div>
+                  {/* Sparkle particles */}
+                  {[...Array(6)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-1 h-1 rounded-full bg-white"
+                      initial={{ opacity: 1, x: 0, y: 0 }}
+                      animate={{
+                        opacity: 0,
+                        x: Math.cos((i / 6) * Math.PI * 2) * 40,
+                        y: Math.sin((i / 6) * Math.PI * 2) * 40,
+                      }}
+                      transition={{ duration: 0.8, delay: i * 0.05 }}
+                    />
+                  ))}
                 </div>
               </motion.div>
             )}
@@ -2134,12 +2222,31 @@ export default function GoLivePage() {
                         <button
                           onClick={() => { sendGift(selectedGift, giftQty); setSelectedGift(null); }}
                           className={cn(
-                            "flex items-center gap-1.5 rounded-full px-4 py-2 shadow-lg active:scale-95 transition-transform shrink-0",
+                            "relative flex items-center gap-1.5 rounded-full px-4 py-2.5 shadow-lg active:scale-90 transition-all shrink-0 overflow-hidden",
                             selectedGift.coins >= 500
                               ? "bg-gradient-to-r from-red-500 to-rose-500 shadow-red-500/25"
                               : "bg-gradient-to-r from-amber-500 to-yellow-400 shadow-amber-500/25"
                           )}
                         >
+                          {/* Send sparkle burst */}
+                          {sendSparkle && (
+                            <>
+                              {[...Array(8)].map((_, i) => (
+                                <motion.div
+                                  key={i}
+                                  className="absolute w-1 h-1 rounded-full bg-white"
+                                  initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+                                  animate={{
+                                    opacity: 0,
+                                    x: Math.cos((i / 8) * Math.PI * 2) * 30,
+                                    y: Math.sin((i / 8) * Math.PI * 2) * 30,
+                                    scale: 0,
+                                  }}
+                                  transition={{ duration: 0.5, delay: i * 0.03 }}
+                                />
+                              ))}
+                            </>
+                          )}
                           <Send className="h-3.5 w-3.5 text-white" />
                           <span className="text-white text-xs font-bold">
                             {giftQty > 1 ? `x${giftQty}` : selectedGift.coins >= 500 ? "Send!" : "Send"}
