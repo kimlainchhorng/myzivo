@@ -944,6 +944,28 @@ export default function GoLivePage() {
             <span className="text-purple-300 text-sm font-semibold">Save Highlights & Replay</span>
           </button>
 
+          {/* Stream Rating */}
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 space-y-2">
+            <p className="text-xs text-white/50 font-medium">How was your stream?</p>
+            <div className="flex justify-center gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => { setStreamRating(star); toast.success(`Rated ${star} ⭐`); }}
+                  className={cn(
+                    "text-2xl transition-all duration-200",
+                    star <= streamRating ? "scale-110" : "opacity-30 hover:opacity-60"
+                  )}
+                >
+                  ⭐
+                </button>
+              ))}
+            </div>
+            {streamRating > 0 && (
+              <p className="text-[10px] text-white/30">{streamRating >= 4 ? "Amazing stream! 🎉" : streamRating >= 3 ? "Good work! Keep going 💪" : "Every stream makes you better! 📈"}</p>
+            )}
+          </div>
+
           {/* Schedule Next Stream */}
           <button
             onClick={() => toast("📅 Stream scheduling coming soon!", { description: "Set a time and notify your followers automatically." })}
