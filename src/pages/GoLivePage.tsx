@@ -175,6 +175,9 @@ export default function GoLivePage() {
   // ── NEW v4: Animated coin counter (ended) ──
   const [displayedCoins, setDisplayedCoins] = useState(0);
 
+  // ── Expandable sidebar "More Tools" ──
+  const [showMoreTools, setShowMoreTools] = useState(false);
+
   const cameraFilters: Record<string, string> = useMemo(() => ({
     none: "",
     warm: "sepia(0.25) saturate(1.3) brightness(1.05)",
