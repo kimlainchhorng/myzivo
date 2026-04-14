@@ -495,11 +495,13 @@ export default function GoLivePage() {
     lastGiftRef.current = { name: gift.name, time: now };
     
     // Play sound effects
-    const isPremium = !!giftAnimationVideos[gift.name];
-    if (isPremium) {
-      playPremiumGiftSound();
-    } else {
-      playGiftSound(newCombo);
+    if (soundEnabled) {
+      const isPremium = !!giftAnimationVideos[gift.name];
+      if (isPremium) {
+        playPremiumGiftSound();
+      } else {
+        playGiftSound(newCombo);
+      }
     }
     
     setActiveGiftAnim({ name: gift.name, coins: totalCoins, senderName: sender });
