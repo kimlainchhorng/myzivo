@@ -2234,7 +2234,11 @@ export default function GoLivePage() {
                           ))}
                         </div>
                         <button
-                          onClick={() => { sendGift(selectedGift, giftQty); setSelectedGift(null); }}
+                          onClick={() => {
+                            sendGift(selectedGift, giftQty);
+                            setSelectedGift(null);
+                            setShowGiftPanel(false);
+                          }}
                           className={cn(
                             "relative flex items-center gap-1.5 rounded-full px-4 py-2.5 shadow-lg active:scale-90 transition-all shrink-0 overflow-hidden",
                             selectedGift.coins >= 500
