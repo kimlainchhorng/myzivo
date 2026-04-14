@@ -70,6 +70,8 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   ]);
   const [elapsed, setElapsed] = useState(0);
   const [doubleTapHeart, setDoubleTapHeart] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [showRanking, setShowRanking] = useState(false);
+  const [superChatMsg, setSuperChatMsg] = useState<{ id: string; user: string; text: string; coins: number } | null>(null);
   const lastTapRef = useRef<number>(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const pinnedMessage = useMemo(() => `Welcome to ${stream.host_name}'s stream! Be respectful and have fun 🎉`, [stream.host_name]);
@@ -165,6 +167,21 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     }, 5000);
     return () => clearInterval(interval);
   }, [fakeViewerNames, giftCatalog]);
+
+  // Simulate super chats from viewers
+  useEffect(() => {
+    const superChatMsgs = ["Love this stream! 🔥", "Keep going! 💪", "You're the best! ⭐", "Shoutout please! 🎤", "Amazing content! 💯"];
+    const interval = setInterval(() => {
+      if (Math.random() < 0.15) {
+        const user = fakeViewerNames[Math.floor(Math.random() * fakeViewerNames.length)];
+        const text = superChatMsgs[Math.floor(Math.random() * superChatMsgs.length)];
+        const coins = [50, 100, 200, 500][Math.floor(Math.random() * 4)];
+        setSuperChatMsg({ id: `sc-${Date.now()}`, user, text, coins });
+        setTimeout(() => setSuperChatMsg(null), 5000);
+      }
+    }, 12000);
+    return () => clearInterval(interval);
+  }, [fakeViewerNames]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -392,32 +409,111 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         </AnimatePresence>
       </div>
 
-      {/* ── Right sidebar actions ── */}
-      <div className="absolute right-3 z-20 flex flex-col gap-3 items-center" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 160px)" }}>
+      {/* ── Right sidebar actions (TikTok Live style) ── */}
+      <div className="absolute right-3 z-20 flex flex-col gap-2.5 items-center" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 160px)" }}>
         {/* Mute */}
         <button onClick={() => setMuted(!muted)} className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-          {muted ? <VolumeX className="h-5 w-5 text-white/70" /> : <Volume2 className="h-5 w-5 text-white/70" />}
+          {muted ? <VolumeX className="h-4 w-4 text-white/70" /> : <Volume2 className="h-4 w-4 text-white/70" />}
         </button>
         {/* Share */}
         <button onClick={handleShare} className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-          <Share2 className="h-5 w-5 text-white" />
+          <Share2 className="h-4 w-4 text-white" />
         </button>
-        {/* Heart */}
+        {/* Ranking / Leaderboard */}
+        <button
+          onClick={() => setShowRanking(!showRanking)}
+          className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center"
+        >
+          <Crown className="h-4 w-4 text-amber-400" />
+          <span className="text-[7px] text-amber-300 -mt-0.5">Rank</span>
+        </button>
+        {/* Heart / Like */}
         <button
           onClick={() => sendReaction("❤️")}
           className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center"
         >
-          <Heart className="h-5 w-5 text-red-400 fill-red-400" />
-          {likes > 0 && <span className="text-[9px] text-white/70 -mt-0.5">{likes}</span>}
+          <Heart className="h-4 w-4 text-red-400 fill-red-400" />
+          {likes > 0 && <span className="text-[8px] text-white/60 -mt-0.5">{likes > 999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>}
         </button>
-        {/* Gift */}
+        {/* Gift (large, primary CTA) */}
         <button
           onClick={() => setShowGiftPanel(true)}
-          className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30"
+          className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30 animate-pulse"
         >
           <Gift className="h-5 w-5 text-white" />
         </button>
       </div>
+
+      {/* ── Ranking/Leaderboard Panel ── */}
+      <AnimatePresence>
+        {showRanking && (
+          <motion.div
+            initial={{ x: 200, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 200, opacity: 0 }}
+            transition={{ type: "spring", damping: 20 }}
+            className="absolute right-2 z-40 w-52 bg-black/80 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 80px)" }}
+          >
+            <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
+              <div className="flex items-center gap-1.5">
+                <Crown className="h-3.5 w-3.5 text-amber-400" />
+                <span className="text-xs font-bold text-white">Top Gifters</span>
+              </div>
+              <button onClick={() => setShowRanking(false)} className="text-white/40">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="p-2 space-y-1">
+              {topGifters.length === 0 ? (
+                <p className="text-[10px] text-white/40 text-center py-3">No gifts yet — be the first! 🎁</p>
+              ) : (
+                topGifters.map((g, i) => (
+                  <div key={g.name} className={cn(
+                    "flex items-center gap-2 px-2 py-1.5 rounded-xl",
+                    i === 0 ? "bg-amber-500/15" : "bg-white/5"
+                  )}>
+                    <span className="text-sm">{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</span>
+                    <span className="text-[11px] text-white font-medium flex-1 truncate">{g.name}</span>
+                    <div className="flex items-center gap-0.5">
+                      <img src={goldCoinIcon} alt="" className="w-3 h-3" />
+                      <span className="text-[10px] text-amber-300 font-bold">{g.coins.toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            {/* Viewer's own rank hint */}
+            <div className="px-3 py-2 border-t border-white/10 bg-white/5">
+              <p className="text-[9px] text-white/40 text-center">Send gifts to climb the rankings! 🏆</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Super Chat floating ── */}
+      <AnimatePresence>
+        {superChatMsg && (
+          <motion.div
+            key={superChatMsg.id}
+            initial={{ y: -20, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -20, opacity: 0 }}
+            className="absolute left-3 right-16 z-30 bg-gradient-to-r from-amber-500/30 to-orange-500/20 backdrop-blur-sm border border-amber-500/30 rounded-xl px-3 py-2"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 160px)" }}
+          >
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className="text-[9px] font-bold bg-amber-500/40 text-amber-200 px-1.5 py-0.5 rounded">💬 SUPER CHAT</span>
+              <span className="text-[10px] text-amber-300 font-bold">{superChatMsg.user}</span>
+              <div className="flex items-center gap-0.5 ml-auto">
+                <img src={goldCoinIcon} alt="" className="w-3 h-3" />
+                <span className="text-[9px] text-amber-300 font-bold">{superChatMsg.coins}</span>
+              </div>
+            </div>
+            <p className="text-[11px] text-white">{superChatMsg.text}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Chat overlay (bottom-left) ── */}
       <div className="absolute left-0 right-16 z-20" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 60px)" }}>
