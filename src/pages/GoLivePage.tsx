@@ -419,9 +419,50 @@ export default function GoLivePage() {
 
   const sendChat = useCallback(() => {
     if (!chatInput.trim()) return;
+    if (slowMode && slowModeCooldown > 0) {
+      toast(`⏳ Slow mode: wait ${slowModeCooldown}s`, { duration: 1500 });
+      return;
+    }
     setChatMessages((prev) => [...prev.slice(-20), { id: Date.now().toString(), user: "You (Host)", text: chatInput, avatar: "bg-red-500" }]);
     setChatInput("");
-  }, [chatInput]);
+    if (slowMode) {
+      setSlowModeCooldown(5);
+      const iv = setInterval(() => {
+        setSlowModeCooldown((p) => { if (p <= 1) { clearInterval(iv); return 0; } return p - 1; });
+      }, 1000);
+    }
+  }, [chatInput, slowMode, slowModeCooldown]);
+
+  // Helper: get top gifter name
+  const topGifterName = useMemo(() => {
+    const entries = Object.entries(topGifters);
+    if (entries.length === 0) return null;
+    return entries.sort(([, a], [, b]) => b - a)[0][0];
+  }, [topGifters]);
+
+  // Create poll
+  const createPoll = useCallback(() => {
+    const q = pollQuestion.trim();
+    const opts = pollOptions.filter((o) => o.trim());
+    if (!q || opts.length < 2) { toast.error("Need a question and at least 2 options"); return; }
+    setActivePoll({ question: q, options: opts, votes: opts.map(() => 0), totalVotes: 0, expiresAt: Date.now() + 60000 });
+    setShowPollCreator(false);
+    setPollQuestion("");
+    setPollOptions(["", ""]);
+    setChatMessages((prev) => [...prev.slice(-20), { id: `poll-${Date.now()}`, user: "📊", text: `Poll: "${q}" — Vote now!`, isSystem: true }]);
+    toast.success("📊 Poll created!");
+    // Auto simulate votes
+    const voteIv = setInterval(() => {
+      setActivePoll((prev) => {
+        if (!prev || Date.now() > prev.expiresAt) { clearInterval(voteIv); return null; }
+        const idx = Math.floor(Math.random() * prev.options.length);
+        const newVotes = [...prev.votes];
+        newVotes[idx] += 1;
+        return { ...prev, votes: newVotes, totalVotes: prev.totalVotes + 1 };
+      });
+    }, 3000 + Math.random() * 4000);
+    setTimeout(() => clearInterval(voteIv), 60000);
+  }, [pollQuestion, pollOptions]);
 
   const spawnFloatingReaction = useCallback((emoji: string) => {
     const id = `${Date.now()}-${Math.random()}`;
