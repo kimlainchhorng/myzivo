@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef, Re
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { setupActivityTracking, clearSessionArtifacts } from "@/lib/security/sessionSecurity";
+import { getDeviceFingerprint } from "@/lib/security/deviceFingerprint";
 
 type AuthContextType = {
   user: User | null;
@@ -217,6 +218,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = useCallback(async () => {
     explicitSignOutRef.current = true;
     clearSessionArtifacts();
+
+    // Remove this device from trusted devices (so next login requires OTP again)
+    const currentUser = user;
+    if (currentUser) {
+      try {
+        const fingerprint = getDeviceFingerprint();
+        await supabase.rpc("remove_trusted_device", {
+          _user_id: currentUser.id,
+          _device_fingerprint: fingerprint,
+        });
+      } catch {
+        // Non-critical
+      }
+    }
+
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
@@ -225,7 +241,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setTimeout(() => {
       explicitSignOutRef.current = false;
     }, 1000);
-  }, []);
+  }, [user]);
 
   // Session security: idle timeout and max age enforcement
   useEffect(() => {
