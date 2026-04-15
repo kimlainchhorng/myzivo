@@ -427,12 +427,11 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", delay: 0.3, stiffness: 300 }}
-              className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 ring-2"
+              className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 ring-2 ring-amber-300/40"
               style={{
                 background: isUltra
                   ? "linear-gradient(135deg, #FFD700 0%, #FF8C00 50%, #FF4500 100%)"
                   : "linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%)",
-                ringColor: "rgba(255,200,50,0.4)",
                 boxShadow: isUltra
                   ? "0 2px 16px rgba(255,150,0,0.6), 0 0 20px rgba(255,100,0,0.2)"
                   : "0 2px 10px rgba(255,150,0,0.4)",
