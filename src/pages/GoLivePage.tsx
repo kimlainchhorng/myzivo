@@ -864,6 +864,9 @@ export default function GoLivePage() {
                 {displayedCoins.toLocaleString()}
               </motion.p>
               <p className="text-[10px] text-amber-400/60 uppercase tracking-wider">Z Coins Earned</p>
+              {coinsEarned > 0 && (
+                <p className="text-[11px] text-green-400 font-semibold mt-1">≈ ${(coinsEarned * 0.005).toFixed(2)}</p>
+              )}
             </div>
           </div>
 
@@ -961,15 +964,45 @@ export default function GoLivePage() {
             </Button>
           </div>
 
-          {/* Wallet CTA */}
+          {/* Earnings Cash-Out Card */}
           {coinsEarned > 0 && (
-            <button
-              onClick={() => navigate("/wallet")}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r from-amber-500/15 to-yellow-500/10 border border-amber-500/20 active:scale-[0.98] transition-transform mt-1"
-            >
-              <img src={goldCoinIcon} alt="" className="w-5 h-5" />
-              <span className="text-amber-300 text-sm font-semibold">View Wallet & Earnings</span>
-            </button>
+            <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 rounded-2xl p-4 border border-green-500/20 space-y-3 mt-1">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <DollarSign className="h-4 w-4 text-green-400" />
+                </div>
+                <div className="text-left">
+                  <p className="text-white text-sm font-bold">Stream Earnings</p>
+                  <p className="text-white/40 text-[10px]">Coins convert at $0.005 per coin</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between bg-black/20 rounded-xl px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <img src={goldCoinIcon} alt="" className="w-5 h-5" />
+                  <span className="text-amber-300 text-sm font-semibold">{coinsEarned.toLocaleString()} coins</span>
+                </div>
+                <span className="text-green-400 text-lg font-bold">${(coinsEarned * 0.005).toFixed(2)}</span>
+              </div>
+              <button
+                onClick={() => {
+                  if (cashedOut) return;
+                  setCashedOut(true);
+                  toast.success(`$${(coinsEarned * 0.005).toFixed(2)} added to your ZIVO Wallet!`, {
+                    description: `${coinsEarned.toLocaleString()} coins converted`,
+                    duration: 4000,
+                  });
+                }}
+                disabled={cashedOut}
+                className={cn(
+                  "w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-[0.97]",
+                  cashedOut
+                    ? "bg-green-500/20 text-green-300 cursor-default"
+                    : "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20 hover:from-green-600 hover:to-emerald-700"
+                )}
+              >
+                {cashedOut ? "✓ Cashed Out to Wallet" : `Cash Out $${(coinsEarned * 0.005).toFixed(2)} to Wallet`}
+              </button>
+            </div>
           )}
 
           {/* ── NEW: Save Highlights & Replay ── */}
