@@ -327,11 +327,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       setTimeout(() => setComboMultiplierText(null), 2500);
     }
 
-    // Gift-sent flyout — use combo count for tier styling, qty for display
-    const flyoutId = `sent-${Date.now()}`;
-    const effectiveTier = Math.max(giftQty, newCombo * giftQty);
-    setSentGiftFlyout({ id: flyoutId, giftName: selectedGift.name, coins: totalCoins, qty: giftQty, combo: newCombo, tier: effectiveTier });
-    setTimeout(() => setSentGiftFlyout(cur => cur?.id === flyoutId ? null : cur), 2500);
+    // Gift-sent flyout — skip when full-screen video animation will play (it has its own banner)
+    const hasVideoAnim = Boolean(giftAnimationVideos[selectedGift.name]);
+    if (!hasVideoAnim) {
+      const flyoutId = `sent-${Date.now()}`;
+      const effectiveTier = Math.max(giftQty, newCombo * giftQty);
+      setSentGiftFlyout({ id: flyoutId, giftName: selectedGift.name, coins: totalCoins, qty: giftQty, combo: newCombo, tier: effectiveTier });
+      setTimeout(() => setSentGiftFlyout(cur => cur?.id === flyoutId ? null : cur), 2500);
+    }
 
     // Play sound
     if (selectedGift.coins >= 20000) {
