@@ -1,7 +1,6 @@
 /**
  * GiftAnimationOverlay — Premium gift animation over live stream
  * Uses MP4 video animations for premium gifts, icon fallback for others
- * Videos use mix-blend-mode:screen to make black backgrounds transparent
  */
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,11 +19,21 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const onCompleteRef = useRef(onComplete);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const frameLoopRef = useRef<number>();
+  const canvasReadyRef = useRef(false);
   const [animKey, setAnimKey] = useState(0);
   const [videoReady, setVideoReady] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const [canvasReady, setCanvasReady] = useState(false);
 
   onCompleteRef.current = onComplete;
+
+  const giftImg = activeGift ? giftImages[activeGift.name] : undefined;
+  const videoUrl = activeGift ? giftAnimationVideos[activeGift.name] : undefined;
+  const isPremium = activeGift ? activeGift.coins >= 100 : false;
+  const isLegendary = activeGift ? activeGift.coins >= 20000 : false;
+  const hasVideo = Boolean(videoUrl) && !videoError;
 
   const dismiss = useCallback(() => {
     if (timeoutRef.current) {
@@ -61,6 +70,8 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
     setAnimKey((k) => k + 1);
     setVideoReady(false);
     setVideoError(false);
+    setCanvasReady(false);
+    canvasReadyRef.current = false;
   }, [activeGift]);
 
   useEffect(() => {
@@ -73,15 +84,108 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
         timeoutRef.current = undefined;
       }
     };
-  }, [animKey, dismiss]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeGift, dismiss]);
+
+  useEffect(() => {
+    if (!activeGift || !hasVideo || !videoReady) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d", { alpha: true, willReadFrequently: true });
+
+    if (!video || !canvas || !ctx) return;
+
+    const syncCanvasSize = () => {
+      const cssWidth = Math.max(window.innerWidth, 1);
+      const cssHeight = Math.max(window.innerHeight, 1);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      const rawWidth = cssWidth * dpr;
+      const rawHeight = cssHeight * dpr;
+      const scale = Math.min(1, 960 / Math.max(rawWidth, rawHeight));
+      const nextWidth = Math.max(1, Math.round(rawWidth * scale));
+      const nextHeight = Math.max(1, Math.round(rawHeight * scale));
+
+      if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
+        canvas.width = nextWidth;
+        canvas.height = nextHeight;
+      }
+    };
+
+    const renderFrame = () => {
+      if (!videoRef.current || !canvasRef.current) return;
+      if (video.readyState < 2) {
+        frameLoopRef.current = requestAnimationFrame(renderFrame);
+        return;
+      }
+
+      const width = canvas.width;
+      const height = canvas.height;
+      const sourceWidth = video.videoWidth || width;
+      const sourceHeight = video.videoHeight || height;
+      const coverScale = Math.max(width / sourceWidth, height / sourceHeight);
+      const drawWidth = sourceWidth * coverScale;
+      const drawHeight = sourceHeight * coverScale;
+      const drawX = (width - drawWidth) / 2;
+      const drawY = (height - drawHeight) / 2;
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(video, drawX, drawY, drawWidth, drawHeight);
+
+      const frame = ctx.getImageData(0, 0, width, height);
+      const pixels = frame.data;
+
+      for (let i = 0; i < pixels.length; i += 4) {
+        const red = pixels[i];
+        const green = pixels[i + 1];
+        const blue = pixels[i + 2];
+        const max = Math.max(red, green, blue);
+        const min = Math.min(red, green, blue);
+        const luma = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+        const chroma = max - min;
+
+        if (luma < 18 && chroma < 22) {
+          pixels[i + 3] = 0;
+          continue;
+        }
+
+        if (luma < 48 && chroma < 36) {
+          const softAlpha = Math.max(0, Math.min(255, Math.round(((luma - 18) / 30) * 255)));
+          pixels[i + 3] = Math.min(pixels[i + 3], softAlpha);
+        }
+
+        pixels[i] = Math.min(255, Math.round(red * 1.08));
+        pixels[i + 1] = Math.min(255, Math.round(green * 1.05));
+        pixels[i + 2] = Math.min(255, Math.round(blue * 1.08));
+      }
+
+      ctx.putImageData(frame, 0, 0);
+
+      if (!canvasReadyRef.current) {
+        canvasReadyRef.current = true;
+        setCanvasReady(true);
+      }
+
+      frameLoopRef.current = requestAnimationFrame(renderFrame);
+    };
+
+    syncCanvasSize();
+    if (video.paused) {
+      video.play().catch(() => {});
+    }
+    frameLoopRef.current = requestAnimationFrame(renderFrame);
+    window.addEventListener("resize", syncCanvasSize);
+
+    return () => {
+      window.removeEventListener("resize", syncCanvasSize);
+      if (frameLoopRef.current) {
+        cancelAnimationFrame(frameLoopRef.current);
+        frameLoopRef.current = undefined;
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    };
+  }, [activeGift, hasVideo, videoReady, animKey]);
 
   if (!activeGift) return null;
-
-  const giftImg = giftImages[activeGift.name];
-  const videoUrl = giftAnimationVideos[activeGift.name];
-  const isPremium = activeGift.coins >= 100;
-  const isLegendary = activeGift.coins >= 20000;
-  const hasVideo = !!videoUrl && !videoError;
 
   // Combo intensity scales with count
   const comboIntensity = Math.min(comboCount, 20);
@@ -112,41 +216,36 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
           />
         )}
 
-        {/* ── Video animation (fullscreen, screen-blended) ── */}
+        {/* ── Video animation with real black-key transparency ── */}
         {hasVideo && (
           <motion.div
-            initial={{ scale: 0.85, opacity: 0 }}
-            animate={{ scale: 1, opacity: videoReady ? 1 : 0 }}
-            transition={{ type: "spring", damping: 14, stiffness: 100 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: canvasReady ? 1 : 0 }}
+            transition={{ duration: 0.2 }}
             className="absolute inset-0 z-[2]"
           >
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 h-full w-full"
+            />
             <video
               ref={videoRef}
               src={videoUrl}
               autoPlay
               muted
+              loop
               playsInline
-              className="absolute inset-0 w-full h-full object-contain"
-              style={{
-                opacity: videoReady ? 1 : 0,
-                transition: "opacity 0.3s ease-in",
-                mixBlendMode: "screen",
-                filter: "contrast(1.6) brightness(1.2) saturate(1.3)",
-              }}
+              preload="auto"
+              crossOrigin="anonymous"
+              className="absolute left-0 top-0 h-px w-px opacity-0"
               onLoadedData={() => setVideoReady(true)}
               onError={() => setVideoError(true)}
-              onEnded={() => {
-                if (videoRef.current) {
-                  videoRef.current.currentTime = 0;
-                  videoRef.current.play().catch(() => {});
-                }
-              }}
             />
           </motion.div>
         )}
 
         {/* ── Fallback: icon animation (when no video or video failed) ── */}
-        {(!hasVideo) && giftImg && (
+        {!hasVideo && giftImg && (
           <div className="absolute inset-0 flex items-center justify-center z-[2]" style={{ marginTop: giftPanelOpen ? "-45%" : "-5%" }}>
             {/* Expanding ring pulses */}
             {rings.map((r) => (
