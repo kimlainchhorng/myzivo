@@ -363,7 +363,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
 
     setGiftQty(1);
     // Keep gift panel open — user closes manually via X
-  }, [selectedGift, giftQty, giftCombo, sendReaction, coinBalance]);
+  }, [selectedGift, giftQty, giftCombo, sendReaction, coinBalance, enqueueGiftAnim]);
 
   const votePoll = useCallback((optIndex: number) => {
     setActivePoll(prev => {
