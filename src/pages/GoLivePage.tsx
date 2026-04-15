@@ -159,6 +159,8 @@ export default function GoLivePage() {
   const [showGuestInvite, setShowGuestInvite] = useState(false);
   // ── VIP entrance ──
   const [vipEntrance, setVipEntrance] = useState<{ name: string; level: number } | null>(null);
+  // ── Cash out state ──
+  const [cashedOut, setCashedOut] = useState(false);
   // ── Host level ──
   const hostLevel = useMemo(() => Math.min(99, Math.floor(coinsEarned / 50) + 1), [coinsEarned]);
   // ── Chat mute/ban ──
@@ -864,6 +866,9 @@ export default function GoLivePage() {
                 {displayedCoins.toLocaleString()}
               </motion.p>
               <p className="text-[10px] text-amber-400/60 uppercase tracking-wider">Z Coins Earned</p>
+              {coinsEarned > 0 && (
+                <p className="text-[11px] text-green-400 font-semibold mt-1">≈ ${(coinsEarned * 0.005).toFixed(2)}</p>
+              )}
             </div>
           </div>
 
@@ -953,7 +958,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); setPkBattle(null); setTreasureChest(null); setCoHosts([]); setShowGuestInvite(false); setVipEntrance(null); setMutedUsers(new Set()); setActiveSticker(null); setShowStickerPanel(false); setClipSaved(false); setShowRevenueDash(false); setShowTop3Banner(true); setComboMultiplierText(null); setGiftStreakCount(0); setSuperChat(null); setMilestoneEffect(null); setWaveActive(false); setTrendingWord(null); setHashtags([]); setHashtagInput(""); setBgMusic(null); setScreenEffect(null); setStreamRating(0); setDisplayedCoins(0); setGiftNotifQueue([]); setSentGiftFlyout(null); setSendSparkle(false); setShowMoreTools(false); lastMilestoneRef.current = 0; startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); setPkBattle(null); setTreasureChest(null); setCoHosts([]); setShowGuestInvite(false); setVipEntrance(null); setMutedUsers(new Set()); setActiveSticker(null); setShowStickerPanel(false); setClipSaved(false); setShowRevenueDash(false); setShowTop3Banner(true); setComboMultiplierText(null); setGiftStreakCount(0); setSuperChat(null); setMilestoneEffect(null); setWaveActive(false); setTrendingWord(null); setHashtags([]); setHashtagInput(""); setBgMusic(null); setScreenEffect(null); setStreamRating(0); setDisplayedCoins(0); setGiftNotifQueue([]); setSentGiftFlyout(null); setSendSparkle(false); setShowMoreTools(false); setCashedOut(false); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -961,15 +966,45 @@ export default function GoLivePage() {
             </Button>
           </div>
 
-          {/* Wallet CTA */}
+          {/* Earnings Cash-Out Card */}
           {coinsEarned > 0 && (
-            <button
-              onClick={() => navigate("/wallet")}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r from-amber-500/15 to-yellow-500/10 border border-amber-500/20 active:scale-[0.98] transition-transform mt-1"
-            >
-              <img src={goldCoinIcon} alt="" className="w-5 h-5" />
-              <span className="text-amber-300 text-sm font-semibold">View Wallet & Earnings</span>
-            </button>
+            <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 rounded-2xl p-4 border border-green-500/20 space-y-3 mt-1">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <DollarSign className="h-4 w-4 text-green-400" />
+                </div>
+                <div className="text-left">
+                  <p className="text-white text-sm font-bold">Stream Earnings</p>
+                  <p className="text-white/40 text-[10px]">Coins convert at $0.005 per coin</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between bg-black/20 rounded-xl px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <img src={goldCoinIcon} alt="" className="w-5 h-5" />
+                  <span className="text-amber-300 text-sm font-semibold">{coinsEarned.toLocaleString()} coins</span>
+                </div>
+                <span className="text-green-400 text-lg font-bold">${(coinsEarned * 0.005).toFixed(2)}</span>
+              </div>
+              <button
+                onClick={() => {
+                  if (cashedOut) return;
+                  setCashedOut(true);
+                  toast.success(`$${(coinsEarned * 0.005).toFixed(2)} added to your ZIVO Wallet!`, {
+                    description: `${coinsEarned.toLocaleString()} coins converted`,
+                    duration: 4000,
+                  });
+                }}
+                disabled={cashedOut}
+                className={cn(
+                  "w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-[0.97]",
+                  cashedOut
+                    ? "bg-green-500/20 text-green-300 cursor-default"
+                    : "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20 hover:from-green-600 hover:to-emerald-700"
+                )}
+              >
+                {cashedOut ? "✓ Cashed Out to Wallet" : `Cash Out $${(coinsEarned * 0.005).toFixed(2)} to Wallet`}
+              </button>
+            </div>
           )}
 
           {/* ── NEW: Save Highlights & Replay ── */}
