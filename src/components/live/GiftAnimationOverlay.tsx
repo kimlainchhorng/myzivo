@@ -96,8 +96,10 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
     if (!video || !canvas || !ctx) return;
 
     const syncCanvasSize = () => {
-      const cssWidth = Math.max(window.innerWidth, 1);
-      const cssHeight = Math.max(window.innerHeight, 1);
+      const container = canvas.parentElement;
+      if (!container) return;
+      const cssWidth = Math.max(container.clientWidth, 1);
+      const cssHeight = Math.max(container.clientHeight, 1);
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const rawWidth = cssWidth * dpr;
       const rawHeight = cssHeight * dpr;
@@ -222,11 +224,18 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
             initial={{ opacity: 0 }}
             animate={{ opacity: canvasReady ? 1 : 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 z-[2]"
+            className="absolute z-[2] flex items-center justify-center"
+            style={{
+              top: giftPanelOpen ? "5%" : "10%",
+              left: "5%",
+              right: "5%",
+              bottom: giftPanelOpen ? "50%" : "15%",
+            }}
           >
             <canvas
               ref={canvasRef}
-              className="absolute inset-0 h-full w-full"
+              className="w-full h-full object-contain"
+              style={{ maxWidth: "100%", maxHeight: "100%" }}
             />
             <video
               ref={videoRef}
