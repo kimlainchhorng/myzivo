@@ -2,7 +2,15 @@
  * Global Error Reporting & Monitoring
  * Captures unhandled errors and rejections, logs them to Supabase for admin review.
  */
-import { supabase } from "@/integrations/supabase/client";
+// Lazy-import supabase to avoid pulling the vendor chunk into the critical path
+let _supabase: typeof import("@/integrations/supabase/client").supabase | null = null;
+async function getSupabase() {
+  if (!_supabase) {
+    const mod = await import("@/integrations/supabase/client");
+    _supabase = mod.supabase;
+  }
+  return _supabase;
+}
 
 interface ErrorReport {
   type: "error" | "rejection" | "network";
