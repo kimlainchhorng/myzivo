@@ -90,7 +90,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
 
   useEffect(() => {
     if (!activeGift) return;
-    const dur = isLegendary ? 10000 : isUltra ? 9000 : isPremium ? 8000 : 6000;
+    const dur = activeGift.coins >= 9999 ? 12000 : isUltra ? 9000 : isPremium ? 8000 : 6000;
     timeoutRef.current = setTimeout(dismiss, dur);
     return () => {
       if (timeoutRef.current) {
