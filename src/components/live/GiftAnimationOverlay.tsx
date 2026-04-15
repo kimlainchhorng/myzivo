@@ -86,6 +86,13 @@ const GiftAnimationOverlay = forwardRef<HTMLDivElement, GiftAnimationOverlayProp
     setVideoError(false);
     setCanvasReady(false);
     canvasReadyRef.current = false;
+    // Reset video element for new gift
+    const video = videoRef.current;
+    if (video) {
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+    }
   }, [activeGift]);
 
   useEffect(() => {

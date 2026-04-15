@@ -3,6 +3,7 @@
  * Premium 2026 redesign with enhanced visuals
  */
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useGiftAnimationQueue } from "@/hooks/useGiftAnimationQueue";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
 import CoinRechargeSheet from "@/components/live/CoinRechargeSheet";
@@ -111,8 +112,7 @@ export default function GoLivePage() {
   const [coinsEarned, setCoinsEarned] = useState(0);
   const [coinBalance, setCoinBalance] = useState(1250);
   const [showRechargeSheet, setShowRechargeSheet] = useState(false);
-  const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
-  const [giftCombo, setGiftCombo] = useState(0);
+  const { activeGift: activeGiftAnim, comboCount: giftCombo, enqueue: enqueueGiftAnim, onComplete: onGiftAnimComplete } = useGiftAnimationQueue();
   const [viewerGiftNotif, setViewerGiftNotif] = useState<{ id: string; sender: string; giftName: string; coins: number } | null>(null);
   // ── Gift notification queue (right-side stacked, TikTok-style) ──
   const [giftNotifQueue, setGiftNotifQueue] = useState<{ id: string; sender: string; giftName: string; coins: number }[]>([]);
@@ -765,9 +765,6 @@ export default function GoLivePage() {
     let newCombo = 1;
     if (lastGiftRef.current.name === gift.name && now - lastGiftRef.current.time < 5000) {
       newCombo = giftCombo + 1;
-      setGiftCombo(newCombo);
-    } else {
-      setGiftCombo(1);
     }
     lastGiftRef.current = { name: gift.name, time: now };
 
@@ -790,7 +787,7 @@ export default function GoLivePage() {
       }
     }
     
-    setActiveGiftAnim({ name: gift.name, coins: totalCoins, senderName: sender });
+    enqueueGiftAnim({ name: gift.name, coins: totalCoins, senderName: sender, combo: newCombo });
     // Auto-close gift panel for immersive video animation experience
     if (giftAnimationVideos[gift.name]) {
       setShowGiftPanel(false);
@@ -964,7 +961,7 @@ export default function GoLivePage() {
             <Button
               onClick={() => {
                 setPhase("setup"); setElapsed(0); setViewerCount(0); setPeakViewers(0);
-                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setGiftCombo(0); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); setPkBattle(null); setTreasureChest(null); setCoHosts([]); setShowGuestInvite(false); setVipEntrance(null); setMutedUsers(new Set()); setActiveSticker(null); setShowStickerPanel(false); setClipSaved(false); setShowRevenueDash(false); setShowTop3Banner(true); setComboMultiplierText(null); setGiftStreakCount(0); setSuperChat(null); setMilestoneEffect(null); setWaveActive(false); setTrendingWord(null); setHashtags([]); setHashtagInput(""); setBgMusic(null); setScreenEffect(null); setStreamRating(0); setDisplayedCoins(0); setGiftNotifQueue([]); setSentGiftFlyout(null); setSendSparkle(false); setShowMoreTools(false); setCashedOut(false); lastMilestoneRef.current = 0; startCamera();
+                setLikes(0); setChatMessages([]); setGiftsReceived(0); setCoinsEarned(0); setTopGifters({}); setGiftStreakFlash(false); setShowLeaderboard(false); setGoalCelebrated(false); setNewFollowersCount(0); setShareCount(0); setNewFollower(null); setSelectedGift(null); setRecentGifts([]); setPinnedChatMsg(null); setGiftQty(1); setCameraFilter("none"); setShowViewerList(false); setActivePoll(null); setShowPollCreator(false); setSlowModeCooldown(0); setPkBattle(null); setTreasureChest(null); setCoHosts([]); setShowGuestInvite(false); setVipEntrance(null); setMutedUsers(new Set()); setActiveSticker(null); setShowStickerPanel(false); setClipSaved(false); setShowRevenueDash(false); setShowTop3Banner(true); setComboMultiplierText(null); setGiftStreakCount(0); setSuperChat(null); setMilestoneEffect(null); setWaveActive(false); setTrendingWord(null); setHashtags([]); setHashtagInput(""); setBgMusic(null); setScreenEffect(null); setStreamRating(0); setDisplayedCoins(0); setGiftNotifQueue([]); setSentGiftFlyout(null); setSendSparkle(false); setShowMoreTools(false); setCashedOut(false); lastMilestoneRef.current = 0; startCamera();
               }}
               className="rounded-full flex-1 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg shadow-red-500/20"
             >
@@ -3066,7 +3063,7 @@ export default function GoLivePage() {
       {/* Full-screen gift animation overlay */}
       <GiftAnimationOverlay
         activeGift={activeGiftAnim}
-        onComplete={() => { setActiveGiftAnim(null); setGiftCombo(0); }}
+        onComplete={onGiftAnimComplete}
         giftPanelOpen={showGiftPanel}
         comboCount={giftCombo}
       />

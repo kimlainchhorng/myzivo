@@ -3,6 +3,7 @@
  * Full-screen immersive watcher experience with gifts, reactions & engagement
  */
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useGiftAnimationQueue } from "@/hooks/useGiftAnimationQueue";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -95,8 +96,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   // ── Gift-sent flyout ──
   const [sentGiftFlyout, setSentGiftFlyout] = useState<{ id: string; giftName: string; coins: number; qty: number; combo: number; tier: number } | null>(null);
   // ── Gift animation overlay for premium gifts ──
-  const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
-  const [giftCombo, setGiftCombo] = useState(0);
+  const { activeGift: activeGiftAnim, comboCount: giftCombo, enqueue: enqueueGiftAnim, onComplete: onGiftAnimComplete } = useGiftAnimationQueue();
   // ── Coin balance & recharge ──
   const [coinBalance, setCoinBalance] = useState(1250);
   const [showRechargeSheet, setShowRechargeSheet] = useState(false);
@@ -200,7 +200,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         }
         // Trigger premium animation for high-value simulated gifts (rare)
         if (giftAnimationVideos[gift.name] && Math.random() < 0.5) {
-          setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
+          enqueueGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
           setShowGiftPanel(false);
           setSelectedGift(null);
         }
@@ -316,9 +316,6 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     let newCombo = 1;
     if (lastGiftRef.current.name === selectedGift.name && now - lastGiftRef.current.time < 5000) {
       newCombo = giftCombo + 1;
-      setGiftCombo(newCombo);
-    } else {
-      setGiftCombo(1);
     }
     lastGiftRef.current = { name: selectedGift.name, time: now };
 
@@ -347,7 +344,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
 
     // Trigger premium animation for gifts with video — auto-close panel for immersive experience
     if (giftAnimationVideos[selectedGift.name]) {
-      setActiveGiftAnim({ name: selectedGift.name, coins: totalCoins, senderName: "You" });
+      enqueueGiftAnim({ name: selectedGift.name, coins: totalCoins, senderName: "You", combo: newCombo });
       setShowGiftPanel(false);
       setSelectedGift(null);
     }
@@ -1226,7 +1223,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       {/* Full-screen gift animation overlay */}
       <GiftAnimationOverlay
         activeGift={activeGiftAnim}
-        onComplete={() => { setActiveGiftAnim(null); setGiftCombo(0); }}
+        onComplete={onGiftAnimComplete}
         giftPanelOpen={showGiftPanel}
         comboCount={giftCombo}
       />
