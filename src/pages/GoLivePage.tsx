@@ -2254,20 +2254,24 @@ export default function GoLivePage() {
                             )}
                           </div>
                         </div>
-                        {/* Quantity selector */}
-                        <div className="flex gap-1 shrink-0">
-                          {[1, 5, 10, 99].map((q) => (
+                        {/* Quantity selector — scrollable pill strip */}
+                        <div className="flex gap-1 shrink-0 overflow-x-auto max-w-[180px] no-scrollbar snap-x snap-mandatory py-0.5">
+                          {[1, 3, 5, 10, 20, 33, 50, 66, 99].map((q) => (
                             <button
                               key={q}
                               onClick={() => setGiftQty(q)}
                               className={cn(
-                                "w-8 h-7 rounded-lg text-[10px] font-bold transition-all",
+                                "min-w-[34px] h-7 rounded-full text-[10px] font-bold transition-all snap-center shrink-0 px-1.5",
                                 giftQty === q
-                                  ? "bg-amber-500/30 text-amber-300 border border-amber-500/40"
-                                  : "bg-white/5 text-white/40 border border-white/10"
+                                  ? q >= 50
+                                    ? "bg-gradient-to-r from-red-500/40 to-rose-500/30 text-rose-200 border border-rose-400/50 shadow-sm shadow-rose-500/20"
+                                    : q >= 10
+                                      ? "bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border border-amber-400/50 shadow-sm shadow-amber-500/20"
+                                      : "bg-amber-500/30 text-amber-300 border border-amber-500/40"
+                                  : "bg-white/5 text-white/40 border border-white/10 hover:bg-white/10"
                               )}
                             >
-                              x{q}
+                              {q}x
                             </button>
                           ))}
                         </div>
