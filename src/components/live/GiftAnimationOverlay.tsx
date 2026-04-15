@@ -254,7 +254,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               loop
               playsInline
               preload="auto"
-              crossOrigin="anonymous"
+              
               className="absolute left-0 top-0 h-px w-px opacity-0"
               onLoadedData={() => setVideoReady(true)}
               onCanPlay={() => setVideoReady(true)}
