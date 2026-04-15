@@ -791,6 +791,11 @@ export default function GoLivePage() {
     }
     
     setActiveGiftAnim({ name: gift.name, coins: totalCoins, senderName: sender });
+    // Auto-close gift panel for immersive video animation experience
+    if (giftAnimationVideos[gift.name]) {
+      setShowGiftPanel(false);
+      setSelectedGift(null);
+    }
     setGiftQty(1); // Reset qty after send
     // ── "Gift Sent!" flyout on right side ──
     const flyoutId = `sent-${Date.now()}`;

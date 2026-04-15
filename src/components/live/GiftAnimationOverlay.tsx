@@ -187,8 +187,16 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-[99998] pointer-events-none overflow-hidden"
+        className="fixed inset-0 z-[99998] pointer-events-auto overflow-hidden"
+        onClick={dismiss}
       >
+        {/* Solid dark backdrop to hide stream content behind animation */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: hasVideo ? 0.92 : isPremium ? 0.65 : 0.4 }}
+          transition={{ duration: 0.3 }}
+          className="absolute inset-0 bg-black z-[0]"
+        />
         {/* ── Cinematic backdrop ── */}
         {isPremium && (
           <>
@@ -590,6 +598,16 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
             />
           </>
         )}
+
+        {/* ── Tap to skip hint ── */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          transition={{ delay: 2, duration: 0.5 }}
+          className="absolute bottom-8 left-0 right-0 text-center text-white/40 text-[11px] font-medium z-[4]"
+        >
+          Tap to skip
+        </motion.p>
       </motion.div>
     </AnimatePresence>
   );
