@@ -602,7 +602,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 className="absolute bottom-0 text-2xl"
                 style={{ left: `${r.x - 60}%` }}
               >
-                <ReactionIcon name={r.emoji} className="h-6 w-6" style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }} />
+                <ReactionIcon name={r.emoji} className="h-6 w-6" />
               </motion.div>
             );
           })}
