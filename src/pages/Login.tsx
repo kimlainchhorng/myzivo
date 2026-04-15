@@ -209,11 +209,16 @@ const Login = () => {
       }
 
       // Device is trusted — update last_used_at
-      supabase.rpc("register_trusted_device", {
-        _user_id: user.id,
-        _device_fingerprint: fingerprint,
-        _device_name: getDeviceName(),
-      }).catch(() => { /* non-critical */ });
+      // Fire-and-forget: update last_used_at
+      void (async () => {
+        try {
+          await supabase.rpc("register_trusted_device", {
+            _user_id: user.id,
+            _device_fingerprint: fingerprint,
+            _device_name: getDeviceName(),
+          });
+        } catch { /* non-critical */ }
+      })();
 
       const { data: profile } = await supabase
         .from("profiles")
