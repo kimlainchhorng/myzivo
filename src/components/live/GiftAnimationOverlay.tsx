@@ -231,26 +231,24 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
           </>
         )}
 
-        {/* ── Video animation ── */}
+        {/* ── Video animation — full-screen cinematic ── */}
         {hasVideo && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: canvasReady ? 1 : 0 }}
-            transition={{ duration: 0.25 }}
-            className="absolute z-[2] flex items-center justify-center"
-            style={{
-              top: giftPanelOpen ? "5%" : "8%",
-              left: "3%",
-              right: "3%",
-              bottom: giftPanelOpen ? "48%" : "12%",
-            }}
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: canvasReady ? 1 : 0, scale: 1 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="absolute inset-0 z-[2] flex items-center justify-center"
           >
-            <canvas ref={canvasRef} className="w-full h-full object-contain" style={{ maxWidth: "100%", maxHeight: "100%" }} />
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 w-full h-full"
+              style={{ objectFit: "cover" }}
+            />
             <video
               ref={videoRef}
               src={videoUrl}
               autoPlay muted loop playsInline preload="auto" crossOrigin="anonymous"
-              className="absolute left-0 top-0 h-px w-px opacity-0"
+              className="absolute left-0 top-0 h-px w-px opacity-0 pointer-events-none"
               onLoadedData={() => setVideoReady(true)}
               onError={() => setVideoError(true)}
             />
