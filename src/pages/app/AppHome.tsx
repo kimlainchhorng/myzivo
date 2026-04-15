@@ -405,7 +405,7 @@ const AppHome = () => {
                   />
                   <span className="relative z-10 flex items-center gap-1.5">
                     {tab.image ? (
-                      <img src={tab.image} alt={tab.label} className="w-5 h-5 object-contain" style={{ filter: isActive ? "brightness(10)" : "none" }} />
+                      <img src={tab.image} alt={tab.label} width={20} height={20} className="w-5 h-5 object-contain" style={{ filter: isActive ? "brightness(10)" : "none" }} />
                     ) : tab.icon ? (
                       <tab.icon className="w-4.5 h-4.5" />
                     ) : null}
@@ -439,6 +439,8 @@ const AppHome = () => {
                 <img
                   src={tabBgMap[activeHomeTab]}
                   alt=""
+                  width={390}
+                  height={56}
                   className="absolute inset-0 w-full h-full object-cover"
                   style={{ opacity: 0.35, transition: "opacity 0.3s" }}
                 />
@@ -493,7 +495,7 @@ const AppHome = () => {
                     style={{ transform: "translateZ(10px)" }}
                   >
                     {s.image ? (
-                      <img src={s.image} alt={s.label} className="w-8 h-8 object-contain" />
+                      <img src={s.image} alt={s.label} width={32} height={32} className="w-8 h-8 object-contain" />
                     ) : s.icon ? (
                       <s.icon className="w-6 h-6 text-foreground" />
                     ) : null}
@@ -606,7 +608,7 @@ const AppHome = () => {
                       className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 touch-manipulation text-left group relative"
                     >
                       <div className="relative h-[120px] overflow-hidden">
-                        <img src={dest.src} alt={dest.alt} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+                        <img src={dest.src} alt={dest.alt} width={340} height={120} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                         {i < 2 && (
                           <div className="absolute top-2 left-2 bg-amber-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm">
@@ -644,7 +646,7 @@ const AppHome = () => {
                       className="shrink-0 flex flex-col items-center gap-1.5 touch-manipulation group"
                     >
                       <div className="relative w-[72px] h-[72px] rounded-full overflow-hidden ring-2 ring-border/30 group-hover:ring-primary/40 transition-all">
-                        <img src={dest.src} alt={dest.alt} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+                        <img src={dest.src} alt={dest.alt} width={72} height={72} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
                       </div>
                       <div className="text-center">
                         <div className="text-[10px] font-semibold text-foreground leading-tight truncate max-w-[76px]">{dest.city}</div>
