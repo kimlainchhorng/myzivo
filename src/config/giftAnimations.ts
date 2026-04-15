@@ -41,29 +41,8 @@ import goldenCastleVid from "@/assets/gifts/animations/golden-castle.mp4.asset.j
 
 export const giftAnimationVideos: Record<string, string> = {
   // ── Gifts tab ──
-  // Lv.1 — 1 coin
-  "Lucky Cat": luckyCatVid.url,
-  "Cute Panda": cutePandaVid.url,
-  "Baby Dragon": babyDragonVid.url,
-  // Lv.1 — 5 coins
-  "Ice Penguin": icePenguinVid.url,
-  "King Cobra": kingCobraVid.url,
-  "Rainbow Butterfly": rainbowButterflyVid.url,
-  // Lv.2 — 10 coins
-  "Star Fox": starFoxVid.url,
-  "Crystal Unicorn": crystalUnicornVid.url,
-  // Lv.2 — 15-30 coins
-  "Magic Rabbit": magicRabbitVid.url,
-  "Snake Dance": snakeDanceVid.url,
-  "Neon Dolphin": neonDolphinVid.url,
-  "Mystic Wolf": mysticWolfVid.url,
-  // Lv.3 — 50 coins
-  "Phoenix Rising": phoenixRisingVid.url,
-  // Lv.3 — 99 coins
-  "Diamond Bear": diamondBearVid.url,
-  // Lv.4 — 199 coins
-  "Thunder Tiger": thunderTigerVid.url,
-  // Lv.4 — 299 coins
+  // Gifts 1-199 coins: NO video animations (icon-only)
+  // Lv.4 — 299 coins (first gift with video)
   "Fire Dragon": fireDragonVid.url,
 
   // ── Interactive tab ──
