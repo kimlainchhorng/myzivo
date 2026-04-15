@@ -69,10 +69,6 @@ const LANGS = [
 ];
 
 const getFlagUrl = (cc: string) => `/flags/${cc}.svg`;
-const CITY_BG: Record<string, string> = {
-  US: "/flags/city-us.jpg",
-  KH: "/flags/city-kh.jpg",
-};
 
 /* ── 3D tilt hook ── */
 function use3DTilt(ref: React.RefObject<HTMLElement | null>, intensity = 8) {
@@ -133,7 +129,7 @@ const Profile = () => {
   const queryClient = useQueryClient();
   const location = useLocation();
   const { t, currentLanguage, changeLanguage } = useI18n();
-  const { country, setCountry, countries } = useCountry();
+  
   const { user, signOut, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
