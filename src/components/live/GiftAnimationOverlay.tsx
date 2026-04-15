@@ -114,12 +114,9 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
       if (!container) return;
       const cssW = Math.max(container.clientWidth, 1);
       const cssH = Math.max(container.clientHeight, 1);
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-      const rawW = cssW * dpr;
-      const rawH = cssH * dpr;
-      const scale = Math.min(1, 960 / Math.max(rawW, rawH));
-      const nw = Math.max(1, Math.round(rawW * scale));
-      const nh = Math.max(1, Math.round(rawH * scale));
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const nw = Math.max(1, Math.round(cssW * dpr));
+      const nh = Math.max(1, Math.round(cssH * dpr));
       if (canvas.width !== nw || canvas.height !== nh) {
         canvas.width = nw;
         canvas.height = nh;
@@ -231,26 +228,24 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
           </>
         )}
 
-        {/* ── Video animation ── */}
+        {/* ── Video animation — full-screen cinematic ── */}
         {hasVideo && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: canvasReady ? 1 : 0 }}
-            transition={{ duration: 0.25 }}
-            className="absolute z-[2] flex items-center justify-center"
-            style={{
-              top: giftPanelOpen ? "5%" : "8%",
-              left: "3%",
-              right: "3%",
-              bottom: giftPanelOpen ? "48%" : "12%",
-            }}
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: canvasReady ? 1 : 0, scale: 1 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="absolute inset-0 z-[2] flex items-center justify-center"
           >
-            <canvas ref={canvasRef} className="w-full h-full object-contain" style={{ maxWidth: "100%", maxHeight: "100%" }} />
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 w-full h-full"
+              style={{ objectFit: "cover" }}
+            />
             <video
               ref={videoRef}
               src={videoUrl}
               autoPlay muted loop playsInline preload="auto" crossOrigin="anonymous"
-              className="absolute left-0 top-0 h-px w-px opacity-0"
+              className="absolute left-0 top-0 h-px w-px opacity-0 pointer-events-none"
               onLoadedData={() => setVideoReady(true)}
               onError={() => setVideoError(true)}
             />
