@@ -128,27 +128,34 @@ const GiftAnimationOverlay = forwardRef<HTMLDivElement, GiftAnimationOverlayProp
       if (video.readyState < 2) { frameLoopRef.current = requestAnimationFrame(renderFrame); return; }
 
       const w = canvas.width, h = canvas.height;
+      if (w === 0 || h === 0) { frameLoopRef.current = requestAnimationFrame(renderFrame); return; }
       const sw = video.videoWidth || w, sh = video.videoHeight || h;
       const cs = Math.max(w / sw, h / sh);
       const dw = sw * cs, dh = sh * cs;
-      ctx.clearRect(0, 0, w, h);
-      ctx.drawImage(video, (w - dw) / 2, (h - dh) / 2, dw, dh);
+      try {
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(video, (w - dw) / 2, (h - dh) / 2, dw, dh);
 
-      const frame = ctx.getImageData(0, 0, w, h);
-      const px = frame.data;
-      for (let i = 0; i < px.length; i += 4) {
-        const r = px[i], g = px[i + 1], b = px[i + 2];
-        const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-        const chroma = Math.max(r, g, b) - Math.min(r, g, b);
-        if (luma < 18 && chroma < 22) { px[i + 3] = 0; continue; }
-        if (luma < 48 && chroma < 36) {
-          px[i + 3] = Math.min(px[i + 3], Math.max(0, Math.min(255, Math.round(((luma - 18) / 30) * 255))));
+        const frame = ctx.getImageData(0, 0, w, h);
+        const px = frame.data;
+        for (let i = 0; i < px.length; i += 4) {
+          const r = px[i], g = px[i + 1], b = px[i + 2];
+          const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+          if (luma < 18 && chroma < 22) { px[i + 3] = 0; continue; }
+          if (luma < 48 && chroma < 36) {
+            px[i + 3] = Math.min(px[i + 3], Math.max(0, Math.min(255, Math.round(((luma - 18) / 30) * 255))));
+          }
+          px[i] = Math.min(255, Math.round(r * 1.08));
+          px[i + 1] = Math.min(255, Math.round(g * 1.05));
+          px[i + 2] = Math.min(255, Math.round(b * 1.08));
         }
-        px[i] = Math.min(255, Math.round(r * 1.08));
-        px[i + 1] = Math.min(255, Math.round(g * 1.05));
-        px[i + 2] = Math.min(255, Math.round(b * 1.08));
+        ctx.putImageData(frame, 0, 0);
+      } catch {
+        // Canvas tainted or security error — show video directly without chroma-key
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(video, (w - dw) / 2, (h - dh) / 2, dw, dh);
       }
-      ctx.putImageData(frame, 0, 0);
       if (!canvasReadyRef.current) { canvasReadyRef.current = true; setCanvasReady(true); }
       frameLoopRef.current = requestAnimationFrame(renderFrame);
     };
@@ -252,7 +259,7 @@ const GiftAnimationOverlay = forwardRef<HTMLDivElement, GiftAnimationOverlayProp
             <video
               ref={videoRef}
               src={videoUrl}
-              autoPlay muted loop playsInline preload="auto" crossOrigin="anonymous"
+              autoPlay muted loop playsInline preload="auto"
               className="absolute left-0 top-0 h-px w-px opacity-0 pointer-events-none"
               onLoadedData={() => setVideoReady(true)}
               onError={() => setVideoError(true)}
