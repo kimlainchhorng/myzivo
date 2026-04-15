@@ -204,7 +204,7 @@ export default function Setup() {
   };
 
   const handleSkip = async () => {
-    await persistSetup({ includeUploads: false, redirectTo: redirectTo === "/" ? "/profile" : redirectTo });
+    await persistSetup({ includeUploads: false, redirectTo });
   };
 
   if (authLoading || checking) {
@@ -296,14 +296,6 @@ export default function Setup() {
 
           <div className="px-6 pb-6 pt-3 sm:px-8 sm:pb-8">
             <div className="mb-5">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-1 text-white/50 hover:text-white text-sm mb-3 transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back
-              </button>
 
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-white tracking-tight">Add Your Photos</h1>
