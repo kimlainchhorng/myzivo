@@ -765,9 +765,6 @@ export default function GoLivePage() {
     let newCombo = 1;
     if (lastGiftRef.current.name === gift.name && now - lastGiftRef.current.time < 5000) {
       newCombo = giftCombo + 1;
-      setGiftCombo(newCombo);
-    } else {
-      setGiftCombo(1);
     }
     lastGiftRef.current = { name: gift.name, time: now };
 
