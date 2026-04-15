@@ -109,6 +109,8 @@ export default function GoLivePage() {
   const [showChat, setShowChat] = useState(true);
   const [streamQuality, setStreamQuality] = useState<"HD" | "SD">("HD");
   const [coinsEarned, setCoinsEarned] = useState(0);
+  const [coinBalance, setCoinBalance] = useState(1250);
+  const [showRechargeSheet, setShowRechargeSheet] = useState(false);
   const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
   const [giftCombo, setGiftCombo] = useState(0);
   const [viewerGiftNotif, setViewerGiftNotif] = useState<{ id: string; sender: string; giftName: string; coins: number } | null>(null);
