@@ -2958,6 +2958,13 @@ export default function GoLivePage() {
         giftPanelOpen={showGiftPanel}
         comboCount={giftCombo}
       />
+
+      <CoinRechargeSheet
+        open={showRechargeSheet}
+        onClose={() => setShowRechargeSheet(false)}
+        currentBalance={coinBalance}
+        onPurchase={(coins) => setCoinBalance(prev => prev + coins)}
+      />
     </div>
   );
 }
