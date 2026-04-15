@@ -33,9 +33,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
   const videoUrl = activeGift ? giftAnimationVideos[activeGift.name] : undefined;
   const isPremium = activeGift ? activeGift.coins >= 100 : false;
   const isLegendary = activeGift ? activeGift.coins >= 20000 : false;
-  const hasVideoAsset = Boolean(videoUrl);
-  const hasVideo = hasVideoAsset && !videoError;
-  const showFallbackVisual = Boolean(giftImg) && (!hasVideo || !canvasReady);
+  const hasVideo = Boolean(videoUrl) && !videoError;
 
   const dismiss = useCallback(() => {
     if (timeoutRef.current) {
@@ -79,23 +77,14 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
   useEffect(() => {
     if (!activeGift) return;
     const isPremiumGift = activeGift.coins >= 100;
-    timeoutRef.current = setTimeout(dismiss, isPremiumGift || hasVideoAsset ? 5000 : 4000);
+    timeoutRef.current = setTimeout(dismiss, isPremiumGift ? 5000 : 4000);
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = undefined;
       }
     };
-  }, [activeGift, dismiss, hasVideoAsset]);
-
-  useEffect(() => {
-    if (!activeGift || !hasVideo) return;
-
-    const video = videoRef.current;
-    if (video && video.readyState >= 2) {
-      setVideoReady(true);
-    }
-  }, [activeGift, hasVideo, animKey]);
+  }, [activeGift, dismiss]);
 
   useEffect(() => {
     if (!activeGift || !hasVideo || !videoReady) return;
@@ -142,41 +131,34 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
       ctx.clearRect(0, 0, width, height);
       ctx.drawImage(video, drawX, drawY, drawWidth, drawHeight);
 
-      try {
-        const frame = ctx.getImageData(0, 0, width, height);
-        const pixels = frame.data;
+      const frame = ctx.getImageData(0, 0, width, height);
+      const pixels = frame.data;
 
-        for (let i = 0; i < pixels.length; i += 4) {
-          const red = pixels[i];
-          const green = pixels[i + 1];
-          const blue = pixels[i + 2];
-          const max = Math.max(red, green, blue);
-          const min = Math.min(red, green, blue);
-          const luma = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
-          const chroma = max - min;
+      for (let i = 0; i < pixels.length; i += 4) {
+        const red = pixels[i];
+        const green = pixels[i + 1];
+        const blue = pixels[i + 2];
+        const max = Math.max(red, green, blue);
+        const min = Math.min(red, green, blue);
+        const luma = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+        const chroma = max - min;
 
-          if (luma < 18 && chroma < 22) {
-            pixels[i + 3] = 0;
-            continue;
-          }
-
-          if (luma < 48 && chroma < 36) {
-            const softAlpha = Math.max(0, Math.min(255, Math.round(((luma - 18) / 30) * 255)));
-            pixels[i + 3] = Math.min(pixels[i + 3], softAlpha);
-          }
-
-          pixels[i] = Math.min(255, Math.round(red * 1.08));
-          pixels[i + 1] = Math.min(255, Math.round(green * 1.05));
-          pixels[i + 2] = Math.min(255, Math.round(blue * 1.08));
+        if (luma < 18 && chroma < 22) {
+          pixels[i + 3] = 0;
+          continue;
         }
 
-        ctx.putImageData(frame, 0, 0);
-      } catch {
-        setVideoError(true);
-        setCanvasReady(false);
-        canvasReadyRef.current = false;
-        return;
+        if (luma < 48 && chroma < 36) {
+          const softAlpha = Math.max(0, Math.min(255, Math.round(((luma - 18) / 30) * 255)));
+          pixels[i + 3] = Math.min(pixels[i + 3], softAlpha);
+        }
+
+        pixels[i] = Math.min(255, Math.round(red * 1.08));
+        pixels[i + 1] = Math.min(255, Math.round(green * 1.05));
+        pixels[i + 2] = Math.min(255, Math.round(blue * 1.08));
       }
+
+      ctx.putImageData(frame, 0, 0);
 
       if (!canvasReadyRef.current) {
         canvasReadyRef.current = true;
@@ -254,17 +236,16 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               loop
               playsInline
               preload="auto"
-              
+              crossOrigin="anonymous"
               className="absolute left-0 top-0 h-px w-px opacity-0"
               onLoadedData={() => setVideoReady(true)}
-              onCanPlay={() => setVideoReady(true)}
               onError={() => setVideoError(true)}
             />
           </motion.div>
         )}
 
         {/* ── Fallback: icon animation (when no video or video failed) ── */}
-        {showFallbackVisual && giftImg && (
+        {!hasVideo && giftImg && (
           <div className="absolute inset-0 flex items-center justify-center z-[2]" style={{ marginTop: giftPanelOpen ? "-45%" : "-5%" }}>
             {/* Expanding ring pulses */}
             {rings.map((r) => (
