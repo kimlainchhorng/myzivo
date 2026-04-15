@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { User, ArrowRight, ArrowLeft, Loader2, Camera, ImagePlus } from "lucide-react";
+import { User, ArrowRight, Loader2, Camera, ImagePlus } from "lucide-react";
 import { getSafeRedirectTarget, withRedirectParam } from "@/lib/authRedirect";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -204,7 +204,7 @@ export default function Setup() {
   };
 
   const handleSkip = async () => {
-    await persistSetup({ includeUploads: false, redirectTo: redirectTo === "/" ? "/profile" : redirectTo });
+    await persistSetup({ includeUploads: false, redirectTo });
   };
 
   if (authLoading || checking) {
@@ -296,14 +296,6 @@ export default function Setup() {
 
           <div className="px-6 pb-6 pt-3 sm:px-8 sm:pb-8">
             <div className="mb-5">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-1 text-white/50 hover:text-white text-sm mb-3 transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back
-              </button>
 
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-white tracking-tight">Add Your Photos</h1>
