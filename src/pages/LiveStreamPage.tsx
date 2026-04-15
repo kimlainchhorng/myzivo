@@ -580,21 +580,32 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       </div>
 
       {/* ── Floating reactions ── */}
-      <div className="absolute right-4 bottom-48 z-30 w-10 pointer-events-none">
+      <div className="absolute right-4 bottom-48 z-30 w-14 pointer-events-none">
         <AnimatePresence>
-          {floatingReactions.map((r) => (
-            <motion.div
-              key={r.id}
-              initial={{ y: 0, opacity: 1, scale: 0.5 }}
-              animate={{ y: -200, opacity: 0, scale: 1.2, x: (Math.random() - 0.5) * 40 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 2, ease: "easeOut" }}
-              className="absolute bottom-0 text-2xl"
-              style={{ left: `${r.x - 60}%` }}
-            >
-              <ReactionIcon name={r.emoji} className="h-6 w-6" />
-            </motion.div>
-          ))}
+          {floatingReactions.map((r, i) => {
+            const randomScale = 0.8 + Math.random() * 0.8;
+            const randomDrift = (Math.random() - 0.5) * 50;
+            const randomDur = 1.8 + Math.random() * 1.2;
+            return (
+              <motion.div
+                key={r.id}
+                initial={{ y: 0, opacity: 1, scale: 0.3, rotate: -15 + Math.random() * 30 }}
+                animate={{
+                  y: -220 - Math.random() * 80,
+                  opacity: [1, 1, 0.8, 0],
+                  scale: [0.3, randomScale, randomScale * 0.9, randomScale * 0.5],
+                  x: [0, randomDrift * 0.3, randomDrift],
+                  rotate: [0, -10 + Math.random() * 20],
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: randomDur, ease: "easeOut" }}
+                className="absolute bottom-0 text-2xl"
+                style={{ left: `${r.x - 60}%` }}
+              >
+                <ReactionIcon name={r.emoji} className="h-6 w-6" style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }} />
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
       </div>
 
