@@ -183,7 +183,15 @@ const Login = () => {
         _device_fingerprint: fingerprint,
       });
 
-      if (!isTrusted) {
+      // Check if user has ANY trusted devices — if none, this is first login, auto-trust
+      const { count: trustedCount } = await supabase
+        .from("trusted_devices")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+
+      const isFirstLogin = (trustedCount ?? 0) === 0;
+
+      if (!isTrusted && !isFirstLogin) {
         // New device — keep session but require device OTP verification
         // Determine final redirect after device verification
         let finalRedirect = from && from !== "/" && from !== "/login" ? from : "/";
