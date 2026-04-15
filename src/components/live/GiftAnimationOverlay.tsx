@@ -625,6 +625,6 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
       </motion.div>
     </AnimatePresence>
   );
-});
+}
 
 export default GiftAnimationOverlay;
