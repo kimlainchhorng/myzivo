@@ -3,18 +3,33 @@
  * Maps gift names to their full-screen animation videos
  * Sorted low → high by coin value
  */
-import crystalUnicornVid from "@/assets/gifts/animations/crystal-unicorn.mp4.asset.json";
+import luckyCatVid from "@/assets/gifts/animations/lucky-cat.mp4.asset.json";
+import cutePandaVid from "@/assets/gifts/animations/cute-panda.mp4.asset.json";
 import babyDragonVid from "@/assets/gifts/animations/baby-dragon.mp4.asset.json";
+import icePenguinVid from "@/assets/gifts/animations/ice-penguin.mp4.asset.json";
+import kingCobraVid from "@/assets/gifts/animations/king-cobra.mp4.asset.json";
+import rainbowButterflyVid from "@/assets/gifts/animations/rainbow-butterfly.mp4.asset.json";
+import starFoxVid from "@/assets/gifts/animations/star-fox.mp4.asset.json";
+import crystalUnicornVid from "@/assets/gifts/animations/crystal-unicorn.mp4.asset.json";
+import magicRabbitVid from "@/assets/gifts/animations/magic-rabbit.mp4.asset.json";
+import snakeDanceVid from "@/assets/gifts/animations/snake-dance.mp4.asset.json";
+import neonDolphinVid from "@/assets/gifts/animations/neon-dolphin.mp4.asset.json";
+import mysticWolfVid from "@/assets/gifts/animations/mystic-wolf.mp4.asset.json";
 import phoenixRisingVid from "@/assets/gifts/animations/phoenix-rising.mp4.asset.json";
+import diamondBearVid from "@/assets/gifts/animations/diamond-bear.mp4.asset.json";
 import thunderTigerVid from "@/assets/gifts/animations/thunder-tiger.mp4.asset.json";
 import fireDragonVid from "@/assets/gifts/animations/fire-dragon.mp4.asset.json";
 import pandaPartyVid from "@/assets/gifts/animations/panda-party.mp4.asset.json";
 import sapphireSwanVid from "@/assets/gifts/animations/sapphire-swan.mp4.asset.json";
 import royalCrownVid from "@/assets/gifts/animations/royal-crown.mp4.asset.json";
+import goldFountainVid from "@/assets/gifts/animations/gold-fountain.mp4.asset.json";
 import emeraldEagleVid from "@/assets/gifts/animations/emerald-eagle.mp4.asset.json";
 import diamondRainVid from "@/assets/gifts/animations/diamond-rain.mp4.asset.json";
+import platinumPandaVid from "@/assets/gifts/animations/platinum-panda.mp4.asset.json";
 import luxuryLamboVid from "@/assets/gifts/animations/luxury-lambo.mp4.asset.json";
+import treasureDragonVid from "@/assets/gifts/animations/treasure-dragon.mp4.asset.json";
 import goldFerrariVid from "@/assets/gifts/animations/gold-ferrari.mp4.asset.json";
+import goldHelicopterVid from "@/assets/gifts/animations/gold-helicopter.mp4.asset.json";
 import rollsRoyceVid from "@/assets/gifts/animations/rolls-royce.mp4.asset.json";
 import blackPantherVid from "@/assets/gifts/animations/black-panther.mp4.asset.json";
 import bugattiVid from "@/assets/gifts/animations/bugatti.mp4.asset.json";
@@ -25,32 +40,59 @@ import galaxyCrownVid from "@/assets/gifts/animations/galaxy-crown.mp4.asset.jso
 import goldenCastleVid from "@/assets/gifts/animations/golden-castle.mp4.asset.json";
 
 export const giftAnimationVideos: Record<string, string> = {
-  // Lv.2 — 10 coins
-  "Crystal Unicorn": crystalUnicornVid.url,
-  // Lv.1 — 1 coin (popular)
+  // ── Gifts tab ──
+  // Lv.1 — 1 coin
+  "Lucky Cat": luckyCatVid.url,
+  "Cute Panda": cutePandaVid.url,
   "Baby Dragon": babyDragonVid.url,
+  // Lv.1 — 5 coins
+  "Ice Penguin": icePenguinVid.url,
+  "King Cobra": kingCobraVid.url,
+  "Rainbow Butterfly": rainbowButterflyVid.url,
+  // Lv.2 — 10 coins
+  "Star Fox": starFoxVid.url,
+  "Crystal Unicorn": crystalUnicornVid.url,
+  // Lv.2 — 15-30 coins
+  "Magic Rabbit": magicRabbitVid.url,
+  "Snake Dance": snakeDanceVid.url,
+  "Neon Dolphin": neonDolphinVid.url,
+  "Mystic Wolf": mysticWolfVid.url,
   // Lv.3 — 50 coins
   "Phoenix Rising": phoenixRisingVid.url,
+  // Lv.3 — 99 coins
+  "Diamond Bear": diamondBearVid.url,
   // Lv.4 — 199 coins
   "Thunder Tiger": thunderTigerVid.url,
   // Lv.4 — 299 coins
   "Fire Dragon": fireDragonVid.url,
+
+  // ── Interactive tab ──
   // Lv.4 — 100 coins
   "Panda Party": pandaPartyVid.url,
   // Lv.5 — 699 coins
   "Sapphire Swan": sapphireSwanVid.url,
   // Lv.5 — 888 coins
   "Royal Crown": royalCrownVid.url,
+  // Lv.5 — 999 coins
+  "Gold Fountain": goldFountainVid.url,
   // Lv.6 — 1200 coins
   "Emerald Eagle": emeraldEagleVid.url,
   // Lv.6 — 1500 coins
   "Diamond Rain": diamondRainVid.url,
+  // Lv.6 — 1999 coins
+  "Platinum Panda": platinumPandaVid.url,
   // Lv.6 — 2000 coins
   "Luxury Lambo": luxuryLamboVid.url,
+  // Lv.6 — 2500 coins
+  "Treasure Dragon": treasureDragonVid.url,
   // Lv.6 — 3000 coins
   "Gold Ferrari": goldFerrariVid.url,
+  // Lv.6 — 3500 coins
+  "Gold Helicopter": goldHelicopterVid.url,
   // Lv.7 — 5000 coins
   "Rolls Royce": rollsRoyceVid.url,
+
+  // ── Exclusive tab ──
   // Lv.7 — 4999 coins
   "Black Panther": blackPantherVid.url,
   // Lv.7 — 9999 coins
