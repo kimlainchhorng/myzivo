@@ -545,12 +545,14 @@ const AppHome = () => {
                     className="shrink-0 w-[170px] rounded-2xl overflow-hidden bg-card border border-border/40 shadow-sm hover:shadow-lg transition-all duration-300 touch-manipulation text-left group"
                   >
                     <div className="relative h-[100px] overflow-hidden">
-                      <img
-                        src={r.cover_image_url || r.logo_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400"}
-                        alt={r.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        loading="lazy"
-                      />
+                       <img
+                         src={r.cover_image_url || r.logo_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400"}
+                         alt={r.name}
+                         width={170}
+                         height={100}
+                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                         loading="lazy"
+                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                       <div className="absolute bottom-2 right-2 bg-orange-500/90 backdrop-blur-sm rounded-full px-2.5 py-0.5 shadow-sm">
                         <span className="text-[9px] font-bold text-primary-foreground flex items-center gap-0.5"><Zap className="w-2.5 h-2.5" /> {t("home.reorder")}</span>
