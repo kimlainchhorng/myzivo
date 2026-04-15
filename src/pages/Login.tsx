@@ -176,6 +176,45 @@ const Login = () => {
         return;
       }
 
+      // Check if this device is trusted
+      const fingerprint = getDeviceFingerprint();
+      const { data: isTrusted } = await supabase.rpc("is_device_trusted", {
+        _user_id: user.id,
+        _device_fingerprint: fingerprint,
+      });
+
+      if (!isTrusted) {
+        // New device — sign out temporarily, send OTP, and redirect to device verification
+        await supabase.auth.signOut();
+
+        // Determine final redirect after device verification
+        let finalRedirect = from && from !== "/" && from !== "/login" ? from : "/";
+
+        // Send OTP for device verification
+        try {
+          await supabase.functions.invoke("send-otp-email", {
+            body: { email: user.email, userId: user.id },
+          });
+        } catch {
+          // Non-critical: user can resend from the verification page
+        }
+
+        setIsLoading(false);
+        toast.info("New device detected. Please verify with the code sent to your email.", { icon: "🔐" });
+        navigate("/verify-new-device", {
+          replace: true,
+          state: { email: user.email, userId: user.id, redirectTo: finalRedirect },
+        });
+        return;
+      }
+
+      // Device is trusted — update last_used_at
+      supabase.rpc("register_trusted_device", {
+        _user_id: user.id,
+        _device_fingerprint: fingerprint,
+        _device_name: getDeviceName(),
+      }).catch(() => { /* non-critical */ });
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("setup_complete")
