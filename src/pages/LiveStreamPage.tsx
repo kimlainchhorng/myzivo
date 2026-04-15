@@ -96,8 +96,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   // ── Gift-sent flyout ──
   const [sentGiftFlyout, setSentGiftFlyout] = useState<{ id: string; giftName: string; coins: number; qty: number; combo: number; tier: number } | null>(null);
   // ── Gift animation overlay for premium gifts ──
-  const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
-  const [giftCombo, setGiftCombo] = useState(0);
+  const { activeGift: activeGiftAnim, comboCount: giftCombo, enqueue: enqueueGiftAnim, onComplete: onGiftAnimComplete } = useGiftAnimationQueue();
   // ── Coin balance & recharge ──
   const [coinBalance, setCoinBalance] = useState(1250);
   const [showRechargeSheet, setShowRechargeSheet] = useState(false);
