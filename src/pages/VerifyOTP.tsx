@@ -32,9 +32,8 @@ const VerifyOTP = () => {
       const { data } = await supabase.auth.getUser();
       if (data.user?.email) {
         setEmail(data.user.email);
-      } else {
-        navigate(withRedirectParam("/login?mode=signup", redirectTo), { replace: true });
       }
+      // Don't redirect — show a "session expired" UI instead
     };
 
     void hydrateEmail();
