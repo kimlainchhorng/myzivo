@@ -119,7 +119,6 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
             animate={{ scale: 1, opacity: videoReady ? 1 : 0 }}
             transition={{ type: "spring", damping: 14, stiffness: 100 }}
             className="absolute inset-0 z-[2]"
-            style={{ mixBlendMode: "screen" }}
           >
             <video
               ref={videoRef}
@@ -131,6 +130,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               style={{
                 opacity: videoReady ? 1 : 0,
                 transition: "opacity 0.3s ease-in",
+                mixBlendMode: "screen",
                 filter: "contrast(1.6) brightness(1.2) saturate(1.3)",
               }}
               onLoadedData={() => setVideoReady(true)}
