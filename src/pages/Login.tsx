@@ -387,7 +387,7 @@ const Login = () => {
                     <FormControl>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                        <input type="password" placeholder="••••••••" autoComplete="current-password" className={input3DLg} {...field} />
+                        <input type="password" placeholder="Enter password" autoComplete="current-password" className={input3DLg} {...field} />
                       </div>
                     </FormControl>
                     <FormMessage className="text-red-400 text-xs" />
