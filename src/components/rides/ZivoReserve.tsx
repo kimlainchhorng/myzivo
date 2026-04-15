@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format, addDays, setHours, setMinutes } from "date-fns";
-import reserveHero from "@/assets/zivo-reserve-hero.png";
+import reserveHero from "@/assets/zivo-reserve-hero.webp";
 import ScrollWheelPicker from "./ScrollWheelPicker";
 
 type Screen = "landing" | "datetime" | "route" | "confirmed";
