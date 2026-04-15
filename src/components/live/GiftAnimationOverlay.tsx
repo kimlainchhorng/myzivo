@@ -122,9 +122,6 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
               animate={{ scale: 1, opacity: videoReady ? 1 : 0 }}
               transition={{ type: "spring", damping: 12, stiffness: 120 }}
               className="relative"
-              style={{
-                mixBlendMode: "screen",
-              }}
             >
               <video
                 ref={videoRef}
@@ -142,11 +139,11 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
                 style={{
                   opacity: videoReady ? 1 : 0,
                   transition: "opacity 0.3s ease-in",
+                  mixBlendMode: "screen",
                 }}
                 onLoadedData={() => setVideoReady(true)}
                 onError={() => setVideoError(true)}
                 onEnded={() => {
-                  // Loop once then let timeout dismiss
                   if (videoRef.current) {
                     videoRef.current.currentTime = 0;
                     videoRef.current.play().catch(() => {});
