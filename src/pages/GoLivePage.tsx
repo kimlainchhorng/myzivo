@@ -867,7 +867,7 @@ export default function GoLivePage() {
               </motion.p>
               <p className="text-[10px] text-amber-400/60 uppercase tracking-wider">Z Coins Earned</p>
               {coinsEarned > 0 && (
-                <p className="text-[11px] text-green-400 font-semibold mt-1">≈ ${(coinsEarned * 0.005).toFixed(2)}</p>
+                <p className="text-[11px] text-green-400 font-semibold mt-1">≈ ${(coinsEarned * 0.009).toFixed(2)}</p>
               )}
             </div>
           </div>
@@ -975,7 +975,7 @@ export default function GoLivePage() {
                 </div>
                 <div className="text-left">
                   <p className="text-white text-sm font-bold">Stream Earnings</p>
-                  <p className="text-white/40 text-[10px]">Coins convert at $0.005 per coin</p>
+                  <p className="text-white/40 text-[10px]">Coins convert at $0.009 per coin</p>
                 </div>
               </div>
               <div className="flex items-center justify-between bg-black/20 rounded-xl px-3 py-2">
@@ -983,13 +983,13 @@ export default function GoLivePage() {
                   <img src={goldCoinIcon} alt="" className="w-5 h-5" />
                   <span className="text-amber-300 text-sm font-semibold">{coinsEarned.toLocaleString()} coins</span>
                 </div>
-                <span className="text-green-400 text-lg font-bold">${(coinsEarned * 0.005).toFixed(2)}</span>
+                <span className="text-green-400 text-lg font-bold">${(coinsEarned * 0.009).toFixed(2)}</span>
               </div>
               <button
                 onClick={() => {
                   if (cashedOut) return;
                   setCashedOut(true);
-                  toast.success(`$${(coinsEarned * 0.005).toFixed(2)} added to your ZIVO Wallet!`, {
+                  toast.success(`$${(coinsEarned * 0.009).toFixed(2)} added to your ZIVO Wallet!`, {
                     description: `${coinsEarned.toLocaleString()} coins converted`,
                     duration: 4000,
                   });
@@ -1002,7 +1002,7 @@ export default function GoLivePage() {
                     : "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/20 hover:from-green-600 hover:to-emerald-700"
                 )}
               >
-                {cashedOut ? "✓ Cashed Out to Wallet" : `Cash Out $${(coinsEarned * 0.005).toFixed(2)} to Wallet`}
+                {cashedOut ? "✓ Cashed Out to Wallet" : `Cash Out $${(coinsEarned * 0.009).toFixed(2)} to Wallet`}
               </button>
             </div>
           )}
