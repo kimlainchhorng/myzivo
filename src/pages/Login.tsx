@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle, Sparkles } from "lucide-react";
-import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
+
 import { toast } from "sonner";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
@@ -23,25 +23,12 @@ const loginSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-const normalizePhoneDigits = (value: string) =>
-  value
-    .normalize("NFKD")
-    .replace(/[０-９]/g, (digit) => String.fromCharCode(digit.charCodeAt(0) - 65248))
-    .replace(/\D/g, "");
 
 // Signup schema (extends login with name + confirm)
 const signupSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(50),
   lastName: z.string().min(1, "Last name is required").max(50),
   email: z.string().email("Please enter a valid email address"),
-  phone: z.string().trim().refine((value) => {
-    const digits = normalizePhoneDigits(value);
-    const valid = digits.length >= 7 && digits.length <= 15;
-    if (!valid) {
-      console.warn("[Signup] Phone validation failed:", { raw: value, digits, length: digits.length });
-    }
-    return valid;
-  }, "Please enter a valid phone number"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
   agreeToTerms: z.literal(true, { errorMap: () => ({ message: "You must agree to the Terms of Service" }) }),
@@ -124,7 +111,7 @@ const Login = () => {
       firstName: "",
       lastName: "",
       email: "",
-      phone: "",
+      
       password: "",
       confirmPassword: "",
       agreeToTerms: undefined as unknown as true,
@@ -222,7 +209,7 @@ const Login = () => {
     setIsLoading(true);
 
     const fullName = `${data.firstName} ${data.lastName}`.trim();
-    const { error } = await signUp(data.email, data.password, fullName, data.phone);
+    const { error } = await signUp(data.email, data.password, fullName);
 
     if (error) {
       setIsLoading(false);
@@ -446,36 +433,6 @@ const Login = () => {
                   )} />
                 </div>
 
-                <FormField control={signupForm.control} name="phone" render={({ field }) => (
-                  <FormItem className="space-y-0.5">
-                    <FormLabel className="text-white/70 text-xs font-medium">{t("auth.phone")}</FormLabel>
-                    <FormControl>
-                      <div>
-                        <CountryPhoneInput
-                          value={field.value}
-                          onChange={(value) => {
-                            signupForm.setValue("phone", value, {
-                              shouldDirty: true,
-                              shouldTouch: true,
-                              shouldValidate: true,
-                            });
-
-                            const digits = normalizePhoneDigits(value);
-                            if (digits.length >= 7 && digits.length <= 15) {
-                              signupForm.clearErrors("phone");
-                            }
-                          }}
-                          onBlur={() => {
-                            field.onBlur();
-                            void signupForm.trigger("phone");
-                          }}
-                          name={field.name}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-xs" />
-                  </FormItem>
-                )} />
 
                 <FormField control={signupForm.control} name="email" render={({ field }) => (
                   <FormItem className="space-y-0.5">
