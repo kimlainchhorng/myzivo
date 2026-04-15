@@ -28,13 +28,13 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePersonalizedHome, HomeRestaurant } from "@/hooks/usePersonalizedHome";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import zivoRideIcon from "@/assets/zivo-ride-icon.png";
-import zivoEatsIcon from "@/assets/zivo-eats-icon.png";
-import zivoFlightsIcon from "@/assets/zivo-flights-icon.png";
-import zivoHotelsIcon from "@/assets/zivo-hotels-icon.png";
-import zivoRentalCarIcon from "@/assets/zivo-rental-car.png";
-import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
-import zivoShoppingIcon from "@/assets/zivo-shopping.png";
+import zivoRideIcon from "@/assets/zivo-ride-icon.webp";
+import zivoEatsIcon from "@/assets/zivo-eats-icon.webp";
+import zivoFlightsIcon from "@/assets/zivo-flights-icon.webp";
+import zivoHotelsIcon from "@/assets/zivo-hotels-icon.webp";
+import zivoRentalCarIcon from "@/assets/zivo-rental-car.webp";
+import zivoReserveIcon from "@/assets/zivo-reserve-car.webp";
+import zivoShoppingIcon from "@/assets/zivo-shopping.webp";
 
 // Lazy-load below-fold heavy components
 const LiveTripTracker = lazy(() => import("@/components/home/widgets/LiveTripTracker"));
