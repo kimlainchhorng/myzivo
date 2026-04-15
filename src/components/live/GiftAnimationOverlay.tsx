@@ -2,7 +2,7 @@
  * GiftAnimationOverlay — Cinematic gift animation over live stream
  * Premium full-screen experience with rich golden glow, particles & video
  */
-import { useEffect, useRef, useState, useCallback, useMemo, forwardRef } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { giftImages } from "@/config/giftIcons";
 import { giftAnimationVideos } from "@/config/giftAnimations";
