@@ -23,8 +23,22 @@ const VerifyOTP = () => {
   const navUserId = navState?.userId;
   const redirectTo = getSafeRedirectTarget(searchParams.get("redirect") ?? navState?.redirectTo);
 
-  const [email, setEmail] = useState<string | undefined>(navEmail);
-  const userId = navUserId;
+  // Persist email in sessionStorage so page refreshes don't lose it
+  const [email, setEmail] = useState<string | undefined>(() => {
+    if (navEmail) {
+      sessionStorage.setItem("zivo_otp_email", navEmail);
+      return navEmail;
+    }
+    return sessionStorage.getItem("zivo_otp_email") || undefined;
+  });
+
+  const [userId] = useState<string | undefined>(() => {
+    if (navUserId) {
+      sessionStorage.setItem("zivo_otp_userId", navUserId);
+      return navUserId;
+    }
+    return sessionStorage.getItem("zivo_otp_userId") || undefined;
+  });
 
   useEffect(() => {
     const hydrateEmail = async () => {
@@ -32,12 +46,12 @@ const VerifyOTP = () => {
       const { data } = await supabase.auth.getUser();
       if (data.user?.email) {
         setEmail(data.user.email);
+        sessionStorage.setItem("zivo_otp_email", data.user.email);
       }
-      // Don't redirect — show a "session expired" UI instead
     };
 
     void hydrateEmail();
-  }, [email, navigate]);
+  }, [email]);
 
   useEffect(() => {
     if (resendCooldown > 0) {
