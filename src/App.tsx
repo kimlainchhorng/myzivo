@@ -196,6 +196,7 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 
 const VerifyOTP = lazy(() => lazyRetry(() => import("./pages/VerifyOTP")));
 const Setup = lazy(() => lazyRetry(() => import("./pages/Setup")));
+const VerifyNewDevice = lazy(() => lazyRetry(() => import("./pages/VerifyNewDevice")));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -726,6 +727,7 @@ const App = () => (
                 <Route path="/onboarding" element={<Onboarding />} />
                 
                 <Route path="/verify-otp" element={<VerifyOTP />} />
+                <Route path="/verify-new-device" element={<VerifyNewDevice />} />
                 <Route path="/setup" element={<Setup />} />
                 
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
