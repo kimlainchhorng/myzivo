@@ -77,7 +77,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
   useEffect(() => {
     if (!activeGift) return;
     const isPremiumGift = activeGift.coins >= 100;
-    timeoutRef.current = setTimeout(dismiss, isPremiumGift ? 5000 : 4000);
+    timeoutRef.current = setTimeout(dismiss, isPremiumGift ? 8000 : 6000);
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
