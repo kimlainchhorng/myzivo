@@ -201,6 +201,8 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         // Trigger premium animation for high-value simulated gifts (rare)
         if (giftAnimationVideos[gift.name] && Math.random() < 0.5) {
           setActiveGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
+          setShowGiftPanel(false);
+          setSelectedGift(null);
         }
         // Update top gifters
         setTopGifters(prev => {
@@ -343,9 +345,11 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       playGiftSound(newCombo, selectedGift.coins);
     }
 
-    // Trigger premium animation for gifts with video
+    // Trigger premium animation for gifts with video — auto-close panel for immersive experience
     if (giftAnimationVideos[selectedGift.name]) {
       setActiveGiftAnim({ name: selectedGift.name, coins: totalCoins, senderName: "You" });
+      setShowGiftPanel(false);
+      setSelectedGift(null);
     }
 
     // Update top gifters
