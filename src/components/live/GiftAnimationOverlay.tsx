@@ -2,7 +2,7 @@
  * GiftAnimationOverlay — Cinematic gift animation over live stream
  * Premium full-screen experience with rich golden glow, particles & video
  */
-import { useEffect, useRef, useState, useCallback, useMemo, forwardRef } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { giftImages } from "@/config/giftIcons";
 import { giftAnimationVideos } from "@/config/giftAnimations";
@@ -15,7 +15,7 @@ interface GiftAnimationOverlayProps {
   comboCount?: number;
 }
 
-const GiftAnimationOverlay = forwardRef<HTMLDivElement, GiftAnimationOverlayProps>(function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCount = 1 }, _ref) {
+function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCount = 1 }: GiftAnimationOverlayProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const onCompleteRef = useRef(onComplete);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -625,6 +625,6 @@ const GiftAnimationOverlay = forwardRef<HTMLDivElement, GiftAnimationOverlayProp
       </motion.div>
     </AnimatePresence>
   );
-});
+}
 
 export default GiftAnimationOverlay;
