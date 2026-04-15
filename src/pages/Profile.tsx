@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
-import { useCountry } from "@/hooks/useCountry";
+
 import SEOHead from "@/components/SEOHead";
 import {
   User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
@@ -69,10 +69,6 @@ const LANGS = [
 ];
 
 const getFlagUrl = (cc: string) => `/flags/${cc}.svg`;
-const CITY_BG: Record<string, string> = {
-  US: "/flags/city-us.jpg",
-  KH: "/flags/city-kh.jpg",
-};
 
 /* ── 3D tilt hook ── */
 function use3DTilt(ref: React.RefObject<HTMLElement | null>, intensity = 8) {
@@ -133,7 +129,7 @@ const Profile = () => {
   const queryClient = useQueryClient();
   const location = useLocation();
   const { t, currentLanguage, changeLanguage } = useI18n();
-  const { country, setCountry, countries } = useCountry();
+  
   const { user, signOut, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
@@ -663,31 +659,6 @@ const Profile = () => {
             </AnimatePresence>
           </ParallaxSection>
 
-          {/* ── Country Selector (admin only — others use IP detection) ── */}
-          {isAdmin && (
-            <ParallaxSection index={1}>
-              <div className="flex items-center justify-center gap-2 mb-4">
-                {countries.map((c) => (
-                  <motion.button
-                    key={c.code}
-                    whileTap={{ scale: 0.94 }}
-                    onClick={() => setCountry(c.code)}
-                    className={`relative flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-[12px] font-bold transition-all touch-manipulation overflow-hidden min-w-[120px] justify-center ${
-                      country === c.code
-                        ? "ring-2 ring-primary shadow-xl shadow-primary/20"
-                        : "ring-1 ring-border/30 opacity-65 hover:opacity-100"
-                    }`}
-                  >
-                    <img src={CITY_BG[c.code]} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-                    <div className={`absolute inset-0 transition-colors duration-500 ${country === c.code ? "bg-primary/55" : "bg-foreground/40"}`} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/5" />
-                    <img src={getFlagUrl(c.code.toLowerCase())} alt={c.name} className="w-5 h-3.5 rounded-[2px] object-cover shadow-md border border-white/40 shrink-0 relative z-10" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                    <span className="relative z-10 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">{c.name}</span>
-                  </motion.button>
-                ))}
-              </div>
-            </ParallaxSection>
-          )}
 
           {profileLoading ? (
             <div className="flex items-center justify-center py-20">
