@@ -200,7 +200,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className="fixed inset-0 z-[100] pointer-events-none overflow-hidden"
+        className="fixed inset-0 z-[99998] pointer-events-none overflow-hidden"
       >
         {/* ── Premium backdrop glow ── */}
         {isPremium && (
