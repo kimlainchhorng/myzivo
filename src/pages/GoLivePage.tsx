@@ -1676,7 +1676,8 @@ export default function GoLivePage() {
                 animate={{ x: 0, opacity: 1, scale: 1 }}
                 exit={{ x: 300, opacity: 0, scale: 0.7 }}
                 transition={{ type: "spring", damping: 16, stiffness: 200 }}
-                className="absolute right-3 bottom-[280px] z-40"
+                className="fixed right-3 z-[99999]"
+                style={{ top: 120 }}
               >
                 <div
                   className="flex items-center gap-2 px-3 py-2.5 rounded-2xl"
