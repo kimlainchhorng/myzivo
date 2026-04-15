@@ -794,13 +794,16 @@ export default function GoLivePage() {
       setSelectedGift(null);
     }
     setGiftQty(1); // Reset qty after send
-    // ── "Gift Sent!" flyout on right side ──
-    const flyoutId = `sent-${Date.now()}`;
-    const effectiveTier = Math.max(qty, newCombo * qty);
-    setSentGiftFlyout({ id: flyoutId, giftName: gift.name, coins: totalCoins, qty, combo: newCombo, tier: effectiveTier });
-    setSendSparkle(true);
-    setTimeout(() => setSendSparkle(false), 600);
-    setTimeout(() => setSentGiftFlyout((cur) => cur?.id === flyoutId ? null : cur), 2500);
+    // ── "Gift Sent!" flyout — skip when full-screen video animation plays (has its own banner) ──
+    const hasVideoAnim = Boolean(giftAnimationVideos[gift.name]);
+    if (!hasVideoAnim) {
+      const flyoutId = `sent-${Date.now()}`;
+      const effectiveTier = Math.max(qty, newCombo * qty);
+      setSentGiftFlyout({ id: flyoutId, giftName: gift.name, coins: totalCoins, qty, combo: newCombo, tier: effectiveTier });
+      setSendSparkle(true);
+      setTimeout(() => setSendSparkle(false), 600);
+      setTimeout(() => setSentGiftFlyout((cur) => cur?.id === flyoutId ? null : cur), 2500);
+    }
     // Add to PK Battle score if active
     addPkScore(totalCoins);
   }, [spawnFloatingReaction, giftCombo, addPkScore]);
