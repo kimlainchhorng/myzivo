@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getDeviceFingerprint, getDeviceName } from "@/lib/security/deviceFingerprint";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle, Sparkles } from "lucide-react";
