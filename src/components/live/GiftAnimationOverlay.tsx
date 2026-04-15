@@ -130,6 +130,7 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
                 opacity: videoReady ? 1 : 0,
                 transition: "opacity 0.3s ease-in",
                 mixBlendMode: "screen",
+                filter: "contrast(1.8) brightness(1.3) saturate(1.4)",
               }}
               onLoadedData={() => setVideoReady(true)}
               onError={() => setVideoError(true)}
