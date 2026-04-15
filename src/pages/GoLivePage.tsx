@@ -2089,7 +2089,7 @@ export default function GoLivePage() {
                       <span className="text-[8px] text-amber-400/50 uppercase tracking-wider font-medium">Earned</span>
                     </div>
                     <button
-                      onClick={() => toast("Coin Recharge coming soon!", { description: "You'll be able to purchase Z Coins to send premium gifts." })}
+                      onClick={() => setShowRechargeSheet(true)}
                       className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 active:scale-90 transition-transform"
                     >
                       <span className="text-amber-300 text-xs font-bold leading-none">+</span>
@@ -2294,7 +2294,7 @@ export default function GoLivePage() {
                   ))}
                   <div className="flex-1" />
                   <button
-                    onClick={() => toast("Coin Recharge coming soon!", { description: "You'll be able to purchase Z Coins to send premium gifts." })}
+                    onClick={() => setShowRechargeSheet(true)}
                     className="flex items-center gap-1.5 bg-gradient-to-r from-amber-600 to-yellow-500 rounded-full px-3.5 py-1.5 shadow-lg shadow-amber-500/20 active:scale-95 transition-transform"
                   >
                     <img src={goldCoinIcon} alt="" className="w-4 h-4" />
