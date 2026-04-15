@@ -117,7 +117,7 @@ export default function GoLivePage() {
   // ── Gift notification queue (right-side stacked, TikTok-style) ──
   const [giftNotifQueue, setGiftNotifQueue] = useState<{ id: string; sender: string; giftName: string; coins: number }[]>([]);
   // ── "Gift Sent!" flyout when user sends ──
-  const [sentGiftFlyout, setSentGiftFlyout] = useState<{ id: string; giftName: string; coins: number; qty: number } | null>(null);
+  const [sentGiftFlyout, setSentGiftFlyout] = useState<{ id: string; giftName: string; coins: number; qty: number; combo: number; tier: number } | null>(null);
   // ── Send button sparkle burst ──
   const [sendSparkle, setSendSparkle] = useState(false);
   const lastGiftRef = useRef<{ name: string; time: number }>({ name: "", time: 0 });
@@ -794,7 +794,8 @@ export default function GoLivePage() {
     setGiftQty(1); // Reset qty after send
     // ── "Gift Sent!" flyout on right side ──
     const flyoutId = `sent-${Date.now()}`;
-    setSentGiftFlyout({ id: flyoutId, giftName: gift.name, coins: totalCoins, qty });
+    const effectiveTier = Math.max(qty, newCombo * qty);
+    setSentGiftFlyout({ id: flyoutId, giftName: gift.name, coins: totalCoins, qty, combo: newCombo, tier: effectiveTier });
     setSendSparkle(true);
     setTimeout(() => setSendSparkle(false), 600);
     setTimeout(() => setSentGiftFlyout((cur) => cur?.id === flyoutId ? null : cur), 2500);
@@ -1680,41 +1681,49 @@ export default function GoLivePage() {
                 <div
                   className="flex items-center gap-2 px-3 py-2.5 rounded-2xl"
                   style={{
-                    background: sentGiftFlyout.qty >= 50
+                    background: sentGiftFlyout.tier >= 50
                       ? "linear-gradient(135deg, rgba(239,68,68,0.95) 0%, rgba(220,38,38,0.85) 50%, rgba(185,28,28,0.7) 100%)"
-                      : sentGiftFlyout.qty >= 20
+                      : sentGiftFlyout.tier >= 20
                         ? "linear-gradient(135deg, rgba(245,158,11,0.95) 0%, rgba(217,119,6,0.85) 50%, rgba(180,83,9,0.7) 100%)"
-                        : sentGiftFlyout.qty >= 5
+                        : sentGiftFlyout.tier >= 5
                           ? "linear-gradient(135deg, rgba(168,85,247,0.95) 0%, rgba(139,92,246,0.85) 50%, rgba(109,40,217,0.7) 100%)"
-                          : "linear-gradient(135deg, rgba(16,185,129,0.9) 0%, rgba(5,150,105,0.8) 50%, rgba(4,120,87,0.6) 100%)",
+                          : sentGiftFlyout.tier >= 3
+                            ? "linear-gradient(135deg, rgba(59,130,246,0.95) 0%, rgba(37,99,235,0.85) 50%, rgba(29,78,216,0.7) 100%)"
+                            : "linear-gradient(135deg, rgba(16,185,129,0.9) 0%, rgba(5,150,105,0.8) 50%, rgba(4,120,87,0.6) 100%)",
                     backdropFilter: "blur(12px)",
-                    boxShadow: sentGiftFlyout.qty >= 50
+                    boxShadow: sentGiftFlyout.tier >= 50
                       ? "0 4px 24px rgba(239,68,68,0.5), inset 0 1px 0 rgba(255,255,255,0.2)"
-                      : sentGiftFlyout.qty >= 20
+                      : sentGiftFlyout.tier >= 20
                         ? "0 4px 24px rgba(245,158,11,0.5), inset 0 1px 0 rgba(255,255,255,0.2)"
-                        : sentGiftFlyout.qty >= 5
+                        : sentGiftFlyout.tier >= 5
                           ? "0 4px 24px rgba(168,85,247,0.5), inset 0 1px 0 rgba(255,255,255,0.2)"
-                          : "0 4px 24px rgba(16,185,129,0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
-                    border: sentGiftFlyout.qty >= 50
+                          : sentGiftFlyout.tier >= 3
+                            ? "0 4px 24px rgba(59,130,246,0.4), inset 0 1px 0 rgba(255,255,255,0.2)"
+                            : "0 4px 24px rgba(16,185,129,0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
+                    border: sentGiftFlyout.tier >= 50
                       ? "1px solid rgba(239,68,68,0.4)"
-                      : sentGiftFlyout.qty >= 20
+                      : sentGiftFlyout.tier >= 20
                         ? "1px solid rgba(245,158,11,0.4)"
-                        : sentGiftFlyout.qty >= 5
+                        : sentGiftFlyout.tier >= 5
                           ? "1px solid rgba(168,85,247,0.4)"
-                          : "1px solid rgba(16,185,129,0.3)",
+                          : sentGiftFlyout.tier >= 3
+                            ? "1px solid rgba(59,130,246,0.3)"
+                            : "1px solid rgba(16,185,129,0.3)",
                   }}
                 >
                   {giftImages[sentGiftFlyout.giftName] ? (
                     <motion.img
                       src={giftImages[sentGiftFlyout.giftName]}
                       alt=""
-                      className={cn("object-contain", sentGiftFlyout.qty >= 20 ? "w-10 h-10" : "w-8 h-8")}
+                      className={cn("object-contain", sentGiftFlyout.tier >= 20 ? "w-10 h-10" : "w-8 h-8")}
                       style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}
-                      animate={sentGiftFlyout.qty >= 50
+                      animate={sentGiftFlyout.tier >= 50
                         ? { rotate: [0, -15, 15, -10, 10, 0], scale: [1, 1.3, 1.1, 1.25, 1] }
-                        : { rotate: [0, -10, 10, 0], scale: [1, 1.15, 1] }
+                        : sentGiftFlyout.tier >= 5
+                          ? { rotate: [0, -10, 10, -5, 5, 0], scale: [1, 1.2, 1.05, 1.15, 1] }
+                          : { rotate: [0, -10, 10, 0], scale: [1, 1.15, 1] }
                       }
-                      transition={{ duration: sentGiftFlyout.qty >= 20 ? 0.7 : 0.5 }}
+                      transition={{ duration: sentGiftFlyout.tier >= 20 ? 0.7 : 0.5 }}
                     />
                   ) : (
                     <Gift className="h-6 w-6 text-amber-300" />
@@ -1722,12 +1731,13 @@ export default function GoLivePage() {
                   <div>
                     <p className="text-white text-[11px] font-bold">
                       <Check className="h-3 w-3 inline mr-0.5" />
-                      {sentGiftFlyout.qty >= 50 ? " 🔥 COMBO!" : sentGiftFlyout.qty >= 20 ? " ⚡ Combo!" : " Gift Sent!"}
-                      {sentGiftFlyout.qty > 1 && <span className={cn("ml-1", sentGiftFlyout.qty >= 50 ? "text-yellow-200" : sentGiftFlyout.qty >= 20 ? "text-amber-200" : "")}>x{sentGiftFlyout.qty}</span>}
+                      {sentGiftFlyout.tier >= 50 ? " 🔥 COMBO!" : sentGiftFlyout.tier >= 20 ? " ⚡ Combo!" : sentGiftFlyout.tier >= 5 ? " 💜 Combo!" : sentGiftFlyout.tier >= 3 ? " 💙 Hit!" : " Gift Sent!"}
+                      {sentGiftFlyout.combo > 1 && <span className="ml-1 text-yellow-200">x{sentGiftFlyout.combo}</span>}
+                      {sentGiftFlyout.qty > 1 && <span className={cn("ml-1", sentGiftFlyout.tier >= 50 ? "text-yellow-200" : sentGiftFlyout.tier >= 20 ? "text-amber-200" : sentGiftFlyout.tier >= 5 ? "text-purple-200" : sentGiftFlyout.tier >= 3 ? "text-blue-200" : "text-emerald-200")}>×{sentGiftFlyout.qty}</span>}
                     </p>
                     <div className="flex items-center gap-1">
                       <img src={goldCoinIcon} alt="" className="w-3 h-3" />
-                      <span className={cn("text-[10px] font-semibold", sentGiftFlyout.qty >= 50 ? "text-yellow-100" : sentGiftFlyout.qty >= 20 ? "text-amber-100" : "text-emerald-100")}>{sentGiftFlyout.coins.toLocaleString()}</span>
+                      <span className={cn("text-[10px] font-semibold", sentGiftFlyout.tier >= 50 ? "text-yellow-100" : sentGiftFlyout.tier >= 20 ? "text-amber-100" : sentGiftFlyout.tier >= 5 ? "text-purple-100" : "text-emerald-100")}>{sentGiftFlyout.coins.toLocaleString()}</span>
                     </div>
                   </div>
                   {/* Sparkle particles */}
