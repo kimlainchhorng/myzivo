@@ -149,10 +149,13 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
           const r = px[i], g = px[i + 1], b = px[i + 2];
           const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
           const chroma = Math.max(r, g, b) - Math.min(r, g, b);
-          if (luma < 18 && chroma < 22) { px[i + 3] = 0; continue; }
-          if (luma < 48 && chroma < 36) {
-            px[i + 3] = Math.min(px[i + 3], Math.max(0, Math.min(255, Math.round(((luma - 18) / 30) * 255))));
+          // Hard cut — fully transparent for very dark, low-saturation pixels
+          if (luma < 30 && chroma < 35) { px[i + 3] = 0; continue; }
+          // Soft edge — gradual fade for near-black pixels (avoids harsh cutout edges)
+          if (luma < 70 && chroma < 50) {
+            px[i + 3] = Math.min(px[i + 3], Math.max(0, Math.min(255, Math.round(((luma - 30) / 40) * 255))));
           }
+          // Slight warmth boost for gift visuals
           px[i] = Math.min(255, Math.round(r * 1.08));
           px[i + 1] = Math.min(255, Math.round(g * 1.05));
           px[i + 2] = Math.min(255, Math.round(b * 1.08));
