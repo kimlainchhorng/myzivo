@@ -175,7 +175,30 @@ const VerifyOTP = () => {
   };
 
   if (!email) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted px-4 safe-area-top safe-area-bottom">
+        <div className="w-full max-w-md text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-card/80 backdrop-blur-2xl border border-border rounded-3xl shadow-2xl p-6 sm:p-8"
+          >
+            <Mail className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-foreground mb-2">Session Expired</h2>
+            <p className="text-muted-foreground text-sm mb-6">
+              Your verification session has expired. Please sign up again to receive a new code.
+            </p>
+            <Button
+              onClick={() => navigate("/login?mode=signup", { replace: true })}
+              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold"
+            >
+              Back to Sign Up
+            </Button>
+          </motion.div>
+        </div>
+      </div>
+    );
   }
 
   return (
