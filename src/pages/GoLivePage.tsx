@@ -2301,8 +2301,8 @@ export default function GoLivePage() {
                         <button
                           onClick={() => {
                             sendGift(selectedGift, giftQty);
-                            setSelectedGift(null);
-                            setShowGiftPanel(false);
+                            setGiftQty(1);
+                            // Keep panel open — user closes manually via X
                           }}
                           className={cn(
                             "relative flex items-center gap-1.5 rounded-full px-4 py-2.5 shadow-lg active:scale-90 transition-all shrink-0 overflow-hidden",

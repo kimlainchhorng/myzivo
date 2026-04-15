@@ -356,9 +356,8 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       return [...prev, { name: "You", coins: totalCoins }].sort((a, b) => b.coins - a.coins).slice(0, 5);
     });
 
-    setSelectedGift(null);
     setGiftQty(1);
-    setShowGiftPanel(false);
+    // Keep gift panel open — user closes manually via X
   }, [selectedGift, giftQty, giftCombo, sendReaction]);
 
   const votePoll = useCallback((optIndex: number) => {
