@@ -3,6 +3,7 @@
  * Premium 2026 redesign with enhanced visuals
  */
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useGiftAnimationQueue } from "@/hooks/useGiftAnimationQueue";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
 import CoinRechargeSheet from "@/components/live/CoinRechargeSheet";

@@ -3,6 +3,7 @@
  * Full-screen immersive watcher experience with gifts, reactions & engagement
  */
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useGiftAnimationQueue } from "@/hooks/useGiftAnimationQueue";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
