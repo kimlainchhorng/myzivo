@@ -1096,31 +1096,54 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
             <div
               className="flex items-center gap-2 px-3 py-2.5 rounded-2xl"
               style={{
-                background: "linear-gradient(135deg, rgba(16,185,129,0.9) 0%, rgba(5,150,105,0.8) 50%, rgba(4,120,87,0.6) 100%)",
+                background: sentGiftFlyout.qty >= 50
+                  ? "linear-gradient(135deg, rgba(239,68,68,0.95) 0%, rgba(220,38,38,0.85) 50%, rgba(185,28,28,0.7) 100%)"
+                  : sentGiftFlyout.qty >= 20
+                    ? "linear-gradient(135deg, rgba(245,158,11,0.95) 0%, rgba(217,119,6,0.85) 50%, rgba(180,83,9,0.7) 100%)"
+                    : sentGiftFlyout.qty >= 5
+                      ? "linear-gradient(135deg, rgba(168,85,247,0.95) 0%, rgba(139,92,246,0.85) 50%, rgba(109,40,217,0.7) 100%)"
+                      : "linear-gradient(135deg, rgba(16,185,129,0.9) 0%, rgba(5,150,105,0.8) 50%, rgba(4,120,87,0.6) 100%)",
                 backdropFilter: "blur(12px)",
-                boxShadow: "0 4px 24px rgba(16,185,129,0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
-                border: "1px solid rgba(16,185,129,0.3)",
+                boxShadow: sentGiftFlyout.qty >= 50
+                  ? "0 4px 24px rgba(239,68,68,0.5), inset 0 1px 0 rgba(255,255,255,0.2)"
+                  : sentGiftFlyout.qty >= 20
+                    ? "0 4px 24px rgba(245,158,11,0.5), inset 0 1px 0 rgba(255,255,255,0.2)"
+                    : sentGiftFlyout.qty >= 5
+                      ? "0 4px 24px rgba(168,85,247,0.5), inset 0 1px 0 rgba(255,255,255,0.2)"
+                      : "0 4px 24px rgba(16,185,129,0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
+                border: sentGiftFlyout.qty >= 50
+                  ? "1px solid rgba(239,68,68,0.4)"
+                  : sentGiftFlyout.qty >= 20
+                    ? "1px solid rgba(245,158,11,0.4)"
+                    : sentGiftFlyout.qty >= 5
+                      ? "1px solid rgba(168,85,247,0.4)"
+                      : "1px solid rgba(16,185,129,0.3)",
               }}
             >
               {giftImages[sentGiftFlyout.giftName] ? (
                 <motion.img
                   src={giftImages[sentGiftFlyout.giftName]}
                   alt=""
-                  className="w-8 h-8 object-contain"
+                  className={cn("object-contain", sentGiftFlyout.qty >= 20 ? "w-10 h-10" : "w-8 h-8")}
                   style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}
-                  animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.15, 1] }}
-                  transition={{ duration: 0.5 }}
+                  animate={sentGiftFlyout.qty >= 50
+                    ? { rotate: [0, -15, 15, -10, 10, 0], scale: [1, 1.3, 1.1, 1.25, 1] }
+                    : { rotate: [0, -10, 10, 0], scale: [1, 1.15, 1] }
+                  }
+                  transition={{ duration: sentGiftFlyout.qty >= 20 ? 0.7 : 0.5 }}
                 />
               ) : (
                 <Gift className="h-6 w-6 text-amber-300" />
               )}
               <div>
                 <p className="text-white text-[11px] font-bold">
-                  <CheckCircle className="h-3 w-3 inline mr-0.5" /> Gift Sent!{sentGiftFlyout.qty > 1 ? ` x${sentGiftFlyout.qty}` : ""}
+                  <CheckCircle className="h-3 w-3 inline mr-0.5" />
+                  {sentGiftFlyout.qty >= 50 ? " 🔥 COMBO!" : sentGiftFlyout.qty >= 20 ? " ⚡ Combo!" : " Gift Sent!"}
+                  {sentGiftFlyout.qty > 1 && <span className={cn("ml-1", sentGiftFlyout.qty >= 50 ? "text-yellow-200" : sentGiftFlyout.qty >= 20 ? "text-amber-200" : "")}>x{sentGiftFlyout.qty}</span>}
                 </p>
                 <div className="flex items-center gap-1">
                   <img src={goldCoinIcon} alt="" className="w-3 h-3" />
-                  <span className="text-emerald-100 text-[10px] font-semibold">{sentGiftFlyout.coins.toLocaleString()}</span>
+                  <span className={cn("text-[10px] font-semibold", sentGiftFlyout.qty >= 50 ? "text-yellow-100" : sentGiftFlyout.qty >= 20 ? "text-amber-100" : "text-emerald-100")}>{sentGiftFlyout.coins.toLocaleString()}</span>
                 </div>
               </div>
             </div>
