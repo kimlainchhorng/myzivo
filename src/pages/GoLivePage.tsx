@@ -159,6 +159,8 @@ export default function GoLivePage() {
   const [showGuestInvite, setShowGuestInvite] = useState(false);
   // ── VIP entrance ──
   const [vipEntrance, setVipEntrance] = useState<{ name: string; level: number } | null>(null);
+  // ── Cash out state ──
+  const [cashedOut, setCashedOut] = useState(false);
   // ── Host level ──
   const hostLevel = useMemo(() => Math.min(99, Math.floor(coinsEarned / 50) + 1), [coinsEarned]);
   // ── Chat mute/ban ──
