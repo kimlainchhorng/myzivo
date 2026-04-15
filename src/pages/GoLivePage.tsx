@@ -112,8 +112,7 @@ export default function GoLivePage() {
   const [coinsEarned, setCoinsEarned] = useState(0);
   const [coinBalance, setCoinBalance] = useState(1250);
   const [showRechargeSheet, setShowRechargeSheet] = useState(false);
-  const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
-  const [giftCombo, setGiftCombo] = useState(0);
+  const { activeGift: activeGiftAnim, comboCount: giftCombo, enqueue: enqueueGiftAnim, onComplete: onGiftAnimComplete } = useGiftAnimationQueue();
   const [viewerGiftNotif, setViewerGiftNotif] = useState<{ id: string; sender: string; giftName: string; coins: number } | null>(null);
   // ── Gift notification queue (right-side stacked, TikTok-style) ──
   const [giftNotifQueue, setGiftNotifQueue] = useState<{ id: string; sender: string; giftName: string; coins: number }[]>([]);
@@ -791,7 +790,7 @@ export default function GoLivePage() {
       }
     }
     
-    setActiveGiftAnim({ name: gift.name, coins: totalCoins, senderName: sender });
+    enqueueGiftAnim({ name: gift.name, coins: totalCoins, senderName: sender, combo: newCombo });
     // Auto-close gift panel for immersive video animation experience
     if (giftAnimationVideos[gift.name]) {
       setShowGiftPanel(false);
@@ -3067,7 +3066,7 @@ export default function GoLivePage() {
       {/* Full-screen gift animation overlay */}
       <GiftAnimationOverlay
         activeGift={activeGiftAnim}
-        onComplete={() => { setActiveGiftAnim(null); setGiftCombo(0); }}
+        onComplete={onGiftAnimComplete}
         giftPanelOpen={showGiftPanel}
         comboCount={giftCombo}
       />
