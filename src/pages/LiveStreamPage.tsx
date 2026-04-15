@@ -278,6 +278,16 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     if (!selectedGift) return;
     const totalCoins = selectedGift.coins * giftQty;
 
+    // Check balance
+    if (totalCoins > coinBalance) {
+      toast.error("Not enough coins!", { description: "Top up your balance to send this gift." });
+      setShowRechargeSheet(true);
+      return;
+    }
+
+    // Deduct coins
+    setCoinBalance(prev => prev - totalCoins);
+
     // Haptic feedback
     try { navigator.vibrate?.(giftQty > 1 ? [50, 30, 50] : [50]); } catch {} // eslint-disable-line no-empty
 
@@ -909,10 +919,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               <div className="flex items-center gap-2 shrink-0">
                 <div className="flex items-center gap-1 bg-amber-500/15 rounded-full px-2.5 py-1 border border-amber-500/20">
                   <img src={goldCoinIcon} alt="coins" className="w-4 h-4" />
-                  <span className="text-amber-300 text-[11px] font-bold">1,250</span>
+                  <span className="text-amber-300 text-[11px] font-bold">{coinBalance.toLocaleString()}</span>
                 </div>
                 <button
-                  onClick={() => toast.info("Top Up coming soon!", { description: "Purchase Z Coins" })}
+                  onClick={() => setShowRechargeSheet(true)}
                   className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 active:scale-90 transition-transform"
                 >
                   <span className="text-amber-300 text-xs font-bold leading-none">+</span>
@@ -1057,7 +1067,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               ))}
               <div className="flex-1" />
               <button
-                onClick={() => toast.info("Top Up coming soon!", { description: "Purchase Z Coins" })}
+                onClick={() => setShowRechargeSheet(true)}
                 className="flex items-center gap-1.5 bg-gradient-to-r from-amber-600 to-yellow-500 rounded-full px-3.5 py-1.5 shadow-lg shadow-amber-500/20 active:scale-95 transition-transform"
               >
                 <img src={goldCoinIcon} alt="" className="w-4 h-4" />
@@ -1385,6 +1395,13 @@ export default function LiveStreamPage() {
           ))
         )}
       </div>
+
+      <CoinRechargeSheet
+        open={showRechargeSheet}
+        onClose={() => setShowRechargeSheet(false)}
+        currentBalance={coinBalance}
+        onPurchase={(coins) => setCoinBalance(prev => prev + coins)}
+      />
 
       <ZivoMobileNav />
     </div>
