@@ -15,7 +15,7 @@ interface GiftAnimationOverlayProps {
   comboCount?: number;
 }
 
-const GiftAnimationOverlay = forwardRef<HTMLDivElement, GiftAnimationOverlayProps>(function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCount = 1 }, _ref) {
+function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCount = 1 }: GiftAnimationOverlayProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const onCompleteRef = useRef(onComplete);
   const videoRef = useRef<HTMLVideoElement>(null);
