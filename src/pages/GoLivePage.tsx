@@ -1065,16 +1065,30 @@ export default function GoLivePage() {
         {cameraError ? (
           <div className="w-full h-full bg-gradient-to-br from-violet-950/80 via-black to-rose-950/60 flex items-center justify-center">
             <div className="text-center space-y-4">
-              <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto border border-white/10">
-                <CameraOff className="h-8 w-8 text-white/20" />
-              </div>
+              <motion.div
+                className="w-24 h-24 rounded-full flex items-center justify-center mx-auto relative"
+                style={{
+                  background: "radial-gradient(circle, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 60%, transparent 100%)",
+                  border: "1.5px solid rgba(255,255,255,0.08)",
+                }}
+                animate={{ scale: [1, 1.04, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <CameraOff className="h-9 w-9 text-white/15" />
+                {/* Animated ring */}
+                <motion.div
+                  className="absolute inset-0 rounded-full border border-white/10"
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </motion.div>
               <div>
-                <p className="text-white/50 text-sm font-medium">Camera unavailable</p>
-                <p className="text-white/30 text-xs mt-1">Check permissions or try another device</p>
+                <p className="text-white/40 text-sm font-medium">Camera unavailable</p>
+                <p className="text-white/20 text-[11px] mt-1">Check permissions or try another device</p>
               </div>
               {phase === "setup" && (
-                <Button size="sm" variant="outline" onClick={startCamera} className="text-white border-white/20 rounded-full">
-                  <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Retry
+                <Button size="sm" variant="outline" onClick={startCamera} className="text-white border-white/20 rounded-full gap-1.5">
+                  <RotateCcw className="h-3.5 w-3.5" /> Retry
                 </Button>
               )}
             </div>
@@ -1211,22 +1225,42 @@ export default function GoLivePage() {
             </button>
           </div>
 
-          {/* Stream Goal Progress Bar */}
-          <div className="mt-2 bg-black/30 backdrop-blur-md rounded-xl px-3 py-2 border border-white/5">
+          {/* Stream Goal Progress Bar — Enhanced */}
+          <div className="mt-2 bg-black/30 backdrop-blur-md rounded-xl px-3 py-2 border border-white/5 relative overflow-hidden">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] text-white/50 font-medium"> Stream Goal</span>
+              <span className="text-[10px] text-white/50 font-medium flex items-center gap-1"><Target className="h-3 w-3 text-amber-400/70" /> Stream Goal</span>
               <span className="text-[10px] text-amber-300 font-bold">{Math.min(coinsEarned, streamGoal)}/{streamGoal}</span>
             </div>
-            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden relative">
               <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-400"
+                className="h-full rounded-full"
+                style={{
+                  background: coinsEarned >= streamGoal
+                    ? "linear-gradient(90deg, #10B981, #34D399, #6EE7B7)"
+                    : "linear-gradient(90deg, #F59E0B, #FBBF24, #FCD34D)",
+                }}
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min((coinsEarned / streamGoal) * 100, 100)}%` }}
                 transition={{ type: "spring", damping: 20 }}
               />
+              {/* Shimmer effect on progress bar */}
+              {coinsEarned > 0 && coinsEarned < streamGoal && (
+                <motion.div
+                  className="absolute top-0 h-full w-8 rounded-full"
+                  style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)" }}
+                  animate={{ left: ["-10%", "110%"] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
+                />
+              )}
             </div>
             {coinsEarned >= streamGoal && (
-              <p className="text-[9px] text-amber-300 mt-1 text-center animate-pulse flex items-center justify-center gap-0.5"><PartyPopper className="h-3 w-3" /> Goal reached!</p>
+              <motion.p
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-[9px] text-emerald-300 mt-1 text-center flex items-center justify-center gap-0.5 font-semibold"
+              >
+                <PartyPopper className="h-3 w-3" /> Goal reached! 🎉
+              </motion.p>
             )}
           </div>
 

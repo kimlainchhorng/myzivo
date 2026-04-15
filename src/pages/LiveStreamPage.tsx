@@ -580,21 +580,32 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       </div>
 
       {/* ── Floating reactions ── */}
-      <div className="absolute right-4 bottom-48 z-30 w-10 pointer-events-none">
+      <div className="absolute right-4 bottom-48 z-30 w-14 pointer-events-none">
         <AnimatePresence>
-          {floatingReactions.map((r) => (
-            <motion.div
-              key={r.id}
-              initial={{ y: 0, opacity: 1, scale: 0.5 }}
-              animate={{ y: -200, opacity: 0, scale: 1.2, x: (Math.random() - 0.5) * 40 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 2, ease: "easeOut" }}
-              className="absolute bottom-0 text-2xl"
-              style={{ left: `${r.x - 60}%` }}
-            >
-              <ReactionIcon name={r.emoji} className="h-6 w-6" />
-            </motion.div>
-          ))}
+          {floatingReactions.map((r, i) => {
+            const randomScale = 0.8 + Math.random() * 0.8;
+            const randomDrift = (Math.random() - 0.5) * 50;
+            const randomDur = 1.8 + Math.random() * 1.2;
+            return (
+              <motion.div
+                key={r.id}
+                initial={{ y: 0, opacity: 1, scale: 0.3, rotate: -15 + Math.random() * 30 }}
+                animate={{
+                  y: -220 - Math.random() * 80,
+                  opacity: [1, 1, 0.8, 0],
+                  scale: [0.3, randomScale, randomScale * 0.9, randomScale * 0.5],
+                  x: [0, randomDrift * 0.3, randomDrift],
+                  rotate: [0, -10 + Math.random() * 20],
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: randomDur, ease: "easeOut" }}
+                className="absolute bottom-0 text-2xl"
+                style={{ left: `${r.x - 60}%` }}
+              >
+                <ReactionIcon name={r.emoji} className="h-6 w-6" />
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
       </div>
 
@@ -767,70 +778,90 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               exit={{ y: 30, opacity: 0 }}
               className="px-3 mb-2"
             >
-              <div className="bg-blue-950/70 backdrop-blur-md rounded-2xl p-3 border border-blue-500/20">
-                <div className="flex items-center justify-between mb-2">
+              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-2xl p-3.5 border border-blue-500/15 shadow-lg shadow-blue-500/5">
+                <div className="flex items-center justify-between mb-2.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs"></span>
-                    <span className="text-[11px] font-bold text-blue-300">POLL</span>
+                    <motion.span
+                      className="text-[10px] font-black text-blue-400 uppercase tracking-wider bg-blue-500/10 rounded-full px-2 py-0.5 border border-blue-500/20"
+                      animate={{ scale: [1, 1.03, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      POLL
+                    </motion.span>
                   </div>
-                  <span className="text-[9px] text-white/40">{activePoll.totalVotes} votes</span>
+                  <span className="text-[9px] text-white/30 font-medium">{activePoll.totalVotes} votes</span>
                 </div>
-                <p className="text-white text-xs font-semibold mb-2">{activePoll.question}</p>
-                <div className="space-y-1.5">
+                <p className="text-white text-[13px] font-semibold mb-3">{activePoll.question}</p>
+                <div className="space-y-2">
                   {activePoll.options.map((opt, i) => {
                     const pct = activePoll.totalVotes > 0 ? Math.round((activePoll.votes[i] / activePoll.totalVotes) * 100) : 0;
                     const isVoted = activePoll.voted === i;
+                    const isWinning = pct === Math.max(...activePoll.votes.map((v, vi) => activePoll.totalVotes > 0 ? Math.round((v / activePoll.totalVotes) * 100) : 0));
                     return (
                       <button
                         key={i}
                         onClick={() => votePoll(i)}
                         disabled={activePoll.voted !== null}
-                        className="relative w-full text-left"
+                        className="relative w-full text-left group"
                       >
-                        <div className={cn("h-7 rounded-lg overflow-hidden border", isVoted ? "border-blue-400/40 bg-blue-500/15" : "border-white/10 bg-white/5")}>
+                        <div className={cn(
+                          "h-8 rounded-xl overflow-hidden border transition-all",
+                          isVoted ? "border-blue-400/40 bg-blue-500/10 shadow-sm shadow-blue-500/10" :
+                          "border-white/8 bg-white/5 hover:bg-white/8"
+                        )}>
                           <motion.div
-                            className="h-full rounded-lg bg-blue-500/25"
+                            className={cn(
+                              "h-full rounded-xl",
+                              isWinning && activePoll.voted !== null ? "bg-gradient-to-r from-blue-500/30 to-cyan-500/20" : "bg-blue-500/20"
+                            )}
                             initial={{ width: 0 }}
                             animate={{ width: `${pct}%` }}
-                            transition={{ type: "spring", damping: 20 }}
+                            transition={{ type: "spring", damping: 20, delay: i * 0.05 }}
                           />
                         </div>
-                        <div className="absolute inset-0 flex items-center justify-between px-2.5">
-                          <span className="text-[11px] text-white/80 font-medium">{opt}</span>
-                          <span className="text-[10px] text-blue-300 font-bold">{pct}%</span>
+                        <div className="absolute inset-0 flex items-center justify-between px-3">
+                          <span className={cn("text-[11px] font-medium", isVoted ? "text-white" : "text-white/70")}>{opt}</span>
+                          <span className={cn("text-[10px] font-bold tabular-nums", isVoted ? "text-blue-300" : "text-white/40")}>{pct}%</span>
                         </div>
                       </button>
                     );
                   })}
                 </div>
                 {activePoll.voted !== null && (
-                  <p className="text-[9px] text-blue-300/50 text-center mt-1.5">✓ You voted for "{activePoll.options[activePoll.voted]}"</p>
+                  <motion.p
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-[9px] text-blue-300/40 text-center mt-2"
+                  >
+                    ✓ Voted for "{activePoll.options[activePoll.voted]}"
+                  </motion.p>
                 )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Messages */}
-        <div className="px-3 max-h-[160px] overflow-y-auto scrollbar-hide space-y-1 mask-gradient-top flex flex-col">
-          {chatMessages.slice(-7).map((msg) => {
+        {/* Messages — improved staggered animations */}
+        <div className="px-3 max-h-[170px] overflow-y-auto scrollbar-hide space-y-1 mask-gradient-top flex flex-col">
+          {chatMessages.slice(-8).map((msg, idx) => {
             const isJoin = msg.isSystem && msg.text.includes("joined");
             const isTopFan = topGifters.length > 0 && msg.user === topGifters[0].name;
             return (
               <motion.div
                 key={msg.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, x: -30, y: 8 }}
+                animate={{ opacity: 1, x: 0, y: 0 }}
+                transition={{ type: "spring", damping: 22, stiffness: 300, delay: idx * 0.02 }}
                 className={cn(
                   "flex items-center gap-1.5 px-2.5 py-1.5 rounded-2xl max-w-[85%] w-fit",
-                  isJoin ? "bg-green-500/15" :
-                  msg.isSystem ? "bg-primary/20" :
+                  isJoin ? "bg-green-500/10" :
+                  msg.isSystem ? "bg-primary/15" :
                   msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" :
                   msg.level && msg.level >= 40 ? "bg-gradient-to-r from-amber-900/40 to-yellow-900/20 border border-amber-500/15" :
                   msg.level && msg.level >= 30 ? "bg-gradient-to-r from-purple-900/40 to-pink-900/20 border border-purple-500/15" :
                   msg.level && msg.level >= 20 ? "bg-gradient-to-r from-blue-900/40 to-cyan-900/20 border border-blue-500/10" :
                   msg.level && msg.level >= 10 ? "bg-gradient-to-r from-green-900/30 to-emerald-900/15 border border-green-500/10" :
-                  "bg-black/40 backdrop-blur-sm"
+                  "bg-black/35 backdrop-blur-sm"
                 )}
               >
                 {!msg.isSystem && (
@@ -861,16 +892,18 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           <div ref={chatEndRef} />
         </div>
 
-        {/* Quick reactions */}
-        <div className="flex items-center gap-1.5 px-3 mt-1.5">
+        {/* Quick reactions — enhanced with haptic-feel press animations */}
+        <div className="flex items-center gap-1.5 px-3 mt-2">
           {quickReactions.map((key) => (
-            <button
+            <motion.button
               key={key}
               onClick={() => sendReaction(key)}
-              className="w-8 h-8 rounded-lg bg-black/30 backdrop-blur-md flex items-center justify-center text-sm active:scale-75 transition-transform border border-white/5"
+              whileTap={{ scale: 0.7 }}
+              whileHover={{ scale: 1.1 }}
+              className="w-8 h-8 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center text-sm border border-white/5 active:bg-white/10 transition-colors"
             >
               <ReactionIcon name={key} className="h-4 w-4" />
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
