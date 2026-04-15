@@ -56116,6 +56116,10 @@ export type Database = {
         Args: { _damage_report_id: string; _user_id: string }
         Returns: boolean
       }
+      is_device_trusted: {
+        Args: { _device_fingerprint: string; _user_id: string }
+        Returns: boolean
+      }
       is_driver: { Args: { p_user_id?: string }; Returns: boolean }
       is_following: { Args: { target_user_id: string }; Returns: boolean }
       is_hotel_owner: { Args: { _hotel_id: string }; Returns: boolean }
@@ -56244,6 +56248,19 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: string
+      }
+      register_trusted_device: {
+        Args: {
+          _device_fingerprint: string
+          _device_name?: string
+          _ip_address?: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      remove_trusted_device: {
+        Args: { _device_fingerprint: string; _user_id: string }
+        Returns: undefined
       }
       resolve_admin_alert: {
         Args: { p_alert_id: string; p_notes?: string }
