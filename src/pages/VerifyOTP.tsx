@@ -65,6 +65,10 @@ const VerifyOTP = () => {
   }, []);
 
   const redirectAfterVerification = useCallback(async () => {
+    // Clean up OTP session data
+    sessionStorage.removeItem("zivo_otp_email");
+    sessionStorage.removeItem("zivo_otp_userId");
+
     const { data: { session } } = await supabase.auth.getSession();
     const activeUser = session?.user;
 
