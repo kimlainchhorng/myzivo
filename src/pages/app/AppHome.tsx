@@ -140,6 +140,8 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
       <img
         src={restaurant.cover_image_url || restaurant.logo_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400"}
         alt={restaurant.name}
+        width={170}
+        height={120}
         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         loading="lazy"
       />
@@ -692,6 +694,8 @@ const AppHome = () => {
                         <img
                           src={destPhoto?.src || `https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=400`}
                           alt={deal.destination}
+                          width={220}
+                          height={140}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                           loading="lazy"
                         />
