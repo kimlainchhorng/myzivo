@@ -611,4 +611,6 @@ const GiftAnimationOverlay = forwardRef<HTMLDivElement, GiftAnimationOverlayProp
       </motion.div>
     </AnimatePresence>
   );
-}
+});
+
+export default GiftAnimationOverlay;
