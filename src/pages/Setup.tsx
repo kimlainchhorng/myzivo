@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { User, ArrowRight, ArrowLeft, Loader2, Camera, ImagePlus } from "lucide-react";
+import { User, ArrowRight, Loader2, Camera, ImagePlus } from "lucide-react";
 import { getSafeRedirectTarget, withRedirectParam } from "@/lib/authRedirect";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
