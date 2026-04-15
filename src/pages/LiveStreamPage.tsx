@@ -45,6 +45,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
+import CoinRechargeSheet from "@/components/live/CoinRechargeSheet";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import { giftImages } from "@/config/giftIcons";
 import { giftAnimationVideos } from "@/config/giftAnimations";
@@ -96,6 +97,9 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   // ── Gift animation overlay for premium gifts ──
   const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
   const [giftCombo, setGiftCombo] = useState(0);
+  // ── Coin balance & recharge ──
+  const [coinBalance, setCoinBalance] = useState(1250);
+  const [showRechargeSheet, setShowRechargeSheet] = useState(false);
   // ── Combo multiplier text ──
   const [comboMultiplierText, setComboMultiplierText] = useState<{ text: string; id: string } | null>(null);
   // ── Recent gifts ──
@@ -273,6 +277,16 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const sendGift = useCallback(() => {
     if (!selectedGift) return;
     const totalCoins = selectedGift.coins * giftQty;
+
+    // Check balance
+    if (totalCoins > coinBalance) {
+      toast.error("Not enough coins!", { description: "Top up your balance to send this gift." });
+      setShowRechargeSheet(true);
+      return;
+    }
+
+    // Deduct coins
+    setCoinBalance(prev => prev - totalCoins);
 
     // Haptic feedback
     try { navigator.vibrate?.(giftQty > 1 ? [50, 30, 50] : [50]); } catch {} // eslint-disable-line no-empty
@@ -905,10 +919,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               <div className="flex items-center gap-2 shrink-0">
                 <div className="flex items-center gap-1 bg-amber-500/15 rounded-full px-2.5 py-1 border border-amber-500/20">
                   <img src={goldCoinIcon} alt="coins" className="w-4 h-4" />
-                  <span className="text-amber-300 text-[11px] font-bold">1,250</span>
+                  <span className="text-amber-300 text-[11px] font-bold">{coinBalance.toLocaleString()}</span>
                 </div>
                 <button
-                  onClick={() => toast.info("Top Up coming soon!", { description: "Purchase Z Coins" })}
+                  onClick={() => setShowRechargeSheet(true)}
                   className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 active:scale-90 transition-transform"
                 >
                   <span className="text-amber-300 text-xs font-bold leading-none">+</span>
@@ -1053,7 +1067,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
               ))}
               <div className="flex-1" />
               <button
-                onClick={() => toast.info("Top Up coming soon!", { description: "Purchase Z Coins" })}
+                onClick={() => setShowRechargeSheet(true)}
                 className="flex items-center gap-1.5 bg-gradient-to-r from-amber-600 to-yellow-500 rounded-full px-3.5 py-1.5 shadow-lg shadow-amber-500/20 active:scale-95 transition-transform"
               >
                 <img src={goldCoinIcon} alt="" className="w-4 h-4" />
@@ -1141,6 +1155,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         onComplete={() => { setActiveGiftAnim(null); setGiftCombo(0); }}
         giftPanelOpen={showGiftPanel}
         comboCount={giftCombo}
+      />
+
+      {/* Coin Recharge Sheet */}
+      <CoinRechargeSheet
+        open={showRechargeSheet}
+        onClose={() => setShowRechargeSheet(false)}
+        currentBalance={coinBalance}
+        onPurchase={(coins) => setCoinBalance(prev => prev + coins)}
       />
     </div>
   );
@@ -1381,6 +1403,7 @@ export default function LiveStreamPage() {
           ))
         )}
       </div>
+
 
       <ZivoMobileNav />
     </div>

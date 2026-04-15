@@ -5,6 +5,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
+import CoinRechargeSheet from "@/components/live/CoinRechargeSheet";
 import { playGiftSound, playPremiumGiftSound, playLegendaryGiftSound } from "@/utils/giftSounds";
 import { giftAnimationVideos } from "@/config/giftAnimations";
 import { giftCatalog, getLevelColor, getLevelBg, type GiftItem } from "@/config/giftCatalog";
@@ -108,6 +109,8 @@ export default function GoLivePage() {
   const [showChat, setShowChat] = useState(true);
   const [streamQuality, setStreamQuality] = useState<"HD" | "SD">("HD");
   const [coinsEarned, setCoinsEarned] = useState(0);
+  const [coinBalance, setCoinBalance] = useState(1250);
+  const [showRechargeSheet, setShowRechargeSheet] = useState(false);
   const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
   const [giftCombo, setGiftCombo] = useState(0);
   const [viewerGiftNotif, setViewerGiftNotif] = useState<{ id: string; sender: string; giftName: string; coins: number } | null>(null);
@@ -2086,7 +2089,7 @@ export default function GoLivePage() {
                       <span className="text-[8px] text-amber-400/50 uppercase tracking-wider font-medium">Earned</span>
                     </div>
                     <button
-                      onClick={() => toast("Coin Recharge coming soon!", { description: "You'll be able to purchase Z Coins to send premium gifts." })}
+                      onClick={() => setShowRechargeSheet(true)}
                       className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 active:scale-90 transition-transform"
                     >
                       <span className="text-amber-300 text-xs font-bold leading-none">+</span>
@@ -2291,7 +2294,7 @@ export default function GoLivePage() {
                   ))}
                   <div className="flex-1" />
                   <button
-                    onClick={() => toast("Coin Recharge coming soon!", { description: "You'll be able to purchase Z Coins to send premium gifts." })}
+                    onClick={() => setShowRechargeSheet(true)}
                     className="flex items-center gap-1.5 bg-gradient-to-r from-amber-600 to-yellow-500 rounded-full px-3.5 py-1.5 shadow-lg shadow-amber-500/20 active:scale-95 transition-transform"
                   >
                     <img src={goldCoinIcon} alt="" className="w-4 h-4" />
@@ -2954,6 +2957,13 @@ export default function GoLivePage() {
         onComplete={() => { setActiveGiftAnim(null); setGiftCombo(0); }}
         giftPanelOpen={showGiftPanel}
         comboCount={giftCombo}
+      />
+
+      <CoinRechargeSheet
+        open={showRechargeSheet}
+        onClose={() => setShowRechargeSheet(false)}
+        currentBalance={coinBalance}
+        onPurchase={(coins) => setCoinBalance(prev => prev + coins)}
       />
     </div>
   );
