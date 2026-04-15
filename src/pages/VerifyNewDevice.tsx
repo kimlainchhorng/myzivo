@@ -99,11 +99,11 @@ const VerifyNewDevice = () => {
     setIsVerifying(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("verify-otp", {
-        body: { email, otp, userId },
+      const { data, error } = await supabase.functions.invoke("verify-otp-code", {
+        body: { email, code: otp },
       });
 
-      if (error || !data?.valid) {
+      if (error || !data?.success) {
         toast.error(data?.error || "Invalid verification code. Please try again.");
         setCode(Array(CODE_LENGTH).fill(""));
         inputRefs.current[0]?.focus();
