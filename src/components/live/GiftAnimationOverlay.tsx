@@ -222,11 +222,18 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
             initial={{ opacity: 0 }}
             animate={{ opacity: canvasReady ? 1 : 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 z-[2]"
+            className="absolute z-[2] flex items-center justify-center"
+            style={{
+              top: giftPanelOpen ? "5%" : "10%",
+              left: "5%",
+              right: "5%",
+              bottom: giftPanelOpen ? "50%" : "15%",
+            }}
           >
             <canvas
               ref={canvasRef}
-              className="absolute inset-0 h-full w-full"
+              className="w-full h-full object-contain"
+              style={{ maxWidth: "100%", maxHeight: "100%" }}
             />
             <video
               ref={videoRef}
