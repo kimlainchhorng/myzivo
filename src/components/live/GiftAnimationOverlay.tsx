@@ -111,47 +111,36 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
           />
         )}
 
-        {/* ── Video animation (full-screen, blended) ── */}
+        {/* ── Video animation (full-screen, blended like TikTok Live) ── */}
         {hasVideo && (
-          <div
-            className="absolute inset-0 flex items-center justify-center z-[2]"
-            style={{ marginTop: giftPanelOpen ? "-20%" : "0" }}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: videoReady ? 1 : 0 }}
+            transition={{ type: "spring", damping: 14, stiffness: 100 }}
+            className="absolute inset-0 z-[2] flex items-center justify-center"
           >
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: videoReady ? 1 : 0 }}
-              transition={{ type: "spring", damping: 12, stiffness: 120 }}
-              className="relative"
-            >
-              <video
-                ref={videoRef}
-                src={videoUrl}
-                autoPlay
-                muted
-                playsInline
-                className={
-                  isLegendary
-                    ? "w-[22rem] h-[22rem] sm:w-[28rem] sm:h-[28rem] object-contain"
-                    : isPremium
-                    ? "w-[18rem] h-[18rem] sm:w-[22rem] sm:h-[22rem] object-contain"
-                    : "w-[14rem] h-[14rem] object-contain"
+            <video
+              ref={videoRef}
+              src={videoUrl}
+              autoPlay
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+              style={{
+                opacity: videoReady ? 1 : 0,
+                transition: "opacity 0.3s ease-in",
+                mixBlendMode: "screen",
+              }}
+              onLoadedData={() => setVideoReady(true)}
+              onError={() => setVideoError(true)}
+              onEnded={() => {
+                if (videoRef.current) {
+                  videoRef.current.currentTime = 0;
+                  videoRef.current.play().catch(() => {});
                 }
-                style={{
-                  opacity: videoReady ? 1 : 0,
-                  transition: "opacity 0.3s ease-in",
-                  mixBlendMode: "screen",
-                }}
-                onLoadedData={() => setVideoReady(true)}
-                onError={() => setVideoError(true)}
-                onEnded={() => {
-                  if (videoRef.current) {
-                    videoRef.current.currentTime = 0;
-                    videoRef.current.play().catch(() => {});
-                  }
-                }}
-              />
-            </motion.div>
-          </div>
+              }}
+            />
+          </motion.div>
         )}
 
         {/* ── Fallback: icon animation (when no video or video failed) ── */}
