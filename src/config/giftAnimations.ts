@@ -3,13 +3,7 @@
  * Maps gift names to their full-screen animation videos
  * Sorted low → high by coin value
  */
-// Low-value gift videos (1-199 coins) — removed, no video for these
-import fireDragonVid from "@/assets/gifts/animations/fire-dragon.mp4.asset.json";
-import neonDolphinVid from "@/assets/gifts/animations/neon-dolphin.mp4.asset.json";
-import mysticWolfVid from "@/assets/gifts/animations/mystic-wolf.mp4.asset.json";
-import phoenixRisingVid from "@/assets/gifts/animations/phoenix-rising.mp4.asset.json";
-import diamondBearVid from "@/assets/gifts/animations/diamond-bear.mp4.asset.json";
-import thunderTigerVid from "@/assets/gifts/animations/thunder-tiger.mp4.asset.json";
+// Gifts 200+ coins get video animations
 import fireDragonVid from "@/assets/gifts/animations/fire-dragon.mp4.asset.json";
 import pandaPartyVid from "@/assets/gifts/animations/panda-party.mp4.asset.json";
 import sapphireSwanVid from "@/assets/gifts/animations/sapphire-swan.mp4.asset.json";
