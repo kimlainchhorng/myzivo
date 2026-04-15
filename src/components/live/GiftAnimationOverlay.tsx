@@ -96,8 +96,10 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
     if (!video || !canvas || !ctx) return;
 
     const syncCanvasSize = () => {
-      const cssWidth = Math.max(window.innerWidth, 1);
-      const cssHeight = Math.max(window.innerHeight, 1);
+      const container = canvas.parentElement;
+      if (!container) return;
+      const cssWidth = Math.max(container.clientWidth, 1);
+      const cssHeight = Math.max(container.clientHeight, 1);
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const rawWidth = cssWidth * dpr;
       const rawHeight = cssHeight * dpr;
