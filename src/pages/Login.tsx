@@ -207,6 +207,8 @@ const Login = () => {
         navigate("/admin/analytics", { replace: true });
       } else if (!profile?.setup_complete) {
         navigate("/setup", { replace: true });
+      } else if (from && from !== "/" && from !== "/login") {
+        navigate(from, { replace: true });
       } else {
         navigate("/", { replace: true });
       }
@@ -387,7 +389,7 @@ const Login = () => {
                     <FormControl>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                        <input type="password" placeholder="••••••••" autoComplete="current-password" className={input3DLg} {...field} />
+                        <input type="password" placeholder="Enter password" autoComplete="current-password" className={input3DLg} {...field} />
                       </div>
                     </FormControl>
                     <FormMessage className="text-red-400 text-xs" />
@@ -495,7 +497,7 @@ const Login = () => {
                       <FormControl>
                         <div className="relative">
                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                          <input type="password" placeholder="••••••••" autoComplete="new-password" className={input3D} {...field} />
+                          <input type="password" placeholder="Min 6 chars" autoComplete="new-password" className={input3D} {...field} />
                         </div>
                       </FormControl>
                       <FormMessage className="text-red-400 text-xs" />
@@ -507,7 +509,7 @@ const Login = () => {
                       <FormControl>
                         <div className="relative">
                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                          <input type="password" placeholder="••••••••" autoComplete="new-password" className={input3D} {...field} />
+                          <input type="password" placeholder="Re-enter" autoComplete="new-password" className={input3D} {...field} />
                         </div>
                       </FormControl>
                       <FormMessage className="text-red-400 text-xs" />
