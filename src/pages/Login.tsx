@@ -184,11 +184,27 @@ const Login = () => {
       });
 
       if (!isTrusted) {
-        // New device — sign out temporarily, send OTP, and redirect to device verification
-        await supabase.auth.signOut();
-
+        // New device — keep session but require device OTP verification
         // Determine final redirect after device verification
         let finalRedirect = from && from !== "/" && from !== "/login" ? from : "/";
+
+        // Check setup status to include in redirect chain
+        const { data: profileCheck } = await supabase
+          .from("profiles")
+          .select("setup_complete")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        const { data: isAdminCheck } = await supabase.rpc("check_user_role", {
+          _user_id: user.id,
+          _role: "admin",
+        });
+
+        if (isAdminCheck) {
+          finalRedirect = "/admin/analytics";
+        } else if (!profileCheck?.setup_complete) {
+          finalRedirect = "/setup";
+        }
 
         // Send OTP for device verification
         try {
