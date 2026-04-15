@@ -1065,16 +1065,30 @@ export default function GoLivePage() {
         {cameraError ? (
           <div className="w-full h-full bg-gradient-to-br from-violet-950/80 via-black to-rose-950/60 flex items-center justify-center">
             <div className="text-center space-y-4">
-              <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto border border-white/10">
-                <CameraOff className="h-8 w-8 text-white/20" />
-              </div>
+              <motion.div
+                className="w-24 h-24 rounded-full flex items-center justify-center mx-auto relative"
+                style={{
+                  background: "radial-gradient(circle, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 60%, transparent 100%)",
+                  border: "1.5px solid rgba(255,255,255,0.08)",
+                }}
+                animate={{ scale: [1, 1.04, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <CameraOff className="h-9 w-9 text-white/15" />
+                {/* Animated ring */}
+                <motion.div
+                  className="absolute inset-0 rounded-full border border-white/10"
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </motion.div>
               <div>
-                <p className="text-white/50 text-sm font-medium">Camera unavailable</p>
-                <p className="text-white/30 text-xs mt-1">Check permissions or try another device</p>
+                <p className="text-white/40 text-sm font-medium">Camera unavailable</p>
+                <p className="text-white/20 text-[11px] mt-1">Check permissions or try another device</p>
               </div>
               {phase === "setup" && (
-                <Button size="sm" variant="outline" onClick={startCamera} className="text-white border-white/20 rounded-full">
-                  <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Retry
+                <Button size="sm" variant="outline" onClick={startCamera} className="text-white border-white/20 rounded-full gap-1.5">
+                  <RotateCcw className="h-3.5 w-3.5" /> Retry
                 </Button>
               )}
             </div>
