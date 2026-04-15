@@ -1156,6 +1156,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         giftPanelOpen={showGiftPanel}
         comboCount={giftCombo}
       />
+
+      {/* Coin Recharge Sheet */}
+      <CoinRechargeSheet
+        open={showRechargeSheet}
+        onClose={() => setShowRechargeSheet(false)}
+        currentBalance={coinBalance}
+        onPurchase={(coins) => setCoinBalance(prev => prev + coins)}
+      />
     </div>
   );
 }
@@ -1396,12 +1404,6 @@ export default function LiveStreamPage() {
         )}
       </div>
 
-      <CoinRechargeSheet
-        open={showRechargeSheet}
-        onClose={() => setShowRechargeSheet(false)}
-        currentBalance={coinBalance}
-        onPurchase={(coins) => setCoinBalance(prev => prev + coins)}
-      />
 
       <ZivoMobileNav />
     </div>
