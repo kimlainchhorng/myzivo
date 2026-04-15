@@ -259,7 +259,7 @@ const GiftAnimationOverlay = forwardRef<HTMLDivElement, GiftAnimationOverlayProp
             <video
               ref={videoRef}
               src={videoUrl}
-              autoPlay muted loop playsInline preload="auto" crossOrigin="anonymous"
+              autoPlay muted loop playsInline preload="auto"
               className="absolute left-0 top-0 h-px w-px opacity-0 pointer-events-none"
               onLoadedData={() => setVideoReady(true)}
               onError={() => setVideoError(true)}
