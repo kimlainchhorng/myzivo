@@ -3,16 +3,8 @@
  * Maps gift names to their full-screen animation videos
  * Sorted low → high by coin value
  */
-import luckyCatVid from "@/assets/gifts/animations/lucky-cat.mp4.asset.json";
-import cutePandaVid from "@/assets/gifts/animations/cute-panda.mp4.asset.json";
-import babyDragonVid from "@/assets/gifts/animations/baby-dragon.mp4.asset.json";
-import icePenguinVid from "@/assets/gifts/animations/ice-penguin.mp4.asset.json";
-import kingCobraVid from "@/assets/gifts/animations/king-cobra.mp4.asset.json";
-import rainbowButterflyVid from "@/assets/gifts/animations/rainbow-butterfly.mp4.asset.json";
-import starFoxVid from "@/assets/gifts/animations/star-fox.mp4.asset.json";
-import crystalUnicornVid from "@/assets/gifts/animations/crystal-unicorn.mp4.asset.json";
-import magicRabbitVid from "@/assets/gifts/animations/magic-rabbit.mp4.asset.json";
-import snakeDanceVid from "@/assets/gifts/animations/snake-dance.mp4.asset.json";
+// Low-value gift videos (1-199 coins) — removed, no video for these
+import fireDragonVid from "@/assets/gifts/animations/fire-dragon.mp4.asset.json";
 import neonDolphinVid from "@/assets/gifts/animations/neon-dolphin.mp4.asset.json";
 import mysticWolfVid from "@/assets/gifts/animations/mystic-wolf.mp4.asset.json";
 import phoenixRisingVid from "@/assets/gifts/animations/phoenix-rising.mp4.asset.json";
