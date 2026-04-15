@@ -114,12 +114,9 @@ export default function GiftAnimationOverlay({ activeGift, onComplete, giftPanel
       if (!container) return;
       const cssW = Math.max(container.clientWidth, 1);
       const cssH = Math.max(container.clientHeight, 1);
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-      const rawW = cssW * dpr;
-      const rawH = cssH * dpr;
-      const scale = Math.min(1, 960 / Math.max(rawW, rawH));
-      const nw = Math.max(1, Math.round(rawW * scale));
-      const nh = Math.max(1, Math.round(rawH * scale));
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const nw = Math.max(1, Math.round(cssW * dpr));
+      const nh = Math.max(1, Math.round(cssH * dpr));
       if (canvas.width !== nw || canvas.height !== nh) {
         canvas.width = nw;
         canvas.height = nh;
