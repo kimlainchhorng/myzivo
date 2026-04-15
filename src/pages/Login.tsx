@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle, Sparkles } from "lucide-react";
-import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
+
 import { toast } from "sonner";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
@@ -23,11 +23,6 @@ const loginSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-const normalizePhoneDigits = (value: string) =>
-  value
-    .normalize("NFKD")
-    .replace(/[０-９]/g, (digit) => String.fromCharCode(digit.charCodeAt(0) - 65248))
-    .replace(/\D/g, "");
 
 // Signup schema (extends login with name + confirm)
 const signupSchema = z.object({
