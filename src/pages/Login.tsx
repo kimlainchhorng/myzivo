@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getDeviceFingerprint, getDeviceName } from "@/lib/security/deviceFingerprint";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle, Sparkles } from "lucide-react";
@@ -174,6 +175,74 @@ const Login = () => {
         navigate("/verify-email", { replace: true });
         return;
       }
+
+      // Check if this device is trusted
+      const fingerprint = getDeviceFingerprint();
+      const { data: isTrusted } = await supabase.rpc("is_device_trusted", {
+        _user_id: user.id,
+        _device_fingerprint: fingerprint,
+      });
+
+      // Check if user has ANY trusted devices — if none, this is first login, auto-trust
+      const { count: trustedCount } = await supabase
+        .from("trusted_devices")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+
+      const isFirstLogin = (trustedCount ?? 0) === 0;
+
+      if (!isTrusted && !isFirstLogin) {
+        // New device — keep session but require device OTP verification
+        // Determine final redirect after device verification
+        let finalRedirect = from && from !== "/" && from !== "/login" ? from : "/";
+
+        // Check setup status to include in redirect chain
+        const { data: profileCheck } = await supabase
+          .from("profiles")
+          .select("setup_complete")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        const { data: isAdminCheck } = await supabase.rpc("check_user_role", {
+          _user_id: user.id,
+          _role: "admin",
+        });
+
+        if (isAdminCheck) {
+          finalRedirect = "/admin/analytics";
+        } else if (!profileCheck?.setup_complete) {
+          finalRedirect = "/setup";
+        }
+
+        // Send OTP for device verification
+        try {
+          await supabase.functions.invoke("send-otp-email", {
+            body: { email: user.email, userId: user.id },
+          });
+        } catch {
+          // Non-critical: user can resend from the verification page
+        }
+
+        setIsLoading(false);
+        toast.info("New device detected. Please verify with the code sent to your email.", { icon: "🔐" });
+        navigate("/verify-new-device", {
+          replace: true,
+          state: { email: user.email, userId: user.id, redirectTo: finalRedirect },
+        });
+        return;
+      }
+
+      // Device is trusted — update last_used_at
+      // Fire-and-forget: update last_used_at
+      void (async () => {
+        try {
+          await supabase.rpc("register_trusted_device", {
+            _user_id: user.id,
+            _device_fingerprint: fingerprint,
+            _device_name: getDeviceName(),
+          });
+        } catch { /* non-critical */ }
+      })();
 
       const { data: profile } = await supabase
         .from("profiles")
