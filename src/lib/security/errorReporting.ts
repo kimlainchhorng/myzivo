@@ -56,6 +56,7 @@ async function reportError(report: ErrorReport): Promise<void> {
 
   // Attempt to log to Supabase analytics_events table
   try {
+    const supabase = await getSupabase();
     await supabase.from("analytics_events").insert({
       event_name: "client_error",
       session_id: report.sessionId,
