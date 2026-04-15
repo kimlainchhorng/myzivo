@@ -96,6 +96,9 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   // ── Gift animation overlay for premium gifts ──
   const [activeGiftAnim, setActiveGiftAnim] = useState<{ name: string; coins: number; senderName?: string } | null>(null);
   const [giftCombo, setGiftCombo] = useState(0);
+  // ── Coin balance & recharge ──
+  const [coinBalance, setCoinBalance] = useState(1250);
+  const [showRechargeSheet, setShowRechargeSheet] = useState(false);
   // ── Combo multiplier text ──
   const [comboMultiplierText, setComboMultiplierText] = useState<{ text: string; id: string } | null>(null);
   // ── Recent gifts ──
