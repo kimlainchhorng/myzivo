@@ -23,9 +23,10 @@ import {
   Share2, BarChart3, Copy, ExternalLink, Trash2, Edit, Calendar,
   Percent, DollarSign, Clock, CheckCircle2, XCircle, Image as ImageIcon,
   MessageSquare, Loader2, QrCode, Link2, Send, Sparkles, Target,
-  Users, ArrowUpRight, ArrowDownRight, Minus, Hash, Globe, Zap
+  Users, ArrowUpRight, ArrowDownRight, Minus, Hash, Globe, Zap, Rocket
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import StoreAdsManager from "./StoreAdsManager";
 
 interface Props {
   storeId: string;
