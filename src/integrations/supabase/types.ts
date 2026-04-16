@@ -24541,6 +24541,45 @@ export type Database = {
           },
         ]
       }
+      live_gift_displays: {
+        Row: {
+          coins: number
+          created_at: string
+          expires_at: string
+          gift_icon: string | null
+          gift_name: string
+          id: string
+          sender_id: string
+          sender_name: string
+          stream_id: string
+          tier: string
+        }
+        Insert: {
+          coins?: number
+          created_at?: string
+          expires_at: string
+          gift_icon?: string | null
+          gift_name: string
+          id?: string
+          sender_id: string
+          sender_name?: string
+          stream_id: string
+          tier?: string
+        }
+        Update: {
+          coins?: number
+          created_at?: string
+          expires_at?: string
+          gift_icon?: string | null
+          gift_name?: string
+          id?: string
+          sender_id?: string
+          sender_name?: string
+          stream_id?: string
+          tier?: string
+        }
+        Relationships: []
+      }
       live_gifts: {
         Row: {
           badge: string | null
