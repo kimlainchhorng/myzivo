@@ -225,6 +225,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           text: `sent ${gift.name}`,
           isGift: true,
           level: Math.floor(Math.random() * 20) + 1,
+          giftIcon: giftImages[gift.name],
         }]);
         setTimeout(() => {
           setGiftNotifQueue(prev => prev.filter(n => n.id !== notif.id));
