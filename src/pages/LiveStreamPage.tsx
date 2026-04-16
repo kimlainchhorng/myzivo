@@ -73,7 +73,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   // Preload gift video URLs in background when entering live stream
   useEffect(() => { preloadGiftAnimations(); preloadGiftImages(); }, []);
   const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; isSystem?: boolean; avatar?: string; level?: number }[]>([
+  const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; isSystem?: boolean; avatar?: string; level?: number; giftIcon?: string }[]>([
     { id: "sys-1", user: "System", text: `Welcome to ${stream.host_name}'s stream!`, isSystem: true },
   ]);
   const [isFollowing, setIsFollowing] = useState(false);
