@@ -913,7 +913,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 initial={{ opacity: 0, x: -24, y: 6 }}
                 animate={{ opacity: 1, x: 0, y: 0 }}
                 transition={{ type: "spring", damping: 24, stiffness: 300, delay: idx * 0.015 }}
-                className="relative self-stretch w-full min-h-[38px] rounded-2xl overflow-hidden"
+                className="relative self-stretch w-full min-h-[50px] rounded-2xl overflow-hidden"
                 style={{
                   background: msg.isGift
                     ? "linear-gradient(135deg, rgba(255,180,40,0.22) 0%, rgba(120,60,0,0.35) 100%)"
@@ -956,7 +956,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   />
                 )}
 
-                <div className="relative z-10 flex items-start gap-2 px-2.5 py-2">
+                <div className="relative z-10 flex items-start gap-2 px-2.5 py-2.5">
                   {/* Avatar — 3D gradient per tier */}
                   <div className="relative shrink-0 pt-[1px]">
                     <div
@@ -974,100 +974,102 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                     )}
                   </div>
 
-                  <div className="min-w-0 max-w-full flex-auto flex flex-wrap items-center content-center gap-x-[6px] gap-y-[3px]">
-                    {/* Level badge — 3D dragon-scale floating pill */}
-                    <span
-                      className={cn(
-                        "relative text-[8px] font-black px-[7px] py-[2px] rounded-full shrink-0 tracking-wider overflow-hidden",
-                        lv >= 50 ? "animate-[float3d_2.4s_ease-in-out_infinite]" : lv >= 20 ? "animate-[float3d_3.2s_ease-in-out_infinite]" : ""
+                  <div className="min-w-0 max-w-full flex-auto">
+                    <div className="flex min-w-0 flex-wrap items-center gap-x-[6px] gap-y-1">
+                      {/* Level badge — 3D dragon-scale floating pill */}
+                      <span
+                        className={cn(
+                          "relative text-[8px] font-black px-[7px] py-[2px] rounded-full shrink-0 tracking-wider overflow-hidden",
+                          lv >= 50 ? "animate-[float3d_2.4s_ease-in-out_infinite]" : lv >= 20 ? "animate-[float3d_3.2s_ease-in-out_infinite]" : ""
+                        )}
+                        style={{
+                          background: msg.isGift
+                            ? "linear-gradient(145deg, #FFE066 0%, #FFB300 45%, #C77800 100%)"
+                            : lv >= 50
+                            ? "linear-gradient(145deg, #FF6B6B 0%, #C2185B 50%, #4A0E2A 100%)"
+                            : lv >= 20
+                            ? "linear-gradient(145deg, #FFE066 0%, #FF9500 50%, #8B4500 100%)"
+                            : lv >= 10
+                            ? "linear-gradient(145deg, #B388FF 0%, #6A1B9A 50%, #2A0845 100%)"
+                            : "linear-gradient(145deg, #90A4AE 0%, #455A64 50%, #1C2A30 100%)",
+                          color: "#FFFFFF",
+                          boxShadow: lv >= 50
+                            ? "0 3px 10px rgba(255,40,80,0.55), 0 0 14px rgba(255,80,120,0.4), inset 0 1.5px 0 rgba(255,255,255,0.55), inset 0 -2px 3px rgba(0,0,0,0.45), inset 0 0 0 0.5px rgba(255,220,200,0.3)"
+                            : lv >= 20
+                            ? "0 3px 8px rgba(255,140,0,0.5), 0 0 10px rgba(255,180,0,0.35), inset 0 1.5px 0 rgba(255,255,255,0.5), inset 0 -2px 3px rgba(0,0,0,0.4), inset 0 0 0 0.5px rgba(255,230,150,0.3)"
+                            : lv >= 10
+                            ? "0 2px 6px rgba(120,40,200,0.45), inset 0 1.5px 0 rgba(255,255,255,0.4), inset 0 -1.5px 2px rgba(0,0,0,0.35)"
+                            : "0 1.5px 4px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -1px 2px rgba(0,0,0,0.3)",
+                          textShadow: "0 1px 1.5px rgba(0,0,0,0.55), 0 0 4px rgba(255,255,255,0.2)",
+                          transform: "perspective(40px) translateZ(0)",
+                        }}
+                      >
+                        {/* Specular highlight sweep */}
+                        <span
+                          aria-hidden
+                          className="absolute inset-0 rounded-full pointer-events-none"
+                          style={{
+                            background: "linear-gradient(160deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.05) 35%, transparent 55%)",
+                            mixBlendMode: "overlay",
+                          }}
+                        />
+                        <span className="relative">Lv.{lv || 1}</span>
+                      </span>
+
+                      {/* Top Fan / VIP badges */}
+                      {isTopFan && (
+                        <span
+                          className="text-[7px] font-bold px-[6px] py-[2px] rounded-full shrink-0 flex items-center gap-[2px]"
+                          style={{
+                            background: "linear-gradient(135deg, rgba(255,200,50,0.5), rgba(255,160,0,0.35))",
+                            color: "#FFF3C4",
+                            border: "1px solid rgba(255,200,50,0.35)",
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2), 0 0 6px rgba(255,200,0,0.3)",
+                          }}
+                        >
+                          <Star className="h-[7px] w-[7px] fill-amber-200 text-amber-200" /> Top Fan
+                        </span>
                       )}
-                      style={{
-                        background: msg.isGift
-                          ? "linear-gradient(145deg, #FFE066 0%, #FFB300 45%, #C77800 100%)"
-                          : lv >= 50
-                          ? "linear-gradient(145deg, #FF6B6B 0%, #C2185B 50%, #4A0E2A 100%)"
-                          : lv >= 20
-                          ? "linear-gradient(145deg, #FFE066 0%, #FF9500 50%, #8B4500 100%)"
-                          : lv >= 10
-                          ? "linear-gradient(145deg, #B388FF 0%, #6A1B9A 50%, #2A0845 100%)"
-                          : "linear-gradient(145deg, #90A4AE 0%, #455A64 50%, #1C2A30 100%)",
-                        color: "#FFFFFF",
-                        boxShadow: lv >= 50
-                          ? "0 3px 10px rgba(255,40,80,0.55), 0 0 14px rgba(255,80,120,0.4), inset 0 1.5px 0 rgba(255,255,255,0.55), inset 0 -2px 3px rgba(0,0,0,0.45), inset 0 0 0 0.5px rgba(255,220,200,0.3)"
-                          : lv >= 20
-                          ? "0 3px 8px rgba(255,140,0,0.5), 0 0 10px rgba(255,180,0,0.35), inset 0 1.5px 0 rgba(255,255,255,0.5), inset 0 -2px 3px rgba(0,0,0,0.4), inset 0 0 0 0.5px rgba(255,230,150,0.3)"
-                          : lv >= 10
-                          ? "0 2px 6px rgba(120,40,200,0.45), inset 0 1.5px 0 rgba(255,255,255,0.4), inset 0 -1.5px 2px rgba(0,0,0,0.35)"
-                          : "0 1.5px 4px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -1px 2px rgba(0,0,0,0.3)",
-                        textShadow: "0 1px 1.5px rgba(0,0,0,0.55), 0 0 4px rgba(255,255,255,0.2)",
-                        transform: "perspective(40px) translateZ(0)",
-                      }}
-                    >
-                      {/* Specular highlight sweep */}
-                      <span
-                        aria-hidden
-                        className="absolute inset-0 rounded-full pointer-events-none"
-                        style={{
-                          background: "linear-gradient(160deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.05) 35%, transparent 55%)",
-                          mixBlendMode: "overlay",
-                        }}
-                      />
-                      <span className="relative">Lv.{lv || 1}</span>
-                    </span>
+                      {!isTopFan && lv >= 50 && (
+                        <span
+                          className="text-[7px] font-bold px-[6px] py-[2px] rounded-full shrink-0"
+                          style={{
+                            background: "linear-gradient(135deg, rgba(255,80,50,0.5), rgba(255,40,0,0.35))",
+                            color: "#FFD0C0",
+                            border: "1px solid rgba(255,80,50,0.3)",
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15), 0 0 6px rgba(255,80,50,0.3)",
+                          }}
+                        >
+                          🔥 VIP
+                        </span>
+                      )}
 
-                    {/* Top Fan / VIP badges */}
-                    {isTopFan && (
-                      <span
-                        className="text-[7px] font-bold px-[6px] py-[2px] rounded-full shrink-0 flex items-center gap-[2px]"
-                        style={{
-                          background: "linear-gradient(135deg, rgba(255,200,50,0.5), rgba(255,160,0,0.35))",
-                          color: "#FFF3C4",
-                          border: "1px solid rgba(255,200,50,0.35)",
-                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2), 0 0 6px rgba(255,200,0,0.3)",
-                        }}
-                      >
-                        <Star className="h-[7px] w-[7px] fill-amber-200 text-amber-200" /> Top Fan
+                      {/* Name */}
+                      <span className="text-[10px] font-bold min-w-0 break-words" style={{ color: msg.isGift ? "#FFD700" : isMe ? "#7DF9A0" : tc.nameColor, textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}>
+                        {msg.user}
                       </span>
-                    )}
-                    {!isTopFan && lv >= 50 && (
-                      <span
-                        className="text-[7px] font-bold px-[6px] py-[2px] rounded-full shrink-0"
-                        style={{
-                          background: "linear-gradient(135deg, rgba(255,80,50,0.5), rgba(255,40,0,0.35))",
-                          color: "#FFD0C0",
-                          border: "1px solid rgba(255,80,50,0.3)",
-                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15), 0 0 6px rgba(255,80,50,0.3)",
-                        }}
-                      >
-                        🔥 VIP
-                      </span>
-                    )}
 
-                    {/* Name */}
-                    <span className="text-[10px] font-bold min-w-0 break-words" style={{ color: msg.isGift ? "#FFD700" : isMe ? "#7DF9A0" : tc.nameColor, textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}>
-                      {msg.user}
-                    </span>
+                      {/* Gift icon inline */}
+                      {msg.isGift && msg.giftIcon && (
+                        <motion.img
+                          src={msg.giftIcon}
+                          alt=""
+                          className="h-5 w-5 object-contain shrink-0"
+                          initial={{ scale: 0, rotate: -20 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ type: "spring", stiffness: 300 }}
+                          style={{ filter: "drop-shadow(0 0 4px rgba(255,200,0,0.5))" }}
+                        />
+                      )}
+                    </div>
 
-                    {/* Gift icon inline */}
-                    {msg.isGift && msg.giftIcon && (
-                      <motion.img
-                        src={msg.giftIcon}
-                        alt=""
-                        className="h-5 w-5 object-contain shrink-0"
-                        initial={{ scale: 0, rotate: -20 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ type: "spring", stiffness: 300 }}
-                        style={{ filter: "drop-shadow(0 0 4px rgba(255,200,0,0.5))" }}
-                      />
-                    )}
-
-                    {/* Message text — inline with name & badges, wraps naturally */}
-                    <span
-                      className={cn("text-[10px] leading-[1.35] basis-full min-w-0", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}
+                    {/* Message text on its own row to prevent clipping */}
+                    <p
+                      className={cn("mt-1 min-w-0 pr-1 text-[10px] leading-[1.4]", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}
                       style={{ overflowWrap: "anywhere", wordBreak: "break-word", textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}
                     >
                       {msg.text}
-                    </span>
+                    </p>
                   </div>
                 </div>
               </motion.div>
