@@ -361,7 +361,7 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
           />
         ))}
 
-        {/* ── Sender banner — 3D premium with depth ── */}
+        {/* ── Sender banner — 3D gift-themed ── */}
         <motion.div
           initial={{ x: -400, opacity: 0, rotateY: -15 }}
           animate={{ x: 0, opacity: 1, rotateY: 0 }}
@@ -370,59 +370,44 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
           className="absolute left-0 z-[3]"
           style={{ top: giftPanelOpen ? "10%" : "22%", perspective: "800px" }}
         >
-          {/* 3D layered card */}
           <motion.div
             className="relative"
             animate={{ y: [0, -2, 0] }}
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             style={{ transformStyle: "preserve-3d" }}
           >
-            {/* Back shadow layer for 3D depth */}
-            <div
-              className="absolute inset-0 rounded-r-[28px]"
-              style={{
-                transform: "translateZ(-8px) translateY(4px)",
-                background: "rgba(0,0,0,0.6)",
-                filter: "blur(12px)",
-              }}
-            />
+            {/* 3D shadow */}
+            <div className="absolute inset-0 rounded-r-[28px]" style={{ transform: "translateZ(-8px) translateY(4px)", background: `hsla(${giftTheme.h},40%,8%,0.7)`, filter: "blur(14px)" }} />
 
-            {/* Main card body */}
+            {/* Main card — colors from gift theme */}
             <div
               className="relative flex items-center gap-3 pl-3 pr-10 py-3 rounded-r-[28px] overflow-hidden"
               style={{
-                background: isLegendary
-                  ? "linear-gradient(110deg, rgba(80,20,0,0.98) 0%, rgba(180,70,0,0.95) 15%, rgba(255,140,20,0.9) 40%, rgba(255,190,60,0.7) 65%, rgba(255,220,100,0.3) 85%, transparent 100%)"
-                  : isUltra
-                  ? "linear-gradient(110deg, rgba(100,30,0,0.97) 0%, rgba(200,90,10,0.92) 20%, rgba(255,150,30,0.8) 50%, rgba(255,180,60,0.5) 75%, transparent 100%)"
-                  : isPremium
-                  ? "linear-gradient(110deg, rgba(120,50,0,0.95) 0%, rgba(200,110,20,0.88) 25%, rgba(255,160,50,0.65) 55%, rgba(255,190,80,0.3) 80%, transparent 100%)"
-                  : "linear-gradient(110deg, rgba(80,50,5,0.92) 0%, rgba(150,100,20,0.8) 30%, rgba(200,150,40,0.5) 65%, transparent 100%)",
+                background: giftTheme.name === "luxury"
+                  ? `linear-gradient(110deg, rgba(20,20,25,0.98) 0%, rgba(50,50,60,0.95) 20%, rgba(80,80,95,0.8) 50%, rgba(120,120,140,0.4) 75%, transparent 100%)`
+                  : `linear-gradient(110deg, hsla(${giftTheme.h},${giftTheme.s}%,12%,0.98) 0%, hsla(${giftTheme.h},${giftTheme.s}%,25%,0.95) 15%, hsla(${giftTheme.h},${giftTheme.s - 10}%,40%,0.85) 40%, hsla(${giftTheme.h},${giftTheme.s - 15}%,55%,0.6) 65%, hsla(${giftTheme.h},${giftTheme.s - 20}%,65%,0.25) 85%, transparent 100%)`,
                 backdropFilter: "blur(20px) saturate(1.5)",
-                boxShadow: isLegendary
-                  ? "0 8px 50px rgba(255,100,0,0.6), 0 2px 20px rgba(255,60,0,0.3), inset 0 1px 0 rgba(255,255,200,0.5), inset 0 -2px 0 rgba(80,20,0,0.4)"
+                boxShadow: giftTheme.name === "luxury"
+                  ? `0 6px 40px rgba(180,180,200,0.3), inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -2px 0 rgba(0,0,0,0.4)`
+                  : isLegendary
+                  ? `0 8px 50px hsla(${giftTheme.h},${giftTheme.s}%,50%,0.5), 0 2px 20px hsla(${giftTheme.h},${giftTheme.s}%,40%,0.25), inset 0 1px 0 hsla(${giftTheme.h},30%,90%,0.5), inset 0 -2px 0 hsla(${giftTheme.h},${giftTheme.s}%,10%,0.4)`
                   : isUltra
-                  ? "0 6px 40px rgba(255,120,0,0.5), 0 2px 16px rgba(255,80,0,0.2), inset 0 1px 0 rgba(255,255,180,0.4), inset 0 -2px 0 rgba(80,20,0,0.3)"
-                  : isPremium
-                  ? "0 4px 30px rgba(255,130,0,0.4), inset 0 1px 0 rgba(255,255,150,0.3), inset 0 -1px 0 rgba(60,20,0,0.3)"
-                  : "0 4px 20px rgba(255,170,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)",
-                borderTop: "1px solid rgba(255,230,120,0.35)",
-                borderRight: "1px solid rgba(255,200,80,0.15)",
+                  ? `0 6px 40px hsla(${giftTheme.h},${giftTheme.s}%,45%,0.4), inset 0 1px 0 hsla(${giftTheme.h},30%,85%,0.4), inset 0 -2px 0 hsla(${giftTheme.h},${giftTheme.s}%,10%,0.3)`
+                  : `0 4px 25px hsla(${giftTheme.h},${giftTheme.s}%,40%,0.3), inset 0 1px 0 hsla(${giftTheme.h},30%,80%,0.25)`,
+                borderTop: giftTheme.name === "luxury" ? "1px solid rgba(200,200,220,0.3)" : `1px solid hsla(${giftTheme.h},${giftTheme.s}%,70%,0.35)`,
+                borderRight: giftTheme.name === "luxury" ? "1px solid rgba(150,150,170,0.15)" : `1px solid hsla(${giftTheme.h},${giftTheme.s}%,60%,0.15)`,
                 transform: "translateZ(4px)",
               }}
             >
-              {/* Animated shine sweep */}
+              {/* Shine sweep */}
               <motion.div
                 className="absolute inset-0 pointer-events-none"
                 animate={{ x: ["-100%", "200%"] }}
                 transition={{ duration: 3, repeat: Infinity, repeatDelay: 4, ease: "easeInOut" }}
-                style={{
-                  background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 45%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.15) 55%, transparent 60%)",
-                  width: "50%",
-                }}
+                style={{ background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 45%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.12) 55%, transparent 60%)", width: "50%" }}
               />
 
-              {/* Sender avatar — 3D raised */}
+              {/* Avatar */}
               <motion.div
                 initial={{ scale: 0, rotateZ: -20 }}
                 animate={{ scale: 1, rotateZ: 0 }}
@@ -432,101 +417,50 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm"
                   style={{
-                    background: isLegendary
-                      ? "linear-gradient(145deg, #FFE066 0%, #FFB800 30%, #FF6B00 70%, #CC3300 100%)"
-                      : isUltra
-                      ? "linear-gradient(145deg, #FFD700 0%, #FF8C00 50%, #FF4500 100%)"
-                      : "linear-gradient(145deg, #F59E0B 0%, #D97706 50%, #B45309 100%)",
-                    boxShadow: isLegendary
-                      ? "0 4px 20px rgba(255,130,0,0.7), 0 0 30px rgba(255,80,0,0.3), inset 0 -3px 6px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,200,0.5)"
-                      : isUltra
-                      ? "0 3px 16px rgba(255,150,0,0.6), inset 0 -2px 4px rgba(0,0,0,0.25), inset 0 2px 3px rgba(255,255,180,0.4)"
-                      : "0 2px 10px rgba(255,150,0,0.4), inset 0 -2px 4px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,180,0.3)",
-                    border: isLegendary ? "2px solid rgba(255,220,100,0.6)" : "2px solid rgba(255,200,80,0.4)",
+                    background: giftTheme.name === "luxury"
+                      ? "linear-gradient(145deg, #888 0%, #555 50%, #333 100%)"
+                      : `linear-gradient(145deg, hsla(${giftTheme.h},${giftTheme.s}%,70%,1) 0%, hsla(${giftTheme.h},${giftTheme.s}%,45%,1) 50%, hsla(${giftTheme.h},${giftTheme.s}%,25%,1) 100%)`,
+                    boxShadow: `0 3px 16px hsla(${giftTheme.h},${giftTheme.s}%,40%,0.6), inset 0 -2px 4px rgba(0,0,0,0.25), inset 0 2px 3px hsla(${giftTheme.h},30%,85%,0.4)`,
+                    border: `2px solid hsla(${giftTheme.h},${giftTheme.s}%,65%,0.5)`,
                   }}
                 >
                   {(activeGift.senderName || "S")[0]}
                 </div>
-                {/* Gift icon overlaid on avatar with 3D pop */}
                 {giftImg && (
                   <motion.img
-                    src={giftImg}
-                    alt=""
+                    src={giftImg} alt=""
                     className="absolute -bottom-1 -right-2 w-9 h-9 object-contain z-10"
                     initial={{ scale: 0, rotate: -30 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: "spring", delay: 0.4, stiffness: 250 }}
-                    style={{
-                      filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.6)) drop-shadow(0 0 4px rgba(255,200,0,0.3))",
-                    }}
+                    style={{ filter: `drop-shadow(0 3px 8px rgba(0,0,0,0.6)) drop-shadow(0 0 6px hsla(${giftTheme.h},${giftTheme.s}%,50%,0.4))` }}
                   />
                 )}
               </motion.div>
 
-              {/* Text content */}
-              <motion.div
-                className="min-w-0 flex-1"
-                initial={{ opacity: 0, x: -16 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.35 }}
-              >
-                <p className="text-white text-[14px] font-extrabold leading-tight truncate" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(255,200,0,0.15)" }}>
+              {/* Text */}
+              <motion.div className="min-w-0 flex-1" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.35 }}>
+                <p className="text-white text-[14px] font-extrabold leading-tight truncate" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.8)" }}>
                   {activeGift.senderName || "Someone"}
                 </p>
-                <p className="text-amber-100/90 text-[11px] font-semibold leading-tight mt-0.5">
+                <p style={{ color: giftTheme.name === "luxury" ? "rgba(220,220,230,0.9)" : `hsla(${giftTheme.h},60%,85%,0.95)` }} className="text-[11px] font-semibold leading-tight mt-0.5">
                   sent <span className="text-white font-bold">{activeGift.name}</span>
                 </p>
-                {/* Duration badge for big gifts */}
-                {activeGift.coins >= 500 && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.6 }}
-                    className="flex items-center gap-1 mt-1"
-                  >
-                    <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-[1px] rounded-full"
-                      style={{
-                        background: activeGift.coins >= 50000
-                          ? "linear-gradient(135deg, #FFD700, #FF4500)"
-                          : activeGift.coins >= 20000
-                          ? "linear-gradient(135deg, #FF8C00, #FF4500)"
-                          : activeGift.coins >= 5000
-                          ? "linear-gradient(135deg, #FFB800, #FF6B00)"
-                          : activeGift.coins >= 1000
-                          ? "linear-gradient(135deg, #F59E0B, #D97706)"
-                          : "linear-gradient(135deg, #A78BFA, #7C3AED)",
-                        color: "white",
-                        boxShadow: "0 1px 6px rgba(255,150,0,0.4)",
-                      }}
-                    >
-                      {activeGift.coins >= 50000 ? "🏆 1 YEAR" :
-                       activeGift.coins >= 20000 ? "💎 3 MONTHS" :
-                       activeGift.coins >= 5000 ? "👑 1 MONTH" :
-                       activeGift.coins >= 1000 ? "⭐ 14 DAYS" : "✨ 7 DAYS"}
-                    </span>
-                  </motion.div>
-                )}
               </motion.div>
 
-              {/* Coin badge — 3D raised pill */}
+              {/* Coin badge */}
               <motion.div
                 initial={{ scale: 0, rotateZ: 20 }}
                 animate={{ scale: 1, rotateZ: 0 }}
                 transition={{ type: "spring", delay: 0.45, stiffness: 280 }}
                 className="flex items-center gap-1 rounded-full px-3 py-1.5 ml-1 shrink-0"
                 style={{
-                  background: isLegendary
-                    ? "linear-gradient(135deg, rgba(255,180,0,0.6), rgba(255,100,0,0.4))"
-                    : isUltra
-                    ? "linear-gradient(135deg, rgba(255,150,0,0.5), rgba(255,80,0,0.3))"
-                    : "rgba(0,0,0,0.35)",
+                  background: giftTheme.name === "luxury"
+                    ? "linear-gradient(135deg, rgba(180,180,200,0.35), rgba(100,100,120,0.25))"
+                    : `linear-gradient(135deg, hsla(${giftTheme.h},${giftTheme.s}%,55%,0.4), hsla(${giftTheme.h},${giftTheme.s}%,35%,0.25))`,
                   backdropFilter: "blur(8px)",
-                  border: isLegendary ? "1.5px solid rgba(255,220,80,0.5)" : "1px solid rgba(255,200,50,0.3)",
-                  boxShadow: isLegendary
-                    ? "0 2px 16px rgba(255,150,0,0.5), inset 0 1px 0 rgba(255,255,200,0.3)"
-                    : isUltra
-                    ? "0 2px 12px rgba(255,150,0,0.3), inset 0 1px 0 rgba(255,255,200,0.2)"
-                    : "inset 0 1px 0 rgba(255,255,255,0.1)",
+                  border: `1px solid hsla(${giftTheme.h},${giftTheme.s}%,65%,0.35)`,
+                  boxShadow: `0 2px 12px hsla(${giftTheme.h},${giftTheme.s}%,45%,0.3), inset 0 1px 0 hsla(${giftTheme.h},30%,85%,0.2)`,
                 }}
               >
                 <img src={goldCoinIcon} alt="" className="w-4 h-4" style={{ filter: "drop-shadow(0 0 4px rgba(255,200,0,0.5))" }} />
