@@ -77,7 +77,7 @@ import { ReactionIcon, MedalIcon, QUICK_REACTIONS } from "@/utils/reactionIcons"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { giftImages } from "@/config/giftIcons";
+import { giftImages, preloadGiftImages } from "@/config/giftIcons";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -85,7 +85,7 @@ type LivePhase = "setup" | "countdown" | "live" | "ended";
 
 export default function GoLivePage() {
   // Preload gift video URLs in background
-  useEffect(() => { preloadGiftAnimations(); }, []);
+  useEffect(() => { preloadGiftAnimations(); preloadGiftImages(); }, []);
   const navigate = useNavigate();
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
