@@ -1163,16 +1163,16 @@ export default function GoLivePage() {
             <div
               className="relative flex items-center gap-2.5 rounded-full pl-1 pr-3 py-1 max-w-[60%] overflow-visible"
               style={{
-                background: "linear-gradient(160deg, rgba(60,60,80,0.95) 0%, rgba(28,28,42,0.92) 45%, rgba(8,8,16,0.96) 100%)",
+                background: "linear-gradient(160deg, rgba(110,115,135,0.92) 0%, rgba(72,76,95,0.9) 45%, rgba(45,48,62,0.94) 100%)",
                 boxShadow: [
-                  "inset 0 1.5px 0.5px rgba(255,255,255,0.32)",
-                  "inset 0 -1.5px 1px rgba(0,0,0,0.75)",
-                  "inset 1px 0 1px rgba(255,255,255,0.06)",
-                  "inset -1px 0 1px rgba(0,0,0,0.45)",
-                  "0 8px 22px rgba(0,0,0,0.6)",
-                  "0 1px 2px rgba(0,0,0,0.6)",
+                  "inset 0 2px 1px rgba(255,255,255,0.45)",
+                  "inset 0 -2px 1.5px rgba(0,0,0,0.55)",
+                  "inset 1.5px 0 1px rgba(255,255,255,0.12)",
+                  "inset -1.5px 0 1px rgba(0,0,0,0.35)",
+                  "0 8px 22px rgba(0,0,0,0.55)",
+                  "0 1px 2px rgba(0,0,0,0.5)",
                 ].join(", "),
-                border: "1px solid rgba(255,255,255,0.10)",
+                border: "1px solid rgba(255,255,255,0.18)",
               }}
             >
               {/* Top glass sheen */}
