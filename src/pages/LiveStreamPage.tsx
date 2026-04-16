@@ -257,7 +257,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
 
   const sendChat = useCallback(() => {
     if (!chatInput.trim()) return;
-    setChatMessages(prev => [...prev, { id: Date.now().toString(), user: "You", text: chatInput, level: 5 }]);
+    setChatMessages(prev => [...prev, { id: Date.now().toString(), user: "You", text: chatInput, level: myLevel }]);
     setChatInput("");
   }, [chatInput]);
 
