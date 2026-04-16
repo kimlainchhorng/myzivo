@@ -913,7 +913,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 initial={{ opacity: 0, x: -24, y: 6 }}
                 animate={{ opacity: 1, x: 0, y: 0 }}
                 transition={{ type: "spring", damping: 24, stiffness: 300, delay: idx * 0.015 }}
-                className="relative w-full min-w-0 max-w-[85%] sm:max-w-[320px] rounded-[18px] overflow-hidden"
+                className="relative w-fit max-w-[88%] sm:max-w-[320px] rounded-[18px]"
                 style={{
                   background: msg.isGift
                     ? "linear-gradient(110deg, rgba(180,120,0,0.5) 0%, rgba(120,60,0,0.35) 50%, rgba(60,30,0,0.2) 100%)"
@@ -940,7 +940,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   />
                 )}
 
-                <div className="relative z-10 grid grid-cols-[22px,minmax(0,1fr)] items-start gap-x-2 gap-y-1 px-2.5 py-[5px]">
+                <div className="relative z-10 flex items-center gap-2 px-2.5 py-[5px]">
                   {/* Avatar — 3D gradient per tier */}
                   <div className="relative shrink-0">
                     <div
@@ -958,7 +958,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                     )}
                   </div>
 
-                  <div className="min-w-0 flex flex-wrap items-center gap-[6px]">
+                  <div className="min-w-0 flex flex-wrap items-center gap-x-[6px] gap-y-[2px] flex-1">
                     {/* Level badge — 3D embossed pill */}
                     <span
                       className="text-[7px] font-black px-[6px] py-[2px] rounded-full shrink-0 tracking-wider"
@@ -1019,12 +1019,12 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                         style={{ filter: "drop-shadow(0 0 4px rgba(255,200,0,0.5))" }}
                       />
                     )}
-                  </div>
 
-                  {/* Message text */}
-                  <span className={cn("col-start-2 text-[10px] min-w-0 break-words leading-[1.3]", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}>
-                    {msg.text}
-                  </span>
+                    {/* Message text — inline with name & badges, wraps naturally */}
+                    <span className={cn("text-[10px] break-words leading-[1.3]", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}>
+                      {msg.text}
+                    </span>
+                  </div>
                 </div>
               </motion.div>
             );
