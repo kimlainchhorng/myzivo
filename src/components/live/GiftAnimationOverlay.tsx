@@ -8,15 +8,17 @@ import { giftImages, preloadGiftImages } from "@/config/giftIcons";
 import { giftAnimationVideos, preloadGiftAnimations } from "@/config/giftAnimations";
 import { getGiftLevel } from "@/config/giftCatalog";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
+import blackPantherTransparent from "@/assets/gifts/black-panther-transparent.png";
 
 
 /**
  * Per-gift transparent PNG override.
  * If a gift name is listed here, we skip its baked-in .mp4 and render the cutout
- * PNG over the live stream instead. Currently empty — Black Panther uses a new
- * mp4 with a solid black background that composites cleanly via screen blend.
+ * PNG over the live stream — no background of any kind.
  */
-const transparentGiftOverrides: Record<string, string> = {};
+const transparentGiftOverrides: Record<string, string> = {
+  "Black Panther": blackPantherTransparent,
+};
 
 interface GiftAnimationOverlayProps {
   activeGift: { name: string; coins: number; senderName?: string } | null;
