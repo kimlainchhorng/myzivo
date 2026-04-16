@@ -338,6 +338,7 @@ function ReelCard({
       const resp = await fetch(url);
       if (!resp.ok) throw new Error("fetch failed");
       const blob = await resp.blob();
+      const { repairVideoBlob } = await import("@/utils/videoRepair");
       const repairedUrl = await repairVideoBlob(blob);
       if (repairedUrl) {
         if (blobSrc) URL.revokeObjectURL(blobSrc);
