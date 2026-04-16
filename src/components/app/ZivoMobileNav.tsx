@@ -34,10 +34,10 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
   const { t } = useI18n();
 
   const tabs: NavTab[] = [
-    { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
+    { id: "live", labelKey: "nav.live", icon: Radio, path: "/live", bg: navAlertsBg, cssVar: "var(--cars)" },
     { id: "reel", labelKey: "nav.feed", icon: Newspaper, path: "/feed", bg: navSearchBg, cssVar: "var(--flights)" },
     { id: "feed", labelKey: "nav.reel", icon: Film, path: "/reels", bg: navSearchBg, cssVar: "var(--flights)" },
-    { id: "live", labelKey: "nav.live", icon: Radio, path: "/live", bg: navAlertsBg, cssVar: "var(--cars)" },
+    { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
     { id: "map", labelKey: "nav.map", icon: MapPin, path: "/store-map", bg: navTripsBg, cssVar: "var(--hotels)" },
     { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: "/chat", bg: navAlertsBg, cssVar: "var(--cars)" },
     { id: "account", labelKey: "nav.account", icon: User, path: "/profile", bg: navAccountBg, cssVar: "var(--primary)" },
@@ -82,7 +82,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
                 "flex flex-col items-center justify-center flex-1 gap-0.5 transition-colors duration-200 touch-manipulation active:scale-90 relative min-w-[44px] min-h-[44px]",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
-              aria-label={t(tab.labelKey)}
+              aria-label={tab.id === "live" ? "Live" : t(tab.labelKey)}
               aria-current={isActive ? "page" : undefined}
             >
               <div className="relative flex items-center justify-center">
@@ -114,7 +114,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
                   ? "font-semibold text-primary"
                   : "font-medium text-muted-foreground"
               )}>
-                {t(tab.labelKey)}
+                {tab.id === "live" ? "Live" : t(tab.labelKey)}
               </span>
             </button>
           );
