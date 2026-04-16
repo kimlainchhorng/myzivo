@@ -1270,21 +1270,19 @@ export default function GoLivePage() {
                   <span className="text-white/65 truncate" style={{ textShadow: "0 1px 1px rgba(0,0,0,0.5)" }}>
                     {fakeFollowers.current.toLocaleString()} followers
                   </span>
-                  {giftsReceived > 0 && (
-                    <span
-                      className="flex items-center gap-0.5 shrink-0 font-black px-1.5 py-[1px] rounded-full"
-                      style={{
-                        background: "linear-gradient(180deg, rgba(253,224,71,0.18), rgba(180,83,9,0.25))",
-                        border: "1px solid rgba(253,224,71,0.35)",
-                        color: "#fde68a",
-                        textShadow: "0 1px 1px rgba(0,0,0,0.55)",
-                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 1px 2px rgba(0,0,0,0.4)",
-                      }}
-                    >
-                      <img src={goldCoinIcon} alt="" className="w-3 h-3" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.5))" }} />
-                      {coinsEarned.toLocaleString()}
-                    </span>
-                  )}
+                  <span
+                    className="flex items-center gap-1 shrink-0 font-black px-2 py-[2px] rounded-full text-[10px]"
+                    style={{
+                      background: "linear-gradient(180deg, rgba(40,30,15,0.85), rgba(20,12,5,0.95))",
+                      border: "1.5px solid rgba(251,191,36,0.55)",
+                      color: "#fde68a",
+                      textShadow: "0 1px 1px rgba(0,0,0,0.7)",
+                      boxShadow: "inset 0 1px 0.5px rgba(255,255,255,0.18), inset 0 -1px 0.5px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.5)",
+                    }}
+                  >
+                    <img src={goldCoinIcon} alt="" className="w-3.5 h-3.5" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.6))" }} />
+                    {coinsEarned.toLocaleString()}
+                  </span>
                 </div>
               </div>
             </div>
