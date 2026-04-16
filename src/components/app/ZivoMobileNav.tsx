@@ -4,7 +4,7 @@
  */
 import { forwardRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Rss, MapPin, MessageCircle, User, Film, Newspaper } from "lucide-react";
+import { Home, Rss, MapPin, MessageCircle, User, Film, Newspaper, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
@@ -37,6 +37,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
     { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
     { id: "reel", labelKey: "nav.feed", icon: Newspaper, path: "/feed", bg: navSearchBg, cssVar: "var(--flights)" },
     { id: "feed", labelKey: "nav.reel", icon: Film, path: "/reels", bg: navSearchBg, cssVar: "var(--flights)" },
+    { id: "live", labelKey: "nav.live", icon: Radio, path: "/live", bg: navAlertsBg, cssVar: "var(--cars)" },
     { id: "map", labelKey: "nav.map", icon: MapPin, path: "/store-map", bg: navTripsBg, cssVar: "var(--hotels)" },
     { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: "/chat", bg: navAlertsBg, cssVar: "var(--cars)" },
     { id: "account", labelKey: "nav.account", icon: User, path: "/profile", bg: navAccountBg, cssVar: "var(--primary)" },
@@ -48,6 +49,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
     if (path.startsWith("/reels")) return "feed";
     if (path.startsWith("/feed")) return "reel";
     if (path.startsWith("/store-map") || path.startsWith("/map")) return "map";
+    if (path.startsWith("/live") || path.startsWith("/go-live")) return "live";
     if (path.startsWith("/chat")) return "chat";
     if (path.startsWith("/account") || path.startsWith("/profile") || path.startsWith("/user/") || path.startsWith("/more") || path.startsWith("/personal-dashboard") || path.startsWith("/personal/") || path.startsWith("/shop-dashboard")) return "account";
     return "home";
