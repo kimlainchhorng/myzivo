@@ -80,6 +80,7 @@ import { cn } from "@/lib/utils";
 import { giftImages, preloadGiftImages } from "@/config/giftIcons";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 type LivePhase = "setup" | "countdown" | "live" | "ended";
 
@@ -88,6 +89,8 @@ export default function GoLivePage() {
   useEffect(() => { preloadGiftAnimations(); preloadGiftImages(); }, []);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: userProfile } = useUserProfile();
+  const hostDisplayName = userProfile?.full_name || user?.email?.split("@")[0] || "Host";
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
