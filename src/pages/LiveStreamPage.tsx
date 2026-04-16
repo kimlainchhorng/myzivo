@@ -940,7 +940,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   />
                 )}
 
-                <div className="relative z-10 flex items-center gap-[6px] px-2.5 py-[5px] flex-wrap">
+                <div className="relative z-10 flex items-center gap-[6px] px-2.5 py-[5px]">
                   {/* Avatar — 3D gradient per tier */}
                   <div className="relative shrink-0">
                     <div
@@ -1011,7 +1011,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                     <motion.img
                       src={msg.giftIcon}
                       alt=""
-                      className="h-4 w-4 object-contain shrink-0"
+                      className="h-5 w-5 object-contain shrink-0"
                       initial={{ scale: 0, rotate: -20 }}
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{ type: "spring", stiffness: 300 }}
@@ -1020,7 +1020,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   )}
 
                   {/* Message text */}
-                  <span className={cn("text-[10px]", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}>
+                  <span className={cn("text-[10px] min-w-0", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}>
                     {msg.text}
                   </span>
                 </div>
