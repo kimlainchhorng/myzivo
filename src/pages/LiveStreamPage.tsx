@@ -845,7 +845,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         </AnimatePresence>
 
         {/* Messages — improved staggered animations */}
-        <div className="pl-3 pr-16 max-h-[180px] overflow-y-auto scrollbar-hide space-y-[5px] mask-gradient-top flex flex-col">
+        <div className="pl-3 pr-16 max-h-[180px] overflow-y-auto scrollbar-hide space-y-2 mask-gradient-top flex flex-col items-start">
           {chatMessages.slice(-8).map((msg, idx) => {
             const isJoin = msg.isSystem && msg.text.includes("joined");
             const isTopFan = topGifters.length > 0 && msg.user === topGifters[0].name;
