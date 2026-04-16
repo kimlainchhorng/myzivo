@@ -23,9 +23,10 @@ import {
   Share2, BarChart3, Copy, ExternalLink, Trash2, Edit, Calendar,
   Percent, DollarSign, Clock, CheckCircle2, XCircle, Image as ImageIcon,
   MessageSquare, Loader2, QrCode, Link2, Send, Sparkles, Target,
-  Users, ArrowUpRight, ArrowDownRight, Minus, Hash, Globe, Zap
+  Users, ArrowUpRight, ArrowDownRight, Minus, Hash, Globe, Zap, Rocket
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import StoreAdsManager from "./StoreAdsManager";
 
 interface Props {
   storeId: string;
@@ -288,11 +289,12 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName }:
     <div className="space-y-5">
       {/* Sub-navigation tabs */}
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-        <TabsList className="w-full grid grid-cols-4 h-10">
+        <TabsList className="w-full grid grid-cols-5 h-10">
           <TabsTrigger value="overview" className="text-xs gap-1.5"><BarChart3 className="w-3.5 h-3.5" /> Overview</TabsTrigger>
-          <TabsTrigger value="promotions" className="text-xs gap-1.5"><Tag className="w-3.5 h-3.5" /> Promotions</TabsTrigger>
+          <TabsTrigger value="promotions" className="text-xs gap-1.5"><Tag className="w-3.5 h-3.5" /> Promos</TabsTrigger>
+          <TabsTrigger value="ads" className="text-xs gap-1.5"><Rocket className="w-3.5 h-3.5" /> Ads</TabsTrigger>
           <TabsTrigger value="posts" className="text-xs gap-1.5"><ImageIcon className="w-3.5 h-3.5" /> Posts</TabsTrigger>
-          <TabsTrigger value="share" className="text-xs gap-1.5"><Share2 className="w-3.5 h-3.5" /> Share & QR</TabsTrigger>
+          <TabsTrigger value="share" className="text-xs gap-1.5"><Share2 className="w-3.5 h-3.5" /> Share</TabsTrigger>
         </TabsList>
 
         {/* ═══ OVERVIEW ═══ */}
@@ -497,6 +499,11 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName }:
               })}
             </div>
           )}
+        </TabsContent>
+
+        {/* ═══ ADS ═══ */}
+        <TabsContent value="ads" className="space-y-4 mt-4">
+          <StoreAdsManager storeId={storeId} />
         </TabsContent>
 
         {/* ═══ POSTS ═══ */}
