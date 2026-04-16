@@ -373,155 +373,214 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
           />
         ))}
 
-        {/* ── Sender banner — 3D gift-themed ── */}
-        <motion.div
-          initial={{ x: -400, opacity: 0, rotateY: -15 }}
-          animate={{ x: 0, opacity: 1, rotateY: 0 }}
-          exit={{ x: -400, opacity: 0, rotateY: -15 }}
-          transition={{ type: "spring", damping: 16, stiffness: 140, delay: 0.15 }}
-          className="absolute left-0 z-[3]"
-          style={{ top: giftPanelOpen ? "10%" : "22%", perspective: "800px" }}
-        >
-          <motion.div
-            className="relative"
-            animate={{ y: [0, -2, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            style={{ transformStyle: "preserve-3d" }}
-          >
-            {/* 3D shadow */}
-            <div className="absolute inset-0 rounded-r-[28px]" style={{ transform: "translateZ(-8px) translateY(4px)", background: `hsla(${giftTheme.h},40%,8%,0.7)`, filter: "blur(14px)" }} />
+        {/* ── Sender banner — 3D level-scaled ── */}
+        {(() => {
+          const level = getGiftLevel(activeGift.coins);
+          const is3D = level >= 3;
+          const isEpic = level >= 6;
+          const isMythic = level >= 8;
+          const isImmortal = level >= 10;
 
-            {/* Main card — colors from gift theme */}
-            <div
-              className="relative flex items-center gap-3 pl-3 pr-10 py-3 rounded-r-[28px] overflow-hidden"
-              style={{
-                background: giftTheme.name === "luxury"
-                  ? `linear-gradient(110deg, rgba(20,20,25,0.98) 0%, rgba(50,50,60,0.95) 20%, rgba(80,80,95,0.8) 50%, rgba(120,120,140,0.4) 75%, transparent 100%)`
-                  : `linear-gradient(110deg, hsla(${giftTheme.h},${giftTheme.s}%,12%,0.98) 0%, hsla(${giftTheme.h},${giftTheme.s}%,25%,0.95) 15%, hsla(${giftTheme.h},${giftTheme.s - 10}%,40%,0.85) 40%, hsla(${giftTheme.h},${giftTheme.s - 15}%,55%,0.6) 65%, hsla(${giftTheme.h},${giftTheme.s - 20}%,65%,0.25) 85%, transparent 100%)`,
-                backdropFilter: "blur(20px) saturate(1.5)",
-                boxShadow: giftTheme.name === "luxury"
-                  ? `0 6px 40px rgba(180,180,200,0.3), inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -2px 0 rgba(0,0,0,0.4)`
-                  : isLegendary
-                  ? `0 8px 50px hsla(${giftTheme.h},${giftTheme.s}%,50%,0.5), 0 2px 20px hsla(${giftTheme.h},${giftTheme.s}%,40%,0.25), inset 0 1px 0 hsla(${giftTheme.h},30%,90%,0.5), inset 0 -2px 0 hsla(${giftTheme.h},${giftTheme.s}%,10%,0.4)`
-                  : isUltra
-                  ? `0 6px 40px hsla(${giftTheme.h},${giftTheme.s}%,45%,0.4), inset 0 1px 0 hsla(${giftTheme.h},30%,85%,0.4), inset 0 -2px 0 hsla(${giftTheme.h},${giftTheme.s}%,10%,0.3)`
-                  : `0 4px 25px hsla(${giftTheme.h},${giftTheme.s}%,40%,0.3), inset 0 1px 0 hsla(${giftTheme.h},30%,80%,0.25)`,
-                borderTop: giftTheme.name === "luxury" ? "1px solid rgba(200,200,220,0.3)" : `1px solid hsla(${giftTheme.h},${giftTheme.s}%,70%,0.35)`,
-                borderRight: giftTheme.name === "luxury" ? "1px solid rgba(150,150,170,0.15)" : `1px solid hsla(${giftTheme.h},${giftTheme.s}%,60%,0.15)`,
-                transform: "translateZ(4px)",
-              }}
+          // Level-driven color accents
+          const lvColors: Record<number, { bg: string; glow: string; text: string; badge: string }> = {
+            1: { bg: "from-zinc-800/95 to-zinc-700/80", glow: "rgba(161,161,170,0.15)", text: "text-zinc-300", badge: "bg-zinc-600/60 border-zinc-500/40" },
+            2: { bg: "from-green-900/95 to-green-800/80", glow: "rgba(74,222,128,0.2)", text: "text-green-300", badge: "bg-green-700/60 border-green-500/40" },
+            3: { bg: "from-blue-900/95 to-blue-800/80", glow: "rgba(96,165,250,0.25)", text: "text-blue-300", badge: "bg-blue-700/60 border-blue-400/40" },
+            4: { bg: "from-purple-900/95 to-purple-800/80", glow: "rgba(167,139,250,0.3)", text: "text-purple-300", badge: "bg-purple-700/60 border-purple-400/40" },
+            5: { bg: "from-pink-900/95 to-pink-800/80", glow: "rgba(244,114,182,0.3)", text: "text-pink-300", badge: "bg-pink-700/60 border-pink-400/40" },
+            6: { bg: "from-amber-900/95 to-amber-800/80", glow: "rgba(251,191,36,0.35)", text: "text-amber-300", badge: "bg-amber-600/60 border-amber-400/50" },
+            7: { bg: "from-orange-900/95 to-orange-700/85", glow: "rgba(251,146,60,0.4)", text: "text-orange-300", badge: "bg-orange-600/60 border-orange-400/50" },
+            8: { bg: "from-red-950/98 to-red-800/85", glow: "rgba(248,113,113,0.45)", text: "text-red-300", badge: "bg-red-600/60 border-red-400/50" },
+            9: { bg: "from-rose-950/98 to-rose-800/85", glow: "rgba(251,113,133,0.5)", text: "text-rose-300", badge: "bg-rose-600/60 border-rose-400/50" },
+            10: { bg: "from-yellow-900/98 via-amber-800/90 to-orange-900/85", glow: "rgba(253,224,71,0.55)", text: "text-yellow-200", badge: "bg-yellow-500/60 border-yellow-300/50" },
+          };
+          const lv = lvColors[level] || lvColors[1];
+
+          // Level label
+          const lvLabel = level >= 10 ? "👑 Immortal" : level >= 8 ? "🔥 Mythic" : level >= 6 ? "⭐ Epic" : level >= 4 ? "💎 Rare" : undefined;
+
+          return (
+            <motion.div
+              initial={{ x: -400, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -400, opacity: 0 }}
+              transition={{ type: "spring", damping: 16, stiffness: 140, delay: 0.15 }}
+              className="absolute left-0 z-[3]"
+              style={{ top: giftPanelOpen ? "10%" : "22%", perspective: is3D ? "1000px" : undefined }}
             >
-              {/* Shine sweep */}
               <motion.div
-                className="absolute inset-0 pointer-events-none"
-                animate={{ x: ["-100%", "200%"] }}
-                transition={{ duration: 3, repeat: Infinity, repeatDelay: 4, ease: "easeInOut" }}
-                style={{ background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 45%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.12) 55%, transparent 60%)", width: "50%" }}
-              />
-
-              {/* Animated gift running inside the banner */}
-              <motion.div
-                initial={{ scale: 0, rotateZ: -20 }}
-                animate={{ scale: 1, rotateZ: 0 }}
-                transition={{ type: "spring", delay: 0.25, stiffness: 300 }}
-                className="relative shrink-0 w-14 h-14"
+                className="relative"
+                animate={is3D ? { y: [0, -3, 0], rotateX: [0, 1.5, 0] } : {}}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                style={{ transformStyle: is3D ? "preserve-3d" : undefined }}
               >
-                {/* Sender initial behind */}
+                {/* 3D depth shadow — stronger per level */}
+                {is3D && (
+                  <div
+                    className="absolute inset-0 rounded-r-[28px]"
+                    style={{
+                      transform: `translateZ(-${6 + level}px) translateY(${3 + level * 0.5}px)`,
+                      background: `rgba(0,0,0,${0.3 + level * 0.04})`,
+                      filter: `blur(${10 + level * 2}px)`,
+                    }}
+                  />
+                )}
+
+                {/* Main card */}
                 <div
-                  className="absolute inset-0 rounded-full flex items-center justify-center text-white/60 font-bold text-[10px]"
+                  className={`relative flex items-center gap-2.5 pl-3 pr-5 py-2.5 rounded-r-[28px] overflow-hidden bg-gradient-to-r ${lv.bg}`}
                   style={{
-                    background: `linear-gradient(145deg, hsla(${giftTheme.h},${giftTheme.s}%,55%,0.4), hsla(${giftTheme.h},${giftTheme.s}%,25%,0.3))`,
-                    border: `1.5px solid hsla(${giftTheme.h},${giftTheme.s}%,60%,0.3)`,
+                    backdropFilter: `blur(${14 + level * 2}px) saturate(${1 + level * 0.08})`,
+                    boxShadow: `0 ${4 + level}px ${20 + level * 4}px ${lv.glow}, inset 0 1px 0 rgba(255,255,255,${0.08 + level * 0.03}), inset 0 -1px 0 rgba(0,0,0,0.3)`,
+                    borderTop: `1px solid rgba(255,255,255,${0.1 + level * 0.03})`,
+                    borderRight: `1px solid rgba(255,255,255,${0.05 + level * 0.015})`,
+                    transform: is3D ? `translateZ(${2 + level}px)` : undefined,
                   }}
                 >
-                  {(activeGift.senderName || "S")[0]}
-                </div>
+                  {/* Shine sweep — faster for higher levels */}
+                  <motion.div
+                    className="absolute inset-0 pointer-events-none"
+                    animate={{ x: ["-100%", "200%"] }}
+                    transition={{ duration: Math.max(1.5, 4 - level * 0.25), repeat: Infinity, repeatDelay: Math.max(1, 5 - level * 0.4), ease: "easeInOut" }}
+                    style={{
+                      background: `linear-gradient(105deg, transparent 40%, rgba(255,255,255,${0.06 + level * 0.02}) 45%, rgba(255,255,255,${0.12 + level * 0.03}) 50%, rgba(255,255,255,${0.06 + level * 0.02}) 55%, transparent 60%)`,
+                      width: "50%",
+                    }}
+                  />
 
-                {/* Gift icon — galloping/flying animation */}
-                {giftImg && (
-                  <motion.div className="absolute inset-0 z-10 flex items-center justify-center">
-                    {/* Sparkle trail behind the gift */}
-                    {bannerTrails.map((t) => (
-                      <motion.div
-                        key={`trail-${t.id}`}
-                        className="absolute rounded-full"
+                  {/* Outer glow ring for epic+ */}
+                  {isEpic && (
+                    <motion.div
+                      className="absolute inset-0 rounded-r-[28px] pointer-events-none"
+                      animate={{ opacity: [0.3, 0.7, 0.3] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                      style={{ boxShadow: `inset 0 0 ${10 + level * 3}px ${lv.glow}` }}
+                    />
+                  )}
+
+                  {/* Gift icon area */}
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", delay: 0.25, stiffness: 300 }}
+                    className="relative shrink-0 w-12 h-12"
+                  >
+                    {/* Glowing ring behind icon — intensity scales with level */}
+                    <motion.div
+                      className="absolute inset-[-4px] rounded-full"
+                      style={{
+                        background: `radial-gradient(circle, ${lv.glow}, transparent 70%)`,
+                      }}
+                      animate={is3D ? { scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] } : {}}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    />
+
+                    {giftImg && (
+                      <motion.img
+                        src={giftImg}
+                        alt={activeGift.name}
+                        className="w-12 h-12 object-contain relative z-10"
+                        animate={is3D ? {
+                          y: [0, -3, 0, -1.5, 0],
+                          rotate: [0, 4, -3, 2, 0],
+                          scale: [1, 1.1, 1, 1.05, 1],
+                        } : {}}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
                         style={{
-                          width: t.size,
-                          height: t.size,
-                          background: `hsla(${giftTheme.h},${giftTheme.s}%,70%,0.8)`,
-                          boxShadow: `0 0 6px hsla(${giftTheme.h},${giftTheme.s}%,60%,0.6)`,
-                        }}
-                        animate={{
-                          x: [0, t.x],
-                          y: [0, t.y],
-                          opacity: [0, 0.9, 0],
-                          scale: [0.5, 1, 0],
-                        }}
-                        transition={{
-                          duration: 0.8,
-                          delay: 0.5 + t.delay,
-                          repeat: Infinity,
-                          repeatDelay: 0.6,
-                          ease: "easeOut",
+                          filter: `drop-shadow(0 2px 8px rgba(0,0,0,0.6)) drop-shadow(0 0 ${8 + level * 2}px ${lv.glow})`,
                         }}
                       />
-                    ))}
-                    <motion.img
-                      src={giftImg}
-                      alt={activeGift.name}
-                      className="w-11 h-11 object-contain"
-                      animate={{
-                        y: [0, -4, 0, -2, 0],
-                        x: [0, 2, 0, -1, 0],
-                        rotate: [0, 3, -2, 1, 0],
-                        scale: [1, 1.08, 1, 1.04, 1],
-                      }}
-                      transition={{
-                        duration: 1.6,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                      style={{
-                        filter: `drop-shadow(0 3px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 12px hsla(${giftTheme.h},${giftTheme.s}%,55%,0.5))`,
-                      }}
-                    />
+                    )}
                   </motion.div>
-                )}
-              </motion.div>
 
-              {/* Text */}
-              <motion.div className="min-w-0 flex-1" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.35 }}>
-                <p className="text-white text-[14px] font-extrabold leading-tight truncate" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.8)" }}>
-                  {activeGift.senderName || "Someone"}
-                </p>
-                <p style={{ color: giftTheme.name === "luxury" ? "rgba(220,220,230,0.9)" : `hsla(${giftTheme.h},60%,85%,0.95)` }} className="text-[11px] font-semibold leading-tight mt-0.5">
-                  sent <span className="text-white font-bold">{activeGift.name}</span>
-                </p>
-              </motion.div>
+                  {/* Text + level badges */}
+                  <motion.div className="min-w-0 flex-1" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+                    {/* Sender name */}
+                    <p className="text-white text-[13px] font-extrabold leading-tight truncate" style={{ textShadow: "0 2px 6px rgba(0,0,0,0.8)" }}>
+                      {activeGift.senderName || "Someone"}
+                    </p>
 
-              {/* Coin badge */}
-              <motion.div
-                initial={{ scale: 0, rotateZ: 20 }}
-                animate={{ scale: 1, rotateZ: 0 }}
-                transition={{ type: "spring", delay: 0.45, stiffness: 280 }}
-                className="flex items-center gap-1 rounded-full px-3 py-1.5 ml-1 shrink-0"
-                style={{
-                  background: giftTheme.name === "luxury"
-                    ? "linear-gradient(135deg, rgba(180,180,200,0.35), rgba(100,100,120,0.25))"
-                    : `linear-gradient(135deg, hsla(${giftTheme.h},${giftTheme.s}%,55%,0.4), hsla(${giftTheme.h},${giftTheme.s}%,35%,0.25))`,
-                  backdropFilter: "blur(8px)",
-                  border: `1px solid hsla(${giftTheme.h},${giftTheme.s}%,65%,0.35)`,
-                  boxShadow: `0 2px 12px hsla(${giftTheme.h},${giftTheme.s}%,45%,0.3), inset 0 1px 0 hsla(${giftTheme.h},30%,85%,0.2)`,
-                }}
-              >
-                <img src={goldCoinIcon} alt="" className="w-4 h-4" style={{ filter: "drop-shadow(0 0 4px rgba(255,200,0,0.5))" }} />
-                <span className="text-amber-100 text-[13px] font-black tabular-nums" style={{ textShadow: "0 0 8px rgba(255,200,0,0.5), 0 1px 4px rgba(0,0,0,0.6)" }}>
-                  {activeGift.coins.toLocaleString()}
-                </span>
+                    {/* Level badges row */}
+                    <div className="flex items-center gap-1.5 mt-1">
+                      {/* Level badge */}
+                      <span
+                        className={`inline-flex items-center px-1.5 py-[1px] rounded-full text-[9px] font-black tracking-wide border ${lv.badge} ${lv.text}`}
+                        style={{ textShadow: level >= 6 ? `0 0 6px ${lv.glow}` : undefined }}
+                      >
+                        Lv.{level}
+                      </span>
+
+                      {/* Tier badge for rare+ */}
+                      {lvLabel && (
+                        <motion.span
+                          className={`inline-flex items-center px-1.5 py-[1px] rounded-full text-[9px] font-bold border ${lv.badge} ${lv.text}`}
+                          animate={isMythic ? { scale: [1, 1.05, 1] } : {}}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          style={{ textShadow: `0 0 6px ${lv.glow}` }}
+                        >
+                          {lvLabel}
+                        </motion.span>
+                      )}
+                    </div>
+
+                    {/* Gift name */}
+                    <p className={`text-[10px] font-semibold leading-tight mt-0.5 ${lv.text} opacity-80`}>
+                      sent <span className="text-white font-bold opacity-100">{activeGift.name}</span>
+                    </p>
+                  </motion.div>
+
+                  {/* Coin badge */}
+                  <motion.div
+                    initial={{ scale: 0, rotateZ: 20 }}
+                    animate={{ scale: 1, rotateZ: 0 }}
+                    transition={{ type: "spring", delay: 0.45, stiffness: 280 }}
+                    className={`flex items-center gap-1 rounded-full px-2.5 py-1 ml-1 shrink-0 border ${lv.badge}`}
+                    style={{
+                      backdropFilter: "blur(8px)",
+                      boxShadow: `0 2px 10px ${lv.glow}`,
+                    }}
+                  >
+                    <img src={goldCoinIcon} alt="" className="w-3.5 h-3.5" style={{ filter: "drop-shadow(0 0 4px rgba(255,200,0,0.5))" }} />
+                    <span className="text-amber-100 text-[12px] font-black tabular-nums" style={{ textShadow: "0 0 6px rgba(255,200,0,0.4), 0 1px 3px rgba(0,0,0,0.6)" }}>
+                      {activeGift.coins.toLocaleString()}
+                    </span>
+                  </motion.div>
+
+                  {/* Immortal level particle border effect */}
+                  {isImmortal && (
+                    <>
+                      {Array.from({ length: 8 }, (_, i) => (
+                        <motion.div
+                          key={`border-p-${i}`}
+                          className="absolute rounded-full pointer-events-none"
+                          style={{
+                            width: 3,
+                            height: 3,
+                            background: "#FCD34D",
+                            boxShadow: "0 0 6px #FCD34D",
+                            top: `${10 + Math.random() * 80}%`,
+                            left: `${5 + Math.random() * 90}%`,
+                          }}
+                          animate={{
+                            opacity: [0, 1, 0],
+                            scale: [0, 1.5, 0],
+                            y: [0, -(10 + Math.random() * 20)],
+                          }}
+                          transition={{
+                            duration: 1 + Math.random(),
+                            delay: i * 0.2,
+                            repeat: Infinity,
+                            repeatDelay: 1,
+                          }}
+                        />
+                      ))}
+                    </>
+                  )}
+                </div>
               </motion.div>
-            </div>
-          </motion.div>
-        </motion.div>
+            </motion.div>
+          );
+        })()}
 
         {/* ── Combo counter ── */}
         {comboCount >= 2 && (
