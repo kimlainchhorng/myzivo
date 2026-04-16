@@ -913,7 +913,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 initial={{ opacity: 0, x: -24, y: 6 }}
                 animate={{ opacity: 1, x: 0, y: 0 }}
                 transition={{ type: "spring", damping: 24, stiffness: 300, delay: idx * 0.015 }}
-                className="relative rounded-[18px] max-w-[90%] w-fit overflow-hidden"
+                className="relative w-full min-w-0 max-w-[85%] sm:max-w-[320px] rounded-[18px] overflow-hidden"
                 style={{
                   background: msg.isGift
                     ? "linear-gradient(110deg, rgba(180,120,0,0.5) 0%, rgba(120,60,0,0.35) 50%, rgba(60,30,0,0.2) 100%)"
@@ -940,7 +940,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   />
                 )}
 
-                <div className="relative z-10 flex items-start gap-[6px] px-2.5 py-[5px] flex-wrap">
+                <div className="relative z-10 grid grid-cols-[22px,minmax(0,1fr)] items-start gap-x-2 gap-y-1 px-2.5 py-[5px]">
                   {/* Avatar — 3D gradient per tier */}
                   <div className="relative shrink-0">
                     <div
@@ -958,69 +958,71 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                     )}
                   </div>
 
-                  {/* Level badge — 3D embossed pill */}
-                  <span
-                    className="text-[7px] font-black px-[6px] py-[2px] rounded-full shrink-0 tracking-wider"
-                    style={{
-                      background: msg.isGift ? "linear-gradient(135deg, #FFD700, #FFA500)" : tc.badgeBg,
-                      color: msg.isGift ? "#1a0800" : tc.badgeText,
-                      boxShadow: tc.badgeShadow
-                        ? `${tc.badgeShadow}, inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)`
-                        : "inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.1)",
-                      textShadow: lv >= 20 ? "0 1px 0 rgba(255,255,255,0.2)" : undefined,
-                    }}
-                  >
-                    Lv.{lv || 1}
-                  </span>
-
-                  {/* Top Fan / VIP badges */}
-                  {isTopFan && (
+                  <div className="min-w-0 flex flex-wrap items-center gap-[6px]">
+                    {/* Level badge — 3D embossed pill */}
                     <span
-                      className="text-[7px] font-bold px-[6px] py-[2px] rounded-full shrink-0 flex items-center gap-[2px]"
+                      className="text-[7px] font-black px-[6px] py-[2px] rounded-full shrink-0 tracking-wider"
                       style={{
-                        background: "linear-gradient(135deg, rgba(255,200,50,0.5), rgba(255,160,0,0.35))",
-                        color: "#FFF3C4",
-                        border: "1px solid rgba(255,200,50,0.35)",
-                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2), 0 0 6px rgba(255,200,0,0.3)",
+                        background: msg.isGift ? "linear-gradient(135deg, #FFD700, #FFA500)" : tc.badgeBg,
+                        color: msg.isGift ? "#1a0800" : tc.badgeText,
+                        boxShadow: tc.badgeShadow
+                          ? `${tc.badgeShadow}, inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)`
+                          : "inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.1)",
+                        textShadow: lv >= 20 ? "0 1px 0 rgba(255,255,255,0.2)" : undefined,
                       }}
                     >
-                      <Star className="h-[7px] w-[7px] fill-amber-200 text-amber-200" /> Top Fan
+                      Lv.{lv || 1}
                     </span>
-                  )}
-                  {!isTopFan && lv >= 50 && (
-                    <span
-                      className="text-[7px] font-bold px-[6px] py-[2px] rounded-full shrink-0"
-                      style={{
-                        background: "linear-gradient(135deg, rgba(255,80,50,0.5), rgba(255,40,0,0.35))",
-                        color: "#FFD0C0",
-                        border: "1px solid rgba(255,80,50,0.3)",
-                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15), 0 0 6px rgba(255,80,50,0.3)",
-                      }}
-                    >
-                      🔥 VIP
+
+                    {/* Top Fan / VIP badges */}
+                    {isTopFan && (
+                      <span
+                        className="text-[7px] font-bold px-[6px] py-[2px] rounded-full shrink-0 flex items-center gap-[2px]"
+                        style={{
+                          background: "linear-gradient(135deg, rgba(255,200,50,0.5), rgba(255,160,0,0.35))",
+                          color: "#FFF3C4",
+                          border: "1px solid rgba(255,200,50,0.35)",
+                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2), 0 0 6px rgba(255,200,0,0.3)",
+                        }}
+                      >
+                        <Star className="h-[7px] w-[7px] fill-amber-200 text-amber-200" /> Top Fan
+                      </span>
+                    )}
+                    {!isTopFan && lv >= 50 && (
+                      <span
+                        className="text-[7px] font-bold px-[6px] py-[2px] rounded-full shrink-0"
+                        style={{
+                          background: "linear-gradient(135deg, rgba(255,80,50,0.5), rgba(255,40,0,0.35))",
+                          color: "#FFD0C0",
+                          border: "1px solid rgba(255,80,50,0.3)",
+                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15), 0 0 6px rgba(255,80,50,0.3)",
+                        }}
+                      >
+                        🔥 VIP
+                      </span>
+                    )}
+
+                    {/* Name */}
+                    <span className="text-[10px] font-bold min-w-0 break-words" style={{ color: msg.isGift ? "#FFD700" : isMe ? "#7DF9A0" : tc.nameColor, textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}>
+                      {msg.user}
                     </span>
-                  )}
 
-                  {/* Name */}
-                  <span className="text-[10px] font-bold shrink-0" style={{ color: msg.isGift ? "#FFD700" : isMe ? "#7DF9A0" : tc.nameColor, textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}>
-                    {msg.user}
-                  </span>
-
-                  {/* Gift icon inline */}
-                  {msg.isGift && msg.giftIcon && (
-                    <motion.img
-                      src={msg.giftIcon}
-                      alt=""
-                      className="h-5 w-5 object-contain shrink-0"
-                      initial={{ scale: 0, rotate: -20 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                      style={{ filter: "drop-shadow(0 0 4px rgba(255,200,0,0.5))" }}
-                    />
-                  )}
+                    {/* Gift icon inline */}
+                    {msg.isGift && msg.giftIcon && (
+                      <motion.img
+                        src={msg.giftIcon}
+                        alt=""
+                        className="h-5 w-5 object-contain shrink-0"
+                        initial={{ scale: 0, rotate: -20 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                        style={{ filter: "drop-shadow(0 0 4px rgba(255,200,0,0.5))" }}
+                      />
+                    )}
+                  </div>
 
                   {/* Message text */}
-                  <span className={cn("text-[10px] break-words flex-1 min-w-0 leading-[1.3] self-center", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}>
+                  <span className={cn("col-start-2 text-[10px] min-w-0 break-words leading-[1.3]", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}>
                     {msg.text}
                   </span>
                 </div>
