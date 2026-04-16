@@ -1610,30 +1610,56 @@ export default function LiveStreamPage() {
                   }
                   setActiveStream(stream);
                 }}
-                className="w-full text-left bg-card rounded-2xl border border-border/30 overflow-hidden hover:border-red-500/30 transition-all group"
+                className="w-full text-left bg-card rounded-2xl border border-border/30 overflow-hidden hover:border-red-500/30 transition-all group shadow-sm hover:shadow-xl hover:-translate-y-1 duration-300"
               >
-                {/* Thumbnail */}
-                <div className="relative aspect-video bg-gradient-to-br from-violet-900/30 via-background to-rose-900/20 flex items-center justify-center">
-                  <StreamTopicIcon topic={stream.thumbnail_emoji} className="h-12 w-12 group-hover:scale-110 transition-transform" />
+                {/* Thumbnail with topic photo */}
+                <div className="relative aspect-video overflow-hidden bg-muted">
+                  {(() => {
+                    const topicPhotos: Record<string, string> = {
+                      Music: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=70&auto=format&fit=crop",
+                      Gaming: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=70&auto=format&fit=crop",
+                      Cooking: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800&q=70&auto=format&fit=crop",
+                      Fitness: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=70&auto=format&fit=crop",
+                      Art: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=70&auto=format&fit=crop",
+                      Travel: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=70&auto=format&fit=crop",
+                      Tech: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=70&auto=format&fit=crop",
+                      Fashion: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=70&auto=format&fit=crop",
+                      Comedy: "https://images.unsplash.com/photo-1527224538127-2104bb71c51b?w=800&q=70&auto=format&fit=crop",
+                      Education: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=70&auto=format&fit=crop",
+                      Sports: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&q=70&auto=format&fit=crop",
+                      General: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=70&auto=format&fit=crop",
+                    };
+                    const photo = topicPhotos[stream.topic] || topicPhotos.General;
+                    return (
+                      <img
+                        src={photo}
+                        alt={stream.title}
+                        loading="lazy"
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    );
+                  })()}
+                  {/* Dark gradient overlay for legibility */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/30" />
                   {stream.status === "live" && (
-                    <Badge className="absolute top-3 left-3 bg-red-500 text-white border-0 text-[10px] gap-1 animate-pulse">
+                    <Badge className="absolute top-3 left-3 bg-red-500 text-white border-0 text-[10px] gap-1 animate-pulse shadow-lg">
                       <Radio className="h-2.5 w-2.5" /> LIVE
                     </Badge>
                   )}
                   {/* Hot badge for high viewer streams */}
                   {stream.status === "live" && stream.viewer_count >= 3000 && (
-                  <Badge className="absolute top-3 left-12 bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 text-[10px] gap-0.5 ml-1">
+                    <Badge className="absolute top-3 left-[68px] bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 text-[10px] gap-0.5 shadow-lg">
                       <Flame className="h-2.5 w-2.5" /> Hot
                     </Badge>
                   )}
                   {/* Daily Pick for first stream */}
                   {i === 0 && stream.status === "live" && (
-                    <Badge className="absolute top-10 left-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 text-[9px] gap-0.5">
+                    <Badge className="absolute top-11 left-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 text-[9px] gap-0.5 shadow-lg">
                       <Star className="h-2.5 w-2.5 fill-white" /> Daily Pick
                     </Badge>
                   )}
                   {stream.status === "scheduled" && (
-                    <Badge className="absolute top-3 left-3 bg-amber-500 text-white border-0 text-[10px] gap-0.5">
+                    <Badge className="absolute top-3 left-3 bg-amber-500 text-white border-0 text-[10px] gap-0.5 shadow-lg">
                       <CalendarDays className="h-2.5 w-2.5" /> Scheduled
                     </Badge>
                   )}
@@ -1642,9 +1668,14 @@ export default function LiveStreamPage() {
                       Ended
                     </Badge>
                   )}
-                  <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-2.5 py-1">
-                    <Eye className="h-3 w-3 text-white/70" />
-                    <span className="text-[11px] text-white font-medium">{stream.viewer_count.toLocaleString()}</span>
+                  {/* Title overlay on thumbnail (Home-card style) */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3 pr-20">
+                    <h3 className="font-bold text-white text-sm truncate drop-shadow-lg">{stream.title}</h3>
+                    <p className="text-[11px] text-white/80 truncate drop-shadow">{stream.topic}</p>
+                  </div>
+                  <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1 border border-white/10">
+                    <Eye className="h-3 w-3 text-white/80" />
+                    <span className="text-[11px] text-white font-semibold">{stream.viewer_count.toLocaleString()}</span>
                   </div>
                 </div>
 
