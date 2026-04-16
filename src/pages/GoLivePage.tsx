@@ -1228,43 +1228,36 @@ export default function GoLivePage() {
             </button>
           </div>
 
-          {/* Stream Goal Progress Bar — Enhanced */}
-          <div className="mt-2 bg-black/30 backdrop-blur-md rounded-xl px-3 py-2 border border-white/5 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] text-white/50 font-medium flex items-center gap-1"><Target className="h-3 w-3 text-amber-400/70" /> Stream Goal</span>
-              <span className="text-[10px] text-amber-300 font-bold">{Math.min(coinsEarned, streamGoal)}/{streamGoal}</span>
-            </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden relative">
-              <motion.div
-                className="h-full rounded-full"
-                style={{
-                  background: coinsEarned >= streamGoal
-                    ? "linear-gradient(90deg, #10B981, #34D399, #6EE7B7)"
-                    : "linear-gradient(90deg, #F59E0B, #FBBF24, #FCD34D)",
-                }}
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min((coinsEarned / streamGoal) * 100, 100)}%` }}
-                transition={{ type: "spring", damping: 20 }}
-              />
-              {/* Shimmer effect on progress bar */}
-              {coinsEarned > 0 && coinsEarned < streamGoal && (
+          {/* Stream Goal Progress Bar — slim, single-line */}
+          <div className="mt-1.5 bg-black/25 backdrop-blur-md rounded-lg px-2.5 py-1 border border-white/5 relative overflow-hidden">
+            <div className="flex items-center gap-2">
+              <Target className="h-2.5 w-2.5 text-amber-400/80 shrink-0" />
+              <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden relative">
                 <motion.div
-                  className="absolute top-0 h-full w-8 rounded-full"
-                  style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)" }}
-                  animate={{ left: ["-10%", "110%"] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
+                  className="h-full rounded-full"
+                  style={{
+                    background: coinsEarned >= streamGoal
+                      ? "linear-gradient(90deg, #10B981, #34D399)"
+                      : "linear-gradient(90deg, #F59E0B, #FBBF24)",
+                  }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min((coinsEarned / streamGoal) * 100, 100)}%` }}
+                  transition={{ type: "spring", damping: 20 }}
                 />
-              )}
+                {coinsEarned > 0 && coinsEarned < streamGoal && (
+                  <motion.div
+                    className="absolute top-0 h-full w-6 rounded-full"
+                    style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)" }}
+                    animate={{ left: ["-10%", "110%"] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
+                  />
+                )}
+              </div>
+              <span className="text-[9px] text-amber-300 font-bold tabular-nums shrink-0">
+                {Math.min(coinsEarned, streamGoal)}/{streamGoal}
+              </span>
+              {coinsEarned >= streamGoal && <PartyPopper className="h-2.5 w-2.5 text-emerald-300 shrink-0" />}
             </div>
-            {coinsEarned >= streamGoal && (
-              <motion.p
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-[9px] text-emerald-300 mt-1 text-center flex items-center justify-center gap-0.5 font-semibold"
-              >
-                <PartyPopper className="h-3 w-3" /> Goal reached! 🎉
-              </motion.p>
-            )}
           </div>
 
           {/* ── PK Battle Bar ── */}
