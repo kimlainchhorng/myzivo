@@ -1509,52 +1509,7 @@ export default function GoLivePage() {
                 </div>
               </div>
 
-              {/* Hashtags for discovery */}
-              <div>
-                <p className="text-zinc-400 text-[11px] mb-1.5 font-medium">Hashtags</p>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {hashtags.map((tag) => (
-                    <span key={tag} className="flex items-center gap-1 bg-blue-500/15 text-blue-300 text-[11px] font-medium rounded-full px-2.5 py-1 border border-blue-500/20">
-                      #{tag}
-                      <button onClick={() => setHashtags((p) => p.filter((t) => t !== tag))} className="text-blue-400/60 hover:text-blue-300">
-                        <X className="h-2.5 w-2.5" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-                {hashtags.length < 5 && (
-                  <div className="flex gap-2">
-                    <Input
-                      value={hashtagInput}
-                      onChange={(e) => setHashtagInput(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && hashtagInput.trim()) {
-                          setHashtags((p) => [...p, hashtagInput.trim()]);
-                          setHashtagInput("");
-                        }
-                      }}
-                      placeholder="Add hashtag..."
-                      maxLength={20}
-                      className="bg-zinc-800/80 border-zinc-700/50 text-white placeholder:text-zinc-500 text-xs rounded-xl h-8 flex-1"
-                    />
-                    <button
-                      onClick={() => { if (hashtagInput.trim()) { setHashtags((p) => [...p, hashtagInput.trim()]); setHashtagInput(""); } }}
-                      className="px-3 py-1 rounded-xl bg-blue-500/20 text-blue-300 text-[11px] font-medium border border-blue-500/20"
-                    >
-                      Add
-                    </button>
-                  </div>
-                )}
-                {hashtags.length === 0 && (
-                  <div className="flex gap-1.5 mt-1">
-                    {["trending", "live", "fyp", "viral"].map((suggestion) => (
-                      <button key={suggestion} onClick={() => setHashtags((p) => [...p, suggestion])} className="text-[10px] text-zinc-500 bg-zinc-800/60 rounded-full px-2 py-0.5 hover:text-zinc-400 transition-colors">
-                        #{suggestion}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+
 
               {/* Settings toggles — separated row with divider */}
               <div className="border-t border-white/5 pt-2">
