@@ -4,10 +4,7 @@
  * Sorted low → high by coin value
  */
 // Gifts 45+ coins get video animations
-import shadowWolfVid from "@/assets/gifts/animations/shadow-wolf.mp4.asset.json";
-import goldenPhoenixVid from "@/assets/gifts/animations/golden-phoenix.mp4.asset.json";
 import fireDragonVid from "@/assets/gifts/animations/fire-dragon.mp4.asset.json";
-import pandaPartyVid from "@/assets/gifts/animations/panda-party.mp4.asset.json";
 import sapphireSwanVid from "@/assets/gifts/animations/sapphire-swan.mp4.asset.json";
 import royalCrownVid from "@/assets/gifts/animations/royal-crown.mp4.asset.json";
 import goldFountainVid from "@/assets/gifts/animations/gold-fountain.mp4.asset.json";
