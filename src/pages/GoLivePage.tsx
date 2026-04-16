@@ -1156,52 +1156,49 @@ export default function GoLivePage() {
 
         {phase === "live" && (
           <>
-            <div className="flex items-center gap-1.5 bg-red-500 rounded-full px-2.5 py-1 shadow-lg shadow-red-500/30">
-              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            <div className="flex items-center gap-1.5 bg-red-500 rounded-full px-2 py-0.5 shadow-lg shadow-red-500/30 shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               <span className="text-white text-[10px] font-bold uppercase tracking-wider">Live</span>
             </div>
-            <div className={cn("flex items-center gap-1 bg-black/40 backdrop-blur-md rounded-full px-2.5 py-1 border border-white/10 transition-all", viewerPulse && "scale-110 bg-green-500/20 border-green-500/30")}>
+            <div className={cn("flex items-center gap-1 bg-black/40 backdrop-blur-md rounded-full px-2 py-0.5 border border-white/10 transition-all shrink-0", viewerPulse && "scale-110 bg-green-500/20 border-green-500/30")}>
               <Eye className="h-3 w-3 text-white/70" />
-              <span className={cn("text-white text-xs font-medium transition-colors", viewerPulse && "text-green-300")}>{viewerCount.toLocaleString()}</span>
+              <span className={cn("text-white text-[11px] font-medium transition-colors", viewerPulse && "text-green-300")}>{viewerCount.toLocaleString()}</span>
             </div>
-            <div className="ml-auto" />
 
+            {/* Inline host info */}
+            <div className="flex-1 min-w-0 flex items-center gap-1.5 bg-black/30 backdrop-blur-md rounded-full pl-1 pr-2.5 py-0.5 border border-white/5">
+              <div className="relative shrink-0">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white text-[10px] font-bold shadow-lg shadow-red-500/20">
+                  {user?.email?.[0]?.toUpperCase() || "Z"}
+                </div>
+                <span className={cn(
+                  "absolute -bottom-0.5 -right-0.5 text-[7px] font-bold px-1 py-0 rounded-full border",
+                  hostLevel >= 50 ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-white border-amber-300/50" :
+                  hostLevel >= 20 ? "bg-gradient-to-r from-blue-500 to-cyan-400 text-white border-blue-300/50" :
+                  "bg-white/20 text-white/80 border-white/20"
+                )}>
+                  {hostLevel}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0 leading-tight">
+                <p className="text-white text-[11px] font-semibold truncate">{title}</p>
+                <div className="flex items-center gap-1 text-white/40 text-[9px]">
+                  <span className="truncate">{fakeFollowers.current.toLocaleString()} followers</span>
+                  {giftsReceived > 0 && (
+                    <span className="text-amber-300 flex items-center gap-0.5 shrink-0">
+                      <img src={goldCoinIcon} alt="" className="w-2.5 h-2.5" /> {coinsEarned}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
           </>
         )}
       </div>
 
-      {/* Live host info bar */}
+      {/* Stream goal bar (host-only) */}
       {phase === "live" && (
-        <div className="relative z-10 px-4 mt-3">
-          <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-2xl px-3 py-2 border border-white/5">
-            <div className="relative">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-red-500/20">
-                {user?.email?.[0]?.toUpperCase() || "Z"}
-              </div>
-              {/* Host Level Badge */}
-              <span className={cn(
-                "absolute -bottom-1 -right-1 text-[7px] font-bold px-1 py-0.5 rounded-full border",
-                hostLevel >= 50 ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-white border-amber-300/50" :
-                hostLevel >= 20 ? "bg-gradient-to-r from-blue-500 to-cyan-400 text-white border-blue-300/50" :
-                "bg-white/20 text-white/80 border-white/20"
-              )}>
-                {hostLevel}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-semibold truncate">{title}</p>
-              <div className="flex items-center gap-2">
-                <span className="text-white/40 text-[10px]">{topic}</span>
-                <span className="text-white/25 text-[10px]">·</span>
-                <span className="text-white/40 text-[10px]">{fakeFollowers.current.toLocaleString()} followers</span>
-                {giftsReceived > 0 && (
-                  <span className="text-amber-300 text-[10px] flex items-center gap-0.5">
-                    <img src={goldCoinIcon} alt="" className="w-3 h-3" /> {coinsEarned}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
+        <div className="relative z-10 px-4 mt-2">
 
           {/* Stream Goal Progress Bar — slim, single-line */}
           <div className="mt-1.5 bg-black/25 backdrop-blur-md rounded-lg px-2.5 py-1 border border-white/5 relative overflow-hidden">
