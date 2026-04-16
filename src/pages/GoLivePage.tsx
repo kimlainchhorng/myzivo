@@ -1369,13 +1369,13 @@ export default function GoLivePage() {
         <div className="relative z-10 flex-1 min-h-0 flex flex-col p-3 pb-4 overflow-y-auto overscroll-contain">
           <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.25 }} className="mt-auto space-y-2.5">
             {/* Stream setup card */}
-            <div className="bg-zinc-900/90 backdrop-blur-xl rounded-3xl p-4 space-y-4 border border-white/10 shadow-2xl shadow-black/50">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center">
-                  <Sparkles className="h-4 w-4 text-white" />
+            <div className="bg-zinc-900/90 backdrop-blur-xl rounded-2xl p-3 space-y-2.5 border border-white/10 shadow-2xl shadow-black/50">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center">
+                  <Sparkles className="h-3.5 w-3.5 text-white" />
                 </div>
-                <div>
-                  <span className="text-white font-semibold text-sm">Stream Setup</span>
+                <div className="leading-tight">
+                  <span className="text-white font-semibold text-[13px]">Stream Setup</span>
                   <p className="text-white/30 text-[10px]">Configure your broadcast</p>
                 </div>
               </div>
