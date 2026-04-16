@@ -913,7 +913,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 initial={{ opacity: 0, x: -24, y: 6 }}
                 animate={{ opacity: 1, x: 0, y: 0 }}
                 transition={{ type: "spring", damping: 24, stiffness: 300, delay: idx * 0.015 }}
-                className="relative self-start max-w-[88%] sm:max-w-[320px] min-h-[38px] rounded-2xl overflow-hidden backdrop-blur-md"
+                className="relative self-stretch w-full min-h-[38px] rounded-2xl overflow-hidden"
                 style={{
                   background: msg.isGift
                     ? "linear-gradient(135deg, rgba(255,180,40,0.22) 0%, rgba(120,60,0,0.35) 100%)"
@@ -1062,7 +1062,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                     )}
 
                     {/* Message text — inline with name & badges, wraps naturally */}
-                    <span className={cn("text-[10px] break-words leading-[1.3]", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}>
+                    <span
+                      className={cn("text-[10px] leading-[1.35] basis-full min-w-0", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}
+                      style={{ overflowWrap: "anywhere", wordBreak: "break-word", textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}
+                    >
                       {msg.text}
                     </span>
                   </div>
