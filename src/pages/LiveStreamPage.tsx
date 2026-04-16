@@ -44,11 +44,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
-import CoinRechargeSheet from "@/components/live/CoinRechargeSheet";
+import { lazy, Suspense } from "react";
+const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
+const GiftAnimationOverlay = lazy(() => import("@/components/live/GiftAnimationOverlay"));
+const CoinRechargeSheet = lazy(() => import("@/components/live/CoinRechargeSheet"));
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
-import { giftImages } from "@/config/giftIcons";
+import { giftImages, preloadGiftImages } from "@/config/giftIcons";
 import { hasGiftVideo, giftAnimationVideos, preloadGiftAnimations } from "@/config/giftAnimations";
 import { giftCatalog, getLevelColor, getLevelBg, type GiftItem } from "@/config/giftCatalog";
 import { playGiftSound, playPremiumGiftSound, playLegendaryGiftSound } from "@/utils/giftSounds";
@@ -70,7 +71,7 @@ interface LiveStream {
 /* ─────────── Watcher Component ─────────── */
 function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => void }) {
   // Preload gift video URLs in background when entering live stream
-  useEffect(() => { preloadGiftAnimations(); }, []);
+  useEffect(() => { preloadGiftAnimations(); preloadGiftImages(); }, []);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; isSystem?: boolean; avatar?: string; level?: number }[]>([
     { id: "sys-1", user: "System", text: `Welcome to ${stream.host_name}'s stream!`, isSystem: true },
@@ -1264,11 +1265,14 @@ export default function LiveStreamPage() {
   const { data: dbStreams = [], isLoading } = useQuery({
     queryKey: ["live-streams"],
     queryFn: async () => {
-      const { data: amaSessions } = await (supabase as any)
+      // Single query — fetch sessions with host profiles in parallel
+      const sessionsPromise = (supabase as any)
         .from("ama_sessions")
         .select("id, host_id, title, topic, viewer_count, question_count, status, starts_at, ends_at, created_at")
         .order("created_at", { ascending: false })
         .limit(30);
+
+      const [{ data: amaSessions }] = await Promise.all([sessionsPromise]);
 
       if (!amaSessions?.length) return [] as LiveStream[];
 
@@ -1303,7 +1307,8 @@ export default function LiveStreamPage() {
         } as LiveStream;
       });
     },
-    staleTime: 15_000,
+    staleTime: 30_000, // 30s cache — streams don't change that fast
+    gcTime: 2 * 60_000,
   });
 
   // Use DB streams if available, otherwise show demos

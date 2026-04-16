@@ -5,8 +5,9 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useGiftAnimationQueue } from "@/hooks/useGiftAnimationQueue";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
-import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
-import CoinRechargeSheet from "@/components/live/CoinRechargeSheet";
+import { lazy, Suspense } from "react";
+const GiftAnimationOverlay = lazy(() => import("@/components/live/GiftAnimationOverlay"));
+const CoinRechargeSheet = lazy(() => import("@/components/live/CoinRechargeSheet"));
 import { playGiftSound, playPremiumGiftSound, playLegendaryGiftSound } from "@/utils/giftSounds";
 import { hasGiftVideo, giftAnimationVideos, preloadGiftAnimations } from "@/config/giftAnimations";
 import { giftCatalog, getLevelColor, getLevelBg, type GiftItem } from "@/config/giftCatalog";
@@ -76,7 +77,7 @@ import { ReactionIcon, MedalIcon, QUICK_REACTIONS } from "@/utils/reactionIcons"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { giftImages } from "@/config/giftIcons";
+import { giftImages, preloadGiftImages } from "@/config/giftIcons";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -84,7 +85,7 @@ type LivePhase = "setup" | "countdown" | "live" | "ended";
 
 export default function GoLivePage() {
   // Preload gift video URLs in background
-  useEffect(() => { preloadGiftAnimations(); }, []);
+  useEffect(() => { preloadGiftAnimations(); preloadGiftImages(); }, []);
   const navigate = useNavigate();
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
