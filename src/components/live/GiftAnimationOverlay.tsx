@@ -418,34 +418,73 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
                 style={{ background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 45%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.12) 55%, transparent 60%)", width: "50%" }}
               />
 
-              {/* Avatar */}
+              {/* Animated gift running inside the banner */}
               <motion.div
                 initial={{ scale: 0, rotateZ: -20 }}
                 animate={{ scale: 1, rotateZ: 0 }}
-                transition={{ type: "spring", delay: 0.3, stiffness: 300 }}
-                className="relative shrink-0"
+                transition={{ type: "spring", delay: 0.25, stiffness: 300 }}
+                className="relative shrink-0 w-14 h-14"
               >
+                {/* Sender initial behind */}
                 <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  className="absolute inset-0 rounded-full flex items-center justify-center text-white/60 font-bold text-[10px]"
                   style={{
-                    background: giftTheme.name === "luxury"
-                      ? "linear-gradient(145deg, #888 0%, #555 50%, #333 100%)"
-                      : `linear-gradient(145deg, hsla(${giftTheme.h},${giftTheme.s}%,70%,1) 0%, hsla(${giftTheme.h},${giftTheme.s}%,45%,1) 50%, hsla(${giftTheme.h},${giftTheme.s}%,25%,1) 100%)`,
-                    boxShadow: `0 3px 16px hsla(${giftTheme.h},${giftTheme.s}%,40%,0.6), inset 0 -2px 4px rgba(0,0,0,0.25), inset 0 2px 3px hsla(${giftTheme.h},30%,85%,0.4)`,
-                    border: `2px solid hsla(${giftTheme.h},${giftTheme.s}%,65%,0.5)`,
+                    background: `linear-gradient(145deg, hsla(${giftTheme.h},${giftTheme.s}%,55%,0.4), hsla(${giftTheme.h},${giftTheme.s}%,25%,0.3))`,
+                    border: `1.5px solid hsla(${giftTheme.h},${giftTheme.s}%,60%,0.3)`,
                   }}
                 >
                   {(activeGift.senderName || "S")[0]}
                 </div>
+
+                {/* Gift icon — galloping/flying animation */}
                 {giftImg && (
-                  <motion.img
-                    src={giftImg} alt=""
-                    className="absolute -bottom-1 -right-2 w-9 h-9 object-contain z-10"
-                    initial={{ scale: 0, rotate: -30 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: "spring", delay: 0.4, stiffness: 250 }}
-                    style={{ filter: `drop-shadow(0 3px 8px rgba(0,0,0,0.6)) drop-shadow(0 0 6px hsla(${giftTheme.h},${giftTheme.s}%,50%,0.4))` }}
-                  />
+                  <motion.div className="absolute inset-0 z-10 flex items-center justify-center">
+                    {/* Sparkle trail behind the gift */}
+                    {bannerTrails.map((t) => (
+                      <motion.div
+                        key={`trail-${t.id}`}
+                        className="absolute rounded-full"
+                        style={{
+                          width: t.size,
+                          height: t.size,
+                          background: `hsla(${giftTheme.h},${giftTheme.s}%,70%,0.8)`,
+                          boxShadow: `0 0 6px hsla(${giftTheme.h},${giftTheme.s}%,60%,0.6)`,
+                        }}
+                        animate={{
+                          x: [0, t.x],
+                          y: [0, t.y],
+                          opacity: [0, 0.9, 0],
+                          scale: [0.5, 1, 0],
+                        }}
+                        transition={{
+                          duration: 0.8,
+                          delay: 0.5 + t.delay,
+                          repeat: Infinity,
+                          repeatDelay: 0.6,
+                          ease: "easeOut",
+                        }}
+                      />
+                    ))}
+                    <motion.img
+                      src={giftImg}
+                      alt={activeGift.name}
+                      className="w-11 h-11 object-contain"
+                      animate={{
+                        y: [0, -4, 0, -2, 0],
+                        x: [0, 2, 0, -1, 0],
+                        rotate: [0, 3, -2, 1, 0],
+                        scale: [1, 1.08, 1, 1.04, 1],
+                      }}
+                      transition={{
+                        duration: 1.6,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                      style={{
+                        filter: `drop-shadow(0 3px 10px rgba(0,0,0,0.6)) drop-shadow(0 0 12px hsla(${giftTheme.h},${giftTheme.s}%,55%,0.5))`,
+                      }}
+                    />
+                  </motion.div>
                 )}
               </motion.div>
 
