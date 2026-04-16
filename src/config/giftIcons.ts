@@ -1,102 +1,97 @@
-/** Gift icon image imports for the LIVE gift panel */
+/**
+ * Gift icon image imports — LAZY LOADED
+ * Images are only loaded when the gift panel opens on a live stream page.
+ */
 import goldCoin from "@/assets/gifts/gold-coin.png";
-
-// === Gifts Tab ===
-import babyDragon from "@/assets/gifts/baby-dragon.png";
-import cutePanda from "@/assets/gifts/cute-panda.png";
-import kingCobra from "@/assets/gifts/king-cobra.png";
-import crystalUnicorn from "@/assets/gifts/crystal-unicorn.png";
-import phoenixRising from "@/assets/gifts/phoenix-rising.png";
-import diamondBear from "@/assets/gifts/diamond-bear.png";
-import luckyCat from "@/assets/gifts/lucky-cat.png";
-import mysticWolf from "@/assets/gifts/mystic-wolf.png";
-import rainbowButterfly from "@/assets/gifts/rainbow-butterfly.png";
-import thunderTiger from "@/assets/gifts/thunder-tiger.png";
-import starFox from "@/assets/gifts/star-fox.png";
-import icePenguin from "@/assets/gifts/ice-penguin.png";
-import magicRabbit from "@/assets/gifts/magic-rabbit.png";
-import neonDolphin from "@/assets/gifts/neon-dolphin.png";
-import snakeDance from "@/assets/gifts/snake-dance.png";
-import fireDragon from "@/assets/gifts/fire-dragon.png";
-import shadowWolf from "@/assets/gifts/shadow-wolf.png";
-import goldenPhoenix from "@/assets/gifts/golden-phoenix.png";
-
-// === Interactive Tab ===
-import pandaParty from "@/assets/gifts/panda-party.png";
-import luxuryLambo from "@/assets/gifts/luxury-lambo.png";
-import goldFerrari from "@/assets/gifts/gold-ferrari.png";
-import rollsRoyce from "@/assets/gifts/rolls-royce.png";
-import diamondRain from "@/assets/gifts/diamond-rain.png";
-import goldFountain from "@/assets/gifts/gold-fountain.png";
-import treasureDragon from "@/assets/gifts/treasure-dragon.png";
-import goldHelicopter from "@/assets/gifts/gold-helicopter.png";
-import sapphireSwan from "@/assets/gifts/sapphire-swan.png";
-import emeraldEagle from "@/assets/gifts/emerald-eagle.png";
-import royalCrown from "@/assets/gifts/royal-crown.png";
-import platinumPanda from "@/assets/gifts/platinum-panda.png";
-import crystalPegasus from "@/assets/gifts/crystal-pegasus.png";
-import neonRocket from "@/assets/gifts/neon-rocket.png";
-
-// === Exclusive Tab ===
-import blackPanther from "@/assets/gifts/black-panther.png";
-import bugatti from "@/assets/gifts/bugatti.png";
-import diamondDragon from "@/assets/gifts/diamond-dragon.png";
-import luxuryYacht from "@/assets/gifts/luxury-yacht.png";
-import privateIsland from "@/assets/gifts/private-island.png";
-import galaxyCrown from "@/assets/gifts/galaxy-crown.png";
-import goldenCastle from "@/assets/gifts/golden-castle.png";
-import cosmicDragon from "@/assets/gifts/cosmic-dragon.png";
-import diamondThrone from "@/assets/gifts/diamond-throne.png";
-import celestialPhoenix from "@/assets/gifts/celestial-phoenix.png";
-
 export { goldCoin };
 
-export const giftImages: Record<string, string> = {
-  // Gifts tab
-  "Baby Dragon": babyDragon,
-  "Cute Panda": cutePanda,
-  "King Cobra": kingCobra,
-  "Crystal Unicorn": crystalUnicorn,
-  "Phoenix Rising": phoenixRising,
-  "Diamond Bear": diamondBear,
-  "Lucky Cat": luckyCat,
-  "Mystic Wolf": mysticWolf,
-  "Rainbow Butterfly": rainbowButterfly,
-  "Thunder Tiger": thunderTiger,
-  "Star Fox": starFox,
-  "Ice Penguin": icePenguin,
-  "Magic Rabbit": magicRabbit,
-  "Neon Dolphin": neonDolphin,
-  "Snake Dance": snakeDance,
-  "Fire Dragon": fireDragon,
-  "Shadow Wolf": shadowWolf,
-  "Golden Phoenix": goldenPhoenix,
+let imageMapCache: Record<string, string> | null = null;
+let imageMapPromise: Promise<Record<string, string>> | null = null;
 
-  // Interactive tab
-  "Panda Party": pandaParty,
-  "Luxury Lambo": luxuryLambo,
-  "Gold Ferrari": goldFerrari,
-  "Rolls Royce": rollsRoyce,
-  "Diamond Rain": diamondRain,
-  "Gold Fountain": goldFountain,
-  "Treasure Dragon": treasureDragon,
-  "Gold Helicopter": goldHelicopter,
-  "Sapphire Swan": sapphireSwan,
-  "Emerald Eagle": emeraldEagle,
-  "Royal Crown": royalCrown,
-  "Platinum Panda": platinumPanda,
-  "Crystal Pegasus": crystalPegasus,
-  "Neon Rocket": neonRocket,
+async function loadGiftImages(): Promise<Record<string, string>> {
+  const mods = await Promise.all([
+    import("@/assets/gifts/baby-dragon.png"),
+    import("@/assets/gifts/cute-panda.png"),
+    import("@/assets/gifts/king-cobra.png"),
+    import("@/assets/gifts/crystal-unicorn.png"),
+    import("@/assets/gifts/phoenix-rising.png"),
+    import("@/assets/gifts/diamond-bear.png"),
+    import("@/assets/gifts/lucky-cat.png"),
+    import("@/assets/gifts/mystic-wolf.png"),
+    import("@/assets/gifts/rainbow-butterfly.png"),
+    import("@/assets/gifts/thunder-tiger.png"),
+    import("@/assets/gifts/star-fox.png"),
+    import("@/assets/gifts/ice-penguin.png"),
+    import("@/assets/gifts/magic-rabbit.png"),
+    import("@/assets/gifts/neon-dolphin.png"),
+    import("@/assets/gifts/snake-dance.png"),
+    import("@/assets/gifts/fire-dragon.png"),
+    import("@/assets/gifts/shadow-wolf.png"),
+    import("@/assets/gifts/golden-phoenix.png"),
+    import("@/assets/gifts/panda-party.png"),
+    import("@/assets/gifts/luxury-lambo.png"),
+    import("@/assets/gifts/gold-ferrari.png"),
+    import("@/assets/gifts/rolls-royce.png"),
+    import("@/assets/gifts/diamond-rain.png"),
+    import("@/assets/gifts/gold-fountain.png"),
+    import("@/assets/gifts/treasure-dragon.png"),
+    import("@/assets/gifts/gold-helicopter.png"),
+    import("@/assets/gifts/sapphire-swan.png"),
+    import("@/assets/gifts/emerald-eagle.png"),
+    import("@/assets/gifts/royal-crown.png"),
+    import("@/assets/gifts/platinum-panda.png"),
+    import("@/assets/gifts/crystal-pegasus.png"),
+    import("@/assets/gifts/neon-rocket.png"),
+    import("@/assets/gifts/black-panther.png"),
+    import("@/assets/gifts/bugatti.png"),
+    import("@/assets/gifts/diamond-dragon.png"),
+    import("@/assets/gifts/luxury-yacht.png"),
+    import("@/assets/gifts/private-island.png"),
+    import("@/assets/gifts/galaxy-crown.png"),
+    import("@/assets/gifts/golden-castle.png"),
+    import("@/assets/gifts/cosmic-dragon.png"),
+    import("@/assets/gifts/diamond-throne.png"),
+    import("@/assets/gifts/celestial-phoenix.png"),
+  ]);
 
-  // Exclusive tab
-  "Black Panther": blackPanther,
-  "Bugatti": bugatti,
-  "Diamond Dragon": diamondDragon,
-  "Luxury Yacht": luxuryYacht,
-  "Private Island": privateIsland,
-  "Galaxy Crown": galaxyCrown,
-  "Golden Castle": goldenCastle,
-  "Cosmic Dragon": cosmicDragon,
-  "Diamond Throne": diamondThrone,
-  "Celestial Phoenix": celestialPhoenix,
-};
+  const names = [
+    "Baby Dragon", "Cute Panda", "King Cobra", "Crystal Unicorn",
+    "Phoenix Rising", "Diamond Bear", "Lucky Cat", "Mystic Wolf",
+    "Rainbow Butterfly", "Thunder Tiger", "Star Fox", "Ice Penguin",
+    "Magic Rabbit", "Neon Dolphin", "Snake Dance", "Fire Dragon",
+    "Shadow Wolf", "Golden Phoenix",
+    "Panda Party", "Luxury Lambo", "Gold Ferrari", "Rolls Royce",
+    "Diamond Rain", "Gold Fountain", "Treasure Dragon", "Gold Helicopter",
+    "Sapphire Swan", "Emerald Eagle", "Royal Crown", "Platinum Panda",
+    "Crystal Pegasus", "Neon Rocket",
+    "Black Panther", "Bugatti", "Diamond Dragon", "Luxury Yacht",
+    "Private Island", "Galaxy Crown", "Golden Castle", "Cosmic Dragon",
+    "Diamond Throne", "Celestial Phoenix",
+  ];
+
+  const map: Record<string, string> = {};
+  mods.forEach((m, i) => { map[names[i]] = m.default; });
+  return map;
+}
+
+/** Preload gift images (call when entering live stream) */
+export function preloadGiftImages(): void {
+  if (!imageMapPromise) {
+    imageMapPromise = loadGiftImages().then(m => { imageMapCache = m; return m; });
+  }
+}
+
+/** Get gift image URL (async, lazy) */
+export async function getGiftImage(name: string): Promise<string | undefined> {
+  if (imageMapCache) return imageMapCache[name];
+  if (!imageMapPromise) preloadGiftImages();
+  const map = await imageMapPromise!;
+  return map[name];
+}
+
+// Proxy for legacy sync access — returns cached value or undefined
+export const giftImages: Record<string, string> = new Proxy({} as Record<string, string>, {
+  get(_target, prop: string) {
+    return imageMapCache?.[prop];
+  },
+});
