@@ -1410,14 +1410,17 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       </AnimatePresence>
 
       {/* Full-screen gift animation overlay */}
-      <GiftAnimationOverlay
-        activeGift={activeGiftAnim}
-        onComplete={onGiftAnimComplete}
-        giftPanelOpen={showGiftPanel}
-        comboCount={giftCombo}
-      />
+      <Suspense fallback={null}>
+        <GiftAnimationOverlay
+          activeGift={activeGiftAnim}
+          onComplete={onGiftAnimComplete}
+          giftPanelOpen={showGiftPanel}
+          comboCount={giftCombo}
+        />
+      </Suspense>
 
       {/* Coin Recharge Sheet */}
+      <Suspense fallback={null}>
       <CoinRechargeSheet
         open={showRechargeSheet}
         onClose={() => setShowRechargeSheet(false)}
