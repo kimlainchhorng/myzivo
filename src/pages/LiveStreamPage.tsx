@@ -940,7 +940,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   />
                 )}
 
-                <div className="relative z-10 flex items-center gap-[6px] px-2.5 py-[5px]">
+                <div className="relative z-10 flex items-center gap-[6px] px-2.5 py-[5px] flex-wrap">
                   {/* Avatar — 3D gradient per tier */}
                   <div className="relative shrink-0">
                     <div
