@@ -1161,31 +1161,49 @@ export default function GoLivePage() {
           <>
             {/* Inline host info — Premium 3D glossy pill */}
             <div
-              className="relative flex items-center gap-2.5 rounded-full pl-1 pr-3 py-1 max-w-[60%] overflow-visible"
+              className="relative flex items-center gap-2.5 rounded-full pl-1 pr-3 py-1.5 max-w-[60%] overflow-visible"
               style={{
                 background: hostLevel >= 50
-                  ? "linear-gradient(160deg, #fde68a 0%, #f59e0b 30%, #c2410c 65%, #7c2d12 100%)"
+                  ? "radial-gradient(ellipse 120% 90% at 50% -10%, #fff7d6 0%, #fcd34d 18%, #f59e0b 48%, #b45309 80%, #4c1d05 100%)"
                   : hostLevel >= 20
-                  ? "linear-gradient(160deg, #fecaca 0%, #ef4444 35%, #b91c1c 70%, #5b1212 100%)"
-                  : "linear-gradient(160deg, #fed7aa 0%, #fb923c 30%, #dc2626 65%, #7f1d1d 100%)",
+                  ? "radial-gradient(ellipse 120% 90% at 50% -10%, #fee2e2 0%, #fca5a5 18%, #ef4444 48%, #991b1b 80%, #3f0a0a 100%)"
+                  : "radial-gradient(ellipse 120% 90% at 50% -10%, #fff1d6 0%, #fdba74 18%, #f97316 48%, #b91c1c 80%, #4a0a0a 100%)",
                 boxShadow: [
-                  "inset 0 2px 1px rgba(255,255,255,0.55)",
-                  "inset 0 -2px 1.5px rgba(0,0,0,0.5)",
-                  "inset 1.5px 0 1px rgba(255,255,255,0.18)",
-                  "inset -1.5px 0 1px rgba(0,0,0,0.3)",
-                  "0 8px 22px rgba(220,38,38,0.45)",
-                  "0 0 18px rgba(251,146,60,0.35)",
-                  "0 1px 2px rgba(0,0,0,0.5)",
+                  "inset 0 3px 2px rgba(255,255,255,0.85)",
+                  "inset 0 -4px 4px rgba(0,0,0,0.65)",
+                  "inset 2px 0 2px rgba(255,255,255,0.25)",
+                  "inset -2px 0 2px rgba(0,0,0,0.45)",
+                  "0 10px 28px rgba(220,38,38,0.55)",
+                  "0 0 24px rgba(251,146,60,0.5)",
+                  "0 2px 4px rgba(0,0,0,0.6)",
+                  "0 0 0 1px rgba(0,0,0,0.45)",
                 ].join(", "),
-                border: "1px solid rgba(255,220,150,0.45)",
+                border: "1.5px solid rgba(255,235,180,0.7)",
               }}
             >
-              {/* Top glass sheen */}
+              {/* Top glossy sheen — strong reflective highlight */}
               <span
                 aria-hidden
-                className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-full overflow-hidden"
+                className="pointer-events-none absolute inset-x-1 top-[2px] h-[45%] rounded-t-full"
                 style={{
-                  background: "linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.04) 60%, transparent 100%)",
+                  background: "linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 55%, transparent 100%)",
+                  filter: "blur(0.3px)",
+                }}
+              />
+              {/* Bottom inner shadow for depth */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-2 bottom-[1px] h-[32%] rounded-b-full"
+                style={{ background: "linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 100%)" }}
+              />
+              {/* Specular highlight spot */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute top-[10%] left-[10%] w-[35%] h-[28%] rounded-full"
+                style={{
+                  background: "radial-gradient(ellipse, rgba(255,255,255,0.6) 0%, transparent 70%)",
+                  filter: "blur(2.5px)",
+                  mixBlendMode: "screen",
                 }}
               />
               <div className="relative shrink-0 z-10" style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.65))" }}>
