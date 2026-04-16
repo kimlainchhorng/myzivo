@@ -1006,17 +1006,17 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                     {msg.user}
                   </span>
 
-                  {/* Gift icon inline (emoji) */}
+                  {/* Gift icon inline */}
                   {msg.isGift && msg.giftIcon && (
-                    <motion.span
-                      className="text-sm shrink-0"
+                    <motion.img
+                      src={msg.giftIcon}
+                      alt=""
+                      className="h-5 w-5 object-contain shrink-0"
                       initial={{ scale: 0, rotate: -20 }}
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{ type: "spring", stiffness: 300 }}
                       style={{ filter: "drop-shadow(0 0 4px rgba(255,200,0,0.5))" }}
-                    >
-                      {msg.giftIcon}
-                    </motion.span>
+                    />
                   )}
 
                   {/* Message text */}
