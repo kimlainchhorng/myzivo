@@ -1019,9 +1019,8 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                         style={{ filter: "drop-shadow(0 0 4px rgba(255,200,0,0.5))" }}
                       />
                     )}
-                  </div>
 
-                    {/* Message text — inline with name & badges */}
+                    {/* Message text — inline with name & badges, wraps naturally */}
                     <span className={cn("text-[10px] break-words leading-[1.3]", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}>
                       {msg.text}
                     </span>
