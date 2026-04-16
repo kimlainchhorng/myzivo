@@ -2056,3 +2056,9 @@ html[lang="km"] textarea {
   0% { transform: scale(1); opacity: 0.3; }
   100% { transform: scale(1.8); opacity: 0; }
 }
+
+/* 🐉 3D floating dragon-scale level badge */
+@keyframes float3d {
+  0%, 100% { transform: perspective(40px) translateZ(0) translateY(0) rotateX(0deg); }
+  50% { transform: perspective(40px) translateZ(2px) translateY(-2px) rotateX(6deg); }
+}
