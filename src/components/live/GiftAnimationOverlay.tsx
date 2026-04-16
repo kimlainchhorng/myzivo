@@ -8,7 +8,7 @@ import { giftImages, preloadGiftImages } from "@/config/giftIcons";
 import { giftAnimationVideos, preloadGiftAnimations } from "@/config/giftAnimations";
 import { getGiftLevel } from "@/config/giftCatalog";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
-import blackPantherTransparent from "@/assets/gifts/black-panther-transparent.png";
+
 
 /**
  * Per-gift transparent PNG override.
