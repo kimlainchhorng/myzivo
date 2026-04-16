@@ -42,7 +42,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
-import { repairVideoBlob } from "@/utils/videoRepair";
+// videoRepair is heavy (FFmpeg WASM) — dynamic import only when needed
 
 interface FeedPost {
   id: string;
