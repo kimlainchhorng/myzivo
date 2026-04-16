@@ -18,6 +18,8 @@ import magicRabbit from "@/assets/gifts/magic-rabbit.png";
 import neonDolphin from "@/assets/gifts/neon-dolphin.png";
 import snakeDance from "@/assets/gifts/snake-dance.png";
 import fireDragon from "@/assets/gifts/fire-dragon.png";
+import shadowWolf from "@/assets/gifts/shadow-wolf.png";
+import goldenPhoenix from "@/assets/gifts/golden-phoenix.png";
 
 // === Interactive Tab ===
 import pandaParty from "@/assets/gifts/panda-party.png";
@@ -32,6 +34,8 @@ import sapphireSwan from "@/assets/gifts/sapphire-swan.png";
 import emeraldEagle from "@/assets/gifts/emerald-eagle.png";
 import royalCrown from "@/assets/gifts/royal-crown.png";
 import platinumPanda from "@/assets/gifts/platinum-panda.png";
+import crystalPegasus from "@/assets/gifts/crystal-pegasus.png";
+import neonRocket from "@/assets/gifts/neon-rocket.png";
 
 // === Exclusive Tab ===
 import blackPanther from "@/assets/gifts/black-panther.png";
@@ -41,6 +45,9 @@ import luxuryYacht from "@/assets/gifts/luxury-yacht.png";
 import privateIsland from "@/assets/gifts/private-island.png";
 import galaxyCrown from "@/assets/gifts/galaxy-crown.png";
 import goldenCastle from "@/assets/gifts/golden-castle.png";
+import cosmicDragon from "@/assets/gifts/cosmic-dragon.png";
+import diamondThrone from "@/assets/gifts/diamond-throne.png";
+import celestialPhoenix from "@/assets/gifts/celestial-phoenix.png";
 
 export { goldCoin };
 
@@ -62,6 +69,8 @@ export const giftImages: Record<string, string> = {
   "Neon Dolphin": neonDolphin,
   "Snake Dance": snakeDance,
   "Fire Dragon": fireDragon,
+  "Shadow Wolf": shadowWolf,
+  "Golden Phoenix": goldenPhoenix,
 
   // Interactive tab
   "Panda Party": pandaParty,
@@ -76,6 +85,8 @@ export const giftImages: Record<string, string> = {
   "Emerald Eagle": emeraldEagle,
   "Royal Crown": royalCrown,
   "Platinum Panda": platinumPanda,
+  "Crystal Pegasus": crystalPegasus,
+  "Neon Rocket": neonRocket,
 
   // Exclusive tab
   "Black Panther": blackPanther,
@@ -85,4 +96,7 @@ export const giftImages: Record<string, string> = {
   "Private Island": privateIsland,
   "Galaxy Crown": galaxyCrown,
   "Golden Castle": goldenCastle,
+  "Cosmic Dragon": cosmicDragon,
+  "Diamond Throne": diamondThrone,
+  "Celestial Phoenix": celestialPhoenix,
 };
