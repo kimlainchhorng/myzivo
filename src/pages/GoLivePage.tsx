@@ -1156,28 +1156,72 @@ export default function GoLivePage() {
 
         {phase === "live" && (
           <>
-            {/* Inline host info — leftmost */}
-            <div className="flex items-center gap-1.5 bg-black/30 backdrop-blur-md rounded-full pl-1 pr-2.5 py-0.5 border border-white/5 max-w-[55%]">
-              <div className="relative shrink-0">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white text-[10px] font-bold shadow-lg shadow-red-500/20">
-                  {user?.email?.[0]?.toUpperCase() || "Z"}
+            {/* Inline host info — 3D glossy pill */}
+            <div
+              className="flex items-center gap-2 rounded-full pl-1 pr-3 py-1 max-w-[55%] border border-white/15"
+              style={{
+                background: "linear-gradient(145deg, rgba(40,40,55,0.85), rgba(15,15,25,0.75))",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.5), 0 4px 14px rgba(0,0,0,0.45)",
+              }}
+            >
+              <div className="relative shrink-0" style={{ filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.5))" }}>
+                {/* 3D avatar */}
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[12px] font-bold relative overflow-hidden"
+                  style={{
+                    background: "radial-gradient(circle at 30% 25%, #ff8a8a, #e11d48 55%, #881337)",
+                    boxShadow: "inset 0 2px 3px rgba(255,255,255,0.4), inset 0 -3px 5px rgba(0,0,0,0.45), 0 2px 6px rgba(225,29,72,0.5)",
+                  }}
+                >
+                  <span className="relative z-10">{user?.email?.[0]?.toUpperCase() || "Z"}</span>
+                  {/* Glossy highlight */}
+                  <span
+                    className="absolute top-0 left-1 right-1 h-2/5 rounded-full"
+                    style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.55), rgba(255,255,255,0))" }}
+                  />
                 </div>
-                <span className={cn(
-                  "absolute -bottom-0.5 -right-0.5 text-[7px] font-bold px-1 py-0 rounded-full border",
-                  hostLevel >= 50 ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-white border-amber-300/50" :
-                  hostLevel >= 20 ? "bg-gradient-to-r from-blue-500 to-cyan-400 text-white border-blue-300/50" :
-                  "bg-white/20 text-white/80 border-white/20"
-                )}>
+                {/* 3D Level badge */}
+                <span
+                  className={cn(
+                    "absolute -bottom-1 -right-1 text-[8px] font-black px-1.5 py-0 rounded-full border leading-tight",
+                    hostLevel >= 50 ? "text-white border-amber-200/70" :
+                    hostLevel >= 20 ? "text-white border-cyan-200/70" :
+                    "text-white border-white/40"
+                  )}
+                  style={{
+                    background: hostLevel >= 50
+                      ? "radial-gradient(circle at 30% 25%, #fde68a, #f59e0b 60%, #b45309)"
+                      : hostLevel >= 20
+                      ? "radial-gradient(circle at 30% 25%, #a5f3fc, #0891b2 60%, #155e75)"
+                      : "radial-gradient(circle at 30% 25%, #f5f5f5, #71717a 60%, #3f3f46)",
+                    boxShadow: "inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -1px 1px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.5)",
+                    textShadow: "0 1px 1px rgba(0,0,0,0.5)",
+                  }}
+                >
                   {hostLevel}
                 </span>
               </div>
               <div className="flex-1 min-w-0 leading-tight">
-                <p className="text-white text-[11px] font-semibold truncate">{title}</p>
-                <div className="flex items-center gap-1 text-white/40 text-[9px]">
-                  <span className="truncate">{fakeFollowers.current.toLocaleString()} followers</span>
+                <p
+                  className="text-white text-[12px] font-bold truncate"
+                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}
+                >
+                  {title}
+                </p>
+                <div className="flex items-center gap-1.5 text-[9px]">
+                  <span className="text-white/55 truncate" style={{ textShadow: "0 1px 1px rgba(0,0,0,0.5)" }}>
+                    {fakeFollowers.current.toLocaleString()} followers
+                  </span>
                   {giftsReceived > 0 && (
-                    <span className="text-amber-300 flex items-center gap-0.5 shrink-0">
-                      <img src={goldCoinIcon} alt="" className="w-2.5 h-2.5" /> {coinsEarned}
+                    <span
+                      className="flex items-center gap-0.5 shrink-0 font-bold"
+                      style={{
+                        color: "#fde68a",
+                        textShadow: "0 1px 2px rgba(180,83,9,0.6)",
+                      }}
+                    >
+                      <img src={goldCoinIcon} alt="" className="w-3 h-3" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
+                      {coinsEarned}
                     </span>
                   )}
                 </div>
