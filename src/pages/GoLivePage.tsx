@@ -1526,9 +1526,6 @@ export default function GoLivePage() {
                   >
                     <Timer className="h-3 w-3" /> Slow
                   </button>
-                </div>
-                {/* Second row */}
-                <div className="flex items-center gap-2 mt-2">
                   <button
                     onClick={() => toast("Screen share coming soon!", { description: "Share your screen with viewers" })}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium bg-zinc-800 text-zinc-500 border border-zinc-700/50 hover:text-zinc-400 transition-all"
