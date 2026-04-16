@@ -34,16 +34,10 @@ import celestialPhoenixVid from "@/assets/gifts/animations/celestial-phoenix.mp4
 
 export const giftAnimationVideos: Record<string, string> = {
   // ── Gifts tab ──
-  // Lv.2 — 45 coins
-  "Shadow Wolf": shadowWolfVid.url,
-  // Lv.3 — 75 coins
-  "Golden Phoenix": goldenPhoenixVid.url,
   // Lv.4 — 299 coins
   "Fire Dragon": fireDragonVid.url,
 
   // ── Interactive tab ──
-  // Lv.4 — 100 coins
-  "Panda Party": pandaPartyVid.url,
   // Lv.5 — 699 coins
   "Sapphire Swan": sapphireSwanVid.url,
   // Lv.5 — 888 coins
