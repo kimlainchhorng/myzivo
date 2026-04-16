@@ -1252,15 +1252,15 @@ export default function GoLivePage() {
                   {hostLevel}
                 </span>
               </div>
-              <div className="flex-1 min-w-0 leading-tight">
+              <div className="flex-1 min-w-0 leading-tight relative z-10">
                 <p
-                  className="text-white text-[12px] font-bold truncate"
-                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}
+                  className="text-white text-[12.5px] font-extrabold truncate"
+                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.7), 0 0 1px rgba(0,0,0,0.5)" }}
                 >
-                  {title}
+                  {hostDisplayName}
                 </p>
                 <div className="flex items-center gap-1.5 text-[9px]">
-                  <span className="text-white/55 truncate" style={{ textShadow: "0 1px 1px rgba(0,0,0,0.5)" }}>
+                  <span className="text-white/60 truncate" style={{ textShadow: "0 1px 1px rgba(0,0,0,0.5)" }}>
                     {fakeFollowers.current.toLocaleString()} followers
                   </span>
                   {giftsReceived > 0 && (
