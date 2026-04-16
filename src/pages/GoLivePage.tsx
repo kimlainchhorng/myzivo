@@ -1366,16 +1366,16 @@ export default function GoLivePage() {
 
       {/* Setup form */}
       {phase === "setup" && (
-        <div className="relative z-10 flex-1 flex flex-col justify-end p-4 pb-6 space-y-3">
-          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.25 }} className="space-y-3">
+        <div className="relative z-10 flex-1 min-h-0 flex flex-col p-3 pb-4 overflow-y-auto overscroll-contain">
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.25 }} className="mt-auto space-y-2.5">
             {/* Stream setup card */}
-            <div className="bg-zinc-900/90 backdrop-blur-xl rounded-3xl p-4 space-y-4 border border-white/10 shadow-2xl shadow-black/50">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center">
-                  <Sparkles className="h-4 w-4 text-white" />
+            <div className="bg-zinc-900/90 backdrop-blur-xl rounded-2xl p-3 space-y-2.5 border border-white/10 shadow-2xl shadow-black/50">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center">
+                  <Sparkles className="h-3.5 w-3.5 text-white" />
                 </div>
-                <div>
-                  <span className="text-white font-semibold text-sm">Stream Setup</span>
+                <div className="leading-tight">
+                  <span className="text-white font-semibold text-[13px]">Stream Setup</span>
                   <p className="text-white/30 text-[10px]">Configure your broadcast</p>
                 </div>
               </div>
@@ -1387,7 +1387,7 @@ export default function GoLivePage() {
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Give your stream a title..."
                   maxLength={100}
-                  className="bg-zinc-800/80 border-zinc-700/50 text-white placeholder:text-zinc-500 text-sm rounded-xl h-11 pl-4 pr-12 focus:border-red-500/50 focus:ring-red-500/20"
+                  className="bg-zinc-800/80 border-zinc-700/50 text-white placeholder:text-zinc-500 text-sm rounded-xl h-9 pl-3.5 pr-12 focus:border-red-500/50 focus:ring-red-500/20"
                 />
                 {title.length > 0 && (
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px]">{title.length}/100</span>
@@ -1396,7 +1396,7 @@ export default function GoLivePage() {
 
               {/* Topic chips */}
               <div>
-                <p className="text-zinc-400 text-xs mb-2 font-medium">Topic</p>
+                <p className="text-zinc-400 text-[11px] mb-1.5 font-medium">Topic</p>
                 <div className="flex flex-wrap gap-1.5">
                   {topicConfig.map((t) => (
                     <button
@@ -1417,7 +1417,7 @@ export default function GoLivePage() {
 
               {/* Hashtags for discovery */}
               <div>
-                <p className="text-zinc-400 text-xs mb-2 font-medium">Hashtags</p>
+                <p className="text-zinc-400 text-[11px] mb-1.5 font-medium">Hashtags</p>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {hashtags.map((tag) => (
                     <span key={tag} className="flex items-center gap-1 bg-blue-500/15 text-blue-300 text-[11px] font-medium rounded-full px-2.5 py-1 border border-blue-500/20">
@@ -1463,8 +1463,8 @@ export default function GoLivePage() {
               </div>
 
               {/* Settings toggles — separated row with divider */}
-              <div className="border-t border-white/5 pt-3">
-                <div className="flex items-center gap-2">
+              <div className="border-t border-white/5 pt-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <button
                     onClick={() => setBeautyMode((p) => !p)}
                     className={cn(
@@ -1526,9 +1526,6 @@ export default function GoLivePage() {
                   >
                     <Timer className="h-3 w-3" /> Slow
                   </button>
-                </div>
-                {/* Second row */}
-                <div className="flex items-center gap-2 mt-2">
                   <button
                     onClick={() => toast("Screen share coming soon!", { description: "Share your screen with viewers" })}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium bg-zinc-800 text-zinc-500 border border-zinc-700/50 hover:text-zinc-400 transition-all"
@@ -1540,40 +1537,40 @@ export default function GoLivePage() {
             </div>
 
             {/* Camera controls */}
-            <div className="flex justify-center gap-4">
-              <div className="flex flex-col items-center gap-1">
+            <div className="flex justify-center gap-3">
+              <div className="flex flex-col items-center gap-0.5">
                 <button
                   onClick={toggleCamera}
                   className={cn(
-                    "w-13 h-13 rounded-2xl flex items-center justify-center transition-all",
+                    "rounded-2xl flex items-center justify-center transition-all",
                     cameraOn
                       ? "bg-zinc-800/80 hover:bg-zinc-700/80 text-white"
                       : "bg-red-500/30 text-red-300"
                   )}
-                  style={{ width: 52, height: 52 }}
+                  style={{ width: 44, height: 44 }}
                 >
-                  {cameraOn ? <Camera className="h-5 w-5" /> : <CameraOff className="h-5 w-5" />}
+                  {cameraOn ? <Camera className="h-4 w-4" /> : <CameraOff className="h-4 w-4" />}
                 </button>
                 <span className="text-[9px] text-zinc-500">{cameraOn ? "Camera" : "Off"}</span>
               </div>
-              <div className="flex flex-col items-center gap-1">
+              <div className="flex flex-col items-center gap-0.5">
                 <button
                   onClick={toggleMic}
                   className={cn(
-                    "w-13 h-13 rounded-2xl flex items-center justify-center transition-all",
+                    "rounded-2xl flex items-center justify-center transition-all",
                     micOn
                       ? "bg-zinc-800/80 hover:bg-zinc-700/80 text-white"
                       : "bg-red-500/30 text-red-300"
                   )}
-                  style={{ width: 52, height: 52 }}
+                  style={{ width: 44, height: 44 }}
                 >
-                  {micOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+                  {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
                 </button>
                 <span className="text-[9px] text-zinc-500">{micOn ? "Audio" : "Muted"}</span>
               </div>
-              <div className="flex flex-col items-center gap-1">
-                <button onClick={flipCamera} className="rounded-2xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-white transition-all" style={{ width: 52, height: 52 }}>
-                  <RotateCcw className="h-5 w-5" />
+              <div className="flex flex-col items-center gap-0.5">
+                <button onClick={flipCamera} className="rounded-2xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-white transition-all" style={{ width: 44, height: 44 }}>
+                  <RotateCcw className="h-4 w-4" />
                 </button>
                 <span className="text-[9px] text-zinc-500">Flip</span>
               </div>
@@ -1582,10 +1579,10 @@ export default function GoLivePage() {
             {/* Go Live button */}
             <Button
               onClick={goLive}
-              className="w-full rounded-2xl h-13 bg-gradient-to-r from-red-500 via-red-500 to-rose-500 hover:from-red-600 hover:via-red-600 hover:to-rose-600 text-white text-[15px] font-bold gap-2.5 shadow-xl shadow-red-500/30 border-0 transition-all active:scale-[0.98]"
-              style={{ height: 52 }}
+              className="w-full rounded-2xl bg-gradient-to-r from-red-500 via-red-500 to-rose-500 hover:from-red-600 hover:via-red-600 hover:to-rose-600 text-white text-sm font-bold gap-2 shadow-xl shadow-red-500/30 border-0 transition-all active:scale-[0.98]"
+              style={{ height: 46 }}
             >
-              <Zap className="h-5 w-5" /> Go Live
+              <Zap className="h-4 w-4" /> Go Live
             </Button>
           </motion.div>
         </div>
