@@ -107,96 +107,11 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
     };
   }, [activeGift, dismiss, isPremium, isUltra, isLegendary]);
 
-  // Video → canvas chroma-key pipeline
+  // Video ready → mark canvas ready (no chroma-key needed, using CSS blend mode)
   useEffect(() => {
     if (!activeGift || !hasVideo || !videoReady) return;
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d", { alpha: true, willReadFrequently: true });
-    if (!video || !canvas || !ctx) return;
-
-    const syncCanvasSize = () => {
-      const container = canvas.parentElement;
-      if (!container) return;
-      const cssW = Math.max(container.clientWidth, 1);
-      const cssH = Math.max(container.clientHeight, 1);
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const nw = Math.max(1, Math.round(cssW * dpr));
-      const nh = Math.max(1, Math.round(cssH * dpr));
-      if (canvas.width !== nw || canvas.height !== nh) {
-        canvas.width = nw;
-        canvas.height = nh;
-      }
-    };
-
-    const renderFrame = () => {
-      if (!videoRef.current || !canvasRef.current) return;
-      if (video.readyState < 2) { frameLoopRef.current = requestAnimationFrame(renderFrame); return; }
-
-      const w = canvas.width, h = canvas.height;
-      if (w === 0 || h === 0) { frameLoopRef.current = requestAnimationFrame(renderFrame); return; }
-      const sw = video.videoWidth || w, sh = video.videoHeight || h;
-      const cs = Math.max(w / sw, h / sh);
-      const dw = sw * cs, dh = sh * cs;
-      try {
-        ctx.clearRect(0, 0, w, h);
-        ctx.drawImage(video, (w - dw) / 2, (h - dh) / 2, dw, dh);
-
-        const frame = ctx.getImageData(0, 0, w, h);
-        const px = frame.data;
-        for (let i = 0; i < px.length; i += 4) {
-          const r = px[i], g = px[i + 1], b = px[i + 2];
-          const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-          const chroma = Math.max(r, g, b) - Math.min(r, g, b);
-
-          // === Remove dark/black background ===
-          if (luma < 40 && chroma < 45) { px[i + 3] = 0; continue; }
-          if (luma < 80 && chroma < 55) {
-            px[i + 3] = Math.min(px[i + 3], Math.max(0, Math.round(((luma - 40) / 40) * 255)));
-            if (px[i + 3] === 0) continue;
-          }
-
-          // === Remove light/white/gray clouds & sky ===
-          if (luma > 210 && chroma < 40) { px[i + 3] = 0; continue; }
-          if (luma > 160 && chroma < 50) {
-            const fade = Math.max(0, Math.round(((210 - luma) / 50) * 255));
-            px[i + 3] = Math.min(px[i + 3], fade);
-            if (px[i + 3] === 0) continue;
-          }
-
-          // === Remove mid-gray unsaturated pixels (fog/haze) ===
-          if (chroma < 30 && luma > 100 && luma < 180) {
-            const satFade = Math.max(0, Math.round((chroma / 30) * 255));
-            px[i + 3] = Math.min(px[i + 3], satFade);
-            if (px[i + 3] === 0) continue;
-          }
-
-          // Slight warmth boost for gift visuals
-          px[i] = Math.min(255, Math.round(r * 1.08));
-          px[i + 1] = Math.min(255, Math.round(g * 1.05));
-          px[i + 2] = Math.min(255, Math.round(b * 1.08));
-        }
-        ctx.putImageData(frame, 0, 0);
-      } catch {
-        // Canvas tainted or security error — show video directly without chroma-key
-        ctx.clearRect(0, 0, w, h);
-        ctx.drawImage(video, (w - dw) / 2, (h - dh) / 2, dw, dh);
-      }
-      if (!canvasReadyRef.current) { canvasReadyRef.current = true; setCanvasReady(true); }
-      frameLoopRef.current = requestAnimationFrame(renderFrame);
-    };
-
-    syncCanvasSize();
-    if (video.paused) video.play().catch(() => {});
-    frameLoopRef.current = requestAnimationFrame(renderFrame);
-    window.addEventListener("resize", syncCanvasSize);
-    return () => {
-      window.removeEventListener("resize", syncCanvasSize);
-      if (frameLoopRef.current) { cancelAnimationFrame(frameLoopRef.current); frameLoopRef.current = undefined; }
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    };
-  }, [activeGift, hasVideo, videoReady, animKey]);
+    setCanvasReady(true);
+  }, [activeGift, hasVideo, videoReady]);
 
   if (!activeGift) return null;
 
