@@ -1164,31 +1164,8 @@ export default function GoLivePage() {
               <Eye className="h-3 w-3 text-white/70" />
               <span className={cn("text-white text-xs font-medium transition-colors", viewerPulse && "text-green-300")}>{viewerCount.toLocaleString()}</span>
             </div>
-            <div className="ml-auto flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setShareCount((p) => p + 1);
-                  if (navigator.share) {
-                    navigator.share({ title: `Watch ${title} live on ZIVO!`, url: window.location.href }).catch(() => {});
-                  } else {
-                    navigator.clipboard?.writeText(window.location.href);
-                    toast.success("Stream link copied!");
-                  }
-                }}
-                className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10"
-              >
-                <Share2 className="h-4 w-4 text-white" />
-              </button>
-              <button
-                onClick={() => setShowChat((p) => !p)}
-                className={cn(
-                  "w-9 h-9 rounded-full backdrop-blur-md flex items-center justify-center border border-white/10",
-                  showChat ? "bg-white/15" : "bg-black/40"
-                )}
-              >
-                <MessageCircle className="h-4 w-4 text-white" />
-              </button>
-            </div>
+            <div className="ml-auto" />
+
           </>
         )}
       </div>
@@ -1950,6 +1927,29 @@ export default function GoLivePage() {
                       <Users className="h-4 w-4 text-white/70" />
                     </div>
                     <span className="text-white/50 text-[9px]">Guests</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShareCount((p) => p + 1);
+                      if (navigator.share) {
+                        navigator.share({ title: `Watch ${title} live on ZIVO!`, url: window.location.href }).catch(() => {});
+                      } else {
+                        navigator.clipboard?.writeText(window.location.href);
+                        toast.success("Stream link copied!");
+                      }
+                    }}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                      <Share2 className="h-4 w-4 text-white/70" />
+                    </div>
+                    <span className="text-white/50 text-[9px]">Share</span>
+                  </button>
+                  <button onClick={() => setShowChat((p) => !p)} className="flex flex-col items-center gap-1">
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", showChat ? "bg-white/20" : "bg-white/10")}>
+                      <MessageCircle className="h-4 w-4 text-white/70" />
+                    </div>
+                    <span className="text-white/50 text-[9px]">Chat</span>
                   </button>
                 </div>
               </motion.div>
