@@ -283,6 +283,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     // Deduct coins
     setCoinBalance(prev => prev - totalCoins);
 
+    // Level up from gifting — every 50 coins gifted = 1 level
+    setMyTotalCoinsGifted(prev => {
+      const newTotal = prev + totalCoins;
+      const newLevel = Math.min(99, Math.floor(newTotal / 50) + 1);
+      setMyLevel(newLevel);
+      return newTotal;
+    });
+
     // Haptic feedback
     try { navigator.vibrate?.(giftQty > 1 ? [50, 30, 50] : [50]); } catch {} // eslint-disable-line no-empty
 
@@ -292,7 +300,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       user: "You",
       text: giftQty > 1 ? `sent ${selectedGift.name} x${giftQty} (${totalCoins.toLocaleString()} coins)` : `sent ${selectedGift.name} (${selectedGift.coins} coins)`,
       isGift: true,
-      level: 5,
+      level: Math.min(99, Math.floor((myTotalCoinsGifted + totalCoins) / 50) + 1),
     }]);
 
     // Track recent gifts (unique, max 4)
