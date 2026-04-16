@@ -1225,31 +1225,31 @@ export default function GoLivePage() {
                     }}
                   />
                 </div>
-                {/* Premium 3D LV coin */}
+                {/* Premium 3D LV coin — orange-gold pill below avatar */}
                 <span
-                  className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-[2px] text-[8.5px] font-black px-1.5 py-[2px] rounded-full leading-none z-20 text-white overflow-hidden whitespace-nowrap"
+                  className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-[3px] text-[9px] font-black px-1.5 py-[2.5px] rounded-full leading-none z-20 text-white overflow-hidden whitespace-nowrap"
                   style={{
                     background: hostLevel >= 50
-                      ? "linear-gradient(180deg, #fffbe6 0%, #fde047 30%, #f59e0b 70%, #92400e 100%)"
+                      ? "linear-gradient(180deg, #fde68a 0%, #fbbf24 28%, #ea580c 70%, #7c2d12 100%)"
                       : hostLevel >= 20
-                      ? "linear-gradient(180deg, #ecfeff 0%, #67e8f9 30%, #0891b2 70%, #0e4a5c 100%)"
-                      : "linear-gradient(180deg, #ffffff 0%, #d4d4d8 30%, #71717a 70%, #27272a 100%)",
+                      ? "linear-gradient(180deg, #fef3c7 0%, #fbbf24 28%, #d97706 70%, #78350f 100%)"
+                      : "linear-gradient(180deg, #fed7aa 0%, #fb923c 28%, #c2410c 70%, #7c2d12 100%)",
                     boxShadow: [
-                      "inset 0 1.5px 1.2px rgba(255,255,255,0.9)",
-                      "inset 0 -1.8px 1.5px rgba(0,0,0,0.55)",
-                      "0 2.5px 5px rgba(0,0,0,0.7)",
-                      "0 0 0 1.5px rgba(0,0,0,0.6)",
-                      "0 0 0 2.5px rgba(255,255,255,0.15)",
+                      "inset 0 1.5px 1.5px rgba(255,255,255,0.95)",
+                      "inset 0 -2px 2px rgba(120,53,15,0.7)",
+                      "0 3px 6px rgba(0,0,0,0.75)",
+                      "0 0 0 1.5px rgba(0,0,0,0.7)",
+                      "0 0 0 2.5px rgba(251,191,36,0.35)",
                     ].join(", "),
-                    textShadow: "0 1px 1px rgba(0,0,0,0.7)",
+                    textShadow: "0 1px 1.5px rgba(120,53,15,0.9)",
                   }}
                 >
-                  <span className="opacity-85 text-[7px] tracking-wide">LV</span>
-                  <span>{hostLevel}</span>
+                  <span className="opacity-95 text-[7.5px] tracking-wider">LV</span>
+                  <span className="text-[10px]">{hostLevel}</span>
                   <span
                     aria-hidden
                     className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-full"
-                    style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.6), transparent)" }}
+                    style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.7), transparent)" }}
                   />
                 </span>
               </div>
