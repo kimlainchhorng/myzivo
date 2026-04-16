@@ -19,8 +19,6 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const onCompleteRef = useRef(onComplete);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const frameLoopRef = useRef<number>();
   const canvasReadyRef = useRef(false);
   const [animKey, setAnimKey] = useState(0);
   const [videoReady, setVideoReady] = useState(false);
