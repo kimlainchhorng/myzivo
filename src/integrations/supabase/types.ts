@@ -42913,6 +42913,196 @@ export type Database = {
         }
         Relationships: []
       }
+      store_ad_accounts: {
+        Row: {
+          connected_at: string | null
+          connected_by: string | null
+          created_at: string
+          display_name: string | null
+          external_account_id: string | null
+          id: string
+          last_synced_at: string | null
+          metadata: Json
+          platform: Database["public"]["Enums"]["ad_platform"]
+          status: Database["public"]["Enums"]["ad_account_status"]
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          connected_at?: string | null
+          connected_by?: string | null
+          created_at?: string
+          display_name?: string | null
+          external_account_id?: string | null
+          id?: string
+          last_synced_at?: string | null
+          metadata?: Json
+          platform: Database["public"]["Enums"]["ad_platform"]
+          status?: Database["public"]["Enums"]["ad_account_status"]
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          connected_at?: string | null
+          connected_by?: string | null
+          created_at?: string
+          display_name?: string | null
+          external_account_id?: string | null
+          id?: string
+          last_synced_at?: string | null
+          metadata?: Json
+          platform?: Database["public"]["Enums"]["ad_platform"]
+          status?: Database["public"]["Enums"]["ad_account_status"]
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_ad_accounts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_accounts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_accounts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_accounts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_ad_campaigns: {
+        Row: {
+          body: string | null
+          clicks: number
+          conversions: number
+          created_at: string
+          created_by: string | null
+          creative_url: string | null
+          cta: string | null
+          currency: string
+          daily_budget_cents: number
+          destination_url: string | null
+          end_date: string | null
+          external_ids: Json
+          headline: string | null
+          id: string
+          impressions: number
+          metrics: Json
+          name: string
+          objective: string
+          platforms: Database["public"]["Enums"]["ad_platform"][]
+          spend_cents: number
+          start_date: string | null
+          status: Database["public"]["Enums"]["ad_campaign_status"]
+          store_id: string
+          targeting: Json
+          total_budget_cents: number
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          clicks?: number
+          conversions?: number
+          created_at?: string
+          created_by?: string | null
+          creative_url?: string | null
+          cta?: string | null
+          currency?: string
+          daily_budget_cents?: number
+          destination_url?: string | null
+          end_date?: string | null
+          external_ids?: Json
+          headline?: string | null
+          id?: string
+          impressions?: number
+          metrics?: Json
+          name: string
+          objective?: string
+          platforms?: Database["public"]["Enums"]["ad_platform"][]
+          spend_cents?: number
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["ad_campaign_status"]
+          store_id: string
+          targeting?: Json
+          total_budget_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          clicks?: number
+          conversions?: number
+          created_at?: string
+          created_by?: string | null
+          creative_url?: string | null
+          cta?: string | null
+          currency?: string
+          daily_budget_cents?: number
+          destination_url?: string | null
+          end_date?: string | null
+          external_ids?: Json
+          headline?: string | null
+          id?: string
+          impressions?: number
+          metrics?: Json
+          name?: string
+          objective?: string
+          platforms?: Database["public"]["Enums"]["ad_platform"][]
+          spend_cents?: number
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["ad_campaign_status"]
+          store_id?: string
+          targeting?: Json
+          total_budget_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_ad_campaigns_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_campaigns_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_campaigns_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_campaigns_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_chat_messages: {
         Row: {
           chat_id: string
@@ -56610,6 +56800,15 @@ export type Database = {
       zone_supply_count: { Args: { p_zone_id: string }; Returns: number }
     }
     Enums: {
+      ad_account_status: "disconnected" | "pending" | "connected" | "error"
+      ad_campaign_status:
+        | "draft"
+        | "pending_review"
+        | "active"
+        | "paused"
+        | "ended"
+        | "rejected"
+      ad_platform: "meta" | "instagram" | "google" | "tiktok" | "x"
       app_role:
         | "admin"
         | "moderator"
@@ -56969,6 +57168,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ad_account_status: ["disconnected", "pending", "connected", "error"],
+      ad_campaign_status: [
+        "draft",
+        "pending_review",
+        "active",
+        "paused",
+        "ended",
+        "rejected",
+      ],
+      ad_platform: ["meta", "instagram", "google", "tiktok", "x"],
       app_role: [
         "admin",
         "moderator",
