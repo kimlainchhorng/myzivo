@@ -24541,6 +24541,57 @@ export type Database = {
           },
         ]
       }
+      live_gifts: {
+        Row: {
+          badge: string | null
+          bg_gradient: string
+          coins: number
+          created_at: string
+          icon: string
+          icon_image_url: string | null
+          id: string
+          is_active: boolean
+          level: number
+          name: string
+          sort_order: number
+          tab: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          badge?: string | null
+          bg_gradient?: string
+          coins?: number
+          created_at?: string
+          icon?: string
+          icon_image_url?: string | null
+          id?: string
+          is_active?: boolean
+          level?: number
+          name: string
+          sort_order?: number
+          tab?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          badge?: string | null
+          bg_gradient?: string
+          coins?: number
+          created_at?: string
+          icon?: string
+          icon_image_url?: string | null
+          id?: string
+          is_active?: boolean
+          level?: number
+          name?: string
+          sort_order?: number
+          tab?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       live_likes: {
         Row: {
           created_at: string
