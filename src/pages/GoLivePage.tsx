@@ -1537,40 +1537,40 @@ export default function GoLivePage() {
             </div>
 
             {/* Camera controls */}
-            <div className="flex justify-center gap-4">
-              <div className="flex flex-col items-center gap-1">
+            <div className="flex justify-center gap-3">
+              <div className="flex flex-col items-center gap-0.5">
                 <button
                   onClick={toggleCamera}
                   className={cn(
-                    "w-13 h-13 rounded-2xl flex items-center justify-center transition-all",
+                    "rounded-2xl flex items-center justify-center transition-all",
                     cameraOn
                       ? "bg-zinc-800/80 hover:bg-zinc-700/80 text-white"
                       : "bg-red-500/30 text-red-300"
                   )}
-                  style={{ width: 52, height: 52 }}
+                  style={{ width: 44, height: 44 }}
                 >
-                  {cameraOn ? <Camera className="h-5 w-5" /> : <CameraOff className="h-5 w-5" />}
+                  {cameraOn ? <Camera className="h-4 w-4" /> : <CameraOff className="h-4 w-4" />}
                 </button>
                 <span className="text-[9px] text-zinc-500">{cameraOn ? "Camera" : "Off"}</span>
               </div>
-              <div className="flex flex-col items-center gap-1">
+              <div className="flex flex-col items-center gap-0.5">
                 <button
                   onClick={toggleMic}
                   className={cn(
-                    "w-13 h-13 rounded-2xl flex items-center justify-center transition-all",
+                    "rounded-2xl flex items-center justify-center transition-all",
                     micOn
                       ? "bg-zinc-800/80 hover:bg-zinc-700/80 text-white"
                       : "bg-red-500/30 text-red-300"
                   )}
-                  style={{ width: 52, height: 52 }}
+                  style={{ width: 44, height: 44 }}
                 >
-                  {micOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+                  {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
                 </button>
                 <span className="text-[9px] text-zinc-500">{micOn ? "Audio" : "Muted"}</span>
               </div>
-              <div className="flex flex-col items-center gap-1">
-                <button onClick={flipCamera} className="rounded-2xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-white transition-all" style={{ width: 52, height: 52 }}>
-                  <RotateCcw className="h-5 w-5" />
+              <div className="flex flex-col items-center gap-0.5">
+                <button onClick={flipCamera} className="rounded-2xl bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center text-white transition-all" style={{ width: 44, height: 44 }}>
+                  <RotateCcw className="h-4 w-4" />
                 </button>
                 <span className="text-[9px] text-zinc-500">Flip</span>
               </div>
@@ -1579,10 +1579,10 @@ export default function GoLivePage() {
             {/* Go Live button */}
             <Button
               onClick={goLive}
-              className="w-full rounded-2xl h-13 bg-gradient-to-r from-red-500 via-red-500 to-rose-500 hover:from-red-600 hover:via-red-600 hover:to-rose-600 text-white text-[15px] font-bold gap-2.5 shadow-xl shadow-red-500/30 border-0 transition-all active:scale-[0.98]"
-              style={{ height: 52 }}
+              className="w-full rounded-2xl bg-gradient-to-r from-red-500 via-red-500 to-rose-500 hover:from-red-600 hover:via-red-600 hover:to-rose-600 text-white text-sm font-bold gap-2 shadow-xl shadow-red-500/30 border-0 transition-all active:scale-[0.98]"
+              style={{ height: 46 }}
             >
-              <Zap className="h-5 w-5" /> Go Live
+              <Zap className="h-4 w-4" /> Go Live
             </Button>
           </motion.div>
         </div>
