@@ -4,14 +4,15 @@
  * Videos auto-play when scrolled into view, pause when scrolled away.
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import UnifiedShareSheet from "@/components/shared/ShareSheet";
+import { lazy, Suspense } from "react";
+const UnifiedShareSheet = lazy(() => import("@/components/shared/ShareSheet"));
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import { useI18n } from "@/hooks/useI18n";
-import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import NavBar from "@/components/home/NavBar";
-import CreatePostModal from "@/components/social/CreatePostModal";
+const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
+const NavBar = lazy(() => import("@/components/home/NavBar"));
+const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Heart from "lucide-react/dist/esm/icons/heart";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
@@ -42,7 +43,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
-import { repairVideoBlob } from "@/utils/videoRepair";
+// videoRepair is heavy (FFmpeg WASM) — dynamic import only when needed
 
 interface FeedPost {
   id: string;
@@ -338,6 +339,7 @@ function ReelCard({
       const resp = await fetch(url);
       if (!resp.ok) throw new Error("fetch failed");
       const blob = await resp.blob();
+      const { repairVideoBlob } = await import("@/utils/videoRepair");
       const repairedUrl = await repairVideoBlob(blob);
       if (repairedUrl) {
         if (blobSrc) URL.revokeObjectURL(blobSrc);
