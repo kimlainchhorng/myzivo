@@ -8,7 +8,7 @@ import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
 import CoinRechargeSheet from "@/components/live/CoinRechargeSheet";
 import { playGiftSound, playPremiumGiftSound, playLegendaryGiftSound } from "@/utils/giftSounds";
-import { giftAnimationVideos } from "@/config/giftAnimations";
+import { hasGiftVideo, giftAnimationVideos, preloadGiftAnimations } from "@/config/giftAnimations";
 import { giftCatalog, getLevelColor, getLevelBg, type GiftItem } from "@/config/giftCatalog";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -83,6 +83,8 @@ import { useAuth } from "@/contexts/AuthContext";
 type LivePhase = "setup" | "countdown" | "live" | "ended";
 
 export default function GoLivePage() {
+  // Preload gift video URLs in background
+  useEffect(() => { preloadGiftAnimations(); }, []);
   const navigate = useNavigate();
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -780,7 +782,7 @@ export default function GoLivePage() {
     if (soundEnabled) {
       if (gift.coins >= 20000) {
         playLegendaryGiftSound();
-      } else if (!!giftAnimationVideos[gift.name]) {
+      } else if (!!hasGiftVideo(gift.name)) {
         playPremiumGiftSound();
       } else {
         playGiftSound(newCombo, gift.coins);
@@ -789,13 +791,13 @@ export default function GoLivePage() {
     
     enqueueGiftAnim({ name: gift.name, coins: totalCoins, senderName: sender, combo: newCombo });
     // Auto-close gift panel for immersive video animation experience
-    if (giftAnimationVideos[gift.name]) {
+    if (hasGiftVideo(gift.name)) {
       setShowGiftPanel(false);
       setSelectedGift(null);
     }
     setGiftQty(1); // Reset qty after send
     // ── "Gift Sent!" flyout — skip when full-screen video animation plays (has its own banner) ──
-    const hasVideoAnim = Boolean(giftAnimationVideos[gift.name]);
+    const hasVideoAnim = Boolean(hasGiftVideo(gift.name));
     if (!hasVideoAnim) {
       const flyoutId = `sent-${Date.now()}`;
       const effectiveTier = Math.max(qty, newCombo * qty);
@@ -2284,7 +2286,7 @@ export default function GoLivePage() {
                           ) : (
                             <span className="text-3xl">{gift.icon}</span>
                           )}
-                          {giftAnimationVideos[gift.name] && (
+                          {hasGiftVideo(gift.name) && (
                             <span className="absolute bottom-0.5 left-0.5 text-[7px] bg-black/50 text-white/80 px-1 py-0.5 rounded-md font-bold backdrop-blur-sm flex items-center"><Clapperboard className="h-2 w-2" /></span>
                           )}
                         </div>

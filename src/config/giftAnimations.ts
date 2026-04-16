@@ -1,86 +1,117 @@
 /**
- * Gift animation video mapping
- * Maps gift names to their full-screen animation videos
- * Sorted low → high by coin value
+ * Gift animation video mapping — LAZY LOADED
+ * Videos are fetched from CDN; this module only resolves URLs on first access.
+ * Maps gift names to their full-screen animation videos.
  */
-// Gifts 45+ coins get video animations
-import fireDragonVid from "@/assets/gifts/animations/fire-dragon.mp4.asset.json";
-import sapphireSwanVid from "@/assets/gifts/animations/sapphire-swan.mp4.asset.json";
-import royalCrownVid from "@/assets/gifts/animations/royal-crown.mp4.asset.json";
-import goldFountainVid from "@/assets/gifts/animations/gold-fountain.mp4.asset.json";
-import emeraldEagleVid from "@/assets/gifts/animations/emerald-eagle.mp4.asset.json";
-import diamondRainVid from "@/assets/gifts/animations/diamond-rain.mp4.asset.json";
-import crystalPegasusVid from "@/assets/gifts/animations/crystal-pegasus.mp4.asset.json";
-import platinumPandaVid from "@/assets/gifts/animations/platinum-panda.mp4.asset.json";
-import luxuryLamboVid from "@/assets/gifts/animations/luxury-lambo.mp4.asset.json";
-import treasureDragonVid from "@/assets/gifts/animations/treasure-dragon.mp4.asset.json";
-import neonRocketVid from "@/assets/gifts/animations/neon-rocket.mp4.asset.json";
-import goldFerrariVid from "@/assets/gifts/animations/gold-ferrari.mp4.asset.json";
-import goldHelicopterVid from "@/assets/gifts/animations/gold-helicopter.mp4.asset.json";
-import rollsRoyceVid from "@/assets/gifts/animations/rolls-royce.mp4.asset.json";
-import blackPantherVid from "@/assets/gifts/animations/black-panther.mp4.asset.json";
-import bugattiVid from "@/assets/gifts/animations/bugatti.mp4.asset.json";
-import diamondDragonVid from "@/assets/gifts/animations/diamond-dragon.mp4.asset.json";
-import luxuryYachtVid from "@/assets/gifts/animations/luxury-yacht.mp4.asset.json";
-import privateIslandVid from "@/assets/gifts/animations/private-island.mp4.asset.json";
-import cosmicDragonVid from "@/assets/gifts/animations/cosmic-dragon.mp4.asset.json";
-import galaxyCrownVid from "@/assets/gifts/animations/galaxy-crown.mp4.asset.json";
-import goldenCastleVid from "@/assets/gifts/animations/golden-castle.mp4.asset.json";
-import diamondThroneVid from "@/assets/gifts/animations/diamond-throne.mp4.asset.json";
-import celestialPhoenixVid from "@/assets/gifts/animations/celestial-phoenix.mp4.asset.json";
 
-export const giftAnimationVideos: Record<string, string> = {
-  // ── Gifts tab ──
-  // Lv.4 — 299 coins
-  "Fire Dragon": fireDragonVid.url,
+// Gift names that have video animations (lightweight sync check)
+export const giftsWithVideo = new Set([
+  "Fire Dragon",
+  "Sapphire Swan", "Royal Crown", "Gold Fountain",
+  "Emerald Eagle", "Diamond Rain", "Crystal Pegasus",
+  "Platinum Panda", "Luxury Lambo", "Treasure Dragon",
+  "Neon Rocket", "Gold Ferrari", "Gold Helicopter", "Rolls Royce",
+  "Black Panther", "Bugatti", "Diamond Dragon", "Luxury Yacht",
+  "Private Island", "Cosmic Dragon", "Galaxy Crown",
+  "Golden Castle", "Diamond Throne", "Celestial Phoenix",
+]);
 
-  // ── Interactive tab ──
-  // Lv.5 — 699 coins
-  "Sapphire Swan": sapphireSwanVid.url,
-  // Lv.5 — 888 coins
-  "Royal Crown": royalCrownVid.url,
-  // Lv.5 — 999 coins
-  "Gold Fountain": goldFountainVid.url,
-  // Lv.6 — 1200 coins
-  "Emerald Eagle": emeraldEagleVid.url,
-  // Lv.6 — 1500 coins
-  "Diamond Rain": diamondRainVid.url,
-  // Lv.6 — 1800 coins
-  "Crystal Pegasus": crystalPegasusVid.url,
-  // Lv.6 — 1999 coins
-  "Platinum Panda": platinumPandaVid.url,
-  // Lv.6 — 2000 coins
-  "Luxury Lambo": luxuryLamboVid.url,
-  // Lv.6 — 2500 coins
-  "Treasure Dragon": treasureDragonVid.url,
-  // Lv.6 — 2800 coins
-  "Neon Rocket": neonRocketVid.url,
-  // Lv.6 — 3000 coins
-  "Gold Ferrari": goldFerrariVid.url,
-  // Lv.6 — 3500 coins
-  "Gold Helicopter": goldHelicopterVid.url,
-  // Lv.7 — 5000 coins
-  "Rolls Royce": rollsRoyceVid.url,
+/** Check if a gift has a video animation (sync, zero-cost) */
+export function hasGiftVideo(name: string): boolean {
+  return giftsWithVideo.has(name);
+}
 
-  // ── Exclusive tab ──
-  // Lv.7 — 4999 coins
-  "Black Panther": blackPantherVid.url,
-  // Lv.7 — 9999 coins
-  "Bugatti": bugattiVid.url,
-  // Lv.8 — 15000 coins
-  "Diamond Dragon": diamondDragonVid.url,
-  // Lv.8 — 19999 coins
-  "Luxury Yacht": luxuryYachtVid.url,
-  // Lv.9 — 29999 coins
-  "Private Island": privateIslandVid.url,
-  // Lv.9 — 35000 coins
-  "Cosmic Dragon": cosmicDragonVid.url,
-  // Lv.9 — 49999 coins
-  "Galaxy Crown": galaxyCrownVid.url,
-  // Lv.10 — 59999 coins
-  "Golden Castle": goldenCastleVid.url,
-  // Lv.10 — 75000 coins
-  "Diamond Throne": diamondThroneVid.url,
-  // Lv.10 — 99999 coins
-  "Celestial Phoenix": celestialPhoenixVid.url,
-};
+// Cached map — populated on first getGiftVideoUrl() call
+let videoMapPromise: Promise<Record<string, string>> | null = null;
+let videoMapCache: Record<string, string> | null = null;
+
+async function loadVideoMap(): Promise<Record<string, string>> {
+  const [
+    fireDragonVid, sapphireSwanVid, royalCrownVid, goldFountainVid,
+    emeraldEagleVid, diamondRainVid, crystalPegasusVid, platinumPandaVid,
+    luxuryLamboVid, treasureDragonVid, neonRocketVid, goldFerrariVid,
+    goldHelicopterVid, rollsRoyceVid, blackPantherVid, bugattiVid,
+    diamondDragonVid, luxuryYachtVid, privateIslandVid, cosmicDragonVid,
+    galaxyCrownVid, goldenCastleVid, diamondThroneVid, celestialPhoenixVid,
+  ] = await Promise.all([
+    import("@/assets/gifts/animations/fire-dragon.mp4.asset.json"),
+    import("@/assets/gifts/animations/sapphire-swan.mp4.asset.json"),
+    import("@/assets/gifts/animations/royal-crown.mp4.asset.json"),
+    import("@/assets/gifts/animations/gold-fountain.mp4.asset.json"),
+    import("@/assets/gifts/animations/emerald-eagle.mp4.asset.json"),
+    import("@/assets/gifts/animations/diamond-rain.mp4.asset.json"),
+    import("@/assets/gifts/animations/crystal-pegasus.mp4.asset.json"),
+    import("@/assets/gifts/animations/platinum-panda.mp4.asset.json"),
+    import("@/assets/gifts/animations/luxury-lambo.mp4.asset.json"),
+    import("@/assets/gifts/animations/treasure-dragon.mp4.asset.json"),
+    import("@/assets/gifts/animations/neon-rocket.mp4.asset.json"),
+    import("@/assets/gifts/animations/gold-ferrari.mp4.asset.json"),
+    import("@/assets/gifts/animations/gold-helicopter.mp4.asset.json"),
+    import("@/assets/gifts/animations/rolls-royce.mp4.asset.json"),
+    import("@/assets/gifts/animations/black-panther.mp4.asset.json"),
+    import("@/assets/gifts/animations/bugatti.mp4.asset.json"),
+    import("@/assets/gifts/animations/diamond-dragon.mp4.asset.json"),
+    import("@/assets/gifts/animations/luxury-yacht.mp4.asset.json"),
+    import("@/assets/gifts/animations/private-island.mp4.asset.json"),
+    import("@/assets/gifts/animations/cosmic-dragon.mp4.asset.json"),
+    import("@/assets/gifts/animations/galaxy-crown.mp4.asset.json"),
+    import("@/assets/gifts/animations/golden-castle.mp4.asset.json"),
+    import("@/assets/gifts/animations/diamond-throne.mp4.asset.json"),
+    import("@/assets/gifts/animations/celestial-phoenix.mp4.asset.json"),
+  ]);
+
+  return {
+    "Fire Dragon": fireDragonVid.default?.url ?? fireDragonVid.url,
+    "Sapphire Swan": sapphireSwanVid.default?.url ?? sapphireSwanVid.url,
+    "Royal Crown": royalCrownVid.default?.url ?? royalCrownVid.url,
+    "Gold Fountain": goldFountainVid.default?.url ?? goldFountainVid.url,
+    "Emerald Eagle": emeraldEagleVid.default?.url ?? emeraldEagleVid.url,
+    "Diamond Rain": diamondRainVid.default?.url ?? diamondRainVid.url,
+    "Crystal Pegasus": crystalPegasusVid.default?.url ?? crystalPegasusVid.url,
+    "Platinum Panda": platinumPandaVid.default?.url ?? platinumPandaVid.url,
+    "Luxury Lambo": luxuryLamboVid.default?.url ?? luxuryLamboVid.url,
+    "Treasure Dragon": treasureDragonVid.default?.url ?? treasureDragonVid.url,
+    "Neon Rocket": neonRocketVid.default?.url ?? neonRocketVid.url,
+    "Gold Ferrari": goldFerrariVid.default?.url ?? goldFerrariVid.url,
+    "Gold Helicopter": goldHelicopterVid.default?.url ?? goldHelicopterVid.url,
+    "Rolls Royce": rollsRoyceVid.default?.url ?? rollsRoyceVid.url,
+    "Black Panther": blackPantherVid.default?.url ?? blackPantherVid.url,
+    "Bugatti": bugattiVid.default?.url ?? bugattiVid.url,
+    "Diamond Dragon": diamondDragonVid.default?.url ?? diamondDragonVid.url,
+    "Luxury Yacht": luxuryYachtVid.default?.url ?? luxuryYachtVid.url,
+    "Private Island": privateIslandVid.default?.url ?? privateIslandVid.url,
+    "Cosmic Dragon": cosmicDragonVid.default?.url ?? cosmicDragonVid.url,
+    "Galaxy Crown": galaxyCrownVid.default?.url ?? galaxyCrownVid.url,
+    "Golden Castle": goldenCastleVid.default?.url ?? goldenCastleVid.url,
+    "Diamond Throne": diamondThroneVid.default?.url ?? diamondThroneVid.url,
+    "Celestial Phoenix": celestialPhoenixVid.default?.url ?? celestialPhoenixVid.url,
+  };
+}
+
+/** Get the video URL for a gift (async, lazy-loads on first call, cached after) */
+export async function getGiftVideoUrl(name: string): Promise<string | undefined> {
+  if (videoMapCache) return videoMapCache[name];
+  if (!videoMapPromise) {
+    videoMapPromise = loadVideoMap().then(map => { videoMapCache = map; return map; });
+  }
+  const map = await videoMapPromise;
+  return map[name];
+}
+
+// Legacy compat — keep the old export name but as a getter that returns cached map or empty
+// This allows existing sync checks like `giftAnimationVideos[name]` to work after preload
+export const giftAnimationVideos: Record<string, string> = new Proxy({} as Record<string, string>, {
+  get(_target, prop: string) {
+    return videoMapCache?.[prop];
+  },
+  has(_target, prop: string) {
+    return giftsWithVideo.has(prop);
+  },
+});
+
+/** Preload the video map (call when entering live stream) */
+export function preloadGiftAnimations(): void {
+  if (!videoMapPromise) {
+    videoMapPromise = loadVideoMap().then(map => { videoMapCache = map; return map; });
+  }
+}

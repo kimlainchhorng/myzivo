@@ -49,7 +49,7 @@ import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
 import CoinRechargeSheet from "@/components/live/CoinRechargeSheet";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import { giftImages } from "@/config/giftIcons";
-import { giftAnimationVideos } from "@/config/giftAnimations";
+import { hasGiftVideo, giftAnimationVideos, preloadGiftAnimations } from "@/config/giftAnimations";
 import { giftCatalog, getLevelColor, getLevelBg, type GiftItem } from "@/config/giftCatalog";
 import { playGiftSound, playPremiumGiftSound, playLegendaryGiftSound } from "@/utils/giftSounds";
 import { ReactionIcon, StreamTopicIcon } from "@/utils/reactionIcons";
@@ -69,6 +69,8 @@ interface LiveStream {
 
 /* ─────────── Watcher Component ─────────── */
 function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => void }) {
+  // Preload gift video URLs in background when entering live stream
+  useEffect(() => { preloadGiftAnimations(); }, []);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; isSystem?: boolean; avatar?: string; level?: number }[]>([
     { id: "sys-1", user: "System", text: `Welcome to ${stream.host_name}'s stream!`, isSystem: true },
@@ -199,7 +201,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           playGiftSound(1, gift.coins);
         }
         // Trigger premium animation for high-value simulated gifts (rare)
-        if (giftAnimationVideos[gift.name] && Math.random() < 0.5) {
+        if (hasGiftVideo(gift.name) && Math.random() < 0.5) {
           enqueueGiftAnim({ name: gift.name, coins: gift.coins, senderName: sender });
           setShowGiftPanel(false);
           setSelectedGift(null);
@@ -328,7 +330,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     }
 
     // Gift-sent flyout — skip when full-screen video animation will play (it has its own banner)
-    const hasVideoAnim = Boolean(giftAnimationVideos[selectedGift.name]);
+    const hasVideoAnim = Boolean(hasGiftVideo(selectedGift.name));
     if (!hasVideoAnim) {
       const flyoutId = `sent-${Date.now()}`;
       const effectiveTier = Math.max(giftQty, newCombo * giftQty);
@@ -339,14 +341,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     // Play sound
     if (selectedGift.coins >= 20000) {
       playLegendaryGiftSound();
-    } else if (giftAnimationVideos[selectedGift.name]) {
+    } else if (hasGiftVideo(selectedGift.name)) {
       playPremiumGiftSound();
     } else {
       playGiftSound(newCombo, selectedGift.coins);
     }
 
     // Trigger premium animation for gifts with video — auto-close panel for immersive experience
-    if (giftAnimationVideos[selectedGift.name]) {
+    if (hasGiftVideo(selectedGift.name)) {
       enqueueGiftAnim({ name: selectedGift.name, coins: totalCoins, senderName: "You", combo: newCombo });
       setShowGiftPanel(false);
       setSelectedGift(null);
@@ -1009,7 +1011,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                       ) : (
                         <span className="text-3xl">{gift.icon}</span>
                       )}
-                      {giftAnimationVideos[gift.name] && (
+                      {hasGiftVideo(gift.name) && (
                         <span className="absolute bottom-0.5 left-0.5 text-[7px] bg-black/50 text-white/80 px-1 py-0.5 rounded-md font-bold backdrop-blur-sm flex items-center"><Clapperboard className="h-2 w-2" /></span>
                       )}
                     </div>
