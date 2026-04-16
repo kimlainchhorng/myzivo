@@ -185,13 +185,15 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
         className="fixed inset-0 z-[99998] pointer-events-auto overflow-hidden"
         onClick={dismiss}
       >
-        {/* Solid dark backdrop to hide stream content behind animation */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: hasVideo ? 0.85 : isPremium ? 0.65 : 0.4 }}
-          transition={{ duration: 0.3 }}
-          className="absolute inset-0 bg-black z-[0]"
-        />
+        {/* Solid dark backdrop — skipped for transparent overrides (no background at all) */}
+        {!transparentOverride && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: hasVideo ? 0.85 : isPremium ? 0.65 : 0.4 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 bg-black z-[0]"
+          />
+        )}
         {/* ── Cinematic backdrop ── */}
         {isPremium && (
           <>
