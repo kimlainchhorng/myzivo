@@ -1164,31 +1164,8 @@ export default function GoLivePage() {
               <Eye className="h-3 w-3 text-white/70" />
               <span className={cn("text-white text-xs font-medium transition-colors", viewerPulse && "text-green-300")}>{viewerCount.toLocaleString()}</span>
             </div>
-            <div className="ml-auto flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setShareCount((p) => p + 1);
-                  if (navigator.share) {
-                    navigator.share({ title: `Watch ${title} live on ZIVO!`, url: window.location.href }).catch(() => {});
-                  } else {
-                    navigator.clipboard?.writeText(window.location.href);
-                    toast.success("Stream link copied!");
-                  }
-                }}
-                className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10"
-              >
-                <Share2 className="h-4 w-4 text-white" />
-              </button>
-              <button
-                onClick={() => setShowChat((p) => !p)}
-                className={cn(
-                  "w-9 h-9 rounded-full backdrop-blur-md flex items-center justify-center border border-white/10",
-                  showChat ? "bg-white/15" : "bg-black/40"
-                )}
-              >
-                <MessageCircle className="h-4 w-4 text-white" />
-              </button>
-            </div>
+            <div className="ml-auto" />
+
           </>
         )}
       </div>
