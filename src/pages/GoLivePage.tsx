@@ -1396,7 +1396,7 @@ export default function GoLivePage() {
 
               {/* Topic chips */}
               <div>
-                <p className="text-zinc-400 text-xs mb-2 font-medium">Topic</p>
+                <p className="text-zinc-400 text-[11px] mb-1.5 font-medium">Topic</p>
                 <div className="flex flex-wrap gap-1.5">
                   {topicConfig.map((t) => (
                     <button
