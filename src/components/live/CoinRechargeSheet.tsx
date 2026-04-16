@@ -12,7 +12,8 @@ interface CoinRechargeSheetProps {
   open: boolean;
   onClose: () => void;
   currentBalance: number;
-  onPurchase: (coins: number) => void;
+  /** Awaitable purchase handler — must add coins to the real wallet (e.g. via the recharge_coins RPC). */
+  onPurchase: (coins: number) => Promise<void> | void;
 }
 
 export default function CoinRechargeSheet({ open, onClose, currentBalance, onPurchase }: CoinRechargeSheetProps) {
@@ -24,15 +25,13 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance, onPur
     setStep("confirm");
   }, []);
 
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = useCallback(async () => {
     if (!selected) return;
     setStep("processing");
-    // Simulate payment processing
-    setTimeout(() => {
-      const totalCoins = selected.coins + (selected.bonus || 0);
-      onPurchase(totalCoins);
+    const totalCoins = selected.coins + (selected.bonus || 0);
+    try {
+      await onPurchase(totalCoins);
       setStep("success");
-      // Auto-close after success
       setTimeout(() => {
         setStep("select");
         setSelected(null);
@@ -40,8 +39,11 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance, onPur
         toast.success(`${totalCoins.toLocaleString()} Z Coins added!`, {
           description: "Your balance has been updated.",
         });
-      }, 1800);
-    }, 1500);
+      }, 1500);
+    } catch (e: any) {
+      setStep("select");
+      toast.error("Purchase failed", { description: e?.message ?? "Please try again." });
+    }
   }, [selected, onPurchase, onClose]);
 
   const handleClose = useCallback(() => {
