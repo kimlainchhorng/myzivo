@@ -1142,15 +1142,17 @@ export default function GoLivePage() {
 
       {/* Top bar */}
       <div className="relative z-10 flex items-center gap-2 px-4 pt-3" style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 12px), 12px)" }}>
-        <button
-          onClick={() => {
-            if (showGiftPanel) { setShowGiftPanel(false); setSelectedGift(null); return; }
-            streamRef.current?.getTracks().forEach((t) => t.stop()); phase === "live" ? setShowEndConfirm(true) : navigate(-1);
-          }}
-          className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10"
-        >
-          {phase === "live" ? <X className="h-5 w-5 text-white" /> : <ArrowLeft className="h-5 w-5 text-white" />}
-        </button>
+        {phase !== "live" && (
+          <button
+            onClick={() => {
+              if (showGiftPanel) { setShowGiftPanel(false); setSelectedGift(null); return; }
+              streamRef.current?.getTracks().forEach((t) => t.stop()); navigate(-1);
+            }}
+            className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10"
+          >
+            <ArrowLeft className="h-5 w-5 text-white" />
+          </button>
+        )}
 
         {phase === "live" && (
           <>
