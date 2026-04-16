@@ -1163,16 +1163,21 @@ export default function GoLivePage() {
             <div
               className="relative flex items-center gap-2.5 rounded-full pl-1 pr-3 py-1 max-w-[60%] overflow-visible"
               style={{
-                background: "linear-gradient(160deg, rgba(110,115,135,0.92) 0%, rgba(72,76,95,0.9) 45%, rgba(45,48,62,0.94) 100%)",
+                background: hostLevel >= 50
+                  ? "linear-gradient(160deg, #fde68a 0%, #f59e0b 30%, #c2410c 65%, #7c2d12 100%)"
+                  : hostLevel >= 20
+                  ? "linear-gradient(160deg, #fecaca 0%, #ef4444 35%, #b91c1c 70%, #5b1212 100%)"
+                  : "linear-gradient(160deg, #fed7aa 0%, #fb923c 30%, #dc2626 65%, #7f1d1d 100%)",
                 boxShadow: [
-                  "inset 0 2px 1px rgba(255,255,255,0.45)",
-                  "inset 0 -2px 1.5px rgba(0,0,0,0.55)",
-                  "inset 1.5px 0 1px rgba(255,255,255,0.12)",
-                  "inset -1.5px 0 1px rgba(0,0,0,0.35)",
-                  "0 8px 22px rgba(0,0,0,0.55)",
+                  "inset 0 2px 1px rgba(255,255,255,0.55)",
+                  "inset 0 -2px 1.5px rgba(0,0,0,0.5)",
+                  "inset 1.5px 0 1px rgba(255,255,255,0.18)",
+                  "inset -1.5px 0 1px rgba(0,0,0,0.3)",
+                  "0 8px 22px rgba(220,38,38,0.45)",
+                  "0 0 18px rgba(251,146,60,0.35)",
                   "0 1px 2px rgba(0,0,0,0.5)",
                 ].join(", "),
-                border: "1px solid rgba(255,255,255,0.18)",
+                border: "1px solid rgba(255,220,150,0.45)",
               }}
             >
               {/* Top glass sheen */}
