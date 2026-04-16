@@ -34,6 +34,26 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
   const isLegendary = activeGift ? activeGift.coins >= 20000 : false;
   const hasVideo = Boolean(videoUrl) && !videoError;
 
+  // Derive color theme from gift name
+  const giftTheme = useMemo(() => {
+    if (!activeGift) return { h: 30, s: 90, name: "gold" }; // default gold
+    const n = activeGift.name.toLowerCase();
+    if (n.includes("dragon") || n.includes("emerald") || n.includes("eagle")) return { h: 145, s: 80, name: "emerald" };
+    if (n.includes("fire") || n.includes("phoenix") || n.includes("ferrari")) return { h: 15, s: 95, name: "fire" };
+    if (n.includes("ice") || n.includes("penguin") || n.includes("crystal") || n.includes("diamond")) return { h: 200, s: 85, name: "ice" };
+    if (n.includes("sapphire") || n.includes("swan") || n.includes("galaxy")) return { h: 225, s: 80, name: "sapphire" };
+    if (n.includes("gold") || n.includes("crown") || n.includes("treasure") || n.includes("castle") || n.includes("throne")) return { h: 42, s: 95, name: "gold" };
+    if (n.includes("neon") || n.includes("rocket")) return { h: 280, s: 85, name: "neon" };
+    if (n.includes("panther") || n.includes("bugatti") || n.includes("lambo") || n.includes("royce") || n.includes("yacht")) return { h: 0, s: 0, name: "luxury" };
+    if (n.includes("panda") || n.includes("platinum")) return { h: 260, s: 30, name: "platinum" };
+    if (n.includes("cosmic") || n.includes("celestial")) return { h: 270, s: 75, name: "cosmic" };
+    if (n.includes("rainbow") || n.includes("butterfly")) return { h: 300, s: 70, name: "rainbow" };
+    if (n.includes("cobra") || n.includes("snake")) return { h: 85, s: 70, name: "venom" };
+    if (n.includes("wolf") || n.includes("shadow")) return { h: 220, s: 20, name: "shadow" };
+    if (n.includes("cat") || n.includes("lucky")) return { h: 50, s: 90, name: "gold" };
+    return { h: 30, s: 90, name: "gold" };
+  }, [activeGift]);
+
   const dismiss = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
