@@ -4,7 +4,7 @@
  */
 import { forwardRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Rss, MapPin, MessageCircle, User, Film, Newspaper } from "lucide-react";
+import { Home, Rss, MapPin, MessageCircle, User, Film, Newspaper, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
