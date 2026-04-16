@@ -1956,18 +1956,8 @@ export default function GoLivePage() {
             )}
           </AnimatePresence>
 
-          {/* Quick reaction bar */}
-          <div className="px-3 pr-[56px] mb-2 flex gap-1 justify-start">
-            {quickReactions.map((r) => (
-              <button
-                key={r.key}
-                onClick={() => sendReaction(r.key)}
-                className="w-8 h-8 rounded-lg bg-black/30 backdrop-blur-md flex items-center justify-center shrink-0 active:scale-75 transition-transform text-sm border border-white/5"
-              >
-                {r.icon}
-              </button>
-            ))}
-          </div>
+          {/* Quick reaction bar removed per request */}
+
 
           {/* Chat messages overlay */}
           {showChat && (
