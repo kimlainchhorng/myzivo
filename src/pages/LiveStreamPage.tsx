@@ -845,7 +845,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         </AnimatePresence>
 
         {/* Messages — improved staggered animations */}
-        <div className="px-3 max-h-[180px] overflow-y-auto scrollbar-hide space-y-[5px] mask-gradient-top flex flex-col">
+        <div className="pl-3 pr-16 max-h-[180px] overflow-y-auto scrollbar-hide space-y-[5px] mask-gradient-top flex flex-col">
           {chatMessages.slice(-8).map((msg, idx) => {
             const isJoin = msg.isSystem && msg.text.includes("joined");
             const isTopFan = topGifters.length > 0 && msg.user === topGifters[0].name;
@@ -940,7 +940,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   />
                 )}
 
-                <div className="relative z-10 flex items-center gap-[6px] px-2.5 py-[5px]">
+                <div className="relative z-10 flex items-start gap-[6px] px-2.5 py-[5px] flex-wrap">
                   {/* Avatar — 3D gradient per tier */}
                   <div className="relative shrink-0">
                     <div
@@ -1020,7 +1020,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   )}
 
                   {/* Message text */}
-                  <span className={cn("text-[10px] min-w-0", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}>
+                  <span className={cn("text-[10px] break-words flex-1 min-w-0 leading-[1.3] self-center", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}>
                     {msg.text}
                   </span>
                 </div>
