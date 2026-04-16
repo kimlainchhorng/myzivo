@@ -185,24 +185,20 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
           </>
         )}
 
-        {/* ── Video animation — full-screen cinematic ── */}
+        {/* ── Video animation — full-screen with blend mode ── */}
         {hasVideo && (
           <motion.div
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: canvasReady ? 1 : 0, scale: 1 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
             className="absolute inset-0 z-[2] flex items-center justify-center"
+            style={{ mixBlendMode: "screen" }}
           >
-            <canvas
-              ref={canvasRef}
-              className="absolute inset-0 w-full h-full"
-              style={{ objectFit: "cover" }}
-            />
             <video
               ref={videoRef}
               src={videoUrl}
               autoPlay muted loop playsInline preload="auto"
-              className="absolute left-0 top-0 h-px w-px opacity-0 pointer-events-none"
+              className="absolute inset-0 w-full h-full object-cover"
               onLoadedData={() => setVideoReady(true)}
               onError={() => setVideoError(true)}
             />
