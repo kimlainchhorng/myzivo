@@ -341,100 +341,181 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
           />
         ))}
 
-        {/* ── Sender banner — premium glassmorphic ── */}
+        {/* ── Sender banner — 3D premium with depth ── */}
         <motion.div
-          initial={{ x: -400, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -400, opacity: 0 }}
-          transition={{ type: "spring", damping: 18, stiffness: 160, delay: 0.15 }}
+          initial={{ x: -400, opacity: 0, rotateY: -15 }}
+          animate={{ x: 0, opacity: 1, rotateY: 0 }}
+          exit={{ x: -400, opacity: 0, rotateY: -15 }}
+          transition={{ type: "spring", damping: 16, stiffness: 140, delay: 0.15 }}
           className="absolute left-0 z-[3]"
-          style={{ top: giftPanelOpen ? "10%" : "22%" }}
+          style={{ top: giftPanelOpen ? "10%" : "22%", perspective: "800px" }}
         >
-          <div
-            className="flex items-center gap-2.5 pl-2.5 pr-8 py-2.5 rounded-r-full"
-            style={{
-              background: isUltra
-                ? "linear-gradient(95deg, rgba(160,60,0,0.97) 0%, rgba(200,110,10,0.9) 20%, rgba(255,160,40,0.65) 55%, transparent 100%)"
-                : isPremium
-                ? "linear-gradient(95deg, rgba(180,80,0,0.95) 0%, rgba(220,130,20,0.85) 25%, rgba(255,170,50,0.55) 60%, transparent 100%)"
-                : "linear-gradient(95deg, rgba(100,70,10,0.9) 0%, rgba(160,110,20,0.75) 30%, rgba(200,150,40,0.45) 65%, transparent 100%)",
-              backdropFilter: "blur(16px)",
-              boxShadow: isUltra
-                ? "0 4px 40px rgba(255,120,0,0.5), 0 0 60px rgba(255,80,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -1px 0 rgba(0,0,0,0.2)"
-                : isPremium
-                ? "0 4px 30px rgba(255,130,0,0.4), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.2)"
-                : "0 4px 20px rgba(255,170,0,0.25), inset 0 1px 0 rgba(255,255,255,0.15)",
-              borderTop: "1px solid rgba(255,220,100,0.25)",
-              borderBottom: "1px solid rgba(100,60,0,0.3)",
-            }}
+          {/* 3D layered card */}
+          <motion.div
+            className="relative"
+            animate={{ y: [0, -2, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            style={{ transformStyle: "preserve-3d" }}
           >
-            {/* Sender avatar */}
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", delay: 0.3, stiffness: 300 }}
-              className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 ring-2 ring-amber-300/40"
+            {/* Back shadow layer for 3D depth */}
+            <div
+              className="absolute inset-0 rounded-r-[28px]"
               style={{
-                background: isUltra
-                  ? "linear-gradient(135deg, #FFD700 0%, #FF8C00 50%, #FF4500 100%)"
-                  : "linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%)",
-                boxShadow: isUltra
-                  ? "0 2px 16px rgba(255,150,0,0.6), 0 0 20px rgba(255,100,0,0.2)"
-                  : "0 2px 10px rgba(255,150,0,0.4)",
+                transform: "translateZ(-8px) translateY(4px)",
+                background: "rgba(0,0,0,0.6)",
+                filter: "blur(12px)",
+              }}
+            />
+
+            {/* Main card body */}
+            <div
+              className="relative flex items-center gap-3 pl-3 pr-10 py-3 rounded-r-[28px] overflow-hidden"
+              style={{
+                background: isLegendary
+                  ? "linear-gradient(110deg, rgba(80,20,0,0.98) 0%, rgba(180,70,0,0.95) 15%, rgba(255,140,20,0.9) 40%, rgba(255,190,60,0.7) 65%, rgba(255,220,100,0.3) 85%, transparent 100%)"
+                  : isUltra
+                  ? "linear-gradient(110deg, rgba(100,30,0,0.97) 0%, rgba(200,90,10,0.92) 20%, rgba(255,150,30,0.8) 50%, rgba(255,180,60,0.5) 75%, transparent 100%)"
+                  : isPremium
+                  ? "linear-gradient(110deg, rgba(120,50,0,0.95) 0%, rgba(200,110,20,0.88) 25%, rgba(255,160,50,0.65) 55%, rgba(255,190,80,0.3) 80%, transparent 100%)"
+                  : "linear-gradient(110deg, rgba(80,50,5,0.92) 0%, rgba(150,100,20,0.8) 30%, rgba(200,150,40,0.5) 65%, transparent 100%)",
+                backdropFilter: "blur(20px) saturate(1.5)",
+                boxShadow: isLegendary
+                  ? "0 8px 50px rgba(255,100,0,0.6), 0 2px 20px rgba(255,60,0,0.3), inset 0 1px 0 rgba(255,255,200,0.5), inset 0 -2px 0 rgba(80,20,0,0.4)"
+                  : isUltra
+                  ? "0 6px 40px rgba(255,120,0,0.5), 0 2px 16px rgba(255,80,0,0.2), inset 0 1px 0 rgba(255,255,180,0.4), inset 0 -2px 0 rgba(80,20,0,0.3)"
+                  : isPremium
+                  ? "0 4px 30px rgba(255,130,0,0.4), inset 0 1px 0 rgba(255,255,150,0.3), inset 0 -1px 0 rgba(60,20,0,0.3)"
+                  : "0 4px 20px rgba(255,170,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)",
+                borderTop: "1px solid rgba(255,230,120,0.35)",
+                borderRight: "1px solid rgba(255,200,80,0.15)",
+                transform: "translateZ(4px)",
               }}
             >
-              {(activeGift.senderName || "S")[0]}
-            </motion.div>
-
-            {/* Mini gift icon overlapping avatar */}
-            {giftImg && (
-              <motion.img
-                src={giftImg}
-                alt=""
-                className="w-9 h-9 object-contain -ml-6 mb-[-12px] relative z-10"
-                initial={{ scale: 0, rotate: -30 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", delay: 0.4, stiffness: 250 }}
-                style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.5))" }}
+              {/* Animated shine sweep */}
+              <motion.div
+                className="absolute inset-0 pointer-events-none"
+                animate={{ x: ["-100%", "200%"] }}
+                transition={{ duration: 3, repeat: Infinity, repeatDelay: 4, ease: "easeInOut" }}
+                style={{
+                  background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 45%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.15) 55%, transparent 60%)",
+                  width: "50%",
+                }}
               />
-            )}
 
-            {/* Text */}
-            <motion.div
-              className="min-w-0"
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.35 }}
-            >
-              <p className="text-white text-[13px] font-bold leading-tight truncate" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.7)" }}>
-                {activeGift.senderName || "Someone"}
-              </p>
-              <p className="text-amber-100/90 text-[11px] font-medium leading-tight">
-                sent <span className="text-white font-semibold">{activeGift.name}</span>
-              </p>
-            </motion.div>
+              {/* Sender avatar — 3D raised */}
+              <motion.div
+                initial={{ scale: 0, rotateZ: -20 }}
+                animate={{ scale: 1, rotateZ: 0 }}
+                transition={{ type: "spring", delay: 0.3, stiffness: 300 }}
+                className="relative shrink-0"
+              >
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  style={{
+                    background: isLegendary
+                      ? "linear-gradient(145deg, #FFE066 0%, #FFB800 30%, #FF6B00 70%, #CC3300 100%)"
+                      : isUltra
+                      ? "linear-gradient(145deg, #FFD700 0%, #FF8C00 50%, #FF4500 100%)"
+                      : "linear-gradient(145deg, #F59E0B 0%, #D97706 50%, #B45309 100%)",
+                    boxShadow: isLegendary
+                      ? "0 4px 20px rgba(255,130,0,0.7), 0 0 30px rgba(255,80,0,0.3), inset 0 -3px 6px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,200,0.5)"
+                      : isUltra
+                      ? "0 3px 16px rgba(255,150,0,0.6), inset 0 -2px 4px rgba(0,0,0,0.25), inset 0 2px 3px rgba(255,255,180,0.4)"
+                      : "0 2px 10px rgba(255,150,0,0.4), inset 0 -2px 4px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,180,0.3)",
+                    border: isLegendary ? "2px solid rgba(255,220,100,0.6)" : "2px solid rgba(255,200,80,0.4)",
+                  }}
+                >
+                  {(activeGift.senderName || "S")[0]}
+                </div>
+                {/* Gift icon overlaid on avatar with 3D pop */}
+                {giftImg && (
+                  <motion.img
+                    src={giftImg}
+                    alt=""
+                    className="absolute -bottom-1 -right-2 w-9 h-9 object-contain z-10"
+                    initial={{ scale: 0, rotate: -30 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", delay: 0.4, stiffness: 250 }}
+                    style={{
+                      filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.6)) drop-shadow(0 0 4px rgba(255,200,0,0.3))",
+                    }}
+                  />
+                )}
+              </motion.div>
 
-            {/* Coin badge */}
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", delay: 0.45, stiffness: 280 }}
-              className="flex items-center gap-0.5 rounded-full px-2.5 py-1 ml-1"
-              style={{
-                background: isUltra
-                  ? "linear-gradient(135deg, rgba(255,150,0,0.5), rgba(255,80,0,0.3))"
-                  : "rgba(0,0,0,0.3)",
-                backdropFilter: "blur(6px)",
-                border: "1px solid rgba(255,200,50,0.3)",
-                boxShadow: isUltra ? "0 0 12px rgba(255,150,0,0.3)" : "none",
-              }}
-            >
-              <img src={goldCoinIcon} alt="" className="w-3.5 h-3.5" />
-              <span className="text-amber-200 text-[12px] font-extrabold" style={{ textShadow: "0 0 6px rgba(255,200,0,0.4)" }}>
-                {activeGift.coins.toLocaleString()}
-              </span>
-            </motion.div>
-          </div>
+              {/* Text content */}
+              <motion.div
+                className="min-w-0 flex-1"
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.35 }}
+              >
+                <p className="text-white text-[14px] font-extrabold leading-tight truncate" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(255,200,0,0.15)" }}>
+                  {activeGift.senderName || "Someone"}
+                </p>
+                <p className="text-amber-100/90 text-[11px] font-semibold leading-tight mt-0.5">
+                  sent <span className="text-white font-bold">{activeGift.name}</span>
+                </p>
+                {/* Duration badge for big gifts */}
+                {activeGift.coins >= 500 && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.6 }}
+                    className="flex items-center gap-1 mt-1"
+                  >
+                    <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-[1px] rounded-full"
+                      style={{
+                        background: activeGift.coins >= 50000
+                          ? "linear-gradient(135deg, #FFD700, #FF4500)"
+                          : activeGift.coins >= 20000
+                          ? "linear-gradient(135deg, #FF8C00, #FF4500)"
+                          : activeGift.coins >= 5000
+                          ? "linear-gradient(135deg, #FFB800, #FF6B00)"
+                          : activeGift.coins >= 1000
+                          ? "linear-gradient(135deg, #F59E0B, #D97706)"
+                          : "linear-gradient(135deg, #A78BFA, #7C3AED)",
+                        color: "white",
+                        boxShadow: "0 1px 6px rgba(255,150,0,0.4)",
+                      }}
+                    >
+                      {activeGift.coins >= 50000 ? "🏆 1 YEAR" :
+                       activeGift.coins >= 20000 ? "💎 3 MONTHS" :
+                       activeGift.coins >= 5000 ? "👑 1 MONTH" :
+                       activeGift.coins >= 1000 ? "⭐ 14 DAYS" : "✨ 7 DAYS"}
+                    </span>
+                  </motion.div>
+                )}
+              </motion.div>
+
+              {/* Coin badge — 3D raised pill */}
+              <motion.div
+                initial={{ scale: 0, rotateZ: 20 }}
+                animate={{ scale: 1, rotateZ: 0 }}
+                transition={{ type: "spring", delay: 0.45, stiffness: 280 }}
+                className="flex items-center gap-1 rounded-full px-3 py-1.5 ml-1 shrink-0"
+                style={{
+                  background: isLegendary
+                    ? "linear-gradient(135deg, rgba(255,180,0,0.6), rgba(255,100,0,0.4))"
+                    : isUltra
+                    ? "linear-gradient(135deg, rgba(255,150,0,0.5), rgba(255,80,0,0.3))"
+                    : "rgba(0,0,0,0.35)",
+                  backdropFilter: "blur(8px)",
+                  border: isLegendary ? "1.5px solid rgba(255,220,80,0.5)" : "1px solid rgba(255,200,50,0.3)",
+                  boxShadow: isLegendary
+                    ? "0 2px 16px rgba(255,150,0,0.5), inset 0 1px 0 rgba(255,255,200,0.3)"
+                    : isUltra
+                    ? "0 2px 12px rgba(255,150,0,0.3), inset 0 1px 0 rgba(255,255,200,0.2)"
+                    : "inset 0 1px 0 rgba(255,255,255,0.1)",
+                }}
+              >
+                <img src={goldCoinIcon} alt="" className="w-4 h-4" style={{ filter: "drop-shadow(0 0 4px rgba(255,200,0,0.5))" }} />
+                <span className="text-amber-100 text-[13px] font-black tabular-nums" style={{ textShadow: "0 0 8px rgba(255,200,0,0.5), 0 1px 4px rgba(0,0,0,0.6)" }}>
+                  {activeGift.coins.toLocaleString()}
+                </span>
+              </motion.div>
+            </div>
+          </motion.div>
         </motion.div>
 
         {/* ── Combo counter ── */}
