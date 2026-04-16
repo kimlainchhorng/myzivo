@@ -1156,46 +1156,94 @@ export default function GoLivePage() {
 
         {phase === "live" && (
           <>
-            {/* Inline host info — 3D glossy pill */}
+            {/* Inline host info — Ultra 3D glossy pill */}
             <div
-              className="flex items-center gap-2 rounded-full pl-1 pr-3 py-1 max-w-[55%] border border-white/15"
+              className="relative flex items-center gap-2 rounded-full pl-1 pr-3 py-1 max-w-[55%] overflow-hidden"
               style={{
-                background: "linear-gradient(145deg, rgba(40,40,55,0.85), rgba(15,15,25,0.75))",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.5), 0 4px 14px rgba(0,0,0,0.45)",
+                background: "linear-gradient(160deg, rgba(55,55,75,0.95) 0%, rgba(28,28,42,0.92) 45%, rgba(10,10,18,0.95) 100%)",
+                boxShadow: [
+                  "inset 0 1.5px 0.5px rgba(255,255,255,0.28)",
+                  "inset 0 -1.5px 1px rgba(0,0,0,0.7)",
+                  "inset 1px 0 1px rgba(255,255,255,0.05)",
+                  "inset -1px 0 1px rgba(0,0,0,0.4)",
+                  "0 6px 18px rgba(0,0,0,0.55)",
+                  "0 1px 2px rgba(0,0,0,0.6)",
+                ].join(", "),
+                border: "1px solid rgba(255,255,255,0.08)",
               }}
             >
-              <div className="relative shrink-0" style={{ filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.5))" }}>
-                {/* 3D avatar */}
+              {/* Top glass sheen across the whole pill */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-full"
+                style={{
+                  background: "linear-gradient(to bottom, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.04) 60%, transparent 100%)",
+                }}
+              />
+              <div className="relative shrink-0 z-10" style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))" }}>
+                {/* 3D avatar — skin-on specular ball */}
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[12px] font-bold relative overflow-hidden"
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[13px] font-extrabold relative overflow-hidden"
                   style={{
-                    background: "radial-gradient(circle at 30% 25%, #ff8a8a, #e11d48 55%, #881337)",
-                    boxShadow: "inset 0 2px 3px rgba(255,255,255,0.4), inset 0 -3px 5px rgba(0,0,0,0.45), 0 2px 6px rgba(225,29,72,0.5)",
+                    background: "radial-gradient(circle at 32% 28%, #ffd0d0 0%, #ff6b8a 28%, #e11d48 60%, #881337 92%)",
+                    boxShadow: [
+                      "inset 0 2.5px 3px rgba(255,255,255,0.55)",
+                      "inset 0 -4px 6px rgba(0,0,0,0.55)",
+                      "inset 3px -2px 5px rgba(136,19,55,0.6)",
+                      "0 3px 8px rgba(225,29,72,0.6)",
+                      "0 1px 2px rgba(0,0,0,0.5)",
+                    ].join(", "),
                   }}
                 >
-                  <span className="relative z-10">{user?.email?.[0]?.toUpperCase() || "Z"}</span>
-                  {/* Glossy highlight */}
+                  <span className="relative z-10" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
+                    {user?.email?.[0]?.toUpperCase() || "Z"}
+                  </span>
+                  {/* Primary specular highlight (skin shine) */}
                   <span
-                    className="absolute top-0 left-1 right-1 h-2/5 rounded-full"
-                    style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.55), rgba(255,255,255,0))" }}
+                    aria-hidden
+                    className="absolute top-[8%] left-[18%] w-[45%] h-[35%] rounded-full"
+                    style={{
+                      background: "radial-gradient(ellipse at center, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.4) 40%, transparent 75%)",
+                      filter: "blur(0.5px)",
+                    }}
+                  />
+                  {/* Secondary tiny highlight */}
+                  <span
+                    aria-hidden
+                    className="absolute top-[20%] left-[55%] w-[15%] h-[12%] rounded-full"
+                    style={{
+                      background: "radial-gradient(circle, rgba(255,255,255,0.85) 0%, transparent 70%)",
+                    }}
+                  />
+                  {/* Bottom rim light bounce */}
+                  <span
+                    aria-hidden
+                    className="absolute bottom-0 left-[15%] right-[15%] h-[20%] rounded-full"
+                    style={{
+                      background: "radial-gradient(ellipse at center top, rgba(255,150,170,0.55) 0%, transparent 70%)",
+                    }}
                   />
                 </div>
-                {/* 3D Level badge */}
+                {/* 3D Level badge — chunkier coin */}
                 <span
                   className={cn(
-                    "absolute -bottom-1 -right-1 text-[8px] font-black px-1.5 py-0 rounded-full border leading-tight",
-                    hostLevel >= 50 ? "text-white border-amber-200/70" :
-                    hostLevel >= 20 ? "text-white border-cyan-200/70" :
-                    "text-white border-white/40"
+                    "absolute -bottom-1.5 -right-1.5 text-[9px] font-black px-1.5 py-[1px] rounded-full leading-tight z-10",
+                    "text-white"
                   )}
                   style={{
                     background: hostLevel >= 50
-                      ? "radial-gradient(circle at 30% 25%, #fde68a, #f59e0b 60%, #b45309)"
+                      ? "radial-gradient(circle at 30% 25%, #fff5cc 0%, #fde047 25%, #f59e0b 60%, #92400e 100%)"
                       : hostLevel >= 20
-                      ? "radial-gradient(circle at 30% 25%, #a5f3fc, #0891b2 60%, #155e75)"
-                      : "radial-gradient(circle at 30% 25%, #f5f5f5, #71717a 60%, #3f3f46)",
-                    boxShadow: "inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -1px 1px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.5)",
-                    textShadow: "0 1px 1px rgba(0,0,0,0.5)",
+                      ? "radial-gradient(circle at 30% 25%, #cffafe 0%, #67e8f9 25%, #0891b2 60%, #0e4a5c 100%)"
+                      : "radial-gradient(circle at 30% 25%, #fafafa 0%, #d4d4d8 25%, #71717a 60%, #27272a 100%)",
+                    boxShadow: [
+                      "inset 0 1.5px 1px rgba(255,255,255,0.7)",
+                      "inset 0 -1.5px 1.5px rgba(0,0,0,0.55)",
+                      "inset 1px 0 0.5px rgba(255,255,255,0.3)",
+                      "0 2px 4px rgba(0,0,0,0.6)",
+                      "0 0 0 1.5px rgba(0,0,0,0.4)",
+                    ].join(", "),
+                    textShadow: "0 1px 1px rgba(0,0,0,0.6), 0 0 2px rgba(0,0,0,0.3)",
                   }}
                 >
                   {hostLevel}
