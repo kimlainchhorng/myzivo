@@ -102,6 +102,9 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const { activeGift: activeGiftAnim, comboCount: giftCombo, enqueue: enqueueGiftAnim, onComplete: onGiftAnimComplete } = useGiftAnimationQueue();
   // ── Coin balance & recharge ──
   const [coinBalance, setCoinBalance] = useState(1250);
+  // ── My level — increases when sending gifts ──
+  const [myLevel, setMyLevel] = useState(1);
+  const [myTotalCoinsGifted, setMyTotalCoinsGifted] = useState(0);
   const [showRechargeSheet, setShowRechargeSheet] = useState(false);
   // ── Combo multiplier text ──
   const [comboMultiplierText, setComboMultiplierText] = useState<{ text: string; id: string } | null>(null);
@@ -254,7 +257,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
 
   const sendChat = useCallback(() => {
     if (!chatInput.trim()) return;
-    setChatMessages(prev => [...prev, { id: Date.now().toString(), user: "You", text: chatInput, level: 5 }]);
+    setChatMessages(prev => [...prev, { id: Date.now().toString(), user: "You", text: chatInput, level: myLevel }]);
     setChatInput("");
   }, [chatInput]);
 
@@ -280,6 +283,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     // Deduct coins
     setCoinBalance(prev => prev - totalCoins);
 
+    // Level up from gifting — every 50 coins gifted = 1 level
+    setMyTotalCoinsGifted(prev => {
+      const newTotal = prev + totalCoins;
+      const newLevel = Math.min(99, Math.floor(newTotal / 50) + 1);
+      setMyLevel(newLevel);
+      return newTotal;
+    });
+
     // Haptic feedback
     try { navigator.vibrate?.(giftQty > 1 ? [50, 30, 50] : [50]); } catch {} // eslint-disable-line no-empty
 
@@ -289,7 +300,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
       user: "You",
       text: giftQty > 1 ? `sent ${selectedGift.name} x${giftQty} (${totalCoins.toLocaleString()} coins)` : `sent ${selectedGift.name} (${selectedGift.coins} coins)`,
       isGift: true,
-      level: 5,
+      level: Math.min(99, Math.floor((myTotalCoinsGifted + totalCoins) / 50) + 1),
     }]);
 
     // Track recent gifts (unique, max 4)
