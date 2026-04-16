@@ -298,9 +298,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
     setChatMessages(prev => [...prev, {
       id: Date.now().toString(),
       user: "You",
-      text: giftQty > 1 ? `sent ${selectedGift.name} x${giftQty} (${totalCoins.toLocaleString()} coins)` : `sent ${selectedGift.name} (${selectedGift.coins} coins)`,
+      text: giftQty > 1 ? `sent ${selectedGift.name} x${giftQty}` : `sent ${selectedGift.name}`,
       isGift: true,
       level: Math.min(99, Math.floor((myTotalCoinsGifted + totalCoins) / 50) + 1),
+      giftIcon: giftImages[selectedGift.name],
     }]);
 
     // Track recent gifts (unique, max 4)
