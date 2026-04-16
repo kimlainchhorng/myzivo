@@ -1159,126 +1159,130 @@ export default function GoLivePage() {
 
         {phase === "live" && (
           <>
-            {/* Inline host info — Ultra 3D glossy pill */}
+            {/* Inline host info — Premium 3D glossy pill */}
             <div
-              className="relative flex items-center gap-2 rounded-full pl-1 pr-3 py-1 max-w-[55%] overflow-hidden"
+              className="relative flex items-center gap-2.5 rounded-full pl-1 pr-3 py-1 max-w-[60%] overflow-visible"
               style={{
-                background: "linear-gradient(160deg, rgba(55,55,75,0.95) 0%, rgba(28,28,42,0.92) 45%, rgba(10,10,18,0.95) 100%)",
+                background: "linear-gradient(160deg, rgba(60,60,80,0.95) 0%, rgba(28,28,42,0.92) 45%, rgba(8,8,16,0.96) 100%)",
                 boxShadow: [
-                  "inset 0 1.5px 0.5px rgba(255,255,255,0.28)",
-                  "inset 0 -1.5px 1px rgba(0,0,0,0.7)",
-                  "inset 1px 0 1px rgba(255,255,255,0.05)",
-                  "inset -1px 0 1px rgba(0,0,0,0.4)",
-                  "0 6px 18px rgba(0,0,0,0.55)",
+                  "inset 0 1.5px 0.5px rgba(255,255,255,0.32)",
+                  "inset 0 -1.5px 1px rgba(0,0,0,0.75)",
+                  "inset 1px 0 1px rgba(255,255,255,0.06)",
+                  "inset -1px 0 1px rgba(0,0,0,0.45)",
+                  "0 8px 22px rgba(0,0,0,0.6)",
                   "0 1px 2px rgba(0,0,0,0.6)",
                 ].join(", "),
-                border: "1px solid rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.10)",
               }}
             >
-              {/* Top glass sheen across the whole pill */}
+              {/* Top glass sheen */}
               <span
                 aria-hidden
-                className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-full"
+                className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-full overflow-hidden"
                 style={{
-                  background: "linear-gradient(to bottom, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.04) 60%, transparent 100%)",
+                  background: "linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.04) 60%, transparent 100%)",
                 }}
               />
-              <div className="relative shrink-0 z-10" style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.6))" }}>
-                {/* 3D avatar — skin-on specular ball */}
+              <div className="relative shrink-0 z-10" style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.65))" }}>
+                {/* 3D avatar — supports real image with skin-on specular */}
                 <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[13px] font-extrabold relative overflow-hidden"
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white text-[14px] font-extrabold relative overflow-hidden ring-1 ring-white/15"
                   style={{
-                    background: "radial-gradient(circle at 32% 28%, #ffd0d0 0%, #ff6b8a 28%, #e11d48 60%, #881337 92%)",
+                    background: userProfile?.avatar_url
+                      ? "transparent"
+                      : "radial-gradient(circle at 32% 28%, #ffd0d0 0%, #ff6b8a 28%, #e11d48 60%, #881337 92%)",
                     boxShadow: [
-                      "inset 0 2.5px 3px rgba(255,255,255,0.55)",
+                      "inset 0 2.5px 3px rgba(255,255,255,0.5)",
                       "inset 0 -4px 6px rgba(0,0,0,0.55)",
-                      "inset 3px -2px 5px rgba(136,19,55,0.6)",
-                      "0 3px 8px rgba(225,29,72,0.6)",
+                      "0 3px 10px rgba(225,29,72,0.5)",
                       "0 1px 2px rgba(0,0,0,0.5)",
                     ].join(", "),
                   }}
                 >
-                  <span className="relative z-10" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
-                    {user?.email?.[0]?.toUpperCase() || "Z"}
-                  </span>
-                  {/* Primary specular highlight (skin shine) */}
+                  {userProfile?.avatar_url ? (
+                    <img src={userProfile.avatar_url} alt={hostDisplayName} className="absolute inset-0 w-full h-full object-cover" />
+                  ) : (
+                    <span className="relative z-10" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
+                      {hostDisplayName?.[0]?.toUpperCase() || "Z"}
+                    </span>
+                  )}
+                  {/* Specular highlights */}
                   <span
                     aria-hidden
-                    className="absolute top-[8%] left-[18%] w-[45%] h-[35%] rounded-full"
+                    className="absolute top-[8%] left-[18%] w-[45%] h-[35%] rounded-full pointer-events-none"
                     style={{
-                      background: "radial-gradient(ellipse at center, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.4) 40%, transparent 75%)",
+                      background: "radial-gradient(ellipse at center, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.3) 40%, transparent 75%)",
                       filter: "blur(0.5px)",
+                      mixBlendMode: "screen",
                     }}
                   />
-                  {/* Secondary tiny highlight */}
                   <span
                     aria-hidden
-                    className="absolute top-[20%] left-[55%] w-[15%] h-[12%] rounded-full"
+                    className="absolute top-[22%] left-[58%] w-[14%] h-[10%] rounded-full pointer-events-none"
                     style={{
-                      background: "radial-gradient(circle, rgba(255,255,255,0.85) 0%, transparent 70%)",
-                    }}
-                  />
-                  {/* Bottom rim light bounce */}
-                  <span
-                    aria-hidden
-                    className="absolute bottom-0 left-[15%] right-[15%] h-[20%] rounded-full"
-                    style={{
-                      background: "radial-gradient(ellipse at center top, rgba(255,150,170,0.55) 0%, transparent 70%)",
+                      background: "radial-gradient(circle, rgba(255,255,255,0.9) 0%, transparent 70%)",
+                      mixBlendMode: "screen",
                     }}
                   />
                 </div>
-                {/* 3D Level coin add-on — chunky pop-out */}
+                {/* Premium 3D LV coin */}
                 <span
-                  className="absolute -bottom-1.5 -right-2 flex items-center gap-0.5 text-[8.5px] font-black px-1.5 py-[2px] rounded-full leading-none z-20 text-white overflow-hidden"
+                  className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-[2px] text-[8.5px] font-black px-1.5 py-[2px] rounded-full leading-none z-20 text-white overflow-hidden whitespace-nowrap"
                   style={{
                     background: hostLevel >= 50
-                      ? "radial-gradient(circle at 30% 22%, #fffbe6 0%, #fde047 22%, #f59e0b 58%, #92400e 100%)"
+                      ? "linear-gradient(180deg, #fffbe6 0%, #fde047 30%, #f59e0b 70%, #92400e 100%)"
                       : hostLevel >= 20
-                      ? "radial-gradient(circle at 30% 22%, #ecfeff 0%, #67e8f9 22%, #0891b2 58%, #0e4a5c 100%)"
-                      : "radial-gradient(circle at 30% 22%, #ffffff 0%, #d4d4d8 22%, #71717a 58%, #27272a 100%)",
+                      ? "linear-gradient(180deg, #ecfeff 0%, #67e8f9 30%, #0891b2 70%, #0e4a5c 100%)"
+                      : "linear-gradient(180deg, #ffffff 0%, #d4d4d8 30%, #71717a 70%, #27272a 100%)",
                     boxShadow: [
-                      "inset 0 1.5px 1.2px rgba(255,255,255,0.85)",
+                      "inset 0 1.5px 1.2px rgba(255,255,255,0.9)",
                       "inset 0 -1.8px 1.5px rgba(0,0,0,0.55)",
-                      "inset 1px 0 0.5px rgba(255,255,255,0.4)",
-                      "inset -1px 0 0.5px rgba(0,0,0,0.3)",
-                      "0 2.5px 5px rgba(0,0,0,0.65)",
-                      "0 0 0 1.5px rgba(0,0,0,0.55)",
-                      "0 0 0 2.5px rgba(255,255,255,0.12)",
+                      "0 2.5px 5px rgba(0,0,0,0.7)",
+                      "0 0 0 1.5px rgba(0,0,0,0.6)",
+                      "0 0 0 2.5px rgba(255,255,255,0.15)",
                     ].join(", "),
-                    textShadow: "0 1px 1px rgba(0,0,0,0.65)",
+                    textShadow: "0 1px 1px rgba(0,0,0,0.7)",
                   }}
                 >
-                  <span className="opacity-80 text-[7px] tracking-tight">LV</span>
+                  <span className="opacity-85 text-[7px] tracking-wide">LV</span>
                   <span>{hostLevel}</span>
-                  {/* glossy top sheen */}
                   <span
                     aria-hidden
                     className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-full"
-                    style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.55), transparent)" }}
+                    style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.6), transparent)" }}
                   />
                 </span>
               </div>
-              <div className="flex-1 min-w-0 leading-tight relative z-10">
+              <div className="flex-1 min-w-0 leading-tight relative z-10 pr-1">
                 <p
-                  className="text-white text-[12.5px] font-extrabold truncate"
-                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.7), 0 0 1px rgba(0,0,0,0.5)" }}
+                  className="text-[13px] font-extrabold truncate tracking-tight"
+                  style={{
+                    background: "linear-gradient(180deg, #ffffff 0%, #e5e7eb 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                    filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.7))",
+                  }}
                 >
                   {hostDisplayName}
                 </p>
-                <div className="flex items-center gap-1.5 text-[9px]">
-                  <span className="text-white/60 truncate" style={{ textShadow: "0 1px 1px rgba(0,0,0,0.5)" }}>
+                <div className="flex items-center gap-1.5 text-[9.5px] mt-0.5">
+                  <span className="text-white/65 truncate" style={{ textShadow: "0 1px 1px rgba(0,0,0,0.5)" }}>
                     {fakeFollowers.current.toLocaleString()} followers
                   </span>
                   {giftsReceived > 0 && (
                     <span
-                      className="flex items-center gap-0.5 shrink-0 font-bold"
+                      className="flex items-center gap-0.5 shrink-0 font-black px-1.5 py-[1px] rounded-full"
                       style={{
+                        background: "linear-gradient(180deg, rgba(253,224,71,0.18), rgba(180,83,9,0.25))",
+                        border: "1px solid rgba(253,224,71,0.35)",
                         color: "#fde68a",
-                        textShadow: "0 1px 2px rgba(180,83,9,0.6)",
+                        textShadow: "0 1px 1px rgba(0,0,0,0.55)",
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 1px 2px rgba(0,0,0,0.4)",
                       }}
                     >
-                      <img src={goldCoinIcon} alt="" className="w-3 h-3" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))" }} />
-                      {coinsEarned}
+                      <img src={goldCoinIcon} alt="" className="w-3 h-3" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.5))" }} />
+                      {coinsEarned.toLocaleString()}
                     </span>
                   )}
                 </div>
