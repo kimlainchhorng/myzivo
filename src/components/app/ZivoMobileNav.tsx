@@ -114,7 +114,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
                   ? "font-semibold text-primary"
                   : "font-medium text-muted-foreground"
               )}>
-                {t(tab.labelKey)}
+                {tab.id === "live" ? "Live" : t(tab.labelKey)}
               </span>
             </button>
           );
