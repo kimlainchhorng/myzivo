@@ -4,14 +4,15 @@
  * Videos auto-play when scrolled into view, pause when scrolled away.
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import UnifiedShareSheet from "@/components/shared/ShareSheet";
+import { lazy, Suspense } from "react";
+const UnifiedShareSheet = lazy(() => import("@/components/shared/ShareSheet"));
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import { useI18n } from "@/hooks/useI18n";
-import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import NavBar from "@/components/home/NavBar";
-import CreatePostModal from "@/components/social/CreatePostModal";
+const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
+const NavBar = lazy(() => import("@/components/home/NavBar"));
+const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Heart from "lucide-react/dist/esm/icons/heart";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
