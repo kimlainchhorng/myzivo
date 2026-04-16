@@ -162,8 +162,10 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
   const comboColor = comboCount >= 10 ? "#FF4500" : comboCount >= 5 ? "#FF6B6B" : "#FFD700";
   const comboScale = 1 + Math.min(comboCount * 0.05, 0.6);
 
-  // Gift size tiers
-  const giftSizeClass = isLegendary
+  // Gift size tiers — transparent overrides render much larger to match video gifts
+  const giftSizeClass = transparentOverride
+    ? "w-[85vw] h-[85vw] max-w-[520px] max-h-[520px]"
+    : isLegendary
     ? "w-44 h-44"
     : isUltra
     ? "w-36 h-36"
