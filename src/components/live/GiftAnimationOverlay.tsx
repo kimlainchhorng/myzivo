@@ -188,8 +188,8 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
         className="fixed inset-0 z-[99998] pointer-events-auto overflow-hidden"
         onClick={dismiss}
       >
-        {/* Solid dark backdrop — skipped for transparent overrides (no background at all) */}
-        {!transparentOverride && (
+        {/* Solid dark backdrop — skipped for transparent overrides and for screen-blend video gifts */}
+        {!transparentOverride && !(activeGift && noBackdropVideoGifts.has(activeGift.name)) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: hasVideo ? 0.85 : isPremium ? 0.65 : 0.4 }}
