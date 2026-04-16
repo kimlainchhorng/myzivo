@@ -1149,7 +1149,8 @@ export default function GoLivePage() {
           <button
             onClick={() => {
               if (showGiftPanel) { setShowGiftPanel(false); setSelectedGift(null); return; }
-              streamRef.current?.getTracks().forEach((t) => t.stop()); navigate(-1);
+              try { streamRef.current?.getTracks().forEach((t) => t.stop()); } catch { /* noop */ }
+              if (window.history.length > 1) navigate(-1); else navigate("/live");
             }}
             className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10"
           >
