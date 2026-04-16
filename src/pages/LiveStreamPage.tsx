@@ -1427,6 +1427,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         currentBalance={coinBalance}
         onPurchase={(coins) => setCoinBalance(prev => prev + coins)}
       />
+      </Suspense>
     </div>
   );
 }
