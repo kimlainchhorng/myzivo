@@ -83,6 +83,8 @@ import { useAuth } from "@/contexts/AuthContext";
 type LivePhase = "setup" | "countdown" | "live" | "ended";
 
 export default function GoLivePage() {
+  // Preload gift video URLs in background
+  useEffect(() => { preloadGiftAnimations(); }, []);
   const navigate = useNavigate();
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);

@@ -69,6 +69,8 @@ interface LiveStream {
 
 /* ─────────── Watcher Component ─────────── */
 function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => void }) {
+  // Preload gift video URLs in background when entering live stream
+  useEffect(() => { preloadGiftAnimations(); }, []);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<{ id: string; user: string; text: string; isGift?: boolean; isSystem?: boolean; avatar?: string; level?: number }[]>([
     { id: "sys-1", user: "System", text: `Welcome to ${stream.host_name}'s stream!`, isSystem: true },
