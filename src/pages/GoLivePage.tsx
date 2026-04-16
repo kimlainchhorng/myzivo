@@ -2729,32 +2729,22 @@ export default function GoLivePage() {
         )}
       </AnimatePresence>
 
-      {/* ── NEW: Top-3 Gifter Mini-Banner (persistent during live) ── */}
+      {/* Top-3 Gifter Mini-Banner — collapsed into a single chip to reduce clutter; tap to open leaderboard */}
       {phase === "live" && showTop3Banner && Object.keys(topGifters).length > 0 && !showLeaderboard && (
-        <div className="fixed left-3 z-40" style={{ top: "calc(env(safe-area-inset-top, 0px) + 170px)" }}>
-          <div
-            className="rounded-xl px-2.5 py-1.5 flex items-center gap-2"
-            style={{
-              background: "linear-gradient(135deg, rgba(40,25,10,0.85) 0%, rgba(60,35,15,0.8) 100%)",
-              backdropFilter: "blur(12px)",
-              border: "1px solid rgba(255,200,80,0.12)",
-            }}
+        <div className="fixed left-3 z-40" style={{ top: "calc(env(safe-area-inset-top, 0px) + 168px)" }}>
+          <button
+            onClick={() => setShowLeaderboard(true)}
+            className="rounded-full px-2 py-1 flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-amber-500/15 active:scale-95 transition-transform"
           >
-            <span className="text-[8px] text-amber-400 font-bold uppercase">Top</span>
+            <Trophy className="h-3 w-3 text-amber-300" />
+            <span className="text-[9px] text-amber-200 font-semibold">Top 3</span>
             {Object.entries(topGifters)
               .sort(([, a], [, b]) => b - a)
-              .slice(0, 3)
-              .map(([name, coins], i) => {
-                const medals = ["#1", "#2", "#3"];
-                return (
-                  <div key={name} className="flex items-center gap-1">
-                    <span className="text-[10px]">{medals[i]}</span>
-                    <span className="text-[9px] text-white/70 font-medium max-w-[40px] truncate">{name}</span>
-                    <span className="text-[8px] text-amber-300 font-bold">{coins}</span>
-                  </div>
-                );
-              })}
-          </div>
+              .slice(0, 1)
+              .map(([name, coins]) => (
+                <span key={name} className="text-[9px] text-white/60">· {name} {coins}</span>
+              ))}
+          </button>
         </div>
       )}
 
