@@ -248,8 +248,8 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
           </motion.div>
         )}
 
-        {/* ── Fallback: icon animation ── */}
-        {!hasVideo && giftImg && (
+        {/* ── Fallback: icon animation (also used for transparent PNG overrides) ── */}
+        {!hasVideo && effectiveGiftImg && (
           <div
             className="absolute inset-0 flex items-center justify-center z-[2]"
             style={{ marginTop: giftPanelOpen ? "-40%" : "-5%" }}
@@ -340,7 +340,7 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
               className="relative z-10"
             >
               <motion.img
-                src={giftImg}
+                src={effectiveGiftImg}
                 alt={activeGift.name}
                 className={`${giftSizeClass} object-contain`}
                 style={{
