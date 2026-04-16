@@ -843,10 +843,24 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         </AnimatePresence>
 
         {/* Messages — improved staggered animations */}
-        <div className="px-3 max-h-[170px] overflow-y-auto scrollbar-hide space-y-1 mask-gradient-top flex flex-col">
+        <div className="px-3 max-h-[170px] overflow-y-auto scrollbar-hide space-y-1.5 mask-gradient-top flex flex-col">
           {chatMessages.slice(-8).map((msg, idx) => {
             const isJoin = msg.isSystem && msg.text.includes("joined");
             const isTopFan = topGifters.length > 0 && msg.user === topGifters[0].name;
+            const lv = msg.level || 0;
+            // Level-driven color system
+            const lvStyle = lv >= 50
+              ? { bg: "from-amber-800/60 via-yellow-900/50 to-orange-900/40", border: "border-amber-400/30", badge: "from-amber-400/50 to-yellow-500/40 text-amber-100 border-amber-300/40", glow: "shadow-amber-500/15" }
+              : lv >= 40
+              ? { bg: "from-rose-900/50 via-red-900/40 to-orange-900/30", border: "border-rose-400/25", badge: "from-rose-400/45 to-pink-500/35 text-rose-100 border-rose-300/35", glow: "shadow-rose-500/10" }
+              : lv >= 30
+              ? { bg: "from-purple-900/50 via-violet-900/40 to-pink-900/30", border: "border-purple-400/25", badge: "from-purple-400/45 to-violet-500/35 text-purple-100 border-purple-300/35", glow: "shadow-purple-500/10" }
+              : lv >= 20
+              ? { bg: "from-blue-900/45 via-cyan-900/35 to-sky-900/25", border: "border-blue-400/20", badge: "from-blue-400/40 to-cyan-500/30 text-blue-100 border-blue-300/30", glow: "shadow-blue-500/8" }
+              : lv >= 10
+              ? { bg: "from-green-900/40 via-emerald-900/30 to-teal-900/20", border: "border-green-400/15", badge: "from-green-400/35 to-emerald-500/25 text-green-200 border-green-400/25", glow: "" }
+              : { bg: "from-slate-800/50 to-zinc-800/40", border: "border-white/5", badge: "from-white/10 to-white/5 text-white/50 border-white/10", glow: "" };
+
             return (
               <motion.div
                 key={msg.id}
@@ -854,39 +868,84 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 animate={{ opacity: 1, x: 0, y: 0 }}
                 transition={{ type: "spring", damping: 22, stiffness: 300, delay: idx * 0.02 }}
                 className={cn(
-                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-2xl max-w-[85%] w-fit",
+                  "flex items-center gap-1.5 px-2.5 py-[6px] rounded-2xl max-w-[88%] w-fit relative overflow-hidden",
                   isJoin ? "bg-green-500/10" :
                   msg.isSystem ? "bg-primary/15" :
-                  msg.isGift ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/20" :
-                  msg.level && msg.level >= 40 ? "bg-gradient-to-r from-amber-900/40 to-yellow-900/20 border border-amber-500/15" :
-                  msg.level && msg.level >= 30 ? "bg-gradient-to-r from-purple-900/40 to-pink-900/20 border border-purple-500/15" :
-                  msg.level && msg.level >= 20 ? "bg-gradient-to-r from-blue-900/40 to-cyan-900/20 border border-blue-500/10" :
-                  msg.level && msg.level >= 10 ? "bg-gradient-to-r from-green-900/30 to-emerald-900/15 border border-green-500/10" :
-                  "bg-black/35 backdrop-blur-sm"
+                  msg.isGift ? "bg-gradient-to-r from-amber-500/25 to-yellow-500/15 border border-amber-500/25" :
+                  `bg-gradient-to-r ${lvStyle.bg} border ${lvStyle.border} ${lvStyle.glow}`
                 )}
+                style={!msg.isSystem && lv >= 20 ? {
+                  boxShadow: `inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.2)`,
+                } : undefined}
               >
+                {/* 3D shine sweep for high levels */}
+                {!msg.isSystem && lv >= 30 && (
+                  <motion.div
+                    className="absolute inset-0 pointer-events-none"
+                    initial={{ x: "-100%" }}
+                    animate={{ x: "200%" }}
+                    transition={{ duration: 2.5, delay: 0.5 + idx * 0.1, repeat: Infinity, repeatDelay: 6, ease: "easeInOut" }}
+                    style={{
+                      background: `linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.06) 45%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 55%, transparent 60%)`,
+                      width: "40%",
+                    }}
+                  />
+                )}
+
+                {/* Avatar */}
                 {!msg.isSystem && (
-                  <div className={cn("h-6 w-6 rounded-full flex items-center justify-center shrink-0", "bg-primary/20")}>
+                  <div className={cn(
+                    "h-6 w-6 rounded-full flex items-center justify-center shrink-0 relative",
+                    lv >= 40 ? "bg-gradient-to-br from-amber-500/40 to-orange-600/30 border border-amber-400/30" :
+                    lv >= 20 ? "bg-gradient-to-br from-blue-500/30 to-purple-500/20 border border-blue-400/20" :
+                    "bg-white/10"
+                  )}
+                  style={lv >= 30 ? { boxShadow: `0 0 8px rgba(255,255,255,0.08)` } : undefined}
+                  >
                     <span className="text-[9px] text-white font-bold">{msg.user[0]}</span>
+                    {/* Level ring glow for 40+ */}
+                    {lv >= 40 && (
+                      <div className="absolute inset-[-2px] rounded-full border border-amber-400/25 animate-pulse" />
+                    )}
                   </div>
                 )}
-                {msg.level && !msg.isSystem && (
-                  <span className={cn(
-                    "text-[8px] font-bold px-1.5 py-0.5 rounded-full shrink-0 border",
-                    msg.level >= 40 ? "bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border-amber-500/30" :
-                    msg.level >= 30 ? "bg-gradient-to-r from-purple-500/40 to-pink-500/30 text-purple-200 border-purple-500/30" :
-                    msg.level >= 20 ? "bg-gradient-to-r from-blue-500/40 to-cyan-500/30 text-blue-200 border-blue-500/30" :
-                    msg.level >= 10 ? "bg-gradient-to-r from-green-500/30 to-emerald-500/20 text-green-300 border-green-500/20" :
-                    "bg-white/10 text-white/50 border-white/10"
-                  )}>
-                    Lv.{msg.level}
+
+                {/* Level badge — 3D pill */}
+                {lv > 0 && !msg.isSystem && (
+                  <span
+                    className={cn(
+                      "text-[8px] font-black px-1.5 py-[2px] rounded-full shrink-0 border bg-gradient-to-r tracking-wide",
+                      lvStyle.badge,
+                    )}
+                    style={{
+                      textShadow: lv >= 20 ? "0 1px 3px rgba(0,0,0,0.5)" : undefined,
+                      boxShadow: lv >= 30 ? `inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.3)` : undefined,
+                    }}
+                  >
+                    Lv.{lv}
                   </span>
                 )}
+
+                {/* Top Fan badge */}
                 {isTopFan && !msg.isSystem && (
-                  <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full shrink-0 bg-gradient-to-r from-amber-500/40 to-yellow-500/30 text-amber-200 border border-amber-500/30 flex items-center gap-0.5"><Star className="h-2 w-2 fill-amber-300 text-amber-300" /> Top Fan</span>
+                  <span className="text-[7px] font-bold px-1.5 py-[2px] rounded-full shrink-0 bg-gradient-to-r from-amber-500/50 to-yellow-500/40 text-amber-100 border border-amber-400/35 flex items-center gap-0.5"
+                    style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15), 0 2px 6px rgba(0,0,0,0.3)" }}
+                  >
+                    <Star className="h-2 w-2 fill-amber-200 text-amber-200" /> Top Fan
+                  </span>
                 )}
-                <span className={cn("text-xs font-medium", msg.isSystem ? "text-white/40 italic" : "text-white/80")}>{msg.user}</span>
-                <span className={cn("text-xs", msg.isGift ? "text-amber-300" : msg.isSystem ? "text-white/30 italic" : "text-white/90")}>{msg.text}</span>
+
+                {/* Gift VIP badge for big spenders */}
+                {!msg.isSystem && !isTopFan && lv >= 50 && (
+                  <span className="text-[7px] font-bold px-1.5 py-[2px] rounded-full shrink-0 bg-gradient-to-r from-red-500/50 to-orange-500/40 text-orange-100 border border-red-400/35 flex items-center gap-0.5"
+                    style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15), 0 2px 6px rgba(0,0,0,0.3)" }}
+                  >
+                    🔥 VIP
+                  </span>
+                )}
+
+                <span className={cn("text-[11px] font-semibold", msg.isSystem ? "text-white/40 italic" : lv >= 40 ? "text-amber-200/90" : "text-white/80")}>{msg.user}</span>
+                <span className={cn("text-[11px]", msg.isGift ? "text-amber-300" : msg.isSystem ? "text-white/30 italic" : "text-white/90")}>{msg.text}</span>
               </motion.div>
             );
           })}
