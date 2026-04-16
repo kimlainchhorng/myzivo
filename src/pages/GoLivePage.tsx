@@ -80,6 +80,7 @@ import { cn } from "@/lib/utils";
 import { giftImages, preloadGiftImages } from "@/config/giftIcons";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 type LivePhase = "setup" | "countdown" | "live" | "ended";
 
@@ -88,6 +89,8 @@ export default function GoLivePage() {
   useEffect(() => { preloadGiftAnimations(); preloadGiftImages(); }, []);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: userProfile } = useUserProfile();
+  const hostDisplayName = userProfile?.full_name || user?.email?.split("@")[0] || "Host";
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -1224,40 +1227,46 @@ export default function GoLivePage() {
                     }}
                   />
                 </div>
-                {/* 3D Level badge — chunkier coin */}
+                {/* 3D Level coin add-on — chunky pop-out */}
                 <span
-                  className={cn(
-                    "absolute -bottom-1.5 -right-1.5 text-[9px] font-black px-1.5 py-[1px] rounded-full leading-tight z-10",
-                    "text-white"
-                  )}
+                  className="absolute -bottom-1.5 -right-2 flex items-center gap-0.5 text-[8.5px] font-black px-1.5 py-[2px] rounded-full leading-none z-20 text-white overflow-hidden"
                   style={{
                     background: hostLevel >= 50
-                      ? "radial-gradient(circle at 30% 25%, #fff5cc 0%, #fde047 25%, #f59e0b 60%, #92400e 100%)"
+                      ? "radial-gradient(circle at 30% 22%, #fffbe6 0%, #fde047 22%, #f59e0b 58%, #92400e 100%)"
                       : hostLevel >= 20
-                      ? "radial-gradient(circle at 30% 25%, #cffafe 0%, #67e8f9 25%, #0891b2 60%, #0e4a5c 100%)"
-                      : "radial-gradient(circle at 30% 25%, #fafafa 0%, #d4d4d8 25%, #71717a 60%, #27272a 100%)",
+                      ? "radial-gradient(circle at 30% 22%, #ecfeff 0%, #67e8f9 22%, #0891b2 58%, #0e4a5c 100%)"
+                      : "radial-gradient(circle at 30% 22%, #ffffff 0%, #d4d4d8 22%, #71717a 58%, #27272a 100%)",
                     boxShadow: [
-                      "inset 0 1.5px 1px rgba(255,255,255,0.7)",
-                      "inset 0 -1.5px 1.5px rgba(0,0,0,0.55)",
-                      "inset 1px 0 0.5px rgba(255,255,255,0.3)",
-                      "0 2px 4px rgba(0,0,0,0.6)",
-                      "0 0 0 1.5px rgba(0,0,0,0.4)",
+                      "inset 0 1.5px 1.2px rgba(255,255,255,0.85)",
+                      "inset 0 -1.8px 1.5px rgba(0,0,0,0.55)",
+                      "inset 1px 0 0.5px rgba(255,255,255,0.4)",
+                      "inset -1px 0 0.5px rgba(0,0,0,0.3)",
+                      "0 2.5px 5px rgba(0,0,0,0.65)",
+                      "0 0 0 1.5px rgba(0,0,0,0.55)",
+                      "0 0 0 2.5px rgba(255,255,255,0.12)",
                     ].join(", "),
-                    textShadow: "0 1px 1px rgba(0,0,0,0.6), 0 0 2px rgba(0,0,0,0.3)",
+                    textShadow: "0 1px 1px rgba(0,0,0,0.65)",
                   }}
                 >
-                  {hostLevel}
+                  <span className="opacity-80 text-[7px] tracking-tight">LV</span>
+                  <span>{hostLevel}</span>
+                  {/* glossy top sheen */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-full"
+                    style={{ background: "linear-gradient(to bottom, rgba(255,255,255,0.55), transparent)" }}
+                  />
                 </span>
               </div>
-              <div className="flex-1 min-w-0 leading-tight">
+              <div className="flex-1 min-w-0 leading-tight relative z-10">
                 <p
-                  className="text-white text-[12px] font-bold truncate"
-                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}
+                  className="text-white text-[12.5px] font-extrabold truncate"
+                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.7), 0 0 1px rgba(0,0,0,0.5)" }}
                 >
-                  {title}
+                  {hostDisplayName}
                 </p>
                 <div className="flex items-center gap-1.5 text-[9px]">
-                  <span className="text-white/55 truncate" style={{ textShadow: "0 1px 1px rgba(0,0,0,0.5)" }}>
+                  <span className="text-white/60 truncate" style={{ textShadow: "0 1px 1px rgba(0,0,0,0.5)" }}>
                     {fakeFollowers.current.toLocaleString()} followers
                   </span>
                   {giftsReceived > 0 && (
