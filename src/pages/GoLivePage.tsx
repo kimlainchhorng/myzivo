@@ -2871,16 +2871,7 @@ export default function GoLivePage() {
         )}
       </AnimatePresence>
 
-      {/* ── NEW v3: Trending Word Indicator ── */}
-      {phase === "live" && trendingWord && (
-        <div className="fixed left-3 z-40 pointer-events-none" style={{ top: "calc(env(safe-area-inset-top, 0px) + 195px)" }}>
-          <div className="flex items-center gap-1 bg-blue-500/20 backdrop-blur-sm rounded-full px-2 py-0.5 border border-blue-500/20">
-            <Flame className="h-2.5 w-2.5 text-orange-400" />
-            <span className="text-[8px] text-blue-300 font-bold uppercase">Trending:</span>
-            <span className="text-[9px] text-white/80 font-semibold">{trendingWord}</span>
-          </div>
-        </div>
-      )}
+      {/* Trending Word Indicator — removed: chat already surfaces hot keywords visually, kept only state for analytics */}
 
       {/* ── NEW: Revenue Mini-Dashboard ── */}
       <AnimatePresence>
