@@ -5,8 +5,9 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useGiftAnimationQueue } from "@/hooks/useGiftAnimationQueue";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
-import GiftAnimationOverlay from "@/components/live/GiftAnimationOverlay";
-import CoinRechargeSheet from "@/components/live/CoinRechargeSheet";
+import { lazy, Suspense } from "react";
+const GiftAnimationOverlay = lazy(() => import("@/components/live/GiftAnimationOverlay"));
+const CoinRechargeSheet = lazy(() => import("@/components/live/CoinRechargeSheet"));
 import { playGiftSound, playPremiumGiftSound, playLegendaryGiftSound } from "@/utils/giftSounds";
 import { hasGiftVideo, giftAnimationVideos, preloadGiftAnimations } from "@/config/giftAnimations";
 import { giftCatalog, getLevelColor, getLevelBg, type GiftItem } from "@/config/giftCatalog";
