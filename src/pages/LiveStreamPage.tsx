@@ -913,20 +913,33 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 initial={{ opacity: 0, x: -24, y: 6 }}
                 animate={{ opacity: 1, x: 0, y: 0 }}
                 transition={{ type: "spring", damping: 24, stiffness: 300, delay: idx * 0.015 }}
-                className={cn(
-                  "relative w-fit max-w-[88%] sm:max-w-[320px] rounded-[18px]",
-                  lv >= 50 || msg.isGift ? "dragon-banner" : lv >= 20 ? "dragon-banner dragon-banner-gold" : lv >= 10 ? "dragon-banner dragon-banner-violet" : ""
-                )}
+                className="relative w-fit max-w-[88%] sm:max-w-[320px] rounded-2xl overflow-hidden backdrop-blur-md"
                 style={{
                   background: msg.isGift
-                    ? "linear-gradient(110deg, rgba(180,120,0,0.5) 0%, rgba(120,60,0,0.35) 50%, rgba(60,30,0,0.2) 100%)"
-                    : tc.bg,
-                  border: `1px solid ${msg.isGift ? "rgba(255,200,50,0.35)" : tc.border}`,
-                  boxShadow: lv >= 30
-                    ? `inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.3)`
+                    ? "linear-gradient(135deg, rgba(255,180,40,0.22) 0%, rgba(120,60,0,0.35) 100%)"
+                    : lv >= 50
+                    ? "linear-gradient(135deg, rgba(255,60,100,0.22) 0%, rgba(60,10,30,0.55) 100%)"
+                    : lv >= 20
+                    ? "linear-gradient(135deg, rgba(255,170,40,0.18) 0%, rgba(70,40,0,0.55) 100%)"
                     : lv >= 10
-                    ? `inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.15)`
-                    : undefined,
+                    ? "linear-gradient(135deg, rgba(140,80,220,0.2) 0%, rgba(40,10,70,0.55) 100%)"
+                    : "linear-gradient(135deg, rgba(60,70,90,0.45) 0%, rgba(20,25,35,0.55) 100%)",
+                  border: msg.isGift
+                    ? "1px solid rgba(255,200,80,0.45)"
+                    : lv >= 50
+                    ? "1px solid rgba(255,90,130,0.45)"
+                    : lv >= 20
+                    ? "1px solid rgba(255,180,60,0.4)"
+                    : lv >= 10
+                    ? "1px solid rgba(170,120,255,0.35)"
+                    : "1px solid rgba(255,255,255,0.08)",
+                  boxShadow: lv >= 50
+                    ? "0 6px 18px rgba(255,40,80,0.25), inset 0 1px 0 rgba(255,255,255,0.12)"
+                    : lv >= 20
+                    ? "0 5px 14px rgba(255,140,0,0.22), inset 0 1px 0 rgba(255,255,255,0.1)"
+                    : lv >= 10
+                    ? "0 4px 12px rgba(120,60,200,0.22), inset 0 1px 0 rgba(255,255,255,0.08)"
+                    : "0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
                 }}
               >
                 {/* Shine sweep for 30+ */}
