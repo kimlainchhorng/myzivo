@@ -34,10 +34,10 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
   const { t } = useI18n();
 
   const tabs: NavTab[] = [
-    { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
+    { id: "live", labelKey: "nav.live", icon: Radio, path: "/live", bg: navAlertsBg, cssVar: "var(--cars)" },
     { id: "reel", labelKey: "nav.feed", icon: Newspaper, path: "/feed", bg: navSearchBg, cssVar: "var(--flights)" },
     { id: "feed", labelKey: "nav.reel", icon: Film, path: "/reels", bg: navSearchBg, cssVar: "var(--flights)" },
-    { id: "live", labelKey: "nav.live", icon: Radio, path: "/live", bg: navAlertsBg, cssVar: "var(--cars)" },
+    { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
     { id: "map", labelKey: "nav.map", icon: MapPin, path: "/store-map", bg: navTripsBg, cssVar: "var(--hotels)" },
     { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: "/chat", bg: navAlertsBg, cssVar: "var(--cars)" },
     { id: "account", labelKey: "nav.account", icon: User, path: "/profile", bg: navAccountBg, cssVar: "var(--primary)" },
