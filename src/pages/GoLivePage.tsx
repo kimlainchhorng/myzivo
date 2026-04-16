@@ -1765,7 +1765,7 @@ export default function GoLivePage() {
           </AnimatePresence>
 
           {/* Side actions — minimal 4-button sidebar like TikTok */}
-          <div className="absolute left-2 bottom-44 flex flex-col gap-2 items-center z-30">
+          <div className="absolute right-2 bottom-44 flex flex-col gap-2 items-center z-30">
             <button onClick={flipCamera} className="w-9 h-9 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
               <RotateCcw className="h-3.5 w-3.5 text-white/60" />
             </button>
