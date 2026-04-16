@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { giftImages, preloadGiftImages } from "@/config/giftIcons";
 import { giftAnimationVideos, preloadGiftAnimations } from "@/config/giftAnimations";
+import { getGiftLevel } from "@/config/giftCatalog";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 
 interface GiftAnimationOverlayProps {
