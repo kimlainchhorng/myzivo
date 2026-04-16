@@ -142,7 +142,7 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
         {/* Solid dark backdrop to hide stream content behind animation */}
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: hasVideo ? 0.92 : isPremium ? 0.65 : 0.4 }}
+          animate={{ opacity: hasVideo ? 0.85 : isPremium ? 0.65 : 0.4 }}
           transition={{ duration: 0.3 }}
           className="absolute inset-0 bg-black z-[0]"
         />
