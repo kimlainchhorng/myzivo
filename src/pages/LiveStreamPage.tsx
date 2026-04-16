@@ -102,6 +102,9 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const { activeGift: activeGiftAnim, comboCount: giftCombo, enqueue: enqueueGiftAnim, onComplete: onGiftAnimComplete } = useGiftAnimationQueue();
   // ── Coin balance & recharge ──
   const [coinBalance, setCoinBalance] = useState(1250);
+  // ── My level — increases when sending gifts ──
+  const [myLevel, setMyLevel] = useState(1);
+  const [myTotalCoinsGifted, setMyTotalCoinsGifted] = useState(0);
   const [showRechargeSheet, setShowRechargeSheet] = useState(false);
   // ── Combo multiplier text ──
   const [comboMultiplierText, setComboMultiplierText] = useState<{ text: string; id: string } | null>(null);
