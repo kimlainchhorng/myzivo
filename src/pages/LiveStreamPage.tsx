@@ -1265,11 +1265,14 @@ export default function LiveStreamPage() {
   const { data: dbStreams = [], isLoading } = useQuery({
     queryKey: ["live-streams"],
     queryFn: async () => {
-      const { data: amaSessions } = await (supabase as any)
+      // Single query — fetch sessions with host profiles in parallel
+      const sessionsPromise = (supabase as any)
         .from("ama_sessions")
         .select("id, host_id, title, topic, viewer_count, question_count, status, starts_at, ends_at, created_at")
         .order("created_at", { ascending: false })
         .limit(30);
+
+      const [{ data: amaSessions }] = await Promise.all([sessionsPromise]);
 
       if (!amaSessions?.length) return [] as LiveStream[];
 
@@ -1304,7 +1307,8 @@ export default function LiveStreamPage() {
         } as LiveStream;
       });
     },
-    staleTime: 15_000,
+    staleTime: 30_000, // 30s cache — streams don't change that fast
+    gcTime: 2 * 60_000,
   });
 
   // Use DB streams if available, otherwise show demos
