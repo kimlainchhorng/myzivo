@@ -49,6 +49,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
     if (path.startsWith("/reels")) return "feed";
     if (path.startsWith("/feed")) return "reel";
     if (path.startsWith("/store-map") || path.startsWith("/map")) return "map";
+    if (path.startsWith("/live") || path.startsWith("/go-live")) return "live";
     if (path.startsWith("/chat")) return "chat";
     if (path.startsWith("/account") || path.startsWith("/profile") || path.startsWith("/user/") || path.startsWith("/more") || path.startsWith("/personal-dashboard") || path.startsWith("/personal/") || path.startsWith("/shop-dashboard")) return "account";
     return "home";
