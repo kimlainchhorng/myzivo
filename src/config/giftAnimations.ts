@@ -4,10 +4,7 @@
  * Sorted low → high by coin value
  */
 // Gifts 45+ coins get video animations
-import shadowWolfVid from "@/assets/gifts/animations/shadow-wolf.mp4.asset.json";
-import goldenPhoenixVid from "@/assets/gifts/animations/golden-phoenix.mp4.asset.json";
 import fireDragonVid from "@/assets/gifts/animations/fire-dragon.mp4.asset.json";
-import pandaPartyVid from "@/assets/gifts/animations/panda-party.mp4.asset.json";
 import sapphireSwanVid from "@/assets/gifts/animations/sapphire-swan.mp4.asset.json";
 import royalCrownVid from "@/assets/gifts/animations/royal-crown.mp4.asset.json";
 import goldFountainVid from "@/assets/gifts/animations/gold-fountain.mp4.asset.json";
@@ -34,16 +31,10 @@ import celestialPhoenixVid from "@/assets/gifts/animations/celestial-phoenix.mp4
 
 export const giftAnimationVideos: Record<string, string> = {
   // ── Gifts tab ──
-  // Lv.2 — 45 coins
-  "Shadow Wolf": shadowWolfVid.url,
-  // Lv.3 — 75 coins
-  "Golden Phoenix": goldenPhoenixVid.url,
   // Lv.4 — 299 coins
   "Fire Dragon": fireDragonVid.url,
 
   // ── Interactive tab ──
-  // Lv.4 — 100 coins
-  "Panda Party": pandaPartyVid.url,
   // Lv.5 — 699 coins
   "Sapphire Swan": sapphireSwanVid.url,
   // Lv.5 — 888 coins
