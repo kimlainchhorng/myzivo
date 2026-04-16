@@ -12,12 +12,11 @@ import blackPantherTransparent from "@/assets/gifts/black-panther-transparent.pn
 
 /**
  * Per-gift transparent PNG override.
- * If a gift name is listed here, we skip its baked-in .mp4 (which has a scenic
- * background) and render the cutout PNG over the live stream instead.
+ * If a gift name is listed here, we skip its baked-in .mp4 and render the cutout
+ * PNG over the live stream instead. Currently empty — Black Panther uses a new
+ * mp4 with a solid black background that composites cleanly via screen blend.
  */
-const transparentGiftOverrides: Record<string, string> = {
-  "Black Panther": blackPantherTransparent,
-};
+const transparentGiftOverrides: Record<string, string> = {};
 
 interface GiftAnimationOverlayProps {
   activeGift: { name: string; coins: number; senderName?: string } | null;
