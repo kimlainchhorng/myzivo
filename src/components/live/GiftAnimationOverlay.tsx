@@ -8,6 +8,16 @@ import { giftImages, preloadGiftImages } from "@/config/giftIcons";
 import { giftAnimationVideos, preloadGiftAnimations } from "@/config/giftAnimations";
 import { getGiftLevel } from "@/config/giftCatalog";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
+import blackPantherTransparent from "@/assets/gifts/black-panther-transparent.png";
+
+/**
+ * Per-gift transparent PNG override.
+ * If a gift name is listed here, we skip its baked-in .mp4 (which has a scenic
+ * background) and render the cutout PNG over the live stream instead.
+ */
+const transparentGiftOverrides: Record<string, string> = {
+  "Black Panther": blackPantherTransparent,
+};
 
 interface GiftAnimationOverlayProps {
   activeGift: { name: string; coins: number; senderName?: string } | null;
@@ -29,7 +39,10 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
   onCompleteRef.current = onComplete;
 
   const giftImg = activeGift ? giftImages[activeGift.name] : undefined;
-  const videoUrl = activeGift ? giftAnimationVideos[activeGift.name] : undefined;
+  const transparentOverride = activeGift ? transparentGiftOverrides[activeGift.name] : undefined;
+  const videoUrl = activeGift && !transparentOverride ? giftAnimationVideos[activeGift.name] : undefined;
+  // When a transparent PNG override exists, route through the icon path using that PNG.
+  const effectiveGiftImg = transparentOverride ?? giftImg;
   const isPremium = activeGift ? activeGift.coins >= 100 : false;
   const isUltra = activeGift ? activeGift.coins >= 5000 : false;
   const isLegendary = activeGift ? activeGift.coins >= 20000 : false;
@@ -235,8 +248,8 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
           </motion.div>
         )}
 
-        {/* ── Fallback: icon animation ── */}
-        {!hasVideo && giftImg && (
+        {/* ── Fallback: icon animation (also used for transparent PNG overrides) ── */}
+        {!hasVideo && effectiveGiftImg && (
           <div
             className="absolute inset-0 flex items-center justify-center z-[2]"
             style={{ marginTop: giftPanelOpen ? "-40%" : "-5%" }}
@@ -327,7 +340,7 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
               className="relative z-10"
             >
               <motion.img
-                src={giftImg}
+                src={effectiveGiftImg}
                 alt={activeGift.name}
                 className={`${giftSizeClass} object-contain`}
                 style={{
