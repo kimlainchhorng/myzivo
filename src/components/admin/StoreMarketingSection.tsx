@@ -501,6 +501,11 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName }:
           )}
         </TabsContent>
 
+        {/* ═══ ADS ═══ */}
+        <TabsContent value="ads" className="space-y-4 mt-4">
+          <StoreAdsManager storeId={storeId} />
+        </TabsContent>
+
         {/* ═══ POSTS ═══ */}
         <TabsContent value="posts" className="space-y-4 mt-4">
           <div className="flex items-center justify-between">
