@@ -1417,7 +1417,7 @@ export default function GoLivePage() {
 
               {/* Hashtags for discovery */}
               <div>
-                <p className="text-zinc-400 text-xs mb-2 font-medium">Hashtags</p>
+                <p className="text-zinc-400 text-[11px] mb-1.5 font-medium">Hashtags</p>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {hashtags.map((tag) => (
                     <span key={tag} className="flex items-center gap-1 bg-blue-500/15 text-blue-300 text-[11px] font-medium rounded-full px-2.5 py-1 border border-blue-500/20">
