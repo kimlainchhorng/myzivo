@@ -225,6 +225,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           text: `sent ${gift.name}`,
           isGift: true,
           level: Math.floor(Math.random() * 20) + 1,
+          giftIcon: giftImages[gift.name],
         }]);
         setTimeout(() => {
           setGiftNotifQueue(prev => prev.filter(n => n.id !== notif.id));
@@ -939,7 +940,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   />
                 )}
 
-                <div className="relative z-10 flex items-center gap-[6px] px-2.5 py-[5px]">
+                <div className="relative z-10 flex items-center gap-[6px] px-2.5 py-[5px] flex-wrap">
                   {/* Avatar — 3D gradient per tier */}
                   <div className="relative shrink-0">
                     <div
@@ -1019,7 +1020,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   )}
 
                   {/* Message text */}
-                  <span className={cn("text-[10px] truncate", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}>
+                  <span className={cn("text-[10px]", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}>
                     {msg.text}
                   </span>
                 </div>
