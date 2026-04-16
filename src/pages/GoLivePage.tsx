@@ -1156,17 +1156,8 @@ export default function GoLivePage() {
 
         {phase === "live" && (
           <>
-            <div className="flex items-center gap-1.5 bg-red-500 rounded-full px-2 py-0.5 shadow-lg shadow-red-500/30 shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-              <span className="text-white text-[10px] font-bold uppercase tracking-wider">Live</span>
-            </div>
-            <div className={cn("flex items-center gap-1 bg-black/40 backdrop-blur-md rounded-full px-2 py-0.5 border border-white/10 transition-all shrink-0", viewerPulse && "scale-110 bg-green-500/20 border-green-500/30")}>
-              <Eye className="h-3 w-3 text-white/70" />
-              <span className={cn("text-white text-[11px] font-medium transition-colors", viewerPulse && "text-green-300")}>{viewerCount.toLocaleString()}</span>
-            </div>
-
-            {/* Inline host info */}
-            <div className="flex-1 min-w-0 flex items-center gap-1.5 bg-black/30 backdrop-blur-md rounded-full pl-1 pr-2.5 py-0.5 border border-white/5">
+            {/* Inline host info — leftmost */}
+            <div className="flex items-center gap-1.5 bg-black/30 backdrop-blur-md rounded-full pl-1 pr-2.5 py-0.5 border border-white/5 max-w-[55%]">
               <div className="relative shrink-0">
                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white text-[10px] font-bold shadow-lg shadow-red-500/20">
                   {user?.email?.[0]?.toUpperCase() || "Z"}
@@ -1191,6 +1182,15 @@ export default function GoLivePage() {
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-red-500 rounded-full px-2 py-0.5 shadow-lg shadow-red-500/30 shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              <span className="text-white text-[10px] font-bold uppercase tracking-wider">Live</span>
+            </div>
+            <div className={cn("flex items-center gap-1 bg-black/40 backdrop-blur-md rounded-full px-2 py-0.5 border border-white/10 transition-all shrink-0", viewerPulse && "scale-110 bg-green-500/20 border-green-500/30")}>
+              <Eye className="h-3 w-3 text-white/70" />
+              <span className={cn("text-white text-[11px] font-medium transition-colors", viewerPulse && "text-green-300")}>{viewerCount.toLocaleString()}</span>
             </div>
           </>
         )}
@@ -1765,7 +1765,7 @@ export default function GoLivePage() {
           </AnimatePresence>
 
           {/* Side actions — minimal 4-button sidebar like TikTok */}
-          <div className="absolute left-2 bottom-44 flex flex-col gap-2 items-center z-30">
+          <div className="absolute right-2 bottom-44 flex flex-col gap-2 items-center z-30">
             <button onClick={flipCamera} className="w-9 h-9 rounded-xl bg-black/30 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform border border-white/5">
               <RotateCcw className="h-3.5 w-3.5 text-white/60" />
             </button>
