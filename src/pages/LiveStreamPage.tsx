@@ -845,7 +845,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
         </AnimatePresence>
 
         {/* Messages — improved staggered animations */}
-        <div className="pl-3 pr-16 max-h-[180px] overflow-y-auto scrollbar-hide space-y-2 mask-gradient-top flex flex-col items-start">
+        <div className="pl-3 pr-16 max-h-[180px] overflow-y-auto scrollbar-hide space-y-2 flex flex-col items-start">
           {chatMessages.slice(-8).map((msg, idx) => {
             const isJoin = msg.isSystem && msg.text.includes("joined");
             const isTopFan = topGifters.length > 0 && msg.user === topGifters[0].name;
@@ -913,7 +913,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 initial={{ opacity: 0, x: -24, y: 6 }}
                 animate={{ opacity: 1, x: 0, y: 0 }}
                 transition={{ type: "spring", damping: 24, stiffness: 300, delay: idx * 0.015 }}
-                className="relative w-fit max-w-[88%] sm:max-w-[320px] rounded-2xl overflow-hidden backdrop-blur-md"
+                className="relative self-start max-w-[88%] sm:max-w-[320px] min-h-[38px] rounded-2xl overflow-hidden backdrop-blur-md"
                 style={{
                   background: msg.isGift
                     ? "linear-gradient(135deg, rgba(255,180,40,0.22) 0%, rgba(120,60,0,0.35) 100%)"
@@ -956,9 +956,9 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   />
                 )}
 
-                <div className="relative z-10 flex items-center gap-2 px-2.5 py-[5px]">
+                <div className="relative z-10 flex items-start gap-2 px-2.5 py-2">
                   {/* Avatar — 3D gradient per tier */}
-                  <div className="relative shrink-0">
+                  <div className="relative shrink-0 pt-[1px]">
                     <div
                       className="h-[22px] w-[22px] rounded-full flex items-center justify-center"
                       style={{
@@ -974,7 +974,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                     )}
                   </div>
 
-                  <div className="min-w-0 flex flex-wrap items-center gap-x-[6px] gap-y-[2px] flex-1">
+                  <div className="min-w-0 max-w-full flex-auto flex flex-wrap items-center content-center gap-x-[6px] gap-y-[3px]">
                     {/* Level badge — 3D dragon-scale floating pill */}
                     <span
                       className={cn(
