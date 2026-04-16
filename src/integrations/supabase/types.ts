@@ -8738,6 +8738,36 @@ export type Database = {
         }
         Relationships: []
       }
+      coin_transactions: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          kind: string
+          metadata: Json | null
+          reference_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          kind: string
+          metadata?: Json | null
+          reference_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          kind?: string
+          metadata?: Json | null
+          reference_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       comment_reactions: {
         Row: {
           comment_id: string
@@ -24683,35 +24713,50 @@ export type Database = {
       }
       live_streams: {
         Row: {
+          coins_earned: number
           created_at: string
           ended_at: string | null
+          gifts_received: number
+          host_avatar: string | null
+          host_name: string | null
           id: string
           like_count: number
           started_at: string
           status: string
           title: string | null
+          topic: string
           user_id: string
           viewer_count: number
         }
         Insert: {
+          coins_earned?: number
           created_at?: string
           ended_at?: string | null
+          gifts_received?: number
+          host_avatar?: string | null
+          host_name?: string | null
           id?: string
           like_count?: number
           started_at?: string
           status?: string
           title?: string | null
+          topic?: string
           user_id: string
           viewer_count?: number
         }
         Update: {
+          coins_earned?: number
           created_at?: string
           ended_at?: string | null
+          gifts_received?: number
+          host_avatar?: string | null
+          host_name?: string | null
           id?: string
           like_count?: number
           started_at?: string
           status?: string
           title?: string | null
+          topic?: string
           user_id?: string
           viewer_count?: number
         }
@@ -48599,6 +48644,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_coin_balances: {
+        Row: {
+          balance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_consent_logs: {
         Row: {
           consent_given: boolean
@@ -55606,6 +55669,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: undefined
       }
+      ensure_coin_balance: { Args: { _user_id: string }; Returns: undefined }
       ensure_job_otp: {
         Args: {
           p_digits?: number
@@ -56308,6 +56372,7 @@ export type Database = {
         Args: { p_referee_id: string; p_referral_code: string }
         Returns: Json
       }
+      recharge_coins: { Args: { amount: number }; Returns: number }
       recommend_driver_positions: {
         Args: { p_tenant_id?: string }
         Returns: number
@@ -56368,6 +56433,17 @@ export type Database = {
       seed_demand_zones: {
         Args: { p_center_lat: number; p_center_lng: number }
         Returns: undefined
+      }
+      send_live_gift: {
+        Args: {
+          p_coins: number
+          p_gift_icon: string
+          p_gift_name: string
+          p_quantity?: number
+          p_stream_id: string
+          p_tier?: string
+        }
+        Returns: Json
       }
       set_customer_phone: { Args: { p_phone_e164: string }; Returns: Json }
       set_driver_phone: { Args: { p_phone_e164: string }; Returns: Json }
