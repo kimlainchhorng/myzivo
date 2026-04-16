@@ -959,19 +959,44 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   </div>
 
                   <div className="min-w-0 flex flex-wrap items-center gap-x-[6px] gap-y-[2px] flex-1">
-                    {/* Level badge — 3D embossed pill */}
+                    {/* Level badge — 3D dragon-scale floating pill */}
                     <span
-                      className="text-[7px] font-black px-[6px] py-[2px] rounded-full shrink-0 tracking-wider"
+                      className={cn(
+                        "relative text-[8px] font-black px-[7px] py-[2px] rounded-full shrink-0 tracking-wider overflow-hidden",
+                        lv >= 50 ? "animate-[float3d_2.4s_ease-in-out_infinite]" : lv >= 20 ? "animate-[float3d_3.2s_ease-in-out_infinite]" : ""
+                      )}
                       style={{
-                        background: msg.isGift ? "linear-gradient(135deg, #FFD700, #FFA500)" : tc.badgeBg,
-                        color: msg.isGift ? "#1a0800" : tc.badgeText,
-                        boxShadow: tc.badgeShadow
-                          ? `${tc.badgeShadow}, inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)`
-                          : "inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.1)",
-                        textShadow: lv >= 20 ? "0 1px 0 rgba(255,255,255,0.2)" : undefined,
+                        background: msg.isGift
+                          ? "linear-gradient(145deg, #FFE066 0%, #FFB300 45%, #C77800 100%)"
+                          : lv >= 50
+                          ? "linear-gradient(145deg, #FF6B6B 0%, #C2185B 50%, #4A0E2A 100%)"
+                          : lv >= 20
+                          ? "linear-gradient(145deg, #FFE066 0%, #FF9500 50%, #8B4500 100%)"
+                          : lv >= 10
+                          ? "linear-gradient(145deg, #B388FF 0%, #6A1B9A 50%, #2A0845 100%)"
+                          : "linear-gradient(145deg, #90A4AE 0%, #455A64 50%, #1C2A30 100%)",
+                        color: "#FFFFFF",
+                        boxShadow: lv >= 50
+                          ? "0 3px 10px rgba(255,40,80,0.55), 0 0 14px rgba(255,80,120,0.4), inset 0 1.5px 0 rgba(255,255,255,0.55), inset 0 -2px 3px rgba(0,0,0,0.45), inset 0 0 0 0.5px rgba(255,220,200,0.3)"
+                          : lv >= 20
+                          ? "0 3px 8px rgba(255,140,0,0.5), 0 0 10px rgba(255,180,0,0.35), inset 0 1.5px 0 rgba(255,255,255,0.5), inset 0 -2px 3px rgba(0,0,0,0.4), inset 0 0 0 0.5px rgba(255,230,150,0.3)"
+                          : lv >= 10
+                          ? "0 2px 6px rgba(120,40,200,0.45), inset 0 1.5px 0 rgba(255,255,255,0.4), inset 0 -1.5px 2px rgba(0,0,0,0.35)"
+                          : "0 1.5px 4px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -1px 2px rgba(0,0,0,0.3)",
+                        textShadow: "0 1px 1.5px rgba(0,0,0,0.55), 0 0 4px rgba(255,255,255,0.2)",
+                        transform: "perspective(40px) translateZ(0)",
                       }}
                     >
-                      Lv.{lv || 1}
+                      {/* Specular highlight sweep */}
+                      <span
+                        aria-hidden
+                        className="absolute inset-0 rounded-full pointer-events-none"
+                        style={{
+                          background: "linear-gradient(160deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.05) 35%, transparent 55%)",
+                          mixBlendMode: "overlay",
+                        }}
+                      />
+                      <span className="relative">Lv.{lv || 1}</span>
                     </span>
 
                     {/* Top Fan / VIP badges */}
