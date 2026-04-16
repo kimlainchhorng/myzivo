@@ -913,7 +913,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                 initial={{ opacity: 0, x: -24, y: 6 }}
                 animate={{ opacity: 1, x: 0, y: 0 }}
                 transition={{ type: "spring", damping: 24, stiffness: 300, delay: idx * 0.015 }}
-                className="relative w-fit max-w-[88%] sm:max-w-[320px] rounded-[18px]"
+                className={cn(
+                  "relative w-fit max-w-[88%] sm:max-w-[320px] rounded-[18px]",
+                  lv >= 50 || msg.isGift ? "dragon-banner" : lv >= 20 ? "dragon-banner dragon-banner-gold" : lv >= 10 ? "dragon-banner dragon-banner-violet" : ""
+                )}
                 style={{
                   background: msg.isGift
                     ? "linear-gradient(110deg, rgba(180,120,0,0.5) 0%, rgba(120,60,0,0.35) 50%, rgba(60,30,0,0.2) 100%)"
