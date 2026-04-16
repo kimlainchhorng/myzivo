@@ -1366,8 +1366,8 @@ export default function GoLivePage() {
 
       {/* Setup form */}
       {phase === "setup" && (
-        <div className="relative z-10 flex-1 flex flex-col justify-end p-4 pb-6 space-y-3">
-          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.25 }} className="space-y-3">
+        <div className="relative z-10 flex-1 min-h-0 flex flex-col p-3 pb-4 overflow-y-auto overscroll-contain">
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.25 }} className="mt-auto space-y-2.5">
             {/* Stream setup card */}
             <div className="bg-zinc-900/90 backdrop-blur-xl rounded-3xl p-4 space-y-4 border border-white/10 shadow-2xl shadow-black/50">
               <div className="flex items-center gap-2.5">
