@@ -82,7 +82,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
                 "flex flex-col items-center justify-center flex-1 gap-0.5 transition-colors duration-200 touch-manipulation active:scale-90 relative min-w-[44px] min-h-[44px]",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
-              aria-label={t(tab.labelKey)}
+              aria-label={tab.id === "live" ? "Live" : t(tab.labelKey)}
               aria-current={isActive ? "page" : undefined}
             >
               <div className="relative flex items-center justify-center">
