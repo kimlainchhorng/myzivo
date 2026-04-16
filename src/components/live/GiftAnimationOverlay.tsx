@@ -62,6 +62,17 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
     onCompleteRef.current();
   }, []);
 
+  // Mini sparkle trails for the banner gift icon
+  const bannerTrails = useMemo(() =>
+    Array.from({ length: 6 }, (_, i) => ({
+      id: i,
+      delay: i * 0.15,
+      x: -(12 + i * 8),
+      y: -4 + Math.sin(i * 1.2) * 6,
+      size: 3 + Math.random() * 3,
+    })),
+  [animKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Sparkle particles — more for expensive gifts
   const particleCount = isLegendary ? 24 : isUltra ? 18 : isPremium ? 14 : 10;
   const sparkles = useMemo(() =>
