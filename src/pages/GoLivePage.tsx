@@ -1387,7 +1387,7 @@ export default function GoLivePage() {
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Give your stream a title..."
                   maxLength={100}
-                  className="bg-zinc-800/80 border-zinc-700/50 text-white placeholder:text-zinc-500 text-sm rounded-xl h-11 pl-4 pr-12 focus:border-red-500/50 focus:ring-red-500/20"
+                  className="bg-zinc-800/80 border-zinc-700/50 text-white placeholder:text-zinc-500 text-sm rounded-xl h-9 pl-3.5 pr-12 focus:border-red-500/50 focus:ring-red-500/20"
                 />
                 {title.length > 0 && (
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px]">{title.length}/100</span>
