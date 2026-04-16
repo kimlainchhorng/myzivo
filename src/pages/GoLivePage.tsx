@@ -1271,16 +1271,16 @@ export default function GoLivePage() {
                     {fakeFollowers.current.toLocaleString()} followers
                   </span>
                   <span
-                    className="flex items-center gap-1 shrink-0 font-black px-2 py-[2px] rounded-full text-[10px]"
+                    className="flex items-center gap-1 shrink-0 font-black px-2 py-[2.5px] rounded-full text-[10.5px]"
                     style={{
-                      background: "linear-gradient(180deg, rgba(40,30,15,0.85), rgba(20,12,5,0.95))",
-                      border: "1.5px solid rgba(251,191,36,0.55)",
-                      color: "#fde68a",
-                      textShadow: "0 1px 1px rgba(0,0,0,0.7)",
-                      boxShadow: "inset 0 1px 0.5px rgba(255,255,255,0.18), inset 0 -1px 0.5px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.5)",
+                      background: "linear-gradient(180deg, #fde68a 0%, #fbbf24 35%, #d97706 75%, #92400e 100%)",
+                      border: "1.5px solid rgba(120,53,15,0.85)",
+                      color: "#3b1f05",
+                      textShadow: "0 1px 0.5px rgba(255,240,180,0.7)",
+                      boxShadow: "inset 0 1.5px 1px rgba(255,255,255,0.85), inset 0 -1.5px 1.5px rgba(120,53,15,0.65), 0 2px 5px rgba(0,0,0,0.55), 0 0 0 1.5px rgba(0,0,0,0.55)",
                     }}
                   >
-                    <img src={goldCoinIcon} alt="" className="w-3.5 h-3.5" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.6))" }} />
+                    <img src={goldCoinIcon} alt="" className="w-3.5 h-3.5" style={{ filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.5))" }} />
                     {coinsEarned.toLocaleString()}
                   </span>
                 </div>
