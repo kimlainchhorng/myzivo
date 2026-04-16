@@ -1019,7 +1019,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
                   )}
 
                   {/* Message text */}
-                  <span className={cn("text-[10px] truncate", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}>
+                  <span className={cn("text-[10px]", msg.isGift ? "text-amber-200 font-medium" : "text-white/85")}>
                     {msg.text}
                   </span>
                 </div>
