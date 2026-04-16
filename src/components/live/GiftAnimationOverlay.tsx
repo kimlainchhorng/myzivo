@@ -8,15 +8,17 @@ import { giftImages, preloadGiftImages } from "@/config/giftIcons";
 import { giftAnimationVideos, preloadGiftAnimations } from "@/config/giftAnimations";
 import { getGiftLevel } from "@/config/giftCatalog";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
+import blackPantherTransparent from "@/assets/gifts/black-panther-transparent.png";
 
 
 /**
  * Per-gift transparent PNG override.
  * If a gift name is listed here, we skip its baked-in .mp4 and render the cutout
- * PNG over the live stream instead. Currently empty — Black Panther uses a new
- * mp4 with a solid black background that composites cleanly via screen blend.
+ * PNG over the live stream — no background of any kind.
  */
-const transparentGiftOverrides: Record<string, string> = {};
+const transparentGiftOverrides: Record<string, string> = {
+  "Black Panther": blackPantherTransparent,
+};
 
 interface GiftAnimationOverlayProps {
   activeGift: { name: string; coins: number; senderName?: string } | null;
@@ -183,13 +185,15 @@ function GiftAnimationOverlay({ activeGift, onComplete, giftPanelOpen, comboCoun
         className="fixed inset-0 z-[99998] pointer-events-auto overflow-hidden"
         onClick={dismiss}
       >
-        {/* Solid dark backdrop to hide stream content behind animation */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: hasVideo ? 0.85 : isPremium ? 0.65 : 0.4 }}
-          transition={{ duration: 0.3 }}
-          className="absolute inset-0 bg-black z-[0]"
-        />
+        {/* Solid dark backdrop — skipped for transparent overrides (no background at all) */}
+        {!transparentOverride && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: hasVideo ? 0.85 : isPremium ? 0.65 : 0.4 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 bg-black z-[0]"
+          />
+        )}
         {/* ── Cinematic backdrop ── */}
         {isPremium && (
           <>
