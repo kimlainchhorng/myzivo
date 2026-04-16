@@ -1463,8 +1463,8 @@ export default function GoLivePage() {
               </div>
 
               {/* Settings toggles — separated row with divider */}
-              <div className="border-t border-white/5 pt-3">
-                <div className="flex items-center gap-2">
+              <div className="border-t border-white/5 pt-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <button
                     onClick={() => setBeautyMode((p) => !p)}
                     className={cn(
