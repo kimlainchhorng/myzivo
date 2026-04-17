@@ -84,11 +84,11 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
               </div>
             </div>
             <Button
-              onClick={() => setShowLivePanel((v) => !v)}
+              onClick={() => (showLivePanel ? setShowLivePanel(false) : openStudio())}
               className="gap-2 shrink-0 h-12 sm:h-10 w-full sm:w-auto rounded-xl text-sm font-semibold touch-manipulation active:scale-[0.98]"
             >
               <Video className="w-4 h-4" />
-              {showLivePanel ? "Hide Studio" : "Go Live Now"}
+              {showLivePanel ? "Hide Studio" : studioMounted ? "Show Studio" : "Go Live Now"}
             </Button>
           </CardContent>
         </Card>
