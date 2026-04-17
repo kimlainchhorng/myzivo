@@ -194,6 +194,15 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
                   <Button
                     variant="ghost"
                     size="icon"
+                    onClick={() => setShowQrDialog(true)}
+                    title="Continue on phone"
+                    className="h-8 w-8"
+                  >
+                    <QrCode className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => navigate("/go-live")}
                     title="Open full screen"
                     className="h-8 w-8"
