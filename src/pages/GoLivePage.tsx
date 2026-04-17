@@ -313,17 +313,34 @@ export default function GoLivePage() {
       }
     };
 
+    let answered = false;
     unsub = subscribeSignals(streamId, "publisher", async (row) => {
       if (!pc || !alive) return;
       try {
         if (row.type === "join") {
+          // Ignore duplicate joins once we already have a local offer pending
+          // an answer — re-creating offers thrashes ICE and prevents connect.
+          if (pc.signalingState !== "stable" && !answered) {
+            console.log("[publisher] ignoring re-join, negotiation in progress");
+            return;
+          }
+          if (answered && pc.connectionState === "connected") {
+            console.log("[publisher] ignoring re-join, already connected");
+            return;
+          }
+          answered = false;
           console.log("[publisher] viewer joined, creating offer for stream", streamId);
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
           await sendSignal(streamId, "publisher", "viewer", "offer", { type: offer.type, sdp: offer.sdp });
           console.log("[publisher] offer sent");
         } else if (row.type === "answer") {
+          if (pc.signalingState !== "have-local-offer") {
+            console.log("[publisher] ignoring answer, state=", pc.signalingState);
+            return;
+          }
           await pc.setRemoteDescription(new RTCSessionDescription(row.payload));
+          answered = true;
         } else if (row.type === "ice" && row.payload) {
           try { await pc.addIceCandidate(new RTCIceCandidate(row.payload)); } catch {}
         }

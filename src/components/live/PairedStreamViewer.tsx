@@ -198,11 +198,15 @@ export default function PairedStreamViewer({
     }
 
     sendSignal(streamId, "viewer", "publisher", "join", {});
+    // Retry join only while we have NOT yet received an offer (no remote desc).
+    // Once negotiation has started, retrying would force the publisher to
+    // re-create the offer and thrash ICE — never reaching "connected".
     const joinRetry = setInterval(() => {
-      if (active && pc.connectionState !== "connected") {
-        sendSignal(streamId, "viewer", "publisher", "join", {});
-      }
-    }, 1500);
+      if (!active) return;
+      if (pc.remoteDescription) return; // offer already received
+      if (pc.connectionState === "connected") return;
+      sendSignal(streamId, "viewer", "publisher", "join", {});
+    }, 2000);
 
     return () => {
       active = false;
