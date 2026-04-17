@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RemoteConfigProvider } from "@/contexts/RemoteConfigContext";
@@ -384,6 +384,7 @@ const BusinessAccountPage = lazy(() => import("./pages/business/BusinessAccountP
 const PartnerAuditDocs = lazy(() => import("./pages/business/PartnerAuditDocs"));
 const EnterpriseReady = lazy(() => import("./pages/business/EnterpriseReady"));
 const PartnerWithZivo = lazy(() => import("./pages/business/PartnerWithZivo"));
+const PartnerOnboarding = lazy(() => import("./pages/business/PartnerOnboarding"));
 const PartnerLogin = lazy(() => import("./pages/PartnerLogin"));
 const CorporateTravel = lazy(() => import("./pages/business/CorporateTravel"));
 const DataInsights = lazy(() => import("./pages/business/DataInsights"));
@@ -479,6 +480,12 @@ const GeofenceBootstrap = lazy(() => import("@/hooks/useGeofenceNotifications").
   function GeofenceComp() { m.useGeofenceNotifications(); return null; }
   return { default: GeofenceComp };
 }));
+
+/** Routes /partner-with-zivo: with ?type= → onboarding wizard, otherwise landing page */
+const PartnerOnboardingDispatcher = () => {
+  const [params] = useSearchParams();
+  return params.get("type") ? <PartnerOnboarding /> : <PartnerWithZivo />;
+};
 
 const App = () => (
   <ErrorBoundary>
@@ -874,7 +881,7 @@ const App = () => (
                 <Route path="/security/vulnerability-disclosure" element={<VulnerabilityDisclosure />} />
 
                 {/* Business */}
-                <Route path="/partner-with-zivo" element={<PartnerWithZivo />} />
+                <Route path="/partner-with-zivo" element={<PartnerOnboardingDispatcher />} />
                 <Route path="/partner-login" element={<PartnerLogin />} />
                 <Route path="/partners" element={<PartnerWithZivo />} />
                 <Route path="/business" element={<BusinessLandingPage />} />
