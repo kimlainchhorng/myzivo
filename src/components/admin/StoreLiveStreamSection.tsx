@@ -292,6 +292,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   });
 
   const liveNow = streams?.filter((s) => s.status === "live") ?? [];
+  const activeLiveStreamId = liveNow[0]?.id ?? null;
   const past = streams?.filter((s) => s.status !== "live") ?? [];
 
   const totalViews = streams?.reduce((sum, s) => sum + (s.viewer_count ?? 0), 0) ?? 0;
@@ -441,9 +442,11 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
                         <div className="w-full h-full" style={{ containerType: "size" }}>
                           {(pairStatus === "confirmed" || liveNow.length > 0) && storeOwnerId ? (
                             <PairedStreamViewer
+                              key={activeLiveStreamId ?? pairSessionId ?? "paired-stream-viewer"}
                               storeOwnerId={storeOwnerId}
                               storeName={storeMeta?.name ?? storeName ?? null}
                               storeAvatarUrl={storeMeta?.avatar_url ?? null}
+                              streamIdHint={activeLiveStreamId}
                             />
                           ) : (
                             <GoLivePage />
