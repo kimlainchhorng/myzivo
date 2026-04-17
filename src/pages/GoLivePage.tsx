@@ -42,6 +42,15 @@ import { supabase, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/integrations
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useCoinBalance } from "@/hooks/useCoinBalance";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { optimizeAvatar } from "@/utils/optimizeAvatar";
+import {
+  getPairedIdentity,
+  getPairToken,
+  getPairedSessionByToken,
+  clearPairedIdentity,
+  type PairedIdentity,
+} from "@/lib/livePairing";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 
 const CoinRechargeSheet = lazy(() => import("@/components/live/CoinRechargeSheet"));
@@ -66,7 +75,44 @@ export default function GoLivePage() {
   const { user } = useAuth();
   const { data: userProfile } = useUserProfile();
   const { balance: coinBalance, recharge } = useCoinBalance();
-  const hostDisplayName = userProfile?.full_name || user?.email?.split("@")[0] || "Host";
+
+  // Paired-device mode: phone confirmed via QR can broadcast as the store without sign-in.
+  const [paired, setPaired] = useState<PairedIdentity | null>(() => getPairedIdentity());
+  const [pairToken, setPairTokenState] = useState<string | null>(() => getPairToken());
+  const isPaired = !!paired && !!pairToken;
+
+  // Re-validate pair token on mount; clear it if revoked / expired
+  useEffect(() => {
+    if (!pairToken) return;
+    let alive = true;
+    (async () => {
+      try {
+        const sess = await getPairedSessionByToken(pairToken);
+        if (!alive) return;
+        if (!sess) {
+          clearPairedIdentity();
+          setPaired(null);
+          setPairTokenState(null);
+          return;
+        }
+        // Refresh stored identity (avatar/name may have changed)
+        setPaired((prev) => prev ? { ...prev, store_name: sess.store_name, store_avatar_url: sess.store_avatar_url } : prev);
+      } catch {
+        clearPairedIdentity();
+        setPaired(null);
+        setPairTokenState(null);
+        toast.error("Pairing expired. Please scan the QR again.");
+      }
+    })();
+    return () => { alive = false; };
+  }, [pairToken]);
+
+  const hostDisplayName = isPaired
+    ? (paired?.store_name || "Live Shop")
+    : (userProfile?.full_name || user?.email?.split("@")[0] || "Host");
+  const hostAvatarUrl = isPaired
+    ? paired?.store_avatar_url ?? null
+    : userProfile?.avatar_url ?? null;
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -124,9 +170,9 @@ export default function GoLivePage() {
 
   const flipCamera = useCallback(() => setFacingMode((p) => (p === "user" ? "environment" : "user")), []);
 
-  // ── Go live: create live_streams row ──
+  // ── Go live: create live_streams row (or call edge function in paired mode) ──
   const goLive = useCallback(async () => {
-    if (!user?.id) { toast.error("Please sign in"); return; }
+    if (!user?.id && !isPaired) { toast.error("Please sign in or pair this device"); return; }
     const streamTitle = title.trim() || "My Live Stream";
     setTitle(streamTitle);
     setPhase("countdown");
@@ -136,32 +182,52 @@ export default function GoLivePage() {
       c -= 1;
       if (c <= 0) {
         clearInterval(iv);
-        const { data, error } = await (supabase as any)
-          .from("live_streams")
-          .insert({
-            user_id: user.id,
-            title: streamTitle,
-            topic,
-            host_name: hostDisplayName,
-            host_avatar: userProfile?.avatar_url ?? null,
-            status: "live",
-            started_at: new Date().toISOString(),
-          })
-          .select("id")
-          .single();
-        if (error) {
-          toast.error("Failed to start", { description: error.message });
+        try {
+          let newStreamId: string | null = null;
+
+          if (isPaired && pairToken) {
+            // Paired-device flow: edge function authorizes via pair token
+            const { data, error } = await supabase.functions.invoke("pair-go-live", {
+              body: {
+                pair_token: pairToken,
+                action: "start",
+                payload: { title: streamTitle, topic },
+              },
+            });
+            if (error) throw error;
+            if ((data as any)?.error) throw new Error((data as any).error);
+            newStreamId = (data as any)?.stream_id ?? null;
+          } else {
+            const { data, error } = await (supabase as any)
+              .from("live_streams")
+              .insert({
+                user_id: user!.id,
+                title: streamTitle,
+                topic,
+                host_name: hostDisplayName,
+                host_avatar: hostAvatarUrl,
+                status: "live",
+                started_at: new Date().toISOString(),
+              })
+              .select("id")
+              .single();
+            if (error) throw error;
+            newStreamId = data.id;
+          }
+
+          if (!newStreamId) throw new Error("No stream id returned");
+          setStreamId(newStreamId);
+          setPhase("live");
+          toast.success("You're live!");
+        } catch (e: any) {
+          toast.error("Failed to start", { description: e?.message ?? String(e) });
           setPhase("setup");
-          return;
         }
-        setStreamId(data.id);
-        setPhase("live");
-        toast.success("You're live!");
       } else {
         setCountdown(c);
       }
     }, 1000);
-  }, [title, topic, user?.id, hostDisplayName, userProfile?.avatar_url]);
+  }, [title, topic, user, isPaired, pairToken, hostDisplayName, hostAvatarUrl]);
 
   // ── Realtime subscriptions for the active stream ──
   useEffect(() => {
@@ -242,6 +308,14 @@ export default function GoLivePage() {
     const endedAt = new Date().toISOString();
 
     try {
+      // Paired-device flow: end via edge function
+      if (isPaired && pairToken && !options?.keepalive) {
+        await supabase.functions.invoke("pair-go-live", {
+          body: { pair_token: pairToken, action: "end", stream_id: streamId },
+        });
+        return;
+      }
+
       if (options?.keepalive) {
         const { data: sessionData } = await supabase.auth.getSession();
         const accessToken = sessionData.session?.access_token;
@@ -269,7 +343,7 @@ export default function GoLivePage() {
     } catch (error) {
       console.warn("[GoLivePage] failed to end stream", error);
     }
-  }, [streamId]);
+  }, [streamId, isPaired, pairToken]);
 
   const endStream = useCallback(async () => {
     await endActiveStream();
@@ -335,10 +409,38 @@ export default function GoLivePage() {
         {phase === "setup" && (
           <>
             <div className="relative z-10 flex items-center gap-2 px-3 pt-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}>
-              <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+              <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shrink-0">
                 <ArrowLeft className="h-5 w-5 text-white" />
               </button>
-              <h1 className="text-white font-bold flex-1 text-center mr-9">Go Live</h1>
+              {isPaired ? (
+                <div className="flex-1 flex items-center justify-center gap-2">
+                  <Avatar className="h-9 w-9 ring-2 ring-white/30 shadow-lg">
+                    <AvatarImage src={optimizeAvatar(hostAvatarUrl, 96)} alt={hostDisplayName} />
+                    <AvatarFallback className="bg-white/15 text-white text-sm font-bold">
+                      {hostDisplayName?.[0]?.toUpperCase() ?? "S"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col items-start leading-tight">
+                    <span className="text-white text-sm font-bold truncate max-w-[140px]">{hostDisplayName}</span>
+                    <span className="text-[9px] uppercase tracking-wider text-emerald-300 font-semibold">Paired device</span>
+                  </div>
+                </div>
+              ) : (
+                <h1 className="text-white font-bold flex-1 text-center mr-9">Go Live</h1>
+              )}
+              {isPaired && (
+                <button
+                  onClick={() => {
+                    clearPairedIdentity();
+                    setPaired(null);
+                    setPairTokenState(null);
+                    toast.success("Unpaired");
+                  }}
+                  className="text-[10px] font-semibold text-white/70 px-2.5 py-1.5 rounded-full bg-white/10 backdrop-blur-sm shrink-0"
+                >
+                  Unpair
+                </button>
+              )}
             </div>
 
             <div className="relative z-10 mt-auto px-4 pb-6 space-y-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}>
@@ -380,8 +482,8 @@ export default function GoLivePage() {
                 </button>
               </div>
 
-              <Button onClick={goLive} disabled={!user} className="w-full h-14 rounded-full bg-red-500 hover:bg-red-600 text-white font-bold text-base shadow-lg shadow-red-500/40">
-                <Radio className="h-5 w-5 mr-2" /> {user ? "Go Live" : "Sign in to go live"}
+              <Button onClick={goLive} disabled={!user && !isPaired} className="w-full h-14 rounded-full bg-red-500 hover:bg-red-600 text-white font-bold text-base shadow-lg shadow-red-500/40">
+                <Radio className="h-5 w-5 mr-2" /> {(user || isPaired) ? (isPaired ? `Go Live as ${hostDisplayName}` : "Go Live") : "Sign in to go live"}
               </Button>
             </div>
           </>
