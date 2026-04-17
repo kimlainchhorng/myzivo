@@ -42,6 +42,15 @@ import { supabase, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/integrations
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useCoinBalance } from "@/hooks/useCoinBalance";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { optimizeAvatar } from "@/utils/optimizeAvatar";
+import {
+  getPairedIdentity,
+  getPairToken,
+  getPairedSessionByToken,
+  clearPairedIdentity,
+  type PairedIdentity,
+} from "@/lib/livePairing";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 
 const CoinRechargeSheet = lazy(() => import("@/components/live/CoinRechargeSheet"));
