@@ -248,7 +248,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
       <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
         <DialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-[360px] p-0 gap-0 overflow-hidden border-primary/30 rounded-2xl shadow-[0_20px_60px_-15px_hsl(var(--primary)/0.35)]">
           {/* Hero header with decorative gradient */}
-          <div className="relative px-5 pt-4 pb-3 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border-b border-primary/10 overflow-hidden">
+          <div className="relative pl-5 pr-12 pt-4 pb-3 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border-b border-primary/10 overflow-hidden">
             <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-primary/15 blur-2xl pointer-events-none" />
             <div className="absolute -bottom-6 -left-6 w-20 h-20 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
             <div className="relative flex items-center gap-2.5">
