@@ -114,8 +114,23 @@ Deno.serve(async (req) => {
       return json(200, { ok: true });
     }
 
-    // heartbeat — no-op for now, just confirm pairing still valid
-    return json(200, { ok: true, store_id: storeId });
+    const { data: activeStream, error: activeErr } = await admin
+      .from("live_streams")
+      .select("id, title, topic, started_at, viewer_count, like_count, coins_earned, gifts_received")
+      .eq("user_id", storeOwnerId)
+      .eq("status", "live")
+      .is("ended_at", null)
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (activeErr) return json(500, { error: activeErr.message });
+
+    return json(200, {
+      ok: true,
+      store_id: storeId,
+      active_stream: activeStream ?? null,
+    });
   } catch (e) {
     return json(500, { error: (e as Error).message });
   }

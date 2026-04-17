@@ -422,20 +422,13 @@ export default function GoLivePage() {
 
   // ── Resume an existing live stream on mount (after refresh / re-open) ──
   useEffect(() => {
-    if (!user?.id) return;
     if (phase !== "setup" || streamId) return;
+    if (!user?.id && !(isPaired && pairToken)) return;
+
     let cancelled = false;
-    (async () => {
-      const { data, error } = await (supabase as any)
-        .from("live_streams")
-        .select("id, title, topic, started_at, viewer_count, like_count, coins_earned, gifts_received")
-        .eq("user_id", user.id)
-        .eq("status", "live")
-        .is("ended_at", null)
-        .order("started_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (cancelled || error || !data) return;
+
+    const restoreLiveStream = (data: any) => {
+      if (cancelled || !data?.id) return;
       setStreamId(data.id);
       setTitle(data.title || "");
       if (data.topic) setTopic(data.topic);
@@ -447,9 +440,33 @@ export default function GoLivePage() {
         setElapsed(Math.max(0, Math.floor((Date.now() - new Date(data.started_at).getTime()) / 1000)));
       }
       setPhase("live");
+    };
+
+    (async () => {
+      if (isPaired && pairToken) {
+        const { data, error } = await supabase.functions.invoke("pair-go-live", {
+          body: { pair_token: pairToken, action: "heartbeat" },
+        });
+        if (cancelled || error) return;
+        restoreLiveStream((data as any)?.active_stream ?? null);
+        return;
+      }
+
+      const { data, error } = await (supabase as any)
+        .from("live_streams")
+        .select("id, title, topic, started_at, viewer_count, like_count, coins_earned, gifts_received")
+        .eq("user_id", user.id)
+        .eq("status", "live")
+        .is("ended_at", null)
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled || error || !data) return;
+      restoreLiveStream(data);
     })();
+
     return () => { cancelled = true; };
-  }, [user?.id, phase, streamId]);
+  }, [user?.id, isPaired, pairToken, phase, streamId]);
 
   const formatTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
