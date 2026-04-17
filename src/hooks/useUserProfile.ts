@@ -54,6 +54,38 @@ export const useUserProfile = () => {
       return data as unknown as UserProfile | null;
     },
     enabled: !!user?.id,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export type AccountSummary = {
+  profile: UserProfile | null;
+  stats: { followers: number; following: number; posts: number };
+  generatedAt: string;
+  version: string;
+};
+
+/**
+ * useAccountSummary v2026 — single round-trip combining profile + stats.
+ * Backed by the `account-summary` edge function with 30s edge cache.
+ */
+export const useAccountSummary = () => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["accountSummary", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase.functions.invoke("account-summary");
+      if (error) throw error;
+      return data as AccountSummary;
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
 };
 
