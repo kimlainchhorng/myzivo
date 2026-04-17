@@ -781,7 +781,7 @@ export default function LiveStreamPage() {
   const [filter, setFilter] = useState<"all" | "live" | "scheduled">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: streams = [], isLoading, refetch } = useQuery({
+  const { data: streams = [], isLoading, isFetching, refetch } = useQuery({
     queryKey: ["live-streams-real"],
     queryFn: async (): Promise<LiveStream[]> => {
       const { data: rows } = await (supabase as any)
