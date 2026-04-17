@@ -20,6 +20,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import DriverAppDownloadSheet from "@/components/partner/DriverAppDownloadSheet";
 
 const partnerOptions = [
   { icon: Car, label: "Become a Driver", description: "Earn money driving with ZIVO", href: "/partner-with-zivo?type=driver", color: "from-blue-500 to-blue-600" },
@@ -45,6 +46,7 @@ const AppMore = () => {
   const { user, signOut, isAdmin } = useAuth();
   const { data: access } = useUserAccess(user?.id);
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
+  const [showDriverDownloadSheet, setShowDriverDownloadSheet] = useState(false);
   const [showSwitchSheet, setShowSwitchSheet] = useState(false);
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null; share_code: string | null } | null>(null);
   const [copied, setCopied] = useState(false);
@@ -292,23 +294,45 @@ const AppMore = () => {
             <SheetTitle className="text-lg font-display">Become a Partner</SheetTitle>
           </SheetHeader>
           <div className="space-y-2">
-            {partnerOptions.map((opt) => (
-              <Link
-                key={opt.label}
-                to={opt.href}
-                onClick={() => setShowPartnerSheet(false)}
-                className="flex items-center gap-3 p-3 rounded-2xl border border-border/30 bg-card/60 hover:bg-card/90 transition-colors touch-manipulation active:scale-[0.98]"
-              >
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${opt.color} flex items-center justify-center shadow-lg`}>
-                  <opt.icon className="w-4.5 h-4.5 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm">{opt.label}</p>
-                  <p className="text-xs text-muted-foreground">{opt.description}</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
-              </Link>
-            ))}
+            {partnerOptions.map((opt) => {
+              const isDriver = opt.label === "Become a Driver";
+              const commonInner = (
+                <>
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${opt.color} flex items-center justify-center shadow-lg`}>
+                    <opt.icon className="w-4.5 h-4.5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm">{opt.label}</p>
+                    <p className="text-xs text-muted-foreground">{opt.description}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+                </>
+              );
+              if (isDriver) {
+                return (
+                  <button
+                    key={opt.label}
+                    onClick={() => {
+                      setShowPartnerSheet(false);
+                      setShowDriverDownloadSheet(true);
+                    }}
+                    className="w-full text-left flex items-center gap-3 p-3 rounded-2xl border border-border/30 bg-card/60 hover:bg-card/90 transition-colors touch-manipulation active:scale-[0.98]"
+                  >
+                    {commonInner}
+                  </button>
+                );
+              }
+              return (
+                <Link
+                  key={opt.label}
+                  to={opt.href}
+                  onClick={() => setShowPartnerSheet(false)}
+                  className="flex items-center gap-3 p-3 rounded-2xl border border-border/30 bg-card/60 hover:bg-card/90 transition-colors touch-manipulation active:scale-[0.98]"
+                >
+                  {commonInner}
+                </Link>
+              );
+            })}
           </div>
         </SheetContent>
       </Sheet>
