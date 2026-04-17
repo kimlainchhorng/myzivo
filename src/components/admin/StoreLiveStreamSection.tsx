@@ -42,6 +42,12 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   // Once the studio has been opened, keep it mounted so hiding the panel
   // does NOT end an in-progress live stream.
   const [studioMounted, setStudioMounted] = useState(false);
+  const [showQrDialog, setShowQrDialog] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const goLiveUrl = typeof window !== "undefined" ? `${window.location.origin}/go-live` : "/go-live";
+  const copyUrl = async () => {
+    try { await navigator.clipboard.writeText(goLiveUrl); setCopied(true); setTimeout(() => setCopied(false), 1500); toast.success("Link copied"); } catch { toast.error("Copy failed"); }
+  };
   const openStudio = () => { setStudioMounted(true); setShowLivePanel(true); };
   const { data: storeOwnerId } = useQuery({
     queryKey: ["store-live-stream-owner", storeId],
