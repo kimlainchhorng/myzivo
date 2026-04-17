@@ -44,7 +44,7 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const ConnectCallback = lazy(() => import("./pages/ConnectCallback"));
-const PairPage = lazy(() => import("./pages/PairPage"));
+const PairPage = lazy(() => lazyRetry(() => import("./pages/PairPage")));
 
 const Index = lazy(() => lazyRetry(() => import("./pages/Index")));
 
