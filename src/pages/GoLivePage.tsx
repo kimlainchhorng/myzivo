@@ -170,9 +170,9 @@ export default function GoLivePage() {
 
   const flipCamera = useCallback(() => setFacingMode((p) => (p === "user" ? "environment" : "user")), []);
 
-  // ── Go live: create live_streams row ──
+  // ── Go live: create live_streams row (or call edge function in paired mode) ──
   const goLive = useCallback(async () => {
-    if (!user?.id) { toast.error("Please sign in"); return; }
+    if (!user?.id && !isPaired) { toast.error("Please sign in or pair this device"); return; }
     const streamTitle = title.trim() || "My Live Stream";
     setTitle(streamTitle);
     setPhase("countdown");
@@ -182,32 +182,52 @@ export default function GoLivePage() {
       c -= 1;
       if (c <= 0) {
         clearInterval(iv);
-        const { data, error } = await (supabase as any)
-          .from("live_streams")
-          .insert({
-            user_id: user.id,
-            title: streamTitle,
-            topic,
-            host_name: hostDisplayName,
-            host_avatar: userProfile?.avatar_url ?? null,
-            status: "live",
-            started_at: new Date().toISOString(),
-          })
-          .select("id")
-          .single();
-        if (error) {
-          toast.error("Failed to start", { description: error.message });
+        try {
+          let newStreamId: string | null = null;
+
+          if (isPaired && pairToken) {
+            // Paired-device flow: edge function authorizes via pair token
+            const { data, error } = await supabase.functions.invoke("pair-go-live", {
+              body: {
+                pair_token: pairToken,
+                action: "start",
+                payload: { title: streamTitle, topic },
+              },
+            });
+            if (error) throw error;
+            if ((data as any)?.error) throw new Error((data as any).error);
+            newStreamId = (data as any)?.stream_id ?? null;
+          } else {
+            const { data, error } = await (supabase as any)
+              .from("live_streams")
+              .insert({
+                user_id: user!.id,
+                title: streamTitle,
+                topic,
+                host_name: hostDisplayName,
+                host_avatar: hostAvatarUrl,
+                status: "live",
+                started_at: new Date().toISOString(),
+              })
+              .select("id")
+              .single();
+            if (error) throw error;
+            newStreamId = data.id;
+          }
+
+          if (!newStreamId) throw new Error("No stream id returned");
+          setStreamId(newStreamId);
+          setPhase("live");
+          toast.success("You're live!");
+        } catch (e: any) {
+          toast.error("Failed to start", { description: e?.message ?? String(e) });
           setPhase("setup");
-          return;
         }
-        setStreamId(data.id);
-        setPhase("live");
-        toast.success("You're live!");
       } else {
         setCountdown(c);
       }
     }, 1000);
-  }, [title, topic, user?.id, hostDisplayName, userProfile?.avatar_url]);
+  }, [title, topic, user, isPaired, pairToken, hostDisplayName, hostAvatarUrl]);
 
   // ── Realtime subscriptions for the active stream ──
   useEffect(() => {
