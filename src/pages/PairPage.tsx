@@ -16,6 +16,7 @@ import {
   confirmPairSession,
   cancelPairSession,
   savePairedIdentity,
+  savePairToken,
   type PairSession,
 } from "@/lib/livePairing";
 import { toast } from "sonner";
@@ -53,6 +54,7 @@ export default function PairPage() {
     setActing("confirm");
     try {
       await confirmPairSession(token);
+      savePairToken(token);
       savePairedIdentity({
         store_id: session.store_id,
         store_name: session.store_name,
