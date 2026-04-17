@@ -28279,6 +28279,36 @@ export type Database = {
         }
         Relationships: []
       }
+      oauth_states: {
+        Row: {
+          created_at: string
+          expires_at: string
+          platform: Database["public"]["Enums"]["ad_platform"]
+          return_url: string | null
+          state: string
+          store_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          platform: Database["public"]["Enums"]["ad_platform"]
+          return_url?: string | null
+          state: string
+          store_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          platform?: Database["public"]["Enums"]["ad_platform"]
+          return_url?: string | null
+          state?: string
+          store_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       offline_sync_queue: {
         Row: {
           action_data: Json
@@ -42915,6 +42945,7 @@ export type Database = {
       }
       store_ad_accounts: {
         Row: {
+          access_token: string | null
           connected_at: string | null
           connected_by: string | null
           created_at: string
@@ -42924,11 +42955,15 @@ export type Database = {
           last_synced_at: string | null
           metadata: Json
           platform: Database["public"]["Enums"]["ad_platform"]
+          scopes: string | null
           status: Database["public"]["Enums"]["ad_account_status"]
           store_id: string
+          token_expires_at: string | null
           updated_at: string
+          user_external_id: string | null
         }
         Insert: {
+          access_token?: string | null
           connected_at?: string | null
           connected_by?: string | null
           created_at?: string
@@ -42938,11 +42973,15 @@ export type Database = {
           last_synced_at?: string | null
           metadata?: Json
           platform: Database["public"]["Enums"]["ad_platform"]
+          scopes?: string | null
           status?: Database["public"]["Enums"]["ad_account_status"]
           store_id: string
+          token_expires_at?: string | null
           updated_at?: string
+          user_external_id?: string | null
         }
         Update: {
+          access_token?: string | null
           connected_at?: string | null
           connected_by?: string | null
           created_at?: string
@@ -42952,9 +42991,12 @@ export type Database = {
           last_synced_at?: string | null
           metadata?: Json
           platform?: Database["public"]["Enums"]["ad_platform"]
+          scopes?: string | null
           status?: Database["public"]["Enums"]["ad_account_status"]
           store_id?: string
+          token_expires_at?: string | null
           updated_at?: string
+          user_external_id?: string | null
         }
         Relationships: [
           {
@@ -43096,6 +43138,87 @@ export type Database = {
           },
           {
             foreignKeyName: "store_ad_campaigns_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_ad_pages: {
+        Row: {
+          access_token: string | null
+          account_id: string
+          created_at: string
+          external_id: string
+          id: string
+          is_default: boolean
+          metadata: Json
+          name: string | null
+          page_type: string
+          picture_url: string | null
+          platform: Database["public"]["Enums"]["ad_platform"]
+          store_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          account_id: string
+          created_at?: string
+          external_id: string
+          id?: string
+          is_default?: boolean
+          metadata?: Json
+          name?: string | null
+          page_type: string
+          picture_url?: string | null
+          platform: Database["public"]["Enums"]["ad_platform"]
+          store_id: string
+        }
+        Update: {
+          access_token?: string | null
+          account_id?: string
+          created_at?: string
+          external_id?: string
+          id?: string
+          is_default?: boolean
+          metadata?: Json
+          name?: string | null
+          page_type?: string
+          picture_url?: string | null
+          platform?: Database["public"]["Enums"]["ad_platform"]
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_ad_pages_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "store_ad_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_pages_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_pages_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_pages_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_pages_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"

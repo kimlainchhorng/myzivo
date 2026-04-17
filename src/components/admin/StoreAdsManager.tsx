@@ -124,8 +124,25 @@ export default function StoreAdsManager({ storeId }: Props) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["store-ad-accounts", storeId] });
-      toast.success("Account saved. Backend wiring pending — campaigns won't launch until API access is finalized.");
+      toast.success("Account saved.");
       setConnectPlatform(null);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  // Real OAuth: Meta (FB + IG). Other platforms still fall back to manual entry.
+  const oauthMutation = useMutation({
+    mutationFn: async (platform: Platform) => {
+      if (platform !== "meta" && platform !== "instagram") {
+        throw new Error(`${platform} OAuth not yet enabled. Use manual entry below.`);
+      }
+      const returnUrl = `${window.location.origin}/connect/callback`;
+      const { data, error } = await supabase.functions.invoke("meta-oauth-start", {
+        body: { store_id: storeId, platform, return_url: returnUrl },
+      });
+      if (error) throw error;
+      if (!data?.authorize_url) throw new Error("No authorize URL returned");
+      window.location.href = data.authorize_url;
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -410,8 +427,24 @@ export default function StoreAdsManager({ storeId }: Props) {
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3 text-sm">
+                  {(p.id === "meta" || p.id === "instagram") && (
+                    <Button
+                      className="w-full bg-[#1877F2] hover:bg-[#1459bf] text-white"
+                      onClick={() => oauthMutation.mutate(p.id)}
+                      disabled={oauthMutation.isPending}
+                    >
+                      {oauthMutation.isPending
+                        ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        : <Facebook className="w-4 h-4 mr-2" />}
+                      Continue with Facebook
+                    </Button>
+                  )}
                   <div className="p-3 rounded-lg bg-muted text-xs leading-relaxed">
-                    <p className="font-semibold mb-1">Required:</p>
+                    <p className="font-semibold mb-1">
+                      {(p.id === "meta" || p.id === "instagram")
+                        ? "Or paste an Ad Account ID manually:"
+                        : "Required:"}
+                    </p>
                     <p className="text-muted-foreground">{p.secretsHint}</p>
                   </div>
                   <ConnectForm
