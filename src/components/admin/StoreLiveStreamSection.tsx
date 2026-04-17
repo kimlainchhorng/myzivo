@@ -116,12 +116,14 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
           </CardHeader>
           <CardContent className="px-3 sm:px-6 pb-4 sm:pb-6">
             <div className="flex justify-center">
-              <div className="relative w-full max-w-[390px] aspect-[9/19.5] rounded-[2rem] overflow-hidden border-[6px] border-foreground/80 bg-black shadow-2xl">
+              <div className="relative w-full max-w-[390px] h-[760px] rounded-[2.25rem] overflow-hidden border-[8px] border-foreground/85 bg-black shadow-2xl">
+                {/* Notch */}
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-5 rounded-full bg-foreground/85 z-10" />
                 <iframe
                   src="/go-live"
                   title="Go Live Studio"
-                  className="w-full h-full border-0"
-                  allow="camera; microphone; autoplay; fullscreen"
+                  className="w-full h-full border-0 bg-background"
+                  allow="camera; microphone; autoplay; fullscreen; display-capture"
                 />
               </div>
             </div>
