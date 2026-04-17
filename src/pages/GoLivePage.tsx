@@ -335,12 +335,9 @@ export default function GoLivePage() {
     return () => {
       alive = false;
       try { unsub?.(); } catch {}
-      // Only signal "bye" when the stream is truly ending — not on every
-      // dependency change (camera flip, mic toggle, etc.) which would
-      // disconnect the desktop viewer mid-handshake.
-      if (phase === "ended") {
-        try { sendSignal(streamId, "publisher", "viewer", "bye", {}); } catch {}
-      }
+      // Do NOT signal "bye" on every dependency change — that would
+      // disconnect the desktop viewer mid-handshake when the camera/mic
+      // toggles. The explicit "End Stream" flow handles teardown.
       try { pc?.close(); } catch {}
     };
   }, [streamId, phase, isPaired]);
