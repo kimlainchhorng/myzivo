@@ -8,7 +8,8 @@ import {
   ArrowLeft, Wallet, CreditCard, Star, Trash2, Plus, Shield,
   Users, Gift, Trophy,
   Clock, DollarSign, ChevronRight, Eye, EyeOff,
-  TrendingUp, Zap, Banknote, Building2, Send, AlertCircle
+  TrendingUp, Zap, Banknote, Building2, Send, AlertCircle,
+  Radio, Coins,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -21,6 +22,7 @@ import { useCustomerWallet } from "@/hooks/useCustomerWallet";
 import { useStripePaymentMethods, useDeleteStripeCard, useSetDefaultStripeCard } from "@/hooks/useStripePaymentMethods";
 import { useWalletTransactions, useWalletCredits, useWalletSummary } from "@/hooks/useZivoWallet";
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
+import { useLiveEarnings } from "@/hooks/useLiveEarnings";
 import AddCardForm from "@/components/wallet/AddCardForm";
 import SEOHead from "@/components/SEOHead";
 import { motion, AnimatePresence } from "framer-motion";
@@ -43,6 +45,7 @@ function brandLabel(brand: string) {
 
 const TAB_ITEMS = [
   { key: "cards", label: "Cards", icon: CreditCard },
+  { key: "gifts", label: "Gifts", icon: Gift },
   { key: "cashout", label: "Cash Out", icon: Banknote },
   { key: "history", label: "History", icon: Clock },
   { key: "credits", label: "Credits", icon: Gift },
@@ -59,7 +62,7 @@ export default function WalletPage() {
   const navigate = useNavigate();
   const [showAddCard, setShowAddCard] = useState(false);
   const [balanceHidden, setBalanceHidden] = useState(false);
-  const [activeTab, setActiveTab] = useState<"cards" | "cashout" | "history" | "credits">("cards");
+  const [activeTab, setActiveTab] = useState<"cards" | "gifts" | "cashout" | "history" | "credits">("cards");
   const [cashoutAmount, setCashoutAmount] = useState("");
   const [cashoutMethod, setCashoutMethod] = useState<string>("bank_transfer");
   const [cashoutNote, setCashoutNote] = useState("");
@@ -85,6 +88,7 @@ export default function WalletPage() {
   const { data: walletCredits = [], isLoading: creditsLoading } = useWalletCredits();
   const { data: summary, isLoading: summaryLoading } = useWalletSummary();
   const { points, isLoading: pointsLoading } = useLoyaltyPoints();
+  const { totals: liveEarnings, payouts: liveGiftPayouts } = useLiveEarnings();
 
   // Payout methods
   const { data: payoutMethods = [], isLoading: payoutsLoading } = useQuery({
