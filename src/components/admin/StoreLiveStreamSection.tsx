@@ -246,7 +246,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
       )}
 
       <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
-        <DialogContent className="max-w-md p-0 overflow-hidden gap-0 border-primary/20">
+        <DialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-[400px] max-h-[90vh] overflow-y-auto p-0 gap-0 border-primary/20">
           {/* Hero header */}
           <div className="relative bg-gradient-to-br from-primary/15 via-primary/5 to-background px-6 pt-6 pb-5 border-b border-border/50">
             <div className="flex items-center gap-3 mb-1">
