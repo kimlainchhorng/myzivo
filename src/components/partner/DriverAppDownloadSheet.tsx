@@ -127,7 +127,7 @@ export default function DriverAppDownloadSheet({
               onClick={() => openExternal(APP_STORE_URL)}
               className="w-full h-16 rounded-2xl bg-foreground text-background flex items-center gap-3 px-4 active:scale-[0.98] transition shadow-lg"
             >
-              <Apple className="w-8 h-8" />
+              <AppleLogo className="w-7 h-7" />
               <div className="flex-1 text-left">
                 <p className="text-[10px] opacity-80 leading-none">
                   Download on the
