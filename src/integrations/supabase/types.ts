@@ -24730,10 +24730,12 @@ export type Database = {
           cancelled_at: string | null
           confirmed_at: string | null
           created_at: string
+          device_expires_at: string | null
           expires_at: string
           id: string
           phone_ip: string | null
           phone_user_agent: string | null
+          revoked_at: string | null
           status: string
           store_avatar_url: string | null
           store_id: string
@@ -24746,10 +24748,12 @@ export type Database = {
           cancelled_at?: string | null
           confirmed_at?: string | null
           created_at?: string
+          device_expires_at?: string | null
           expires_at?: string
           id?: string
           phone_ip?: string | null
           phone_user_agent?: string | null
+          revoked_at?: string | null
           status?: string
           store_avatar_url?: string | null
           store_id: string
@@ -24762,10 +24766,12 @@ export type Database = {
           cancelled_at?: string | null
           confirmed_at?: string | null
           created_at?: string
+          device_expires_at?: string | null
           expires_at?: string
           id?: string
           phone_ip?: string | null
           phone_user_agent?: string | null
+          revoked_at?: string | null
           status?: string
           store_avatar_url?: string | null
           store_id?: string
@@ -56468,6 +56474,18 @@ export type Database = {
         }[]
       }
       get_owner_profile_id: { Args: { user_uuid: string }; Returns: string }
+      get_paired_session_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          device_expires_at: string
+          session_id: string
+          status: string
+          store_avatar_url: string
+          store_id: string
+          store_name: string
+          store_owner_id: string
+        }[]
+      }
       get_pricing_for_trip: {
         Args: {
           p_city_id: string
@@ -56872,6 +56890,10 @@ export type Database = {
       resolve_admin_alert: {
         Args: { p_alert_id: string; p_notes?: string }
         Returns: Json
+      }
+      revoke_live_pair_session: {
+        Args: { p_token: string }
+        Returns: undefined
       }
       safe_parse_timestamptz: { Args: { input: string }; Returns: string }
       score_driver_for_assignment: {
