@@ -2,9 +2,10 @@
  * StoreLiveStreamSection — Live streaming hub for store owners.
  * Shows stream stats and a "Go Live" entry point that opens /go-live in a new tab.
  */
-import { useState, lazy, Suspense } from "react";
+import { useState, lazy, Suspense, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Radio, Eye, Heart, Gift, Play, Video, X, Maximize2, QrCode, Smartphone, Copy, Check } from "lucide-react";
+import { Radio, Eye, Heart, Gift, Play, Video, X, Maximize2, QrCode, Smartphone, Copy, Check, ShieldCheck, Loader2, RefreshCw } from "lucide-react";
+import { createPairSession } from "@/lib/livePairing";
 import { QRCodeSVG } from "qrcode.react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
@@ -44,11 +45,85 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   const [studioMounted, setStudioMounted] = useState(false);
   const [showQrDialog, setShowQrDialog] = useState(false);
   const [copied, setCopied] = useState(false);
-  const goLiveUrl = typeof window !== "undefined" ? `${window.location.origin}/go-live` : "/go-live";
+  // Pairing state — token is generated when dialog opens; status flips to "confirmed" via realtime
+  const [pairToken, setPairToken] = useState<string | null>(null);
+  const [pairSessionId, setPairSessionId] = useState<string | null>(null);
+  const [pairExpiresAt, setPairExpiresAt] = useState<string | null>(null);
+  const [pairStatus, setPairStatus] = useState<"idle" | "loading" | "pending" | "confirmed" | "expired" | "error">("idle");
+  const [pairPhoneUA, setPairPhoneUA] = useState<string | null>(null);
+  const [pairError, setPairError] = useState<string | null>(null);
+  const channelRef = useRef<any>(null);
+
+  const goLiveUrl = pairToken
+    ? (typeof window !== "undefined" ? `${window.location.origin}/pair/${pairToken}` : `/pair/${pairToken}`)
+    : (typeof window !== "undefined" ? `${window.location.origin}/go-live` : "/go-live");
+
   const copyUrl = async () => {
     try { await navigator.clipboard.writeText(goLiveUrl); setCopied(true); setTimeout(() => setCopied(false), 1500); toast.success("Link copied"); } catch { toast.error("Copy failed"); }
   };
   const openStudio = () => { setStudioMounted(true); setShowLivePanel(true); };
+
+  // Generate a pairing session every time the QR dialog opens
+  const startPairing = async () => {
+    setPairStatus("loading");
+    setPairError(null);
+    setPairPhoneUA(null);
+    try {
+      const { session_id, token, expires_at } = await createPairSession(storeId);
+      setPairToken(token);
+      setPairSessionId(session_id);
+      setPairExpiresAt(expires_at);
+      setPairStatus("pending");
+    } catch (e: any) {
+      setPairError(e?.message ?? "Couldn't start pairing");
+      setPairStatus("error");
+    }
+  };
+
+  // When dialog opens, kick off a fresh pairing token
+  useEffect(() => {
+    if (showQrDialog) {
+      startPairing();
+    } else {
+      // Clean reset when closed
+      setPairToken(null); setPairSessionId(null); setPairStatus("idle"); setPairPhoneUA(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showQrDialog]);
+
+  // Realtime: watch this session for status flip → "confirmed"
+  useEffect(() => {
+    if (!pairSessionId) return;
+    const ch = supabase
+      .channel(`pair-${pairSessionId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "live_pair_sessions", filter: `id=eq.${pairSessionId}` },
+        (payload: any) => {
+          const next = payload?.new;
+          if (!next) return;
+          if (next.status === "confirmed") {
+            setPairStatus("confirmed");
+            setPairPhoneUA(next.phone_user_agent ?? null);
+          } else if (next.status === "expired" || next.status === "cancelled") {
+            setPairStatus("expired");
+          }
+        },
+      )
+      .subscribe();
+    channelRef.current = ch;
+    return () => { try { supabase.removeChannel(ch); } catch {} };
+  }, [pairSessionId]);
+
+  // Auto-expire on TTL
+  useEffect(() => {
+    if (!pairExpiresAt || pairStatus !== "pending") return;
+    const ms = new Date(pairExpiresAt).getTime() - Date.now();
+    if (ms <= 0) { setPairStatus("expired"); return; }
+    const t = setTimeout(() => setPairStatus("expired"), ms);
+    return () => clearTimeout(t);
+  }, [pairExpiresAt, pairStatus]);
+
   const { data: storeOwnerId } = useQuery({
     queryKey: ["store-live-stream-owner", storeId],
     queryFn: async (): Promise<string | null> => {
