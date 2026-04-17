@@ -14,7 +14,7 @@ import { Loader2, Wifi, WifiOff } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { supabase } from "@/integrations/supabase/client";
-import { ICE_SERVERS, sendSignal, subscribeSignals } from "@/lib/liveWebrtc";
+import { ICE_SERVERS, getIceServers, logSelectedCandidatePair, sendSignal, subscribeSignals } from "@/lib/liveWebrtc";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
@@ -134,10 +134,21 @@ export default function PairedStreamViewer({
 
     let active = true;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let restartTimer: ReturnType<typeof setTimeout> | null = null;
+    let restartAttempted = false;
     const pendingIce: RTCIceCandidateInit[] = [];
     setState("waiting-for-offer");
+    // Start with STUN-only so we don't block; swap in TURN as soon as the
+    // edge function returns. setConfiguration() updates ICE servers without
+    // recreating the peer connection.
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
     pcRef.current = pc;
+    getIceServers().then((servers) => {
+      if (!active) return;
+      try { pc.setConfiguration({ iceServers: servers }); } catch (e) {
+        console.warn("[viewer] setConfiguration failed", e);
+      }
+    });
 
     const flushIce = async () => {
       while (pendingIce.length) {
@@ -161,11 +172,19 @@ export default function PairedStreamViewer({
       }
     };
 
+    pc.oniceconnectionstatechange = () => {
+      console.log("[viewer] iceConnectionState=", pc.iceConnectionState);
+    };
+
     pc.onconnectionstatechange = () => {
       const nextState = pc.connectionState;
       console.log("[viewer] connectionState=", nextState);
       if (nextState === "connected") {
         setState("live");
+        restartAttempted = false;
+        if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+        if (restartTimer) { clearTimeout(restartTimer); restartTimer = null; }
+        logSelectedCandidatePair(pc, "viewer");
         return;
       }
       if (nextState === "connecting") {
@@ -173,8 +192,36 @@ export default function PairedStreamViewer({
         return;
       }
 
-      if (nextState === "failed" || nextState === "disconnected" || nextState === "closed") {
+      if (nextState === "failed" || nextState === "disconnected") {
         setState("disconnected");
+        // Try ICE restart first (one shot). Only tear down if it doesn't
+        // recover within ~6s. Tearing down too aggressively was causing
+        // the viewer to bounce back to "waiting" while the publisher was
+        // mid-handshake.
+        if (!restartAttempted) {
+          restartAttempted = true;
+          try {
+            console.log("[viewer] attempting restartIce()");
+            pc.restartIce();
+          } catch (e) {
+            console.warn("[viewer] restartIce failed", e);
+          }
+          // Re-send join so publisher knows to re-offer.
+          sendSignal(streamId, "viewer", "publisher", "join", {});
+          if (restartTimer) clearTimeout(restartTimer);
+          restartTimer = setTimeout(() => {
+            if (!active) return;
+            if (pc.connectionState === "connected") return;
+            console.log("[viewer] restartIce did not recover, tearing down");
+            if (videoRef.current) videoRef.current.srcObject = null;
+            setStreamId(null);
+            setState("waiting-for-stream");
+          }, 6000);
+          return;
+        }
+      }
+
+      if (nextState === "closed") {
         if (reconnectTimer) clearTimeout(reconnectTimer);
         reconnectTimer = setTimeout(() => {
           if (!active) return;
@@ -241,6 +288,7 @@ export default function PairedStreamViewer({
       active = false;
       clearInterval(joinRetry);
       if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (restartTimer) clearTimeout(restartTimer);
       if (user?.id) {
         (supabase as any)
           .from("live_viewers")

@@ -6,7 +6,10 @@
  * Knowing the stream UUID is the capability — RLS allows insert/select on it.
  *
  * Topology: 1 publisher → 1 viewer (the store owner's desktop).
- * No SFU, no TURN. STUN-only — fine for most home/office networks.
+ * ICE servers are fetched at runtime from the `get-ice-servers` edge function
+ * which mints short-lived Twilio TURN credentials. This is critical: pure
+ * STUN cannot punch through symmetric NAT (mobile carrier ↔ home Wi-Fi),
+ * so we MUST have working TURN relay or the connection silently fails.
  */
 import { supabase } from "@/integrations/supabase/client";
 import { getPairToken } from "@/lib/livePairing";
@@ -15,32 +18,84 @@ export type SignalRole = "publisher" | "viewer";
 export type SignalType = "join" | "offer" | "answer" | "ice" | "bye" | "heartbeat";
 
 /**
- * STUN servers handle most same-network handshakes. TURN relays are required
- * when phone (mobile carrier NAT) and desktop (home NAT) cannot reach each
- * other directly. We use Open Relay Project's free TURN as a fallback so the
- * paired-phone → desktop-studio flow works across networks even without a
- * private TURN deployment.
+ * STUN-only fallback. Used before the edge function returns and as a last
+ * resort if Twilio NTS is down. Real cross-network calls will need the TURN
+ * servers fetched via `getIceServers()` below.
  */
 export const ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
-  { urls: "stun:openrelay.metered.ca:80" },
-  {
-    urls: "turn:openrelay.metered.ca:80",
-    username: "openrelayproject",
-    credential: "openrelayproject",
-  },
-  {
-    urls: "turn:openrelay.metered.ca:443",
-    username: "openrelayproject",
-    credential: "openrelayproject",
-  },
-  {
-    urls: "turn:openrelay.metered.ca:443?transport=tcp",
-    username: "openrelayproject",
-    credential: "openrelayproject",
-  },
 ];
+
+let cachedIce: RTCIceServer[] | null = null;
+let cachedAt = 0;
+const CACHE_TTL_MS = 50 * 60 * 1000; // 50 min, less than Twilio's 60-min TTL
+
+/**
+ * Fetch ICE servers (STUN + Twilio TURN) from the edge function.
+ * Cached for ~50 minutes per page session.
+ *
+ * Always returns at least the STUN fallback so callers never get an empty list.
+ */
+export async function getIceServers(): Promise<RTCIceServer[]> {
+  const now = Date.now();
+  if (cachedIce && now - cachedAt < CACHE_TTL_MS) return cachedIce;
+
+  try {
+    const { data, error } = await (supabase as any).functions.invoke("get-ice-servers", {
+      body: {},
+    });
+    if (error) throw error;
+    const servers = (data as any)?.iceServers;
+    if (Array.isArray(servers) && servers.length > 0) {
+      cachedIce = servers;
+      cachedAt = now;
+      const hasTurn = servers.some((s: any) =>
+        Array.isArray(s.urls)
+          ? s.urls.some((u: string) => u.startsWith("turn"))
+          : typeof s.urls === "string" && s.urls.startsWith("turn"),
+      );
+      console.log(
+        `[liveWebrtc] ICE servers loaded (${servers.length}), TURN=${hasTurn}`,
+      );
+      return servers;
+    }
+  } catch (e) {
+    console.warn("[liveWebrtc] get-ice-servers failed, using STUN fallback", e);
+  }
+  return ICE_SERVERS;
+}
+
+/**
+ * Logs the active ICE candidate-pair type so it's instantly obvious whether
+ * the connection went direct (host/srflx) or via TURN (relay). Call this
+ * once `connectionState === "connected"`.
+ */
+export async function logSelectedCandidatePair(
+  pc: RTCPeerConnection,
+  tag: string,
+): Promise<void> {
+  try {
+    const stats = await pc.getStats();
+    let pair: any = null;
+    stats.forEach((r: any) => {
+      if (r.type === "candidate-pair" && r.state === "succeeded" && r.nominated) {
+        pair = r;
+      }
+    });
+    if (!pair) return;
+    let local: any = null, remote: any = null;
+    stats.forEach((r: any) => {
+      if (r.id === pair.localCandidateId) local = r;
+      if (r.id === pair.remoteCandidateId) remote = r;
+    });
+    console.log(
+      `[${tag}] selected candidate pair: local=${local?.candidateType}/${local?.protocol} remote=${remote?.candidateType}/${remote?.protocol}`,
+    );
+  } catch (e) {
+    console.warn(`[${tag}] candidate-pair stats failed`, e);
+  }
+}
 
 export interface SignalRow {
   id: string;
