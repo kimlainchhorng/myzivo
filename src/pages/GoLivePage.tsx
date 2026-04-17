@@ -409,10 +409,38 @@ export default function GoLivePage() {
         {phase === "setup" && (
           <>
             <div className="relative z-10 flex items-center gap-2 px-3 pt-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}>
-              <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+              <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shrink-0">
                 <ArrowLeft className="h-5 w-5 text-white" />
               </button>
-              <h1 className="text-white font-bold flex-1 text-center mr-9">Go Live</h1>
+              {isPaired ? (
+                <div className="flex-1 flex items-center justify-center gap-2">
+                  <Avatar className="h-9 w-9 ring-2 ring-white/30 shadow-lg">
+                    <AvatarImage src={optimizeAvatar(hostAvatarUrl, 96)} alt={hostDisplayName} />
+                    <AvatarFallback className="bg-white/15 text-white text-sm font-bold">
+                      {hostDisplayName?.[0]?.toUpperCase() ?? "S"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col items-start leading-tight">
+                    <span className="text-white text-sm font-bold truncate max-w-[140px]">{hostDisplayName}</span>
+                    <span className="text-[9px] uppercase tracking-wider text-emerald-300 font-semibold">Paired device</span>
+                  </div>
+                </div>
+              ) : (
+                <h1 className="text-white font-bold flex-1 text-center mr-9">Go Live</h1>
+              )}
+              {isPaired && (
+                <button
+                  onClick={() => {
+                    clearPairedIdentity();
+                    setPaired(null);
+                    setPairTokenState(null);
+                    toast.success("Unpaired");
+                  }}
+                  className="text-[10px] font-semibold text-white/70 px-2.5 py-1.5 rounded-full bg-white/10 backdrop-blur-sm shrink-0"
+                >
+                  Unpair
+                </button>
+              )}
             </div>
 
             <div className="relative z-10 mt-auto px-4 pb-6 space-y-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}>
@@ -454,8 +482,8 @@ export default function GoLivePage() {
                 </button>
               </div>
 
-              <Button onClick={goLive} disabled={!user} className="w-full h-14 rounded-full bg-red-500 hover:bg-red-600 text-white font-bold text-base shadow-lg shadow-red-500/40">
-                <Radio className="h-5 w-5 mr-2" /> {user ? "Go Live" : "Sign in to go live"}
+              <Button onClick={goLive} disabled={!user && !isPaired} className="w-full h-14 rounded-full bg-red-500 hover:bg-red-600 text-white font-bold text-base shadow-lg shadow-red-500/40">
+                <Radio className="h-5 w-5 mr-2" /> {(user || isPaired) ? (isPaired ? `Go Live as ${hostDisplayName}` : "Go Live") : "Sign in to go live"}
               </Button>
             </div>
           </>
