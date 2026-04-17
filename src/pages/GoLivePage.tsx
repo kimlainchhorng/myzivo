@@ -75,7 +75,44 @@ export default function GoLivePage() {
   const { user } = useAuth();
   const { data: userProfile } = useUserProfile();
   const { balance: coinBalance, recharge } = useCoinBalance();
-  const hostDisplayName = userProfile?.full_name || user?.email?.split("@")[0] || "Host";
+
+  // Paired-device mode: phone confirmed via QR can broadcast as the store without sign-in.
+  const [paired, setPaired] = useState<PairedIdentity | null>(() => getPairedIdentity());
+  const [pairToken, setPairTokenState] = useState<string | null>(() => getPairToken());
+  const isPaired = !!paired && !!pairToken;
+
+  // Re-validate pair token on mount; clear it if revoked / expired
+  useEffect(() => {
+    if (!pairToken) return;
+    let alive = true;
+    (async () => {
+      try {
+        const sess = await getPairedSessionByToken(pairToken);
+        if (!alive) return;
+        if (!sess) {
+          clearPairedIdentity();
+          setPaired(null);
+          setPairTokenState(null);
+          return;
+        }
+        // Refresh stored identity (avatar/name may have changed)
+        setPaired((prev) => prev ? { ...prev, store_name: sess.store_name, store_avatar_url: sess.store_avatar_url } : prev);
+      } catch {
+        clearPairedIdentity();
+        setPaired(null);
+        setPairTokenState(null);
+        toast.error("Pairing expired. Please scan the QR again.");
+      }
+    })();
+    return () => { alive = false; };
+  }, [pairToken]);
+
+  const hostDisplayName = isPaired
+    ? (paired?.store_name || "Live Shop")
+    : (userProfile?.full_name || user?.email?.split("@")[0] || "Host");
+  const hostAvatarUrl = isPaired
+    ? paired?.store_avatar_url ?? null
+    : userProfile?.avatar_url ?? null;
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
