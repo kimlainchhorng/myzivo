@@ -300,12 +300,12 @@ export default function PartnerOnboarding() {
               )}
 
               {STEPS[step].id === "hours" && (
-                <div className="space-y-2">
+                <div className="space-y-2 w-full overflow-hidden">
                   {DAYS.map((d) => (
-                    <div key={d} className="flex items-center gap-2 py-1.5">
-                      <span className="w-10 text-xs font-bold">{d}</span>
+                    <div key={d} className="flex items-center gap-1.5 py-1.5 w-full">
+                      <span className="w-9 shrink-0 text-xs font-bold">{d}</span>
                       {form.hours[d].closed ? (
-                        <span className="flex-1 text-xs text-muted-foreground italic">Closed</span>
+                        <span className="flex-1 min-w-0 text-xs text-muted-foreground italic">Closed</span>
                       ) : (
                         <>
                           <Input
@@ -314,22 +314,22 @@ export default function PartnerOnboarding() {
                             onChange={(e) =>
                               update("hours", { ...form.hours, [d]: { ...form.hours[d], open: e.target.value } })
                             }
-                            className="h-9 rounded-lg flex-1 text-xs"
+                            className="h-9 rounded-lg flex-1 min-w-0 w-0 text-xs px-2"
                           />
-                          <span className="text-muted-foreground text-xs">–</span>
+                          <span className="text-muted-foreground text-xs shrink-0">–</span>
                           <Input
                             type="time"
                             value={form.hours[d].close}
                             onChange={(e) =>
                               update("hours", { ...form.hours, [d]: { ...form.hours[d], close: e.target.value } })
                             }
-                            className="h-9 rounded-lg flex-1 text-xs"
+                            className="h-9 rounded-lg flex-1 min-w-0 w-0 text-xs px-2"
                           />
                         </>
                       )}
                       <Button
                         type="button" variant="ghost" size="sm"
-                        className="text-[10px] h-8 px-2"
+                        className="text-[10px] h-8 px-1.5 shrink-0"
                         onClick={() =>
                           update("hours", { ...form.hours, [d]: { ...form.hours[d], closed: !form.hours[d].closed } })
                         }
