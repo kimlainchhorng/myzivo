@@ -4,7 +4,9 @@
  */
 import { useState, lazy, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Radio, Eye, Heart, Gift, Play, Video, X, Maximize2 } from "lucide-react";
+import { Radio, Eye, Heart, Gift, Play, Video, X, Maximize2, QrCode, Smartphone, Copy, Check } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const GoLivePage = lazy(() => import("@/pages/GoLivePage"));
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
