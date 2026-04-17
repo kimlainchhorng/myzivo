@@ -51,6 +51,7 @@ import {
   clearPairedIdentity,
   type PairedIdentity,
 } from "@/lib/livePairing";
+import { ICE_SERVERS, sendSignal, subscribeSignals } from "@/lib/liveWebrtc";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 
 const CoinRechargeSheet = lazy(() => import("@/components/live/CoinRechargeSheet"));
@@ -292,6 +293,50 @@ export default function GoLivePage() {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [streamId]);
+
+  // ── WebRTC publisher: when paired and live, broadcast camera to the desktop viewer ──
+  useEffect(() => {
+    if (!streamId || phase !== "live" || !isPaired) return;
+    const localStream = streamRef.current;
+    if (!localStream) return;
+
+    let pc: RTCPeerConnection | null = null;
+    let unsub: (() => void) | null = null;
+    let alive = true;
+
+    pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    localStream.getTracks().forEach((t) => pc!.addTrack(t, localStream));
+
+    pc.onicecandidate = (ev) => {
+      if (ev.candidate && alive) {
+        sendSignal(streamId, "publisher", "viewer", "ice", ev.candidate.toJSON());
+      }
+    };
+
+    unsub = subscribeSignals(streamId, "publisher", async (row) => {
+      if (!pc || !alive) return;
+      try {
+        if (row.type === "join") {
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          await sendSignal(streamId, "publisher", "viewer", "offer", { type: offer.type, sdp: offer.sdp });
+        } else if (row.type === "answer") {
+          await pc.setRemoteDescription(new RTCSessionDescription(row.payload));
+        } else if (row.type === "ice" && row.payload) {
+          try { await pc.addIceCandidate(new RTCIceCandidate(row.payload)); } catch {}
+        }
+      } catch (e) {
+        console.warn("[GoLivePage publisher] signal error", e);
+      }
+    });
+
+    return () => {
+      alive = false;
+      try { unsub?.(); } catch {}
+      try { sendSignal(streamId, "publisher", "viewer", "bye", {}); } catch {}
+      try { pc?.close(); } catch {}
+    };
+  }, [streamId, phase, isPaired]);
 
   // Stream timer
   useEffect(() => {

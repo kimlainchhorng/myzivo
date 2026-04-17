@@ -24782,6 +24782,36 @@ export type Database = {
         }
         Relationships: []
       }
+      live_stream_signals: {
+        Row: {
+          created_at: string
+          from_role: string
+          id: string
+          payload: Json | null
+          stream_id: string
+          to_role: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          from_role: string
+          id?: string
+          payload?: Json | null
+          stream_id: string
+          to_role: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          from_role?: string
+          id?: string
+          payload?: Json | null
+          stream_id?: string
+          to_role?: string
+          type?: string
+        }
+        Relationships: []
+      }
       live_streams: {
         Row: {
           coins_earned: number
@@ -55886,6 +55916,7 @@ export type Database = {
       cleanup_expired_otp_codes: { Args: never; Returns: undefined }
       cleanup_expired_qr_tokens: { Args: never; Returns: undefined }
       cleanup_expired_tokens: { Args: never; Returns: undefined }
+      cleanup_old_live_stream_signals: { Args: never; Returns: undefined }
       cleanup_old_location_history: { Args: never; Returns: undefined }
       cleanup_old_login_sessions: { Args: never; Returns: undefined }
       cleanup_old_security_events: { Args: never; Returns: undefined }

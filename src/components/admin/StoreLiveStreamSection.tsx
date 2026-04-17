@@ -10,6 +10,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const GoLivePage = lazy(() => import("@/pages/GoLivePage"));
+const PairedStreamViewer = lazy(() => import("@/components/live/PairedStreamViewer"));
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -105,6 +106,9 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
           if (next.status === "confirmed") {
             setPairStatus("confirmed");
             setPairPhoneUA(next.phone_user_agent ?? null);
+            // Auto-open the studio so the user immediately sees the phone's feed
+            setStudioMounted(true);
+            setShowLivePanel(true);
           } else if (next.status === "expired" || next.status === "cancelled") {
             setPairStatus("expired");
           }
@@ -124,21 +128,26 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
     return () => clearTimeout(t);
   }, [pairExpiresAt, pairStatus]);
 
-  const { data: storeOwnerId } = useQuery({
+  const { data: storeMeta } = useQuery({
     queryKey: ["store-live-stream-owner", storeId],
-    queryFn: async (): Promise<string | null> => {
+    queryFn: async (): Promise<{ owner_id: string | null; avatar_url: string | null; name: string | null }> => {
       const { data, error } = await supabase
         .from("store_profiles")
-        .select("owner_id")
+        .select("owner_id, avatar_url, name")
         .eq("id", storeId)
         .maybeSingle();
       if (error) {
         console.warn("[StoreLiveStreamSection] owner fetch error", error);
-        return null;
+        return { owner_id: null, avatar_url: null, name: null };
       }
-      return data?.owner_id ?? null;
+      return {
+        owner_id: (data as any)?.owner_id ?? null,
+        avatar_url: (data as any)?.avatar_url ?? null,
+        name: (data as any)?.name ?? null,
+      };
     },
   });
+  const storeOwnerId = storeMeta?.owner_id ?? null;
   const { data: streams, isLoading } = useQuery({
     queryKey: ["store-live-streams", storeId, storeOwnerId],
     queryFn: async (): Promise<StreamRow[]> => {
@@ -305,7 +314,15 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
                     <div className="absolute inset-0 overflow-hidden bg-background">
                       <Suspense fallback={<div className="flex items-center justify-center h-full text-sm text-muted-foreground">Loading studio…</div>}>
                         <div className="w-full h-full" style={{ containerType: "size" }}>
-                          <GoLivePage />
+                          {pairStatus === "confirmed" && storeOwnerId ? (
+                            <PairedStreamViewer
+                              storeOwnerId={storeOwnerId}
+                              storeName={storeMeta?.name ?? storeName ?? null}
+                              storeAvatarUrl={storeMeta?.avatar_url ?? null}
+                            />
+                          ) : (
+                            <GoLivePage />
+                          )}
                         </div>
                       </Suspense>
                     </div>
