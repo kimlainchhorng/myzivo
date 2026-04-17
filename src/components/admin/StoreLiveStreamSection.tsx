@@ -37,6 +37,10 @@ interface StreamRow {
 export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   const navigate = useNavigate();
   const [showLivePanel, setShowLivePanel] = useState(false);
+  // Once the studio has been opened, keep it mounted so hiding the panel
+  // does NOT end an in-progress live stream.
+  const [studioMounted, setStudioMounted] = useState(false);
+  const openStudio = () => { setStudioMounted(true); setShowLivePanel(true); };
   const { data: streams, isLoading } = useQuery({
     queryKey: ["store-live-streams", storeId],
     queryFn: async (): Promise<StreamRow[]> => {
@@ -80,11 +84,11 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
               </div>
             </div>
             <Button
-              onClick={() => setShowLivePanel((v) => !v)}
+              onClick={() => (showLivePanel ? setShowLivePanel(false) : openStudio())}
               className="gap-2 shrink-0 h-12 sm:h-10 w-full sm:w-auto rounded-xl text-sm font-semibold touch-manipulation active:scale-[0.98]"
             >
               <Video className="w-4 h-4" />
-              {showLivePanel ? "Hide Studio" : "Go Live Now"}
+              {showLivePanel ? "Hide Studio" : studioMounted ? "Show Studio" : "Go Live Now"}
             </Button>
           </CardContent>
         </Card>
@@ -141,9 +145,9 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
         </Card>
       </div>
 
-      {/* Right-side docked phone studio */}
-      {showLivePanel && (
-        <aside className="w-full lg:w-[420px] shrink-0">
+      {/* Right-side docked phone studio — kept mounted once opened so hiding doesn't end the live stream */}
+      {studioMounted && (
+        <aside className={cn("w-full lg:w-[420px] shrink-0", !showLivePanel && "hidden")}>
           <div className="lg:sticky lg:top-20">
             <Card className="overflow-hidden border-primary/30">
               <CardHeader className="pb-3 px-4 pt-4 flex flex-row items-center justify-between space-y-0">
@@ -165,7 +169,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowLivePanel(false)}
-                    title="Close"
+                    title="Hide (stream keeps running)"
                     className="h-8 w-8"
                   >
                     <X className="w-4 h-4" />
@@ -189,7 +193,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
                   </div>
                 </div>
                 <p className="text-center text-xs text-muted-foreground mt-3">
-                  Tap maximize for full screen.
+                  Hiding keeps your stream running. Tap maximize for full screen.
                 </p>
               </CardContent>
             </Card>
