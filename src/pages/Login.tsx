@@ -591,42 +591,6 @@ const Login = () => {
             <span>{isLogin ? t("auth.protected") : t("auth.terms_agree")}</span>
           </div>
 
-          {/* Partner buttons row */}
-          <div className="relative z-10 mt-4 flex gap-2">
-            {/* Become a ZIVO Partner */}
-            <motion.button
-              type="button"
-              onClick={() => navigate("/partner-with-zivo")}
-              whileHover={{ y: -2, scale: 1.02 }}
-              whileTap={{ scale: 0.96, rotateX: 6 }}
-              className="relative flex-1 py-3 rounded-2xl text-xs font-bold tracking-wide text-white/80 hover:text-white border border-white/10 hover:border-primary/40 bg-gradient-to-b from-white/[0.06] via-transparent to-white/[0.02] backdrop-blur-sm transition-all duration-300 overflow-hidden group"
-              style={{ transformStyle: "preserve-3d" }}
-            >
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <span className="relative z-10 flex items-center justify-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-primary" />
-                {t("auth.become_partner")}
-              </span>
-            </motion.button>
-
-            {/* Partner Sign In */}
-            <motion.button
-              type="button"
-              onClick={() => navigate("/partner-login")}
-              whileHover={{ y: -2, scale: 1.02 }}
-              whileTap={{ scale: 0.96, rotateX: 6 }}
-              className="relative flex-1 py-3 rounded-2xl text-xs font-bold tracking-wide text-white/80 hover:text-white border border-white/10 hover:border-primary/40 bg-gradient-to-b from-white/[0.06] via-transparent to-white/[0.02] backdrop-blur-sm transition-all duration-300 overflow-hidden group"
-              style={{ transformStyle: "preserve-3d" }}
-            >
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <span className="relative z-10 flex items-center justify-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-primary" />
-                {t("auth.partner_sign_in")}
-              </span>
-            </motion.button>
-          </div>
         </motion.div>
       </div>
 
