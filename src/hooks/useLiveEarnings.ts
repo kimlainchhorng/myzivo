@@ -3,6 +3,7 @@
  * Pulls from v_creator_live_earnings + v_creator_live_stream_earnings views.
  * Conversion: 1 coin = $0.01, creator share = 70%.
  */
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -90,6 +91,31 @@ export function useLiveEarnings() {
     },
     enabled: !!user,
   });
+
+  // Realtime: refetch when new gifts arrive on any of this creator's streams
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (!user?.id) return;
+    const ch = supabase
+      .channel(`live-earnings-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "live_gift_displays",
+          filter: `creator_id=eq.${user.id}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["live-earnings-totals", user.id] });
+          queryClient.invalidateQueries({ queryKey: ["live-earnings-streams", user.id] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [user?.id, queryClient]);
 
   return {
     totals: totalsQuery.data,
