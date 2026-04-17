@@ -81,18 +81,17 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
     }
   };
 
-  // When dialog opens, kick off a fresh pairing token
+  // When dialog opens, kick off a fresh pairing token.
+  // IMPORTANT: don't reset pairStatus on close — once confirmed, the studio
+  // must keep showing the phone's live feed even after the dialog closes.
   useEffect(() => {
-    if (showQrDialog) {
+    if (showQrDialog && pairStatus !== "confirmed") {
       startPairing();
-    } else {
-      // Clean reset when closed
-      setPairToken(null); setPairSessionId(null); setPairStatus("idle"); setPairPhoneUA(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showQrDialog]);
 
-  // Realtime: watch this session for status flip → "confirmed"
+  // Realtime: watch this specific session for status flip → "confirmed"
   useEffect(() => {
     if (!pairSessionId) return;
     const ch = supabase
@@ -118,6 +117,65 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
     channelRef.current = ch;
     return () => { try { supabase.removeChannel(ch); } catch {} };
   }, [pairSessionId]);
+
+  // Always-on watcher: ANY pair session for this store flipping to confirmed
+  // (covers cross-tab pairings or when the dialog has been closed).
+  useEffect(() => {
+    if (!storeId) return;
+    const ch = supabase
+      .channel(`store-pair-${storeId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "live_pair_sessions", filter: `store_id=eq.${storeId}` },
+        (payload: any) => {
+          const next = payload?.new;
+          if (next?.status === "confirmed") {
+            setPairStatus("confirmed");
+            setPairSessionId(next.id);
+            setPairPhoneUA(next.phone_user_agent ?? null);
+            setStudioMounted(true);
+            setShowLivePanel(true);
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "live_pair_sessions", filter: `store_id=eq.${storeId}` },
+        (payload: any) => {
+          const next = payload?.new;
+          if (next?.status === "confirmed") {
+            setPairStatus("confirmed");
+            setPairSessionId(next.id);
+            setStudioMounted(true);
+            setShowLivePanel(true);
+          }
+        },
+      )
+      .subscribe();
+    return () => { try { supabase.removeChannel(ch); } catch {} };
+  }, [storeId]);
+
+  // On mount: detect an already-active confirmed pairing for this store
+  useEffect(() => {
+    if (!storeId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await (supabase as any).rpc("get_active_pair_session_for_store", { p_store_id: storeId });
+        if (cancelled || error) return;
+        const row = Array.isArray(data) ? data[0] : data;
+        if (row?.session_id) {
+          setPairSessionId(row.session_id);
+          setPairStatus("confirmed");
+          setStudioMounted(true);
+          setShowLivePanel(true);
+        }
+      } catch (e) {
+        console.warn("[StoreLiveStreamSection] active pair check failed", e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [storeId]);
 
   // Auto-expire on TTL
   useEffect(() => {
