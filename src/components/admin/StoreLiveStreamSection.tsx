@@ -273,60 +273,62 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
             </div>
           </div>
 
-          {/* QR code with corner brackets */}
-          <div className="pt-5 pb-3 flex justify-center bg-gradient-to-b from-transparent to-muted/20">
-            <div className="relative">
-              {/* Corner brackets */}
-              <span className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-primary rounded-tl-md" />
-              <span className="absolute -top-2 -right-2 w-4 h-4 border-t-2 border-r-2 border-primary rounded-tr-md" />
-              <span className="absolute -bottom-2 -left-2 w-4 h-4 border-b-2 border-l-2 border-primary rounded-bl-md" />
-              <span className="absolute -bottom-2 -right-2 w-4 h-4 border-b-2 border-r-2 border-primary rounded-br-md" />
-              <div className="relative p-3 bg-white rounded-xl shadow-lg ring-1 ring-border/50">
-                <QRCodeSVG value={goLiveUrl} size={148} level="M" includeMargin={false} />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center ring-[3px] ring-white shadow-lg">
-                    <Radio className="w-4 h-4 text-primary-foreground" />
+          {/* Body */}
+          <div className="px-4 pt-5 pb-4 bg-gradient-to-b from-transparent to-muted/20">
+            <div className="mx-auto flex w-full max-w-[292px] flex-col items-center">
+              {/* QR code with corner brackets */}
+              <div className="relative mb-4 w-fit self-center">
+                <span className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-primary rounded-tl-md" />
+                <span className="absolute -top-2 -right-2 w-4 h-4 border-t-2 border-r-2 border-primary rounded-tr-md" />
+                <span className="absolute -bottom-2 -left-2 w-4 h-4 border-b-2 border-l-2 border-primary rounded-bl-md" />
+                <span className="absolute -bottom-2 -right-2 w-4 h-4 border-b-2 border-r-2 border-primary rounded-br-md" />
+                <div className="relative p-3 bg-white rounded-xl shadow-lg ring-1 ring-border/50">
+                  <QRCodeSVG value={goLiveUrl} size={148} level="M" includeMargin={false} />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center ring-[3px] ring-white shadow-lg">
+                      <Radio className="w-4 h-4 text-primary-foreground" />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Steps */}
-          <div className="px-5 pb-3">
-            <ol className="space-y-1.5">
-              {[
-                "Open Camera / QR scanner",
-                "Tap the link that appears",
-                "Sign in with same account",
-              ].map((step, i) => (
-                <li key={i} className="flex items-center gap-2">
-                  <span className="shrink-0 w-4 h-4 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">{i + 1}</span>
-                  <span className="text-[11px] text-foreground leading-tight">{step}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
+              {/* Steps */}
+              <div className="w-full pb-4">
+                <ol className="space-y-1.5">
+                  {[
+                    "Open Camera / QR scanner",
+                    "Tap the link that appears",
+                    "Sign in with same account",
+                  ].map((step, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <span className="shrink-0 w-4 h-4 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">{i + 1}</span>
+                      <span className="text-[11px] text-foreground leading-tight">{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
 
-          {/* URL + copy */}
-          <div className="px-5 pb-4 space-y-2">
-            <Button
-              onClick={copyUrl}
-              variant={copied ? "default" : "default"}
-              className="w-full h-10 gap-2 rounded-lg font-semibold shadow-md shadow-primary/20"
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copied ? "Link copied!" : "Copy link"}
-            </Button>
-            <div className="w-full rounded-lg border border-border/70 bg-muted/40 px-2.5 py-1.5">
-              <code className="block text-[10px] truncate text-muted-foreground font-mono" title={goLiveUrl}>{goLiveUrl}</code>
-            </div>
-            <div className="flex items-center justify-center gap-1.5 pt-0.5">
-              <span className="w-1 h-1 rounded-full bg-primary/60" />
-              <p className="text-[10px] text-muted-foreground leading-snug">
-                Your stream stays active across devices
-              </p>
-              <span className="w-1 h-1 rounded-full bg-primary/60" />
+              {/* URL + copy */}
+              <div className="w-full space-y-2">
+                <Button
+                  onClick={copyUrl}
+                  variant="default"
+                  className="w-full h-11 gap-2 rounded-xl font-semibold shadow-md shadow-primary/20"
+                >
+                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copied ? "Link copied!" : "Copy link"}
+                </Button>
+                <div className="w-full rounded-lg border border-border/70 bg-muted/40 px-3 py-2">
+                  <code className="block w-full overflow-hidden text-ellipsis whitespace-nowrap text-[10px] text-muted-foreground font-mono" title={goLiveUrl}>{goLiveUrl}</code>
+                </div>
+                <div className="flex items-center justify-center gap-1.5 pt-0.5">
+                  <span className="w-1 h-1 rounded-full bg-primary/60" />
+                  <p className="text-[10px] text-muted-foreground leading-snug text-center">
+                    Your stream stays active across devices
+                  </p>
+                  <span className="w-1 h-1 rounded-full bg-primary/60" />
+                </div>
+              </div>
             </div>
           </div>
         </DialogContent>
