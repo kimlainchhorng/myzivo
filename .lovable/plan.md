@@ -1,47 +1,37 @@
 
 
-## Problem
-After scanning the QR + tapping "Confirm & Go Live" on the phone, the desktop studio still shows `<GoLivePage />` ("Camera unavailable") instead of `<PairedStreamViewer />` (the phone's live feed).
+## Root cause (verified against DB)
 
-Root cause in `StoreLiveStreamSection.tsx`:
-- The `pairStatus === "confirmed"` switch (line 317) depends on local component state set only by the realtime UPDATE handler that fires while the QR dialog is open.
-- When the dialog closes, the cleanup at line 90 resets `pairStatus` to `"idle"` → studio falls back to `<GoLivePage />` (desktop has no camera → blank).
-- On a fresh page load there is no detection of an already-paired phone — the desktop "forgets" the pairing.
+The desktop never switches to the WebRTC viewer because the auto-detect RPC silently fails:
 
-The phone *is* publishing correctly; the desktop just isn't switching into viewer mode.
+- `get_active_pair_session_for_store` queries `FROM public.stores` — **that table does not exist** in this project. The actual table is `public.store_profiles`.
+- Result: the RPC raises `relation "stores" does not exist`, the catch in `StoreLiveStreamSection.tsx` swallows it as a warning, and `pairStatus` stays at `"idle"` on every page load.
+- DB confirms: pair session for store `0013f47a…` IS `confirmed`, the live stream `51acbbff…` IS `live`, but `live_stream_signals` only contains a single `bye` from the publisher — **no `join` was ever sent by the desktop**, so the publisher never built an offer, so the desktop preview shows the camera-less `<GoLivePage />` (the "Waiting for viewers…" text in the screenshot is from GoLivePage's chat empty-state, not the viewer).
+
+A second smaller issue: even when the pair fires within the same session and `pairStatus` does flip via realtime, on a hard refresh the recovery path is broken for the same reason.
 
 ## Fix
 
-### 1. Persist + auto-detect paired session on desktop
-- Don't reset `pairStatus` on dialog close — keep the "confirmed" badge so the studio keeps showing the viewer.
-- On mount, query for an **active** `live_pair_sessions` row for this `storeId` (status `confirmed`, not expired). If found → set `pairStatus = "confirmed"`, store the session, auto-mount studio.
-- Add a new RPC `get_active_pair_session_for_store(p_store_id uuid)` returning the most recent confirmed/active session for the store. Restricted so only the store owner can call it.
+### 1. Migration: rewrite the RPC against the real table
+- Replace `public.stores` references with `public.store_profiles`
+- Same signature, same return columns (`session_id`, `store_owner_id`, `store_name`, `store_avatar_url`, `status`, `device_expires_at`, `confirmed_at`)
+- Keep SECURITY DEFINER + owner/admin authorization check
 
-### 2. Always-on realtime watcher (independent of dialog)
-- Move the `live_pair_sessions` realtime subscription out of the dialog effect into a top-level effect keyed on `storeId`. Listen for INSERT and UPDATE rows where `store_id = storeId`.
-- On any row flipping to `confirmed`, set `pairStatus = "confirmed"` and auto-open the studio.
+### 2. Fallback: detect active live stream even without an active pair session
+In `StoreLiveStreamSection.tsx`, add a parallel auto-detect: query `live_streams` for `user_id = storeOwnerId` and `status = 'live'`. If one exists, set `pairStatus = "confirmed"` and auto-mount the studio. This makes the desktop self-healing even if the RPC fails again or the pair session expires while a stream is live.
 
-### 3. Auto-show viewer when phone goes live, even without an explicit pair session
-- Add a parallel watcher: query `live_streams` for this `storeOwnerId` with `status='live'`. If one exists, switch the studio to `<PairedStreamViewer />` even if `pairStatus` isn't `"confirmed"` (covers the case where the user scanned via a different desktop session).
-- Updated condition for the studio body becomes:
-  ```
-  (pairStatus === "confirmed" || hasActiveLiveStream) && storeOwnerId
-    ? <PairedStreamViewer ... />
-    : <GoLivePage />
-  ```
+### 3. Hard-fail RPC errors loudly (dev-only)
+Change the silent `console.warn` swallow to also log the error message body so the next regression is caught immediately.
 
-### 4. Manual "force viewer" toggle (small UX safety net)
-- Add a tiny button in the studio header: when an active stream exists but the desktop shows GoLivePage, allow user to tap "View phone feed" → switches to `<PairedStreamViewer />`.
-
-### 5. Phone-side robustness check
-- In `GoLivePage.tsx`, double-check that the publisher PC is created when `phase === "live" && isPaired`. Add a console log on offer creation to make debugging easier (no behavior change).
+### 4. Cleanup signal noise
+The publisher's cleanup currently sends `bye` whenever the effect tears down (camera flip, mic toggle, etc.). Guard it so `bye` is only sent when the stream truly ends (`phase === "ended"`), not on every dependency change. Otherwise the desktop viewer can receive a stale `bye` mid-handshake.
 
 ## Files
-- `src/components/admin/StoreLiveStreamSection.tsx` — restructure pairing state, add active-session + active-stream queries, update studio gate, remove reset-on-close.
-- New migration: add `get_active_pair_session_for_store` RPC (security definer, owner-only).
-- `src/pages/GoLivePage.tsx` — add a `[publisher]` console log around offer creation.
+- New migration: drop + recreate `public.get_active_pair_session_for_store(uuid)` against `store_profiles`
+- `src/components/admin/StoreLiveStreamSection.tsx` — add live-stream fallback effect; surface RPC errors
+- `src/pages/GoLivePage.tsx` — only emit `bye` on stream end
 
 ## Out of scope
-- TURN server (still STUN-only).
-- Public viewers (only the paired-owner desktop sees the feed).
+- TURN server (still STUN-only — fine for same-LAN/most home networks)
+- Multi-viewer broadcast
 
