@@ -166,7 +166,10 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           </div>
 
           {/* User info */}
-          <div className="border-t border-border px-4 py-3">
+          <div
+            className="border-t border-border px-4 py-3 shrink-0"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
+          >
             <p className="text-xs font-medium text-foreground truncate">{user?.email}</p>
             <p className="text-[10px] text-muted-foreground">Store Owner</p>
           </div>
