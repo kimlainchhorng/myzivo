@@ -274,15 +274,15 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
           </div>
 
           {/* QR code with corner brackets */}
-          <div className="px-5 pt-5 pb-3 flex justify-center bg-gradient-to-b from-transparent to-muted/20">
-            <div className="relative">
+          <div className="px-6 pt-5 pb-3 flex justify-center bg-gradient-to-b from-transparent to-muted/20">
+            <div className="relative mx-2">
               {/* Corner brackets */}
-              <span className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-primary rounded-tl-md" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-primary rounded-tr-md" />
-              <span className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-primary rounded-bl-md" />
-              <span className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-primary rounded-br-md" />
+              <span className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-primary rounded-tl-md" />
+              <span className="absolute -top-2 -right-2 w-4 h-4 border-t-2 border-r-2 border-primary rounded-tr-md" />
+              <span className="absolute -bottom-2 -left-2 w-4 h-4 border-b-2 border-l-2 border-primary rounded-bl-md" />
+              <span className="absolute -bottom-2 -right-2 w-4 h-4 border-b-2 border-r-2 border-primary rounded-br-md" />
               <div className="relative p-3 bg-white rounded-xl shadow-lg ring-1 ring-border/50">
-                <QRCodeSVG value={goLiveUrl} size={156} level="M" includeMargin={false} />
+                <QRCodeSVG value={goLiveUrl} size={148} level="M" includeMargin={false} />
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center ring-[3px] ring-white shadow-lg">
                     <Radio className="w-4 h-4 text-primary-foreground" />
