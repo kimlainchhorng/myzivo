@@ -335,7 +335,12 @@ export default function GoLivePage() {
     return () => {
       alive = false;
       try { unsub?.(); } catch {}
-      try { sendSignal(streamId, "publisher", "viewer", "bye", {}); } catch {}
+      // Only signal "bye" when the stream is truly ending — not on every
+      // dependency change (camera flip, mic toggle, etc.) which would
+      // disconnect the desktop viewer mid-handshake.
+      if (phase === "ended") {
+        try { sendSignal(streamId, "publisher", "viewer", "bye", {}); } catch {}
+      }
       try { pc?.close(); } catch {}
     };
   }, [streamId, phase, isPaired]);
