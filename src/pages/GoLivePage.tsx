@@ -283,6 +283,37 @@ export default function GoLivePage() {
   // explicitly tap End / X. This lets them refresh, lose connection, or hide
   // the studio panel without dropping their broadcast.
 
+  // ── Resume an existing live stream on mount (after refresh / re-open) ──
+  useEffect(() => {
+    if (!user?.id) return;
+    if (phase !== "setup" || streamId) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await (supabase as any)
+        .from("live_streams")
+        .select("id, title, topic, started_at, viewer_count, like_count, coins_earned, gifts_received")
+        .eq("user_id", user.id)
+        .eq("status", "live")
+        .is("ended_at", null)
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled || error || !data) return;
+      setStreamId(data.id);
+      setTitle(data.title || "");
+      if (data.topic) setTopic(data.topic);
+      setViewerCount(data.viewer_count ?? 0);
+      setLikes(data.like_count ?? 0);
+      setCoinsEarned(data.coins_earned ?? 0);
+      setGiftsReceived(data.gifts_received ?? 0);
+      if (data.started_at) {
+        setElapsed(Math.max(0, Math.floor((Date.now() - new Date(data.started_at).getTime()) / 1000)));
+      }
+      setPhase("live");
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, phase, streamId]);
+
   const formatTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   // ── SETUP / COUNTDOWN / ENDED screens ──
