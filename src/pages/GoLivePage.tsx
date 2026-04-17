@@ -117,6 +117,7 @@ export default function GoLivePage() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const [phase, setPhase] = useState<LivePhase>("setup");
@@ -147,9 +148,14 @@ export default function GoLivePage() {
         audio: true,
       });
       streamRef.current = s;
-      if (videoRef.current) videoRef.current.srcObject = s;
+      setLocalStream(s);
+      if (videoRef.current) {
+        videoRef.current.srcObject = s;
+        try { await videoRef.current.play(); } catch {}
+      }
       setCameraError(false);
-    } catch {
+    } catch (err) {
+      console.warn("[GoLivePage] getUserMedia failed", err);
       setCameraError(true);
     }
   }, [facingMode]);
@@ -295,15 +301,21 @@ export default function GoLivePage() {
   }, [streamId]);
 
   // ── WebRTC publisher: when paired and live, broadcast camera to the desktop viewer ──
+  // IMPORTANT: depends on `localStream` so when the camera becomes ready slightly
+  // AFTER the stream is created, this effect will rerun and start publishing.
   useEffect(() => {
     if (!streamId || phase !== "live" || !isPaired) return;
-    const localStream = streamRef.current;
-    if (!localStream) return;
+    if (!localStream || localStream.getTracks().length === 0) {
+      console.log("[publisher] waiting for local media stream...");
+      return;
+    }
 
     let pc: RTCPeerConnection | null = null;
     let unsub: (() => void) | null = null;
     let alive = true;
+    const pendingIce: RTCIceCandidateInit[] = [];
 
+    console.log("[publisher] starting peer connection for stream", streamId);
     pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
     localStream.getTracks().forEach((t) => pc!.addTrack(t, localStream));
 
@@ -313,27 +325,52 @@ export default function GoLivePage() {
       }
     };
 
+    pc.onconnectionstatechange = () => {
+      console.log("[publisher] connectionState=", pc?.connectionState);
+      if (pc?.connectionState === "failed" && alive) {
+        // Trigger ICE restart
+        try { pc.restartIce(); } catch {}
+      }
+    };
+
+    const flushIce = async () => {
+      while (pendingIce.length) {
+        const c = pendingIce.shift()!;
+        try { await pc!.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {
+          console.warn("[publisher] failed to add queued ICE", e);
+        }
+      }
+    };
+
     let answered = false;
+    let creatingOffer = false;
     unsub = subscribeSignals(streamId, "publisher", async (row) => {
       if (!pc || !alive) return;
       try {
         if (row.type === "join") {
-          // Ignore duplicate joins once we already have a local offer pending
-          // an answer — re-creating offers thrashes ICE and prevents connect.
+          if (creatingOffer) {
+            console.log("[publisher] ignoring re-join, offer creation in progress");
+            return;
+          }
           if (pc.signalingState !== "stable" && !answered) {
             console.log("[publisher] ignoring re-join, negotiation in progress");
             return;
           }
-          if (answered && pc.connectionState === "connected") {
-            console.log("[publisher] ignoring re-join, already connected");
+          if (answered && (pc.connectionState === "connected" || pc.connectionState === "connecting")) {
+            console.log("[publisher] ignoring re-join, already connected/connecting");
             return;
           }
+          creatingOffer = true;
           answered = false;
-          console.log("[publisher] viewer joined, creating offer for stream", streamId);
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-          await sendSignal(streamId, "publisher", "viewer", "offer", { type: offer.type, sdp: offer.sdp });
-          console.log("[publisher] offer sent");
+          try {
+            console.log("[publisher] viewer joined, creating offer for stream", streamId);
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            await sendSignal(streamId, "publisher", "viewer", "offer", { type: offer.type, sdp: offer.sdp });
+            console.log("[publisher] offer sent");
+          } finally {
+            creatingOffer = false;
+          }
         } else if (row.type === "answer") {
           if (pc.signalingState !== "have-local-offer") {
             console.log("[publisher] ignoring answer, state=", pc.signalingState);
@@ -341,8 +378,16 @@ export default function GoLivePage() {
           }
           await pc.setRemoteDescription(new RTCSessionDescription(row.payload));
           answered = true;
+          await flushIce();
         } else if (row.type === "ice" && row.payload) {
-          try { await pc.addIceCandidate(new RTCIceCandidate(row.payload)); } catch {}
+          if (!pc.remoteDescription) {
+            // Queue until remote description is set
+            pendingIce.push(row.payload);
+            return;
+          }
+          try { await pc.addIceCandidate(new RTCIceCandidate(row.payload)); } catch (e) {
+            console.warn("[publisher] addIceCandidate failed", e);
+          }
         }
       } catch (e) {
         console.warn("[GoLivePage publisher] signal error", e);
@@ -357,7 +402,7 @@ export default function GoLivePage() {
       // toggles. The explicit "End Stream" flow handles teardown.
       try { pc?.close(); } catch {}
     };
-  }, [streamId, phase, isPaired]);
+  }, [streamId, phase, isPaired, localStream]);
 
   // Stream timer
   useEffect(() => {
