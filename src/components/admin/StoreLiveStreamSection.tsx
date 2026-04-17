@@ -106,6 +106,9 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
           if (next.status === "confirmed") {
             setPairStatus("confirmed");
             setPairPhoneUA(next.phone_user_agent ?? null);
+            // Auto-open the studio so the user immediately sees the phone's feed
+            setStudioMounted(true);
+            setShowLivePanel(true);
           } else if (next.status === "expired" || next.status === "cancelled") {
             setPairStatus("expired");
           }
