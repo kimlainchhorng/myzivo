@@ -10,6 +10,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const GoLivePage = lazy(() => import("@/pages/GoLivePage"));
+const PairedStreamViewer = lazy(() => import("@/components/live/PairedStreamViewer"));
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
