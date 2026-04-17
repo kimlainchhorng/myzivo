@@ -3,7 +3,7 @@
  * Shows stream stats and a "Go Live" entry point that opens /go-live in a new tab.
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Radio, Eye, Heart, Gift, Play, Video, ExternalLink } from "lucide-react";
+import { Radio, Eye, Heart, Gift, Play, Video } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   storeId: string;
@@ -31,6 +32,7 @@ interface StreamRow {
 }
 
 export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
+  const navigate = useNavigate();
   const { data: streams, isLoading } = useQuery({
     queryKey: ["store-live-streams", storeId],
     queryFn: async (): Promise<StreamRow[]> => {
@@ -72,12 +74,11 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
             </div>
           </div>
           <Button
-            onClick={() => window.open("/go-live", "_blank")}
+            onClick={() => navigate("/go-live")}
             className="gap-2 shrink-0 h-12 sm:h-10 w-full sm:w-auto rounded-xl text-sm font-semibold touch-manipulation active:scale-[0.98]"
           >
             <Video className="w-4 h-4" />
             Go Live Now
-            <ExternalLink className="w-3.5 h-3.5 opacity-70" />
           </Button>
         </CardContent>
       </Card>
