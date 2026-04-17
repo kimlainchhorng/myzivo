@@ -348,16 +348,11 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
             </div>
           </div>
 
-          {/* Body — flips between QR (pending) and Confirmed views */}
-          <div className="relative px-4 pt-5 pb-4 bg-gradient-to-b from-transparent to-muted/20 min-h-[420px] [perspective:1200px]">
-            <div
-              className={cn(
-                "relative w-full transition-transform duration-700 [transform-style:preserve-3d]",
-                pairStatus === "confirmed" && "[transform:rotateY(180deg)]"
-              )}
-            >
+          {/* Body — swaps between QR (pending) and Confirmed views */}
+          <div className="relative px-4 pt-5 pb-4 bg-gradient-to-b from-transparent to-muted/20 min-h-[420px]">
+            <div className="relative w-full">
               {/* FRONT — QR + steps */}
-              <div className="[backface-visibility:hidden]">
+              <div className={cn(pairStatus === "confirmed" ? "hidden" : "block")}>
                 <div className="mx-auto flex w-full max-w-[292px] flex-col items-center">
                   {/* QR with brackets */}
                   <div className="relative mb-4 w-fit self-center">
