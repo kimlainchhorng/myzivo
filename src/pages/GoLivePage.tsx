@@ -308,6 +308,14 @@ export default function GoLivePage() {
     const endedAt = new Date().toISOString();
 
     try {
+      // Paired-device flow: end via edge function
+      if (isPaired && pairToken && !options?.keepalive) {
+        await supabase.functions.invoke("pair-go-live", {
+          body: { pair_token: pairToken, action: "end", stream_id: streamId },
+        });
+        return;
+      }
+
       if (options?.keepalive) {
         const { data: sessionData } = await supabase.auth.getSession();
         const accessToken = sessionData.session?.access_token;
@@ -335,7 +343,7 @@ export default function GoLivePage() {
     } catch (error) {
       console.warn("[GoLivePage] failed to end stream", error);
     }
-  }, [streamId]);
+  }, [streamId, isPaired, pairToken]);
 
   const endStream = useCallback(async () => {
     await endActiveStream();
