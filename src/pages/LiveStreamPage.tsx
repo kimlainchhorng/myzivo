@@ -61,6 +61,7 @@ interface LiveStream {
   like_count: number;
   status: "live" | "scheduled" | "ended";
   started_at: string;
+  ended_at?: string | null;
 }
 
 interface ChatMsg {
@@ -786,8 +787,9 @@ export default function LiveStreamPage() {
     queryFn: async (): Promise<LiveStream[]> => {
       const { data: rows } = await (supabase as any)
         .from("live_streams")
-        .select("id, user_id, title, topic, viewer_count, like_count, status, started_at, host_name, host_avatar")
+        .select("id, user_id, title, topic, viewer_count, like_count, status, started_at, ended_at, host_name, host_avatar")
         .in("status", ["live", "scheduled"])
+        .is("ended_at", null)
         .order("started_at", { ascending: false })
         .limit(50);
       if (!rows?.length) return [];
@@ -803,7 +805,9 @@ export default function LiveStreamPage() {
         for (const p of (profs ?? []) as any[]) profileMap.set(p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url });
       }
 
-      return (rows as any[]).map((r) => ({
+      return (rows as any[])
+        .filter((r) => !r.ended_at)
+        .map((r) => ({
         id: r.id,
         user_id: r.user_id,
         title: r.title || "Live Stream",
@@ -812,6 +816,7 @@ export default function LiveStreamPage() {
         like_count: r.like_count ?? 0,
         status: (r.status === "live" ? "live" : r.status === "scheduled" ? "scheduled" : "ended") as LiveStream["status"],
         started_at: r.started_at,
+        ended_at: r.ended_at ?? null,
         host_name: r.host_name || profileMap.get(r.user_id)?.full_name || "Creator",
         host_avatar: r.host_avatar || profileMap.get(r.user_id)?.avatar_url || null,
       }));
