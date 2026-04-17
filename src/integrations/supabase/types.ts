@@ -56271,6 +56271,19 @@ export type Database = {
         }
         Returns: Json
       }
+      get_active_pair_session_for_store: {
+        Args: { p_store_id: string }
+        Returns: {
+          confirmed_at: string
+          device_expires_at: string
+          session_id: string
+          status: string
+          store_avatar_url: string
+          store_id: string
+          store_name: string
+          store_owner_id: string
+        }[]
+      }
       get_admin_role: { Args: { _user_id: string }; Returns: string }
       get_batch_details: { Args: { p_batch_id: string }; Returns: Json }
       get_country_services: {

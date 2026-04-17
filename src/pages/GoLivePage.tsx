@@ -317,9 +317,11 @@ export default function GoLivePage() {
       if (!pc || !alive) return;
       try {
         if (row.type === "join") {
+          console.log("[publisher] viewer joined, creating offer for stream", streamId);
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
           await sendSignal(streamId, "publisher", "viewer", "offer", { type: offer.type, sdp: offer.sdp });
+          console.log("[publisher] offer sent");
         } else if (row.type === "answer") {
           await pc.setRemoteDescription(new RTCSessionDescription(row.payload));
         } else if (row.type === "ice" && row.payload) {
