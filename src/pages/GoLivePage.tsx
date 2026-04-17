@@ -51,6 +51,7 @@ import {
   clearPairedIdentity,
   type PairedIdentity,
 } from "@/lib/livePairing";
+import { ICE_SERVERS, sendSignal, subscribeSignals } from "@/lib/liveWebrtc";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 
 const CoinRechargeSheet = lazy(() => import("@/components/live/CoinRechargeSheet"));
