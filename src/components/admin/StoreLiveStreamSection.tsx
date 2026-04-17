@@ -246,35 +246,47 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
       )}
 
       <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
-        <DialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-[380px] p-0 gap-0 overflow-hidden border-primary/20">
-          {/* Hero header */}
-          <div className="relative bg-gradient-to-br from-primary/15 via-primary/5 to-background px-5 pt-4 pb-3 border-b border-border/50">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0 ring-1 ring-primary/20">
-                <Smartphone className="w-4 h-4 text-primary" />
+        <DialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-[360px] p-0 gap-0 overflow-hidden border-primary/30 rounded-2xl shadow-[0_20px_60px_-15px_hsl(var(--primary)/0.35)]">
+          {/* Hero header with decorative gradient */}
+          <div className="relative px-5 pt-4 pb-3 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border-b border-primary/10 overflow-hidden">
+            <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-primary/15 blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-6 -left-6 w-20 h-20 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
+            <div className="relative flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shrink-0 shadow-md shadow-primary/30">
+                <Smartphone className="w-4 h-4 text-primary-foreground" />
               </div>
               <div className="min-w-0 flex-1">
-                <DialogTitle className="text-sm font-bold text-foreground leading-tight">Continue on your phone</DialogTitle>
+                <DialogTitle className="text-sm font-bold text-foreground leading-tight tracking-tight">Continue on your phone</DialogTitle>
                 <DialogDescription className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
-                  {liveNow.length > 0 ? "You're live — scan to take it mobile." : "Scan to open the studio on your phone."}
+                  {liveNow.length > 0 ? "You're live — take it mobile." : "Open the studio anywhere."}
                 </DialogDescription>
               </div>
               {liveNow.length > 0 && (
-                <div className="inline-flex items-center gap-1 rounded-full bg-red-500/10 border border-red-500/30 px-2 py-0.5 shrink-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                <div className="inline-flex items-center gap-1 rounded-full bg-red-500/10 border border-red-500/40 px-1.5 py-0.5 shrink-0 shadow-sm">
+                  <span className="relative flex w-1.5 h-1.5">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping" />
+                    <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-red-500" />
+                  </span>
                   <span className="text-[9px] font-bold tracking-wider text-red-600 dark:text-red-400">LIVE</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* QR code */}
-          <div className="px-5 pt-4 pb-3 flex justify-center">
-            <div className="relative p-3 bg-white rounded-xl shadow-md ring-1 ring-border">
-              <QRCodeSVG value={goLiveUrl} size={168} level="M" includeMargin={false} />
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center ring-[3px] ring-white shadow-lg">
-                  <Radio className="w-4 h-4 text-primary-foreground" />
+          {/* QR code with corner brackets */}
+          <div className="px-5 pt-5 pb-3 flex justify-center bg-gradient-to-b from-transparent to-muted/20">
+            <div className="relative">
+              {/* Corner brackets */}
+              <span className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-primary rounded-tl-md" />
+              <span className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-primary rounded-tr-md" />
+              <span className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-primary rounded-bl-md" />
+              <span className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-primary rounded-br-md" />
+              <div className="relative p-3 bg-white rounded-xl shadow-lg ring-1 ring-border/50">
+                <QRCodeSVG value={goLiveUrl} size={156} level="M" includeMargin={false} />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center ring-[3px] ring-white shadow-lg">
+                    <Radio className="w-4 h-4 text-primary-foreground" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -289,7 +301,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
                 "Sign in with same account",
               ].map((step, i) => (
                 <li key={i} className="flex items-center gap-2">
-                  <span className="shrink-0 w-4 h-4 rounded-full bg-primary/15 text-primary text-[9px] font-bold flex items-center justify-center">{i + 1}</span>
+                  <span className="shrink-0 w-4 h-4 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">{i + 1}</span>
                   <span className="text-[11px] text-foreground leading-tight">{step}</span>
                 </li>
               ))}
@@ -298,16 +310,20 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
 
           {/* URL + copy */}
           <div className="px-5 pb-4">
-            <div className="w-full flex items-center gap-1.5 rounded-lg border bg-muted/50 pl-2.5 pr-1 py-1">
+            <div className="w-full flex items-center gap-1.5 rounded-lg border border-border/70 bg-muted/40 pl-2.5 pr-1 py-1 hover:border-primary/30 transition-colors">
               <code className="flex-1 text-[10px] truncate text-muted-foreground font-mono">{goLiveUrl}</code>
-              <Button size="sm" variant={copied ? "default" : "secondary"} onClick={copyUrl} className="h-6 px-2 gap-1 text-[10px] rounded-md shrink-0">
+              <Button size="sm" variant={copied ? "default" : "secondary"} onClick={copyUrl} className="h-6 px-2 gap-1 text-[10px] rounded-md shrink-0 transition-all">
                 {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                 {copied ? "Copied" : "Copy"}
               </Button>
             </div>
-            <p className="mt-2 text-[10px] text-muted-foreground text-center leading-snug">
-              Your stream stays active across devices.
-            </p>
+            <div className="mt-2.5 flex items-center justify-center gap-1.5">
+              <span className="w-1 h-1 rounded-full bg-primary/60" />
+              <p className="text-[10px] text-muted-foreground leading-snug">
+                Your stream stays active across devices
+              </p>
+              <span className="w-1 h-1 rounded-full bg-primary/60" />
+            </div>
           </div>
         </DialogContent>
       </Dialog>
