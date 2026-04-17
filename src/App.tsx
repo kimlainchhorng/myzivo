@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RemoteConfigProvider } from "@/contexts/RemoteConfigContext";
@@ -480,6 +480,12 @@ const GeofenceBootstrap = lazy(() => import("@/hooks/useGeofenceNotifications").
   function GeofenceComp() { m.useGeofenceNotifications(); return null; }
   return { default: GeofenceComp };
 }));
+
+/** Routes /partner-with-zivo: with ?type= → onboarding wizard, otherwise landing page */
+const PartnerOnboardingDispatcher = () => {
+  const [params] = useSearchParams();
+  return params.get("type") ? <PartnerOnboarding /> : <PartnerWithZivo />;
+};
 
 const App = () => (
   <ErrorBoundary>
