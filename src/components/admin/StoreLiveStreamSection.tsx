@@ -5,7 +5,7 @@
 import { useState, lazy, Suspense, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Radio, Eye, Heart, Gift, Play, Video, X, Maximize2, QrCode, Smartphone, Copy, Check, ShieldCheck, Loader2, RefreshCw } from "lucide-react";
-import { createPairSession } from "@/lib/livePairing";
+import { createPairSession, revokePairSession } from "@/lib/livePairing";
 import { QRCodeSVG } from "qrcode.react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
@@ -66,7 +66,9 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   };
   const openStudio = () => { setStudioMounted(true); setShowLivePanel(true); };
 
-  // Generate a pairing session every time the QR dialog opens
+  const hasActivePhoneSession = pairStatus === "confirmed" || !!activeLiveStreamId;
+
+  // Generate a pairing session only when there isn't already an active paired/live session
   const startPairing = async () => {
     setPairStatus("loading");
     setPairError(null);
@@ -83,14 +85,25 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
     }
   };
 
-  // When dialog opens, always generate a fresh pairing token for a new scan.
-  // This must not affect the docked viewer/live state on the right.
+  const refreshPairing = async () => {
+    if (pairToken && hasActivePhoneSession) {
+      try {
+        await revokePairSession(pairToken);
+      } catch (e) {
+        console.warn("[StoreLiveStreamSection] revoke previous pair failed", e);
+      }
+    }
+    await startPairing();
+  };
+
+  // Keep the current paired/live session stable; only mint a new QR when there
+  // is no active pair yet.
   useEffect(() => {
-    if (showQrDialog) {
+    if (showQrDialog && !hasActivePhoneSession && !pairToken) {
       startPairing();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showQrDialog]);
+  }, [showQrDialog, hasActivePhoneSession, pairToken]);
 
   // Realtime: watch this specific session for status flip → "confirmed"
   useEffect(() => {
@@ -172,6 +185,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
         if (row?.session_id) {
           setPairSessionId(row.session_id);
           setPairStatus("confirmed");
+          setPairExpiresAt(row.device_expires_at ?? null);
           setStudioMounted(true);
           setShowLivePanel(true);
         }
@@ -565,7 +579,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
                           <p className="text-[11px] font-semibold text-foreground">
                             {pairStatus === "expired" ? "QR expired" : "Couldn't start"}
                           </p>
-                          <Button size="sm" variant="outline" onClick={startPairing} className="h-7 gap-1 text-[11px]">
+                           <Button size="sm" variant="outline" onClick={refreshPairing} className="h-7 gap-1 text-[11px]">
                             <RefreshCw className="w-3 h-3" /> Refresh
                           </Button>
                         </div>
@@ -615,7 +629,11 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
                     <div className="flex items-center justify-center gap-1.5 pt-0.5">
                       <span className="w-1 h-1 rounded-full bg-primary/60" />
                       <p className="text-[10px] text-muted-foreground leading-snug text-center">
-                        {pairStatus === "pending" ? "Waiting for your phone to scan…" : "One-time secure pairing"}
+                        {pairStatus === "pending"
+                          ? "Waiting for your phone to scan…"
+                          : hasActivePhoneSession
+                            ? "This phone session stays linked until the live ends"
+                            : "One-time secure pairing"}
                       </p>
                       <span className="w-1 h-1 rounded-full bg-primary/60" />
                     </div>
@@ -634,7 +652,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
                   </div>
                   <h3 className="text-lg font-bold text-foreground">Phone paired!</h3>
                   <p className="text-xs text-muted-foreground mt-1 px-2 leading-relaxed">
-                    You're now signed in to <span className="font-semibold text-foreground">{storeName ?? "your shop"}</span> on your phone — opening the Go Live studio…
+                    Your phone is already paired to <span className="font-semibold text-foreground">{storeName ?? "your shop"}</span> and will stay linked until this live stream ends.
                   </p>
 
                   {pairPhoneUA && (
@@ -657,6 +675,13 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
                     className="mt-5 w-full h-10 rounded-xl text-xs font-medium"
                   >
                     Done
+                  </Button>
+                  <Button
+                    onClick={refreshPairing}
+                    variant="ghost"
+                    className="mt-2 w-full h-9 rounded-xl text-[11px] font-medium"
+                  >
+                    Generate new QR instead
                   </Button>
                 </div>
               </div>
