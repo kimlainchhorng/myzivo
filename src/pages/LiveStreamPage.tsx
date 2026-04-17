@@ -815,17 +815,26 @@ export default function LiveStreamPage() {
         host_avatar: r.host_avatar || profileMap.get(r.user_id)?.avatar_url || null,
       }));
     },
-    staleTime: 15_000,
+    staleTime: 5_000,
     gcTime: 60_000,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchInterval: 20_000, // safety poll in case realtime drops
   });
 
-  // Realtime: refetch when any stream changes
+  // Realtime: refetch when any stream changes (debounced to avoid thrash)
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleRefetch = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => refetch(), 400);
+    };
     const ch = supabase
       .channel("live-streams-list")
-      .on("postgres_changes", { event: "*", schema: "public", table: "live_streams" }, () => refetch())
+      .on("postgres_changes", { event: "*", schema: "public", table: "live_streams" }, scheduleRefetch)
       .subscribe();
     return () => {
+      if (timer) clearTimeout(timer);
       supabase.removeChannel(ch);
     };
   }, [refetch]);
