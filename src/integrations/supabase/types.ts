@@ -24821,6 +24821,7 @@ export type Database = {
           host_avatar: string | null
           host_name: string | null
           id: string
+          last_publisher_heartbeat: string | null
           like_count: number
           started_at: string
           status: string
@@ -24837,6 +24838,7 @@ export type Database = {
           host_avatar?: string | null
           host_name?: string | null
           id?: string
+          last_publisher_heartbeat?: string | null
           like_count?: number
           started_at?: string
           status?: string
@@ -24853,6 +24855,7 @@ export type Database = {
           host_avatar?: string | null
           host_name?: string | null
           id?: string
+          last_publisher_heartbeat?: string | null
           like_count?: number
           started_at?: string
           status?: string
@@ -55916,6 +55919,7 @@ export type Database = {
       cleanup_expired_otp_codes: { Args: never; Returns: undefined }
       cleanup_expired_qr_tokens: { Args: never; Returns: undefined }
       cleanup_expired_tokens: { Args: never; Returns: undefined }
+      cleanup_live_artifacts: { Args: never; Returns: Json }
       cleanup_old_live_stream_signals: { Args: never; Returns: undefined }
       cleanup_old_location_history: { Args: never; Returns: undefined }
       cleanup_old_login_sessions: { Args: never; Returns: undefined }
@@ -56135,6 +56139,32 @@ export type Database = {
       }
       driver_mark_arrived: { Args: { p_job_id: string }; Returns: Json }
       driver_start_trip: { Args: { p_job_id: string }; Returns: Json }
+      end_live_stream: {
+        Args: { p_stream_id: string }
+        Returns: {
+          coins_earned: number
+          created_at: string
+          ended_at: string | null
+          gifts_received: number
+          host_avatar: string | null
+          host_name: string | null
+          id: string
+          last_publisher_heartbeat: string | null
+          like_count: number
+          started_at: string
+          status: string
+          title: string | null
+          topic: string
+          user_id: string
+          viewer_count: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "live_streams"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: undefined
@@ -56169,6 +56199,10 @@ export type Database = {
             }[]
           }
       expire_offers_and_reset: { Args: { p_limit?: number }; Returns: Json }
+      expire_stale_live_streams_for_user: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       finalize_job_and_receipt: {
         Args: {
           p_final_miles: number
@@ -57018,6 +57052,10 @@ export type Database = {
           }
       sync_customer_phone_verified: { Args: never; Returns: Json }
       sync_driver_phone_verified: { Args: never; Returns: Json }
+      touch_live_stream_heartbeat: {
+        Args: { p_stream_id: string }
+        Returns: undefined
+      }
       track_user_interest: {
         Args: {
           p_category: string
