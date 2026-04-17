@@ -89,3 +89,9 @@ verify_jwt = false
 
 [functions.account-summary]
 verify_jwt = false
+
+[functions.notifications-summary]
+verify_jwt = false
+
+[functions.wallet-summary]
+verify_jwt = false
