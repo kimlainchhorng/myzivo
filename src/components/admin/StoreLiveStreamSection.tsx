@@ -267,6 +267,9 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
 
     syncLiveState();
 
+    // Re-check every 15s so a closed phone flips to "ended" within ~45s.
+    const staleTimer = setInterval(syncLiveState, 15000);
+
     const ch = supabase
       .channel(`store-live-auto-${storeOwnerId}`)
       .on(
@@ -303,6 +306,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
 
     return () => {
       cancelled = true;
+      clearInterval(staleTimer);
       try { supabase.removeChannel(ch); } catch {}
     };
   }, [queryClient, storeId, storeOwnerId]);
