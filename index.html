@@ -189,6 +189,8 @@
         var script = document.createElement("script");
         script.async = 1;
         script.src = 'https://emrld.ltd/NDkzNzQ1.js?t=493745';
+        // Quiet fail — third-party tracker, never block app
+        script.onerror = function () { /* swallow load error */ };
         document.head.appendChild(script);
       })();
     </script>

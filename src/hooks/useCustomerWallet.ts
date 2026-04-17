@@ -29,6 +29,9 @@ export function useCustomerWallet() {
       return data;
     },
     enabled: !!user,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
 
   const txQuery = useQuery({
@@ -53,6 +56,9 @@ export function useCustomerWallet() {
       })) as WalletTransaction[];
     },
     enabled: !!user,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
 
   const wallet = walletQuery.data;
