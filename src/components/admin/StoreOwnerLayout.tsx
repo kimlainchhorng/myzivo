@@ -77,24 +77,27 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}>
           {/* Store branding */}
-          <div className="h-16 flex items-center justify-between px-5 border-b border-border">
-            <div className="flex items-center gap-2.5 min-w-0">
+          <div
+            className="flex items-center justify-between px-5 border-b border-border shrink-0"
+            style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)', paddingBottom: '12px' }}
+          >
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
               {storeLogoUrl ? (
-                <img src={storeLogoUrl} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />
+                <img src={storeLogoUrl} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />
               ) : (
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Store className="w-4 h-4 text-primary" />
                 </div>
               )}
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <span className="text-sm font-bold text-foreground truncate block">{storeName || "My Store"}</span>
                 {storeId && (
                   <span className="text-[10px] text-muted-foreground font-mono">CBD{storeId.replace(/-/g, '').slice(0, 8).toUpperCase()}</span>
                 )}
               </div>
             </div>
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
-              <ChevronLeft className="w-4 h-4" />
+            <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10 shrink-0 -mr-2 touch-manipulation" onClick={() => setSidebarOpen(false)}>
+              <ChevronLeft className="w-5 h-5" />
             </Button>
           </div>
 
@@ -163,7 +166,10 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           </div>
 
           {/* User info */}
-          <div className="border-t border-border px-4 py-3">
+          <div
+            className="border-t border-border px-4 py-3 shrink-0"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
+          >
             <p className="text-xs font-medium text-foreground truncate">{user?.email}</p>
             <p className="text-[10px] text-muted-foreground">Store Owner</p>
           </div>
