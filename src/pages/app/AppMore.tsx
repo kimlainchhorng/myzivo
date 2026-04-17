@@ -8,6 +8,8 @@ import {
   ChevronRight, Settings, ShoppingBag, Wallet, MapPin, Handshake,
   Sparkles, Car, UtensilsCrossed, Store, Wrench, Building2, Truck, Shield,
   Copy, Share2, QrCode, Check, User, Plane, Hotel, DollarSign,
+  Scissors, Hand, Heart, Dumbbell, GraduationCap, Stethoscope, PawPrint,
+  Briefcase, Camera, Music,
 } from "lucide-react";
 import { toast } from "sonner";
 import AppLayout from "@/components/app/AppLayout";
@@ -27,8 +29,19 @@ const partnerOptions = [
   { icon: UtensilsCrossed, label: "Become a Restaurant Partner", description: "List your restaurant on ZIVO", href: "/partner-with-zivo?type=restaurant", color: "from-orange-500 to-amber-500" },
   { icon: Store, label: "Become a Shop Partner", description: "Sell products through ZIVO", href: "/partner-with-zivo?type=store", color: "from-emerald-500 to-green-500" },
   { icon: Wrench, label: "Become an Auto Repair Partner", description: "Offer repair services on ZIVO", href: "/partner-with-zivo?type=auto-repair", color: "from-slate-500 to-slate-600" },
+  { icon: Car, label: "Become an Auto Dealership", description: "Sell new & used vehicles", href: "/partner-with-zivo?type=auto-dealership", color: "from-zinc-600 to-zinc-800" },
   { icon: Building2, label: "Become a Hotel Partner", description: "List your property on ZIVO", href: "/partner-with-zivo?type=hotel", color: "from-purple-500 to-purple-600" },
   { icon: Truck, label: "Become a Delivery Partner", description: "Deliver food & packages", href: "/partner-with-zivo?type=delivery", color: "from-rose-500 to-pink-500" },
+  { icon: Scissors, label: "Become a Salon Partner", description: "Hair & beauty bookings", href: "/partner-with-zivo?type=salon", color: "from-pink-500 to-fuchsia-500" },
+  { icon: Hand, label: "Become a Nail Salon Partner", description: "Manicure & pedicure services", href: "/partner-with-zivo?type=nail-salon", color: "from-fuchsia-500 to-rose-500" },
+  { icon: Heart, label: "Become a Spa Partner", description: "Massage & wellness", href: "/partner-with-zivo?type=spa", color: "from-teal-400 to-cyan-500" },
+  { icon: Dumbbell, label: "Become a Fitness Partner", description: "Gym & personal trainers", href: "/partner-with-zivo?type=fitness", color: "from-amber-500 to-orange-600" },
+  { icon: GraduationCap, label: "Become a Tutor Partner", description: "Offer lessons & courses", href: "/partner-with-zivo?type=tutor", color: "from-indigo-500 to-blue-600" },
+  { icon: Stethoscope, label: "Become a Clinic Partner", description: "Health & medical services", href: "/partner-with-zivo?type=clinic", color: "from-red-500 to-rose-600" },
+  { icon: PawPrint, label: "Become a Pet Care Partner", description: "Grooming, vets & pet sitting", href: "/partner-with-zivo?type=pet-care", color: "from-yellow-500 to-amber-600" },
+  { icon: Briefcase, label: "Become a Service Pro", description: "Cleaning, plumbing, handyman", href: "/partner-with-zivo?type=service-pro", color: "from-stone-500 to-stone-700" },
+  { icon: Camera, label: "Become a Photographer", description: "Events, portraits & weddings", href: "/partner-with-zivo?type=photographer", color: "from-violet-500 to-purple-600" },
+  { icon: Music, label: "Become an Event Partner", description: "DJs, venues & entertainment", href: "/partner-with-zivo?type=event", color: "from-cyan-500 to-blue-500" },
 ];
 
 const quickLinks = [
