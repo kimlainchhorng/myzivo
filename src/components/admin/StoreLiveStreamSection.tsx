@@ -162,7 +162,11 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
     (async () => {
       try {
         const { data, error } = await (supabase as any).rpc("get_active_pair_session_for_store", { p_store_id: storeId });
-        if (cancelled || error) return;
+        if (cancelled) return;
+        if (error) {
+          console.error("[StoreLiveStreamSection] get_active_pair_session_for_store RPC error:", error.message ?? error, error);
+          return;
+        }
         const row = Array.isArray(data) ? data[0] : data;
         if (row?.session_id) {
           setPairSessionId(row.session_id);
@@ -171,7 +175,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
           setShowLivePanel(true);
         }
       } catch (e) {
-        console.warn("[StoreLiveStreamSection] active pair check failed", e);
+        console.error("[StoreLiveStreamSection] active pair check threw", e);
       }
     })();
     return () => { cancelled = true; };
@@ -206,6 +210,35 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
     },
   });
   const storeOwnerId = storeMeta?.owner_id ?? null;
+
+  // Fallback auto-detect: if there's an active live_stream for this store owner,
+  // treat it as confirmed and mount the viewer — covers cases where the pair
+  // session expired/missing but the phone is still publishing.
+  useEffect(() => {
+    if (!storeOwnerId || pairStatus === "confirmed") return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await (supabase as any)
+        .from("live_streams")
+        .select("id")
+        .eq("user_id", storeOwnerId)
+        .eq("status", "live")
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      if (error) {
+        console.error("[StoreLiveStreamSection] live_streams fallback error:", error.message ?? error);
+        return;
+      }
+      if (data?.id) {
+        setPairStatus("confirmed");
+        setStudioMounted(true);
+        setShowLivePanel(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [storeOwnerId, pairStatus]);
   const { data: streams, isLoading } = useQuery({
     queryKey: ["store-live-streams", storeId, storeOwnerId],
     queryFn: async (): Promise<StreamRow[]> => {
