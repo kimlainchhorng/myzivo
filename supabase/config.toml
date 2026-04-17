@@ -86,3 +86,6 @@ verify_jwt = false
 
 [functions.pair-go-live]
 verify_jwt = false
+
+[functions.account-summary]
+verify_jwt = false

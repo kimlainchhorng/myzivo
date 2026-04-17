@@ -130,12 +130,25 @@ export const useUpdateUserProfile = () => {
 
       if (error) throw error;
     },
+    // Optimistic update — UI reflects changes instantly
+    onMutate: async (updates) => {
+      await queryClient.cancelQueries({ queryKey: ["userProfile", user?.id] });
+      const previous = queryClient.getQueryData<UserProfile | null>(["userProfile", user?.id]);
+      if (previous) {
+        queryClient.setQueryData(["userProfile", user?.id], { ...previous, ...updates });
+      }
+      return { previous };
+    },
+    onError: (error, _vars, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(["userProfile", user?.id], ctx.previous);
+      }
+      toast.error("Failed to update profile: " + error.message);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["accountSummary", user?.id] });
       toast.success("Profile updated successfully");
-    },
-    onError: (error) => {
-      toast.error("Failed to update profile: " + error.message);
     },
   });
 };
