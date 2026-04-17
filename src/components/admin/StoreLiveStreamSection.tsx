@@ -3,7 +3,7 @@
  * Shows stream stats and a "Go Live" entry point that opens /go-live in a new tab.
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Radio, Eye, Heart, Gift, Play, Video, ExternalLink } from "lucide-react";
+import { Radio, Eye, Heart, Gift, Play, Video } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   storeId: string;
