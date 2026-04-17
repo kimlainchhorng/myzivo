@@ -2,9 +2,10 @@
  * StoreLiveStreamSection — Live streaming hub for store owners.
  * Shows stream stats and a "Go Live" entry point that opens /go-live in a new tab.
  */
-import { useState, lazy, Suspense } from "react";
+import { useState, lazy, Suspense, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Radio, Eye, Heart, Gift, Play, Video, X, Maximize2, QrCode, Smartphone, Copy, Check } from "lucide-react";
+import { Radio, Eye, Heart, Gift, Play, Video, X, Maximize2, QrCode, Smartphone, Copy, Check, ShieldCheck, Loader2, RefreshCw } from "lucide-react";
+import { createPairSession } from "@/lib/livePairing";
 import { QRCodeSVG } from "qrcode.react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
@@ -44,11 +45,85 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   const [studioMounted, setStudioMounted] = useState(false);
   const [showQrDialog, setShowQrDialog] = useState(false);
   const [copied, setCopied] = useState(false);
-  const goLiveUrl = typeof window !== "undefined" ? `${window.location.origin}/go-live` : "/go-live";
+  // Pairing state — token is generated when dialog opens; status flips to "confirmed" via realtime
+  const [pairToken, setPairToken] = useState<string | null>(null);
+  const [pairSessionId, setPairSessionId] = useState<string | null>(null);
+  const [pairExpiresAt, setPairExpiresAt] = useState<string | null>(null);
+  const [pairStatus, setPairStatus] = useState<"idle" | "loading" | "pending" | "confirmed" | "expired" | "error">("idle");
+  const [pairPhoneUA, setPairPhoneUA] = useState<string | null>(null);
+  const [pairError, setPairError] = useState<string | null>(null);
+  const channelRef = useRef<any>(null);
+
+  const goLiveUrl = pairToken
+    ? (typeof window !== "undefined" ? `${window.location.origin}/pair/${pairToken}` : `/pair/${pairToken}`)
+    : (typeof window !== "undefined" ? `${window.location.origin}/go-live` : "/go-live");
+
   const copyUrl = async () => {
     try { await navigator.clipboard.writeText(goLiveUrl); setCopied(true); setTimeout(() => setCopied(false), 1500); toast.success("Link copied"); } catch { toast.error("Copy failed"); }
   };
   const openStudio = () => { setStudioMounted(true); setShowLivePanel(true); };
+
+  // Generate a pairing session every time the QR dialog opens
+  const startPairing = async () => {
+    setPairStatus("loading");
+    setPairError(null);
+    setPairPhoneUA(null);
+    try {
+      const { session_id, token, expires_at } = await createPairSession(storeId);
+      setPairToken(token);
+      setPairSessionId(session_id);
+      setPairExpiresAt(expires_at);
+      setPairStatus("pending");
+    } catch (e: any) {
+      setPairError(e?.message ?? "Couldn't start pairing");
+      setPairStatus("error");
+    }
+  };
+
+  // When dialog opens, kick off a fresh pairing token
+  useEffect(() => {
+    if (showQrDialog) {
+      startPairing();
+    } else {
+      // Clean reset when closed
+      setPairToken(null); setPairSessionId(null); setPairStatus("idle"); setPairPhoneUA(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showQrDialog]);
+
+  // Realtime: watch this session for status flip → "confirmed"
+  useEffect(() => {
+    if (!pairSessionId) return;
+    const ch = supabase
+      .channel(`pair-${pairSessionId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "live_pair_sessions", filter: `id=eq.${pairSessionId}` },
+        (payload: any) => {
+          const next = payload?.new;
+          if (!next) return;
+          if (next.status === "confirmed") {
+            setPairStatus("confirmed");
+            setPairPhoneUA(next.phone_user_agent ?? null);
+          } else if (next.status === "expired" || next.status === "cancelled") {
+            setPairStatus("expired");
+          }
+        },
+      )
+      .subscribe();
+    channelRef.current = ch;
+    return () => { try { supabase.removeChannel(ch); } catch {} };
+  }, [pairSessionId]);
+
+  // Auto-expire on TTL
+  useEffect(() => {
+    if (!pairExpiresAt || pairStatus !== "pending") return;
+    const ms = new Date(pairExpiresAt).getTime() - Date.now();
+    if (ms <= 0) { setPairStatus("expired"); return; }
+    const t = setTimeout(() => setPairStatus("expired"), ms);
+    return () => clearTimeout(t);
+  }, [pairExpiresAt, pairStatus]);
+
   const { data: storeOwnerId } = useQuery({
     queryKey: ["store-live-stream-owner", storeId],
     queryFn: async (): Promise<string | null> => {
@@ -273,60 +348,126 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
             </div>
           </div>
 
-          {/* Body */}
-          <div className="px-4 pt-5 pb-4 bg-gradient-to-b from-transparent to-muted/20">
-            <div className="mx-auto flex w-full max-w-[292px] flex-col items-center">
-              {/* QR code with corner brackets */}
-              <div className="relative mb-4 w-fit self-center">
-                <span className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-primary rounded-tl-md" />
-                <span className="absolute -top-2 -right-2 w-4 h-4 border-t-2 border-r-2 border-primary rounded-tr-md" />
-                <span className="absolute -bottom-2 -left-2 w-4 h-4 border-b-2 border-l-2 border-primary rounded-bl-md" />
-                <span className="absolute -bottom-2 -right-2 w-4 h-4 border-b-2 border-r-2 border-primary rounded-br-md" />
-                <div className="relative p-3 bg-white rounded-xl shadow-lg ring-1 ring-border/50">
-                  <QRCodeSVG value={goLiveUrl} size={148} level="M" includeMargin={false} />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center ring-[3px] ring-white shadow-lg">
-                      <Radio className="w-4 h-4 text-primary-foreground" />
+          {/* Body — flips between QR (pending) and Confirmed views */}
+          <div className="relative px-4 pt-5 pb-4 bg-gradient-to-b from-transparent to-muted/20 min-h-[420px] [perspective:1200px]">
+            <div
+              className={cn(
+                "relative w-full transition-transform duration-700 [transform-style:preserve-3d]",
+                pairStatus === "confirmed" && "[transform:rotateY(180deg)]"
+              )}
+            >
+              {/* FRONT — QR + steps */}
+              <div className="[backface-visibility:hidden]">
+                <div className="mx-auto flex w-full max-w-[292px] flex-col items-center">
+                  {/* QR with brackets */}
+                  <div className="relative mb-4 w-fit self-center">
+                    <span className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-primary rounded-tl-md" />
+                    <span className="absolute -top-2 -right-2 w-4 h-4 border-t-2 border-r-2 border-primary rounded-tr-md" />
+                    <span className="absolute -bottom-2 -left-2 w-4 h-4 border-b-2 border-l-2 border-primary rounded-bl-md" />
+                    <span className="absolute -bottom-2 -right-2 w-4 h-4 border-b-2 border-r-2 border-primary rounded-br-md" />
+                    <div className="relative p-3 bg-white rounded-xl shadow-lg ring-1 ring-border/50">
+                      {pairStatus === "loading" || pairStatus === "idle" ? (
+                        <div className="w-[148px] h-[148px] flex items-center justify-center">
+                          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                        </div>
+                      ) : pairStatus === "expired" || pairStatus === "error" ? (
+                        <div className="w-[148px] h-[148px] flex flex-col items-center justify-center gap-2 text-center px-2">
+                          <p className="text-[11px] font-semibold text-foreground">
+                            {pairStatus === "expired" ? "QR expired" : "Couldn't start"}
+                          </p>
+                          <Button size="sm" variant="outline" onClick={startPairing} className="h-7 gap-1 text-[11px]">
+                            <RefreshCw className="w-3 h-3" /> Refresh
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <QRCodeSVG value={goLiveUrl} size={148} level="M" includeMargin={false} />
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center ring-[3px] ring-white shadow-lg">
+                              <Radio className="w-4 h-4 text-primary-foreground" />
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Steps */}
+                  <div className="w-full pb-4">
+                    <ol className="space-y-1.5">
+                      {[
+                        "Open Camera / QR scanner",
+                        "Tap the link that appears",
+                        "Confirm on your phone",
+                      ].map((step, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <span className="shrink-0 w-4 h-4 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">{i + 1}</span>
+                          <span className="text-[11px] text-foreground leading-tight">{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+
+                  {/* URL + copy */}
+                  <div className="w-full space-y-2">
+                    <Button
+                      onClick={copyUrl}
+                      variant="default"
+                      disabled={!pairToken}
+                      className="w-full h-11 gap-2 rounded-xl font-semibold shadow-md shadow-primary/20"
+                    >
+                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {copied ? "Link copied!" : "Copy link"}
+                    </Button>
+                    <div className="w-full rounded-lg border border-border/70 bg-muted/40 px-3 py-2">
+                      <code className="block w-full overflow-hidden text-ellipsis whitespace-nowrap text-[10px] text-muted-foreground font-mono" title={goLiveUrl}>{goLiveUrl}</code>
+                    </div>
+                    <div className="flex items-center justify-center gap-1.5 pt-0.5">
+                      <span className="w-1 h-1 rounded-full bg-primary/60" />
+                      <p className="text-[10px] text-muted-foreground leading-snug text-center">
+                        {pairStatus === "pending" ? "Waiting for your phone to scan…" : "One-time secure pairing"}
+                      </p>
+                      <span className="w-1 h-1 rounded-full bg-primary/60" />
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Steps */}
-              <div className="w-full pb-4">
-                <ol className="space-y-1.5">
-                  {[
-                    "Open Camera / QR scanner",
-                    "Tap the link that appears",
-                    "Sign in with same account",
-                  ].map((step, i) => (
-                    <li key={i} className="flex items-center gap-2">
-                      <span className="shrink-0 w-4 h-4 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">{i + 1}</span>
-                      <span className="text-[11px] text-foreground leading-tight">{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-
-              {/* URL + copy */}
-              <div className="w-full space-y-2">
-                <Button
-                  onClick={copyUrl}
-                  variant="default"
-                  className="w-full h-11 gap-2 rounded-xl font-semibold shadow-md shadow-primary/20"
-                >
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  {copied ? "Link copied!" : "Copy link"}
-                </Button>
-                <div className="w-full rounded-lg border border-border/70 bg-muted/40 px-3 py-2">
-                  <code className="block w-full overflow-hidden text-ellipsis whitespace-nowrap text-[10px] text-muted-foreground font-mono" title={goLiveUrl}>{goLiveUrl}</code>
-                </div>
-                <div className="flex items-center justify-center gap-1.5 pt-0.5">
-                  <span className="w-1 h-1 rounded-full bg-primary/60" />
-                  <p className="text-[10px] text-muted-foreground leading-snug text-center">
-                    Your stream stays active across devices
+              {/* BACK — Confirmed */}
+              <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                <div className="mx-auto flex w-full max-w-[292px] flex-col items-center text-center pt-4">
+                  <div className="relative mb-4">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-2xl shadow-primary/40">
+                      <Check className="w-12 h-12 text-primary-foreground" strokeWidth={3} />
+                    </div>
+                    <span className="absolute -inset-2 rounded-full border-2 border-primary/30 animate-ping pointer-events-none" />
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground">Phone paired!</h3>
+                  <p className="text-xs text-muted-foreground mt-1 px-2 leading-relaxed">
+                    You're now signed in to <span className="font-semibold text-foreground">{storeName ?? "your shop"}</span> on your phone — opening the Go Live studio…
                   </p>
-                  <span className="w-1 h-1 rounded-full bg-primary/60" />
+
+                  {pairPhoneUA && (
+                    <div className="mt-4 w-full rounded-xl border border-border/60 bg-muted/40 px-3 py-2 flex items-center gap-2">
+                      <Smartphone className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <span className="text-[10px] text-muted-foreground truncate text-left flex-1" title={pairPhoneUA}>
+                        {pairPhoneUA}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="mt-5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                    <ShieldCheck className="w-3 h-3 text-primary" />
+                    <span className="text-[10px] font-semibold text-primary">Secure session active</span>
+                  </div>
+
+                  <Button
+                    onClick={() => setShowQrDialog(false)}
+                    variant="outline"
+                    className="mt-5 w-full h-10 rounded-xl text-xs font-medium"
+                  >
+                    Done
+                  </Button>
                 </div>
               </div>
             </div>

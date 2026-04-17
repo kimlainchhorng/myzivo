@@ -24725,6 +24725,57 @@ export type Database = {
         }
         Relationships: []
       }
+      live_pair_sessions: {
+        Row: {
+          cancelled_at: string | null
+          confirmed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          phone_ip: string | null
+          phone_user_agent: string | null
+          status: string
+          store_avatar_url: string | null
+          store_id: string
+          store_name: string | null
+          store_owner_id: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone_ip?: string | null
+          phone_user_agent?: string | null
+          status?: string
+          store_avatar_url?: string | null
+          store_id: string
+          store_name?: string | null
+          store_owner_id: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone_ip?: string | null
+          phone_user_agent?: string | null
+          status?: string
+          store_avatar_url?: string | null
+          store_id?: string
+          store_name?: string | null
+          store_owner_id?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       live_streams: {
         Row: {
           coins_earned: number
@@ -55780,6 +55831,10 @@ export type Database = {
         Returns: boolean
       }
       cancel_batch: { Args: { p_batch_id: string }; Returns: Json }
+      cancel_live_pair_session: {
+        Args: { p_token: string }
+        Returns: undefined
+      }
       check_expiring_documents: { Args: never; Returns: number }
       check_login_anomaly: {
         Args: {
@@ -55839,6 +55894,14 @@ export type Database = {
       compute_cancel_fee: { Args: { p_job_id: string }; Returns: Json }
       compute_est_payout: { Args: { p_job_id: string }; Returns: number }
       compute_zone_surge: { Args: { p_zone_id: string }; Returns: number }
+      confirm_live_pair_session: {
+        Args: { p_token: string; p_user_agent?: string }
+        Returns: {
+          session_id: string
+          status: string
+          store_id: string
+        }[]
+      }
       create_available_test_orders: { Args: never; Returns: number }
       create_batch_from_orders: {
         Args: { p_notes?: string; p_order_ids: string[]; p_region_id?: string }
@@ -55904,6 +55967,14 @@ export type Database = {
             }
             Returns: string
           }
+      create_live_pair_session: {
+        Args: { p_store_id: string }
+        Returns: {
+          expires_at: string
+          session_id: string
+          token: string
+        }[]
+      }
       create_sample_trips_for_driver: {
         Args: { p_driver_id: string }
         Returns: number
@@ -56267,6 +56338,17 @@ export type Database = {
         }[]
       }
       get_jwt_role: { Args: never; Returns: string }
+      get_live_pair_session: {
+        Args: { p_token: string }
+        Returns: {
+          expires_at: string
+          session_id: string
+          status: string
+          store_avatar_url: string
+          store_id: string
+          store_name: string
+        }[]
+      }
       get_merchant_orders: {
         Args: { p_limit?: number; p_restaurant_id: string; p_status?: string }
         Returns: {

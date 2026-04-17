@@ -44,6 +44,7 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const ConnectCallback = lazy(() => import("./pages/ConnectCallback"));
+const PairPage = lazy(() => import("./pages/PairPage"));
 
 const Index = lazy(() => lazyRetry(() => import("./pages/Index")));
 
@@ -574,6 +575,7 @@ const App = () => (
                 <Route path="/reels" element={<FeedPage />} />
                 <Route path="/live" element={<LiveStreamPage />} />
                 <Route path="/go-live" element={<GoLivePage />} />
+                <Route path="/pair/:token" element={<PairPage />} />
                 <Route path="/reels/:postId" element={<FeedPage />} />
                 <Route path="/sound/:soundName" element={<SoundPage />} />
                 <Route path="/dl/:kind/:id" element={<DeepLinkLandingPage />} />
