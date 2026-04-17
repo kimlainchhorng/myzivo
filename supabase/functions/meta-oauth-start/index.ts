@@ -18,9 +18,12 @@ const META_SCOPES = [
 
 function getMetaAppId() {
   const raw = Deno.env.get("META_APP_ID")?.trim() ?? "";
-  const normalized = raw.match(/\d{6,}/)?.[0] ?? raw;
-  if (!normalized) throw new Error("META_APP_ID not configured");
-  if (!/^\d{6,}$/.test(normalized)) throw new Error("META_APP_ID has invalid format");
+  if (!raw) throw new Error("META_APP_ID not configured");
+
+  const digitsOnly = raw.replace(/[^0-9]/g, "");
+  const normalized = digitsOnly || raw;
+
+  if (digitsOnly && digitsOnly.length >= 6) return digitsOnly;
   return normalized;
 }
 
