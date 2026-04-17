@@ -40,6 +40,7 @@ import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import StorePaymentSection from "@/components/admin/StorePaymentSection";
 import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
 import StoreMarketingSection from "@/components/admin/StoreMarketingSection";
+import StoreLiveStreamSection from "@/components/admin/StoreLiveStreamSection";
 import StoreEmployeesSection from "@/components/admin/store/StoreEmployeesSection";
 import StorePayrollSection from "@/components/admin/store/StorePayrollSection";
 import StoreScheduleSection from "@/components/admin/store/StoreScheduleSection";
