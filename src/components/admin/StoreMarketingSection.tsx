@@ -820,6 +820,8 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName }:
             </div>
           </div>
         </DialogContent>
+      </Dialog>
+
       {/* ═══ Boost Post Dialog ═══ */}
       <Dialog open={!!boostPost} onOpenChange={(o) => !o && setBoostPost(null)}>
         <DialogContent className="max-w-md">
