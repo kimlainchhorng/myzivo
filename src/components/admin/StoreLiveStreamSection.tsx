@@ -429,7 +429,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
               </div>
 
               {/* BACK — Confirmed */}
-              <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)]">
+              <div className={cn(pairStatus === "confirmed" ? "block" : "hidden")}>
                 <div className="mx-auto flex w-full max-w-[292px] flex-col items-center text-center pt-4">
                   <div className="relative mb-4">
                     <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-2xl shadow-primary/40">
