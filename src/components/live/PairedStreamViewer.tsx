@@ -132,9 +132,19 @@ export default function PairedStreamViewer({
 
     let active = true;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    const pendingIce: RTCIceCandidateInit[] = [];
     setState("connecting");
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
     pcRef.current = pc;
+
+    const flushIce = async () => {
+      while (pendingIce.length) {
+        const c = pendingIce.shift()!;
+        try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {
+          console.warn("[viewer] queued ICE failed", e);
+        }
+      }
+    };
 
     pc.ontrack = (ev) => {
       if (videoRef.current && ev.streams[0]) {
@@ -174,12 +184,23 @@ export default function PairedStreamViewer({
     const unsub = subscribeSignals(streamId, "viewer", async (row) => {
       try {
         if (row.type === "offer") {
+          if (pc.signalingState !== "stable") {
+            console.log("[viewer] ignoring offer, state=", pc.signalingState);
+            return;
+          }
           await pc.setRemoteDescription(new RTCSessionDescription(row.payload));
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
           await sendSignal(streamId, "viewer", "publisher", "answer", { type: answer.type, sdp: answer.sdp });
+          await flushIce();
         } else if (row.type === "ice" && row.payload) {
-          try { await pc.addIceCandidate(new RTCIceCandidate(row.payload)); } catch {}
+          if (!pc.remoteDescription) {
+            pendingIce.push(row.payload);
+            return;
+          }
+          try { await pc.addIceCandidate(new RTCIceCandidate(row.payload)); } catch (e) {
+            console.warn("[viewer] addIceCandidate failed", e);
+          }
         } else if (row.type === "bye") {
           if (videoRef.current) videoRef.current.srcObject = null;
           setStreamId(null);

@@ -14,9 +14,32 @@ import { getPairToken } from "@/lib/livePairing";
 export type SignalRole = "publisher" | "viewer";
 export type SignalType = "join" | "offer" | "answer" | "ice" | "bye" | "heartbeat";
 
+/**
+ * STUN servers handle most same-network handshakes. TURN relays are required
+ * when phone (mobile carrier NAT) and desktop (home NAT) cannot reach each
+ * other directly. We use Open Relay Project's free TURN as a fallback so the
+ * paired-phone → desktop-studio flow works across networks even without a
+ * private TURN deployment.
+ */
 export const ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "stun:openrelay.metered.ca:80" },
+  {
+    urls: "turn:openrelay.metered.ca:80",
+    username: "openrelayproject",
+    credential: "openrelayproject",
+  },
+  {
+    urls: "turn:openrelay.metered.ca:443",
+    username: "openrelayproject",
+    credential: "openrelayproject",
+  },
+  {
+    urls: "turn:openrelay.metered.ca:443?transport=tcp",
+    username: "openrelayproject",
+    credential: "openrelayproject",
+  },
 ];
 
 export interface SignalRow {
