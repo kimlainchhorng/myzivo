@@ -246,72 +246,67 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
       )}
 
       <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
-        <DialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-[400px] max-h-[90vh] overflow-y-auto p-0 gap-0 border-primary/20">
+        <DialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-[380px] p-0 gap-0 overflow-hidden border-primary/20">
           {/* Hero header */}
-          <div className="relative bg-gradient-to-br from-primary/15 via-primary/5 to-background px-6 pt-6 pb-5 border-b border-border/50">
-            <div className="flex items-center gap-3 mb-1">
-              <div className="w-10 h-10 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0 ring-1 ring-primary/20">
-                <Smartphone className="w-5 h-5 text-primary" />
+          <div className="relative bg-gradient-to-br from-primary/15 via-primary/5 to-background px-5 pt-4 pb-3 border-b border-border/50">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0 ring-1 ring-primary/20">
+                <Smartphone className="w-4 h-4 text-primary" />
               </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-base font-bold text-foreground leading-tight">Continue on your phone</DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                  {liveNow.length > 0
-                    ? "You're live — scan to take the broadcast mobile."
-                    : "Scan to open the studio on your phone."}
+              <div className="min-w-0 flex-1">
+                <DialogTitle className="text-sm font-bold text-foreground leading-tight">Continue on your phone</DialogTitle>
+                <DialogDescription className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
+                  {liveNow.length > 0 ? "You're live — scan to take it mobile." : "Scan to open the studio on your phone."}
                 </DialogDescription>
               </div>
+              {liveNow.length > 0 && (
+                <div className="inline-flex items-center gap-1 rounded-full bg-red-500/10 border border-red-500/30 px-2 py-0.5 shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-[9px] font-bold tracking-wider text-red-600 dark:text-red-400">LIVE</span>
+                </div>
+              )}
             </div>
-            {liveNow.length > 0 && (
-              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-red-500/10 border border-red-500/30 px-2.5 py-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-[10px] font-bold tracking-wider text-red-600 dark:text-red-400">LIVE NOW · AUTO-RESUME</span>
-              </div>
-            )}
           </div>
 
           {/* QR code */}
-          <div className="px-6 pt-5 pb-3 flex flex-col items-center">
-            <div className="relative p-4 bg-white rounded-2xl shadow-md ring-1 ring-border">
-              <QRCodeSVG value={goLiveUrl} size={200} level="M" includeMargin={false} />
-              {/* Center logo overlay */}
+          <div className="px-5 pt-4 pb-3 flex justify-center">
+            <div className="relative p-3 bg-white rounded-xl shadow-md ring-1 ring-border">
+              <QRCodeSVG value={goLiveUrl} size={168} level="M" includeMargin={false} />
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center ring-4 ring-white shadow-lg">
-                  <Radio className="w-5 h-5 text-primary-foreground" />
+                <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center ring-[3px] ring-white shadow-lg">
+                  <Radio className="w-4 h-4 text-primary-foreground" />
                 </div>
               </div>
             </div>
           </div>
 
           {/* Steps */}
-          <div className="px-6 pb-2">
-            <ol className="space-y-2">
+          <div className="px-5 pb-3">
+            <ol className="space-y-1.5">
               {[
-                "Open Camera or QR scanner on your phone",
-                "Point at the code — tap the link that appears",
-                "Sign in with the same account to take over",
+                "Open Camera / QR scanner",
+                "Tap the link that appears",
+                "Sign in with same account",
               ].map((step, i) => (
-                <li key={i} className="flex items-start gap-2.5">
-                  <span className="shrink-0 w-5 h-5 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center mt-0.5">
-                    {i + 1}
-                  </span>
-                  <span className="text-xs text-foreground leading-relaxed">{step}</span>
+                <li key={i} className="flex items-center gap-2">
+                  <span className="shrink-0 w-4 h-4 rounded-full bg-primary/15 text-primary text-[9px] font-bold flex items-center justify-center">{i + 1}</span>
+                  <span className="text-[11px] text-foreground leading-tight">{step}</span>
                 </li>
               ))}
             </ol>
           </div>
 
           {/* URL + copy */}
-          <div className="px-5 pb-5 pt-3">
-            <div className="w-full rounded-xl border bg-muted/50 px-3 py-2">
-              <code className="block text-[10px] truncate text-muted-foreground font-mono mb-2">{goLiveUrl}</code>
-              <Button size="sm" variant={copied ? "default" : "secondary"} onClick={copyUrl} className="w-full h-8 gap-1.5 text-xs rounded-lg">
-                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? "Copied!" : "Copy link"}
+          <div className="px-5 pb-4">
+            <div className="w-full flex items-center gap-1.5 rounded-lg border bg-muted/50 pl-2.5 pr-1 py-1">
+              <code className="flex-1 text-[10px] truncate text-muted-foreground font-mono">{goLiveUrl}</code>
+              <Button size="sm" variant={copied ? "default" : "secondary"} onClick={copyUrl} className="h-6 px-2 gap-1 text-[10px] rounded-md shrink-0">
+                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                {copied ? "Copied" : "Copy"}
               </Button>
             </div>
-            <p className="mt-3 text-[11px] text-muted-foreground text-center leading-relaxed">
-              Your stream stays active — refresh, switch devices, or hide the studio without dropping the broadcast.
+            <p className="mt-2 text-[10px] text-muted-foreground text-center leading-snug">
+              Your stream stays active across devices.
             </p>
           </div>
         </DialogContent>
