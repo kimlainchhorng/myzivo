@@ -15,6 +15,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { ICE_SERVERS, sendSignal, subscribeSignals } from "@/lib/liveWebrtc";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
   storeOwnerId: string;
@@ -29,6 +30,7 @@ type ViewerState =
   | "disconnected";
 
 export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvatarUrl }: Props) {
+  const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const unsubRef = useRef<(() => void) | null>(null);
@@ -89,6 +91,7 @@ export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvata
   useEffect(() => {
     if (!streamId) return;
 
+    let active = true;
     setState("connecting");
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
     pcRef.current = pc;
@@ -101,7 +104,7 @@ export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvata
     };
 
     pc.onicecandidate = (ev) => {
-      if (ev.candidate) {
+      if (ev.candidate && active) {
         sendSignal(streamId, "viewer", "publisher", "ice", ev.candidate.toJSON());
       }
     };
@@ -115,7 +118,6 @@ export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvata
       }
     };
 
-    // Need recvonly transceivers so the offer/answer covers audio + video
     pc.addTransceiver("video", { direction: "recvonly" });
     pc.addTransceiver("audio", { direction: "recvonly" });
 
@@ -137,16 +139,40 @@ export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvata
     });
     unsubRef.current = unsub;
 
-    // Announce ourselves so the publisher creates an offer
+    // Register this desktop as a viewer and keep sending join until the
+    // publisher answers — this avoids the race where the first join happens
+    // before the phone's publisher subscription is ready.
+    if (user?.id) {
+      (supabase as any)
+        .from("live_viewers")
+        .insert({ stream_id: streamId, user_id: user.id })
+        .then(() => null, () => null);
+    }
+
     sendSignal(streamId, "viewer", "publisher", "join", {});
+    const joinRetry = setInterval(() => {
+      if (active && pc.connectionState !== "connected") {
+        sendSignal(streamId, "viewer", "publisher", "join", {});
+      }
+    }, 1500);
 
     return () => {
+      active = false;
+      clearInterval(joinRetry);
+      if (user?.id) {
+        (supabase as any)
+          .from("live_viewers")
+          .delete()
+          .eq("stream_id", streamId)
+          .eq("user_id", user.id)
+          .then(() => null, () => null);
+      }
       try { unsub(); } catch {}
       try { pc.close(); } catch {}
       pcRef.current = null;
       unsubRef.current = null;
     };
-  }, [streamId]);
+  }, [streamId, user?.id]);
 
   return (
     <div className="absolute inset-0 bg-black flex items-center justify-center">
