@@ -52,6 +52,20 @@ Deno.serve(async (req) => {
             if (s.credential) (out as any).credential = s.credential;
             return out;
           });
+          // Add a TURNS (TLS:443) entry so we can punch through deep-packet-
+          // inspection firewalls (corporate / hotel Wi-Fi) that block plain
+          // UDP/TCP TURN. Twilio's NTS doesn't include this by default.
+          const sample = iceServers.find(
+            (s: any) =>
+              typeof s.urls === "string" && s.urls.startsWith("turn:") && s.username,
+          ) as any;
+          if (sample) {
+            iceServers.push({
+              urls: "turns:global.turn.twilio.com:443?transport=tcp",
+              username: sample.username,
+              credential: sample.credential,
+            } as RTCIceServer);
+          }
         } else {
           console.warn("[get-ice-servers] Twilio returned no ice_servers");
         }
