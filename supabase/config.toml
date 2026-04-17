@@ -77,3 +77,6 @@ verify_jwt = false
 
 [functions.oauth-callback]
 verify_jwt = false
+
+[functions.live-signal]
+verify_jwt = false

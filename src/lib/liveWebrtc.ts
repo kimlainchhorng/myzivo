@@ -9,9 +9,10 @@
  * No SFU, no TURN. STUN-only — fine for most home/office networks.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { getPairToken } from "@/lib/livePairing";
 
 export type SignalRole = "publisher" | "viewer";
-export type SignalType = "join" | "offer" | "answer" | "ice" | "bye";
+export type SignalType = "join" | "offer" | "answer" | "ice" | "bye" | "heartbeat";
 
 export const ICE_SERVERS: RTCIceServer[] = [
   { urls: "stun:stun.l.google.com:19302" },
@@ -35,14 +36,26 @@ export async function sendSignal(
   type: SignalType,
   payload: any,
 ): Promise<void> {
-  const { error } = await (supabase as any).from("live_stream_signals").insert({
-    stream_id: streamId,
-    from_role: from,
-    to_role: to,
-    type,
-    payload,
-  });
-  if (error) console.warn("[liveWebrtc] send signal failed", error, { type, to });
+  try {
+    const pairToken = getPairToken();
+    const { error } = await (supabase as any).functions.invoke("live-signal", {
+      body: { stream_id: streamId, from_role: from, to_role: to, type, payload },
+      headers: pairToken ? { "x-pair-token": pairToken } : undefined,
+    });
+    if (error) {
+      console.warn("[liveWebrtc] live-signal failed, falling back", error, { type, to });
+      // Fallback to direct insert so existing flow keeps working if function is down
+      await (supabase as any).from("live_stream_signals").insert({
+        stream_id: streamId,
+        from_role: from,
+        to_role: to,
+        type,
+        payload,
+      });
+    }
+  } catch (e) {
+    console.warn("[liveWebrtc] send signal threw", e);
+  }
 }
 
 /**
