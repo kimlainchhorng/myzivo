@@ -125,21 +125,26 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
     return () => clearTimeout(t);
   }, [pairExpiresAt, pairStatus]);
 
-  const { data: storeOwnerId } = useQuery({
+  const { data: storeMeta } = useQuery({
     queryKey: ["store-live-stream-owner", storeId],
-    queryFn: async (): Promise<string | null> => {
+    queryFn: async (): Promise<{ owner_id: string | null; avatar_url: string | null; name: string | null }> => {
       const { data, error } = await supabase
         .from("store_profiles")
-        .select("owner_id")
+        .select("owner_id, avatar_url, name")
         .eq("id", storeId)
         .maybeSingle();
       if (error) {
         console.warn("[StoreLiveStreamSection] owner fetch error", error);
-        return null;
+        return { owner_id: null, avatar_url: null, name: null };
       }
-      return data?.owner_id ?? null;
+      return {
+        owner_id: (data as any)?.owner_id ?? null,
+        avatar_url: (data as any)?.avatar_url ?? null,
+        name: (data as any)?.name ?? null,
+      };
     },
   });
+  const storeOwnerId = storeMeta?.owner_id ?? null;
   const { data: streams, isLoading } = useQuery({
     queryKey: ["store-live-streams", storeId, storeOwnerId],
     queryFn: async (): Promise<StreamRow[]> => {
