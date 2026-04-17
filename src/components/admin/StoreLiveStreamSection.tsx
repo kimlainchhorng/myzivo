@@ -60,130 +60,136 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   const totalGifts = streams?.reduce((sum, s) => sum + (s.gift_count ?? 0), 0) ?? 0;
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Hero / Go Live */}
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background">
-        <CardContent className="pt-4 sm:pt-6 px-4 sm:px-6 pb-4 sm:pb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
-          <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Radio className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-base sm:text-lg font-bold text-foreground">Live Streaming</h2>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 leading-snug">
-                Broadcast live to your customers — showcase products, host Q&amp;A, or run flash sales.
-              </p>
-            </div>
-          </div>
-          <Button
-            onClick={() => setShowLivePanel(true)}
-            className="gap-2 shrink-0 h-12 sm:h-10 w-full sm:w-auto rounded-xl text-sm font-semibold touch-manipulation active:scale-[0.98]"
-          >
-            <Video className="w-4 h-4" />
-            Go Live Now
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Embedded Go Live mobile preview panel */}
-      {showLivePanel && (
-        <Card className="overflow-hidden border-primary/30">
-          <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              Go Live Studio
-            </CardTitle>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/go-live")}
-                title="Open full screen"
-                className="h-8 w-8"
-              >
-                <Maximize2 className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowLivePanel(false)}
-                title="Close"
-                className="h-8 w-8"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="px-3 sm:px-6 pb-4 sm:pb-6">
-            <div className="flex justify-center">
-              <div className="relative w-full max-w-[390px] h-[760px] rounded-[2.25rem] overflow-hidden border-[8px] border-foreground/85 bg-black shadow-2xl">
-                {/* Notch */}
-                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-5 rounded-full bg-foreground/85 z-10" />
-                <iframe
-                  src="/go-live"
-                  title="Go Live Studio"
-                  className="w-full h-full border-0 bg-background"
-                  allow="camera; microphone; autoplay; fullscreen; display-capture"
-                />
+    <div className={cn("flex gap-4 sm:gap-6", showLivePanel ? "flex-col lg:flex-row" : "flex-col")}>
+      {/* Main column */}
+      <div className={cn("space-y-4 sm:space-y-6 min-w-0", showLivePanel ? "flex-1" : "w-full")}>
+        {/* Hero / Go Live */}
+        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background">
+          <CardContent className="pt-4 sm:pt-6 px-4 sm:px-6 pb-4 sm:pb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Radio className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-lg font-bold text-foreground">Live Streaming</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 leading-snug">
+                  Broadcast live to your customers — showcase products, host Q&amp;A, or run flash sales.
+                </p>
               </div>
             </div>
-            <p className="text-center text-xs text-muted-foreground mt-3">
-              Live broadcast preview — tap the maximize icon for full screen.
-            </p>
+            <Button
+              onClick={() => setShowLivePanel((v) => !v)}
+              className="gap-2 shrink-0 h-12 sm:h-10 w-full sm:w-auto rounded-xl text-sm font-semibold touch-manipulation active:scale-[0.98]"
+            >
+              <Video className="w-4 h-4" />
+              {showLivePanel ? "Hide Studio" : "Go Live Now"}
+            </Button>
           </CardContent>
         </Card>
-      )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-        <StatCard icon={Radio} label="Streams" value={streams?.length ?? 0} color="text-primary" />
-        <StatCard icon={Eye} label="Total Views" value={totalViews} color="text-blue-500" />
-        <StatCard icon={Heart} label="Total Likes" value={totalLikes} color="text-red-500" />
-        <StatCard icon={Gift} label="Gifts Received" value={totalGifts} color="text-amber-500" />
-      </div>
+        {/* Stats */}
+        <div className={cn("grid gap-2.5 sm:gap-3", showLivePanel ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-4")}>
+          <StatCard icon={Radio} label="Streams" value={streams?.length ?? 0} color="text-primary" />
+          <StatCard icon={Eye} label="Total Views" value={totalViews} color="text-blue-500" />
+          <StatCard icon={Heart} label="Total Likes" value={totalLikes} color="text-red-500" />
+          <StatCard icon={Gift} label="Gifts Received" value={totalGifts} color="text-amber-500" />
+        </div>
 
-      {/* Live now */}
-      {liveNow.length > 0 && (
+        {/* Live now */}
+        {liveNow.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                Live Now
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 px-3 sm:px-6 pb-4 sm:pb-6">
+              {liveNow.map((s) => (
+                <StreamRowCard key={s.id} stream={s} live />
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Past streams */}
         <Card>
           <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
-            <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              Live Now
-            </CardTitle>
+            <CardTitle className="text-sm sm:text-base">Recent Streams</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 px-3 sm:px-6 pb-4 sm:pb-6">
-            {liveNow.map((s) => (
-              <StreamRowCard key={s.id} stream={s} live />
-            ))}
+          <CardContent className="px-3 sm:px-6 pb-4 sm:pb-6">
+            {isLoading ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">Loading…</p>
+            ) : past.length === 0 ? (
+              <div className="py-8 sm:py-10 text-center space-y-2">
+                <div className="w-12 h-12 rounded-2xl bg-muted mx-auto flex items-center justify-center">
+                  <Play className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground">No streams yet for {storeName || "this store"}.</p>
+                <p className="text-xs text-muted-foreground">Tap "Go Live Now" to start your first broadcast.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {past.map((s) => (
+                  <StreamRowCard key={s.id} stream={s} />
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
+      </div>
 
-      {/* Past streams */}
-      <Card>
-        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
-          <CardTitle className="text-sm sm:text-base">Recent Streams</CardTitle>
-        </CardHeader>
-        <CardContent className="px-3 sm:px-6 pb-4 sm:pb-6">
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">Loading…</p>
-          ) : past.length === 0 ? (
-            <div className="py-8 sm:py-10 text-center space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-muted mx-auto flex items-center justify-center">
-                <Play className="w-6 h-6 text-muted-foreground" />
-              </div>
-              <p className="text-sm text-muted-foreground">No streams yet for {storeName || "this store"}.</p>
-              <p className="text-xs text-muted-foreground">Tap "Go Live Now" to start your first broadcast.</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {past.map((s) => (
-                <StreamRowCard key={s.id} stream={s} />
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Right-side docked phone studio */}
+      {showLivePanel && (
+        <aside className="w-full lg:w-[420px] shrink-0">
+          <div className="lg:sticky lg:top-20">
+            <Card className="overflow-hidden border-primary/30">
+              <CardHeader className="pb-3 px-4 pt-4 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  Go Live Studio
+                </CardTitle>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate("/go-live")}
+                    title="Open full screen"
+                    className="h-8 w-8"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowLivePanel(false)}
+                    title="Close"
+                    className="h-8 w-8"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="px-3 pb-4">
+                <div className="flex justify-center">
+                  <div className="relative w-full max-w-[380px] h-[720px] rounded-[2.25rem] overflow-hidden border-[8px] border-foreground/85 bg-black shadow-2xl">
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-5 rounded-full bg-foreground/85 z-10" />
+                    <iframe
+                      src="/go-live"
+                      title="Go Live Studio"
+                      className="w-full h-full border-0 bg-background"
+                      allow="camera; microphone; autoplay; fullscreen; display-capture"
+                    />
+                  </div>
+                </div>
+                <p className="text-center text-xs text-muted-foreground mt-3">
+                  Tap maximize for full screen.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </aside>
+      )}
     </div>
   );
 }
