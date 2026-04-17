@@ -97,6 +97,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
   const [showViewerList, setShowViewerList] = useState(false);
   const [viewerNames, setViewerNames] = useState<{ user_id: string; name: string; avatar: string | null }[]>([]);
   const [elapsed, setElapsed] = useState(0);
+  const [streamEnded, setStreamEnded] = useState(stream.status === "ended");
 
   const lastTapRef = useRef<number>(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
