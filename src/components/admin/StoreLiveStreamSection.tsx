@@ -314,7 +314,15 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
                     <div className="absolute inset-0 overflow-hidden bg-background">
                       <Suspense fallback={<div className="flex items-center justify-center h-full text-sm text-muted-foreground">Loading studio…</div>}>
                         <div className="w-full h-full" style={{ containerType: "size" }}>
-                          <GoLivePage />
+                          {pairStatus === "confirmed" && storeOwnerId ? (
+                            <PairedStreamViewer
+                              storeOwnerId={storeOwnerId}
+                              storeName={storeMeta?.name ?? storeName ?? null}
+                              storeAvatarUrl={storeMeta?.avatar_url ?? null}
+                            />
+                          ) : (
+                            <GoLivePage />
+                          )}
                         </div>
                       </Suspense>
                     </div>
