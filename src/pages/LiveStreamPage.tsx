@@ -924,7 +924,7 @@ export default function LiveStreamPage() {
         </div>
       </div>
 
-      <div className="p-4 space-y-3">
+      <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
         {isLoading ? (
           <div className="flex items-center justify-center h-40">
             <div className="flex flex-col items-center gap-3">
