@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getDeviceFingerprint, getDeviceName } from "@/lib/security/deviceFingerprint";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle, Sparkles } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle, Sparkles, Eye, EyeOff } from "lucide-react";
 
 import { toast } from "sonner";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
@@ -56,6 +56,20 @@ const Login = () => {
   }, [searchParams]);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(() => localStorage.getItem("zivo_remember_me") === "true");
+  const [showLoginPwd, setShowLoginPwd] = useState(false);
+  const [showSignupPwd, setShowSignupPwd] = useState(false);
+  const [showSignupConfirm, setShowSignupConfirm] = useState(false);
+
+  // Lightweight password strength estimator (0-4)
+  const calcStrength = (pwd: string): number => {
+    if (!pwd) return 0;
+    let score = 0;
+    if (pwd.length >= 6) score++;
+    if (pwd.length >= 10) score++;
+    if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
+    if (/\d/.test(pwd) && /[^A-Za-z0-9]/.test(pwd)) score++;
+    return Math.min(score, 4);
+  };
   
   const [showLangMenu, setShowLangMenu] = useState(false);
   const { sheet, openSheet, setOpen } = useLegalSheet();
@@ -414,7 +428,7 @@ const Login = () => {
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight drop-shadow-lg">ZIVO ID</h1>
             <motion.p key={isLogin ? "login" : "signup"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-white/60 mt-0.5 text-xs">
-              {isLogin ? t("auth.welcome_back") : t("auth.get_started")}
+              {isLogin ? t("auth.welcome_back") : "Get Started Free — No credit card needed"}
             </motion.p>
           </div>
 
@@ -445,7 +459,10 @@ const Login = () => {
                     <FormControl>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                        <input type="password" placeholder="Enter password" autoComplete="current-password" className={input3DLg} {...field} />
+                        <input type={showLoginPwd ? "text" : "password"} placeholder="Enter password" autoComplete="current-password" className={input3DLg + " pr-10"} {...field} />
+                        <button type="button" onClick={() => setShowLoginPwd(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showLoginPwd ? "Hide password" : "Show password"}>
+                          {showLoginPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
                       </div>
                     </FormControl>
                     <FormMessage className="text-red-400 text-xs" />
@@ -517,30 +534,55 @@ const Login = () => {
                 )} />
 
                 <div className="grid grid-cols-2 gap-2">
-                  <FormField control={signupForm.control} name="password" render={({ field }) => (
-                    <FormItem className="space-y-0.5">
-                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.password")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                          <input type="password" placeholder="Min 6 chars" autoComplete="new-password" className={input3D} {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )} />
-                  <FormField control={signupForm.control} name="confirmPassword" render={({ field }) => (
-                    <FormItem className="space-y-0.5">
-                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.confirm_password")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                          <input type="password" placeholder="Re-enter" autoComplete="new-password" className={input3D} {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )} />
+                  <FormField control={signupForm.control} name="password" render={({ field }) => {
+                    const strength = calcStrength(field.value || "");
+                    const labels = ["", "Weak", "Fair", "Good", "Strong"];
+                    const colors = ["bg-white/10", "bg-red-400", "bg-orange-400", "bg-yellow-400", "bg-primary"];
+                    return (
+                      <FormItem className="space-y-0.5">
+                        <FormLabel className="text-white/70 text-xs font-medium">{t("auth.password")}</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                            <input type={showSignupPwd ? "text" : "password"} placeholder="Min 6 chars" autoComplete="new-password" className={input3D + " pr-9"} {...field} />
+                            <button type="button" onClick={() => setShowSignupPwd(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showSignupPwd ? "Hide password" : "Show password"}>
+                              {showSignupPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        </FormControl>
+                        {field.value && (
+                          <div className="flex items-center gap-1 pt-0.5">
+                            <div className="flex gap-0.5 flex-1">
+                              {[1, 2, 3, 4].map(i => (
+                                <div key={i} className={cn("h-0.5 flex-1 rounded-full transition-colors", i <= strength ? colors[strength] : "bg-white/10")} />
+                              ))}
+                            </div>
+                            <span className="text-[9px] text-white/50 w-9 text-right">{labels[strength]}</span>
+                          </div>
+                        )}
+                        <FormMessage className="text-red-400 text-xs" />
+                      </FormItem>
+                    );
+                  }} />
+                  <FormField control={signupForm.control} name="confirmPassword" render={({ field }) => {
+                    const pwd = signupForm.watch("password");
+                    const matches = field.value && pwd && field.value === pwd;
+                    return (
+                      <FormItem className="space-y-0.5">
+                        <FormLabel className="text-white/70 text-xs font-medium">{t("auth.confirm_password")}</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                            <input type={showSignupConfirm ? "text" : "password"} placeholder="Re-enter" autoComplete="new-password" className={cn(input3D, "pr-9", matches && "border-primary/50")} {...field} />
+                            <button type="button" onClick={() => setShowSignupConfirm(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showSignupConfirm ? "Hide password" : "Show password"}>
+                              {matches ? <CheckCircle className="w-3.5 h-3.5 text-primary" /> : showSignupConfirm ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage className="text-red-400 text-xs" />
+                      </FormItem>
+                    );
+                  }} />
                 </div>
 
                 <FormField control={signupForm.control} name="agreeToTerms" render={({ field }) => (
