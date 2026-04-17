@@ -1,26 +1,54 @@
 
-The user keeps seeing "Couldn't start" on the QR dialog. The RPC `create_live_pair_session` was patched but still fails. I need to investigate why.
+Problem identified: the QR step is now working, but the phone confirmation step is failing. The screenshot error `"column reference "store_id" is ambiguous"` points to the SQL in `confirm_live_pair_session`, not `create_live_pair_session`.
 
-Likely causes:
-1. The `live_pair_sessions` table may be missing the `created_by` column (original migration may not have included it).
-2. RLS policy may block the INSERT even though function is SECURITY DEFINER (unlikely if SD).
-3. Schema cache still stale.
+What I found:
+- `PairPage` loads successfully, so `get_live_pair_session` is working.
+- The error appears when tapping `Confirm & Go Live`, which calls `confirm_live_pair_session`.
+- In the original live-pairing migration, this function has:
+  ```sql
+  RETURNING id, store_id, status INTO session_id, store_id, status;
+  ```
+  Because `store_id` and `status` are also output parameter names, Postgres treats them as ambiguous inside the function body.
 
-I should check the actual table schema and recent error logs before patching again.
+Plan:
+1. Add a new migration that patches `public.confirm_live_pair_session`.
+   - Replace the ambiguous `RETURNING ... INTO session_id, store_id, status` pattern with an unambiguous version.
+   - Safest fix: use local variables like `v_session_id`, `v_store_id`, `v_status`, or return from `v_row` after the update.
+2. Keep the rest of the pairing logic unchanged.
+   - Preserve expiry checks, pending-only confirmation, and user-agent capture.
+3. While patching, normalize the function style so column references are always qualified (`lps.store_id`, etc.) to avoid similar future errors.
+4. Re-test the full pairing flow:
+   - Desktop: open store live section and generate QR
+   - Phone: open pair link
+   - Tap `Confirm & Go Live`
+   - Verify no toast error appears
+   - Verify desktop session updates to `confirmed`
+   - Verify phone redirects into `/go-live`
+5. Quick regression check:
+   - Cancel still works
+   - Expired token still shows proper error
+   - QR creation still works after the confirm fix
 
-## Plan
+Technical details:
+- Root cause is PL/pgSQL name shadowing between output columns and table columns.
+- The broken line is in `supabase/migrations/20260417180144_4d8972bb-fbdb-4660-abb6-1078db260c23.sql` and also the later recreated function still inherits that behavior until patched by a new migration.
+- Example safe pattern:
+  ```sql
+  DECLARE
+    v_session_id uuid;
+    v_store_id uuid;
+    v_status text;
+  BEGIN
+    UPDATE public.live_pair_sessions lps
+    SET status = 'confirmed', confirmed_at = now(), phone_user_agent = p_user_agent
+    WHERE lps.id = v_row.id
+    RETURNING lps.id, lps.store_id, lps.status
+    INTO v_session_id, v_store_id, v_status;
 
-1. Inspect the `live_pair_sessions` table schema to confirm column names match the INSERT statement (`id`, `token`, `store_id`, `created_by`, `status`, `expires_at`).
-2. Check Postgres logs / test the RPC via curl with a real auth token to capture the exact error message.
-3. Based on findings, write a corrective migration:
-   - Add any missing columns (e.g., `created_by uuid`)
-   - OR adjust the function to match actual columns
-4. Refresh PostgREST schema cache (`NOTIFY pgrst, 'reload schema'`).
-5. Re-test in browser as `kimlain@hizivo.com` → open store → Live Stream → "Continue on Phone" → confirm QR renders.
+    RETURN QUERY SELECT v_session_id, v_store_id, v_status;
+  END;
+  ```
+- This is a backend SQL fix; no frontend change should be required unless we want better fallback error copy.
 
-## Technical details
-
-- Function is `SECURITY DEFINER` so RLS won't block inserts done by it.
-- If `created_by` column doesn't exist, INSERT raises "column does not exist" → caught by frontend as generic "Couldn't start".
-- Fix: either ALTER TABLE to add `created_by uuid REFERENCES auth.users(id)`, or remove it from the INSERT.
-- Will keep `created_by` for audit purposes and add the column if missing.
+Optional follow-up after the fix:
+- The current `create_live_pair_session` patch fetches from `public.stores`, while the original ownership logic used `public.store_profiles`. Since the QR already renders, this is not blocking, but I would verify the source so the phone screen shows the real shop name/avatar instead of falling back to “Your Shop”.
