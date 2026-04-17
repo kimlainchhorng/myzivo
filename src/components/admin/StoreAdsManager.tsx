@@ -124,8 +124,25 @@ export default function StoreAdsManager({ storeId }: Props) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["store-ad-accounts", storeId] });
-      toast.success("Account saved. Backend wiring pending — campaigns won't launch until API access is finalized.");
+      toast.success("Account saved.");
       setConnectPlatform(null);
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  // Real OAuth: Meta (FB + IG). Other platforms still fall back to manual entry.
+  const oauthMutation = useMutation({
+    mutationFn: async (platform: Platform) => {
+      if (platform !== "meta" && platform !== "instagram") {
+        throw new Error(`${platform} OAuth not yet enabled. Use manual entry below.`);
+      }
+      const returnUrl = `${window.location.origin}/connect/callback`;
+      const { data, error } = await supabase.functions.invoke("meta-oauth-start", {
+        body: { store_id: storeId, platform, return_url: returnUrl },
+      });
+      if (error) throw error;
+      if (!data?.authorize_url) throw new Error("No authorize URL returned");
+      window.location.href = data.authorize_url;
     },
     onError: (e: any) => toast.error(e.message),
   });
