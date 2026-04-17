@@ -427,8 +427,24 @@ export default function StoreAdsManager({ storeId }: Props) {
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3 text-sm">
+                  {(p.id === "meta" || p.id === "instagram") && (
+                    <Button
+                      className="w-full bg-[#1877F2] hover:bg-[#1459bf] text-white"
+                      onClick={() => oauthMutation.mutate(p.id)}
+                      disabled={oauthMutation.isPending}
+                    >
+                      {oauthMutation.isPending
+                        ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        : <Facebook className="w-4 h-4 mr-2" />}
+                      Continue with Facebook
+                    </Button>
+                  )}
                   <div className="p-3 rounded-lg bg-muted text-xs leading-relaxed">
-                    <p className="font-semibold mb-1">Required:</p>
+                    <p className="font-semibold mb-1">
+                      {(p.id === "meta" || p.id === "instagram")
+                        ? "Or paste an Ad Account ID manually:"
+                        : "Required:"}
+                    </p>
                     <p className="text-muted-foreground">{p.secretsHint}</p>
                   </div>
                   <ConnectForm
