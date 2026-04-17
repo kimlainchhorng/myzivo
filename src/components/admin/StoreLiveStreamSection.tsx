@@ -472,46 +472,6 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
               </div>
             </div>
           </div>
-
-              {/* Steps */}
-              <div className="w-full pb-4">
-                <ol className="space-y-1.5">
-                  {[
-                    "Open Camera / QR scanner",
-                    "Tap the link that appears",
-                    "Sign in with same account",
-                  ].map((step, i) => (
-                    <li key={i} className="flex items-center gap-2">
-                      <span className="shrink-0 w-4 h-4 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">{i + 1}</span>
-                      <span className="text-[11px] text-foreground leading-tight">{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-
-              {/* URL + copy */}
-              <div className="w-full space-y-2">
-                <Button
-                  onClick={copyUrl}
-                  variant="default"
-                  className="w-full h-11 gap-2 rounded-xl font-semibold shadow-md shadow-primary/20"
-                >
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  {copied ? "Link copied!" : "Copy link"}
-                </Button>
-                <div className="w-full rounded-lg border border-border/70 bg-muted/40 px-3 py-2">
-                  <code className="block w-full overflow-hidden text-ellipsis whitespace-nowrap text-[10px] text-muted-foreground font-mono" title={goLiveUrl}>{goLiveUrl}</code>
-                </div>
-                <div className="flex items-center justify-center gap-1.5 pt-0.5">
-                  <span className="w-1 h-1 rounded-full bg-primary/60" />
-                  <p className="text-[10px] text-muted-foreground leading-snug text-center">
-                    Your stream stays active across devices
-                  </p>
-                  <span className="w-1 h-1 rounded-full bg-primary/60" />
-                </div>
-              </div>
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
     </div>
