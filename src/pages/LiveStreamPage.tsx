@@ -781,7 +781,7 @@ export default function LiveStreamPage() {
   const [filter, setFilter] = useState<"all" | "live" | "scheduled">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: streams = [], isLoading, refetch } = useQuery({
+  const { data: streams = [], isLoading, isFetching, refetch } = useQuery({
     queryKey: ["live-streams-real"],
     queryFn: async (): Promise<LiveStream[]> => {
       const { data: rows } = await (supabase as any)
@@ -891,12 +891,16 @@ export default function LiveStreamPage() {
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => refetch()}
-            disabled={isLoading}
+            onClick={async () => {
+              const res = await refetch();
+              const count = (res.data ?? []).filter((s) => s.status === "live").length;
+              toast.success(count > 0 ? `${count} live stream${count === 1 ? "" : "s"}` : "No live streams right now");
+            }}
+            disabled={isFetching}
             className="rounded-full min-h-[40px] min-w-[40px] p-0"
             aria-label="Refresh streams"
           >
-            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
           </Button>
           <Button size="sm" onClick={handleGoLive} className="rounded-full gap-1.5 bg-red-500 hover:bg-red-600 text-white">
             <Plus className="h-4 w-4" /> Go Live
