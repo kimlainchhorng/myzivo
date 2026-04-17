@@ -2,13 +2,16 @@
  * StoreLiveStreamSection — Live streaming hub for store owners.
  * Shows stream stats and a "Go Live" entry point that opens /go-live in a new tab.
  */
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Radio, Eye, Heart, Gift, Play, Video, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface Props {
   storeId: string;
@@ -148,8 +151,38 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any; label: strin
 }
 
 function StreamRowCard({ stream, live }: { stream: StreamRow; live?: boolean }) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const likeMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Sign in to like");
+      const { error } = await (supabase as any)
+        .from("live_likes")
+        .insert({ stream_id: stream.id, user_id: user.id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.setQueryData<StreamRow[] | undefined>(
+        ["store-live-streams"],
+        undefined
+      );
+      queryClient.invalidateQueries({ queryKey: ["store-live-streams"] });
+      toast.success("Liked ❤️");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const openWatcher = () => window.open(`/live/${stream.id}`, "_blank");
+
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:border-primary/30 transition-colors">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={openWatcher}
+      onKeyDown={(e) => { if (e.key === "Enter") openWatcher(); }}
+      className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:border-primary/30 hover:bg-muted/40 transition-colors cursor-pointer"
+    >
       <div className="w-14 h-14 rounded-lg bg-muted overflow-hidden shrink-0 relative">
         {stream.thumbnail_url ? (
           <img src={stream.thumbnail_url} alt="" className="w-full h-full object-cover" />
@@ -159,7 +192,7 @@ function StreamRowCard({ stream, live }: { stream: StreamRow; live?: boolean }) 
           </div>
         )}
         {live && (
-          <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white">LIVE</span>
+          <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-destructive text-destructive-foreground">LIVE</span>
         )}
       </div>
       <div className="flex-1 min-w-0">
@@ -175,6 +208,16 @@ function StreamRowCard({ stream, live }: { stream: StreamRow; live?: boolean }) 
           )}
         </div>
       </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={(e) => { e.stopPropagation(); likeMutation.mutate(); }}
+        disabled={likeMutation.isPending}
+        title="Like this stream"
+        className="shrink-0"
+      >
+        <Heart className={cn("w-4 h-4", likeMutation.isPending ? "text-muted-foreground" : "text-red-500")} />
+      </Button>
       {live ? (
         <Badge variant="destructive">Live</Badge>
       ) : (
@@ -183,3 +226,4 @@ function StreamRowCard({ stream, live }: { stream: StreamRow; live?: boolean }) 
     </div>
   );
 }
+
