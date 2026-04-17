@@ -957,9 +957,9 @@ export default function LiveStreamPage() {
                   }}
                   className="w-full text-left bg-card rounded-2xl border border-border/30 overflow-hidden hover:border-red-500/30 transition-all group shadow-sm hover:shadow-xl hover:-translate-y-1 duration-300"
                 >
-                  <div className="relative aspect-video overflow-hidden bg-muted">
+                  <div className="relative aspect-[3/4] overflow-hidden bg-muted">
                     <img src={photo} alt={stream.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/30" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/40" />
                     {stream.status === "live" && (
                       <Badge className="absolute top-3 left-3 bg-red-500 text-white border-0 text-[10px] gap-1 animate-pulse shadow-lg">
                         <Radio className="h-2.5 w-2.5" /> LIVE
@@ -970,24 +970,24 @@ export default function LiveStreamPage() {
                         <Flame className="h-2.5 w-2.5" /> Hot
                       </Badge>
                     )}
-                    <div className="absolute bottom-0 left-0 right-0 p-3 pr-20">
-                      <h3 className="font-bold text-white text-sm truncate drop-shadow-lg">{stream.title}</h3>
-                      <p className="text-[11px] text-white/80 truncate drop-shadow">{stream.topic}</p>
-                    </div>
-                    <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1 border border-white/10">
+                    <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1 border border-white/10">
                       <Eye className="h-3 w-3 text-white/80" />
                       <span className="text-[11px] text-white font-semibold">{stream.viewer_count.toLocaleString()}</span>
                     </div>
-                  </div>
 
-                  <div className="p-3 flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border-2 border-red-500/30">
-                      <AvatarImage src={stream.host_avatar || undefined} />
-                      <AvatarFallback className="bg-red-500/10 text-red-500 text-xs font-bold">{stream.host_name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-foreground text-sm truncate">{stream.title}</h3>
-                      <p className="text-xs text-muted-foreground truncate">{stream.host_name} · {stream.topic}</p>
+                    {/* Host info overlay at bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Avatar className="h-8 w-8 border-2 border-white/80 shadow-lg">
+                          <AvatarImage src={stream.host_avatar || undefined} />
+                          <AvatarFallback className="bg-red-500/20 text-white text-[10px] font-bold">{stream.host_name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-semibold text-white truncate drop-shadow">{stream.host_name}</p>
+                          <p className="text-[10px] text-white/70 truncate drop-shadow">{stream.topic}</p>
+                        </div>
+                      </div>
+                      <h3 className="font-bold text-white text-sm leading-tight line-clamp-2 drop-shadow-lg">{stream.title}</h3>
                     </div>
                   </div>
                 </button>
