@@ -80,3 +80,9 @@ verify_jwt = false
 
 [functions.live-signal]
 verify_jwt = false
+
+[functions.get-ice-servers]
+verify_jwt = false
+
+[functions.pair-go-live]
+verify_jwt = false
