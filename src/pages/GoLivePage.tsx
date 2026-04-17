@@ -38,7 +38,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useCoinBalance } from "@/hooks/useCoinBalance";
@@ -236,16 +236,64 @@ export default function GoLivePage() {
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages]);
 
-  const endStream = useCallback(async () => {
-    if (streamId) {
+  const endActiveStream = useCallback(async (options?: { keepalive?: boolean }) => {
+    if (!streamId) return;
+
+    const endedAt = new Date().toISOString();
+
+    try {
+      if (options?.keepalive) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+
+        await fetch(`${SUPABASE_URL}/rest/v1/live_streams?id=eq.${streamId}&status=eq.live`, {
+          method: "PATCH",
+          keepalive: true,
+          headers: {
+            "Content-Type": "application/json",
+            apikey: SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${accessToken ?? SUPABASE_PUBLISHABLE_KEY}`,
+            Prefer: "return=minimal",
+          },
+          body: JSON.stringify({ status: "ended", ended_at: endedAt }),
+        });
+
+        return;
+      }
+
       await (supabase as any)
         .from("live_streams")
-        .update({ status: "ended", ended_at: new Date().toISOString() })
-        .eq("id", streamId);
+        .update({ status: "ended", ended_at: endedAt })
+        .eq("id", streamId)
+        .eq("status", "live");
+    } catch (error) {
+      console.warn("[GoLivePage] failed to end stream", error);
     }
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    setPhase("ended");
   }, [streamId]);
+
+  const endStream = useCallback(async () => {
+    await endActiveStream();
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    setStreamId(null);
+    setPhase("ended");
+  }, [endActiveStream]);
+
+  useEffect(() => {
+    if (phase !== "live" || !streamId) return;
+
+    const handlePageExit = () => {
+      void endActiveStream({ keepalive: true });
+    };
+
+    window.addEventListener("pagehide", handlePageExit);
+    window.addEventListener("beforeunload", handlePageExit);
+
+    return () => {
+      window.removeEventListener("pagehide", handlePageExit);
+      window.removeEventListener("beforeunload", handlePageExit);
+      void endActiveStream();
+    };
+  }, [phase, streamId, endActiveStream]);
 
   const formatTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
