@@ -279,6 +279,16 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           ]);
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "live_streams", filter: `id=eq.${stream.id}` },
+        (payload: any) => {
+          const next = payload.new;
+          if (next?.status === "ended") setStreamEnded(true);
+          if (typeof next?.viewer_count === "number") setViewerCount(next.viewer_count);
+          if (typeof next?.like_count === "number") setLikes(next.like_count);
+        }
+      )
       .subscribe();
 
     return () => {
