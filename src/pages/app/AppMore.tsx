@@ -31,7 +31,7 @@ const partnerOptions = [
   { icon: Wrench, label: "Become an Auto Repair Partner", description: "Offer repair services on ZIVO", href: "/partner-with-zivo?type=auto-repair", color: "from-slate-500 to-slate-600" },
   { icon: Car, label: "Become an Auto Dealership", description: "Sell new & used vehicles", href: "/partner-with-zivo?type=auto-dealership", color: "from-zinc-600 to-zinc-800" },
   { icon: Building2, label: "Become a Hotel Partner", description: "List your property on ZIVO", href: "/partner-with-zivo?type=hotel", color: "from-purple-500 to-purple-600" },
-  { icon: Truck, label: "Become a Delivery Partner", description: "Deliver food & packages", href: "/partner-with-zivo?type=delivery", color: "from-rose-500 to-pink-500" },
+  
   { icon: Scissors, label: "Become a Salon Partner", description: "Hair & beauty bookings", href: "/partner-with-zivo?type=salon", color: "from-pink-500 to-fuchsia-500" },
   { icon: Hand, label: "Become a Nail Salon Partner", description: "Manicure & pedicure services", href: "/partner-with-zivo?type=nail-salon", color: "from-fuchsia-500 to-rose-500" },
   { icon: Heart, label: "Become a Spa Partner", description: "Massage & wellness", href: "/partner-with-zivo?type=spa", color: "from-teal-400 to-cyan-500" },
