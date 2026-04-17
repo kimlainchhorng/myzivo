@@ -231,6 +231,15 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
     };
 
     const syncLiveState = async () => {
+      // Auto-end any stream whose publisher hasn't pinged in >30s, so a
+      // closed phone doesn't keep the desktop stuck in "live".
+      try {
+        await (supabase as any).rpc("expire_stale_live_streams_for_user", {
+          p_user_id: storeOwnerId,
+        });
+      } catch (e) {
+        console.warn("[StoreLiveStreamSection] expire stale streams failed", e);
+      }
       const { data, error } = await (supabase as any)
         .from("live_streams")
         .select("id, status, ended_at")

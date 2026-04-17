@@ -349,6 +349,20 @@ export default function GoLivePage() {
     return () => clearInterval(i);
   }, [phase]);
 
+  // Publisher heartbeat — every 8 s, while live, so the desktop can detect
+  // when the phone disappears and auto-end the stream.
+  useEffect(() => {
+    if (phase !== "live" || !streamId) return;
+    let stopped = false;
+    const ping = () => {
+      if (stopped) return;
+      sendSignal(streamId, "publisher", "viewer", "heartbeat", {});
+    };
+    ping();
+    const t = setInterval(ping, 8000);
+    return () => { stopped = true; clearInterval(t); };
+  }, [phase, streamId]);
+
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages]);
 
   const endActiveStream = useCallback(async (options?: { keepalive?: boolean }) => {
