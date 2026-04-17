@@ -365,6 +365,12 @@ const AppMore = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Driver App Download Sheet */}
+      <DriverAppDownloadSheet
+        open={showDriverDownloadSheet}
+        onOpenChange={setShowDriverDownloadSheet}
+      />
     </AppLayout>
   );
 };
