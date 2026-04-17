@@ -32,6 +32,7 @@ interface StreamRow {
 }
 
 export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
+  const navigate = useNavigate();
   const { data: streams, isLoading } = useQuery({
     queryKey: ["store-live-streams", storeId],
     queryFn: async (): Promise<StreamRow[]> => {
@@ -73,12 +74,11 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
             </div>
           </div>
           <Button
-            onClick={() => window.open("/go-live", "_blank")}
+            onClick={() => navigate("/go-live")}
             className="gap-2 shrink-0 h-12 sm:h-10 w-full sm:w-auto rounded-xl text-sm font-semibold touch-manipulation active:scale-[0.98]"
           >
             <Video className="w-4 h-4" />
             Go Live Now
-            <ExternalLink className="w-3.5 h-3.5 opacity-70" />
           </Button>
         </CardContent>
       </Card>
