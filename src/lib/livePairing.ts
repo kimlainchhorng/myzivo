@@ -16,6 +16,7 @@ export interface PairSession {
 }
 
 const PAIRED_KEY = "zivo:live_pair_identity";
+const PAIR_TOKEN_KEY = "zivo:live_pair_token";
 
 export interface PairedIdentity {
   store_id: string;
@@ -54,6 +55,28 @@ export async function cancelPairSession(token: string) {
   if (error) throw error;
 }
 
+export async function getPairedSessionByToken(token: string) {
+  const { data, error } = await (supabase as any).rpc("get_paired_session_by_token", {
+    p_token: token,
+  });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  return row as {
+    session_id: string;
+    store_id: string;
+    store_owner_id: string | null;
+    store_name: string | null;
+    store_avatar_url: string | null;
+    status: string;
+    device_expires_at: string | null;
+  } | null;
+}
+
+export async function revokePairSession(token: string) {
+  const { error } = await (supabase as any).rpc("revoke_live_pair_session", { p_token: token });
+  if (error) throw error;
+}
+
 export function savePairedIdentity(p: Omit<PairedIdentity, "paired_at">) {
   const payload: PairedIdentity = { ...p, paired_at: new Date().toISOString() };
   try { localStorage.setItem(PAIRED_KEY, JSON.stringify(payload)); } catch {}
@@ -67,5 +90,16 @@ export function getPairedIdentity(): PairedIdentity | null {
 }
 
 export function clearPairedIdentity() {
-  try { localStorage.removeItem(PAIRED_KEY); } catch {}
+  try {
+    localStorage.removeItem(PAIRED_KEY);
+    localStorage.removeItem(PAIR_TOKEN_KEY);
+  } catch {}
+}
+
+export function savePairToken(token: string) {
+  try { localStorage.setItem(PAIR_TOKEN_KEY, token); } catch {}
+}
+
+export function getPairToken(): string | null {
+  try { return localStorage.getItem(PAIR_TOKEN_KEY); } catch { return null; }
 }
