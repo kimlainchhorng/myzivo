@@ -195,7 +195,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
     queryFn: async (): Promise<{ owner_id: string | null; avatar_url: string | null; name: string | null }> => {
       const { data, error } = await supabase
         .from("store_profiles")
-        .select("owner_id, avatar_url, name")
+        .select("owner_id, logo_url, name")
         .eq("id", storeId)
         .maybeSingle();
       if (error) {
@@ -204,7 +204,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
       }
       return {
         owner_id: (data as any)?.owner_id ?? null,
-        avatar_url: (data as any)?.avatar_url ?? null,
+        avatar_url: (data as any)?.logo_url ?? null,
         name: (data as any)?.name ?? null,
       };
     },
@@ -215,14 +215,16 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   // treat it as confirmed and mount the viewer — covers cases where the pair
   // session expired/missing but the phone is still publishing.
   useEffect(() => {
-    if (!storeOwnerId || pairStatus === "confirmed") return;
+    if (!storeOwnerId) return;
     let cancelled = false;
-    (async () => {
+
+    const syncLiveState = async () => {
       const { data, error } = await (supabase as any)
         .from("live_streams")
-        .select("id")
+        .select("id, status, ended_at")
         .eq("user_id", storeOwnerId)
         .eq("status", "live")
+        .is("ended_at", null)
         .order("started_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -236,9 +238,41 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
         setStudioMounted(true);
         setShowLivePanel(true);
       }
-    })();
-    return () => { cancelled = true; };
-  }, [storeOwnerId, pairStatus]);
+    };
+
+    syncLiveState();
+
+    const ch = supabase
+      .channel(`store-live-auto-${storeOwnerId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "live_streams", filter: `user_id=eq.${storeOwnerId}` },
+        (payload: any) => {
+          if (payload.new?.status === "live" && !payload.new?.ended_at) {
+            setPairStatus("confirmed");
+            setStudioMounted(true);
+            setShowLivePanel(true);
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "live_streams", filter: `user_id=eq.${storeOwnerId}` },
+        (payload: any) => {
+          if (payload.new?.status === "live" && !payload.new?.ended_at) {
+            setPairStatus("confirmed");
+            setStudioMounted(true);
+            setShowLivePanel(true);
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      try { supabase.removeChannel(ch); } catch {}
+    };
+  }, [storeOwnerId]);
   const { data: streams, isLoading } = useQuery({
     queryKey: ["store-live-streams", storeId, storeOwnerId],
     queryFn: async (): Promise<StreamRow[]> => {
@@ -405,7 +439,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
                     <div className="absolute inset-0 overflow-hidden bg-background">
                       <Suspense fallback={<div className="flex items-center justify-center h-full text-sm text-muted-foreground">Loading studio…</div>}>
                         <div className="w-full h-full" style={{ containerType: "size" }}>
-                          {pairStatus === "confirmed" && storeOwnerId ? (
+                          {(pairStatus === "confirmed" || liveNow.length > 0) && storeOwnerId ? (
                             <PairedStreamViewer
                               storeOwnerId={storeOwnerId}
                               storeName={storeMeta?.name ?? storeName ?? null}
