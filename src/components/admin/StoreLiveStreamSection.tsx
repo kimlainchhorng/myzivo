@@ -41,13 +41,28 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   // does NOT end an in-progress live stream.
   const [studioMounted, setStudioMounted] = useState(false);
   const openStudio = () => { setStudioMounted(true); setShowLivePanel(true); };
+  const { data: storeOwnerId } = useQuery({
+    queryKey: ["store-live-stream-owner", storeId],
+    queryFn: async (): Promise<string | null> => {
+      const { data, error } = await supabase
+        .from("store_profiles")
+        .select("owner_id")
+        .eq("id", storeId)
+        .maybeSingle();
+      if (error) {
+        console.warn("[StoreLiveStreamSection] owner fetch error", error);
+        return null;
+      }
+      return data?.owner_id ?? null;
+    },
+  });
   const { data: streams, isLoading } = useQuery({
-    queryKey: ["store-live-streams", storeId],
+    queryKey: ["store-live-streams", storeId, storeOwnerId],
     queryFn: async (): Promise<StreamRow[]> => {
       const { data, error } = await (supabase as any)
         .from("live_streams")
         .select("id, title, status, viewer_count, like_count, gift_count, started_at, ended_at, thumbnail_url")
-        .eq("store_id", storeId)
+        .eq("user_id", storeOwnerId)
         .order("started_at", { ascending: false })
         .limit(20);
       if (error) {
@@ -56,6 +71,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
       }
       return (data ?? []) as StreamRow[];
     },
+    enabled: !!storeId && !!storeOwnerId,
   });
 
   const liveNow = streams?.filter((s) => s.status === "live") ?? [];
