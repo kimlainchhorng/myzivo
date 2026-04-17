@@ -40,6 +40,7 @@ import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import StorePaymentSection from "@/components/admin/StorePaymentSection";
 import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
 import StoreMarketingSection from "@/components/admin/StoreMarketingSection";
+import StoreLiveStreamSection from "@/components/admin/StoreLiveStreamSection";
 import StoreEmployeesSection from "@/components/admin/store/StoreEmployeesSection";
 import StorePayrollSection from "@/components/admin/store/StorePayrollSection";
 import StoreScheduleSection from "@/components/admin/store/StoreScheduleSection";
@@ -1773,7 +1774,7 @@ export default function AdminStoreEditPage() {
 
   const employeeTitles: Record<string, string> = { employees: "Employees", payroll: "Payroll", "employee-schedule": "Employee Schedule", "time-clock": "Time Clock", "employee-rules": "Employee Rules", attendance: "Attendance & Leave", training: "Training & Onboarding", documents: "Documents & Files" };
   const isAutoRepair = form.category === "auto-repair";
-  const storeOwnerTitle = employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? (isAutoRepair ? "Services" : "Products") : activeTab === "payment" ? (form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : t("admin.store.payment")) : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
+  const storeOwnerTitle = employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? (isAutoRepair ? "Services" : "Products") : activeTab === "payment" ? (form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : t("admin.store.payment")) : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "livestream" ? "Live Stream" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
   const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
     <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} storeCategory={form.category} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
   );
@@ -3256,6 +3257,11 @@ export default function AdminStoreEditPage() {
           {/* Marketing Tab */}
           <TabsContent value="marketing">
             <StoreMarketingSection storeId={storeId!} storeSlug={form.slug} storeName={form.name} />
+          </TabsContent>
+
+          {/* Live Stream Tab */}
+          <TabsContent value="livestream">
+            <StoreLiveStreamSection storeId={storeId!} storeName={form.name} />
           </TabsContent>
 
           <TabsContent value="employees">

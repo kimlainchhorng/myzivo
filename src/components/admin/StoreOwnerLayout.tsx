@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   LogOut, ChevronLeft, Menu, Home, Store,
   Package, CreditCard, MessageCircle, Users, Megaphone, ClipboardList, Settings,
-  Wallet, Calendar, Clock, Shield, CalendarCheck, GraduationCap, Star, FolderOpen
+  Wallet, Calendar, Clock, Shield, CalendarCheck, GraduationCap, Star, FolderOpen, Radio
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     { id: "payment", label: paymentLabel, icon: CreditCard },
     { id: "customers", label: "Customers", icon: Users },
     { id: "marketing", label: "Marketing & Ads", icon: Megaphone },
+    { id: "livestream", label: "Live Stream", icon: Radio },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
