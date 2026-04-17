@@ -66,7 +66,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   };
   const openStudio = () => { setStudioMounted(true); setShowLivePanel(true); };
 
-  const hasActivePhoneSession = pairStatus === "confirmed" || !!pairSessionId;
+  const hasActivePhoneSession = !!pairSessionId && (pairStatus === "pending" || pairStatus === "confirmed");
 
   // Generate a pairing session only when there isn't already an active paired/live session
   const startPairing = async () => {
@@ -124,6 +124,9 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
             setShowLivePanel(true);
           } else if (next.status === "expired" || next.status === "cancelled") {
             setPairStatus("expired");
+            setPairSessionId(null);
+            setPairToken(null);
+            setPairPhoneUA(null);
           }
         },
       )
@@ -169,6 +172,36 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
     return () => { try { supabase.removeChannel(ch); } catch {} };
   }, [storeId]);
 
+  // Auto-expire on TTL
+  useEffect(() => {
+    if (!pairExpiresAt || pairStatus !== "pending") return;
+    const ms = new Date(pairExpiresAt).getTime() - Date.now();
+    if (ms <= 0) { setPairStatus("expired"); return; }
+    const t = setTimeout(() => setPairStatus("expired"), ms);
+    return () => clearTimeout(t);
+  }, [pairExpiresAt, pairStatus]);
+
+  const { data: storeMeta } = useQuery({
+    queryKey: ["store-live-stream-owner", storeId],
+    queryFn: async (): Promise<{ owner_id: string | null; avatar_url: string | null; name: string | null }> => {
+      const { data, error } = await supabase
+        .from("store_profiles")
+        .select("owner_id, logo_url, name")
+        .eq("id", storeId)
+        .maybeSingle();
+      if (error) {
+        console.warn("[StoreLiveStreamSection] owner fetch error", error);
+        return { owner_id: null, avatar_url: null, name: null };
+      }
+      return {
+        owner_id: (data as any)?.owner_id ?? null,
+        avatar_url: (data as any)?.logo_url ?? null,
+        name: (data as any)?.name ?? null,
+      };
+    },
+  });
+  const storeOwnerId = storeMeta?.owner_id ?? null;
+
   // On mount: only restore a confirmed pairing if the store is actively live.
   // This prevents stale confirmed sessions from showing "Phone paired" before
   // anyone scans a fresh QR in a new live cycle.
@@ -208,6 +241,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
         } else {
           setPairStatus((prev) => (prev === "confirmed" ? "idle" : prev));
           setPairSessionId(null);
+          setPairToken(null);
           setPairPhoneUA(null);
         }
       } catch (e) {
@@ -216,36 +250,6 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
     })();
     return () => { cancelled = true; };
   }, [storeId, storeOwnerId]);
-
-  // Auto-expire on TTL
-  useEffect(() => {
-    if (!pairExpiresAt || pairStatus !== "pending") return;
-    const ms = new Date(pairExpiresAt).getTime() - Date.now();
-    if (ms <= 0) { setPairStatus("expired"); return; }
-    const t = setTimeout(() => setPairStatus("expired"), ms);
-    return () => clearTimeout(t);
-  }, [pairExpiresAt, pairStatus]);
-
-  const { data: storeMeta } = useQuery({
-    queryKey: ["store-live-stream-owner", storeId],
-    queryFn: async (): Promise<{ owner_id: string | null; avatar_url: string | null; name: string | null }> => {
-      const { data, error } = await supabase
-        .from("store_profiles")
-        .select("owner_id, logo_url, name")
-        .eq("id", storeId)
-        .maybeSingle();
-      if (error) {
-        console.warn("[StoreLiveStreamSection] owner fetch error", error);
-        return { owner_id: null, avatar_url: null, name: null };
-      }
-      return {
-        owner_id: (data as any)?.owner_id ?? null,
-        avatar_url: (data as any)?.logo_url ?? null,
-        name: (data as any)?.name ?? null,
-      };
-    },
-  });
-  const storeOwnerId = storeMeta?.owner_id ?? null;
 
   // Fallback auto-detect: if there's an active live_stream for this store owner,
   // treat it as confirmed and mount the viewer — and reset back to idle once
@@ -262,6 +266,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
       if (!hadLiveStreamRef.current) return;
       setPairStatus((prev) => (prev === "confirmed" ? "idle" : prev));
       setPairSessionId(null);
+        setPairToken(null);
       setPairPhoneUA(null);
     };
 
@@ -375,6 +380,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
     if (hadLiveStreamRef.current) {
       setPairStatus((prev) => (prev === "confirmed" ? "idle" : prev));
       setPairSessionId(null);
+      setPairToken(null);
       setPairPhoneUA(null);
     }
   }, [activeLiveStreamId]);
