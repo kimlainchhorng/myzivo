@@ -403,6 +403,24 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
+      {/* Stream ended overlay */}
+      {streamEnded && (
+        <div className="absolute inset-0 z-[60] bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-center px-6">
+          <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4">
+            <Radio className="w-8 h-8 text-white/70" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Stream ended</h2>
+          <p className="text-sm text-white/70 mb-6 max-w-xs">
+            {stream.host_name} has ended this live stream. Thanks for watching!
+          </p>
+          <button
+            onClick={onLeave}
+            className="px-6 py-3 rounded-full bg-white text-black font-semibold text-sm"
+          >
+            Back to Live
+          </button>
+        </div>
+      )}
       {/* Background */}
       <div className="absolute inset-0" onClick={handleDoubleTap} onTouchEnd={handleDoubleTap}>
         <div className="absolute inset-0 bg-gradient-to-br from-violet-900/80 via-black to-rose-900/60" />
