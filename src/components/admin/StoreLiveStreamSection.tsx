@@ -174,14 +174,16 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
               </CardHeader>
               <CardContent className="px-3 pb-4">
                 <div className="flex justify-center">
-                  <div className="relative w-full max-w-[380px] h-[720px] rounded-[2.25rem] overflow-hidden border-[8px] border-foreground/85 bg-black shadow-2xl">
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-5 rounded-full bg-foreground/85 z-10" />
-                    <iframe
-                      src="/go-live?embed=1"
-                      title="Go Live Studio"
-                      className="w-full h-full border-0 bg-background"
-                      allow="camera; microphone; autoplay; fullscreen; display-capture"
-                    />
+                  <div
+                    className="relative w-full max-w-[380px] h-[720px] rounded-[2.25rem] overflow-hidden border-[8px] border-foreground/85 bg-black shadow-2xl"
+                    style={{ transform: "translateZ(0)", contain: "layout paint" }}
+                  >
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-5 rounded-full bg-foreground/85 z-20 pointer-events-none" />
+                    <div className="absolute inset-0 overflow-hidden bg-background">
+                      <Suspense fallback={<div className="flex items-center justify-center h-full text-sm text-muted-foreground">Loading studio…</div>}>
+                        <GoLivePage />
+                      </Suspense>
+                    </div>
                   </div>
                 </div>
                 <p className="text-center text-xs text-muted-foreground mt-3">
