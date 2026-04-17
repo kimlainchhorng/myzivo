@@ -2,11 +2,9 @@
  * StoreLiveStreamSection — Live streaming hub for store owners.
  * Shows stream stats and a "Go Live" entry point that opens /go-live in a new tab.
  */
-import { useState, lazy, Suspense } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Radio, Eye, Heart, Gift, Play, Video, X, Maximize2 } from "lucide-react";
-
-const GoLivePage = lazy(() => import("@/pages/GoLivePage"));
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
