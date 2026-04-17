@@ -111,6 +111,9 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName }:
   const [editingPromo, setEditingPromo] = useState<Promotion | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [deletePromoId, setDeletePromoId] = useState<string | null>(null);
+  const [boostPost, setBoostPost] = useState<StorePost | null>(null);
+  const [boostForm, setBoostForm] = useState({ daily_budget: 10, days: 7, audience: "broad", objective: "reach" });
+  const [boosting, setBoosting] = useState(false);
 
   // Promo form state
   const [promoForm, setPromoForm] = useState({
