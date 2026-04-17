@@ -154,6 +154,11 @@ Deno.serve(async (req) => {
     });
   }
 
+  console.log(
+    `[live-signal] type=${type} from=${from_role} to=${to_role} stream=${stream_id} ` +
+    `user=${effectiveUserId} paired=${!!pairedStoreOwnerId} streamOwner=${stream.user_id}`,
+  );
+
   // Heartbeat is a no-op signal that just refreshes the row
   if (type === "heartbeat") {
     if (from_role === "publisher") {
@@ -177,6 +182,7 @@ Deno.serve(async (req) => {
   });
 
   if (insertError) {
+    console.error(`[live-signal] insert failed type=${type} stream=${stream_id}`, insertError);
     return new Response(
       JSON.stringify({ error: "insert_failed", details: insertError.message }),
       {

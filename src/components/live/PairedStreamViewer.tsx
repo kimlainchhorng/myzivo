@@ -26,6 +26,8 @@ interface Props {
 
 type ViewerState =
   | "waiting-for-stream"
+  | "waiting-for-offer"
+  | "negotiating"
   | "connecting"
   | "live"
   | "disconnected";
@@ -133,7 +135,7 @@ export default function PairedStreamViewer({
     let active = true;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     const pendingIce: RTCIceCandidateInit[] = [];
-    setState("connecting");
+    setState("waiting-for-offer");
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
     pcRef.current = pc;
 
@@ -161,8 +163,13 @@ export default function PairedStreamViewer({
 
     pc.onconnectionstatechange = () => {
       const nextState = pc.connectionState;
+      console.log("[viewer] connectionState=", nextState);
       if (nextState === "connected") {
         setState("live");
+        return;
+      }
+      if (nextState === "connecting") {
+        setState((s) => (s === "live" ? s : "connecting"));
         return;
       }
 
@@ -188,6 +195,7 @@ export default function PairedStreamViewer({
             console.log("[viewer] ignoring offer, state=", pc.signalingState);
             return;
           }
+          setState("negotiating");
           await pc.setRemoteDescription(new RTCSessionDescription(row.payload));
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
@@ -272,6 +280,18 @@ export default function PairedStreamViewer({
               <div className="flex items-center gap-2 text-white/60 text-xs">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 Waiting for phone to go live…
+              </div>
+            )}
+            {state === "waiting-for-offer" && (
+              <div className="flex items-center gap-2 text-amber-300 text-xs">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Phone is live — waiting for video stream…
+              </div>
+            )}
+            {state === "negotiating" && (
+              <div className="flex items-center gap-2 text-emerald-300 text-xs">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Negotiating connection…
               </div>
             )}
             {state === "connecting" && (
