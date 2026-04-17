@@ -244,6 +244,35 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
           </div>
         </aside>
       )}
+
+      <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Smartphone className="w-5 h-5 text-primary" />
+              Continue on your phone
+            </DialogTitle>
+            <DialogDescription>
+              Scan with your phone camera to open the studio. If a stream is already live, it will resume automatically.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-2">
+            <div className="p-4 bg-white rounded-2xl border">
+              <QRCodeSVG value={goLiveUrl} size={220} level="M" includeMargin={false} />
+            </div>
+            <div className="w-full flex items-center gap-2 rounded-xl border bg-muted/40 px-3 py-2">
+              <code className="flex-1 text-xs truncate text-foreground">{goLiveUrl}</code>
+              <Button size="sm" variant="ghost" onClick={copyUrl} className="h-8 gap-1.5">
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? "Copied" : "Copy"}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Sign in on your phone with the same account. Your live stream stays active across devices.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
