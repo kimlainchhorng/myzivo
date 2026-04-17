@@ -24569,6 +24569,13 @@ export type Database = {
             referencedRelation: "live_streams"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "live_comments_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "v_creator_live_stream_earnings"
+            referencedColumns: ["stream_id"]
+          },
         ]
       }
       live_gift_displays: {
@@ -24688,6 +24695,13 @@ export type Database = {
             referencedRelation: "live_streams"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "live_likes_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "v_creator_live_stream_earnings"
+            referencedColumns: ["stream_id"]
+          },
         ]
       }
       live_metrics: {
@@ -24788,6 +24802,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "live_streams"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_viewers_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "v_creator_live_stream_earnings"
+            referencedColumns: ["stream_id"]
           },
         ]
       }
@@ -55253,6 +55274,34 @@ export type Database = {
         }
         Relationships: []
       }
+      v_creator_live_earnings: {
+        Row: {
+          creator_id: string | null
+          earnings_cents: number | null
+          platform_fee_cents: number | null
+          total_coins_received: number | null
+          total_gifts_received: number | null
+          unique_gifters: number | null
+        }
+        Relationships: []
+      }
+      v_creator_live_stream_earnings: {
+        Row: {
+          coins_received: number | null
+          creator_id: string | null
+          earnings_cents: number | null
+          ended_at: string | null
+          gifts_received: number | null
+          like_count: number | null
+          started_at: string | null
+          status: string | null
+          stream_id: string | null
+          title: string | null
+          unique_gifters: number | null
+          viewer_count: number | null
+        }
+        Relationships: []
+      }
       v_driver_dispatch_ready: {
         Row: {
           charges_enabled: boolean | null
@@ -56729,6 +56778,14 @@ export type Database = {
       remove_trusted_device: {
         Args: { _device_fingerprint: string; _user_id: string }
         Returns: undefined
+      }
+      request_live_earnings_payout: {
+        Args: {
+          p_amount_cents: number
+          p_method?: string
+          p_reference_id?: string
+        }
+        Returns: string
       }
       resolve_admin_alert: {
         Args: { p_alert_id: string; p_notes?: string }

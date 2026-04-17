@@ -96,6 +96,7 @@ const BookmarksPage = lazy(() => import("./pages/BookmarksPage"));
 const PrivacySettingsPage = lazy(() => import("./pages/account/PrivacySettingsPage"));
 const CreatorDashboardPage = lazy(() => import("./pages/CreatorDashboardPage"));
 const CreatorAnalyticsPage = lazy(() => import("./pages/CreatorAnalyticsPage"));
+const CreatorLiveEarningsPage = lazy(() => import("./pages/CreatorLiveEarningsPage"));
 const AffiliateHubPage = lazy(() => import("./pages/AffiliateHubPage"));
 const DigitalProductsPage = lazy(() => import("./pages/DigitalProductsPage"));
 const MonetizationPage = lazy(() => import("./pages/MonetizationPage"));
@@ -576,6 +577,7 @@ const App = () => (
                 <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
                 <Route path="/creator-dashboard" element={<ProtectedRoute><CreatorDashboardPage /></ProtectedRoute>} />
                 <Route path="/creator-analytics" element={<ProtectedRoute><CreatorAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/creator/live-earnings" element={<ProtectedRoute><CreatorLiveEarningsPage /></ProtectedRoute>} />
                 <Route path="/affiliate-hub" element={<ProtectedRoute><AffiliateHubPage /></ProtectedRoute>} />
                 <Route path="/digital-products" element={<ProtectedRoute><DigitalProductsPage /></ProtectedRoute>} />
                 <Route path="/monetization" element={<ProtectedRoute><MonetizationPage /></ProtectedRoute>} />
