@@ -145,6 +145,35 @@ export default function CreatorDashboardPage() {
           </div>
         </motion.div>
 
+        {/* Live Earnings Spotlight — only shown if user has earned from gifts */}
+        {liveEarningsCents > 0 && (
+          <motion.button
+            onClick={() => navigate("/creator/live-earnings")}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full text-left relative rounded-[20px] overflow-hidden touch-manipulation active:scale-[0.99] transition-transform"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500" />
+            <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/15" />
+            <div className="relative z-10 p-4 flex items-center gap-3 text-white">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
+                <Gift className="w-6 h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="font-extrabold text-base">${(liveEarningsCents / 100).toFixed(2)}</p>
+                  <span className="text-[9px] bg-white/20 rounded-full px-1.5 py-0.5 font-bold">LIVE</span>
+                </div>
+                <p className="text-[11px] text-white/85 flex items-center gap-1 mt-0.5">
+                  <Coins className="w-3 h-3" />
+                  {liveCoins.toLocaleString()} coins from gifts · Tap to withdraw
+                </p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-white/80 shrink-0" />
+            </div>
+          </motion.button>
+        )}
+
         {/* Stats Grid — ZIVO icon pills */}
         <div className="grid grid-cols-3 gap-2.5">
           {overviewCards.map((card, i) => (
