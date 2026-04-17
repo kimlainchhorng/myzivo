@@ -31,6 +31,7 @@ import Volume2 from "lucide-react/dist/esm/icons/volume-2";
 import VolumeX from "lucide-react/dist/esm/icons/volume-x";
 import Clapperboard from "lucide-react/dist/esm/icons/clapperboard";
 import Flame from "lucide-react/dist/esm/icons/flame";
+import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -887,6 +888,16 @@ export default function LiveStreamPage() {
               <Wifi className="h-3 w-3" /> {liveCount} Live
             </Badge>
           )}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="rounded-full min-h-[40px] min-w-[40px] p-0"
+            aria-label="Refresh streams"
+          >
+            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+          </Button>
           <Button size="sm" onClick={handleGoLive} className="rounded-full gap-1.5 bg-red-500 hover:bg-red-600 text-white">
             <Plus className="h-4 w-4" /> Go Live
           </Button>
