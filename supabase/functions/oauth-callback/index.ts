@@ -1,7 +1,6 @@
 // Universal OAuth callback handler. Exchanges code for token, persists account, redirects to picker page.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const APP_ORIGIN = "https://hizivo.com"; // adjust if needed; preview also works via state.return_url
 const PREVIEW_FALLBACK = "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app";
 
 function htmlRedirect(url: string, message = "Connecting...") {
@@ -9,6 +8,20 @@ function htmlRedirect(url: string, message = "Connecting...") {
     `<!doctype html><html><head><meta charset="utf-8"><title>${message}</title></head><body style="font-family:system-ui;text-align:center;padding:40px"><p>${message}</p><script>window.location.href=${JSON.stringify(url)}</script></body></html>`,
     { headers: { "Content-Type": "text/html" } }
   );
+}
+
+function getMetaAppId() {
+  const raw = Deno.env.get("META_APP_ID")?.trim() ?? "";
+  const normalized = raw.match(/\d{6,}/)?.[0] ?? raw;
+  if (!normalized) throw new Error("META_APP_ID not configured");
+  if (!/^\d{6,}$/.test(normalized)) throw new Error("META_APP_ID has invalid format");
+  return normalized;
+}
+
+function getMetaAppSecret() {
+  const secret = Deno.env.get("META_APP_SECRET")?.trim() ?? "";
+  if (!secret) throw new Error("META_APP_SECRET not configured");
+  return secret;
 }
 
 Deno.serve(async (req) => {
@@ -23,12 +36,14 @@ Deno.serve(async (req) => {
 
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { data: stateRow } = await admin
-    .from("oauth_states").select("*").eq("state", state).maybeSingle();
+    .from("oauth_states")
+    .select("*")
+    .eq("state", state)
+    .maybeSingle();
 
   if (!stateRow) {
     return htmlRedirect(`${PREVIEW_FALLBACK}/connect/callback?error=invalid_state`);
   }
-  // Best-effort cleanup
   admin.from("oauth_states").delete().eq("state", state).then(() => {});
 
   const returnBase = stateRow.return_url?.startsWith("http")
@@ -41,18 +56,17 @@ Deno.serve(async (req) => {
 
   try {
     if (stateRow.platform === "meta" || stateRow.platform === "instagram") {
-      const appId = Deno.env.get("META_APP_ID")!;
-      const appSecret = Deno.env.get("META_APP_SECRET")!;
+      const appId = getMetaAppId();
+      const appSecret = getMetaAppSecret();
+      console.log("oauth-callback using META_APP_ID", { appIdLength: appId.length, appIdSuffix: appId.slice(-4) });
       const redirectUri = `${Deno.env.get("SUPABASE_URL")!}/functions/v1/oauth-callback`;
 
-      // 1) Exchange code → short-lived token
       const tokRes = await fetch(
         `https://graph.facebook.com/v21.0/oauth/access_token?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&client_secret=${appSecret}&code=${code}`
       );
       const tok = await tokRes.json();
       if (!tok.access_token) throw new Error(tok.error?.message || "token exchange failed");
 
-      // 2) Upgrade to long-lived (60-day) token
       const longRes = await fetch(
         `https://graph.facebook.com/v21.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${appSecret}&fb_exchange_token=${tok.access_token}`
       );
@@ -60,11 +74,9 @@ Deno.serve(async (req) => {
       const userToken = long.access_token || tok.access_token;
       const expiresIn = long.expires_in || tok.expires_in || 5184000;
 
-      // 3) Identify user
       const meRes = await fetch(`https://graph.facebook.com/v21.0/me?access_token=${userToken}`);
       const me = await meRes.json();
 
-      // 4) Upsert account row
       const { data: account, error: upErr } = await admin
         .from("store_ad_accounts")
         .upsert(
@@ -86,14 +98,12 @@ Deno.serve(async (req) => {
         .single();
       if (upErr) throw upErr;
 
-      // 5) Fetch FB Pages + linked IG accounts
       const pagesRes = await fetch(
         `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,picture,instagram_business_account{id,username,profile_picture_url}&access_token=${userToken}`
       );
       const pagesJson = await pagesRes.json();
       const pages = pagesJson.data || [];
 
-      // Wipe old, insert new
       await admin.from("store_ad_pages").delete().eq("account_id", account.id);
       const rows: any[] = [];
       for (const pg of pages) {
@@ -120,7 +130,7 @@ Deno.serve(async (req) => {
           });
         }
       }
-      // 6) Fetch ad accounts
+
       const adActsRes = await fetch(
         `https://graph.facebook.com/v21.0/me/adaccounts?fields=id,account_id,name,currency,account_status&access_token=${userToken}`
       );
@@ -146,7 +156,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Other platforms — placeholder until secrets configured
     return htmlRedirect(`${returnBase}?error=platform_not_configured&platform=${stateRow.platform}`);
   } catch (e) {
     return htmlRedirect(`${returnBase}?error=${encodeURIComponent((e as Error).message)}`);

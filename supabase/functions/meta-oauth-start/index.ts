@@ -16,6 +16,14 @@ const META_SCOPES = [
   "business_management",
 ].join(",");
 
+function getMetaAppId() {
+  const raw = Deno.env.get("META_APP_ID")?.trim() ?? "";
+  const normalized = raw.match(/\d{6,}/)?.[0] ?? raw;
+  if (!normalized) throw new Error("META_APP_ID not configured");
+  if (!/^\d{6,}$/.test(normalized)) throw new Error("META_APP_ID has invalid format");
+  return normalized;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
@@ -23,6 +31,7 @@ Deno.serve(async (req) => {
     if (!auth?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
     }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -35,20 +44,27 @@ Deno.serve(async (req) => {
     const userId = userRes.user.id;
 
     const body = await req.json();
-    const storeId = body.store_id as string;
-    const platform = (body.platform as string) || "meta";
-    const returnUrl = (body.return_url as string) || "/connect/callback";
-
-    const appId = Deno.env.get("META_APP_ID");
-    if (!appId) {
-      return new Response(JSON.stringify({ error: "META_APP_ID not configured" }), { status: 500, headers: corsHeaders });
+    const storeId = typeof body?.store_id === "string" ? body.store_id : "";
+    const platform = typeof body?.platform === "string" ? body.platform : "meta";
+    const returnUrl = typeof body?.return_url === "string" && body.return_url ? body.return_url : "/connect/callback";
+    if (!storeId) {
+      return new Response(JSON.stringify({ error: "store_id is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
+    const appId = getMetaAppId();
+    console.log("meta-oauth-start using META_APP_ID", { appIdLength: appId.length, appIdSuffix: appId.slice(-4) });
+
     const state = crypto.randomUUID();
-    // Use service role to bypass RLS for state insert
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { error: insertErr } = await admin.from("oauth_states").insert({
-      state, user_id: userId, store_id: storeId, platform, return_url: returnUrl,
+      state,
+      user_id: userId,
+      store_id: storeId,
+      platform,
+      return_url: returnUrl,
     });
     if (insertErr) throw insertErr;
 
@@ -64,6 +80,9 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: (e as Error).message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
