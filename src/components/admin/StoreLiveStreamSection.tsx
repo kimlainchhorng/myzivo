@@ -334,6 +334,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   const totalViews = streams?.reduce((sum, s) => sum + (s.viewer_count ?? 0), 0) ?? 0;
   const totalLikes = streams?.reduce((sum, s) => sum + (s.like_count ?? 0), 0) ?? 0;
   const totalGifts = streams?.reduce((sum, s) => sum + (s.gifts_received ?? 0), 0) ?? 0;
+  const showPairedViewer = !!storeOwnerId && (pairStatus === "confirmed" || !!activeLiveStreamId);
 
   return (
     <div className={cn("flex gap-4 sm:gap-6", showLivePanel ? "flex-col lg:flex-row" : "flex-col")}>
@@ -476,7 +477,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
                     <div className="absolute inset-0 overflow-hidden bg-background">
                       <Suspense fallback={<div className="flex items-center justify-center h-full text-sm text-muted-foreground">Loading studio…</div>}>
                         <div className="w-full h-full" style={{ containerType: "size" }}>
-                          {activeLiveStreamId && storeOwnerId ? (
+                          {showPairedViewer ? (
                             <PairedStreamViewer
                               key={activeLiveStreamId ?? pairSessionId ?? "paired-stream-viewer"}
                               storeOwnerId={storeOwnerId}
