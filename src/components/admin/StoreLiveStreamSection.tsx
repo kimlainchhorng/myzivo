@@ -274,8 +274,8 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
           </div>
 
           {/* QR code with corner brackets */}
-          <div className="px-6 pt-5 pb-3 flex justify-center bg-gradient-to-b from-transparent to-muted/20">
-            <div className="relative mx-2">
+          <div className="pt-5 pb-3 flex justify-center bg-gradient-to-b from-transparent to-muted/20">
+            <div className="relative">
               {/* Corner brackets */}
               <span className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-primary rounded-tl-md" />
               <span className="absolute -top-2 -right-2 w-4 h-4 border-t-2 border-r-2 border-primary rounded-tr-md" />
@@ -309,15 +309,19 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
           </div>
 
           {/* URL + copy */}
-          <div className="px-5 pb-4">
-            <div className="w-full flex items-center gap-1.5 rounded-lg border border-border/70 bg-muted/40 pl-2.5 pr-1 py-1 hover:border-primary/30 transition-colors">
-              <code className="flex-1 text-[10px] truncate text-muted-foreground font-mono">{goLiveUrl}</code>
-              <Button size="sm" variant={copied ? "default" : "secondary"} onClick={copyUrl} className="h-6 px-2 gap-1 text-[10px] rounded-md shrink-0 transition-all">
-                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                {copied ? "Copied" : "Copy"}
-              </Button>
+          <div className="px-5 pb-4 space-y-2">
+            <Button
+              onClick={copyUrl}
+              variant={copied ? "default" : "default"}
+              className="w-full h-10 gap-2 rounded-lg font-semibold shadow-md shadow-primary/20"
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied ? "Link copied!" : "Copy link"}
+            </Button>
+            <div className="w-full rounded-lg border border-border/70 bg-muted/40 px-2.5 py-1.5">
+              <code className="block text-[10px] truncate text-muted-foreground font-mono" title={goLiveUrl}>{goLiveUrl}</code>
             </div>
-            <div className="mt-2.5 flex items-center justify-center gap-1.5">
+            <div className="flex items-center justify-center gap-1.5 pt-0.5">
               <span className="w-1 h-1 rounded-full bg-primary/60" />
               <p className="text-[10px] text-muted-foreground leading-snug">
                 Your stream stays active across devices
