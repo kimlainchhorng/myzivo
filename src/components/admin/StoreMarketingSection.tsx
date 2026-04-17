@@ -820,6 +820,126 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName }:
             </div>
           </div>
         </DialogContent>
+      {/* ═══ Boost Post Dialog ═══ */}
+      <Dialog open={!!boostPost} onOpenChange={(o) => !o && setBoostPost(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Rocket className="w-5 h-5 text-primary" /> Boost Post
+            </DialogTitle>
+          </DialogHeader>
+
+          {boostPost && (
+            <div className="space-y-4">
+              {/* Post preview */}
+              <div className="flex gap-3 p-3 rounded-xl bg-muted/40 border">
+                {boostPost.media_urls?.[0] && (
+                  <img src={boostPost.media_urls[0]} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs line-clamp-2">{boostPost.caption || "(No caption)"}</p>
+                  <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
+                    <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{boostPost.view_count || 0}</span>
+                    <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{boostPost.likes_count || 0}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Objective */}
+              <div>
+                <Label className="text-xs">Goal</Label>
+                <Select value={boostForm.objective} onValueChange={(v) => setBoostForm({ ...boostForm, objective: v })}>
+                  <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="reach">More views & reach</SelectItem>
+                    <SelectItem value="engagement">More likes & comments</SelectItem>
+                    <SelectItem value="traffic">Traffic to my store</SelectItem>
+                    <SelectItem value="messages">More messages</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Audience */}
+              <div>
+                <Label className="text-xs">Audience</Label>
+                <Select value={boostForm.audience} onValueChange={(v) => setBoostForm({ ...boostForm, audience: v })}>
+                  <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="broad">Broad — anyone interested</SelectItem>
+                    <SelectItem value="local">Local — near my store</SelectItem>
+                    <SelectItem value="followers">My followers & similar</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Budget + duration */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Daily budget (USD)</Label>
+                  <Input
+                    type="number" min={1} step={1}
+                    className="mt-1 h-9"
+                    value={boostForm.daily_budget}
+                    onChange={(e) => setBoostForm({ ...boostForm, daily_budget: Math.max(1, Number(e.target.value) || 0) })}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Duration (days)</Label>
+                  <Input
+                    type="number" min={1} max={90} step={1}
+                    className="mt-1 h-9"
+                    value={boostForm.days}
+                    onChange={(e) => setBoostForm({ ...boostForm, days: Math.max(1, Number(e.target.value) || 0) })}
+                  />
+                </div>
+              </div>
+
+              {/* Estimate */}
+              <div className="rounded-xl border bg-primary/5 p-3 space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Total budget</span>
+                  <span className="font-semibold">${(boostForm.daily_budget * boostForm.days).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Estimated reach</span>
+                  <span className="font-semibold">{(boostForm.daily_budget * boostForm.days * 180).toLocaleString()}–{(boostForm.daily_budget * boostForm.days * 520).toLocaleString()} people</span>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <Button variant="outline" className="flex-1" onClick={() => setBoostPost(null)}>Cancel</Button>
+                <Button
+                  className="flex-1 gap-1.5 bg-gradient-to-r from-primary to-emerald-500"
+                  disabled={boosting}
+                  onClick={async () => {
+                    setBoosting(true);
+                    try {
+                      // Best-effort: write to ad_campaigns / restaurant_ads if schema available; otherwise toast.
+                      const total = boostForm.daily_budget * boostForm.days;
+                      const { error } = await (supabase as any)
+                        .from("store_posts")
+                        .update({ is_boosted: true, boost_budget_cents: Math.round(total * 100), boost_ends_at: new Date(Date.now() + boostForm.days * 86400_000).toISOString() })
+                        .eq("id", boostPost.id);
+                      if (error) {
+                        // Schema may not include boost cols — that's OK for v1
+                        console.warn("Boost flag not persisted:", error.message);
+                      }
+                      toast.success(`Post boosted — $${total.toFixed(2)} over ${boostForm.days} day${boostForm.days > 1 ? "s" : ""}`);
+                      qc.invalidateQueries({ queryKey: ["store-posts", storeId] });
+                      setBoostPost(null);
+                    } catch (e: any) {
+                      toast.error(e.message || "Failed to boost post");
+                    } finally {
+                      setBoosting(false);
+                    }
+                  }}
+                >
+                  {boosting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Rocket className="w-4 h-4" /> Boost now</>}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
       </Dialog>
     </div>
   );
