@@ -2,8 +2,9 @@
  * StoreLiveStreamSection — Live streaming hub for store owners.
  * Shows stream stats and a "Go Live" entry point that opens /go-live in a new tab.
  */
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Radio, Eye, Heart, Gift, Play, Video } from "lucide-react";
+import { Radio, Eye, Heart, Gift, Play, Video, X, Maximize2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,7 @@ interface StreamRow {
 
 export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   const navigate = useNavigate();
+  const [showLivePanel, setShowLivePanel] = useState(false);
   const { data: streams, isLoading } = useQuery({
     queryKey: ["store-live-streams", storeId],
     queryFn: async (): Promise<StreamRow[]> => {
@@ -74,7 +76,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
             </div>
           </div>
           <Button
-            onClick={() => navigate("/go-live")}
+            onClick={() => setShowLivePanel(true)}
             className="gap-2 shrink-0 h-12 sm:h-10 w-full sm:w-auto rounded-xl text-sm font-semibold touch-manipulation active:scale-[0.98]"
           >
             <Video className="w-4 h-4" />
@@ -82,6 +84,53 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Embedded Go Live mobile preview panel */}
+      {showLivePanel && (
+        <Card className="overflow-hidden border-primary/30">
+          <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              Go Live Studio
+            </CardTitle>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/go-live")}
+                title="Open full screen"
+                className="h-8 w-8"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowLivePanel(false)}
+                title="Close"
+                className="h-8 w-8"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="px-3 sm:px-6 pb-4 sm:pb-6">
+            <div className="flex justify-center">
+              <div className="relative w-full max-w-[390px] aspect-[9/19.5] rounded-[2rem] overflow-hidden border-[6px] border-foreground/80 bg-black shadow-2xl">
+                <iframe
+                  src="/go-live"
+                  title="Go Live Studio"
+                  className="w-full h-full border-0"
+                  allow="camera; microphone; autoplay; fullscreen"
+                />
+              </div>
+            </div>
+            <p className="text-center text-xs text-muted-foreground mt-3">
+              Live broadcast preview — tap the maximize icon for full screen.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
