@@ -1,44 +1,63 @@
 
+The user wants a forward-looking upgrade pass on the live-streaming + signaling stack: APIs, Supabase functions, and server bits — bringing them to a more modern, robust v2026 baseline.
 
-## What I found
+Goal: harden and modernize the live pipeline + related infra so it's production-grade across app + website.
 
-The code-level handshake looks correct now: ICE queuing, signaling guards, media-ready gating, and `restartIce()` on failure are all in place. The single remaining structural risk that matches the symptom ("stays on Connecting then turns off") is the **TURN server**.
+## Upgrade plan
 
-`src/lib/liveWebrtc.ts` relies on `openrelay.metered.ca` as the only TURN relay. That free service has been shut down / heavily rate-limited since 2024 and frequently returns no relay candidate. When the phone (mobile carrier NAT) and desktop (home/office NAT) cannot do P2P over STUN, ICE has nowhere to fall back to → `iceConnectionState` goes `checking → failed`, `restartIce()` retries against the same dead TURN, the desktop flips to `disconnected`, then the publisher heartbeat eventually marks the stream ended → "they turn off."
+### 1. Edge function runtime + dependency upgrades
+- Bump all live-related functions to `@supabase/supabase-js@2.57.0` (latest stable) — currently pinned to `2.49.1`.
+- Standardize Deno imports via `npm:` specifier with explicit versions across:
+  - `live-signal`
+  - `pair-go-live`
+  - `get-ice-servers`
+  - `admin-create-user`, `admin-delete-user`
+- Add shared `_shared/cors.ts` so CORS headers stop being copy-pasted in every function.
 
-I cannot run the live browser test from plan mode (and live broadcasting requires a real phone scanning the QR — the automated browser cannot do that). The fix below is what needs to happen.
+### 2. `get-ice-servers` v2 (resilience + caching)
+- Add 30s in-memory cache for Twilio credentials (reduces NTS API calls + latency).
+- Add fallback chain: Twilio → Cloudflare STUN → Google STUN, never return empty.
+- Return `ttl` field so client can refresh proactively before expiry (Twilio tokens last 1h).
+- Add `region` hint based on `cf-ipcountry` header for geo-optimized relay selection.
 
-## Plan
+### 3. `live-signal` v2 (throughput + cleanup)
+- Add server-side dedup for ICE candidates (drop duplicates within 2s window) to cut signaling spam.
+- Auto-prune signals older than 60s on every write (lightweight inline cleanup).
+- Add structured response: `{ok, signalId, role}` instead of bare `{ok:true}`.
+- Add rate limit: max 200 signals/min per stream to prevent runaway loops.
 
-1. **Replace TURN relay with a working provider**
-   - Remove dead `openrelay.metered.ca` entries from `ICE_SERVERS` in `src/lib/liveWebrtc.ts`.
-   - Add a real TURN provider. Recommended: Metered's `global.relay.metered.ca` (free tier with API-key credentials) or Cloudflare Calls TURN.
-   - Prompt for and store TURN credentials as Supabase secrets: `TURN_URL`, `TURN_USERNAME`, `TURN_CREDENTIAL`.
-   - Add a tiny edge function `get-ice-servers` that returns the merged STUN+TURN list, so credentials are never shipped in the bundle.
-   - Update `liveWebrtc.ts` to fetch ICE servers once per session and cache them.
+### 4. `pair-go-live` v2 (security + UX)
+- Shorten pair code TTL from current value to 90s (tighter security window).
+- Add single-use enforcement (mark `consumed_at` on pair).
+- Return `expiresAt` so client shows live countdown.
 
-2. **Add ICE diagnostics on both sides**
-   - Log `iceConnectionState`, `iceGatheringState`, and selected candidate-pair type (`host` / `srflx` / `relay`) in `GoLivePage.tsx` and `PairedStreamViewer.tsx`.
-   - This makes it instantly visible in console whether TURN is actually being used.
+### 5. Client `liveWebrtc.ts` upgrades
+- Add proactive ICE refresh at 80% of TTL.
+- Add `iceTransportPolicy: "all"` with auto-fallback to `"relay"` after first failure.
+- Wrap all signal posts with exponential backoff retry (3 attempts).
+- Add connection quality monitor (`getStats()` every 5s → log packet loss + bitrate).
 
-3. **Tighten reconnect behavior**
-   - In `PairedStreamViewer.tsx`, on `failed`, call `pc.restartIce()` once and re-send `join` instead of immediately tearing down to `waiting-for-stream` after 1.2 s. Only fall back to teardown if restart fails after ~6 s.
+### 6. Database hygiene migration
+- Add index on `live_stream_signals(stream_id, created_at)` for faster polling.
+- Add index on `live_streams(status, started_at)` for active-stream lookups.
+- Add scheduled cleanup function (pg_cron) to purge `live_stream_signals` older than 5 min and `live_pair_sessions` older than 10 min.
 
-4. **Verify end-to-end after edits**
-   - Desktop opens Go Live Studio → phone scans QR → confirm → camera preview shows on phone → tap Go Live → desktop receives video within 5 s on a different network (mobile data vs. home Wi-Fi).
-   - Confirm in console that the selected candidate pair is `relay` when on different networks.
+### 7. Realtime subscription upgrade
+- Switch `live_streams` status changes from polling to Supabase Realtime channel where used (lower latency, less load).
 
-## Files to update
+### 8. Verification
+- After deploy: curl `get-ice-servers` to confirm cached + fallback path.
+- Check Supabase function logs for new structured fields.
+- Confirm signaling table stays under ~500 rows steady-state.
+
+## Files to update / create
+- `supabase/functions/_shared/cors.ts` (new)
+- `supabase/functions/get-ice-servers/index.ts`
+- `supabase/functions/live-signal/index.ts`
+- `supabase/functions/pair-go-live/index.ts`
+- `supabase/functions/admin-create-user/index.ts`
+- `supabase/functions/admin-delete-user/index.ts`
 - `src/lib/liveWebrtc.ts`
-- `src/pages/GoLivePage.tsx`
-- `src/components/live/PairedStreamViewer.tsx`
-- new edge function: `supabase/functions/get-ice-servers/index.ts`
+- new migration: indexes + pg_cron cleanup
 
-## What I need from you
-Approve the plan and pick a TURN provider so I can wire credentials:
-- **Metered** (free 50GB/mo, fastest to set up — sign up at metered.ca, give me the app name + secret key)
-- **Cloudflare Calls TURN** (free, requires Cloudflare account + API token)
-- **Twilio NTS** (paid, most reliable — needs Twilio Account SID + Auth Token, you already use Twilio for OTP)
-
-Once you tell me which one, I'll switch to default mode and implement everything in one pass.
-
+Approve and I'll roll all of this out in one default-mode pass.
