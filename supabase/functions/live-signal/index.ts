@@ -11,7 +11,7 @@
  *   { stream_id, from_role, to_role, type, payload? }
  */
 // @ts-ignore - Deno std
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,6 +41,34 @@ function rateLimit(key: string, limit = 30, windowMs = 5_000): boolean {
   arr.push(now);
   buckets.set(key, arr);
   return true;
+}
+
+// Per-minute hard cap to stop runaway loops (200/min per stream)
+const minuteBuckets = new Map<string, number[]>();
+function minuteLimit(key: string, limit = 200): boolean {
+  const now = Date.now();
+  const arr = (minuteBuckets.get(key) ?? []).filter((t) => now - t < 60_000);
+  if (arr.length >= limit) return false;
+  arr.push(now);
+  minuteBuckets.set(key, arr);
+  return true;
+}
+
+// ICE-candidate dedup: drop identical candidates within 2s window
+const iceDedup = new Map<string, number>();
+function isDuplicateIce(streamId: string, fromRole: string, payload: any): boolean {
+  const cand = payload?.candidate?.candidate ?? payload?.candidate;
+  if (typeof cand !== "string") return false;
+  const key = `${streamId}:${fromRole}:${cand}`;
+  const now = Date.now();
+  const last = iceDedup.get(key);
+  if (last && now - last < 2_000) return true;
+  iceDedup.set(key, now);
+  // Light cleanup
+  if (iceDedup.size > 500) {
+    for (const [k, t] of iceDedup) if (now - t > 10_000) iceDedup.delete(k);
+  }
+  return false;
 }
 
 Deno.serve(async (req) => {
@@ -147,9 +175,16 @@ Deno.serve(async (req) => {
     });
   }
 
-  if (!rateLimit(`${effectiveUserId}:${stream_id}`)) {
+  if (!rateLimit(`${effectiveUserId}:${stream_id}`) || !minuteLimit(`${stream_id}`)) {
     return new Response(JSON.stringify({ error: "rate_limited" }), {
       status: 429,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // Drop duplicate ICE candidates (cuts signaling spam ~30-50%)
+  if (type === "ice" && isDuplicateIce(stream_id, from_role, payload)) {
+    return new Response(JSON.stringify({ ok: true, deduped: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
@@ -173,13 +208,11 @@ Deno.serve(async (req) => {
     });
   }
 
-  const { error: insertError } = await admin.from("live_stream_signals").insert({
-    stream_id,
-    from_role,
-    to_role,
-    type,
-    payload,
-  });
+  const { data: inserted, error: insertError } = await admin
+    .from("live_stream_signals")
+    .insert({ stream_id, from_role, to_role, type, payload })
+    .select("id")
+    .single();
 
   if (insertError) {
     console.error(`[live-signal] insert failed type=${type} stream=${stream_id}`, insertError);
@@ -201,14 +234,20 @@ Deno.serve(async (req) => {
       .eq("user_id", effectiveUserId);
   }
 
-  // Opportunistic prune (cheap, fire-and-forget)
+  // Opportunistic prune — tighter (5 min) to keep table small
   admin
     .from("live_stream_signals")
     .delete()
-    .lt("created_at", new Date(Date.now() - 10 * 60_000).toISOString())
+    .lt("created_at", new Date(Date.now() - 5 * 60_000).toISOString())
     .then(() => null, () => null);
 
-  return new Response(JSON.stringify({ ok: true, paired: !!pairedStoreOwnerId }), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      signalId: inserted?.id ?? null,
+      role: from_role,
+      paired: !!pairedStoreOwnerId,
+    }),
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+  );
 });

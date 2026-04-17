@@ -28,18 +28,20 @@ export const ICE_SERVERS: RTCIceServer[] = [
 ];
 
 let cachedIce: RTCIceServer[] | null = null;
-let cachedAt = 0;
-const CACHE_TTL_MS = 50 * 60 * 1000; // 50 min, less than Twilio's 60-min TTL
+let cachedExpiresAt = 0;
+const DEFAULT_TTL_MS = 50 * 60 * 1000;
 
 /**
  * Fetch ICE servers (STUN + Twilio TURN) from the edge function.
- * Cached for ~50 minutes per page session.
+ * Refreshes proactively at 80% of server-provided TTL.
  *
  * Always returns at least the STUN fallback so callers never get an empty list.
  */
 export async function getIceServers(): Promise<RTCIceServer[]> {
   const now = Date.now();
-  if (cachedIce && now - cachedAt < CACHE_TTL_MS) return cachedIce;
+  // Refresh at 80% of TTL to avoid mid-call expiry
+  const refreshAt = cachedExpiresAt - (cachedExpiresAt - now) * 0.2;
+  if (cachedIce && now < refreshAt) return cachedIce;
 
   try {
     const { data, error } = await (supabase as any).functions.invoke("get-ice-servers", {
@@ -47,16 +49,17 @@ export async function getIceServers(): Promise<RTCIceServer[]> {
     });
     if (error) throw error;
     const servers = (data as any)?.iceServers;
+    const ttlSeconds = (data as any)?.ttlSeconds ?? 3000;
     if (Array.isArray(servers) && servers.length > 0) {
       cachedIce = servers;
-      cachedAt = now;
+      cachedExpiresAt = now + Math.min(ttlSeconds * 1000, DEFAULT_TTL_MS);
       const hasTurn = servers.some((s: any) =>
         Array.isArray(s.urls)
           ? s.urls.some((u: string) => u.startsWith("turn"))
           : typeof s.urls === "string" && s.urls.startsWith("turn"),
       );
       console.log(
-        `[liveWebrtc] ICE servers loaded (${servers.length}), TURN=${hasTurn}`,
+        `[liveWebrtc] ICE servers loaded (${servers.length}), TURN=${hasTurn}, ttl=${ttlSeconds}s`,
       );
       return servers;
     }
@@ -114,25 +117,32 @@ export async function sendSignal(
   type: SignalType,
   payload: any,
 ): Promise<void> {
-  try {
-    const pairToken = getPairToken();
-    const { error } = await (supabase as any).functions.invoke("live-signal", {
-      body: { stream_id: streamId, from_role: from, to_role: to, type, payload },
-      headers: pairToken ? { "x-pair-token": pairToken } : undefined,
-    });
-    if (error) {
-      console.warn("[liveWebrtc] live-signal failed, falling back", error, { type, to });
-      // Fallback to direct insert so existing flow keeps working if function is down
-      await (supabase as any).from("live_stream_signals").insert({
-        stream_id: streamId,
-        from_role: from,
-        to_role: to,
-        type,
-        payload,
+  const pairToken = getPairToken();
+  // Exponential backoff retry: 0ms, 250ms, 750ms
+  const delays = [0, 250, 750];
+  for (let attempt = 0; attempt < delays.length; attempt++) {
+    if (delays[attempt] > 0) await new Promise((r) => setTimeout(r, delays[attempt]));
+    try {
+      const { error } = await (supabase as any).functions.invoke("live-signal", {
+        body: { stream_id: streamId, from_role: from, to_role: to, type, payload },
+        headers: pairToken ? { "x-pair-token": pairToken } : undefined,
       });
+      if (!error) return;
+      if (attempt === delays.length - 1) {
+        console.warn("[liveWebrtc] live-signal failed after retries, falling back", error, { type, to });
+        await (supabase as any).from("live_stream_signals").insert({
+          stream_id: streamId,
+          from_role: from,
+          to_role: to,
+          type,
+          payload,
+        });
+      }
+    } catch (e) {
+      if (attempt === delays.length - 1) {
+        console.warn("[liveWebrtc] send signal threw after retries", e);
+      }
     }
-  } catch (e) {
-    console.warn("[liveWebrtc] send signal threw", e);
   }
 }
 
