@@ -1,49 +1,38 @@
 
-The user wants two things based on the screenshot showing "Sign in to go live" on the phone:
 
-1. **Allow going live WITHOUT signing in on phone** — pairing token alone should authorize the phone to broadcast as the paired store. Currently `/go-live` requires real auth.
-2. **Show the store's profile photo on the Go Live screen** (the paired identity avatar) so streamer sees which shop they're broadcasting as.
+## Goal
+Show the paired store's profile photo + name in the GoLivePage **LIVE** screen header — both on the desktop embedded preview ("Go Live Studio") and on the phone — so once confirmed and broadcasting, the streamer (and the desktop viewer) sees which shop is going live.
 
-## Investigation needed
+## Where to change
 
-I need to look at:
-- `/go-live` route component (the page in the screenshot)
-- How auth gate is enforced there
-- `livePairing.ts` already saves `PairedIdentity` to localStorage with store_id/name/avatar
-- Backend: stream creation likely requires `auth.uid()` — need an edge function that accepts a pairing session token and creates/authorizes a stream on behalf of the store owner
+`src/pages/GoLivePage.tsx` only — the LIVE-phase top bar (around lines 538–561).
+
+The component already computes `hostDisplayName` and `hostAvatarUrl` (lines 110–115) from the paired identity, but these values are not rendered in the LIVE header. They're only used when inserting the `live_streams` row.
 
 ## Plan
 
-### 1. Frontend — `/go-live` page
-- Read `getPairedIdentity()` from localStorage on mount
-- If a paired identity exists AND no auth user → treat as "paired session" mode
-- Replace "Sign in to go live" button with "Go Live as [Store Name]" using paired identity
-- Show the store avatar + name prominently at the top (header area, replacing/augmenting "Go Live" title)
-- Add a small "Paired device" badge + "Unpair" link
+1. **Add a host identity chip** to the LIVE top bar, placed right after the LIVE pill and before the viewer/heart/coin chips:
+   - Small `Avatar` (h-6 w-6) using `optimizeAvatar(hostAvatarUrl, 48)` with fallback initial
+   - `hostDisplayName` truncated (max ~14 chars) in white text, semibold, 11px
+   - Wrapped in a `bg-black/40 backdrop-blur-sm rounded-full px-2 py-1` chip to match existing style
+   - Add a subtle `Paired` micro-badge (emerald dot) when `isPaired`, so the user can tell the device is acting via QR pairing
 
-### 2. Backend — pairing-authenticated streaming
-- New edge function `pair-go-live` (public, no JWT required):
-  - Accepts `{ pair_token, action: 'start'|'heartbeat'|'end', stream_payload }`
-  - Validates token against `live_pair_sessions` (must be `confirmed`, not expired)
-  - Looks up `store_owner_id`
-  - Performs the stream action server-side using service role on behalf of that owner
-- New RPC `get_paired_session_by_token(p_token)` — returns store_id, store_owner_id, store_name, avatar if status='confirmed' (used by phone to re-validate identity on load)
-- Extend `confirm_live_pair_session` to also return a long-lived `device_token` (or reuse the pair token) phone stores in localStorage for ongoing API calls
+2. **Tighten the right-side cluster** so the new chip fits at narrow widths (the embedded preview in StoreLiveStreamSection is only ~400px wide):
+   - Hide the heart/coin counters at `< 360px` container width using `hidden xs:flex` style logic (Tailwind `@container` not in stack — fall back to conditional class based on chip presence: keep eye + identity always visible, drop heart+coin if needed). Simplest: keep all chips, reduce gaps from `gap-2` to `gap-1.5` and stat chip padding from `px-2` to `px-1.5`.
 
-### 3. Frontend wiring on `/go-live`
-- On mount: if `PairedIdentity` exists, call `get_paired_session_by_token` to confirm it's still valid; if expired/cancelled, clear localStorage and show normal sign-in
-- Stream start/stop/heartbeat → call `pair-go-live` edge function with stored pair token instead of direct supabase inserts
-- Display: avatar (h-10 w-10 rounded-full) + store name + "Paired" badge in the top bar
+3. **Title row enhancement** (line 564–566): below the top bar, show the host name a second time only if the avatar didn't fit (skip — covered by chip).
 
-### 4. Security guardrails
-- Pair token only authorizes: starting/ending live streams + posting chat as that store
-- Pair token does NOT authorize: profile edits, payments, wallet, DMs to other users
-- Pair sessions expire (already 10 min for pairing handshake — extend confirmed sessions to 24h for streaming use)
-- Add `revoked_at` field; desktop "Unpair" calls a revoke RPC
+4. **Setup-phase preview**: also surface the avatar + name in the `setup` phase header so the streamer sees identity *before* tapping "Go Live as …". A small `Avatar + name + "Paired device"` row above the title input.
 
 ## Technical details
 
-- Files to edit: `src/pages/GoLive.tsx` (or wherever the screenshot screen lives — need to locate), `src/lib/livePairing.ts` (add token persistence + API helpers)
-- New edge function: `supabase/functions/pair-go-live/index.ts` (verify_jwt = false)
-- New migration: extend `live_pair_sessions` (add `revoked_at`, lengthen expiry on confirm), add `get_paired_session_by_token` RPC, add `revoke_live_pair_session` RPC
-- Avatar: use existing `optimizeAvatar` util for the header thumbnail
+- Reuse existing `Avatar`, `AvatarImage`, `AvatarFallback` from `@/components/ui/avatar`
+- Reuse existing `optimizeAvatar` util (already imported)
+- Use Lucide `Store` icon as fallback when avatar URL is null
+- No new state, no new queries — `paired` + `hostDisplayName` + `hostAvatarUrl` already exist
+- No backend / migration changes needed
+
+## Out of scope (mention only)
+
+- Realtime sync of avatar changes from desktop to phone after pairing — already handled by the on-mount re-validation effect (lines 85–108) which refreshes `paired.store_avatar_url` from `getPairedSessionByToken`.
+
