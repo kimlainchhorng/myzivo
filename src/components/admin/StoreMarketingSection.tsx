@@ -555,11 +555,18 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName }:
                           <span className="flex items-center gap-1"><Share2 className="w-3 h-3" />{post.shares_count}</span>
                         </div>
                       </div>
-                      <div className="text-right shrink-0">
+                      <div className="flex flex-col items-end gap-2 shrink-0">
                         <Badge variant={post.is_published ? "default" : "secondary"} className="text-[10px]">
                           {post.is_published ? "Published" : "Draft"}
                         </Badge>
-                        <p className="text-[10px] text-muted-foreground mt-1">{format(parseISO(post.created_at), "MMM d")}</p>
+                        <p className="text-[10px] text-muted-foreground">{format(parseISO(post.created_at), "MMM d")}</p>
+                        <Button
+                          size="sm"
+                          className="h-7 px-2.5 gap-1 text-[11px] bg-gradient-to-r from-primary to-emerald-500 hover:opacity-90"
+                          onClick={() => { setBoostPost(post); setBoostForm({ daily_budget: 10, days: 7, audience: "broad", objective: "reach" }); }}
+                        >
+                          <Rocket className="w-3 h-3" /> Boost
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
