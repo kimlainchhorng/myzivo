@@ -278,22 +278,10 @@ export default function GoLivePage() {
     setPhase("ended");
   }, [endActiveStream]);
 
-  useEffect(() => {
-    if (phase !== "live" || !streamId) return;
-
-    const handlePageExit = () => {
-      void endActiveStream({ keepalive: true });
-    };
-
-    window.addEventListener("pagehide", handlePageExit);
-    window.addEventListener("beforeunload", handlePageExit);
-
-    return () => {
-      window.removeEventListener("pagehide", handlePageExit);
-      window.removeEventListener("beforeunload", handlePageExit);
-      void endActiveStream();
-    };
-  }, [phase, streamId, endActiveStream]);
+  // NOTE: We intentionally DO NOT auto-end the stream on unmount, page refresh,
+  // tab close, or navigation. The host's stream stays "live" until they
+  // explicitly tap End / X. This lets them refresh, lose connection, or hide
+  // the studio panel without dropping their broadcast.
 
   const formatTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
