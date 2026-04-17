@@ -104,9 +104,9 @@ export function useLiveEarnings() {
           event: "INSERT",
           schema: "public",
           table: "live_gift_displays",
-          filter: `creator_id=eq.${user.id}`,
         },
         () => {
+          // Cheap refetch — view filters by creator_id server-side
           queryClient.invalidateQueries({ queryKey: ["live-earnings-totals", user.id] });
           queryClient.invalidateQueries({ queryKey: ["live-earnings-streams", user.id] });
         }
