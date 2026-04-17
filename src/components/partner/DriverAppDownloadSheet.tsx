@@ -9,7 +9,7 @@
  */
 import { motion } from "framer-motion";
 import {
-  Globe, Car, DollarSign, Clock, Shield, Star, ArrowRight, X,
+  Globe, Car, DollarSign, Clock, Zap, Star, ArrowRight, X,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -32,10 +32,10 @@ const APP_STORE_URL =
 const DRIVER_WEBSITE_URL = "https://zivodriver.com";
 
 const HIGHLIGHTS = [
-  { icon: DollarSign, label: "Keep up to 90%", sub: "Industry-leading earnings", color: "hsl(142 71% 45%)" },
+  { icon: DollarSign, label: "Keep up to 75%", sub: "Industry-leading earnings", color: "hsl(142 71% 45%)" },
   { icon: Clock, label: "Drive on your time", sub: "Online whenever you want", color: "hsl(221 83% 53%)" },
-  { icon: Shield, label: "Insurance included", sub: "Coverage on every trip", color: "hsl(263 70% 58%)" },
-  { icon: Star, label: "Weekly payouts", sub: "Cash out anytime via wallet", color: "hsl(38 92% 50%)" },
+  { icon: Zap, label: "Instant payouts", sub: "Cash out anytime to your wallet", color: "hsl(263 70% 58%)" },
+  { icon: Star, label: "Weekly bonuses", sub: "Earn more with peak rewards", color: "hsl(38 92% 50%)" },
 ];
 
 interface DriverAppDownloadSheetProps {
