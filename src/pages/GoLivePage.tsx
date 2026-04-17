@@ -140,24 +140,64 @@ export default function GoLivePage() {
   const [showEndConfirm, setShowEndConfirm] = useState(false);
 
   // ── Camera ──
+  // Tries multiple constraint shapes so we work on phones that lack the
+  // requested facing camera (e.g. desktops with only one webcam, tablets
+  // without a back camera, etc.). Without these fallbacks getUserMedia throws
+  // NotFoundError and we'd allow the user to "go live" with no video.
   const startCamera = useCallback(async () => {
-    try {
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-      const s = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: true,
-      });
-      streamRef.current = s;
-      setLocalStream(s);
-      if (videoRef.current) {
-        videoRef.current.srcObject = s;
-        try { await videoRef.current.play(); } catch {}
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setLocalStream(null);
+
+    const attempts: MediaStreamConstraints[] = [
+      { video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true },
+      { video: { facingMode: { ideal: facingMode } }, audio: true },
+      { video: true, audio: true },
+      { video: true, audio: false },
+    ];
+
+    let s: MediaStream | null = null;
+    let lastErr: unknown = null;
+    for (const c of attempts) {
+      try {
+        s = await navigator.mediaDevices.getUserMedia(c);
+        if (s) break;
+      } catch (err) {
+        lastErr = err;
+        console.warn("[GoLivePage] getUserMedia attempt failed", c, err);
       }
-      setCameraError(false);
-    } catch (err) {
-      console.warn("[GoLivePage] getUserMedia failed", err);
-      setCameraError(true);
     }
+
+    // Final fallback: enumerateDevices + explicit deviceId
+    if (!s) {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cam = devices.find((d) => d.kind === "videoinput");
+        if (cam?.deviceId) {
+          s = await navigator.mediaDevices.getUserMedia({
+            video: { deviceId: { exact: cam.deviceId } },
+            audio: true,
+          });
+        }
+      } catch (err) {
+        lastErr = err;
+        console.warn("[GoLivePage] deviceId fallback failed", err);
+      }
+    }
+
+    if (!s) {
+      console.warn("[GoLivePage] all getUserMedia attempts failed", lastErr);
+      setCameraError(true);
+      return;
+    }
+
+    streamRef.current = s;
+    setLocalStream(s);
+    if (videoRef.current) {
+      videoRef.current.srcObject = s;
+      try { await videoRef.current.play(); } catch {}
+    }
+    setCameraError(false);
   }, [facingMode]);
 
   useEffect(() => {
@@ -180,6 +220,19 @@ export default function GoLivePage() {
   // ── Go live: create live_streams row (or call edge function in paired mode) ──
   const goLive = useCallback(async () => {
     if (!user?.id && !isPaired) { toast.error("Please sign in or pair this device"); return; }
+
+    // Block headless broadcasts: we MUST have a working camera/mic before
+    // creating the live row, otherwise the desktop viewer hangs forever on
+    // "Connecting to phone…" because no offer is ever produced.
+    const hasLiveVideo = !!localStream
+      && localStream.getVideoTracks().some((t) => t.readyState === "live");
+    if (!hasLiveVideo) {
+      toast.error("Camera not ready", { description: "Allow camera access and try again." });
+      // Try to acquire it now so the next tap works.
+      startCamera();
+      return;
+    }
+
     const streamTitle = title.trim() || "My Live Stream";
     setTitle(streamTitle);
     setPhase("countdown");
@@ -234,7 +287,7 @@ export default function GoLivePage() {
         setCountdown(c);
       }
     }, 1000);
-  }, [title, topic, user, isPaired, pairToken, hostDisplayName, hostAvatarUrl]);
+  }, [title, topic, user, isPaired, pairToken, hostDisplayName, hostAvatarUrl, localStream, startCamera]);
 
   // ── Realtime subscriptions for the active stream ──
   useEffect(() => {
@@ -624,9 +677,21 @@ export default function GoLivePage() {
                 </button>
               </div>
 
-              <Button onClick={goLive} disabled={!user && !isPaired} className="w-full h-14 rounded-full bg-red-500 hover:bg-red-600 text-white font-bold text-base shadow-lg shadow-red-500/40">
-                <Radio className="h-5 w-5 mr-2" /> {(user || isPaired) ? (isPaired ? `Go Live as ${hostDisplayName}` : "Go Live") : "Sign in to go live"}
-              </Button>
+              {(() => {
+                const hasMedia = !!localStream && localStream.getVideoTracks().some((t) => t.readyState === "live");
+                const disabled = (!user && !isPaired) || !hasMedia || cameraError;
+                let label: string;
+                if (!user && !isPaired) label = "Sign in to go live";
+                else if (cameraError) label = "Camera unavailable";
+                else if (!hasMedia) label = "Preparing camera…";
+                else if (isPaired) label = `Go Live as ${hostDisplayName}`;
+                else label = "Go Live";
+                return (
+                  <Button onClick={goLive} disabled={disabled} className="w-full h-14 rounded-full bg-red-500 hover:bg-red-600 text-white font-bold text-base shadow-lg shadow-red-500/40 disabled:opacity-60">
+                    <Radio className="h-5 w-5 mr-2" /> {label}
+                  </Button>
+                );
+              })()}
             </div>
           </>
         )}
