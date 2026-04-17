@@ -1,54 +1,49 @@
 
-Problem identified: the QR step is now working, but the phone confirmation step is failing. The screenshot error `"column reference "store_id" is ambiguous"` points to the SQL in `confirm_live_pair_session`, not `create_live_pair_session`.
+The user wants two things based on the screenshot showing "Sign in to go live" on the phone:
 
-What I found:
-- `PairPage` loads successfully, so `get_live_pair_session` is working.
-- The error appears when tapping `Confirm & Go Live`, which calls `confirm_live_pair_session`.
-- In the original live-pairing migration, this function has:
-  ```sql
-  RETURNING id, store_id, status INTO session_id, store_id, status;
-  ```
-  Because `store_id` and `status` are also output parameter names, Postgres treats them as ambiguous inside the function body.
+1. **Allow going live WITHOUT signing in on phone** — pairing token alone should authorize the phone to broadcast as the paired store. Currently `/go-live` requires real auth.
+2. **Show the store's profile photo on the Go Live screen** (the paired identity avatar) so streamer sees which shop they're broadcasting as.
 
-Plan:
-1. Add a new migration that patches `public.confirm_live_pair_session`.
-   - Replace the ambiguous `RETURNING ... INTO session_id, store_id, status` pattern with an unambiguous version.
-   - Safest fix: use local variables like `v_session_id`, `v_store_id`, `v_status`, or return from `v_row` after the update.
-2. Keep the rest of the pairing logic unchanged.
-   - Preserve expiry checks, pending-only confirmation, and user-agent capture.
-3. While patching, normalize the function style so column references are always qualified (`lps.store_id`, etc.) to avoid similar future errors.
-4. Re-test the full pairing flow:
-   - Desktop: open store live section and generate QR
-   - Phone: open pair link
-   - Tap `Confirm & Go Live`
-   - Verify no toast error appears
-   - Verify desktop session updates to `confirmed`
-   - Verify phone redirects into `/go-live`
-5. Quick regression check:
-   - Cancel still works
-   - Expired token still shows proper error
-   - QR creation still works after the confirm fix
+## Investigation needed
 
-Technical details:
-- Root cause is PL/pgSQL name shadowing between output columns and table columns.
-- The broken line is in `supabase/migrations/20260417180144_4d8972bb-fbdb-4660-abb6-1078db260c23.sql` and also the later recreated function still inherits that behavior until patched by a new migration.
-- Example safe pattern:
-  ```sql
-  DECLARE
-    v_session_id uuid;
-    v_store_id uuid;
-    v_status text;
-  BEGIN
-    UPDATE public.live_pair_sessions lps
-    SET status = 'confirmed', confirmed_at = now(), phone_user_agent = p_user_agent
-    WHERE lps.id = v_row.id
-    RETURNING lps.id, lps.store_id, lps.status
-    INTO v_session_id, v_store_id, v_status;
+I need to look at:
+- `/go-live` route component (the page in the screenshot)
+- How auth gate is enforced there
+- `livePairing.ts` already saves `PairedIdentity` to localStorage with store_id/name/avatar
+- Backend: stream creation likely requires `auth.uid()` — need an edge function that accepts a pairing session token and creates/authorizes a stream on behalf of the store owner
 
-    RETURN QUERY SELECT v_session_id, v_store_id, v_status;
-  END;
-  ```
-- This is a backend SQL fix; no frontend change should be required unless we want better fallback error copy.
+## Plan
 
-Optional follow-up after the fix:
-- The current `create_live_pair_session` patch fetches from `public.stores`, while the original ownership logic used `public.store_profiles`. Since the QR already renders, this is not blocking, but I would verify the source so the phone screen shows the real shop name/avatar instead of falling back to “Your Shop”.
+### 1. Frontend — `/go-live` page
+- Read `getPairedIdentity()` from localStorage on mount
+- If a paired identity exists AND no auth user → treat as "paired session" mode
+- Replace "Sign in to go live" button with "Go Live as [Store Name]" using paired identity
+- Show the store avatar + name prominently at the top (header area, replacing/augmenting "Go Live" title)
+- Add a small "Paired device" badge + "Unpair" link
+
+### 2. Backend — pairing-authenticated streaming
+- New edge function `pair-go-live` (public, no JWT required):
+  - Accepts `{ pair_token, action: 'start'|'heartbeat'|'end', stream_payload }`
+  - Validates token against `live_pair_sessions` (must be `confirmed`, not expired)
+  - Looks up `store_owner_id`
+  - Performs the stream action server-side using service role on behalf of that owner
+- New RPC `get_paired_session_by_token(p_token)` — returns store_id, store_owner_id, store_name, avatar if status='confirmed' (used by phone to re-validate identity on load)
+- Extend `confirm_live_pair_session` to also return a long-lived `device_token` (or reuse the pair token) phone stores in localStorage for ongoing API calls
+
+### 3. Frontend wiring on `/go-live`
+- On mount: if `PairedIdentity` exists, call `get_paired_session_by_token` to confirm it's still valid; if expired/cancelled, clear localStorage and show normal sign-in
+- Stream start/stop/heartbeat → call `pair-go-live` edge function with stored pair token instead of direct supabase inserts
+- Display: avatar (h-10 w-10 rounded-full) + store name + "Paired" badge in the top bar
+
+### 4. Security guardrails
+- Pair token only authorizes: starting/ending live streams + posting chat as that store
+- Pair token does NOT authorize: profile edits, payments, wallet, DMs to other users
+- Pair sessions expire (already 10 min for pairing handshake — extend confirmed sessions to 24h for streaming use)
+- Add `revoked_at` field; desktop "Unpair" calls a revoke RPC
+
+## Technical details
+
+- Files to edit: `src/pages/GoLive.tsx` (or wherever the screenshot screen lives — need to locate), `src/lib/livePairing.ts` (add token persistence + API helpers)
+- New edge function: `supabase/functions/pair-go-live/index.ts` (verify_jwt = false)
+- New migration: extend `live_pair_sessions` (add `revoked_at`, lengthen expiry on confirm), add `get_paired_session_by_token` RPC, add `revoke_live_pair_session` RPC
+- Avatar: use existing `optimizeAvatar` util for the header thumbnail
