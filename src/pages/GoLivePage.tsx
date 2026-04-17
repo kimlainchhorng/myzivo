@@ -51,7 +51,7 @@ import {
   clearPairedIdentity,
   type PairedIdentity,
 } from "@/lib/livePairing";
-import { ICE_SERVERS, sendSignal, subscribeSignals } from "@/lib/liveWebrtc";
+import { ICE_SERVERS, getIceServers, logSelectedCandidatePair, sendSignal, subscribeSignals } from "@/lib/liveWebrtc";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 
 const CoinRechargeSheet = lazy(() => import("@/components/live/CoinRechargeSheet"));
@@ -370,6 +370,13 @@ export default function GoLivePage() {
 
     console.log("[publisher] starting peer connection for stream", streamId);
     pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    // Swap in real TURN servers as soon as the edge function returns.
+    getIceServers().then((servers) => {
+      if (!alive || !pc) return;
+      try { pc.setConfiguration({ iceServers: servers }); } catch (e) {
+        console.warn("[publisher] setConfiguration failed", e);
+      }
+    });
     localStream.getTracks().forEach((t) => pc!.addTrack(t, localStream));
 
     pc.onicecandidate = (ev) => {
@@ -378,8 +385,16 @@ export default function GoLivePage() {
       }
     };
 
+    pc.oniceconnectionstatechange = () => {
+      console.log("[publisher] iceConnectionState=", pc?.iceConnectionState);
+    };
+
     pc.onconnectionstatechange = () => {
       console.log("[publisher] connectionState=", pc?.connectionState);
+      if (pc?.connectionState === "connected") {
+        logSelectedCandidatePair(pc, "publisher");
+        return;
+      }
       if (pc?.connectionState === "failed" && alive) {
         // Trigger ICE restart
         try { pc.restartIce(); } catch {}
