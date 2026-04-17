@@ -926,14 +926,14 @@ export default function LiveStreamPage() {
 
       <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
         {isLoading ? (
-          <div className="flex items-center justify-center h-40">
+          <div className="col-span-full flex items-center justify-center h-40">
             <div className="flex flex-col items-center gap-3">
               <Radio className="h-8 w-8 text-red-500 animate-pulse" />
               <p className="text-sm text-muted-foreground">Loading streams...</p>
             </div>
           </div>
         ) : filteredStreams.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-60 text-center px-6">
+          <div className="col-span-full flex flex-col items-center justify-center h-60 text-center px-6">
             <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
               <WifiOff className="h-9 w-9 text-red-500/40" />
             </div>
