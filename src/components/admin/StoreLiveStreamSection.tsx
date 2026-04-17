@@ -169,32 +169,53 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
     return () => { try { supabase.removeChannel(ch); } catch {} };
   }, [storeId]);
 
-  // On mount: detect an already-active confirmed pairing for this store
+  // On mount: only restore a confirmed pairing if the store is actively live.
+  // This prevents stale confirmed sessions from showing "Phone paired" before
+  // anyone scans a fresh QR in a new live cycle.
   useEffect(() => {
-    if (!storeId) return;
+    if (!storeId || !storeOwnerId) return;
     let cancelled = false;
     (async () => {
       try {
-        const { data, error } = await (supabase as any).rpc("get_active_pair_session_for_store", { p_store_id: storeId });
+        const [{ data: pairData, error: pairError }, { data: liveData, error: liveError }] = await Promise.all([
+          (supabase as any).rpc("get_active_pair_session_for_store", { p_store_id: storeId }),
+          (supabase as any)
+            .from("live_streams")
+            .select("id")
+            .eq("user_id", storeOwnerId)
+            .eq("status", "live")
+            .is("ended_at", null)
+            .order("started_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+        ]);
         if (cancelled) return;
-        if (error) {
-          console.error("[StoreLiveStreamSection] get_active_pair_session_for_store RPC error:", error.message ?? error, error);
+        if (pairError) {
+          console.error("[StoreLiveStreamSection] get_active_pair_session_for_store RPC error:", pairError.message ?? pairError, pairError);
           return;
         }
-        const row = Array.isArray(data) ? data[0] : data;
-        if (row?.session_id) {
+        if (liveError) {
+          console.error("[StoreLiveStreamSection] active live check error:", liveError.message ?? liveError, liveError);
+          return;
+        }
+        const row = Array.isArray(pairData) ? pairData[0] : pairData;
+        if (row?.session_id && liveData?.id) {
           setPairSessionId(row.session_id);
           setPairStatus("confirmed");
           setPairExpiresAt(row.device_expires_at ?? null);
           setStudioMounted(true);
           setShowLivePanel(true);
+        } else {
+          setPairStatus((prev) => (prev === "confirmed" ? "idle" : prev));
+          setPairSessionId(null);
+          setPairPhoneUA(null);
         }
       } catch (e) {
         console.error("[StoreLiveStreamSection] active pair check threw", e);
       }
     })();
     return () => { cancelled = true; };
-  }, [storeId]);
+  }, [storeId, storeOwnerId]);
 
   // Auto-expire on TTL
   useEffect(() => {
@@ -329,7 +350,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
     queryFn: async (): Promise<StreamRow[]> => {
       const { data, error } = await (supabase as any)
         .from("live_streams")
-        .select("id, title, status, viewer_count, like_count, gifts_received, started_at, ended_at, thumbnail_url")
+        .select("id, title, status, viewer_count, like_count, gifts_received, started_at, ended_at")
         .eq("user_id", storeOwnerId)
         .order("started_at", { ascending: false })
         .limit(20);
