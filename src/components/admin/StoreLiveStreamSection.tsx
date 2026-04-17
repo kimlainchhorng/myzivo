@@ -246,7 +246,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
       )}
 
       <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
-        <DialogContent className="max-w-md p-0 overflow-hidden gap-0 border-primary/20">
+        <DialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-[400px] max-h-[90vh] overflow-y-auto p-0 gap-0 border-primary/20">
           {/* Hero header */}
           <div className="relative bg-gradient-to-br from-primary/15 via-primary/5 to-background px-6 pt-6 pb-5 border-b border-border/50">
             <div className="flex items-center gap-3 mb-1">
@@ -302,12 +302,12 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
           </div>
 
           {/* URL + copy */}
-          <div className="px-6 pb-5 pt-3">
-            <div className="w-full flex items-center gap-1 rounded-xl border bg-muted/50 pl-3 pr-1 py-1">
-              <code className="flex-1 text-[11px] truncate text-muted-foreground font-mono">{goLiveUrl}</code>
-              <Button size="sm" variant={copied ? "default" : "secondary"} onClick={copyUrl} className="h-7 gap-1 text-[11px] rounded-lg shrink-0">
-                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                {copied ? "Copied" : "Copy link"}
+          <div className="px-5 pb-5 pt-3">
+            <div className="w-full rounded-xl border bg-muted/50 px-3 py-2">
+              <code className="block text-[10px] truncate text-muted-foreground font-mono mb-2">{goLiveUrl}</code>
+              <Button size="sm" variant={copied ? "default" : "secondary"} onClick={copyUrl} className="w-full h-8 gap-1.5 text-xs rounded-lg">
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? "Copied!" : "Copy link"}
               </Button>
             </div>
             <p className="mt-3 text-[11px] text-muted-foreground text-center leading-relaxed">
