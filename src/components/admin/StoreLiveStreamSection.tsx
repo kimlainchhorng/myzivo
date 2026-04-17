@@ -246,29 +246,72 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
       )}
 
       <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Smartphone className="w-5 h-5 text-primary" />
-              Continue on your phone
-            </DialogTitle>
-            <DialogDescription>
-              Scan with your phone camera to open the studio. If a stream is already live, it will resume automatically.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col items-center gap-4 py-2">
-            <div className="p-4 bg-white rounded-2xl border">
-              <QRCodeSVG value={goLiveUrl} size={220} level="M" includeMargin={false} />
+        <DialogContent className="max-w-md p-0 overflow-hidden gap-0 border-primary/20">
+          {/* Hero header */}
+          <div className="relative bg-gradient-to-br from-primary/15 via-primary/5 to-background px-6 pt-6 pb-5 border-b border-border/50">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-10 h-10 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0 ring-1 ring-primary/20">
+                <Smartphone className="w-5 h-5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-base font-bold text-foreground leading-tight">Continue on your phone</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                  {liveNow.length > 0
+                    ? "You're live — scan to take the broadcast mobile."
+                    : "Scan to open the studio on your phone."}
+                </DialogDescription>
+              </div>
             </div>
-            <div className="w-full flex items-center gap-2 rounded-xl border bg-muted/40 px-3 py-2">
-              <code className="flex-1 text-xs truncate text-foreground">{goLiveUrl}</code>
-              <Button size="sm" variant="ghost" onClick={copyUrl} className="h-8 gap-1.5">
-                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? "Copied" : "Copy"}
+            {liveNow.length > 0 && (
+              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-red-500/10 border border-red-500/30 px-2.5 py-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[10px] font-bold tracking-wider text-red-600 dark:text-red-400">LIVE NOW · AUTO-RESUME</span>
+              </div>
+            )}
+          </div>
+
+          {/* QR code */}
+          <div className="px-6 pt-5 pb-3 flex flex-col items-center">
+            <div className="relative p-4 bg-white rounded-2xl shadow-md ring-1 ring-border">
+              <QRCodeSVG value={goLiveUrl} size={200} level="M" includeMargin={false} />
+              {/* Center logo overlay */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center ring-4 ring-white shadow-lg">
+                  <Radio className="w-5 h-5 text-primary-foreground" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Steps */}
+          <div className="px-6 pb-2">
+            <ol className="space-y-2">
+              {[
+                "Open Camera or QR scanner on your phone",
+                "Point at the code — tap the link that appears",
+                "Sign in with the same account to take over",
+              ].map((step, i) => (
+                <li key={i} className="flex items-start gap-2.5">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center mt-0.5">
+                    {i + 1}
+                  </span>
+                  <span className="text-xs text-foreground leading-relaxed">{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* URL + copy */}
+          <div className="px-6 pb-5 pt-3">
+            <div className="w-full flex items-center gap-1 rounded-xl border bg-muted/50 pl-3 pr-1 py-1">
+              <code className="flex-1 text-[11px] truncate text-muted-foreground font-mono">{goLiveUrl}</code>
+              <Button size="sm" variant={copied ? "default" : "secondary"} onClick={copyUrl} className="h-7 gap-1 text-[11px] rounded-lg shrink-0">
+                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                {copied ? "Copied" : "Copy link"}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground text-center">
-              Sign in on your phone with the same account. Your live stream stays active across devices.
+            <p className="mt-3 text-[11px] text-muted-foreground text-center leading-relaxed">
+              Your stream stays active — refresh, switch devices, or hide the studio without dropping the broadcast.
             </p>
           </div>
         </DialogContent>
