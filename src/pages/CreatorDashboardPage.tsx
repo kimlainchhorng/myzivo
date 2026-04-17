@@ -5,12 +5,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLiveEarnings } from "@/hooks/useLiveEarnings";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import {
   ArrowLeft, DollarSign, Users, TrendingUp, Heart, Crown, BarChart3, Wallet,
   Eye, Video, Gift, Star, Zap, Clock, ChevronRight, ArrowUpRight,
   Download, Calendar, Target, Award, Store, PenTool, Share2, Bell,
-  Sparkles, ArrowRight,
+  Sparkles, ArrowRight, Radio, Coins,
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -20,6 +21,7 @@ import SEOHead from "@/components/SEOHead";
 export default function CreatorDashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { totals: liveEarnings } = useLiveEarnings();
 
   const { data: creator } = useQuery({
     queryKey: ["creator-profile", user?.id],
@@ -62,18 +64,21 @@ export default function CreatorDashboardPage() {
   });
 
   const totalTips = tips.reduce((sum: number, t: any) => sum + (t.amount_cents || 0), 0);
-  const totalEarnings = (creator?.total_earnings_cents || 0) + totalTips;
+  const liveEarningsCents = liveEarnings?.earnings_cents ?? 0;
+  const liveCoins = liveEarnings?.total_coins_received ?? 0;
+  const totalEarnings = (creator?.total_earnings_cents || 0) + totalTips + liveEarningsCents;
 
   const overviewCards = [
     { label: "Earnings", value: `$${(totalEarnings / 100).toFixed(2)}`, icon: DollarSign, accent: "hsl(142 71% 45%)" },
     { label: "Subscribers", value: String(subscribers.length), icon: Users, accent: "hsl(221 83% 53%)" },
     { label: "Tips", value: `$${(totalTips / 100).toFixed(2)}`, icon: Heart, accent: "hsl(340 75% 55%)" },
+    { label: "Live Gifts", value: `$${(liveEarningsCents / 100).toFixed(2)}`, icon: Gift, accent: "hsl(25 95% 53%)" },
     { label: "Tier Plans", value: String(tiers.length), icon: Crown, accent: "hsl(38 92% 50%)" },
     { label: "Views", value: "0", icon: Eye, accent: "hsl(263 70% 58%)" },
-    { label: "Engagement", value: "0%", icon: TrendingUp, accent: "hsl(198 93% 59%)" },
   ];
 
   const quickActions = [
+    { label: "Live Earnings", icon: Radio, href: "/creator/live-earnings", accent: "hsl(25 95% 53%)" },
     { label: "Analytics", icon: BarChart3, href: "/creator-analytics", accent: "hsl(263 70% 58%)" },
     { label: "Monetization", icon: DollarSign, href: "/monetization", accent: "hsl(142 71% 45%)" },
     { label: "Affiliate Hub", icon: Gift, href: "/affiliate-hub", accent: "hsl(172 66% 50%)" },
@@ -81,7 +86,6 @@ export default function CreatorDashboardPage() {
     { label: "ZIVO Shop", icon: Store, href: "/shop-dashboard", accent: "hsl(142 71% 45%)" },
     { label: "Wallet", icon: Wallet, href: "/wallet", accent: "hsl(38 92% 50%)" },
     { label: "Scheduler", icon: Calendar, href: "/content-scheduler", accent: "hsl(263 70% 58%)" },
-    { label: "Academy", icon: Award, href: "/monetization/articles", accent: "hsl(25 95% 53%)" },
     { label: "Share", icon: Share2, href: "/qr-profile", accent: "hsl(199 89% 48%)" },
   ];
 
