@@ -32,7 +32,7 @@ interface StreamRow {
   status: string | null;
   viewer_count: number | null;
   like_count: number | null;
-  gift_count: number | null;
+  gifts_received: number | null;
   started_at: string | null;
   ended_at: string | null;
   thumbnail_url: string | null;
@@ -54,6 +54,8 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   const [pairPhoneUA, setPairPhoneUA] = useState<string | null>(null);
   const [pairError, setPairError] = useState<string | null>(null);
   const channelRef = useRef<any>(null);
+  const queryClient = useQueryClient();
+  const hadLiveStreamRef = useRef(false);
 
   const goLiveUrl = pairToken
     ? (typeof window !== "undefined" ? `${window.location.origin}/pair/${pairToken}` : `/pair/${pairToken}`)
@@ -212,11 +214,22 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   const storeOwnerId = storeMeta?.owner_id ?? null;
 
   // Fallback auto-detect: if there's an active live_stream for this store owner,
-  // treat it as confirmed and mount the viewer — covers cases where the pair
-  // session expired/missing but the phone is still publishing.
+  // treat it as confirmed and mount the viewer — and reset back to idle once
+  // a previously-live phone has ended the stream.
   useEffect(() => {
     if (!storeOwnerId) return;
     let cancelled = false;
+
+    const invalidateStreams = () => {
+      queryClient.invalidateQueries({ queryKey: ["store-live-streams", storeId, storeOwnerId] });
+    };
+
+    const resetAfterLiveEnded = () => {
+      if (!hadLiveStreamRef.current) return;
+      setPairStatus((prev) => (prev === "confirmed" ? "idle" : prev));
+      setPairSessionId(null);
+      setPairPhoneUA(null);
+    };
 
     const syncLiveState = async () => {
       const { data, error } = await (supabase as any)
@@ -233,10 +246,14 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
         console.error("[StoreLiveStreamSection] live_streams fallback error:", error.message ?? error);
         return;
       }
+      invalidateStreams();
       if (data?.id) {
+        hadLiveStreamRef.current = true;
         setPairStatus("confirmed");
         setStudioMounted(true);
         setShowLivePanel(true);
+      } else {
+        resetAfterLiveEnded();
       }
     };
 
@@ -248,7 +265,9 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "live_streams", filter: `user_id=eq.${storeOwnerId}` },
         (payload: any) => {
+          invalidateStreams();
           if (payload.new?.status === "live" && !payload.new?.ended_at) {
+            hadLiveStreamRef.current = true;
             setPairStatus("confirmed");
             setStudioMounted(true);
             setShowLivePanel(true);
@@ -259,10 +278,16 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "live_streams", filter: `user_id=eq.${storeOwnerId}` },
         (payload: any) => {
+          invalidateStreams();
           if (payload.new?.status === "live" && !payload.new?.ended_at) {
+            hadLiveStreamRef.current = true;
             setPairStatus("confirmed");
             setStudioMounted(true);
             setShowLivePanel(true);
+            return;
+          }
+          if (payload.new?.ended_at || payload.new?.status === "ended" || payload.new?.status === "cancelled") {
+            resetAfterLiveEnded();
           }
         },
       )
@@ -272,13 +297,13 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
       cancelled = true;
       try { supabase.removeChannel(ch); } catch {}
     };
-  }, [storeOwnerId]);
+  }, [queryClient, storeId, storeOwnerId]);
   const { data: streams, isLoading } = useQuery({
     queryKey: ["store-live-streams", storeId, storeOwnerId],
     queryFn: async (): Promise<StreamRow[]> => {
       const { data, error } = await (supabase as any)
         .from("live_streams")
-        .select("id, title, status, viewer_count, like_count, gift_count, started_at, ended_at, thumbnail_url")
+        .select("id, title, status, viewer_count, like_count, gifts_received, started_at, ended_at, thumbnail_url")
         .eq("user_id", storeOwnerId)
         .order("started_at", { ascending: false })
         .limit(20);
@@ -295,9 +320,21 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   const activeLiveStreamId = liveNow[0]?.id ?? null;
   const past = streams?.filter((s) => s.status !== "live") ?? [];
 
+  useEffect(() => {
+    if (activeLiveStreamId) {
+      hadLiveStreamRef.current = true;
+      return;
+    }
+    if (hadLiveStreamRef.current) {
+      setPairStatus((prev) => (prev === "confirmed" ? "idle" : prev));
+      setPairSessionId(null);
+      setPairPhoneUA(null);
+    }
+  }, [activeLiveStreamId]);
+
   const totalViews = streams?.reduce((sum, s) => sum + (s.viewer_count ?? 0), 0) ?? 0;
   const totalLikes = streams?.reduce((sum, s) => sum + (s.like_count ?? 0), 0) ?? 0;
-  const totalGifts = streams?.reduce((sum, s) => sum + (s.gift_count ?? 0), 0) ?? 0;
+  const totalGifts = streams?.reduce((sum, s) => sum + (s.gifts_received ?? 0), 0) ?? 0;
 
   return (
     <div className={cn("flex gap-4 sm:gap-6", showLivePanel ? "flex-col lg:flex-row" : "flex-col")}>
@@ -440,7 +477,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
                     <div className="absolute inset-0 overflow-hidden bg-background">
                       <Suspense fallback={<div className="flex items-center justify-center h-full text-sm text-muted-foreground">Loading studio…</div>}>
                         <div className="w-full h-full" style={{ containerType: "size" }}>
-                          {(pairStatus === "confirmed" || liveNow.length > 0) && storeOwnerId ? (
+                          {activeLiveStreamId && storeOwnerId ? (
                             <PairedStreamViewer
                               key={activeLiveStreamId ?? pairSessionId ?? "paired-stream-viewer"}
                               storeOwnerId={storeOwnerId}
@@ -687,7 +724,7 @@ function StreamRowCard({ stream, live }: { stream: StreamRow; live?: boolean }) 
         <div className="flex items-center gap-2.5 text-[11px] sm:text-xs text-muted-foreground">
           <span className="flex items-center gap-1 tabular-nums"><Eye className="w-3 h-3" />{stream.viewer_count ?? 0}</span>
           <span className="flex items-center gap-1 tabular-nums"><Heart className="w-3 h-3" />{stream.like_count ?? 0}</span>
-          <span className="flex items-center gap-1 tabular-nums"><Gift className="w-3 h-3" />{stream.gift_count ?? 0}</span>
+          <span className="flex items-center gap-1 tabular-nums"><Gift className="w-3 h-3" />{stream.gifts_received ?? 0}</span>
           {stream.started_at && (
             <span className="truncate hidden xs:inline">{formatDistanceToNow(new Date(stream.started_at), { addSuffix: true })}</span>
           )}
