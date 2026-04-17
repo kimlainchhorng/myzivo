@@ -21,6 +21,7 @@ interface Props {
   storeOwnerId: string;
   storeName?: string | null;
   storeAvatarUrl?: string | null;
+  streamIdHint?: string | null;
 }
 
 type ViewerState =
@@ -29,13 +30,24 @@ type ViewerState =
   | "live"
   | "disconnected";
 
-export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvatarUrl }: Props) {
+export default function PairedStreamViewer({
+  storeOwnerId,
+  storeName,
+  storeAvatarUrl,
+  streamIdHint,
+}: Props) {
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
-  const unsubRef = useRef<(() => void) | null>(null);
-  const [streamId, setStreamId] = useState<string | null>(null);
-  const [state, setState] = useState<ViewerState>("waiting-for-stream");
+  const [streamId, setStreamId] = useState<string | null>(streamIdHint ?? null);
+  const [state, setState] = useState<ViewerState>(streamIdHint ? "connecting" : "waiting-for-stream");
+
+  useEffect(() => {
+    if (streamIdHint) {
+      setStreamId((prev) => (prev === streamIdHint ? prev : streamIdHint));
+      setState("connecting");
+    }
+  }, [streamIdHint]);
 
   // 1) Find the active live stream for this store owner (poll + realtime)
   useEffect(() => {
@@ -43,6 +55,14 @@ export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvata
     let cancelled = false;
 
     const findLive = async () => {
+      if (streamIdHint) {
+        if (!cancelled) {
+          setStreamId(streamIdHint);
+          setState("connecting");
+        }
+        return;
+      }
+
       const { data } = await (supabase as any)
         .from("live_streams")
         .select("id")
@@ -52,7 +72,17 @@ export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvata
         .order("started_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (!cancelled && data?.id) setStreamId(data.id);
+
+      if (cancelled) return;
+
+      if (data?.id) {
+        setStreamId((prev) => (prev === data.id ? prev : data.id));
+        setState("connecting");
+      } else {
+        setStreamId(null);
+        setState("waiting-for-stream");
+        if (videoRef.current) videoRef.current.srcObject = null;
+      }
     };
 
     findLive();
@@ -64,16 +94,26 @@ export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvata
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "live_streams", filter: `user_id=eq.${storeOwnerId}` },
         (payload: any) => {
-          if (payload.new?.status === "live" && !cancelled) setStreamId(payload.new.id);
+          if (payload.new?.status === "live" && !payload.new?.ended_at && !cancelled) {
+            setStreamId(payload.new.id);
+            setState("connecting");
+          }
         },
       )
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "live_streams", filter: `user_id=eq.${storeOwnerId}` },
         (payload: any) => {
-          if (payload.new?.status === "ended" && payload.new.id === streamId) {
-            setStreamId(null);
+          if (cancelled) return;
+          if (payload.new?.status === "live" && !payload.new?.ended_at) {
+            setStreamId(payload.new.id);
+            setState("connecting");
+            return;
+          }
+          if (payload.new?.status === "ended") {
+            setStreamId((prev) => (prev === payload.new.id ? null : prev));
             setState("waiting-for-stream");
+            if (videoRef.current) videoRef.current.srcObject = null;
           }
         },
       )
@@ -84,14 +124,14 @@ export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvata
       clearInterval(poll);
       try { supabase.removeChannel(ch); } catch {}
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeOwnerId]);
+  }, [storeOwnerId, streamIdHint]);
 
   // 2) Once we have a streamId, set up the WebRTC viewer connection
   useEffect(() => {
     if (!streamId) return;
 
     let active = true;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     setState("connecting");
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
     pcRef.current = pc;
@@ -110,11 +150,21 @@ export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvata
     };
 
     pc.onconnectionstatechange = () => {
-      const s = pc.connectionState;
-      if (s === "failed" || s === "disconnected" || s === "closed") {
-        setState("disconnected");
-      } else if (s === "connected") {
+      const nextState = pc.connectionState;
+      if (nextState === "connected") {
         setState("live");
+        return;
+      }
+
+      if (nextState === "failed" || nextState === "disconnected" || nextState === "closed") {
+        setState("disconnected");
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => {
+          if (!active) return;
+          if (videoRef.current) videoRef.current.srcObject = null;
+          setStreamId(null);
+          setState("waiting-for-stream");
+        }, 1200);
       }
     };
 
@@ -131,17 +181,15 @@ export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvata
         } else if (row.type === "ice" && row.payload) {
           try { await pc.addIceCandidate(new RTCIceCandidate(row.payload)); } catch {}
         } else if (row.type === "bye") {
-          setState("disconnected");
+          if (videoRef.current) videoRef.current.srcObject = null;
+          setStreamId(null);
+          setState("waiting-for-stream");
         }
       } catch (e) {
         console.warn("[PairedStreamViewer] signal handling error", e);
       }
     });
-    unsubRef.current = unsub;
 
-    // Register this desktop as a viewer and keep sending join until the
-    // publisher answers — this avoids the race where the first join happens
-    // before the phone's publisher subscription is ready.
     if (user?.id) {
       (supabase as any)
         .from("live_viewers")
@@ -159,6 +207,7 @@ export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvata
     return () => {
       active = false;
       clearInterval(joinRetry);
+      if (reconnectTimer) clearTimeout(reconnectTimer);
       if (user?.id) {
         (supabase as any)
           .from("live_viewers")
@@ -167,10 +216,10 @@ export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvata
           .eq("user_id", user.id)
           .then(() => null, () => null);
       }
+      if (videoRef.current) videoRef.current.srcObject = null;
       try { unsub(); } catch {}
       try { pc.close(); } catch {}
       pcRef.current = null;
-      unsubRef.current = null;
     };
   }, [streamId, user?.id]);
 
@@ -184,7 +233,6 @@ export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvata
         className="w-full h-full object-cover bg-black"
       />
 
-      {/* Overlay: status / identity */}
       {state !== "live" && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-b from-zinc-900 to-black px-6 text-center">
           <Avatar className="h-16 w-16 ring-2 ring-white/20 shadow-xl">
@@ -210,14 +258,13 @@ export default function PairedStreamViewer({ storeOwnerId, storeName, storeAvata
             {state === "disconnected" && (
               <div className="flex items-center gap-2 text-red-400 text-xs">
                 <WifiOff className="h-3 w-3" />
-                Stream disconnected
+                Reconnecting to latest stream…
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* LIVE chip when streaming */}
       {state === "live" && (
         <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
           <div className="flex items-center gap-1 bg-red-500 rounded-full px-2 py-1 shadow-lg">
