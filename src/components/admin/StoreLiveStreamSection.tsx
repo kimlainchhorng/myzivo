@@ -37,6 +37,10 @@ interface StreamRow {
 export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   const navigate = useNavigate();
   const [showLivePanel, setShowLivePanel] = useState(false);
+  // Once the studio has been opened, keep it mounted so hiding the panel
+  // does NOT end an in-progress live stream.
+  const [studioMounted, setStudioMounted] = useState(false);
+  const openStudio = () => { setStudioMounted(true); setShowLivePanel(true); };
   const { data: streams, isLoading } = useQuery({
     queryKey: ["store-live-streams", storeId],
     queryFn: async (): Promise<StreamRow[]> => {
