@@ -536,20 +536,30 @@ export default function GoLivePage() {
       <video ref={videoRef} autoPlay muted playsInline className={cn("absolute inset-0 w-full h-full object-cover", facingMode === "user" && "scale-x-[-1]")} />
 
       {/* Top bar */}
-      <div className="relative z-10 flex items-center gap-2 px-3 pt-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}>
-        <div className="flex items-center gap-1.5 bg-red-500 rounded-full px-2.5 py-1 shadow-lg">
+      <div className="relative z-10 flex items-center gap-1.5 px-3 pt-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}>
+        <div className="flex items-center gap-1 bg-red-500 rounded-full px-2 py-1 shadow-lg shrink-0">
           <Radio className="h-3 w-3 text-white animate-pulse" />
           <span className="text-white text-[10px] font-black tracking-wider">LIVE</span>
         </div>
-        <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
+        <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-sm rounded-full pl-0.5 pr-2 py-0.5 shrink min-w-0">
+          <Avatar className="h-5 w-5 ring-1 ring-white/30">
+            <AvatarImage src={optimizeAvatar(hostAvatarUrl, 48)} alt={hostDisplayName} />
+            <AvatarFallback className="bg-zinc-700 text-white text-[9px] font-bold">
+              {hostDisplayName?.[0]?.toUpperCase() ?? "S"}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-[11px] font-semibold text-white truncate max-w-[80px]">{hostDisplayName}</span>
+          {isPaired && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" title="Paired" />}
+        </div>
+        <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-1.5 py-1 shrink-0">
           <Eye className="h-3 w-3 text-white/70" />
           <span className="text-[11px] text-white font-medium">{viewerCount}</span>
         </div>
-        <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
+        <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-1.5 py-1 shrink-0">
           <Heart className="h-3 w-3 text-red-400 fill-red-400" />
           <span className="text-[11px] text-white font-medium">{likes}</span>
         </div>
-        <div className="flex items-center gap-1 bg-amber-500/20 backdrop-blur-sm rounded-full px-2 py-1 border border-amber-500/30">
+        <div className="flex items-center gap-1 bg-amber-500/20 backdrop-blur-sm rounded-full px-1.5 py-1 border border-amber-500/30 shrink-0">
           <img src={goldCoinIcon} alt="" className="h-3 w-3" />
           <span className="text-[11px] text-amber-300 font-bold">{coinsEarned}</span>
         </div>
