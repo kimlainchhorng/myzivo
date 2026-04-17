@@ -66,7 +66,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   };
   const openStudio = () => { setStudioMounted(true); setShowLivePanel(true); };
 
-  const hasActivePhoneSession = pairStatus === "confirmed" || !!activeLiveStreamId;
+  const hasActivePhoneSession = pairStatus === "confirmed" || !!pairSessionId;
 
   // Generate a pairing session only when there isn't already an active paired/live session
   const startPairing = async () => {
