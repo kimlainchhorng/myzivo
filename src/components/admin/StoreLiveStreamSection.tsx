@@ -56,24 +56,24 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
   const totalGifts = streams?.reduce((sum, s) => sum + (s.gift_count ?? 0), 0) ?? 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Hero / Go Live */}
       <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background">
-        <CardContent className="pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Radio className="w-6 h-6 text-primary" />
+        <CardContent className="pt-4 sm:pt-6 px-4 sm:px-6 pb-4 sm:pb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Radio className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-foreground">Live Streaming</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-bold text-foreground">Live Streaming</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 leading-snug">
                 Broadcast live to your customers — showcase products, host Q&amp;A, or run flash sales.
               </p>
             </div>
           </div>
           <Button
             onClick={() => window.open("/go-live", "_blank")}
-            className="gap-2 shrink-0"
+            className="gap-2 shrink-0 h-12 sm:h-10 w-full sm:w-auto rounded-xl text-sm font-semibold touch-manipulation active:scale-[0.98]"
           >
             <Video className="w-4 h-4" />
             Go Live Now
@@ -83,7 +83,7 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
       </Card>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         <StatCard icon={Radio} label="Streams" value={streams?.length ?? 0} color="text-primary" />
         <StatCard icon={Eye} label="Total Views" value={totalViews} color="text-blue-500" />
         <StatCard icon={Heart} label="Total Likes" value={totalLikes} color="text-red-500" />
@@ -93,13 +93,13 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
       {/* Live now */}
       {liveNow.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
+          <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+            <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
               Live Now
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 px-3 sm:px-6 pb-4 sm:pb-6">
             {liveNow.map((s) => (
               <StreamRowCard key={s.id} stream={s} live />
             ))}
@@ -109,14 +109,14 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
 
       {/* Past streams */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Recent Streams</CardTitle>
+        <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+          <CardTitle className="text-sm sm:text-base">Recent Streams</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-3 sm:px-6 pb-4 sm:pb-6">
           {isLoading ? (
             <p className="text-sm text-muted-foreground py-6 text-center">Loading…</p>
           ) : past.length === 0 ? (
-            <div className="py-10 text-center space-y-2">
+            <div className="py-8 sm:py-10 text-center space-y-2">
               <div className="w-12 h-12 rounded-2xl bg-muted mx-auto flex items-center justify-center">
                 <Play className="w-6 h-6 text-muted-foreground" />
               </div>
@@ -139,12 +139,12 @@ export default function StoreLiveStreamSection({ storeId, storeName }: Props) {
 function StatCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: number; color: string }) {
   return (
     <Card>
-      <CardContent className="pt-5 pb-5">
-        <div className="flex items-center gap-2 mb-2">
-          <Icon className={`w-4 h-4 ${color}`} />
-          <span className="text-xs text-muted-foreground font-medium">{label}</span>
+      <CardContent className="pt-3.5 pb-3.5 px-3 sm:pt-5 sm:pb-5 sm:px-6">
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+          <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${color}`} />
+          <span className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate">{label}</span>
         </div>
-        <p className="text-2xl font-bold text-foreground">{value.toLocaleString()}</p>
+        <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">{value.toLocaleString()}</p>
       </CardContent>
     </Card>
   );
@@ -163,10 +163,6 @@ function StreamRowCard({ stream, live }: { stream: StreamRow; live?: boolean }) 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.setQueryData<StreamRow[] | undefined>(
-        ["store-live-streams"],
-        undefined
-      );
       queryClient.invalidateQueries({ queryKey: ["store-live-streams"] });
       toast.success("Liked ❤️");
     },
@@ -181,11 +177,11 @@ function StreamRowCard({ stream, live }: { stream: StreamRow; live?: boolean }) 
       tabIndex={0}
       onClick={openWatcher}
       onKeyDown={(e) => { if (e.key === "Enter") openWatcher(); }}
-      className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:border-primary/30 hover:bg-muted/40 transition-colors cursor-pointer"
+      className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl border border-border bg-card hover:border-primary/30 hover:bg-muted/40 active:scale-[0.99] transition-all cursor-pointer touch-manipulation min-h-[64px]"
     >
-      <div className="w-14 h-14 rounded-lg bg-muted overflow-hidden shrink-0 relative">
+      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-muted overflow-hidden shrink-0 relative">
         {stream.thumbnail_url ? (
-          <img src={stream.thumbnail_url} alt="" className="w-full h-full object-cover" />
+          <img src={stream.thumbnail_url} alt="" className="w-full h-full object-cover" loading="lazy" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Video className="w-5 h-5 text-muted-foreground" />
@@ -196,15 +192,22 @@ function StreamRowCard({ stream, live }: { stream: StreamRow; live?: boolean }) 
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground truncate">
-          {stream.title || "Untitled stream"}
-        </p>
-        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{stream.viewer_count ?? 0}</span>
-          <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{stream.like_count ?? 0}</span>
-          <span className="flex items-center gap-1"><Gift className="w-3 h-3" />{stream.gift_count ?? 0}</span>
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <p className="text-sm font-semibold text-foreground truncate flex-1">
+            {stream.title || "Untitled stream"}
+          </p>
+          {live ? (
+            <Badge variant="destructive" className="h-5 px-1.5 text-[10px] shrink-0">Live</Badge>
+          ) : (
+            <Badge variant="secondary" className="h-5 px-1.5 text-[10px] shrink-0">Ended</Badge>
+          )}
+        </div>
+        <div className="flex items-center gap-2.5 text-[11px] sm:text-xs text-muted-foreground">
+          <span className="flex items-center gap-1 tabular-nums"><Eye className="w-3 h-3" />{stream.viewer_count ?? 0}</span>
+          <span className="flex items-center gap-1 tabular-nums"><Heart className="w-3 h-3" />{stream.like_count ?? 0}</span>
+          <span className="flex items-center gap-1 tabular-nums"><Gift className="w-3 h-3" />{stream.gift_count ?? 0}</span>
           {stream.started_at && (
-            <span>{formatDistanceToNow(new Date(stream.started_at), { addSuffix: true })}</span>
+            <span className="truncate hidden xs:inline">{formatDistanceToNow(new Date(stream.started_at), { addSuffix: true })}</span>
           )}
         </div>
       </div>
@@ -214,15 +217,11 @@ function StreamRowCard({ stream, live }: { stream: StreamRow; live?: boolean }) 
         onClick={(e) => { e.stopPropagation(); likeMutation.mutate(); }}
         disabled={likeMutation.isPending}
         title="Like this stream"
-        className="shrink-0"
+        aria-label="Like stream"
+        className="shrink-0 h-11 w-11 rounded-full active:scale-90 touch-manipulation"
       >
-        <Heart className={cn("w-4 h-4", likeMutation.isPending ? "text-muted-foreground" : "text-red-500")} />
+        <Heart className={cn("w-5 h-5", likeMutation.isPending ? "text-muted-foreground" : "text-red-500 fill-red-500/20")} />
       </Button>
-      {live ? (
-        <Badge variant="destructive">Live</Badge>
-      ) : (
-        <Badge variant="secondary">Ended</Badge>
-      )}
     </div>
   );
 }
