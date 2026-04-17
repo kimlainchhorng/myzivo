@@ -384,6 +384,7 @@ const BusinessAccountPage = lazy(() => import("./pages/business/BusinessAccountP
 const PartnerAuditDocs = lazy(() => import("./pages/business/PartnerAuditDocs"));
 const EnterpriseReady = lazy(() => import("./pages/business/EnterpriseReady"));
 const PartnerWithZivo = lazy(() => import("./pages/business/PartnerWithZivo"));
+const PartnerOnboarding = lazy(() => import("./pages/business/PartnerOnboarding"));
 const PartnerLogin = lazy(() => import("./pages/PartnerLogin"));
 const CorporateTravel = lazy(() => import("./pages/business/CorporateTravel"));
 const DataInsights = lazy(() => import("./pages/business/DataInsights"));
@@ -874,7 +875,7 @@ const App = () => (
                 <Route path="/security/vulnerability-disclosure" element={<VulnerabilityDisclosure />} />
 
                 {/* Business */}
-                <Route path="/partner-with-zivo" element={<PartnerWithZivo />} />
+                <Route path="/partner-with-zivo" element={<PartnerOnboardingDispatcher />} />
                 <Route path="/partner-login" element={<PartnerLogin />} />
                 <Route path="/partners" element={<PartnerWithZivo />} />
                 <Route path="/business" element={<BusinessLandingPage />} />
