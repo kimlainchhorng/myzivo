@@ -54,6 +54,38 @@ export const useUserProfile = () => {
       return data as unknown as UserProfile | null;
     },
     enabled: !!user?.id,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export type AccountSummary = {
+  profile: UserProfile | null;
+  stats: { followers: number; following: number; posts: number };
+  generatedAt: string;
+  version: string;
+};
+
+/**
+ * useAccountSummary v2026 — single round-trip combining profile + stats.
+ * Backed by the `account-summary` edge function with 30s edge cache.
+ */
+export const useAccountSummary = () => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["accountSummary", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase.functions.invoke("account-summary");
+      if (error) throw error;
+      return data as AccountSummary;
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -98,12 +130,25 @@ export const useUpdateUserProfile = () => {
 
       if (error) throw error;
     },
+    // Optimistic update — UI reflects changes instantly
+    onMutate: async (updates) => {
+      await queryClient.cancelQueries({ queryKey: ["userProfile", user?.id] });
+      const previous = queryClient.getQueryData<UserProfile | null>(["userProfile", user?.id]);
+      if (previous) {
+        queryClient.setQueryData(["userProfile", user?.id], { ...previous, ...updates });
+      }
+      return { previous };
+    },
+    onError: (error, _vars, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(["userProfile", user?.id], ctx.previous);
+      }
+      toast.error("Failed to update profile: " + error.message);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["accountSummary", user?.id] });
       toast.success("Profile updated successfully");
-    },
-    onError: (error) => {
-      toast.error("Failed to update profile: " + error.message);
     },
   });
 };
