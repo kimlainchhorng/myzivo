@@ -1,61 +1,44 @@
 
-Goal: stop the false “live but still connecting” state and make the desktop actually show the phone video.
 
-What I confirmed
-- The store admin page is finding an active `live_streams` row correctly.
-- The desktop viewer is therefore switching into `PairedStreamViewer` and showing “Connecting to phone…”.
-- The strongest confirmed failure is in `src/pages/GoLivePage.tsx`: the console log shows `getUserMedia failed` with `NotFoundError: Requested device not found`.
-- Right now the app can still create a live stream row even when camera/media setup failed, so the desktop thinks the phone is live while no video tracks are ever published.
+## What I found
 
-Do I know what the issue is?
-- Yes. The main issue is not QR anymore.
-- The phone/live publisher can enter “live” without a valid local camera stream.
-- `GoLivePage` also uses overly strict camera constraints (`facingMode` only) with no fallback path, so media setup can fail on some devices/browsers.
-- Result: Supabase shows a live stream, but WebRTC never gets usable media, so the desktop stays stuck on “Connecting to phone…”.
+The code-level handshake looks correct now: ICE queuing, signaling guards, media-ready gating, and `restartIce()` on failure are all in place. The single remaining structural risk that matches the symptom ("stays on Connecting then turns off") is the **TURN server**.
 
-Implementation plan
-1. Harden camera acquisition in `src/pages/GoLivePage.tsx`
-- Replace the single `getUserMedia({ video: { facingMode } })` call with a fallback sequence like the QR scanner uses:
-  - `facingMode: { ideal: ... }`
-  - plain camera request without facing mode
-  - optional device-based retry from `enumerateDevices()`
-- Preserve the chosen stream in state and keep preview/video binding stable.
+`src/lib/liveWebrtc.ts` relies on `openrelay.metered.ca` as the only TURN relay. That free service has been shut down / heavily rate-limited since 2024 and frequently returns no relay candidate. When the phone (mobile carrier NAT) and desktop (home/office NAT) cannot do P2P over STUN, ICE has nowhere to fall back to → `iceConnectionState` goes `checking → failed`, `restartIce()` retries against the same dead TURN, the desktop flips to `disconnected`, then the publisher heartbeat eventually marks the stream ended → "they turn off."
 
-2. Block “Go Live” until media is actually ready
-- Require a valid `localStream` with at least one live video track before creating the `live_streams` row.
-- If camera setup failed, keep the user in setup mode and show a clear retry message instead of allowing a broken broadcast to start.
-- Update the CTA state so users cannot start a “headless” stream.
+I cannot run the live browser test from plan mode (and live broadcasting requires a real phone scanning the QR — the automated browser cannot do that). The fix below is what needs to happen.
 
-3. Tighten publisher startup conditions
-- In `GoLivePage.tsx`, only initialize publisher WebRTC once the stream has valid tracks.
-- If tracks end or the stream goes inactive, surface that as a broadcaster error and stop/recover cleanly instead of silently remaining “live”.
+## Plan
 
-4. Improve desktop studio status messaging
-- In `src/components/live/PairedStreamViewer.tsx`, distinguish:
-  - waiting for stream row
-  - waiting for publisher offer
-  - connected but no media tracks yet
-  - disconnected/retrying
-- This avoids the generic “Connecting to phone…” state hiding the real problem.
+1. **Replace TURN relay with a working provider**
+   - Remove dead `openrelay.metered.ca` entries from `ICE_SERVERS` in `src/lib/liveWebrtc.ts`.
+   - Add a real TURN provider. Recommended: Metered's `global.relay.metered.ca` (free tier with API-key credentials) or Cloudflare Calls TURN.
+   - Prompt for and store TURN credentials as Supabase secrets: `TURN_URL`, `TURN_USERNAME`, `TURN_CREDENTIAL`.
+   - Add a tiny edge function `get-ice-servers` that returns the merged STUN+TURN list, so credentials are never shipped in the bundle.
+   - Update `liveWebrtc.ts` to fetch ICE servers once per session and cache them.
 
-5. Add targeted signaling diagnostics
-- In `supabase/functions/live-signal/index.ts`, add structured logs for:
-  - `join`, `offer`, `answer`, `ice`, `heartbeat`
-  - stream id
-  - caller role
-  - paired vs authenticated caller
-  - rejected publisher attempts
-- This will make the next failure immediately traceable in Supabase logs instead of guessing.
+2. **Add ICE diagnostics on both sides**
+   - Log `iceConnectionState`, `iceGatheringState`, and selected candidate-pair type (`host` / `srflx` / `relay`) in `GoLivePage.tsx` and `PairedStreamViewer.tsx`.
+   - This makes it instantly visible in console whether TURN is actually being used.
 
-6. Verify the full workflow after the fix
-- Test: desktop admin opens studio → phone scans QR → confirm → camera preview appears on phone → go live only succeeds when media is ready → desktop receives video.
-- Re-test refresh and reconnect cases so the stream does not stay “live” without actual media.
+3. **Tighten reconnect behavior**
+   - In `PairedStreamViewer.tsx`, on `failed`, call `pc.restartIce()` once and re-send `join` instead of immediately tearing down to `waiting-for-stream` after 1.2 s. Only fall back to teardown if restart fails after ~6 s.
 
-Files to update
+4. **Verify end-to-end after edits**
+   - Desktop opens Go Live Studio → phone scans QR → confirm → camera preview shows on phone → tap Go Live → desktop receives video within 5 s on a different network (mobile data vs. home Wi-Fi).
+   - Confirm in console that the selected candidate pair is `relay` when on different networks.
+
+## Files to update
+- `src/lib/liveWebrtc.ts`
 - `src/pages/GoLivePage.tsx`
 - `src/components/live/PairedStreamViewer.tsx`
-- `supabase/functions/live-signal/index.ts`
+- new edge function: `supabase/functions/get-ice-servers/index.ts`
 
-Expected outcome
-- The phone will no longer be allowed to mark itself live unless camera/media is actually available.
-- The desktop studio should either show the real video feed or a precise broadcaster-side error instead of hanging forever on “Connecting to phone…”.
+## What I need from you
+Approve the plan and pick a TURN provider so I can wire credentials:
+- **Metered** (free 50GB/mo, fastest to set up — sign up at metered.ca, give me the app name + secret key)
+- **Cloudflare Calls TURN** (free, requires Cloudflare account + API token)
+- **Twilio NTS** (paid, most reliable — needs Twilio Account SID + Auth Token, you already use Twilio for OTP)
+
+Once you tell me which one, I'll switch to default mode and implement everything in one pass.
+
