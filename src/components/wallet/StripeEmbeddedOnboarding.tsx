@@ -8,11 +8,12 @@ import {
   ConnectAccountOnboarding,
   ConnectComponentsProvider,
 } from "@stripe/react-connect-js";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { STRIPE_PUBLISHABLE_KEY } from "@/lib/stripe";
 import { toast } from "sonner";
+import { useConnectOnboard } from "@/hooks/useStripeConnect";
 
 interface Props {
   open: boolean;
