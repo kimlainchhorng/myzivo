@@ -31,6 +31,7 @@ import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { openExternalUrl } from "@/lib/openExternalUrl";
 import ExternalLinkWarning from "@/components/security/ExternalLinkWarning";
+import { assessLinkSync } from "@/hooks/useLinkRisk";
 import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
 
 import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
@@ -1264,6 +1265,19 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
           <p className={`text-[11px] mt-0.5 truncate ${isMe ? "text-primary-foreground/50" : "text-muted-foreground"}`}>
             {preview.description}
           </p>
+          {!isInternalLink && (() => {
+            const r = assessLinkSync(url);
+            if (r.level === "blocked") {
+              return <p className="text-[10px] mt-1 font-semibold text-destructive flex items-center gap-1">⚠ Blocked — {r.warnings[0]}</p>;
+            }
+            if (r.level === "suspicious") {
+              return <p className="text-[10px] mt-1 font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">⚠ Suspicious — {r.warnings[0]}</p>;
+            }
+            if (r.level === "trusted") {
+              return <p className="text-[10px] mt-1 font-semibold text-primary flex items-center gap-1">✓ Verified partner</p>;
+            }
+            return <p className="text-[10px] mt-1 text-muted-foreground">External link</p>;
+          })()}
         </div>
         <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
           isMe ? "bg-primary-foreground/15" : "bg-primary/10"
