@@ -42,7 +42,17 @@ const Login = () => {
     const { error } = await signIn(email.trim(), password);
     setSubmitting(false);
     if (error) {
-      toast.error(error.message || "Sign in failed. Please try again.");
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("invalid login") || msg.includes("invalid credentials") || msg.includes("user not found")) {
+        toast.error("You don't have an account yet. Please sign up first.", {
+          action: {
+            label: "Sign Up",
+            onClick: () => navigate(`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`),
+          },
+        });
+      } else {
+        toast.error(error.message || "Sign in failed. Please try again.");
+      }
       return;
     }
     toast.success("Welcome back!");
