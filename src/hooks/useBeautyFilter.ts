@@ -446,27 +446,26 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
 
       // ── A. Skin smoothing — masked blur with feathered edge.
       // (Runs AFTER slim/nose so any slice seams are blended away.)
+      // Softer curve + reduced blur radius keeps pores at low/mid settings.
       if (s.smooth > 0) {
-        const blurPx = 5 + smoothPct * 11;
+        const blurPx = 4 + smoothPct * 8.25; // was 5 + 11 → reduced ~25%
         blurCtx.globalCompositeOperation = "source-over";
         blurCtx.globalAlpha = 1;
-        blurCtx.filter = `blur(${blurPx.toFixed(1)}px) saturate(1.08) contrast(1.03)`;
-        // Smooth the WARPED face (read from ctx, not raw video) so slim/nose
-        // edits get smoothed too.
+        blurCtx.filter = `blur(${blurPx.toFixed(1)}px) saturate(1.06) contrast(1.02)`;
         blurCtx.drawImage(canvas, 0, 0);
         blurCtx.filter = "none";
         blurCtx.globalCompositeOperation = "destination-in";
         blurCtx.drawImage(featherCanvas, 0, 0);
         blurCtx.globalCompositeOperation = "source-over";
 
-        ctx.globalAlpha = 0.65 + smoothPct * 0.27; // 0.65-0.92
+        ctx.globalAlpha = 0.45 + smoothPct * 0.33; // 0.45-0.78 (was 0.65-0.92)
         ctx.drawImage(blurCanvas, 0, 0);
         ctx.globalAlpha = 1;
       }
 
       // ── B. Brighten + warmth — gentler ──
       if (s.brighten > 0) {
-        const a = 0.08 + brightPct * 0.14;
+        const a = 0.06 + brightPct * 0.10; // softer overlay
         blurCtx.globalCompositeOperation = "source-over";
         blurCtx.filter = "none";
         blurCtx.clearRect(0, 0, W, H);
@@ -476,7 +475,26 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         blurCtx.drawImage(featherCanvas, 0, 0);
         blurCtx.globalCompositeOperation = "source-over";
         ctx.globalCompositeOperation = "screen";
-        ctx.globalAlpha = 0.35;
+        ctx.globalAlpha = 0.20 + brightPct * 0.12; // was flat 0.35; max ~0.32
+        ctx.drawImage(blurCanvas, 0, 0);
+        ctx.globalCompositeOperation = "source-over";
+        ctx.globalAlpha = 1;
+      }
+
+      // ── B2. Skin-grain restoration — re-add micro-texture lost to smoothing.
+      // Scales with how much we smoothed, so heavy smooth = more grain back.
+      if (s.smooth > 0 && grainPattern) {
+        const grainAlpha = 0.04 + smoothPct * 0.05; // 0.04-0.09
+        blurCtx.globalCompositeOperation = "source-over";
+        blurCtx.filter = "none";
+        blurCtx.clearRect(0, 0, W, H);
+        blurCtx.fillStyle = grainPattern;
+        blurCtx.fillRect(0, 0, W, H);
+        blurCtx.globalCompositeOperation = "destination-in";
+        blurCtx.drawImage(featherCanvas, 0, 0);
+        blurCtx.globalCompositeOperation = "source-over";
+        ctx.globalCompositeOperation = "overlay";
+        ctx.globalAlpha = grainAlpha;
         ctx.drawImage(blurCanvas, 0, 0);
         ctx.globalCompositeOperation = "source-over";
         ctx.globalAlpha = 1;
@@ -607,16 +625,16 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         }
       }
 
-      // ── F3. Highlight pass — soft 3D glow on nose bridge / cheekbones / chin.
+      // ── F3. Highlight pass — subtle sheen on nose bridge / cheekbones.
+      // Tied to brighten only; no chin glow; nose radius ~40% smaller.
       if (s.brighten > 0) {
         const noseTip = lms[LM_NOSE_TIP];
         const forehead = lms[LM_FOREHEAD];
         const lc = lms[LM_LEFT_CHEEK];
         const rc = lms[LM_RIGHT_CHEEK];
-        const chin = lms[LM_CHIN];
-        if (noseTip && forehead && lc && rc && chin) {
+        if (noseTip && forehead && lc && rc) {
           const faceW = (rc.x - lc.x) * W;
-          const a = 0.05 + brightPct * 0.10;
+          const a = 0.02 + brightPct * 0.03; // was 0.05 + 0.10 → much subtler
           const paintGlow = (x: number, y: number, r: number, alpha: number) => {
             const g = fxCtx.createRadialGradient(x, y, 0, x, y, r);
             g.addColorStop(0, `rgba(255,250,240,${alpha})`);
@@ -629,17 +647,15 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
           fxCtx.globalCompositeOperation = "source-over";
           fxCtx.filter = "none";
           fxCtx.clearRect(0, 0, W, H);
-          // Nose bridge
+          // Nose bridge — radius shrunk ~40% (0.07 → 0.042)
           const nbx = noseTip.x * W;
           const nby = (noseTip.y + forehead.y) * 0.5 * H;
-          paintGlow(nbx, nby, faceW * 0.07, a);
-          // Cheekbone tops (above contour stripe)
+          paintGlow(nbx, nby, faceW * 0.042, a);
+          // Cheekbone tops — subtle sheen
           const chTop = (lc.y * H + noseTip.y * H) * 0.5;
-          paintGlow(lc.x * W + faceW * 0.08, chTop, faceW * 0.10, a * 0.85);
-          paintGlow(rc.x * W - faceW * 0.08, chTop, faceW * 0.10, a * 0.85);
-          // Chin tip
-          paintGlow(chin.x * W, chin.y * H - faceW * 0.04, faceW * 0.06, a * 0.7);
-          // Clip to face oval (no glow on hair)
+          paintGlow(lc.x * W + faceW * 0.08, chTop, faceW * 0.09, a * 0.75);
+          paintGlow(rc.x * W - faceW * 0.08, chTop, faceW * 0.09, a * 0.75);
+          // (chin tip glow removed — was creating unnatural shine spot)
           fxCtx.globalCompositeOperation = "destination-in";
           fxCtx.drawImage(featherCanvas, 0, 0);
           fxCtx.globalCompositeOperation = "source-over";
