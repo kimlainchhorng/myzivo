@@ -542,12 +542,12 @@ const Login = () => {
               </div>
 
               <FormField control={signupForm.control} name="email" render={({ field }) => (
-                <FormItem className="space-y-0.5">
+                <FormItem className="space-y-1">
                   <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
                   <FormControl>
                     <div className="relative z-10">
-                      {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
-                      <input type={isTouchDevice ? "text" : "email"} inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete={isTouchDevice ? "off" : "email"} className={isTouchDevice ? input3DLg : input3D} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} onClick={(event) => { if (isTouchDevice) { event.currentTarget.focus({ preventScroll: true }); } }} {...field} />
+                      {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
+                      <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3DLg} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
                     </div>
                   </FormControl>
                   <FormMessage className="text-red-400 text-xs" />
