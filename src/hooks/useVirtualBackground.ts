@@ -77,8 +77,8 @@ export function useVirtualBackground(
 
         const w = video.videoWidth || 1280;
         const h = video.videoHeight || 720;
-        out.width = person.width = w;
-        out.height = person.height = h;
+        out.width = person.width = maskHi.width = w;
+        out.height = person.height = maskHi.height = h;
 
         // Publish stream immediately
         outStream = (out as HTMLCanvasElement).captureStream(30);
