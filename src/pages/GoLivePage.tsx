@@ -379,6 +379,30 @@ export default function GoLivePage() {
     });
     localStream.getTracks().forEach((t) => pc!.addTrack(t, localStream));
 
+    // ── Boost video quality: raise encoder bitrate so the watcher gets a
+    // sharp image instead of the heavily-compressed default (~300-500 kbps).
+    // We target 2.5 Mbps which is plenty for 720p portrait video and still
+    // fits comfortably on 5G / decent Wi-Fi uploads. Also enable degradation
+    // preference "maintain-resolution" so frames get smoother rather than
+    // pixelated when bandwidth dips.
+    try {
+      const videoSender = pc.getSenders().find((s) => s.track?.kind === "video");
+      if (videoSender) {
+        const params = videoSender.getParameters();
+        if (!params.encodings || params.encodings.length === 0) {
+          params.encodings = [{}];
+        }
+        params.encodings[0].maxBitrate = 2_500_000; // 2.5 Mbps
+        params.encodings[0].maxFramerate = 30;
+        (params as any).degradationPreference = "maintain-resolution";
+        videoSender.setParameters(params).catch((e) =>
+          console.warn("[publisher] setParameters failed", e),
+        );
+      }
+    } catch (e) {
+      console.warn("[publisher] bitrate boost failed", e);
+    }
+
     pc.onicecandidate = (ev) => {
       if (ev.candidate && alive) {
         sendSignal(streamId, "publisher", "viewer", "ice", ev.candidate.toJSON());
