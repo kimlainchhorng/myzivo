@@ -45,9 +45,32 @@ export default function StripeEmbeddedOnboarding({ open, onClose, onComplete, co
         if (data?.error) throw new Error(data.error);
         if (cancelled) return;
 
+        // Pre-check: try loading the Stripe Connect.js script directly to detect blockage early
+        const scriptOk = await new Promise<boolean>((resolve) => {
+          const existing = document.querySelector('script[src*="connect-js.stripe.com"]');
+          if (existing) return resolve(true);
+          const s = document.createElement("script");
+          s.src = "https://connect-js.stripe.com/v1.0/connect.js";
+          s.async = true;
+          s.onload = () => resolve(true);
+          s.onerror = () => resolve(false);
+          document.head.appendChild(s);
+          // Timeout fallback
+          setTimeout(() => resolve(false), 8000);
+        });
+
+        if (!scriptOk) {
+          if (!cancelled) {
+            setBlocked(true);
+            setError("Embedded Stripe is blocked in this browser/preview. Use secure redirect instead.");
+            setLoading(false);
+          }
+          return;
+        }
+
         let connect;
         try {
-          connect = await loadConnectAndInitialize({
+          connect = loadConnectAndInitialize({
             publishableKey: STRIPE_PUBLISHABLE_KEY,
             fetchClientSecret: async () => data.client_secret,
             appearance: {
