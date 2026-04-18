@@ -345,6 +345,67 @@ function ProfileStep({ creator, userId, onSaved }: any) {
   );
 }
 
+const CREATOR_CATEGORIES = [
+  "Lifestyle", "Travel", "Content", "Gaming", "Music", "Art & Design",
+  "Fashion & Beauty", "Food & Cooking", "Fitness & Health", "Education",
+  "Tech", "Business", "Comedy", "Sports", "Photography", "Film & Video",
+  "Podcast", "News & Politics", "Family & Parenting", "Pets & Animals",
+  "Cars & Vehicles", "DIY & Crafts", "Spirituality", "Other",
+];
+
+function CategoryPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const isCustom = value && !CREATOR_CATEGORIES.includes(value);
+  return (
+    <div>
+      <Label className="text-xs font-bold">Category</Label>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="mt-1 w-full flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-accent/40 transition"
+      >
+        <span className={value ? "text-foreground" : "text-muted-foreground"}>
+          {value || "Tap to choose a category"}
+        </span>
+        <ChevronRight className={`w-4 h-4 text-muted-foreground transition ${open ? "rotate-90" : ""}`} />
+      </button>
+      {open && (
+        <div className="mt-2 rounded-xl border border-border bg-card p-2">
+          <div className="flex flex-wrap gap-1.5">
+            {CREATOR_CATEGORIES.map((c) => {
+              const active = value === c;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => { onChange(c); setOpen(false); }}
+                  className={`text-[11px] font-bold px-2.5 py-1.5 rounded-full border transition ${
+                    active
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background text-foreground border-border hover:bg-accent"
+                  }`}
+                >
+                  {c}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-2 pt-2 border-t border-border">
+            <Label className="text-[10px] font-bold text-muted-foreground">Custom</Label>
+            <Input
+              value={isCustom ? value : ""}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="Type your own…"
+              maxLength={40}
+              className="mt-1 h-8 text-xs"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function VerifyStep({ verified }: { verified: boolean }) {
   const navigate = useNavigate();
   if (verified) {
