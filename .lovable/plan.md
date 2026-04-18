@@ -1,48 +1,44 @@
 
 
 ## Goal
-Upgrade the **Tier** step in `/creator/setup?step=tier` to support flexible subscription pricing (free, paid, custom, multiple billing intervals, free trial), and surface those tiers on the creator's public profile so fans can subscribe.
+Replace the current naive canvas warp (which causes visible seams + global blur) with a real face-aware beauty pipeline that looks like Bigo/TikTok.
 
-## What changes
+## Root cause of current issues
+1. **Global blur**: `ctx.filter = blur(...)` blurs the *entire* frame (hair, background, edges) → everything looks mushy, not smooth-skinned.
+2. **Visible seam under jaw**: face-slim redraws a horizontal band on top of the already-drawn frame → creates a faint horizontal "cut" artifact (visible in your screenshot under the chin).
+3. **No face detection**: slim/eye warps are applied to a fixed center region → if the face moves, the warp misses the face entirely.
+4. Runtime error `setLocalStream` is stale from a previous build — current code uses `setRawStream`. A clean reload clears it.
 
-### 1. Database — extend `subscription_tiers`
-Add columns:
-- `billing_interval` text — `'month' | '3_months' | '6_months' | 'year' | 'lifetime'`
-- `is_free` boolean default false — free tier (members-only access, no payment)
-- `trial_days` integer default 0 — free trial length (e.g. 3, 7, 14, 30)
-- `is_custom_price` boolean default false — fan chooses their own amount (pay-what-you-want, with `price_cents` as the suggested minimum)
+## New approach — MediaPipe FaceLandmarker
 
-No data migration needed (defaults backfill cleanly).
+### Pipeline (`src/hooks/useBeautyFilter.ts` — rewrite)
+1. Lazy-load **`@mediapipe/tasks-vision`** (`FaceLandmarker`, GPU delegate, 478 landmarks, runs at 30fps on phones).
+2. Per frame:
+   - Detect face landmarks (~3ms on modern devices).
+   - **Skin smoothing**: draw the raw frame, then draw a *blurred copy* on top **masked to the face oval** (using landmarks 10, 338, 297, 332, …, 152 — the standard face-oval contour) with `globalAlpha = smooth/100 * 0.7`. Eyes, brows, lips are punched out so they stay sharp.
+   - **Brightening + warmth**: only inside the same face mask (composite a soft warm overlay).
+   - **Face slim**: instead of a hard band redraw, do a smooth horizontal pinch using two thin vertical slice draws on left+right cheek regions (landmarks 234, 454) with bilinear interp — no visible seam.
+   - **Eye enlarge**: scale-up two small circular regions centered on landmarks 33 (left eye) and 263 (right eye), feathered alpha edge so there's no halo.
+3. Fallback: if MediaPipe fails to load (slow connection, unsupported browser), keep current pipeline but **drop the global blur** and only apply brightness/saturate so we never ship the mushy look.
 
-### 2. Tier step UI rebuild — `src/pages/CreatorSetupPage.tsx` → `TierStep`
-Replace the single-price form with a richer composer:
+### Performance
+- Run landmarker on a downscaled 256×256 ImageBitmap, scale results back — keeps us at 30fps even on mid-range phones.
+- Skip every other landmark frame on devices where `requestAnimationFrame` drops below 25fps (reuse last landmarks).
+- All work on offscreen canvas; output via `canvas.captureStream(30)` exactly as today, so the WebRTC publisher path is unchanged.
 
-- **Tier type chips**: `Paid` · `Free` · `Pay what you want`
-- **Billing period chips** (hidden when Free): `1 month` · `3 months` · `6 months` · `1 year` · `Lifetime`
-- **Price input**: hidden when Free; labeled "Suggested minimum" when Pay-what-you-want; auto-calculated /mo helper text below ("$24.99 every 3 months ≈ $8.33/mo")
-- **Free trial chips** (hidden when Free): `None` · `3 days` · `7 days` · `14 days` · `30 days`
-- **Tier name** and **Perks** (existing)
-- **Preview card** at the bottom showing how the tier will appear to fans
-- Tier list above the form shows interval/trial/free badges per tier, with edit + delete actions (currently no edit — adding inline)
+### UI tweaks (`src/pages/GoLivePage.tsx`)
+- Add a **"Loading beauty…"** shimmer on the Beauty button for the first ~500ms while MediaPipe initializes.
+- Add a 4th slider: **"Brighten"** (0–100) — currently bundled into "Smooth", users want it separate (matches Bigo).
+- Default presets: change `DEFAULT_BEAUTY` to `{ smooth: 65, slim: 25, eyes: 20, brighten: 40 }` (more natural — current 55/35/25 was over-slimming).
+- Add 3 quick-preset chips at the top of the panel: **Natural · Glam · Off**.
 
-### 3. Surface tiers on creator profile
-Find the existing creator profile page (or add a section if missing) and render the tiers as a "Subscribe" block:
-- Card per active tier with name, price+interval, trial badge, perks
-- "Subscribe" button → for paid tiers, opens existing checkout flow (`create-zivo-plus-checkout`-style edge function call, or insert into `creator_subscriptions` for free); for free tiers, one-tap join; for pay-what-you-want, opens an amount picker
-- Hide the section on the creator's own profile (they see "Manage tiers" link to `/creator/setup?step=tier` instead)
+### Files
+- `src/hooks/useBeautyFilter.ts` — full rewrite around FaceLandmarker.
+- `src/pages/GoLivePage.tsx` — add Brighten slider, presets, loading state on Beauty button.
+- `package.json` — add `@mediapipe/tasks-vision`.
 
-### 4. Dashboard tier card
-Update `CreatorDashboardPage.tsx` tier list rendering to show interval and trial info (small change, just display).
-
-## Files changed
-- `supabase/migrations/<new>.sql` — add 4 columns to `subscription_tiers`
-- `src/pages/CreatorSetupPage.tsx` — rebuild `TierStep`
-- `src/pages/CreatorDashboardPage.tsx` — display interval/trial in tier list
-- Creator profile page (to be located on implementation) — add Subscribe section with tier cards
-- (optional) New tiny edge function `subscribe-to-tier` to handle Stripe checkout for creator subs, OR reuse existing Stripe checkout pattern
-
-## Open questions (defaults assumed unless you say otherwise)
-- Payment for paid creator subs: route through Stripe Checkout (same pattern as `create-zivo-plus-checkout`) — assumed yes.
-- Pay-what-you-want minimum: $0.99 — assumed.
-- Lifetime billing: kept as an option since you mentioned "something like that" — say if you'd rather drop it.
+### Out of scope (can add later)
+- Color filters (warm/cool LUTs)
+- Sparkle/glam overlays
+- AR stickers/masks
 
