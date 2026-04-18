@@ -486,7 +486,7 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         ctx.globalAlpha = 1;
       }
 
-      // ── F. Eye enlarge — dedicated canvas + feathered radial alpha ──
+      // ── F. Eye enlarge + sparkle (iris brighten + catchlight) ──
       if (s.eyes > 0) {
         const scale = 1 + eyesPct * 0.22;
         const eyes: Point[] = [];
@@ -508,12 +508,15 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
           eyeCanvas.height = size;
 
           eyeCtx.globalCompositeOperation = "source-over";
+          eyeCtx.globalAlpha = 1;
+          eyeCtx.filter = `brightness(${(1 + eyesPct * 0.10).toFixed(3)}) saturate(${(1 + eyesPct * 0.12).toFixed(3)})`;
           eyeCtx.clearRect(0, 0, size, size);
           eyeCtx.drawImage(
             video,
             eye.x - r, eye.y - r, r * 2, r * 2,
             r - sr, r - sr, sr * 2, sr * 2,
           );
+          eyeCtx.filter = "none";
 
           eyeCtx.globalCompositeOperation = "destination-in";
           const grad = eyeCtx.createRadialGradient(r, r, r * 0.45, r, r, r);
@@ -525,6 +528,50 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
           eyeCtx.globalCompositeOperation = "source-over";
 
           ctx.drawImage(eyeCanvas, eye.x - r, eye.y - r);
+
+          // Catchlight — soft white dot at upper-inner iris
+          const cxDot = eye.x - r * 0.18;
+          const cyDot = eye.y - r * 0.22;
+          const dotR = Math.max(1.2, r * 0.10);
+          const cg = ctx.createRadialGradient(cxDot, cyDot, 0, cxDot, cyDot, dotR);
+          cg.addColorStop(0, `rgba(255,255,255,${0.20 + eyesPct * 0.18})`);
+          cg.addColorStop(1, "rgba(255,255,255,0)");
+          ctx.fillStyle = cg;
+          ctx.beginPath();
+          ctx.arc(cxDot, cyDot, dotR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // ── F2. Subtle contour — restore cheekbone shadow flattened by smoothing.
+      if (s.smooth > 0 && slimPct > 0) {
+        const lc = lms[LM_LEFT_CHEEK];
+        const rc = lms[LM_RIGHT_CHEEK];
+        const chin = lms[LM_CHIN];
+        const noseTip = lms[LM_NOSE_TIP];
+        if (lc && rc && chin && noseTip) {
+          const lcX = lc.x * W;
+          const lcY = lc.y * H;
+          const rcX = rc.x * W;
+          const chY = chin.y * H;
+          const ntY = noseTip.y * H;
+          const faceW = rcX - lcX;
+          const stripeW = Math.max(8, faceW * 0.05);
+          const cTop = (ntY + lcY) * 0.5;
+          const cBot = (chY + lcY) * 0.5;
+          const a = 0.06 + slimPct * 0.08;
+          const drawStripe = (cx: number, top: number, bot: number) => {
+            const g = ctx.createLinearGradient(cx - stripeW, 0, cx + stripeW, 0);
+            g.addColorStop(0, "rgba(0,0,0,0)");
+            g.addColorStop(0.5, `rgba(40,25,20,${a})`);
+            g.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = g;
+            ctx.fillRect(cx - stripeW, top, stripeW * 2, bot - top);
+          };
+          ctx.globalCompositeOperation = "multiply";
+          drawStripe(lcX + stripeW * 0.6, cTop, cBot);
+          drawStripe(rcX - stripeW * 0.6, cTop, cBot);
+          ctx.globalCompositeOperation = "source-over";
         }
       }
 
