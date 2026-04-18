@@ -56190,6 +56190,7 @@ export type Database = {
           reason: string
         }[]
       }
+      expire_all_stale_live_streams: { Args: never; Returns: number }
       expire_job_offers:
         | { Args: never; Returns: number }
         | {
