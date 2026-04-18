@@ -117,8 +117,8 @@ const Signup = () => {
           className="rounded-2xl border border-emerald-500/20 bg-card/70 backdrop-blur-xl shadow-2xl p-4 space-y-2.5"
         >
           {/* Names */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
               <label htmlFor="su-first" className="text-sm font-medium text-foreground">First Name</label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -134,7 +134,7 @@ const Signup = () => {
                 />
               </div>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label htmlFor="su-last" className="text-sm font-medium text-foreground">Last Name</label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -153,7 +153,7 @@ const Signup = () => {
           </div>
 
           {/* Email */}
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <label htmlFor="su-email" className="text-sm font-medium text-foreground">Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -175,8 +175,8 @@ const Signup = () => {
           </div>
 
           {/* Passwords */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
               <label htmlFor="su-pw" className="text-sm font-medium text-foreground">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -201,7 +201,7 @@ const Signup = () => {
                 </button>
               </div>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label htmlFor="su-pw2" className="text-sm font-medium text-foreground">Confirm Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -238,7 +238,7 @@ const Signup = () => {
           <Button
             type="submit"
             disabled={submitting}
-            className="w-full h-12 rounded-xl text-base font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+            className="w-full h-11 rounded-xl text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
           >
             {submitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />
