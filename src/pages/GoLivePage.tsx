@@ -209,6 +209,14 @@ export default function GoLivePage() {
     return () => streamRef.current?.getTracks().forEach((t) => t.stop());
   }, [startCamera]);
 
+  // Bind whichever stream is current (beautified preferred) to the preview <video>.
+  useEffect(() => {
+    if (videoRef.current && localStream) {
+      videoRef.current.srcObject = localStream;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [localStream]);
+
   const toggleCamera = useCallback(() => {
     streamRef.current?.getVideoTracks().forEach((t) => (t.enabled = !t.enabled));
     setCameraOn((p) => !p);
