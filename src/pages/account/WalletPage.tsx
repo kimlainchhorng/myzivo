@@ -24,6 +24,7 @@ import { useWalletTransactions, useWalletCredits, useWalletSummary } from "@/hoo
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
 import { useLiveEarnings } from "@/hooks/useLiveEarnings";
 import AddCardForm from "@/components/wallet/AddCardForm";
+import StripeConnectPayoutCard from "@/components/wallet/StripeConnectPayoutCard";
 import SEOHead from "@/components/SEOHead";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow, format } from "date-fns";
@@ -488,6 +489,15 @@ export default function WalletPage() {
                     <Banknote className="w-6 h-6 text-emerald-500" />
                   </div>
                 </div>
+              </div>
+
+              {/* Stripe Connect — Instant payout to debit card */}
+              <StripeConnectPayoutCard balanceDollars={balanceDollars} />
+
+              <div className="flex items-center gap-3 my-1">
+                <div className="flex-1 h-px bg-border/50" />
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-semibold">Or use bank / ABA</span>
+                <div className="flex-1 h-px bg-border/50" />
               </div>
 
               {/* Saved Payout Methods */}
