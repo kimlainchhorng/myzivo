@@ -196,8 +196,8 @@ export function useVirtualBackground(
       cancelled = true;
       cancelAnimationFrame(raf);
       window.clearTimeout(timeout);
-      try { segmenter?.close?.(); } catch {}\\
-      try { (out as any).captureStream?.()?.getTracks?.().forEach?.((t: MediaStreamTrack) => t.stop()); } catch {}\\
+      try { segmenter?.close?.(); } catch {}
+      try { (out as any).captureStream?.()?.getTracks?.().forEach?.((t: MediaStreamTrack) => t.stop()); } catch {}
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source, config.kind, config.imageUrl]);
