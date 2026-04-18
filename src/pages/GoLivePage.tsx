@@ -199,11 +199,8 @@ export default function GoLivePage() {
     }
 
     streamRef.current = s;
-    setLocalStream(s);
-    if (videoRef.current) {
-      videoRef.current.srcObject = s;
-      try { await videoRef.current.play(); } catch {}
-    }
+    setRawStream(s);
+    // videoRef will be bound to the beautified stream via the effect below.
     setCameraError(false);
   }, [facingMode]);
 
