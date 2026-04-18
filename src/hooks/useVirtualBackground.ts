@@ -90,11 +90,9 @@ export function useVirtualBackground(
         if (ir > or) { dh = out.height; dw = dh * ir; dx = (out.width - dw) / 2; }
         else { dw = out.width; dh = dw / ir; dy = (out.height - dh) / 2; }
         ctx.save();
-        // DoF blur — keep brightness natural, no heavy tint
-        ctx.filter = "blur(3px) saturate(1.05) brightness(0.96)";
+        ctx.filter = "blur(3px) saturate(1.05) brightness(0.98)";
         ctx.drawImage(bgImg, dx, dy, dw, dh);
         ctx.restore();
-        drawVignette();
       } else {
         ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, out.width, out.height);
