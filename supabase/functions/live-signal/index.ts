@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
 
   // Heartbeat is a no-op signal that just refreshes the row
   if (type === "heartbeat") {
-    if (from_role === "publisher") {
+    if (from_role === "publisher" && effectiveUserId) {
       await admin
         .from("live_streams")
         .update({ last_publisher_heartbeat: new Date().toISOString() })
