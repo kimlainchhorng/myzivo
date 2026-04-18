@@ -126,6 +126,16 @@ export default function GoLivePage() {
   const { stream: beautifiedStream, status: beautyStatus, luma } = useBeautyFilter(rawStream, beauty);
   const [compareHold, setCompareHold] = useState(false);
 
+  // Virtual background (segmentation) — chosen on setup screen.
+  const [bgChoice, setBgChoice] = useState<{ id: string; kind: "off" | "blur" | "image"; url?: string; label: string }>(
+    { id: "off", kind: "off", label: "None" },
+  );
+  const bgConfig = useMemo(
+    () => ({ kind: bgChoice.kind, imageUrl: bgChoice.url, blurPx: 22 }),
+    [bgChoice.kind, bgChoice.url],
+  );
+  const { stream: bgStream, status: bgStatus } = useVirtualBackground(beautifiedStream ?? rawStream, bgConfig);
+
   // Toast when Beauty Pro becomes active for the first time
   const proAnnouncedRef = useRef(false);
   useEffect(() => {
