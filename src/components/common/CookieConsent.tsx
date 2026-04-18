@@ -23,11 +23,13 @@ const CookieConsent = () => {
   const isRideHub = location.pathname.startsWith("/rides/hub");
   const isAuthRoute = [
     "/login",
+    "/signup",
     "/forgot-password",
     "/reset-password",
     "/verify-email",
     "/verify-otp",
     "/verify-new-device",
+    "/setup",
   ].some((route) => location.pathname.startsWith(route));
   const [isVisible, setIsVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);

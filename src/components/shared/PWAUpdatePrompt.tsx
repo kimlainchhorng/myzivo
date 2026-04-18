@@ -4,20 +4,23 @@
  * Auto-applies the update after 10 seconds if the user doesn't interact.
  */
 import { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { usePWAUpdate } from '@/hooks/usePWAUpdate';
 import { RefreshCw, X } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 
 export function PWAUpdatePrompt() {
+  const location = useLocation();
   const isNative = Capacitor.isNativePlatform();
   const { needRefresh, updateSW } = usePWAUpdate();
   const autoUpdateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const authRoutes = ['/login', '/signup', '/verify-email', '/verify-otp', '/verify-new-device', '/forgot-password', '/reset-password', '/setup'];
+  const onAuthRoute = authRoutes.some((route) => location.pathname.startsWith(route));
 
   useEffect(() => {
-    // Never auto-update on native Capacitor — it would open Safari
-    if (isNative || !needRefresh) return;
+    // Never auto-update on native Capacitor or auth routes — avoid blocking form input
+    if (isNative || onAuthRoute || !needRefresh) return;
 
-    // Auto-update after 10 seconds on web/PWA only
     autoUpdateTimer.current = setTimeout(() => {
       updateSW(true);
     }, 10_000);
@@ -27,9 +30,9 @@ export function PWAUpdatePrompt() {
         clearTimeout(autoUpdateTimer.current);
       }
     };
-  }, [needRefresh, updateSW, isNative]);
+  }, [needRefresh, updateSW, isNative, onAuthRoute]);
 
-  if (!needRefresh || isNative) return null;
+  if (!needRefresh || isNative || onAuthRoute) return null;
 
   const handleUpdate = () => {
     if (autoUpdateTimer.current) clearTimeout(autoUpdateTimer.current);
@@ -37,8 +40,6 @@ export function PWAUpdatePrompt() {
   };
 
   const handleDismiss = () => {
-    // Don't dismiss — just let the auto-update happen
-    // But clear the timer so it doesn't reload while user is doing something
     if (autoUpdateTimer.current) clearTimeout(autoUpdateTimer.current);
   };
 
