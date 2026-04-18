@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useConnectStatus, useConnectOnboard, useInstantPayout } from "@/hooks/useStripeConnect";
+import StripeEmbeddedOnboarding from "./StripeEmbeddedOnboarding";
 
 interface Props {
   balanceDollars: number;
@@ -21,6 +22,7 @@ export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
   const queryClient = useQueryClient();
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<"instant" | "standard">("instant");
+  const [embedOpen, setEmbedOpen] = useState(false);
 
   // When Stripe redirects user back with ?connect=done, refresh status & clean URL
   useEffect(() => {
