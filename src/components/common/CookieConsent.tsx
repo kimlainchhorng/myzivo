@@ -21,6 +21,14 @@ interface CookiePreferences {
 const CookieConsent = () => {
   const location = useLocation();
   const isRideHub = location.pathname.startsWith("/rides/hub");
+  const isAuthRoute = [
+    "/login",
+    "/forgot-password",
+    "/reset-password",
+    "/verify-email",
+    "/verify-otp",
+    "/verify-new-device",
+  ].some((route) => location.pathname.startsWith(route));
   const [isVisible, setIsVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [preferences, setPreferences] = useState<CookiePreferences>({
@@ -31,7 +39,11 @@ const CookieConsent = () => {
 
   useEffect(() => {
     // Never show cookie consent in native iOS/Android apps (App Store guideline 5.1.2i)
-    if (Capacitor.isNativePlatform()) return;
+    // or on auth screens where it can block form fields on mobile.
+    if (Capacitor.isNativePlatform() || isAuthRoute) {
+      setIsVisible(false);
+      return;
+    }
 
     const consent = localStorage.getItem("zivo-cookie-consent");
     if (!consent) {
@@ -39,7 +51,9 @@ const CookieConsent = () => {
       const timer = setTimeout(() => setIsVisible(true), 1500);
       return () => clearTimeout(timer);
     }
-  }, []);
+
+    setIsVisible(false);
+  }, [isAuthRoute]);
 
   const handleAcceptAll = () => {
     const allAccepted = { essential: true, functional: true, analytics: true };
