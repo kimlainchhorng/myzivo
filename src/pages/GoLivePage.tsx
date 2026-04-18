@@ -1049,9 +1049,10 @@ export default function GoLivePage() {
                     min={0}
                     max={100}
                     value={beauty[row.key as keyof BeautySettings] as number}
-                    onChange={(e) =>
-                      setBeauty((b) => ({ ...b, [row.key]: Number(e.target.value) }))
-                    }
+                    onChange={(e) => {
+                      setBeauty((b) => ({ ...b, [row.key]: Number(e.target.value) }));
+                      if (activePreset !== "custom") setActivePreset("custom");
+                    }}
                     className="w-full accent-pink-500 h-1"
                   />
                 </div>
