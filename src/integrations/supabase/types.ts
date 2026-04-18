@@ -8738,6 +8738,45 @@ export type Database = {
         }
         Relationships: []
       }
+      coin_purchases: {
+        Row: {
+          amount_cents: number
+          coins: number
+          created_at: string
+          credited_at: string | null
+          currency: string
+          id: string
+          package_id: string
+          status: string
+          stripe_session_id: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          coins: number
+          created_at?: string
+          credited_at?: string | null
+          currency?: string
+          id?: string
+          package_id: string
+          status?: string
+          stripe_session_id: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          coins?: number
+          created_at?: string
+          credited_at?: string | null
+          currency?: string
+          id?: string
+          package_id?: string
+          status?: string
+          stripe_session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       coin_transactions: {
         Row: {
           created_at: string
@@ -56052,6 +56091,17 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      credit_coin_purchase: {
+        Args: {
+          _amount_cents: number
+          _coins: number
+          _currency: string
+          _package_id: string
+          _session_id: string
+          _user_id: string
+        }
+        Returns: number
       }
       credit_customer_wallet:
         | {
