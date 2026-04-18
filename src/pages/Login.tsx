@@ -497,18 +497,7 @@ const Login = () => {
         {isLogin ? (
           <Form {...loginForm}>
             <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-2.5">
-              <FormField control={loginForm.control} name="email" render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
-                  <div className="relative z-10">
-                    {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
-                    <FormControl>
-                      <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="username" className={input3DLg} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                    </FormControl>
-                  </div>
-                  <FormMessage className="text-red-400 text-xs" />
-                </FormItem>
-              )} />
+              <FormField control={loginForm.control} name="email" render={({ field }) => renderEmailField(field)} />
 
               <FormField control={loginForm.control} name="password" render={({ field }) => (
                 <FormItem className="space-y-1">
@@ -578,18 +567,7 @@ const Login = () => {
                 )} />
               </div>
 
-              <FormField control={signupForm.control} name="email" render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
-                  <div className="relative z-10">
-                    {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
-                    <FormControl>
-                      <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="username" className={input3DLg} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                    </FormControl>
-                  </div>
-                  <FormMessage className="text-red-400 text-xs" />
-                </FormItem>
-              )} />
+              <FormField control={signupForm.control} name="email" render={({ field }) => renderEmailField(field)} />
 
               <div className="grid grid-cols-2 gap-2">
                 <FormField control={signupForm.control} name="password" render={({ field }) => {
