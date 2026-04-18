@@ -211,6 +211,22 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
     warpCanvas.height = H;
     const warpCtx = warpCanvas.getContext("2d")!;
 
+    // Pre-generated 128x128 monochrome noise tile for skin-grain restoration.
+    const noiseCanvas = document.createElement("canvas");
+    noiseCanvas.width = 128;
+    noiseCanvas.height = 128;
+    const noiseCtx = noiseCanvas.getContext("2d")!;
+    {
+      const img = noiseCtx.createImageData(128, 128);
+      const d = img.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const v = 110 + Math.floor(Math.random() * 36); // 110-146 mid-gray
+        d[i] = v; d[i + 1] = v; d[i + 2] = v; d[i + 3] = 255;
+      }
+      noiseCtx.putImageData(img, 0, 0);
+    }
+    const grainPattern = ctx.createPattern(noiseCanvas, "repeat");
+
     let landmarker: any = null;
     let lastLandmarks: Landmark[] | null = null;
     let lastLandmarksAt = 0;
