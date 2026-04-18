@@ -29,6 +29,7 @@ import CommentsSheet from "@/components/social/CommentsSheet";
 import ReelThumbnail from "@/components/social/ReelThumbnail";
 import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolveSharedOrigins";
 import { toUserPostInteractionId } from "@/lib/social/postInteraction";
+import CreatorTiersSubscribe from "@/components/creator/CreatorTiersSubscribe";
 
 type PostTab = "all" | "photos" | "videos";
 
