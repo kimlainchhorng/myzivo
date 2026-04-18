@@ -35,7 +35,7 @@ import PaintBucket from "lucide-react/dist/esm/icons/paintbrush";
 import Plane from "lucide-react/dist/esm/icons/plane";
 import Globe from "lucide-react/dist/esm/icons/globe";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
-import { useBeautyFilter, DEFAULT_BEAUTY, type BeautySettings } from "@/hooks/useBeautyFilter";
+import { useBeautyFilter, DEFAULT_BEAUTY, BEAUTY_PRESETS, type BeautySettings } from "@/hooks/useBeautyFilter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -122,7 +122,7 @@ export default function GoLivePage() {
   const [rawStream, setRawStream] = useState<MediaStream | null>(null);
   const [beauty, setBeauty] = useState<BeautySettings>(DEFAULT_BEAUTY);
   const [showBeautyPanel, setShowBeautyPanel] = useState(false);
-  const beautifiedStream = useBeautyFilter(rawStream, beauty);
+  const { stream: beautifiedStream, ready: beautyReady } = useBeautyFilter(rawStream, beauty);
   const localStream = beautifiedStream ?? rawStream;
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -938,8 +938,32 @@ export default function GoLivePage() {
                 </button>
               </div>
 
+              {/* Quick presets */}
+              <div className="flex gap-2 mb-4">
+                {([
+                  { key: "natural", label: "Natural" },
+                  { key: "glam", label: "Glam" },
+                  { key: "off", label: "Off" },
+                ] as const).map((p) => (
+                  <button
+                    key={p.key}
+                    onClick={() => setBeauty(BEAUTY_PRESETS[p.key])}
+                    className="flex-1 h-8 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs font-semibold"
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              {!beautyReady && beauty.enabled && (
+                <div className="mb-3 text-[11px] text-pink-300/80 text-center animate-pulse">
+                  Loading face tracking…
+                </div>
+              )}
+
               {[
                 { key: "smooth", label: "Skin smoothing", icon: "✨" },
+                { key: "brighten", label: "Brighten", icon: "🌟" },
                 { key: "slim", label: "Face slim", icon: "💎" },
                 { key: "eyes", label: "Eye enlarge", icon: "👁️" },
               ].map((row) => (
