@@ -7,6 +7,27 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+async function notify(
+  supabaseAdmin: any,
+  userId: string,
+  type: string,
+  message: string,
+  entityId: string,
+) {
+  try {
+    await supabaseAdmin.from("user_notifications").insert({
+      user_id: userId,
+      type,
+      entity_id: entityId,
+      entity_type: "coin_purchase",
+      message,
+      is_read: false,
+    });
+  } catch (e) {
+    console.error("[verify-coin-purchase] notify failed", e);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -39,6 +60,7 @@ serve(async (req) => {
     let packageId = "unknown";
     let amountCents = 0;
     let currency = "usd";
+    let failureMessage = "";
 
     if (paymentIntentId) {
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
@@ -48,17 +70,25 @@ serve(async (req) => {
 
       paymentStatus = paymentIntent.status;
       paymentRef = paymentIntent.id;
-      if (paymentIntent.status !== "succeeded") {
-        return new Response(JSON.stringify({ status: paymentIntent.status, credited: false }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
-      }
-
       coins = parseInt(paymentIntent.metadata?.coins || "0", 10);
       packageId = paymentIntent.metadata?.package_id || "unknown";
       amountCents = paymentIntent.amount_received || paymentIntent.amount || 0;
       currency = paymentIntent.currency ?? "usd";
+
+      if (paymentIntent.status !== "succeeded") {
+        failureMessage = paymentIntent.last_payment_error?.message ?? `Payment status: ${paymentIntent.status}`;
+        await notify(
+          supabaseAdmin,
+          user.id,
+          "coin_topup_failed",
+          `Top-up failed: ${failureMessage}`,
+          paymentIntent.id,
+        );
+        return new Response(JSON.stringify({ status: paymentIntent.status, credited: false, error: failureMessage }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
     } else {
       const session = await stripe.checkout.sessions.retrieve(sessionId);
       if (session.metadata?.user_id !== user.id) {
@@ -67,17 +97,17 @@ serve(async (req) => {
 
       paymentStatus = session.payment_status || "pending";
       paymentRef = session.id;
+      coins = parseInt(session.metadata?.coins || "0", 10);
+      packageId = session.metadata?.package_id || "unknown";
+      amountCents = session.amount_total ?? 0;
+      currency = session.currency ?? "usd";
+
       if (session.payment_status !== "paid") {
         return new Response(JSON.stringify({ status: session.payment_status, credited: false }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
         });
       }
-
-      coins = parseInt(session.metadata?.coins || "0", 10);
-      packageId = session.metadata?.package_id || "unknown";
-      amountCents = session.amount_total ?? 0;
-      currency = session.currency ?? "usd";
     }
 
     if (!coins || coins <= 0) throw new Error("Invalid coin amount in payment");
@@ -92,6 +122,14 @@ serve(async (req) => {
     });
 
     if (rpcErr) throw new Error(rpcErr.message);
+
+    await notify(
+      supabaseAdmin,
+      user.id,
+      "coin_topup_success",
+      `+${coins.toLocaleString()} Z Coins added to your wallet`,
+      paymentRef,
+    );
 
     return new Response(JSON.stringify({ status: paymentStatus, credited: true, coins, balance }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
