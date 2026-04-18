@@ -175,6 +175,7 @@ const Login = () => {
             </Link>
           </p>
         </form>
+        </div>
 
         <p className="text-center text-xs text-muted-foreground mt-4">
           Protected by enterprise-grade security
