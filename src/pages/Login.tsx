@@ -425,7 +425,7 @@ const Login = () => {
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
 
           {/* Header */}
-          <div className="text-center mb-3 relative z-20" style={{ transform: "translateZ(30px)" }}>
+          <div className="text-center mb-3 relative z-20" style={isTouchDevice ? undefined : { transform: "translateZ(30px)" }}>
             <div className="absolute -left-2 -top-2">
               <button onClick={(e) => { e.stopPropagation(); navigate("/"); }} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation relative z-30" aria-label="Go to Home">
                 <Home className="w-5 h-5 text-white/70" />
