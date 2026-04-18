@@ -61,7 +61,7 @@ export function useVirtualBackground(
     const drawBackground = (cfg: VirtualBgConfig) => {
       if (cfg.kind === "blur") {
         ctx.save();
-        ctx.filter = `blur(${cfg.blurPx ?? 18}px)`;
+        ctx.filter = `blur(${cfg.blurPx ?? 22}px) saturate(1.05)`;
         ctx.drawImage(video, 0, 0, out.width, out.height);
         ctx.restore();
       } else if (cfg.kind === "image" && bgImgLoaded) {
@@ -70,7 +70,16 @@ export function useVirtualBackground(
         let dw = out.width, dh = out.height, dx = 0, dy = 0;
         if (ir > or) { dh = out.height; dw = dh * ir; dx = (out.width - dw) / 2; }
         else { dw = out.width; dh = dw / ir; dy = (out.height - dh) / 2; }
+        ctx.save();
+        // subtle blur on bg image to match camera DoF — much more realistic
+        ctx.filter = "blur(2px) saturate(1.08) brightness(0.96)";
         ctx.drawImage(bgImg, dx, dy, dw, dh);
+        ctx.restore();
+        // ambient tint from bg → person, very subtle
+        ctx.save();
+        ctx.fillStyle = "rgba(0,0,0,0.04)";
+        ctx.fillRect(0, 0, out.width, out.height);
+        ctx.restore();
       } else {
         ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, out.width, out.height);
