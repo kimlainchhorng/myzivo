@@ -36,6 +36,7 @@ type CareerJob = {
 
 export default function FindEmployeePage() {
   const navigate = useNavigate();
+  const goBack = useSmartBack("/personal/apply-job");
   const { user } = useAuth();
   const [tab, setTab] = useState<"jobs" | "companies">("jobs");
   const [q, setQ] = useState("");
