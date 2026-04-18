@@ -383,10 +383,10 @@ const Login = () => {
   // On touch devices, use simpler styles (no backdrop-blur, 16px font to prevent iOS zoom-on-focus)
   // Keep z-index minimal and avoid filters/transforms inside the input wrapper.
   const input3D = isTouchDevice
-    ? "relative w-full bg-white/15 border border-white/25 rounded-xl py-2.5 pl-9 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors text-base touch-manipulation [-webkit-user-select:text] [user-select:text]"
+    ? "relative z-30 block w-full rounded-xl border border-white/20 bg-black/35 px-4 py-3 text-base leading-6 text-white placeholder:text-white/45 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent [appearance:none] [-webkit-appearance:none] touch-manipulation"
     : "relative z-20 w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2 pl-9 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)] touch-manipulation [-webkit-user-select:text] [user-select:text] pointer-events-auto";
   const input3DLg = isTouchDevice
-    ? "relative w-full bg-white/15 border border-white/25 rounded-xl py-3 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors text-base touch-manipulation [-webkit-user-select:text] [user-select:text]"
+    ? "relative z-30 block w-full rounded-xl border border-white/20 bg-black/35 px-4 py-3 text-base leading-6 text-white placeholder:text-white/45 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent [appearance:none] [-webkit-appearance:none] touch-manipulation"
     : "relative z-20 w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)] touch-manipulation [-webkit-user-select:text] [user-select:text] pointer-events-auto";
 
   return (
@@ -471,8 +471,8 @@ const Login = () => {
                     <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
                     <FormControl>
                       <div className="relative z-10">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
-                        <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3DLg} {...field} />
+                        {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
+                        <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3DLg} style={isTouchDevice ? { WebkitUserSelect: "text" } : undefined} {...field} />
                       </div>
                     </FormControl>
                     <FormMessage className="text-red-400 text-xs" />
@@ -554,8 +554,8 @@ const Login = () => {
                     <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
                     <FormControl>
                       <div className="relative z-10">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
-                        <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3D} {...field} />
+                        {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
+                        <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3D} style={isTouchDevice ? { WebkitUserSelect: "text" } : undefined} {...field} />
                       </div>
                     </FormControl>
                     <FormMessage className="text-red-400 text-xs" />
