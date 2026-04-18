@@ -1,39 +1,21 @@
 
-The user wants the virtual background swap to work again — but cleanly, with no face filter/mask appearance. Currently `useVirtualBackground` is a pass-through stub, so selecting Office/Beach/etc. does nothing (raw camera shows through).
+The current edges look torn/jagged because the soft-ramp (0.35–0.65) on a low-res 256px mask still produces stair-stepping when upscaled to 720p. Need a higher-quality smoothing pass.
 
-## Goal
-Re-enable real background replacement using MediaPipe selfie segmentation, but with a **professional, clean** result:
-- Background swaps properly (image or blur)
-- Face stays raw — no smoothing, no filter, no halo
-- Hard binary mask with crisp silhouette
-- Slight edge antialiasing only at the very boundary (1px) so silhouette doesn't shimmer
+## Fix — `src/hooks/useVirtualBackground.ts`
 
-## Implementation — `src/hooks/useVirtualBackground.ts`
+1. **Render mask at video resolution first**: upscale the low-res confidence mask into a full-size offscreen canvas with `imageSmoothingQuality = "high"` bilinear, then apply a stronger `blur(3px)` filter on that upscale. This kills the staircase before alpha thresholding.
 
-Restore segmentation pipeline with these upgrades over the previous version:
+2. **Wider, smoother alpha ramp**: map confidence `[0.30 .. 0.70]` → alpha `[0..255]`. Wider band = smoother feathered edge (like Zoom/Meet) without halo bleeding into face center (which stays at 1.0 confidence = fully opaque).
 
-1. **MediaPipe ImageSegmenter** (selfie_segmenter.tflite) loaded from `/mediapipe`, GPU→CPU fallback.
+3. **Two-pass mask refinement**:
+   - Pass 1: upscale low-res mask → mid canvas with `blur(2px)`
+   - Pass 2: draw mid → person clip with `blur(1.5px)` 
+   - Combined gives a clean ~3-4px feather, no jaggies.
 
-2. **Hard binary mask** with single-pixel edge softening:
-   - Threshold at 0.5 → fully person or fully background
-   - Apply `maskCtx.filter = "blur(0.6px)"` only on the *upscale draw* to soften jaggies by ~1px (no halo, no face-bleed)
+4. **Keep face raw**: video drawn with `filter: none`, no smoothing applied to person pixels themselves — only the mask alpha channel is smoothed.
 
-3. **Background rendering**:
-   - `image` mode: cover-fit, `blur(2px) saturate(1.05)` for subtle depth-of-field, no vignette, no tint
-   - `blur` mode: blur the live video at 22px
+5. **Background unchanged**: image cover-fit with `blur(2px) saturate(1.05)`, or `blur(22px)` for blur mode.
 
-4. **Person rendering**:
-   - Raw video, NO filter, NO smoothing applied to person pixels
-   - `imageSmoothingEnabled = true` for person draw, `false` for mask upscale
+6. Reuse all canvases, preserve audio, 8s timeout fallback to raw.
 
-5. **Performance**:
-   - Reuse canvases (out / person / mask) — never allocate per frame
-   - `captureStream(30)` published immediately so preview never blanks
-   - Audio tracks preserved
-   - Pass-through immediately if `kind === "off"`
-
-6. **Robustness**:
-   - 8s timeout → if segmenter fails, fall back to raw pass-through (don't block stream)
-   - Per-frame try/catch so one bad frame doesn't kill the loop
-
-No new dependencies. No UI changes. No beauty filter — that hook stays a pass-through stub.
+Result: clean professional silhouette with soft natural feathered edge — no torn pixels, no halo, no face filter.
