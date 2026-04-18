@@ -212,6 +212,7 @@ export default function GoLivePage() {
   const [chatMessages, setChatMessages] = useState<ChatRow[]>([]);
   const [showRechargeSheet, setShowRechargeSheet] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [showBgSheet, setShowBgSheet] = useState(false);
 
   // ── Camera ──
   // Tries multiple constraint shapes so we work on phones that lack the
