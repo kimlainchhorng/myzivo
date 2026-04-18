@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { User, ArrowRight, Loader2, Camera, ImagePlus } from "lucide-react";
@@ -19,6 +20,7 @@ export default function Setup() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { user, isLoading: authLoading } = useAuth();
+  const isMobile = useIsMobile();
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(true);
   const redirectTo = getSafeRedirectTarget(
@@ -216,9 +218,9 @@ export default function Setup() {
   }
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-gradient-to-b from-[#0a1628] to-[#0d2137] px-4 py-8">
+    <div className={isMobile ? "min-h-[100dvh] flex flex-col items-center justify-start bg-gradient-to-b from-[#0a1628] to-[#0d2137] px-4 py-6 overflow-y-auto" : "min-h-[100dvh] flex flex-col items-center justify-center bg-gradient-to-b from-[#0a1628] to-[#0d2137] px-4 py-8"}>
       <div className="w-full max-w-md">
-        <div className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15] rounded-3xl overflow-hidden">
+        <div className={isMobile ? "relative bg-white/[0.08] border border-white/[0.15] rounded-3xl overflow-hidden" : "relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15] rounded-3xl overflow-hidden"}>
           <div className="relative h-32 sm:h-36 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent overflow-hidden group">
             {coverPreview ? (
               <img
@@ -238,9 +240,9 @@ export default function Setup() {
             <button
               type="button"
               onClick={() => coverInputRef.current?.click()}
-              className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors cursor-pointer"
+              className={isMobile ? "absolute inset-0 flex items-center justify-center bg-black/20 transition-colors cursor-pointer touch-manipulation" : "absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors cursor-pointer"}
             >
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full p-2">
+              <div className={isMobile ? "opacity-100 bg-black/55 rounded-full px-3 py-2" : "opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full p-2"}>
                 <Camera className="w-5 h-5 text-white" />
               </div>
             </button>
@@ -273,9 +275,9 @@ export default function Setup() {
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
-                className="absolute inset-0 rounded-full flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors cursor-pointer"
+                className={isMobile ? "absolute inset-0 rounded-full flex items-center justify-center bg-black/20 transition-colors cursor-pointer touch-manipulation" : "absolute inset-0 rounded-full flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors cursor-pointer"}
               >
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full p-1.5">
+                <div className={isMobile ? "opacity-100 bg-black/55 rounded-full p-2" : "opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full p-1.5"}>
                   <Camera className="w-4 h-4 text-white" />
                 </div>
               </button>
@@ -296,11 +298,29 @@ export default function Setup() {
 
           <div className="px-6 pb-6 pt-3 sm:px-8 sm:pb-8">
             <div className="mb-5">
-
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-white tracking-tight">Add Your Photos</h1>
-                <p className="text-white/50 text-sm mt-1">Personalize your profile with a photo and cover</p>
+                <h1 className="text-2xl font-bold text-white tracking-tight">Finish Your Setup</h1>
+                <p className="text-white/60 text-sm mt-1">No typing needed — photos are optional. Add them now or skip and continue.</p>
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-left touch-manipulation active:scale-[0.98] transition-transform"
+              >
+                <p className="text-sm font-semibold text-white">Profile photo</p>
+                <p className="text-xs text-white/50 mt-1">Optional</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => coverInputRef.current?.click()}
+                className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-left touch-manipulation active:scale-[0.98] transition-transform"
+              >
+                <p className="text-sm font-semibold text-white">Cover photo</p>
+                <p className="text-xs text-white/50 mt-1">Optional</p>
+              </button>
             </div>
 
             <Button
@@ -318,14 +338,15 @@ export default function Setup() {
               )}
             </Button>
 
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleSkip}
               disabled={saving}
-              className="w-full text-center text-white/40 hover:text-white/60 text-sm mt-3 transition-colors"
+              className="w-full h-11 rounded-xl border-white/15 bg-white/5 text-white hover:bg-white/10 font-semibold text-sm mt-3 touch-manipulation active:scale-[0.98] transition-all"
             >
-              Skip for now
-            </button>
+              Continue without photos
+            </Button>
           </div>
         </div>
       </div>
