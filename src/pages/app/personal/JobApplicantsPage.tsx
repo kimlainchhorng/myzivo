@@ -6,12 +6,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useSmartBack } from "@/lib/smartBack";
 
 const STATUSES = ["submitted", "reviewed", "shortlisted", "rejected", "hired"] as const;
 
 export default function JobApplicantsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const goBack = useSmartBack("/personal/employer");
   const [job, setJob] = useState<any>(null);
   const [apps, setApps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

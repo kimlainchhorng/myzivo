@@ -9,9 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useSmartBack } from "@/lib/smartBack";
 
 export default function EmployerDashboardPage() {
   const navigate = useNavigate();
+  const goBack = useSmartBack("/personal");
   const { user } = useAuth();
   const [company, setCompany] = useState<any>(null);
   const [jobs, setJobs] = useState<any[]>([]);
