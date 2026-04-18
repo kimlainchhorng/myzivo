@@ -147,14 +147,10 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Anonymous viewers are allowed (read-only); heartbeats are allowed unauthenticated
-  // (they're harmless pings). Other publisher signals require auth.
-  if (!effectiveUserId && from_role !== "viewer" && type !== "heartbeat") {
-    return new Response(JSON.stringify({ error: "unauthorized" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  // Knowing the stream UUID is the capability — both publisher and viewer
+  // signals are accepted unauthenticated. Ownership for publisher writes is
+  // still enforced below against `stream.user_id` when auth IS present, and
+  // rate limits + ICE dedup prevent abuse.
 
   // Confirm the stream exists, and (for publisher) that the caller owns it
   const { data: stream } = await admin
