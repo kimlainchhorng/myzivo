@@ -1,51 +1,51 @@
 
 
-## What I see in your screenshot
-Your face now looks like it has a **flat beauty mask layered on top** — skin looks plastic/uniform, the bright vertical "glow" stripe down your nose/forehead is way too obvious, and the smoothing has erased your real skin texture. It reads as "filter applied" instead of "I just look good today."
+## What I see in your two screenshots
+1. **Screenshot 1 (close-up, looking down)**: Forehead/skin looks **smooth and clean** — the grain pass is working, no plastic look. Good.
+2. **Screenshot 2 (face visible)**: Skin looks **natural now** — no more mask effect, but the face is **slightly washed out / low contrast**, eyes look a bit dim, and there's still a faint **vertical brightness band** down the center of the face from the residual highlight + brighten overlay stacking on the nose ridge.
 
-This is the classic over-processed Bigo look. Three things are making it feel mask-like:
+So the "real skin" fix worked. Next-level upgrade should focus on what Bigo/TikTok do that we still don't:
 
-1. **Highlight glow is too strong & too white** — that bright vertical band on your nose/forehead is the new 3D-glow pass. At the current alpha it looks like a stage spotlight, not natural skin sheen.
-2. **Skin smoothing alpha 0.65–0.92 is too aggressive** — pores, micro-shadows, and skin grain are completely gone. Without grain the face reads as CGI.
-3. **No texture restoration** — pro filters (TikTok, Snap) re-add a tiny noise/grain pass *after* smoothing so skin still looks like skin. We never do that.
+## Plan — v3 "Pro Polish" upgrade
 
-Plus a 4th subtle one: **defaults are too high**. Natural preset is hitting smooth=55, brighten=40 — that's already "Glam" territory on a well-lit face.
+### 1. Eye brightening + under-eye de-darkening (NEW)
+Bigo's signature move. When eyes are detected:
+- Paint a soft warm-white radial under each eye (landmark indices 230, 450) at α 0.06–0.10 → reduces dark circles instantly
+- Brighten the iris region by +8% luma → eyes "pop" without looking fake
+- Tied to existing `eyes` slider
 
-## Plan — make it look like real skin, not a mask
+### 2. Lip definition pass (NEW)
+Currently lips just get saturation. Add:
+- Detect upper-lip cupid's bow (landmarks 0, 11, 12) and paint a 1px subtle dark line for definition
+- Add tiny radial highlight on lower-lip center (landmark 17) for "glossy" look
+- Both at α 0.10–0.18, scales with `lips` slider
 
-### 1. Tone down the highlight glow (`useBeautyFilter.ts`)
-- Cut highlight alpha from 0.05–0.12 → **0.02–0.05**
-- Shrink the nose-bridge highlight radius by ~40% so it's a subtle sheen, not a stripe
-- Remove the chin-tip highlight entirely (it was creating an unnatural shine spot)
-- Tie highlight strength to `brighten` slider only — at brighten=0 it's fully off
+### 3. Auto white-balance correction (NEW)
+The face in screenshot 2 has a slight orange/warm cast from indoor lighting. Sample the forehead patch every 60 frames; if R/B ratio > 1.15 (too warm) push a `rgba(180, 200, 255, 0.04)` cool overlay on face mask. If too cool (< 0.92), push warm. Self-correcting → looks natural in any light.
 
-### 2. Add skin-grain restoration pass (NEW)
-After smoothing + brighten, paint a very subtle monochrome noise texture over the face mask at α 0.04–0.08 (scales *inversely* with smooth — more smoothing = more grain back). Uses a pre-generated 128×128 noise canvas tiled across the face. This is the single biggest "real skin" trick — pro filters all do it.
+### 4. Fix vertical brightness band
+Brighten + highlight currently both pass through the *full* face mask, so the central nose/forehead axis double-brightens. Fix:
+- Make brighten overlay use a horizontal *gradient* mask (stronger at cheeks, fade out at center) so the centerline doesn't get hit twice
+- Cap combined center-axis brightness with `globalAlpha` calc: `min(brightAlpha + highlightAlpha, 0.18)`
 
-### 3. Soften smoothing curve
-- Drop alpha range from 0.65–0.92 → **0.45–0.78**
-- Reduce blur radius slider mapping by ~25% so pores survive at low/mid settings
-- Skin will still look clean but keep micro-detail
+### 5. Subtle face-shape harmonizer
+Light tooth-pinch already exists. Add:
+- Tiny **jaw-line softening**: feather the jawline mask edge by extra 4px so chin transition into neck looks more refined (no hard edge)
+- Micro **chin-lift**: push landmarks 152, 175 up by `slim * 0.5%` of face height — reduces "double chin" appearance subtly
 
-### 4. Retune Natural preset to "barely-there"
-- Natural: smooth 35 (was 55), brighten 20 (was 40), slim 15, eyes 10, lips 8, contour 12, highlight 8, teeth 0
-- Sweet: smooth 50, brighten 30, slim 25, eyes 25, lips 20, contour 18, highlight 15
-- Glam: keeps current strong values for users who want the full Bigo look
-- Add a new **"Real"** preset = smooth 25, brighten 12, everything else minimal — for users who want "I just look rested"
+### 6. New "Pro" preset (between Sweet and Glam)
+- Pro: smooth 60, brighten 35, slim 30, eyes 28, lips 35, nose 18 — the "everyone wants to look like this" sweet spot
 
-### 5. Cap individual sliders' max effect
-- Smooth slider 100 currently = alpha 0.92. Lower to **alpha 0.78** so even maxed it's not plastic
-- Brighten slider 100 currently = +0.18 lighten. Lower to **+0.12**
-
-### 6. Add a quick "Less" / "More" intensity master
-At the top of the beauty panel, add a single intensity slider 0–100% that scales ALL effects together. Default 60%. Lets users dial back everything in one swipe without rebalancing each individual setting.
+### 7. Performance: skip grain pass when smooth < 30
+Grain only matters when smoothing is heavy. Skip the pass entirely on low-smooth settings to save 2–3ms per frame on phones.
 
 ### Files
-- `src/hooks/useBeautyFilter.ts` — weaken highlight, add grain pass, soften smoothing curve, lower max caps
-- `src/pages/GoLivePage.tsx` — retune presets, add "Real" preset, add intensity master slider
+- `src/hooks/useBeautyFilter.ts` — under-eye brighten, lip definition, auto white balance, fixed brighten gradient, jaw feather, chin-lift, perf guard
+- `src/pages/GoLivePage.tsx` — add "Pro" preset chip
 
 ### Out of scope
-- AR stickers / face masks
-- Real ML segmentation for BG blur
-- Per-region smoothing strength (forehead vs cheeks)
+- AR stickers / cat ears
+- ML background segmentation
+- Real bilateral filter (would need WebGL)
+- Hair recoloring
 
