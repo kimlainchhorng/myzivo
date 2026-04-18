@@ -6939,6 +6939,221 @@ export type Database = {
           },
         ]
       }
+      career_applications: {
+        Row: {
+          applicant_email: string | null
+          applicant_id: string
+          applicant_phone: string | null
+          cover_note: string | null
+          created_at: string
+          cv_id: string | null
+          id: string
+          job_id: string
+          notes: string | null
+          resume_url: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_email?: string | null
+          applicant_id: string
+          applicant_phone?: string | null
+          cover_note?: string | null
+          created_at?: string
+          cv_id?: string | null
+          id?: string
+          job_id: string
+          notes?: string | null
+          resume_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_email?: string | null
+          applicant_id?: string
+          applicant_phone?: string | null
+          cover_note?: string | null
+          created_at?: string
+          cv_id?: string | null
+          id?: string
+          job_id?: string
+          notes?: string | null
+          resume_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_applications_cv_id_fkey"
+            columns: ["cv_id"]
+            isOneToOne: false
+            referencedRelation: "user_cvs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "career_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "career_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      career_companies: {
+        Row: {
+          city: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          country: string | null
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          founded_year: number | null
+          id: string
+          industry: string | null
+          is_active: boolean
+          is_verified: boolean
+          location: string | null
+          logo_url: string | null
+          name: string
+          owner_id: string
+          size_range: string | null
+          slug: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          city?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          founded_year?: number | null
+          id?: string
+          industry?: string | null
+          is_active?: boolean
+          is_verified?: boolean
+          location?: string | null
+          logo_url?: string | null
+          name: string
+          owner_id: string
+          size_range?: string | null
+          slug?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          city?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          founded_year?: number | null
+          id?: string
+          industry?: string | null
+          is_active?: boolean
+          is_verified?: boolean
+          location?: string | null
+          logo_url?: string | null
+          name?: string
+          owner_id?: string
+          size_range?: string | null
+          slug?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      career_jobs: {
+        Row: {
+          applications_count: number
+          company_id: string
+          created_at: string
+          description: string | null
+          employment_type: string | null
+          experience_level: string | null
+          expires_at: string | null
+          id: string
+          is_remote: boolean
+          location: string | null
+          posted_by: string
+          requirements: string | null
+          responsibilities: string | null
+          salary_currency: string | null
+          salary_max: number | null
+          salary_min: number | null
+          skills: string[] | null
+          status: string
+          title: string
+          updated_at: string
+          views_count: number
+        }
+        Insert: {
+          applications_count?: number
+          company_id: string
+          created_at?: string
+          description?: string | null
+          employment_type?: string | null
+          experience_level?: string | null
+          expires_at?: string | null
+          id?: string
+          is_remote?: boolean
+          location?: string | null
+          posted_by: string
+          requirements?: string | null
+          responsibilities?: string | null
+          salary_currency?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          skills?: string[] | null
+          status?: string
+          title: string
+          updated_at?: string
+          views_count?: number
+        }
+        Update: {
+          applications_count?: number
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          employment_type?: string | null
+          experience_level?: string | null
+          expires_at?: string | null
+          id?: string
+          is_remote?: boolean
+          location?: string | null
+          posted_by?: string
+          requirements?: string | null
+          responsibilities?: string | null
+          salary_currency?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          skills?: string[] | null
+          status?: string
+          title?: string
+          updated_at?: string
+          views_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_jobs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "career_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cart_items: {
         Row: {
           cart_id: string
@@ -57075,6 +57290,8 @@ export type Database = {
         Args: { p_geojson: Json; p_zone_id: string }
         Returns: Json
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       start_batch: {
         Args: { p_batch_id: string; p_driver_id: string }
         Returns: Json
