@@ -16,6 +16,7 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
 import { BrandProvider } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import GuestOrUser from "@/components/auth/GuestOrUser";
 import PhoneRequiredGate from "@/components/auth/PhoneRequiredGate";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import { RouteErrorBoundary } from "./components/shared/RouteErrorBoundary";
@@ -358,6 +359,7 @@ const NotificationSettings = lazy(() => import("./pages/account/NotificationSett
 const AccountReferralsPage = lazy(() => import("./pages/account/ReferralsPage"));
 const AccountWalletPage = lazy(() => import("./pages/account/WalletPage"));
 const CoinPurchaseSuccess = lazy(() => import("./pages/CoinPurchaseSuccess"));
+const GuestProfilePreview = lazy(() => import("./components/auth/GuestProfilePreview"));
 const GiftCardsPage = lazy(() => import("./pages/account/GiftCardsPage"));
 const GiftCardSuccessPage = lazy(() => import("./pages/account/GiftCardSuccessPage"));
 const AccountAddressesPage = lazy(() => import("./pages/account/AddressesPage"));
@@ -747,7 +749,7 @@ const App = () => (
                 <Route path="/verify-new-device" element={<VerifyNewDevice />} />
                 <Route path="/setup" element={<Setup />} />
                 
-                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/profile" element={<GuestOrUser guestPreview={<GuestProfilePreview />}><Profile /></GuestOrUser>} />
                 <Route path="/more" element={<ProtectedRoute><MorePage /></ProtectedRoute>} />
                 <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
                 <Route path="/user/:userId" element={<PublicProfilePage />} />
