@@ -56,6 +56,24 @@ import {
 } from "@/lib/livePairing";
 import { ICE_SERVERS, getIceServers, logSelectedCandidatePair, sendSignal, subscribeSignals } from "@/lib/liveWebrtc";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
+import bgOffice from "@/assets/bg-office.jpg";
+import bgBeach from "@/assets/bg-beach.jpg";
+import bgCafe from "@/assets/bg-cafe.jpg";
+import bgCity from "@/assets/bg-city.jpg";
+import bgStudio from "@/assets/bg-studio.jpg";
+import bgNature from "@/assets/bg-nature.jpg";
+
+type BgPreset = { id: string; kind: "off" | "blur" | "image"; url?: string; label: string };
+const BG_PRESETS: BgPreset[] = [
+  { id: "off",    kind: "off",   label: "None" },
+  { id: "blur",   kind: "blur",  label: "Blur" },
+  { id: "office", kind: "image", url: bgOffice, label: "Office" },
+  { id: "studio", kind: "image", url: bgStudio, label: "Studio" },
+  { id: "cafe",   kind: "image", url: bgCafe,   label: "Cafe" },
+  { id: "beach",  kind: "image", url: bgBeach,  label: "Beach" },
+  { id: "city",   kind: "image", url: bgCity,   label: "City" },
+  { id: "nature", kind: "image", url: bgNature, label: "Nature" },
+];
 
 const CoinRechargeSheet = lazy(() => import("@/components/live/CoinRechargeSheet"));
 
