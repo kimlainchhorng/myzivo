@@ -50,29 +50,34 @@ const Login = () => {
   };
 
   return (
-    <div className="relative min-h-[100dvh] w-full overflow-hidden bg-[radial-gradient(ellipse_at_top,_hsl(var(--background))_0%,_#020a08_60%,_#000_100%)] flex items-center justify-center px-4 py-10">
+    <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-4 py-10 bg-[#04100d]">
       <SEOHead title="Sign in to ZIVO" description="Sign in to your ZIVO account" />
 
-      {/* Aurora background */}
+      {/* Premium mesh background */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 -left-24 w-[420px] h-[420px] rounded-full bg-emerald-500/30 blur-[120px] animate-pulse" />
-        <div className="absolute top-1/3 -right-32 w-[460px] h-[460px] rounded-full bg-teal-400/20 blur-[140px] animate-pulse" style={{ animationDelay: "1.2s" }} />
-        <div className="absolute -bottom-40 left-1/4 w-[520px] h-[520px] rounded-full bg-emerald-700/25 blur-[160px] animate-pulse" style={{ animationDelay: "2.4s" }} />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent,hsl(var(--background)/0.6))]" />
-        <div className="absolute inset-0 opacity-[0.04] [background-image:linear-gradient(hsl(var(--foreground))_1px,transparent_1px),linear-gradient(90deg,hsl(var(--foreground))_1px,transparent_1px)] [background-size:48px_48px]" />
+        <div className="absolute inset-0 opacity-90 [background:conic-gradient(from_180deg_at_50%_50%,#022c22_0deg,#064e3b_90deg,#0f766e_180deg,#022c22_270deg,#022c22_360deg)]" />
+        <div className="absolute -top-40 -left-32 w-[520px] h-[520px] rounded-full bg-emerald-400/40 blur-[140px] animate-pulse" />
+        <div className="absolute top-1/4 -right-40 w-[560px] h-[560px] rounded-full bg-teal-300/25 blur-[160px] animate-pulse" style={{ animationDelay: "1.4s" }} />
+        <div className="absolute -bottom-48 left-1/3 w-[620px] h-[620px] rounded-full bg-emerald-700/35 blur-[180px] animate-pulse" style={{ animationDelay: "2.6s" }} />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)]" />
+        <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_75%)]" />
       </div>
 
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-md animate-fade-in">
         {/* Brand */}
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-foreground">ZIVO ID</h1>
-          <p className="text-sm text-muted-foreground mt-1">Welcome Back — Zivo All in One Place</p>
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 shadow-[0_8px_32px_rgba(16,185,129,0.45)] mb-3 ring-1 ring-white/20">
+            <Sparkles className="w-7 h-7 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent tracking-tight">ZIVO ID</h1>
+          <p className="text-sm text-white/60 mt-1">Welcome Back — Zivo All in One Place</p>
         </div>
 
-        {/* Glass card */}
+        {/* Glass card with gradient ring */}
+        <div className="relative rounded-2xl p-[1px] bg-gradient-to-b from-emerald-400/50 via-emerald-500/10 to-transparent shadow-[0_30px_80px_-20px_rgba(16,185,129,0.45)]">
         <form
           onSubmit={onSubmit}
-          className="rounded-2xl border border-emerald-500/20 bg-card/70 backdrop-blur-xl shadow-2xl p-6 space-y-5"
+          className="rounded-2xl bg-[#0a1f1a]/85 backdrop-blur-2xl p-6 space-y-5"
         >
           {/* Email */}
           <div className="space-y-1.5">
