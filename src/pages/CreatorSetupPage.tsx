@@ -332,10 +332,7 @@ function ProfileStep({ creator, userId, onSaved }: any) {
         <Label className="text-xs font-bold">Display name *</Label>
         <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="e.g. Alex Creator" maxLength={50} className="mt-1" />
       </div>
-      <div>
-        <Label className="text-xs font-bold">Category</Label>
-        <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Lifestyle, Gaming, Travel…" maxLength={40} className="mt-1" />
-      </div>
+      <CategoryPicker value={category} onChange={setCategory} />
       <div>
         <Label className="text-xs font-bold">Bio</Label>
         <Textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell fans what you create" maxLength={250} rows={3} className="mt-1 resize-none" />
