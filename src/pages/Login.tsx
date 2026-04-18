@@ -463,12 +463,12 @@ const Login = () => {
               <FormField control={loginForm.control} name="email" render={({ field }) => (
                 <FormItem className="space-y-1">
                   <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
-                  <FormControl>
-                    <div className="relative z-10">
-                      {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
-                      <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3DLg} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                    </div>
-                  </FormControl>
+                  <div className="relative z-10">
+                    {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
+                    <FormControl>
+                      <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="username" className={input3DLg} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
+                    </FormControl>
+                  </div>
                   <FormMessage className="text-red-400 text-xs" />
                 </FormItem>
               )} />
@@ -544,12 +544,12 @@ const Login = () => {
               <FormField control={signupForm.control} name="email" render={({ field }) => (
                 <FormItem className="space-y-1">
                   <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
-                  <FormControl>
-                    <div className="relative z-10">
-                      {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
-                      <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3DLg} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                    </div>
-                  </FormControl>
+                  <div className="relative z-10">
+                    {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
+                    <FormControl>
+                      <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="username" className={input3DLg} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
+                    </FormControl>
+                  </div>
                   <FormMessage className="text-red-400 text-xs" />
                 </FormItem>
               )} />
