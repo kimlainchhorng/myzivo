@@ -172,8 +172,8 @@ export function useVirtualBackground(
               mask.height = mh;
               const maskData = conf.getAsFloat32Array();
               const img = mctx.createImageData(mw, mh);
-              const LO = 0.30;
-              const HI = 0.70;
+              const LO = 0.45;
+              const HI = 0.60;
               const RANGE = HI - LO;
               for (let i = 0; i < maskData.length; i++) {
                 const v = maskData[i];
@@ -186,15 +186,27 @@ export function useVirtualBackground(
               }
               mctx.putImageData(img, 0, 0);
 
-              // 2b. Pass 1 — upscale low-res mask to full resolution with bilinear + blur
+              // 2b. Pass 1 — upscale low-res mask to full resolution with bilinear + light blur
               mhctx.clearRect(0, 0, W, H);
+              mhctx.globalAlpha = 1;
               mhctx.imageSmoothingEnabled = true;
               mhctx.imageSmoothingQuality = "high";
-              mhctx.filter = "blur(2px)";
+              mhctx.filter = "blur(1px)";
               mhctx.drawImage(mask, 0, 0, W, H);
               mhctx.filter = "none";
 
-              // 3. Draw raw person, then clip with refined mask (Pass 2 — additional 1.5px blur)
+              // 2c. Temporal smoothing — blend 60% current + 40% previous
+              if (hasPrev) {
+                mhctx.globalAlpha = 0.4;
+                mhctx.drawImage(maskPrev, 0, 0, W, H);
+                mhctx.globalAlpha = 1;
+              }
+              // store current refined mask for next frame
+              mpctx.clearRect(0, 0, W, H);
+              mpctx.drawImage(maskHi, 0, 0, W, H);
+              hasPrev = true;
+
+              // 3. Draw raw person, then clip with refined mask (Pass 2 — light 0.8px blur)
               pctx.globalCompositeOperation = "source-over";
               pctx.filter = "none";
               pctx.imageSmoothingEnabled = true;
@@ -203,7 +215,7 @@ export function useVirtualBackground(
               pctx.drawImage(video!, 0, 0, W, H);
 
               pctx.globalCompositeOperation = "destination-in";
-              pctx.filter = "blur(1.5px)";
+              pctx.filter = "blur(0.8px)";
               pctx.imageSmoothingEnabled = true;
               pctx.imageSmoothingQuality = "high";
               pctx.drawImage(maskHi, 0, 0, W, H);
