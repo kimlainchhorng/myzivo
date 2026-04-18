@@ -47,9 +47,11 @@ export function useVirtualBackground(
     const out = document.createElement("canvas");
     const person = document.createElement("canvas");
     const mask = document.createElement("canvas");
+    const maskHi = document.createElement("canvas");
     const octx = out.getContext("2d")!;
     const pctx = person.getContext("2d")!;
     const mctx = mask.getContext("2d")!;
+    const mhctx = maskHi.getContext("2d")!;
 
     setStatus("loading");
 
@@ -75,8 +77,8 @@ export function useVirtualBackground(
 
         const w = video.videoWidth || 1280;
         const h = video.videoHeight || 720;
-        out.width = person.width = w;
-        out.height = person.height = h;
+        out.width = person.width = maskHi.width = w;
+        out.height = person.height = maskHi.height = h;
 
         // Publish stream immediately
         outStream = (out as HTMLCanvasElement).captureStream(30);
@@ -155,7 +157,7 @@ export function useVirtualBackground(
                 octx.drawImage(video!, 0, 0, W, H);
               }
 
-              // 2. Build hard binary mask from confidence
+              // 2. Build soft alpha mask from confidence with wide ramp
               const conf = result.confidenceMasks?.[0];
               if (!conf) {
                 rafId = requestAnimationFrame(render);
@@ -167,8 +169,12 @@ export function useVirtualBackground(
               mask.height = mh;
               const maskData = conf.getAsFloat32Array();
               const img = mctx.createImageData(mw, mh);
+              const LO = 0.30;
+              const HI = 0.70;
+              const RANGE = HI - LO;
               for (let i = 0; i < maskData.length; i++) {
-                const a = maskData[i] >= 0.5 ? 255 : 0;
+                const v = maskData[i];
+                const a = v <= LO ? 0 : v >= HI ? 255 : Math.round(((v - LO) / RANGE) * 255);
                 const j = i * 4;
                 img.data[j] = 255;
                 img.data[j + 1] = 255;
@@ -177,17 +183,27 @@ export function useVirtualBackground(
               }
               mctx.putImageData(img, 0, 0);
 
-              // 3. Draw raw person, then clip with mask (slight 0.6px blur on mask upscale to soften jaggies)
+              // 2b. Pass 1 — upscale low-res mask to full resolution with bilinear + blur
+              mhctx.clearRect(0, 0, W, H);
+              mhctx.imageSmoothingEnabled = true;
+              mhctx.imageSmoothingQuality = "high";
+              mhctx.filter = "blur(2px)";
+              mhctx.drawImage(mask, 0, 0, W, H);
+              mhctx.filter = "none";
+
+              // 3. Draw raw person, then clip with refined mask (Pass 2 — additional 1.5px blur)
               pctx.globalCompositeOperation = "source-over";
               pctx.filter = "none";
               pctx.imageSmoothingEnabled = true;
+              pctx.imageSmoothingQuality = "high";
               pctx.clearRect(0, 0, W, H);
               pctx.drawImage(video!, 0, 0, W, H);
 
               pctx.globalCompositeOperation = "destination-in";
-              pctx.filter = "blur(0.6px)";
+              pctx.filter = "blur(1.5px)";
               pctx.imageSmoothingEnabled = true;
-              pctx.drawImage(mask, 0, 0, W, H);
+              pctx.imageSmoothingQuality = "high";
+              pctx.drawImage(maskHi, 0, 0, W, H);
               pctx.filter = "none";
               pctx.globalCompositeOperation = "source-over";
 
