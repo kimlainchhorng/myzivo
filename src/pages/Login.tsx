@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, type CSSProperties, type PointerEvent as ReactPointerEvent, type TouchEvent as ReactTouchEvent } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -388,6 +388,25 @@ const Login = () => {
   const input3DLg = isTouchDevice
     ? "relative z-30 block w-full rounded-xl border border-white/20 bg-black/35 px-4 py-3 text-base leading-6 text-white placeholder:text-white/45 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent [appearance:none] [-webkit-appearance:none] touch-manipulation"
     : "relative z-20 w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)] touch-manipulation [-webkit-user-select:text] [user-select:text] pointer-events-auto";
+  const mobileInputStyle: CSSProperties | undefined = isTouchDevice
+    ? { WebkitUserSelect: "text", WebkitTouchCallout: "default" }
+    : undefined;
+
+  const forceMobileInputFocus = useCallback((event: ReactTouchEvent<HTMLInputElement> | ReactPointerEvent<HTMLInputElement>) => {
+    if (!isTouchDevice) return;
+
+    const target = event.currentTarget;
+    if (document.activeElement !== target) {
+      target.focus({ preventScroll: true });
+    }
+
+    try {
+      const cursor = target.value.length;
+      target.setSelectionRange(cursor, cursor);
+    } catch {
+      // Some input types do not support selection ranges.
+    }
+  }, [isTouchDevice]);
 
   return (
     <div className={cn("relative flex flex-col items-center", isTouchDevice ? "min-h-[100dvh] justify-start overflow-x-hidden overflow-y-auto pt-6 pb-8" : "h-[100dvh] justify-center overflow-hidden")}>
@@ -420,6 +439,7 @@ const Login = () => {
           initial={isTouchDevice ? false : { opacity: 0, y: 30, scale: 0.95 }}
           animate={isTouchDevice ? undefined : { opacity: 1, y: 0, scale: 1 }}
           transition={isTouchDevice ? undefined : { duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transformTemplate={isTouchDevice ? () => "none" : undefined}
           style={{
             ...(isTouchDevice ? { transform: "none" } : { rotateX, rotateY, transformStyle: "preserve-3d" as const }),
             boxShadow: isTouchDevice
@@ -429,7 +449,7 @@ const Login = () => {
           onMouseMove={isTouchDevice ? undefined : handleMouseMove}
           onMouseLeave={isTouchDevice ? undefined : handleMouseLeave}
           className={cn(
-            "relative rounded-3xl p-4 sm:p-5 flex flex-col",
+            "relative rounded-3xl p-4 sm:p-5 flex flex-col touch-auto",
             isTouchDevice
               ? "bg-black/70 border border-white/15 mt-4 mb-6"
               : "bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15]"
@@ -472,7 +492,7 @@ const Login = () => {
                     <FormControl>
                       <div className="relative z-10">
                         {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
-                        <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3DLg} style={isTouchDevice ? { WebkitUserSelect: "text" } : undefined} {...field} />
+                        <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3DLg} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
                       </div>
                     </FormControl>
                     <FormMessage className="text-red-400 text-xs" />
@@ -486,9 +506,9 @@ const Login = () => {
                       <Link to="/forgot-password" className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">{t("auth.forgot")}</Link>
                     </div>
                     <FormControl>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
-                        <input type={showLoginPwd ? "text" : "password"} placeholder="Enter password" autoComplete="current-password" className={input3DLg + " pr-10"} {...field} />
+                        <div className="relative">
+                          {!isTouchDevice && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
+                          <input type={showLoginPwd ? "text" : "password"} placeholder="Enter password" autoComplete="current-password" className={cn(input3DLg, "pr-10", !isTouchDevice && "pl-10")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
                         <button type="button" onClick={() => setShowLoginPwd(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showLoginPwd ? "Hide password" : "Show password"}>
                           {showLoginPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
@@ -527,8 +547,8 @@ const Login = () => {
                       <FormLabel className="text-white/70 text-xs font-medium">{t("auth.first_name")}</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
-                          <input placeholder="John" autoComplete="given-name" className={input3D} {...field} />
+                          {!isTouchDevice && <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
+                          <input placeholder="John" autoComplete="given-name" className={cn(input3D, !isTouchDevice && "pl-9")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
                         </div>
                       </FormControl>
                       <FormMessage className="text-red-400 text-xs" />
@@ -539,8 +559,8 @@ const Login = () => {
                       <FormLabel className="text-white/70 text-xs font-medium">{t("auth.last_name")}</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
-                          <input placeholder="Doe" autoComplete="family-name" className={input3D} {...field} />
+                          {!isTouchDevice && <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
+                          <input placeholder="Doe" autoComplete="family-name" className={cn(input3D, !isTouchDevice && "pl-9")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
                         </div>
                       </FormControl>
                       <FormMessage className="text-red-400 text-xs" />
@@ -555,7 +575,7 @@ const Login = () => {
                     <FormControl>
                       <div className="relative z-10">
                         {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
-                        <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3D} style={isTouchDevice ? { WebkitUserSelect: "text" } : undefined} {...field} />
+                        <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3D} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
                       </div>
                     </FormControl>
                     <FormMessage className="text-red-400 text-xs" />
@@ -572,8 +592,8 @@ const Login = () => {
                         <FormLabel className="text-white/70 text-xs font-medium">{t("auth.password")}</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
-                            <input type={showSignupPwd ? "text" : "password"} placeholder="8+ chars, letters & numbers" autoComplete="new-password" className={input3D + " pr-9"} {...field} />
+                            {!isTouchDevice && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
+                            <input type={showSignupPwd ? "text" : "password"} placeholder="8+ chars, letters & numbers" autoComplete="new-password" className={cn(input3D, "pr-9", !isTouchDevice && "pl-9")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
                             <button type="button" onClick={() => setShowSignupPwd(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showSignupPwd ? "Hide password" : "Show password"}>
                               {showSignupPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                             </button>
@@ -601,8 +621,8 @@ const Login = () => {
                         <FormLabel className="text-white/70 text-xs font-medium">{t("auth.confirm_password")}</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
-                            <input type={showSignupConfirm ? "text" : "password"} placeholder="Re-enter" autoComplete="new-password" className={cn(input3D, "pr-9", matches && "border-primary/50")} {...field} />
+                            {!isTouchDevice && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
+                            <input type={showSignupConfirm ? "text" : "password"} placeholder="Re-enter" autoComplete="new-password" className={cn(input3D, "pr-9", !isTouchDevice && "pl-9", matches && "border-primary/50")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
                             <button type="button" onClick={() => setShowSignupConfirm(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showSignupConfirm ? "Hide password" : "Show password"}>
                               {matches ? <CheckCircle className="w-3.5 h-3.5 text-primary" /> : showSignupConfirm ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                             </button>
