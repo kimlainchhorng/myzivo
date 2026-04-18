@@ -125,6 +125,29 @@ export default function GoLivePage() {
   const [activePreset, setActivePreset] = useState<"natural" | "sweet" | "glam" | "auto" | "off" | "custom">("custom");
   const { stream: beautifiedStream, status: beautyStatus, luma } = useBeautyFilter(rawStream, beauty);
   const [compareHold, setCompareHold] = useState(false);
+
+  // Toast when Beauty Pro becomes active for the first time
+  const proAnnouncedRef = useRef(false);
+  useEffect(() => {
+    if (beautyStatus === "pro" && beauty.enabled && !proAnnouncedRef.current) {
+      proAnnouncedRef.current = true;
+      toast.success("Beauty Pro active", { description: "Face tracking enabled", duration: 1500 });
+    }
+  }, [beautyStatus, beauty.enabled]);
+
+  // Auto preset: self-tune brighten/smooth from sampled face luma
+  useEffect(() => {
+    if (activePreset !== "auto" || !beauty.enabled) return;
+    // luma 0..1 ; target ~0.55
+    const base = BEAUTY_PRESETS.auto;
+    let brighten = base.brighten;
+    let smooth = base.smooth;
+    if (luma < 0.35) { brighten = Math.min(85, base.brighten + 25); smooth = Math.min(95, base.smooth + 10); }
+    else if (luma < 0.5) { brighten = Math.min(75, base.brighten + 12); }
+    else if (luma > 0.75) { brighten = Math.max(15, base.brighten - 18); }
+    setBeauty((b) => (b.brighten === brighten && b.smooth === smooth ? b : { ...b, brighten, smooth }));
+  }, [luma, activePreset, beauty.enabled]);
+
   // When user is holding "Compare", show raw camera so they can see the before/after.
   const previewStream = compareHold ? rawStream : (beautifiedStream ?? rawStream);
   const localStream = beautifiedStream ?? rawStream;
