@@ -380,8 +380,8 @@ const Login = () => {
     mouseY.set(0);
   }, [mouseX, mouseY]);
 
-  const input3D = "w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2 pl-9 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]";
-  const input3DLg = "w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]";
+  const input3D = "relative z-20 w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2 pl-9 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)] touch-manipulation [-webkit-user-select:text] [user-select:text] pointer-events-auto";
+  const input3DLg = "relative z-20 w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)] touch-manipulation [-webkit-user-select:text] [user-select:text] pointer-events-auto";
 
   return (
     <div className="h-[100dvh] flex flex-col items-center justify-center relative overflow-hidden">
@@ -452,7 +452,7 @@ const Login = () => {
                     <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
                         <input type="email" placeholder="you@example.com" autoComplete="email" className={input3DLg} {...field} />
                       </div>
                     </FormControl>
@@ -468,7 +468,7 @@ const Login = () => {
                     </div>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
                         <input type={showLoginPwd ? "text" : "password"} placeholder="Enter password" autoComplete="current-password" className={input3DLg + " pr-10"} {...field} />
                         <button type="button" onClick={() => setShowLoginPwd(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showLoginPwd ? "Hide password" : "Show password"}>
                           {showLoginPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -508,7 +508,7 @@ const Login = () => {
                       <FormLabel className="text-white/70 text-xs font-medium">{t("auth.first_name")}</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
                           <input placeholder="John" autoComplete="given-name" className={input3D} {...field} />
                         </div>
                       </FormControl>
@@ -520,7 +520,7 @@ const Login = () => {
                       <FormLabel className="text-white/70 text-xs font-medium">{t("auth.last_name")}</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
                           <input placeholder="Doe" autoComplete="family-name" className={input3D} {...field} />
                         </div>
                       </FormControl>
@@ -535,7 +535,7 @@ const Login = () => {
                     <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
                         <input type="email" placeholder="you@example.com" autoComplete="email" className={input3D} {...field} />
                       </div>
                     </FormControl>
@@ -553,7 +553,7 @@ const Login = () => {
                         <FormLabel className="text-white/70 text-xs font-medium">{t("auth.password")}</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
                             <input type={showSignupPwd ? "text" : "password"} placeholder="8+ chars, letters & numbers" autoComplete="new-password" className={input3D + " pr-9"} {...field} />
                             <button type="button" onClick={() => setShowSignupPwd(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showSignupPwd ? "Hide password" : "Show password"}>
                               {showSignupPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -582,7 +582,7 @@ const Login = () => {
                         <FormLabel className="text-white/70 text-xs font-medium">{t("auth.confirm_password")}</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
                             <input type={showSignupConfirm ? "text" : "password"} placeholder="Re-enter" autoComplete="new-password" className={cn(input3D, "pr-9", matches && "border-primary/50")} {...field} />
                             <button type="button" onClick={() => setShowSignupConfirm(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showSignupConfirm ? "Hide password" : "Show password"}>
                               {matches ? <CheckCircle className="w-3.5 h-3.5 text-primary" /> : showSignupConfirm ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
