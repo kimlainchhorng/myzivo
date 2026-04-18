@@ -175,7 +175,7 @@ export function useVirtualBackground(
               // Asymmetric vertical ramp: looser on top 25% (hair zone) so fine
               // strands aren't clipped, tighter elsewhere to keep body/hands clean.
               const LO_BODY = 0.50, HI_BODY = 0.58;
-              const LO_HAIR = 0.42, HI_HAIR = 0.55;
+              const LO_HAIR = 0.46, HI_HAIR = 0.58;
               const HAIR_BAND = Math.floor(mh * 0.25);
               for (let i = 0; i < maskData.length; i++) {
                 const v = maskData[i];
@@ -183,7 +183,15 @@ export function useVirtualBackground(
                 const inHair = y < HAIR_BAND;
                 const LO = inHair ? LO_HAIR : LO_BODY;
                 const HI = inHair ? HI_HAIR : HI_BODY;
-                const a = v <= LO ? 0 : v >= HI ? 255 : Math.round(((v - LO) / (HI - LO)) * 255);
+                let a: number;
+                if (v <= LO) a = 0;
+                else if (v >= HI) a = 255;
+                else {
+                  // Smoothstep S-curve: push mid-confidence pixels toward 0/1
+                  // → crisper silhouette without changing thresholds.
+                  const t = (v - LO) / (HI - LO);
+                  a = Math.round(t * t * (3 - 2 * t) * 255);
+                }
                 const j = i * 4;
                 img.data[j] = 255;
                 img.data[j + 1] = 255;
@@ -244,13 +252,22 @@ export function useVirtualBackground(
               pctx.clearRect(0, 0, W, H);
               pctx.drawImage(video!, 0, 0, W, H);
 
-              // 3b. Clip with refined mask — tiny 0.4px feather for antialiasing
-              // (sub-pixel, smooths jagged hand edges without measurable dilation).
+              // 3b. Two-step clip: sharp core + feathered edge band.
+              // First pass clips with the crisp mask (interior stays 100% opaque,
+              // face is not washed out). Second pass softens ONLY the silhouette
+              // boundary by drawing a blurred copy at half alpha, antialiasing
+              // edges without dilating the mask or veiling interior pixels.
               pctx.globalCompositeOperation = "destination-in";
-              pctx.filter = "blur(0.4px)";
+              pctx.filter = "none";
               pctx.imageSmoothingEnabled = true;
               pctx.imageSmoothingQuality = "high";
               pctx.drawImage(maskHi, 0, 0, W, H);
+              // Edge-only feather: blur(0.6px) at 0.5 alpha only affects the
+              // boundary because interior is already fully opaque.
+              pctx.filter = "blur(0.6px)";
+              pctx.globalAlpha = 0.5;
+              pctx.drawImage(maskHi, 0, 0, W, H);
+              pctx.globalAlpha = 1;
               pctx.filter = "none";
               pctx.globalCompositeOperation = "source-over";
 
