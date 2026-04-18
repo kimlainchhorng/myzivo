@@ -202,7 +202,7 @@ export function useVirtualBackground(
             // 1) Background layer
             drawBackground(cfg);
 
-            // 2) Build alpha mask with S-curve threshold (sharper silhouette, less halo)
+            // 2) Build tight alpha mask — narrow smoothstep band for crisp silhouette
             const mw = mask.width, mh = mask.height;
             const maskData = mask.getAsFloat32Array();
             if (maskCanvas.width !== mw || maskCanvas.height !== mh) {
@@ -210,31 +210,57 @@ export function useVirtualBackground(
             }
             const tmp = maskCtx.createImageData(mw, mh);
             const data = tmp.data;
+            const LO = 0.5, HI = 0.62, BAND = HI - LO;
             for (let i = 0; i < maskData.length; i++) {
               const v = maskData[i];
               let a: number;
-              if (v >= 0.7) a = 255;
-              else if (v <= 0.35) a = 0;
+              if (v >= HI) a = 255;
+              else if (v <= LO) a = 0;
               else {
-                const t = (v - 0.35) / 0.35;
-                a = Math.round(t * t * (3 - 2 * t) * 255); // smoothstep
+                const t = (v - LO) / BAND;
+                a = Math.round(t * t * (3 - 2 * t) * 255);
               }
               const j = i * 4;
               data[j] = 255; data[j+1] = 255; data[j+2] = 255; data[j+3] = a;
             }
             maskCtx.putImageData(tmp, 0, 0);
+            // Refinement: slight blur + high contrast re-threshold (dilate/erode-ish)
+            maskCtx.globalCompositeOperation = "copy";
+            maskCtx.filter = "blur(0.8px) contrast(1.6)";
+            maskCtx.drawImage(maskCanvas, 0, 0);
+            maskCtx.filter = "none";
+            maskCtx.globalCompositeOperation = "source-over";
 
-            // 3) Compose person cutout with subtle feather to hide jagged edges
+            // 3) Compose person cutout with high-quality upscale + 1px inner feather
             pctx.globalCompositeOperation = "source-over";
             pctx.filter = "none";
+            pctx.imageSmoothingEnabled = true;
+            (pctx as any).imageSmoothingQuality = "high";
             pctx.clearRect(0, 0, personCanvas.width, personCanvas.height);
             pctx.drawImage(video, 0, 0, personCanvas.width, personCanvas.height);
             pctx.globalCompositeOperation = "destination-in";
-            pctx.filter = "blur(1.2px)";
+            pctx.filter = "blur(1px)";
             pctx.drawImage(maskCanvas, 0, 0, personCanvas.width, personCanvas.height);
             pctx.filter = "none";
 
-            // 4) Draw person on top of background
+            // 3b) Light/color match — multiply bg avg color over person, then re-clip
+            if (cfg.kind === "image" && bgImgLoaded) {
+              pctx.globalCompositeOperation = "multiply";
+              pctx.fillStyle = `rgba(${bgAvgColor.r},${bgAvgColor.g},${bgAvgColor.b},0.18)`;
+              pctx.fillRect(0, 0, personCanvas.width, personCanvas.height);
+              pctx.globalCompositeOperation = "destination-in";
+              pctx.drawImage(maskCanvas, 0, 0, personCanvas.width, personCanvas.height);
+            }
+            pctx.globalCompositeOperation = "source-over";
+
+            // 4) Subtle inner rim shadow for depth separation
+            ctx.save();
+            ctx.globalAlpha = 0.3;
+            ctx.filter = "blur(1.5px) brightness(0.35)";
+            ctx.drawImage(personCanvas, 0, 1);
+            ctx.restore();
+
+            // 5) Draw person on top of background
             ctx.drawImage(personCanvas, 0, 0);
 
             try { mask.close?.(); } catch {}
