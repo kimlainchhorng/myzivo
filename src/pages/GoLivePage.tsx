@@ -775,6 +775,47 @@ export default function GoLivePage() {
                 })}
               </div>
 
+              {/* Virtual background picker */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5 px-1">
+                  <span className="text-white/80 text-xs font-semibold">Background</span>
+                  {bgChoice.kind !== "off" && (
+                    <span className="text-[10px] text-white/50">
+                      {bgStatus === "loading" ? "Loading…" : bgStatus === "error" ? "Unavailable" : "Active"}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                  {BG_PRESETS.map((p) => {
+                    const active = bgChoice.id === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => setBgChoice(p)}
+                        className={cn(
+                          "shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 relative",
+                          active ? "border-red-500" : "border-white/20",
+                        )}
+                        title={p.label}
+                      >
+                        {p.kind === "off" && (
+                          <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-[10px] text-white/70 font-semibold">None</div>
+                        )}
+                        {p.kind === "blur" && (
+                          <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center text-[10px] text-white font-semibold" style={{ filter: "blur(0px)" }}>Blur</div>
+                        )}
+                        {p.kind === "image" && p.url && (
+                          <>
+                            <img src={p.url} alt={p.label} className="w-full h-full object-cover" />
+                            <span className="absolute bottom-0 inset-x-0 bg-black/55 text-[9px] text-white text-center py-0.5 font-semibold">{p.label}</span>
+                          </>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="flex justify-center gap-3 py-2">
                 <button onClick={toggleCamera} className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
                   {cameraOn ? <Camera className="h-5 w-5 text-white" /> : <CameraOff className="h-5 w-5 text-white/50" />}
