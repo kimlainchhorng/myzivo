@@ -47,36 +47,47 @@ export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
     return <div className="h-32 bg-muted/30 rounded-2xl animate-pulse" />;
   }
 
+  const handleComplete = () => {
+    setEmbedOpen(false);
+    queryClient.invalidateQueries({ queryKey: ["stripe-connect-status"] });
+  };
+
   // Not connected yet
   if (!status?.connected || !status?.details_submitted) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl bg-gradient-to-br from-[#635bff] to-[#4b44d9] text-white p-5 shadow-lg shadow-[#635bff]/20"
-      >
-        <div className="flex items-center gap-2 mb-1">
-          <Zap className="w-4 h-4" />
-          <span className="text-[11px] font-bold uppercase tracking-wider opacity-90">Powered by Stripe</span>
-        </div>
-        <h3 className="text-lg font-bold mb-1">Get paid instantly</h3>
-        <p className="text-sm text-white/80 mb-4 leading-relaxed">
-          Connect your debit card and cash out in minutes — 24/7, including weekends.
-        </p>
-        <Button
-          onClick={() => onboard.mutate("US")}
-          disabled={onboard.isPending}
-          className="w-full h-11 rounded-xl bg-white text-[#635bff] hover:bg-white/90 font-bold gap-2"
+      <>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl bg-gradient-to-br from-[#635bff] to-[#4b44d9] text-white p-5 shadow-lg shadow-[#635bff]/20"
         >
-          {onboard.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
-          {onboard.isPending ? "Opening Stripe…" : status?.connected ? "Continue setup" : "Set up instant payouts"}
-        </Button>
-        {!!status?.requirements?.length && (
-          <p className="text-[11px] text-white/70 mt-2 flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" /> {status.requirements.length} item(s) need to be completed
+          <div className="flex items-center gap-2 mb-1">
+            <Zap className="w-4 h-4" />
+            <span className="text-[11px] font-bold uppercase tracking-wider opacity-90">Powered by Stripe</span>
+          </div>
+          <h3 className="text-lg font-bold mb-1">Get paid instantly</h3>
+          <p className="text-sm text-white/80 mb-4 leading-relaxed">
+            Connect your debit card and cash out in minutes — 24/7, including weekends.
           </p>
-        )}
-      </motion.div>
+          <Button
+            onClick={() => setEmbedOpen(true)}
+            className="w-full h-11 rounded-xl bg-white text-[#635bff] hover:bg-white/90 font-bold gap-2"
+          >
+            <ArrowRight className="w-4 h-4" />
+            {status?.connected ? "Continue setup" : "Set up instant payouts"}
+          </Button>
+          {!!status?.requirements?.length && (
+            <p className="text-[11px] text-white/70 mt-2 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" /> {status.requirements.length} item(s) need to be completed
+            </p>
+          )}
+        </motion.div>
+        <StripeEmbeddedOnboarding
+          open={embedOpen}
+          onClose={() => setEmbedOpen(false)}
+          onComplete={handleComplete}
+        />
+      </>
     );
   }
 
