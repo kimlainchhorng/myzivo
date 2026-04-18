@@ -100,30 +100,33 @@ const Signup = () => {
   }
 
   return (
-    <div className="relative min-h-[100dvh] w-full overflow-hidden bg-[radial-gradient(ellipse_at_top,_hsl(var(--background))_0%,_#020a08_60%,_#000_100%)] flex items-center justify-center px-4 py-3">
+    <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-4 py-3 bg-[#04100d]">
       <SEOHead title="Create your ZIVO account" description="Sign up for ZIVO to search flights, hotels and more." />
 
-      {/* Aurora background */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 -left-24 w-[420px] h-[420px] rounded-full bg-emerald-500/30 blur-[120px] animate-pulse" />
-        <div className="absolute top-1/3 -right-32 w-[460px] h-[460px] rounded-full bg-teal-400/20 blur-[140px] animate-pulse" style={{ animationDelay: "1.2s" }} />
-        <div className="absolute -bottom-40 left-1/4 w-[520px] h-[520px] rounded-full bg-emerald-700/25 blur-[160px] animate-pulse" style={{ animationDelay: "2.4s" }} />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent,hsl(var(--background)/0.6))]" />
-        <div className="absolute inset-0 opacity-[0.04] [background-image:linear-gradient(hsl(var(--foreground))_1px,transparent_1px),linear-gradient(90deg,hsl(var(--foreground))_1px,transparent_1px)] [background-size:48px_48px]" />
+        <div className="absolute inset-0 opacity-90 [background:conic-gradient(from_180deg_at_50%_50%,#022c22_0deg,#064e3b_90deg,#0f766e_180deg,#022c22_270deg,#022c22_360deg)]" />
+        <div className="absolute -top-40 -left-32 w-[520px] h-[520px] rounded-full bg-emerald-400/40 blur-[140px] animate-pulse" />
+        <div className="absolute top-1/4 -right-40 w-[560px] h-[560px] rounded-full bg-teal-300/25 blur-[160px] animate-pulse" style={{ animationDelay: "1.4s" }} />
+        <div className="absolute -bottom-48 left-1/3 w-[620px] h-[620px] rounded-full bg-emerald-700/35 blur-[180px] animate-pulse" style={{ animationDelay: "2.6s" }} />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)]" />
+        <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_75%)]" />
       </div>
 
-      <div className="relative w-full max-w-md">
-        {/* Brand */}
+      <div className="relative w-full max-w-md animate-fade-in">
         <div className="text-center mb-3">
-          <h1 className="text-2xl font-bold text-foreground">ZIVO ID</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 shadow-[0_8px_32px_rgba(16,185,129,0.45)] mb-2 ring-1 ring-white/20">
+            <MailCheck className="w-6 h-6 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent tracking-tight">ZIVO ID</h1>
+          <p className="text-xs text-white/60 mt-0.5">
             Get Started Free — No credit card needed
           </p>
         </div>
 
+        <div className="relative rounded-2xl p-[1px] bg-gradient-to-b from-emerald-400/50 via-emerald-500/10 to-transparent shadow-[0_30px_80px_-20px_rgba(16,185,129,0.45)]">
         <form
           onSubmit={onSubmit}
-          className="rounded-2xl border border-emerald-500/20 bg-card/70 backdrop-blur-xl shadow-2xl p-4 space-y-2.5"
+          className="rounded-2xl bg-[#0a1f1a]/85 backdrop-blur-2xl p-4 space-y-2.5"
         >
           {/* Names */}
           <div className="grid grid-cols-2 gap-2">
@@ -268,6 +271,7 @@ const Signup = () => {
             </Link>
           </p>
         </form>
+        </div>
 
         <p className="text-center text-xs text-muted-foreground mt-4">
           By signing up, you agree to our Terms of Service
