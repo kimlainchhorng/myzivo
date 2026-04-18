@@ -37,16 +37,19 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
 
   // Guests: Account tab opens the sign-in page directly so they don't see
   // the "Welcome to ZIVO" preview card first.
-  const accountPath = user ? "/profile" : "/login?redirect=%2Fprofile";
+  // Guests get sent to /login (with redirect back) for any members-only tab,
+  // so they don't hit a black/empty screen.
+  const gated = (path: string) =>
+    user ? path : `/login?redirect=${encodeURIComponent(path)}`;
 
   const tabs: NavTab[] = [
-    { id: "live", labelKey: "nav.live", icon: Radio, path: "/live", bg: navAlertsBg, cssVar: "var(--cars)" },
-    { id: "reel", labelKey: "nav.feed", icon: Newspaper, path: "/feed", bg: navSearchBg, cssVar: "var(--flights)" },
-    { id: "feed", labelKey: "nav.reel", icon: Film, path: "/reels", bg: navSearchBg, cssVar: "var(--flights)" },
+    { id: "live", labelKey: "nav.live", icon: Radio, path: gated("/live"), bg: navAlertsBg, cssVar: "var(--cars)" },
+    { id: "reel", labelKey: "nav.feed", icon: Newspaper, path: gated("/feed"), bg: navSearchBg, cssVar: "var(--flights)" },
+    { id: "feed", labelKey: "nav.reel", icon: Film, path: gated("/reels"), bg: navSearchBg, cssVar: "var(--flights)" },
     { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
-    { id: "map", labelKey: "nav.map", icon: MapPin, path: "/store-map", bg: navTripsBg, cssVar: "var(--hotels)" },
-    { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: "/chat", bg: navAlertsBg, cssVar: "var(--cars)" },
-    { id: "account", labelKey: "nav.account", icon: User, path: accountPath, bg: navAccountBg, cssVar: "var(--primary)" },
+    { id: "map", labelKey: "nav.map", icon: MapPin, path: gated("/store-map"), bg: navTripsBg, cssVar: "var(--hotels)" },
+    { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: gated("/chat"), bg: navAlertsBg, cssVar: "var(--cars)" },
+    { id: "account", labelKey: "nav.account", icon: User, path: gated("/profile"), bg: navAccountBg, cssVar: "var(--primary)" },
   ];
 
   const getActiveTab = () => {
