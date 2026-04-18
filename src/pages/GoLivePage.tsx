@@ -119,7 +119,11 @@ export default function GoLivePage() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [rawStream, setRawStream] = useState<MediaStream | null>(null);
+  const [beauty, setBeauty] = useState<BeautySettings>(DEFAULT_BEAUTY);
+  const [showBeautyPanel, setShowBeautyPanel] = useState(false);
+  const beautifiedStream = useBeautyFilter(rawStream, beauty);
+  const localStream = beautifiedStream ?? rawStream;
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const [phase, setPhase] = useState<LivePhase>("setup");
