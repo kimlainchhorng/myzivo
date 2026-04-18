@@ -4,15 +4,22 @@
  * Two operating modes:
  *   • "pro"  — MediaPipe FaceLandmarker (478 landmarks). Skin smoothing,
  *              brighten, face slim (4 feathered cheek slices), eye enlarge,
- *              lip enhance, nose slim. All face-masked.
+ *              lip enhance, nose slim. All face-masked with feathered edges.
  *   • "lite" — Fallback when MediaPipe fails or while loading. Strong
  *              center-oval beauty pass: bilateral-style smoothing, brighten +
- *              warmth, soft outer vignette. Always looks good even with no
- *              landmarks.
+ *              warmth, soft outer vignette.
  *
  * Self-hosts the WASM + model under /public/mediapipe to avoid CDN failures,
  * tries GPU delegate first then auto-retries on CPU, and times out after 6s
  * so the UI never gets stuck on "Loading…".
+ *
+ * v3 fixes:
+ *   - Eye enlarge no longer paints square patches (uses dedicated eyeCanvas
+ *     with feathered radial alpha mask).
+ *   - Lip mask isolated on its own fxCanvas — no more chin blob bleed.
+ *   - Brighten dialed back (0.8 -> 0.35) so faces aren't blown out.
+ *   - Face mask edge feathered with blur(8px) — no hard oval seam.
+ *   - lastLandmarks held for 500ms to stop mask flicker on dropped frames.
  */
 import { useEffect, useRef, useState } from "react";
 
@@ -30,18 +37,18 @@ export interface BeautySettings {
 
 export const DEFAULT_BEAUTY: BeautySettings = {
   enabled: true,
-  smooth: 80,
-  brighten: 55,
-  slim: 35,
-  eyes: 25,
-  lips: 40,
-  nose: 20,
+  smooth: 70,
+  brighten: 35,
+  slim: 25,
+  eyes: 18,
+  lips: 30,
+  nose: 12,
 };
 
 export const BEAUTY_PRESETS: Record<"natural" | "sweet" | "glam" | "off", BeautySettings> = {
-  natural: { enabled: true, smooth: 65, brighten: 40, slim: 25, eyes: 18, lips: 30, nose: 12 },
-  sweet:   { enabled: true, smooth: 92, brighten: 70, slim: 22, eyes: 32, lips: 55, nose: 15 },
-  glam:    { enabled: true, smooth: 95, brighten: 75, slim: 55, eyes: 45, lips: 70, nose: 35 },
+  natural: { enabled: true, smooth: 60, brighten: 30, slim: 20, eyes: 15, lips: 25, nose: 10 },
+  sweet:   { enabled: true, smooth: 82, brighten: 50, slim: 22, eyes: 25, lips: 45, nose: 12 },
+  glam:    { enabled: true, smooth: 85, brighten: 55, slim: 45, eyes: 35, lips: 55, nose: 28 },
   off:     { enabled: false, smooth: 0, brighten: 0, slim: 0, eyes: 0, lips: 0, nose: 0 },
 };
 
@@ -161,13 +168,31 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
     blurCanvas.height = H;
     const blurCtx = blurCanvas.getContext("2d", { alpha: false })!;
 
+    // Main face mask (oval minus eyes/lips). Built once per frame.
     const maskCanvas = document.createElement("canvas");
     maskCanvas.width = W;
     maskCanvas.height = H;
     const maskCtx = maskCanvas.getContext("2d")!;
 
+    // Feathered (blurred) copy of the face mask — eliminates hard oval edges.
+    const featherCanvas = document.createElement("canvas");
+    featherCanvas.width = W;
+    featherCanvas.height = H;
+    const featherCtx = featherCanvas.getContext("2d")!;
+
+    // Per-feature mask scratch (lips, etc) — never stomps on main mask.
+    const fxCanvas = document.createElement("canvas");
+    fxCanvas.width = W;
+    fxCanvas.height = H;
+    const fxCtx = fxCanvas.getContext("2d")!;
+
+    // Dedicated tiny canvas for eye enlarge — sized per-frame.
+    const eyeCanvas = document.createElement("canvas");
+    const eyeCtx = eyeCanvas.getContext("2d")!;
+
     let landmarker: any = null;
     let lastLandmarks: Landmark[] | null = null;
+    let lastLandmarksAt = 0;
     let frameCounter = 0;
     let cancelled = false;
     let rafId: number | null = null;
@@ -175,7 +200,6 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
     let avgFrameMs = 16;
     let mode: BeautyStatus = "loading";
 
-    // Race landmarker load against a 6s timeout — fall back to "lite" if slow.
     const timeoutId = window.setTimeout(() => {
       if (mode === "loading" && !cancelled) {
         mode = "lite";
@@ -199,8 +223,10 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         window.clearTimeout(timeoutId);
       });
 
+    // Build face mask (oval minus eyes & lips) AND a feathered copy of it.
     const buildFaceMask = (lms: Landmark[]) => {
       maskCtx.clearRect(0, 0, W, H);
+      maskCtx.globalCompositeOperation = "source-over";
       maskCtx.fillStyle = "#fff";
       pathFromIndices(maskCtx, lms, FACE_OVAL, W, H);
       maskCtx.fill();
@@ -212,11 +238,16 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
       pathFromIndices(maskCtx, lms, LIPS_OUTER, W, H);
       maskCtx.fill();
       maskCtx.globalCompositeOperation = "source-over";
+
+      // Feathered copy: blur the mask so composites have soft edges.
+      featherCtx.clearRect(0, 0, W, H);
+      featherCtx.filter = "blur(10px)";
+      featherCtx.drawImage(maskCanvas, 0, 0);
+      featherCtx.filter = "none";
     };
 
-    // ── Lite fallback: center-oval beauty pass that always looks good ──
+    // ── Lite fallback ──
     const drawLite = (s: BeautySettings) => {
-      // Estimated face oval ~ 55% width, 70% height, centered slightly above middle
       const cx = W / 2;
       const cy = H * 0.42;
       const rx = W * 0.32;
@@ -225,14 +256,12 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
       const smoothPct = s.smooth / 100;
       const brightPct = s.brighten / 100;
 
-      // 1) Skin smoothing — blur a copy, mask to oval, composite
       if (s.smooth > 0) {
-        const blurPx = 6 + smoothPct * 12; // 6-18px
+        const blurPx = 6 + smoothPct * 12;
         blurCtx.filter = `blur(${blurPx.toFixed(1)}px) saturate(1.08)`;
         blurCtx.drawImage(video, 0, 0, W, H);
         blurCtx.filter = "none";
         blurCtx.globalCompositeOperation = "destination-in";
-        // Soft oval mask with feathered edge via radial gradient
         const grad = blurCtx.createRadialGradient(cx, cy, Math.min(rx, ry) * 0.4, cx, cy, Math.max(rx, ry));
         grad.addColorStop(0, "rgba(255,255,255,1)");
         grad.addColorStop(0.7, "rgba(255,255,255,0.85)");
@@ -245,15 +274,14 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         blurCtx.restore();
         blurCtx.globalCompositeOperation = "source-over";
 
-        ctx.globalAlpha = 0.55 + smoothPct * 0.4; // 0.55-0.95
+        ctx.globalAlpha = 0.45 + smoothPct * 0.35;
         ctx.drawImage(blurCanvas, 0, 0);
         ctx.globalAlpha = 1;
       }
 
-      // 2) Brighten + warmth inside oval
       if (s.brighten > 0) {
         const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry));
-        const a = 0.15 + brightPct * 0.32;
+        const a = 0.08 + brightPct * 0.14;
         grad.addColorStop(0, `rgba(255, 230, 210, ${a})`);
         grad.addColorStop(0.7, `rgba(255, 230, 210, ${a * 0.6})`);
         grad.addColorStop(1, "rgba(255, 230, 210, 0)");
@@ -263,17 +291,16 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         ctx.globalCompositeOperation = "source-over";
       }
 
-      // 3) Soft outer vignette to focus eye on face (Bigo signature)
       if (s.brighten > 0 || s.smooth > 0) {
         const v = ctx.createRadialGradient(cx, cy, Math.min(W, H) * 0.35, cx, cy, Math.max(W, H) * 0.7);
         v.addColorStop(0, "rgba(0,0,0,0)");
-        v.addColorStop(1, `rgba(0,0,0,${0.18 + brightPct * 0.12})`);
+        v.addColorStop(1, `rgba(0,0,0,${0.16 + brightPct * 0.10})`);
         ctx.fillStyle = v;
         ctx.fillRect(0, 0, W, H);
       }
     };
 
-    // ── Pro mode: landmark-driven effects ──
+    // ── Pro mode ──
     const drawPro = (s: BeautySettings, lms: Landmark[]) => {
       buildFaceMask(lms);
 
@@ -284,63 +311,75 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
       const lipsPct = s.lips / 100;
       const nosePct = s.nose / 100;
 
-      // Skin smoothing — masked blur + light glow pass
+      // ── A. Skin smoothing — masked blur with feathered edge ──
       if (s.smooth > 0) {
-        const blurPx = 6 + smoothPct * 12; // 6-18px
-        blurCtx.filter = `blur(${blurPx.toFixed(1)}px) saturate(1.1) contrast(1.04)`;
+        const blurPx = 5 + smoothPct * 11;
+        blurCtx.globalCompositeOperation = "source-over";
+        blurCtx.filter = `blur(${blurPx.toFixed(1)}px) saturate(1.08) contrast(1.03)`;
         blurCtx.drawImage(video, 0, 0, W, H);
         blurCtx.filter = "none";
+        // Use FEATHERED mask so edges blend softly (no hard oval seam).
         blurCtx.globalCompositeOperation = "destination-in";
-        blurCtx.drawImage(maskCanvas, 0, 0);
+        blurCtx.drawImage(featherCanvas, 0, 0);
         blurCtx.globalCompositeOperation = "source-over";
 
-        ctx.globalAlpha = 0.7 + smoothPct * 0.25; // 0.7-0.95
+        ctx.globalAlpha = 0.55 + smoothPct * 0.30; // 0.55-0.85
         ctx.drawImage(blurCanvas, 0, 0);
         ctx.globalAlpha = 1;
       }
 
-      // Brighten + warmth — masked overlay
+      // ── B. Brighten + warmth — gentler ──
       if (s.brighten > 0) {
-        const a = 0.15 + brightPct * 0.27; // 0.15-0.42
+        const a = 0.08 + brightPct * 0.14; // 0.08-0.22
         blurCtx.globalCompositeOperation = "source-over";
         blurCtx.filter = "none";
-        blurCtx.fillStyle = `rgba(255, 226, 200, ${a})`;
+        // Clear before reuse
+        blurCtx.clearRect(0, 0, W, H);
+        blurCtx.fillStyle = `rgba(255, 232, 210, ${a})`;
         blurCtx.fillRect(0, 0, W, H);
         blurCtx.globalCompositeOperation = "destination-in";
-        blurCtx.drawImage(maskCanvas, 0, 0);
+        blurCtx.drawImage(featherCanvas, 0, 0);
         blurCtx.globalCompositeOperation = "source-over";
         ctx.globalCompositeOperation = "screen";
-        ctx.globalAlpha = 0.8;
+        ctx.globalAlpha = 0.35; // was 0.8 — way less blowout
         ctx.drawImage(blurCanvas, 0, 0);
         ctx.globalCompositeOperation = "source-over";
         ctx.globalAlpha = 1;
       }
 
-      // Lip enhance — saturate+contrast inside lip contour
+      // ── C. Lip enhance — subtle tint, isolated mask ──
       if (s.lips > 0) {
-        const sat = 1 + lipsPct * 0.6;
-        const con = 1 + lipsPct * 0.2;
-        blurCtx.filter = `saturate(${sat}) contrast(${con}) brightness(${1 + lipsPct * 0.05})`;
+        const sat = 1 + lipsPct * 0.35; // was 0.6
+        const con = 1 + lipsPct * 0.10; // was 0.20
+        // Render saturated/contrasted video into blurCanvas
         blurCtx.globalCompositeOperation = "source-over";
+        blurCtx.filter = `saturate(${sat}) contrast(${con}) brightness(${1 + lipsPct * 0.04})`;
+        blurCtx.clearRect(0, 0, W, H);
         blurCtx.drawImage(video, 0, 0, W, H);
         blurCtx.filter = "none";
-        // Build lip-only mask
-        const lipMask = maskCtx;
-        lipMask.save();
-        lipMask.clearRect(0, 0, W, H);
-        lipMask.fillStyle = "#fff";
-        pathFromIndices(lipMask, lms, LIPS_OUTER, W, H);
-        lipMask.fill();
-        lipMask.restore();
+        // Build lip-only mask on dedicated fxCanvas (NOT maskCanvas).
+        fxCtx.clearRect(0, 0, W, H);
+        fxCtx.fillStyle = "#fff";
+        pathFromIndices(fxCtx, lms, LIPS_OUTER, W, H);
+        fxCtx.fill();
+        // Feather slightly
+        const featherLips = document.createElement("canvas");
+        featherLips.width = W;
+        featherLips.height = H;
+        const flCtx = featherLips.getContext("2d")!;
+        flCtx.filter = "blur(3px)";
+        flCtx.drawImage(fxCanvas, 0, 0);
+        flCtx.filter = "none";
+        // Mask blurCanvas by feathered lip shape
         blurCtx.globalCompositeOperation = "destination-in";
-        blurCtx.drawImage(maskCanvas, 0, 0);
+        blurCtx.drawImage(featherLips, 0, 0);
         blurCtx.globalCompositeOperation = "source-over";
-        ctx.globalAlpha = 0.85;
+        ctx.globalAlpha = 0.55; // was 0.85
         ctx.drawImage(blurCanvas, 0, 0);
         ctx.globalAlpha = 1;
       }
 
-      // Face slim — 4 feathered cheek slices per side
+      // ── D. Face slim — 4 feathered cheek slices per side ──
       if (s.slim > 0) {
         const lc = lms[LM_LEFT_CHEEK];
         const rc = lms[LM_RIGHT_CHEEK];
@@ -355,21 +394,17 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
           const faceW = rcX - lcX;
           const totalSliceW = Math.max(40, faceW * 0.22);
           const slicePieceH = bandH / 4;
-          // Pinch scaled by face width so it works zoomed in or out
-          const maxPinch = Math.min(45, faceW * 0.06) * slimPct;
+          const maxPinch = Math.min(40, faceW * 0.055) * slimPct;
 
           for (let i = 0; i < 4; i++) {
-            // Feather: stronger at the middle of band, lighter near forehead/chin
-            const feather = Math.sin(((i + 0.5) / 4) * Math.PI); // 0..1..0
+            const feather = Math.sin(((i + 0.5) / 4) * Math.PI);
             const pinch = maxPinch * feather;
             const sy = top + i * slicePieceH;
-            // Left slice
             ctx.drawImage(
               video,
               lcX - totalSliceW * 0.5, sy, totalSliceW, slicePieceH,
               lcX - totalSliceW * 0.5 + pinch, sy, totalSliceW, slicePieceH,
             );
-            // Right slice (mirrored)
             ctx.drawImage(
               video,
               rcX - totalSliceW * 0.5, sy, totalSliceW, slicePieceH,
@@ -379,7 +414,7 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         }
       }
 
-      // Nose slim — small horizontal pinch around nose tip
+      // ── E. Nose slim ──
       if (s.nose > 0) {
         const nt = lms[LM_NOSE_TIP];
         const nl = lms[LM_NOSE_LEFT];
@@ -390,14 +425,12 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
           const noseW = Math.abs(nr.x - nl.x) * W;
           const noseH = noseW * 1.1;
           const sliceW = noseW * 0.55;
-          const pinch = noseW * 0.08 * nosePct; // ~0-8% pull
-          // Left half
+          const pinch = noseW * 0.08 * nosePct;
           ctx.drawImage(
             video,
             ntX - sliceW, ntY - noseH * 0.4, sliceW, noseH,
             ntX - sliceW + pinch, ntY - noseH * 0.4, sliceW, noseH,
           );
-          // Right half
           ctx.drawImage(
             video,
             ntX, ntY - noseH * 0.4, sliceW, noseH,
@@ -406,9 +439,9 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         }
       }
 
-      // Eye enlarge — feathered radial scale
+      // ── F. Eye enlarge — dedicated canvas + feathered radial alpha ──
       if (s.eyes > 0) {
-        const scale = 1 + eyesPct * 0.28; // up to +28%
+        const scale = 1 + eyesPct * 0.22; // cap +22%
         const eyes: Point[] = [];
         const le = lms[LM_LEFT_EYE_CENTER] || lms[LM_LEFT_EYE_FALLBACK];
         const re = lms[LM_RIGHT_EYE_CENTER] || lms[LM_RIGHT_EYE_FALLBACK];
@@ -418,39 +451,52 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         const lc = lms[LM_LEFT_CHEEK];
         const rc = lms[LM_RIGHT_CHEEK];
         const faceW = lc && rc ? Math.abs(rc.x - lc.x) * W : W * 0.4;
-        const radius = Math.max(20, faceW * 0.14);
+        const radius = Math.max(20, faceW * 0.13);
 
         for (const eye of eyes) {
           const r = radius;
           const sr = r * scale;
-          // Render scaled eye into blurCanvas with soft edge
-          blurCtx.save();
-          blurCtx.globalCompositeOperation = "source-over";
-          blurCtx.clearRect(eye.x - r * 1.5, eye.y - r * 1.5, r * 3, r * 3);
-          blurCtx.beginPath();
-          blurCtx.arc(eye.x, eye.y, r, 0, Math.PI * 2);
-          blurCtx.clip();
-          blurCtx.drawImage(
-            video,
-            eye.x - r, eye.y - r, r * 2, r * 2,
-            eye.x - sr, eye.y - sr, sr * 2, sr * 2,
-          );
-          blurCtx.restore();
+          const size = Math.ceil(r * 2);
+          eyeCanvas.width = size;
+          eyeCanvas.height = size;
 
-          // Build a feathered radial mask in another pass and composite
-          ctx.save();
-          const grad = ctx.createRadialGradient(eye.x, eye.y, r * 0.55, eye.x, eye.y, r);
-          grad.addColorStop(0, "rgba(255,255,255,1)");
-          grad.addColorStop(1, "rgba(255,255,255,0)");
-          ctx.fillStyle = grad;
-          ctx.globalCompositeOperation = "source-over";
-          // Use a temp clip with feathered alpha by drawing into blurCanvas-aligned region
-          ctx.beginPath();
-          ctx.arc(eye.x, eye.y, r, 0, Math.PI * 2);
-          ctx.clip();
-          ctx.drawImage(blurCanvas, eye.x - r * 1.5, eye.y - r * 1.5, r * 3, r * 3, eye.x - r * 1.5, eye.y - r * 1.5, r * 3, r * 3);
-          ctx.restore();
+          // 1) Draw scaled eye into eyeCanvas, centered.
+          eyeCtx.globalCompositeOperation = "source-over";
+          eyeCtx.clearRect(0, 0, size, size);
+          eyeCtx.drawImage(
+            video,
+            eye.x - r, eye.y - r, r * 2, r * 2,           // src
+            r - sr, r - sr, sr * 2, sr * 2,                // dst (scaled, centered)
+          );
+
+          // 2) Apply feathered radial alpha mask to eyeCanvas itself.
+          eyeCtx.globalCompositeOperation = "destination-in";
+          const grad = eyeCtx.createRadialGradient(r, r, r * 0.45, r, r, r);
+          grad.addColorStop(0, "rgba(0,0,0,1)");
+          grad.addColorStop(0.75, "rgba(0,0,0,0.85)");
+          grad.addColorStop(1, "rgba(0,0,0,0)");
+          eyeCtx.fillStyle = grad;
+          eyeCtx.fillRect(0, 0, size, size);
+          eyeCtx.globalCompositeOperation = "source-over";
+
+          // 3) Composite onto output. Soft edges = no square patches.
+          ctx.drawImage(eyeCanvas, eye.x - r, eye.y - r);
         }
+      }
+
+      // ── G. Bigo finishing pass: warm mid-tone lift inside face ──
+      if (s.brighten > 0 || s.smooth > 0) {
+        blurCtx.globalCompositeOperation = "source-over";
+        blurCtx.filter = "none";
+        blurCtx.clearRect(0, 0, W, H);
+        blurCtx.fillStyle = "rgba(255, 235, 225, 0.08)";
+        blurCtx.fillRect(0, 0, W, H);
+        blurCtx.globalCompositeOperation = "destination-in";
+        blurCtx.drawImage(featherCanvas, 0, 0);
+        blurCtx.globalCompositeOperation = "source-over";
+        ctx.globalCompositeOperation = "multiply";
+        ctx.drawImage(blurCanvas, 0, 0);
+        ctx.globalCompositeOperation = "source-over";
       }
     };
 
@@ -483,21 +529,22 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
             const result = landmarker.detectForVideo(video, now);
             if (result?.faceLandmarks?.[0]) {
               lastLandmarks = result.faceLandmarks[0];
+              lastLandmarksAt = now;
             }
           } catch {
             // ignore single-frame failure
           }
         }
-        if (lastLandmarks) {
+        // Hold last landmarks for 500ms to prevent mask flicker.
+        const stale = now - lastLandmarksAt > 500;
+        if (lastLandmarks && !stale) {
           drawPro(s, lastLandmarks);
         } else {
-          // No face detected yet — still apply lite pass so user sees effect
           drawLite(s);
         }
       } else if (mode === "lite") {
         drawLite(s);
       } else {
-        // mode === "loading" — show a tiny brighten so it doesn't look broken
         if (s.brighten > 0 || s.smooth > 0) {
           ctx.filter = `brightness(${1 + (s.brighten / 100) * 0.06})`;
           ctx.drawImage(video, 0, 0, W, H);
@@ -518,6 +565,10 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
       blurCanvas.height = canvas.height;
       maskCanvas.width = canvas.width;
       maskCanvas.height = canvas.height;
+      featherCanvas.width = canvas.width;
+      featherCanvas.height = canvas.height;
+      fxCanvas.width = canvas.width;
+      fxCanvas.height = canvas.height;
       start();
     };
 
