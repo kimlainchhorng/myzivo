@@ -439,7 +439,8 @@ const Login = () => {
           onChange: (...event: any[]) => void;
           ref: React.Ref<any>;
         }
-      : never
+      : never,
+    mode: "login" | "signup"
   ) => (
     <FormItem className="space-y-1">
       <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
@@ -447,18 +448,21 @@ const Login = () => {
         {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
         <FormControl>
           <input
-            type="email"
+            type={mode === "signup" && isTouchDevice ? "text" : "email"}
             inputMode="email"
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
             enterKeyHint="next"
             placeholder="you@example.com"
-            autoComplete="username"
+            autoComplete={mode === "signup" && isTouchDevice ? "off" : "username"}
+            name={mode === "signup" && isTouchDevice ? "signup_email" : field.name}
+            data-form-type={mode === "signup" ? "other" : "username"}
+            data-lpignore={mode === "signup" && isTouchDevice ? "true" : undefined}
             className={input3DLg}
             style={mobileInputStyle}
-            onTouchStartCapture={forceMobileInputFocus}
-            onPointerDownCapture={forceMobileInputFocus}
+            onTouchStartCapture={mode === "signup" ? undefined : forceMobileInputFocus}
+            onPointerDownCapture={mode === "signup" ? undefined : forceMobileInputFocus}
             {...field}
           />
         </FormControl>
@@ -497,7 +501,7 @@ const Login = () => {
         {isLogin ? (
           <Form {...loginForm}>
             <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-2.5">
-              <FormField control={loginForm.control} name="email" render={({ field }) => renderEmailField(field)} />
+              <FormField control={loginForm.control} name="email" render={({ field }) => renderEmailField(field, "login")} />
 
               <FormField control={loginForm.control} name="password" render={({ field }) => (
                 <FormItem className="space-y-1">
@@ -567,7 +571,7 @@ const Login = () => {
                 )} />
               </div>
 
-              <FormField control={signupForm.control} name="email" render={({ field }) => renderEmailField(field)} />
+              <FormField control={signupForm.control} name="email" render={({ field }) => renderEmailField(field, "signup")} />
 
               <div className="grid grid-cols-2 gap-2">
                 <FormField control={signupForm.control} name="password" render={({ field }) => {
