@@ -94,19 +94,14 @@ function PayForm({
       await verifyAndCredit(paymentIntent.id);
     } catch (e: any) {
       const msg = e?.message ?? "Please try again.";
+      // Auto-reopen the card form so the user can try another card.
       toast.error("Card declined", {
-        description: msg,
-        action: {
-          label: "Try another card",
-          onClick: () => {
-            try {
-              elements?.getElement(PaymentElement)?.clear();
-            } catch {}
-          },
-        },
+        description: `${msg} — please enter another card.`,
       });
       try {
-        elements?.getElement(PaymentElement)?.focus();
+        const el = elements?.getElement(PaymentElement);
+        // @ts-expect-error PaymentElement supports collapse() at runtime
+        el?.collapse?.();
       } catch {}
     } finally {
       setSubmitting(false);
