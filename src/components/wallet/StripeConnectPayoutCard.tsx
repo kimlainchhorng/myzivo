@@ -97,7 +97,8 @@ export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
             Connect your debit card and cash out in minutes — 24/7, including weekends.
           </p>
           <Button
-            onClick={() => setEmbedOpen(true)}
+            onClick={openOnboarding}
+            disabled={onboard.isPending}
             className="w-full h-11 rounded-xl bg-white text-[#635bff] hover:bg-white/90 font-bold gap-2"
           >
             <ArrowRight className="w-4 h-4" />
