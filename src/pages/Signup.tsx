@@ -68,11 +68,12 @@ const Signup = () => {
       return;
     }
 
-    setSentTo(email.trim());
-    toast.success("Account created! Check your email to confirm.");
+    toast.success("Account created! Check your email for a 6-digit code.");
+    navigate(`/verify-otp?email=${encodeURIComponent(email.trim())}${redirect ? `&redirect=${encodeURIComponent(redirect)}` : ""}`);
+    return;
   };
 
-  // Post-signup confirmation screen
+  // Post-signup confirmation screen (legacy, unused now)
   if (sentTo) {
     return (
       <div className="min-h-[100dvh] w-full bg-gradient-to-br from-emerald-950 via-background to-background flex items-center justify-center px-4 py-10">
