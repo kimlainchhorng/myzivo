@@ -1032,6 +1032,7 @@ function parseLegacyMusicShare(messageText?: string | null): LegacyMusicShareMet
 /* ── Link Preview Card ─────────────────────────────────────────── */
 function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isMe: boolean; hasText: boolean; messageText?: string }) {
   const navigate = useNavigate();
+  const [warnOpen, setWarnOpen] = useState(false);
   const [preview, setPreview] = useState<{
     mediaUrl?: string | null;
     mediaType?: "image" | "video";
@@ -1191,7 +1192,7 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
     if (isInternalLink) {
       navigate(getInAppPath());
     } else {
-      void openExternalUrl(url);
+      setWarnOpen(true);
     }
   };
 
