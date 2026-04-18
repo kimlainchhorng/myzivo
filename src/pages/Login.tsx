@@ -6,7 +6,8 @@
  */
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, Mail, Lock, ArrowRight, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Loader2, Mail, Lock, ArrowRight, Eye, EyeOff, ShieldCheck, Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -148,6 +149,43 @@ const Login = () => {
                 Sign In <ArrowRight className="w-4 h-4 ml-1" />
               </>
             )}
+          </Button>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground uppercase tracking-wider">or</span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
+
+          {/* Email OTP — passwordless */}
+          <Button
+            type="button"
+            variant="outline"
+            disabled={submitting}
+            onClick={async () => {
+              if (!email.trim()) {
+                toast.error("Enter your email first.");
+                return;
+              }
+              setSubmitting(true);
+              const { error } = await supabase.auth.signInWithOtp({ email: email.trim() });
+              setSubmitting(false);
+              if (error) {
+                toast.error(error.message || "Could not send code.");
+                return;
+              }
+              toast.success("Code sent! Check your email.");
+              navigate(
+                `/verify-otp?email=${encodeURIComponent(email.trim())}${
+                  redirect ? `&redirect=${encodeURIComponent(redirect)}` : ""
+                }`
+              );
+            }}
+            className="w-full h-12 rounded-xl text-base font-semibold border-emerald-500/30 hover:bg-emerald-500/10 text-foreground"
+          >
+            <Sparkles className="w-4 h-4 mr-2 text-emerald-400" />
+            Email me a code instead
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
