@@ -8,11 +8,12 @@ import {
   ConnectAccountOnboarding,
   ConnectComponentsProvider,
 } from "@stripe/react-connect-js";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { STRIPE_PUBLISHABLE_KEY } from "@/lib/stripe";
 import { toast } from "sonner";
+import { useConnectOnboard } from "@/hooks/useStripeConnect";
 
 interface Props {
   open: boolean;
@@ -25,12 +26,15 @@ export default function StripeEmbeddedOnboarding({ open, onClose, onComplete, co
   const [instance, setInstance] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState(false);
+  const onboard = useConnectOnboard();
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setBlocked(false);
 
     (async () => {
       try {
@@ -41,26 +45,39 @@ export default function StripeEmbeddedOnboarding({ open, onClose, onComplete, co
         if (data?.error) throw new Error(data.error);
         if (cancelled) return;
 
-        const connect = loadConnectAndInitialize({
-          publishableKey: STRIPE_PUBLISHABLE_KEY,
-          fetchClientSecret: async () => data.client_secret,
-          appearance: {
-            overlays: "dialog",
-            variables: {
-              colorPrimary: "#10b981",
-              borderRadius: "12px",
+        let connect;
+        try {
+          connect = await loadConnectAndInitialize({
+            publishableKey: STRIPE_PUBLISHABLE_KEY,
+            fetchClientSecret: async () => data.client_secret,
+            appearance: {
+              overlays: "dialog",
+              variables: {
+                colorPrimary: "#10b981",
+                borderRadius: "12px",
+              },
             },
-          },
-        });
+          });
+        } catch (loadErr: any) {
+          if (!cancelled) {
+            setBlocked(true);
+            setError("Embedded Stripe is blocked in this browser/preview. Use secure redirect instead.");
+            setLoading(false);
+          }
+          return;
+        }
+
         if (!cancelled) {
           setInstance(connect);
           setLoading(false);
         }
       } catch (e: any) {
         if (!cancelled) {
-          setError(e?.message || "Failed to load Stripe");
+          const msg = e?.message || "Failed to load Stripe";
+          const isBlocked = msg.includes("Connect.js") || msg.includes("connect-js");
+          setBlocked(isBlocked);
+          setError(isBlocked ? "Embedded Stripe is blocked in this browser/preview. Use secure redirect instead." : msg);
           setLoading(false);
-          toast.error(e?.message || "Failed to load Stripe");
         }
       }
     })();
@@ -94,9 +111,25 @@ export default function StripeEmbeddedOnboarding({ open, onClose, onComplete, co
           </div>
         )}
         {error && (
-          <div className="p-6 text-center">
-            <p className="text-sm text-destructive mb-3">{error}</p>
-            <Button onClick={onClose} variant="outline">Close</Button>
+          <div className="p-6 text-center max-w-md mx-auto flex flex-col items-center justify-center h-full">
+            <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-3">
+              <ExternalLink className="w-6 h-6 text-amber-600" />
+            </div>
+            <p className="text-sm font-semibold mb-1">{blocked ? "Open Stripe in secure tab" : "Couldn't load Stripe"}</p>
+            <p className="text-xs text-muted-foreground mb-4">{error}</p>
+            {blocked && (
+              <Button
+                onClick={() => {
+                  onboard.mutate(country, { onSuccess: () => onClose() });
+                }}
+                disabled={onboard.isPending}
+                className="w-full h-11 rounded-xl bg-[#635bff] hover:bg-[#4b44d9] text-white font-bold gap-2 mb-2"
+              >
+                {onboard.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
+                Continue to Stripe
+              </Button>
+            )}
+            <Button onClick={onClose} variant="outline" className="w-full h-11 rounded-xl">Close</Button>
           </div>
         )}
         {instance && !loading && !error && (
