@@ -15,10 +15,15 @@ export default function CoinPurchaseSuccess() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const sessionId = params.get("session_id");
+  const rawReturn = params.get("return_to") || "/wallet";
+  // Only allow safe same-origin paths
+  const returnTo = rawReturn.startsWith("/") && !rawReturn.startsWith("//") ? rawReturn : "/wallet";
+  const isLiveReturn = returnTo.startsWith("/live/") || returnTo.startsWith("/go-live");
   const [status, setStatus] = useState<"loading" | "success" | "pending" | "error">("loading");
   const [coins, setCoins] = useState<number>(0);
   const [balance, setBalance] = useState<number | null>(null);
   const [error, setError] = useState<string>("");
+  const [countdown, setCountdown] = useState<number>(2);
 
   useEffect(() => {
     if (!sessionId) {
@@ -48,6 +53,17 @@ export default function CoinPurchaseSuccess() {
     })();
   }, [sessionId, queryClient]);
 
+  // Auto-return to the live stream (or origin page) after success.
+  useEffect(() => {
+    if (status !== "success") return;
+    if (countdown <= 0) {
+      navigate(returnTo, { replace: true });
+      return;
+    }
+    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [status, countdown, navigate, returnTo]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-6">
       <div className="w-full max-w-sm bg-card rounded-3xl shadow-xl border border-border/50 p-8 text-center">
@@ -74,9 +90,17 @@ export default function CoinPurchaseSuccess() {
                 New balance: {balance.toLocaleString()} Z Coins
               </p>
             )}
-            <Button className="w-full rounded-xl font-bold" onClick={() => navigate("/wallet")}>
-              Back to Wallet
+            <Button className="w-full rounded-xl font-bold" onClick={() => navigate(returnTo, { replace: true })}>
+              {isLiveReturn ? `Back to Live (${countdown})` : "Back to Wallet"}
             </Button>
+            {isLiveReturn && (
+              <button
+                onClick={() => navigate("/wallet")}
+                className="mt-3 text-xs text-muted-foreground underline"
+              >
+                Go to Wallet instead
+              </button>
+            )}
           </>
         )}
 

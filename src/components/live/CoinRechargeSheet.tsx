@@ -31,8 +31,11 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance }: Coi
     if (!selected) return;
     setStep("processing");
     try {
+      // Capture where to send the user back after payment.
+      // If they're inside a live stream, return them to that exact stream.
+      const returnTo = window.location.pathname + window.location.search;
       const { data, error } = await supabase.functions.invoke("create-coin-checkout", {
-        body: { package_id: selected.id },
+        body: { package_id: selected.id, return_to: returnTo },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);

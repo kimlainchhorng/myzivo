@@ -36,6 +36,13 @@ serve(async (req) => {
     const pkg = PACKAGES[packageId];
     if (!pkg) throw new Error("Invalid package_id");
 
+    // Sanitize return_to: must be a same-origin path beginning with "/"
+    let returnTo = "/wallet";
+    const rawReturn = typeof body?.return_to === "string" ? body.return_to : "";
+    if (rawReturn.startsWith("/") && !rawReturn.startsWith("//")) {
+      returnTo = rawReturn.slice(0, 500);
+    }
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
 
     // Reuse customer
@@ -45,6 +52,8 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || "https://hizivo.com";
     const totalCoins = pkg.coins + pkg.bonus;
 
+    // Encode return_to into success_url so the success page can redirect back.
+    const successReturn = encodeURIComponent(returnTo);
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -59,12 +68,13 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/wallet/coins/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/wallet`,
+      success_url: `${origin}/wallet/coins/success?session_id={CHECKOUT_SESSION_ID}&return_to=${successReturn}`,
+      cancel_url: `${origin}${returnTo}`,
       metadata: {
         user_id: user.id,
         package_id: packageId,
         coins: String(totalCoins),
+        return_to: returnTo,
       },
     });
 
