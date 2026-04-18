@@ -415,24 +415,249 @@ const Login = () => {
       : "bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15]"
   );
 
-  const cardStyle: CSSProperties = {
-    ...(isTouchDevice ? {} : { rotateX, rotateY, transformStyle: "preserve-3d" as const }),
-    boxShadow: isTouchDevice
-      ? "0 24px 60px -20px rgba(0,0,0,0.6)"
-      : "0 25px 60px -15px rgba(0,0,0,0.5), 0 10px 25px -10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)",
-  };
+  const cardStyle = isTouchDevice
+    ? {
+        boxShadow: "0 24px 60px -20px rgba(0,0,0,0.6)",
+      }
+    : {
+        rotateX,
+        rotateY,
+        transformStyle: "preserve-3d" as const,
+        boxShadow: "0 25px 60px -15px rgba(0,0,0,0.5), 0 10px 25px -10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)",
+      };
+
+  const cardContent = (
+    <>
+      {!isTouchDevice && <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-transparent to-white/[0.04] rounded-3xl pointer-events-none" />}
+      {!isTouchDevice && <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />}
+
+      <div className="text-center mb-3 relative z-20">
+        <div className="absolute -left-2 -top-2">
+          <button onClick={(e) => { e.stopPropagation(); navigate("/"); }} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation relative z-30" aria-label="Go to Home">
+            <Home className="w-5 h-5 text-white/70" />
+          </button>
+        </div>
+        <div className="absolute -right-2 -top-2">
+          <button onClick={(e) => { e.stopPropagation(); setShowLangMenu(!showLangMenu); }} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation relative z-30" aria-label="Change language">
+            <Globe className="w-5 h-5 text-white/70" />
+          </button>
+        </div>
+        <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight drop-shadow-lg">ZIVO ID</h1>
+        {isTouchDevice ? (
+          <p className="text-white/60 mt-0.5 text-xs">{isLogin ? t("auth.welcome_back") : "Get Started Free — No credit card needed"}</p>
+        ) : (
+          <motion.p key={isLogin ? "login" : "signup"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-white/60 mt-0.5 text-xs">
+            {isLogin ? t("auth.welcome_back") : "Get Started Free — No credit card needed"}
+          </motion.p>
+        )}
+      </div>
+
+      <div className="relative z-20">
+        {isLogin ? (
+          <Form {...loginForm}>
+            <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-2.5">
+              <FormField control={loginForm.control} name="email" render={({ field }) => (
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
+                  <FormControl>
+                    <div className="relative z-10">
+                      {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
+                      <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3DLg} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-red-400 text-xs" />
+                </FormItem>
+              )} />
+
+              <FormField control={loginForm.control} name="password" render={({ field }) => (
+                <FormItem className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <FormLabel className="text-white/70 text-xs font-medium">{t("auth.password")}</FormLabel>
+                    <Link to="/forgot-password" className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">{t("auth.forgot")}</Link>
+                  </div>
+                  <FormControl>
+                    <div className="relative">
+                      {!isTouchDevice && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
+                      <input type={showLoginPwd ? "text" : "password"} placeholder="Enter password" autoComplete="current-password" className={cn(input3DLg, "pr-10", !isTouchDevice && "pl-10")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
+                      <button type="button" onClick={() => setShowLoginPwd(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showLoginPwd ? "Hide password" : "Show password"}>
+                        {showLoginPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-red-400 text-xs" />
+                </FormItem>
+              )} />
+
+              <div className="flex items-center gap-2 py-1">
+                <button
+                  type="button"
+                  onClick={() => setRememberMe(!rememberMe)}
+                  className={`h-5 w-5 min-w-5 rounded border flex items-center justify-center transition-colors ${rememberMe ? 'bg-primary border-primary' : 'border-white/30 bg-white/5'}`}
+                >
+                  {rememberMe && <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                </button>
+                <span className="text-xs text-white/60 select-none cursor-pointer" onClick={() => setRememberMe(!rememberMe)}>Remember me</span>
+              </div>
+
+              <motion.div whileTap={{ scale: 0.97, y: 2 }} whileHover={{ scale: 1.01 }}>
+                <Button type="submit" className="w-full h-10 text-sm font-bold rounded-xl touch-manipulation transition-all relative overflow-hidden shadow-[0_6px_20px_-4px_rgba(34,197,94,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]" disabled={isLoading} style={{ background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.85) 100%)" }}>
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent h-1/2 pointer-events-none rounded-t-xl" />
+                  {isLoading ? <Loader2 className="h-5 w-5 animate-spin relative z-10" /> : <span className="relative z-10 flex items-center gap-2">{t("auth.sign_in")}<ArrowRight className="h-4 w-4" /></span>}
+                </Button>
+              </motion.div>
+            </form>
+          </Form>
+        ) : (
+          <Form {...signupForm}>
+            <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-1.5">
+              <div className="grid grid-cols-2 gap-2">
+                <FormField control={signupForm.control} name="firstName" render={({ field }) => (
+                  <FormItem className="space-y-0.5">
+                    <FormLabel className="text-white/70 text-xs font-medium">{t("auth.first_name")}</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        {!isTouchDevice && <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
+                        <input placeholder="John" autoComplete="given-name" className={cn(input3D, !isTouchDevice && "pl-9")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-red-400 text-xs" />
+                  </FormItem>
+                )} />
+                <FormField control={signupForm.control} name="lastName" render={({ field }) => (
+                  <FormItem className="space-y-0.5">
+                    <FormLabel className="text-white/70 text-xs font-medium">{t("auth.last_name")}</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        {!isTouchDevice && <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
+                        <input placeholder="Doe" autoComplete="family-name" className={cn(input3D, !isTouchDevice && "pl-9")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-red-400 text-xs" />
+                  </FormItem>
+                )} />
+              </div>
+
+              <FormField control={signupForm.control} name="email" render={({ field }) => (
+                <FormItem className="space-y-0.5">
+                  <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
+                  <FormControl>
+                    <div className="relative z-10">
+                      {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
+                      <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3D} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-red-400 text-xs" />
+                </FormItem>
+              )} />
+
+              <div className="grid grid-cols-2 gap-2">
+                <FormField control={signupForm.control} name="password" render={({ field }) => {
+                  const strength = calcStrength(field.value || "");
+                  const labels = ["", "Weak", "Fair", "Good", "Strong"];
+                  const colors = ["bg-white/10", "bg-red-400", "bg-orange-400", "bg-yellow-400", "bg-primary"];
+                  return (
+                    <FormItem className="space-y-0.5">
+                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.password")}</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          {!isTouchDevice && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
+                          <input type={showSignupPwd ? "text" : "password"} placeholder="8+ chars, letters & numbers" autoComplete="new-password" className={cn(input3D, "pr-9", !isTouchDevice && "pl-9")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
+                          <button type="button" onClick={() => setShowSignupPwd(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showSignupPwd ? "Hide password" : "Show password"}>
+                            {showSignupPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </FormControl>
+                      {field.value && (
+                        <div className="flex items-center gap-1 pt-0.5">
+                          <div className="flex gap-0.5 flex-1">
+                            {[1, 2, 3, 4].map(i => (
+                              <div key={i} className={cn("h-0.5 flex-1 rounded-full transition-colors", i <= strength ? colors[strength] : "bg-white/10")} />
+                            ))}
+                          </div>
+                          <span className="text-[9px] text-white/50 w-9 text-right">{labels[strength]}</span>
+                        </div>
+                      )}
+                      <FormMessage className="text-red-400 text-xs" />
+                    </FormItem>
+                  );
+                }} />
+                <FormField control={signupForm.control} name="confirmPassword" render={({ field }) => {
+                  const pwd = signupForm.watch("password");
+                  const matches = field.value && pwd && field.value === pwd;
+                  return (
+                    <FormItem className="space-y-0.5">
+                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.confirm_password")}</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          {!isTouchDevice && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
+                          <input type={showSignupConfirm ? "text" : "password"} placeholder="Re-enter" autoComplete="new-password" className={cn(input3D, "pr-9", !isTouchDevice && "pl-9", matches && "border-primary/50")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
+                          <button type="button" onClick={() => setShowSignupConfirm(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showSignupConfirm ? "Hide password" : "Show password"}>
+                            {matches ? <CheckCircle className="w-3.5 h-3.5 text-primary" /> : showSignupConfirm ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-400 text-xs" />
+                    </FormItem>
+                  );
+                }} />
+              </div>
+
+              <FormField control={signupForm.control} name="agreeToTerms" render={({ field }) => (
+                <FormItem className="space-y-0">
+                  <div className="flex items-start gap-2">
+                    <FormControl>
+                      <input type="checkbox" checked={field.value === true} onChange={(e) => field.onChange(e.target.checked ? true : undefined)} className="mt-0.5 h-4 w-4 rounded border-white/30 bg-white/10 text-primary focus:ring-primary accent-primary cursor-pointer" />
+                    </FormControl>
+                    <label className="text-xs text-white/60 leading-tight cursor-pointer" onClick={() => field.onChange(field.value === true ? undefined : true)}>
+                      I agree to the{" "}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); openSheet("Terms of Service", "/terms"); }} className="text-primary hover:underline font-medium">Terms of Service</button>
+                      {" "}and{" "}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); openSheet("Privacy Policy", "/privacy"); }} className="text-primary hover:underline font-medium">Privacy Policy</button>
+                    </label>
+                  </div>
+                  <FormMessage className="text-red-400 text-xs ml-6" />
+                </FormItem>
+              )} />
+
+              <motion.div whileTap={{ scale: 0.97, y: 2 }} whileHover={{ scale: 1.01 }}>
+                <Button type="submit" className="w-full h-10 text-sm font-bold rounded-xl touch-manipulation transition-all relative overflow-hidden shadow-[0_6px_20px_-4px_rgba(34,197,94,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]" disabled={isLoading} style={{ background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.85) 100%)" }}>
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent h-1/2 pointer-events-none rounded-t-xl" />
+                  {isLoading ? <Loader2 className="h-5 w-5 animate-spin relative z-10" /> : <span className="relative z-10 flex items-center gap-2">{t("auth.create_account")}<ArrowRight className="h-4 w-4" /></span>}
+                </Button>
+              </motion.div>
+            </form>
+          </Form>
+        )}
+      </div>
+
+      <div className="flex items-center justify-center gap-3 mt-2.5 text-white/40 text-[10px] relative z-10">
+        <div className="flex items-center gap-1"><Shield className="w-3 h-3" /><span>{t("auth.encrypted")}</span></div>
+        <div className="w-px h-3 bg-white/15" />
+        <div className="flex items-center gap-1"><Mail className="w-3 h-3" /><span>{t("auth.no_spam")}</span></div>
+      </div>
+
+      <div className="text-center mt-2 relative z-10">
+        <button type="button" onClick={toggleMode} className="text-xs text-white/50 hover:text-white/80 transition-colors">
+          {isLogin ? t("auth.no_account") + " " : t("auth.have_account") + " "}
+          <span className="text-primary font-semibold">{isLogin ? t("auth.sign_up") : t("auth.log_in")}</span>
+        </button>
+      </div>
+
+      <div className="flex items-center justify-center gap-3 mt-2 text-[10px] text-white/30 relative z-10">
+        <span>{isLogin ? t("auth.protected") : t("auth.terms_agree")}</span>
+      </div>
+    </>
+  );
 
   return (
     <div className={cn("relative flex flex-col items-center", isTouchDevice ? "min-h-[100dvh] justify-start overflow-x-hidden overflow-y-auto pt-6 pb-8" : "h-[100dvh] justify-center overflow-hidden")}>
       <SEOHead title={isLogin ? "Sign In – ZIVO" : "Create Account – ZIVO"} description="Sign in or create your ZIVO account to search flights, hotels, and car rentals." noIndex={true} />
 
-      {/* 3D Background */}
       <div className="absolute inset-0 pointer-events-none">
         <img src="/images/auth-bg-3d.jpg" alt="" className="w-full h-full object-cover pointer-events-none" />
         <div className={cn("absolute inset-0 pointer-events-none", isTouchDevice ? "bg-black/45" : "bg-black/40 backdrop-blur-[2px]")} />
       </div>
 
-      {/* Floating particles */}
       {!isTouchDevice && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {[...Array(6)].map((_, i) => (
@@ -449,237 +674,8 @@ const Login = () => {
 
       <div className="w-full max-w-md relative z-10 px-4" style={isTouchDevice ? undefined : { perspective: "1200px" }}>
         {isTouchDevice ? (
-          <div
-            ref={cardRef}
-            style={cardStyle}
-            className={cardClassName}
-          >
-          {/* Glass shimmer */}
-          {!isTouchDevice && <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-transparent to-white/[0.04] rounded-3xl pointer-events-none" />}
-          {!isTouchDevice && <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />}
-
-          {/* Header */}
-          <div className="text-center mb-3 relative z-20">
-            <div className="absolute -left-2 -top-2">
-              <button onClick={(e) => { e.stopPropagation(); navigate("/"); }} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation relative z-30" aria-label="Go to Home">
-                <Home className="w-5 h-5 text-white/70" />
-              </button>
-            </div>
-            <div className="absolute -right-2 -top-2">
-              <button onClick={(e) => { e.stopPropagation(); setShowLangMenu(!showLangMenu); }} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation relative z-30" aria-label="Change language">
-                <Globe className="w-5 h-5 text-white/70" />
-              </button>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight drop-shadow-lg">ZIVO ID</h1>
-            {isTouchDevice ? (
-              <p className="text-white/60 mt-0.5 text-xs">{isLogin ? t("auth.welcome_back") : "Get Started Free — No credit card needed"}</p>
-            ) : (
-              <motion.p key={isLogin ? "login" : "signup"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-white/60 mt-0.5 text-xs">
-                {isLogin ? t("auth.welcome_back") : "Get Started Free — No credit card needed"}
-              </motion.p>
-            )}
-          </div>
-
-          {/* Forms */}
-          <div className="relative z-20">
-          {isLogin ? (
-            <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-2.5">
-                <FormField control={loginForm.control} name="email" render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
-                    <FormControl>
-                      <div className="relative z-10">
-                        {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
-                        <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3DLg} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-xs" />
-                  </FormItem>
-                )} />
-
-                <FormField control={loginForm.control} name="password" render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.password")}</FormLabel>
-                      <Link to="/forgot-password" className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">{t("auth.forgot")}</Link>
-                    </div>
-                    <FormControl>
-                        <div className="relative">
-                          {!isTouchDevice && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
-                          <input type={showLoginPwd ? "text" : "password"} placeholder="Enter password" autoComplete="current-password" className={cn(input3DLg, "pr-10", !isTouchDevice && "pl-10")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                        <button type="button" onClick={() => setShowLoginPwd(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showLoginPwd ? "Hide password" : "Show password"}>
-                          {showLoginPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-xs" />
-                  </FormItem>
-                )} />
-
-                {/* Remember Me */}
-                <div className="flex items-center gap-2 py-1">
-                  <button
-                    type="button"
-                    onClick={() => setRememberMe(!rememberMe)}
-                    className={`h-5 w-5 min-w-5 rounded border flex items-center justify-center transition-colors ${rememberMe ? 'bg-primary border-primary' : 'border-white/30 bg-white/5'}`}
-                  >
-                    {rememberMe && <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
-                  </button>
-                  <span className="text-xs text-white/60 select-none cursor-pointer" onClick={() => setRememberMe(!rememberMe)}>Remember me</span>
-                </div>
-
-                <motion.div whileTap={{ scale: 0.97, y: 2 }} whileHover={{ scale: 1.01 }}>
-                  <Button type="submit" className="w-full h-10 text-sm font-bold rounded-xl touch-manipulation transition-all relative overflow-hidden shadow-[0_6px_20px_-4px_rgba(34,197,94,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]" disabled={isLoading} style={{ background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.85) 100%)" }}>
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent h-1/2 pointer-events-none rounded-t-xl" />
-                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin relative z-10" /> : <span className="relative z-10 flex items-center gap-2">{t("auth.sign_in")}<ArrowRight className="h-4 w-4" /></span>}
-                  </Button>
-                </motion.div>
-              </form>
-            </Form>
-          ) : (
-            <Form {...signupForm}>
-              <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-1.5">
-                <div className="grid grid-cols-2 gap-2">
-                  <FormField control={signupForm.control} name="firstName" render={({ field }) => (
-                    <FormItem className="space-y-0.5">
-                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.first_name")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          {!isTouchDevice && <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
-                          <input placeholder="John" autoComplete="given-name" className={cn(input3D, !isTouchDevice && "pl-9")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )} />
-                  <FormField control={signupForm.control} name="lastName" render={({ field }) => (
-                    <FormItem className="space-y-0.5">
-                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.last_name")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          {!isTouchDevice && <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
-                          <input placeholder="Doe" autoComplete="family-name" className={cn(input3D, !isTouchDevice && "pl-9")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )} />
-                </div>
-
-
-                <FormField control={signupForm.control} name="email" render={({ field }) => (
-                  <FormItem className="space-y-0.5">
-                    <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
-                    <FormControl>
-                      <div className="relative z-10">
-                        {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
-                        <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3D} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-xs" />
-                  </FormItem>
-                )} />
-
-                <div className="grid grid-cols-2 gap-2">
-                  <FormField control={signupForm.control} name="password" render={({ field }) => {
-                    const strength = calcStrength(field.value || "");
-                    const labels = ["", "Weak", "Fair", "Good", "Strong"];
-                    const colors = ["bg-white/10", "bg-red-400", "bg-orange-400", "bg-yellow-400", "bg-primary"];
-                    return (
-                      <FormItem className="space-y-0.5">
-                        <FormLabel className="text-white/70 text-xs font-medium">{t("auth.password")}</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            {!isTouchDevice && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
-                            <input type={showSignupPwd ? "text" : "password"} placeholder="8+ chars, letters & numbers" autoComplete="new-password" className={cn(input3D, "pr-9", !isTouchDevice && "pl-9")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                            <button type="button" onClick={() => setShowSignupPwd(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showSignupPwd ? "Hide password" : "Show password"}>
-                              {showSignupPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                            </button>
-                          </div>
-                        </FormControl>
-                        {field.value && (
-                          <div className="flex items-center gap-1 pt-0.5">
-                            <div className="flex gap-0.5 flex-1">
-                              {[1, 2, 3, 4].map(i => (
-                                <div key={i} className={cn("h-0.5 flex-1 rounded-full transition-colors", i <= strength ? colors[strength] : "bg-white/10")} />
-                              ))}
-                            </div>
-                            <span className="text-[9px] text-white/50 w-9 text-right">{labels[strength]}</span>
-                          </div>
-                        )}
-                        <FormMessage className="text-red-400 text-xs" />
-                      </FormItem>
-                    );
-                  }} />
-                  <FormField control={signupForm.control} name="confirmPassword" render={({ field }) => {
-                    const pwd = signupForm.watch("password");
-                    const matches = field.value && pwd && field.value === pwd;
-                    return (
-                      <FormItem className="space-y-0.5">
-                        <FormLabel className="text-white/70 text-xs font-medium">{t("auth.confirm_password")}</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            {!isTouchDevice && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
-                            <input type={showSignupConfirm ? "text" : "password"} placeholder="Re-enter" autoComplete="new-password" className={cn(input3D, "pr-9", !isTouchDevice && "pl-9", matches && "border-primary/50")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                            <button type="button" onClick={() => setShowSignupConfirm(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showSignupConfirm ? "Hide password" : "Show password"}>
-                              {matches ? <CheckCircle className="w-3.5 h-3.5 text-primary" /> : showSignupConfirm ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                            </button>
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-red-400 text-xs" />
-                      </FormItem>
-                    );
-                  }} />
-                </div>
-
-                <FormField control={signupForm.control} name="agreeToTerms" render={({ field }) => (
-                  <FormItem className="space-y-0">
-                    <div className="flex items-start gap-2">
-                      <FormControl>
-                        <input type="checkbox" checked={field.value === true} onChange={(e) => field.onChange(e.target.checked ? true : undefined)} className="mt-0.5 h-4 w-4 rounded border-white/30 bg-white/10 text-primary focus:ring-primary accent-primary cursor-pointer" />
-                      </FormControl>
-                      <label className="text-xs text-white/60 leading-tight cursor-pointer" onClick={() => field.onChange(field.value === true ? undefined : true)}>
-                        I agree to the{" "}
-                        <button type="button" onClick={(e) => { e.stopPropagation(); openSheet("Terms of Service", "/terms"); }} className="text-primary hover:underline font-medium">Terms of Service</button>
-                        {" "}and{" "}
-                        <button type="button" onClick={(e) => { e.stopPropagation(); openSheet("Privacy Policy", "/privacy"); }} className="text-primary hover:underline font-medium">Privacy Policy</button>
-                      </label>
-                    </div>
-                    <FormMessage className="text-red-400 text-xs ml-6" />
-                  </FormItem>
-                )} />
-
-                <motion.div whileTap={{ scale: 0.97, y: 2 }} whileHover={{ scale: 1.01 }}>
-                  <Button type="submit" className="w-full h-10 text-sm font-bold rounded-xl touch-manipulation transition-all relative overflow-hidden shadow-[0_6px_20px_-4px_rgba(34,197,94,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]" disabled={isLoading} style={{ background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.85) 100%)" }}>
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent h-1/2 pointer-events-none rounded-t-xl" />
-                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin relative z-10" /> : <span className="relative z-10 flex items-center gap-2">{t("auth.create_account")}<ArrowRight className="h-4 w-4" /></span>}
-                  </Button>
-                </motion.div>
-              </form>
-            </Form>
-          )}
-          </div>
-
-
-          {/* Trust */}
-          <div className="flex items-center justify-center gap-3 mt-2.5 text-white/40 text-[10px] relative z-10">
-            <div className="flex items-center gap-1"><Shield className="w-3 h-3" /><span>{t("auth.encrypted")}</span></div>
-            <div className="w-px h-3 bg-white/15" />
-            <div className="flex items-center gap-1"><Mail className="w-3 h-3" /><span>{t("auth.no_spam")}</span></div>
-          </div>
-
-          {/* Toggle */}
-          <div className="text-center mt-2 relative z-10">
-            <button type="button" onClick={toggleMode} className="text-xs text-white/50 hover:text-white/80 transition-colors">
-              {isLogin ? t("auth.no_account") + " " : t("auth.have_account") + " "}
-              <span className="text-primary font-semibold">{isLogin ? t("auth.sign_up") : t("auth.log_in")}</span>
-            </button>
-          </div>
-
-          <div className="flex items-center justify-center gap-3 mt-2 text-[10px] text-white/30 relative z-10">
-            <span>{isLogin ? t("auth.protected") : t("auth.terms_agree")}</span>
-          </div>
+          <div ref={cardRef} style={cardStyle} className={cardClassName}>
+            {cardContent}
           </div>
         ) : (
           <motion.div
@@ -692,234 +688,9 @@ const Login = () => {
             onMouseLeave={handleMouseLeave}
             className={cardClassName}
           >
-          {/* Glass shimmer */}
-          {!isTouchDevice && <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-transparent to-white/[0.04] rounded-3xl pointer-events-none" />}
-          {!isTouchDevice && <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />}
-
-          {/* Header */}
-          <div className="text-center mb-3 relative z-20">
-            <div className="absolute -left-2 -top-2">
-              <button onClick={(e) => { e.stopPropagation(); navigate("/"); }} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation relative z-30" aria-label="Go to Home">
-                <Home className="w-5 h-5 text-white/70" />
-              </button>
-            </div>
-            <div className="absolute -right-2 -top-2">
-              <button onClick={(e) => { e.stopPropagation(); setShowLangMenu(!showLangMenu); }} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation relative z-30" aria-label="Change language">
-                <Globe className="w-5 h-5 text-white/70" />
-              </button>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight drop-shadow-lg">ZIVO ID</h1>
-            {isTouchDevice ? (
-              <p className="text-white/60 mt-0.5 text-xs">{isLogin ? t("auth.welcome_back") : "Get Started Free — No credit card needed"}</p>
-            ) : (
-              <motion.p key={isLogin ? "login" : "signup"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-white/60 mt-0.5 text-xs">
-                {isLogin ? t("auth.welcome_back") : "Get Started Free — No credit card needed"}
-              </motion.p>
-            )}
-          </div>
-
-          {/* Forms */}
-          <div className="relative z-20">
-          {isLogin ? (
-            <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-2.5">
-                <FormField control={loginForm.control} name="email" render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
-                    <FormControl>
-                      <div className="relative z-10">
-                        {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
-                        <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3DLg} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-xs" />
-                  </FormItem>
-                )} />
-
-                <FormField control={loginForm.control} name="password" render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.password")}</FormLabel>
-                      <Link to="/forgot-password" className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">{t("auth.forgot")}</Link>
-                    </div>
-                    <FormControl>
-                        <div className="relative">
-                          {!isTouchDevice && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
-                          <input type={showLoginPwd ? "text" : "password"} placeholder="Enter password" autoComplete="current-password" className={cn(input3DLg, "pr-10", !isTouchDevice && "pl-10")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                        <button type="button" onClick={() => setShowLoginPwd(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showLoginPwd ? "Hide password" : "Show password"}>
-                          {showLoginPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-xs" />
-                  </FormItem>
-                )} />
-
-                {/* Remember Me */}
-                <div className="flex items-center gap-2 py-1">
-                  <button
-                    type="button"
-                    onClick={() => setRememberMe(!rememberMe)}
-                    className={`h-5 w-5 min-w-5 rounded border flex items-center justify-center transition-colors ${rememberMe ? 'bg-primary border-primary' : 'border-white/30 bg-white/5'}`}
-                  >
-                    {rememberMe && <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
-                  </button>
-                  <span className="text-xs text-white/60 select-none cursor-pointer" onClick={() => setRememberMe(!rememberMe)}>Remember me</span>
-                </div>
-
-                <motion.div whileTap={{ scale: 0.97, y: 2 }} whileHover={{ scale: 1.01 }}>
-                  <Button type="submit" className="w-full h-10 text-sm font-bold rounded-xl touch-manipulation transition-all relative overflow-hidden shadow-[0_6px_20px_-4px_rgba(34,197,94,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]" disabled={isLoading} style={{ background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.85) 100%)" }}>
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent h-1/2 pointer-events-none rounded-t-xl" />
-                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin relative z-10" /> : <span className="relative z-10 flex items-center gap-2">{t("auth.sign_in")}<ArrowRight className="h-4 w-4" /></span>}
-                  </Button>
-                </motion.div>
-              </form>
-            </Form>
-          ) : (
-            <Form {...signupForm}>
-              <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-1.5">
-                <div className="grid grid-cols-2 gap-2">
-                  <FormField control={signupForm.control} name="firstName" render={({ field }) => (
-                    <FormItem className="space-y-0.5">
-                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.first_name")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          {!isTouchDevice && <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
-                          <input placeholder="John" autoComplete="given-name" className={cn(input3D, !isTouchDevice && "pl-9")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )} />
-                  <FormField control={signupForm.control} name="lastName" render={({ field }) => (
-                    <FormItem className="space-y-0.5">
-                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.last_name")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          {!isTouchDevice && <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
-                          <input placeholder="Doe" autoComplete="family-name" className={cn(input3D, !isTouchDevice && "pl-9")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )} />
-                </div>
-
-
-                <FormField control={signupForm.control} name="email" render={({ field }) => (
-                  <FormItem className="space-y-0.5">
-                    <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
-                    <FormControl>
-                      <div className="relative z-10">
-                        {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
-                        <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3D} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-xs" />
-                  </FormItem>
-                )} />
-
-                <div className="grid grid-cols-2 gap-2">
-                  <FormField control={signupForm.control} name="password" render={({ field }) => {
-                    const strength = calcStrength(field.value || "");
-                    const labels = ["", "Weak", "Fair", "Good", "Strong"];
-                    const colors = ["bg-white/10", "bg-red-400", "bg-orange-400", "bg-yellow-400", "bg-primary"];
-                    return (
-                      <FormItem className="space-y-0.5">
-                        <FormLabel className="text-white/70 text-xs font-medium">{t("auth.password")}</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            {!isTouchDevice && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
-                            <input type={showSignupPwd ? "text" : "password"} placeholder="8+ chars, letters & numbers" autoComplete="new-password" className={cn(input3D, "pr-9", !isTouchDevice && "pl-9")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                            <button type="button" onClick={() => setShowSignupPwd(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showSignupPwd ? "Hide password" : "Show password"}>
-                              {showSignupPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                            </button>
-                          </div>
-                        </FormControl>
-                        {field.value && (
-                          <div className="flex items-center gap-1 pt-0.5">
-                            <div className="flex gap-0.5 flex-1">
-                              {[1, 2, 3, 4].map(i => (
-                                <div key={i} className={cn("h-0.5 flex-1 rounded-full transition-colors", i <= strength ? colors[strength] : "bg-white/10")} />
-                              ))}
-                            </div>
-                            <span className="text-[9px] text-white/50 w-9 text-right">{labels[strength]}</span>
-                          </div>
-                        )}
-                        <FormMessage className="text-red-400 text-xs" />
-                      </FormItem>
-                    );
-                  }} />
-                  <FormField control={signupForm.control} name="confirmPassword" render={({ field }) => {
-                    const pwd = signupForm.watch("password");
-                    const matches = field.value && pwd && field.value === pwd;
-                    return (
-                      <FormItem className="space-y-0.5">
-                        <FormLabel className="text-white/70 text-xs font-medium">{t("auth.confirm_password")}</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            {!isTouchDevice && <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
-                            <input type={showSignupConfirm ? "text" : "password"} placeholder="Re-enter" autoComplete="new-password" className={cn(input3D, "pr-9", !isTouchDevice && "pl-9", matches && "border-primary/50")} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                            <button type="button" onClick={() => setShowSignupConfirm(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showSignupConfirm ? "Hide password" : "Show password"}>
-                              {matches ? <CheckCircle className="w-3.5 h-3.5 text-primary" /> : showSignupConfirm ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                            </button>
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-red-400 text-xs" />
-                      </FormItem>
-                    );
-                  }} />
-                </div>
-
-                <FormField control={signupForm.control} name="agreeToTerms" render={({ field }) => (
-                  <FormItem className="space-y-0">
-                    <div className="flex items-start gap-2">
-                      <FormControl>
-                        <input type="checkbox" checked={field.value === true} onChange={(e) => field.onChange(e.target.checked ? true : undefined)} className="mt-0.5 h-4 w-4 rounded border-white/30 bg-white/10 text-primary focus:ring-primary accent-primary cursor-pointer" />
-                      </FormControl>
-                      <label className="text-xs text-white/60 leading-tight cursor-pointer" onClick={() => field.onChange(field.value === true ? undefined : true)}>
-                        I agree to the{" "}
-                        <button type="button" onClick={(e) => { e.stopPropagation(); openSheet("Terms of Service", "/terms"); }} className="text-primary hover:underline font-medium">Terms of Service</button>
-                        {" "}and{" "}
-                        <button type="button" onClick={(e) => { e.stopPropagation(); openSheet("Privacy Policy", "/privacy"); }} className="text-primary hover:underline font-medium">Privacy Policy</button>
-                      </label>
-                    </div>
-                    <FormMessage className="text-red-400 text-xs ml-6" />
-                  </FormItem>
-                )} />
-
-                <motion.div whileTap={{ scale: 0.97, y: 2 }} whileHover={{ scale: 1.01 }}>
-                  <Button type="submit" className="w-full h-10 text-sm font-bold rounded-xl touch-manipulation transition-all relative overflow-hidden shadow-[0_6px_20px_-4px_rgba(34,197,94,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]" disabled={isLoading} style={{ background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.85) 100%)" }}>
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent h-1/2 pointer-events-none rounded-t-xl" />
-                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin relative z-10" /> : <span className="relative z-10 flex items-center gap-2">{t("auth.create_account")}<ArrowRight className="h-4 w-4" /></span>}
-                  </Button>
-                </motion.div>
-              </form>
-            </Form>
-          )}
-          </div>
-
-
-          {/* Trust */}
-          <div className="flex items-center justify-center gap-3 mt-2.5 text-white/40 text-[10px] relative z-10">
-            <div className="flex items-center gap-1"><Shield className="w-3 h-3" /><span>{t("auth.encrypted")}</span></div>
-            <div className="w-px h-3 bg-white/15" />
-            <div className="flex items-center gap-1"><Mail className="w-3 h-3" /><span>{t("auth.no_spam")}</span></div>
-          </div>
-
-          {/* Toggle */}
-          <div className="text-center mt-2 relative z-10">
-            <button type="button" onClick={toggleMode} className="text-xs text-white/50 hover:text-white/80 transition-colors">
-              {isLogin ? t("auth.no_account") + " " : t("auth.have_account") + " "}
-              <span className="text-primary font-semibold">{isLogin ? t("auth.sign_up") : t("auth.log_in")}</span>
-            </button>
-          </div>
-
-          <div className="flex items-center justify-center gap-3 mt-2 text-[10px] text-white/30 relative z-10">
-            <span>{isLogin ? t("auth.protected") : t("auth.terms_agree")}</span>
-          </div>
-
-        </motion.div>
+            {cardContent}
+          </motion.div>
+        )}
       </div>
 
       <InlineLegalSheet open={sheet.open} onOpenChange={setOpen} title={sheet.title} url={sheet.url} />
