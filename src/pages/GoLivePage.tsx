@@ -34,6 +34,8 @@ import Dumbbell from "lucide-react/dist/esm/icons/dumbbell";
 import PaintBucket from "lucide-react/dist/esm/icons/paintbrush";
 import Plane from "lucide-react/dist/esm/icons/plane";
 import Globe from "lucide-react/dist/esm/icons/globe";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import { useBeautyFilter, DEFAULT_BEAUTY, type BeautySettings } from "@/hooks/useBeautyFilter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -117,7 +119,11 @@ export default function GoLivePage() {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [rawStream, setRawStream] = useState<MediaStream | null>(null);
+  const [beauty, setBeauty] = useState<BeautySettings>(DEFAULT_BEAUTY);
+  const [showBeautyPanel, setShowBeautyPanel] = useState(false);
+  const beautifiedStream = useBeautyFilter(rawStream, beauty);
+  const localStream = beautifiedStream ?? rawStream;
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const [phase, setPhase] = useState<LivePhase>("setup");
@@ -147,7 +153,7 @@ export default function GoLivePage() {
   const startCamera = useCallback(async () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
-    setLocalStream(null);
+    setRawStream(null);
 
     const attempts: MediaStreamConstraints[] = [
       { video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }, audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, sampleRate: 48000 } as any },
@@ -193,11 +199,8 @@ export default function GoLivePage() {
     }
 
     streamRef.current = s;
-    setLocalStream(s);
-    if (videoRef.current) {
-      videoRef.current.srcObject = s;
-      try { await videoRef.current.play(); } catch {}
-    }
+    setRawStream(s);
+    // videoRef will be bound to the beautified stream via the effect below.
     setCameraError(false);
   }, [facingMode]);
 
@@ -205,6 +208,14 @@ export default function GoLivePage() {
     startCamera();
     return () => streamRef.current?.getTracks().forEach((t) => t.stop());
   }, [startCamera]);
+
+  // Bind whichever stream is current (beautified preferred) to the preview <video>.
+  useEffect(() => {
+    if (videoRef.current && localStream) {
+      videoRef.current.srcObject = localStream;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [localStream]);
 
   const toggleCamera = useCallback(() => {
     streamRef.current?.getVideoTracks().forEach((t) => (t.enabled = !t.enabled));
@@ -866,11 +877,112 @@ export default function GoLivePage() {
         <button onClick={flipCamera} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
           <RotateCcw className="h-4 w-4 text-white" />
         </button>
+        <button
+          onClick={() => setShowBeautyPanel(true)}
+          className={cn(
+            "w-10 h-10 rounded-full backdrop-blur-sm flex flex-col items-center justify-center border",
+            beauty.enabled
+              ? "bg-gradient-to-br from-pink-500/40 to-fuchsia-500/40 border-pink-400/50"
+              : "bg-black/40 border-white/10",
+          )}
+          title="Beauty filter"
+        >
+          <Sparkles className={cn("h-4 w-4", beauty.enabled ? "text-pink-200" : "text-white/70")} />
+          <span className="text-[7px] text-white/80 -mt-0.5">Beauty</span>
+        </button>
         <button onClick={() => setShowRechargeSheet(true)} className="w-10 h-10 rounded-full bg-amber-500/30 border border-amber-500/40 backdrop-blur-sm flex flex-col items-center justify-center">
           <img src={goldCoinIcon} alt="" className="h-4 w-4" />
           <span className="text-[7px] text-amber-200 -mt-0.5">+Coin</span>
         </button>
       </div>
+
+      {/* Beauty panel — Bigo-style bottom sheet */}
+      <AnimatePresence>
+        {showBeautyPanel && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] flex items-end"
+            onClick={() => setShowBeautyPanel(false)}
+          >
+            <div className="absolute inset-0 bg-black/30" />
+            <motion.div
+              initial={{ y: 400 }}
+              animate={{ y: 0 }}
+              exit={{ y: 400 }}
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full bg-zinc-900/95 backdrop-blur-xl rounded-t-3xl border-t border-white/10 px-5 pt-4 pb-8"
+              style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}
+            >
+              <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-3" />
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-pink-400" />
+                  <h3 className="text-white font-bold text-base">Beauty</h3>
+                </div>
+                <button
+                  onClick={() => setBeauty((b) => ({ ...b, enabled: !b.enabled }))}
+                  className={cn(
+                    "relative w-11 h-6 rounded-full transition-colors",
+                    beauty.enabled ? "bg-pink-500" : "bg-white/20",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform",
+                      beauty.enabled ? "translate-x-5" : "translate-x-0.5",
+                    )}
+                  />
+                </button>
+              </div>
+
+              {[
+                { key: "smooth", label: "Skin smoothing", icon: "✨" },
+                { key: "slim", label: "Face slim", icon: "💎" },
+                { key: "eyes", label: "Eye enlarge", icon: "👁️" },
+              ].map((row) => (
+                <div key={row.key} className={cn("mb-4", !beauty.enabled && "opacity-40 pointer-events-none")}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-white/90 text-sm font-medium">
+                      <span className="mr-1.5">{row.icon}</span>{row.label}
+                    </span>
+                    <span className="text-pink-300 text-xs font-bold tabular-nums">
+                      {beauty[row.key as keyof BeautySettings] as number}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={beauty[row.key as keyof BeautySettings] as number}
+                    onChange={(e) =>
+                      setBeauty((b) => ({ ...b, [row.key]: Number(e.target.value) }))
+                    }
+                    className="w-full accent-pink-500 h-1"
+                  />
+                </div>
+              ))}
+
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setBeauty({ ...DEFAULT_BEAUTY, enabled: beauty.enabled })}
+                  className="flex-1 h-10 rounded-full bg-white/10 text-white text-sm font-bold"
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={() => setShowBeautyPanel(false)}
+                  className="flex-1 h-10 rounded-full bg-pink-500 text-white text-sm font-bold"
+                >
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* End confirm */}
       <AnimatePresence>
