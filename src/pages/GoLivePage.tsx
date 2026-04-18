@@ -35,6 +35,7 @@ import PaintBucket from "lucide-react/dist/esm/icons/paintbrush";
 import Plane from "lucide-react/dist/esm/icons/plane";
 import Globe from "lucide-react/dist/esm/icons/globe";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import ImageIcon from "lucide-react/dist/esm/icons/image";
 import { useBeautyFilter, DEFAULT_BEAUTY, BEAUTY_PRESETS, type BeautySettings } from "@/hooks/useBeautyFilter";
 import { useVirtualBackground } from "@/hooks/useVirtualBackground";
 import { Button } from "@/components/ui/button";
