@@ -943,7 +943,7 @@ export default function GoLivePage() {
               </div>
 
               {/* Status pill */}
-              <div className="flex justify-center mb-3">
+              <div className="flex flex-col items-center gap-1 mb-3">
                 <span className={cn(
                   "px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide",
                   beautyStatus === "pro" && "bg-pink-500/20 text-pink-200 border border-pink-400/40",
@@ -954,6 +954,7 @@ export default function GoLivePage() {
                   {beautyStatus === "lite" && "● Beauty: Lite (no face tracking)"}
                   {beautyStatus === "loading" && "Loading…"}
                 </span>
+                <span className="text-[10px] text-white/50">Move closer for best results</span>
               </div>
 
               {/* Quick presets */}
