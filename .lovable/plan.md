@@ -1,36 +1,38 @@
 
 
 ## Diagnosis
+The face area looks washed out and the head has a thick halo because:
+1. **0.4px Pass-2 feather is being applied to the WHOLE silhouette** — it softens the face perimeter, letting background blur bleed inward
+2. **Hair-zone ramp (0.42 LO)** is too loose — captures background pixels above the head as semi-foreground → grey halo
+3. **No edge-only feather** — antialiasing should only apply to the silhouette boundary, not the interior
 
-Two opposite artifacts from the last pass:
-1. **Jagged hand edges** — 1px erosion + removed Pass-2 blur = no antialiasing on the silhouette
-2. **Blue hair halo** — MediaPipe Selfie Segmentation has inherently low confidence on fine hair strands; tight `0.50/0.58` ramp clips them, but background blur leaks through the residual semi-transparent zone
+## Smart AI Upgrade — `src/hooks/useVirtualBackground.ts`
 
-## Fix — `src/hooks/useVirtualBackground.ts`
+**1. Mask sharpening via threshold curve** — replace linear ramp with an S-curve (smoothstep). Pixels near the middle of the ramp get pushed harder toward 0 or 255, producing a crisper edge with the same LO/HI bounds. This is what "smart" segmenters do.
 
-Three balanced changes:
+**2. Tighten hair zone** — `LO 0.42 → 0.46`, `HI 0.55 → 0.58`. Still looser than body but no longer accepts low-confidence background pixels as hair.
 
-**1. Add tiny Pass-2 feather back (0.4px)** — just enough antialiasing to smooth the jagged hand edges without re-dilating the mask. 0.4px is sub-pixel — softens stair-step but doesn't expand silhouette measurably.
+**3. Edge-only Pass-2 feather** — instead of blurring the whole mask in destination-in, generate a thin edge-band (mask minus eroded mask) and feather only that band. Interior stays 100% opaque, only the silhouette gets antialiased. Done by:
+   - Draw mask normally (sharp interior)
+   - Then blur(0.6px) only at edge composite step using a smaller offset trick
 
-**2. Asymmetric vertical ramp for hair** — hair sits at top of head, fingers/body elsewhere. Apply a slightly looser ramp (`0.42/0.55`) only to the **top 25% of the frame** where hair lives, keep tighter `0.50/0.58` everywhere else. Done by sampling the y-coordinate in the alpha-ramp loop.
+   Practical implementation: skip Pass-2 blur entirely on interior, apply blur ONLY when drawing maskHi the second time with `globalAlpha=0.5` for sub-pixel edge smoothing. Net effect = crisp face, smooth edges.
 
-**3. Reduce erosion to horizontal-only ½px equivalent** — drop one of the two horizontal shifts (keep just `+1, 0` not `-1, 0`) so finger gaps stay open but the hand outline doesn't get double-eaten on both sides.
+**4. Background re-clip** — after compositing person over background, paint a 2px feathered alpha gradient at the silhouette boundary using the eroded mask as a "core" and the original mask as "edge". Removes the residual halo entirely.
 
 ### Net diff
 ```text
-Pass-2 blur: 0px → 0.4px (re-add light feather)
-Alpha ramp:  flat 0.50/0.58
-           → top 25%:  0.42/0.55  (hair zone)
-             rest:     0.50/0.58  (body/hands)
-Erosion:    +1,0 and -1,0
-          → +1,0 only  (single-sided)
+Ramp curve: linear → smoothstep S-curve (sharper midtones)
+Hair zone:  0.42/0.55 → 0.46/0.58
+Pass-2:     full-mask 0.4px blur → edge-only 0.6px (interior stays crisp)
+NEW:        2-step composite — eroded core (sharp) + feathered edge band
 ```
 
 ### Expected result
-- Hand edges: smooth (Pass-2 0.4px feather)
-- Finger gaps: still open (single-sided erosion enough)
-- Hair detail: more strands captured (looser top-zone ramp)
-- Blue halo above scalp: gone (lower LO threshold accepts low-confidence hair pixels as foreground)
+- Face: crisp, no veil/wash
+- Head halo: gone (tighter hair ramp + edge-only feather)
+- Hand edges: still smooth (edge feather is now bigger, 0.6px)
+- Finger gaps: preserved (single-sided erosion untouched)
 
-One file. ~20 lines changed.
+One file. ~25 lines changed.
 
