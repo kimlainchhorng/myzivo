@@ -1,24 +1,26 @@
 /**
- * CoinRechargeSheet — Bottom sheet for purchasing Z Coins (simulated demo)
+ * CoinRechargeSheet — Real Stripe-powered Z Coin top-up sheet.
+ * Redirects the user to Stripe Checkout; coins are credited on the success page.
  */
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, ShieldCheck, Sparkles } from "lucide-react";
+import { X, ShieldCheck, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import { coinPackages, type CoinPackage } from "@/config/coinPackages";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CoinRechargeSheetProps {
   open: boolean;
   onClose: () => void;
   currentBalance: number;
-  /** Awaitable purchase handler — must add coins to the real wallet (e.g. via the recharge_coins RPC). */
-  onPurchase: (coins: number) => Promise<void> | void;
+  /** Optional legacy hook — no longer used for the real Stripe flow. */
+  onPurchase?: (coins: number) => Promise<void> | void;
 }
 
-export default function CoinRechargeSheet({ open, onClose, currentBalance, onPurchase }: CoinRechargeSheetProps) {
+export default function CoinRechargeSheet({ open, onClose, currentBalance }: CoinRechargeSheetProps) {
   const [selected, setSelected] = useState<CoinPackage | null>(null);
-  const [step, setStep] = useState<"select" | "confirm" | "processing" | "success">("select");
+  const [step, setStep] = useState<"select" | "confirm" | "processing">("select");
 
   const handleSelect = useCallback((pkg: CoinPackage) => {
     setSelected(pkg);
@@ -28,23 +30,19 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance, onPur
   const handleConfirm = useCallback(async () => {
     if (!selected) return;
     setStep("processing");
-    const totalCoins = selected.coins + (selected.bonus || 0);
     try {
-      await onPurchase(totalCoins);
-      setStep("success");
-      setTimeout(() => {
-        setStep("select");
-        setSelected(null);
-        onClose();
-        toast.success(`${totalCoins.toLocaleString()} Z Coins added!`, {
-          description: "Your balance has been updated.",
-        });
-      }, 1500);
+      const { data, error } = await supabase.functions.invoke("create-coin-checkout", {
+        body: { package_id: selected.id },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (!data?.url) throw new Error("No checkout URL returned");
+      window.location.href = data.url;
     } catch (e: any) {
-      setStep("select");
-      toast.error("Purchase failed", { description: e?.message ?? "Please try again." });
+      setStep("confirm");
+      toast.error("Couldn't start checkout", { description: e?.message ?? "Please try again." });
     }
-  }, [selected, onPurchase, onClose]);
+  }, [selected]);
 
   const handleClose = useCallback(() => {
     if (step === "processing") return; // prevent close during processing
@@ -198,30 +196,9 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance, onPur
 
             {step === "processing" && (
               <div className="px-6 pb-12 flex flex-col items-center justify-center py-12">
-                <div className="w-16 h-16 rounded-full border-4 border-amber-500/30 border-t-amber-400 animate-spin mb-6" />
-                <h3 className="text-white font-bold text-lg mb-1">Processing Payment</h3>
-                <p className="text-white/40 text-sm">Please wait...</p>
-              </div>
-            )}
-
-            {step === "success" && selected && (
-              <div className="px-6 pb-12 flex flex-col items-center justify-center py-8">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", damping: 12 }}
-                  className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mb-6 border-2 border-green-400/40"
-                >
-                  <Check className="w-10 h-10 text-green-400" />
-                </motion.div>
-                <h3 className="text-white font-bold text-lg mb-1">Purchase Successful!</h3>
-                <div className="flex items-center gap-2 mt-2">
-                  <img src={goldCoinIcon} alt="" className="w-6 h-6" />
-                  <span className="text-amber-300 font-bold text-2xl">
-                    +{(selected.coins + (selected.bonus || 0)).toLocaleString()}
-                  </span>
-                </div>
-                <p className="text-white/40 text-xs mt-2">Coins added to your balance</p>
+                <Loader2 className="w-12 h-12 text-amber-400 animate-spin mb-6" />
+                <h3 className="text-white font-bold text-lg mb-1">Redirecting to checkout…</h3>
+                <p className="text-white/40 text-sm text-center">Opening Stripe — your coins will land in your wallet right after payment.</p>
               </div>
             )}
           </motion.div>
