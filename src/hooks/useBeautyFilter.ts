@@ -281,8 +281,9 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
       maskCtx.globalCompositeOperation = "source-over";
 
       // Feathered copy: blur the mask so composites have soft edges.
+      // Extra-soft (blur 14) so the jawline transition into the neck is refined.
       featherCtx.clearRect(0, 0, W, H);
-      featherCtx.filter = "blur(10px)";
+      featherCtx.filter = "blur(14px)";
       featherCtx.drawImage(maskCanvas, 0, 0);
       featherCtx.filter = "none";
     };
@@ -467,27 +468,46 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         ctx.globalAlpha = 1;
       }
 
-      // ── B. Brighten + warmth — gentler ──
+      // ── B. Brighten + warmth — gentler, with side-gradient mask so the
+      // central nose/forehead axis isn't double-hit by the highlight pass.
       if (s.brighten > 0) {
-        const a = 0.06 + brightPct * 0.10; // softer overlay
+        const a = 0.06 + brightPct * 0.10;
         blurCtx.globalCompositeOperation = "source-over";
         blurCtx.filter = "none";
         blurCtx.clearRect(0, 0, W, H);
         blurCtx.fillStyle = `rgba(255, 232, 210, ${a})`;
         blurCtx.fillRect(0, 0, W, H);
+        // Horizontal gradient: stronger at cheeks, fade out at center axis.
+        const lc = lms[LM_LEFT_CHEEK];
+        const rc = lms[LM_RIGHT_CHEEK];
+        const nt = lms[LM_NOSE_TIP];
+        if (lc && rc && nt) {
+          const cxAxis = nt.x * W;
+          const faceW = (rc.x - lc.x) * W;
+          blurCtx.globalCompositeOperation = "destination-in";
+          const gx = blurCtx.createLinearGradient(cxAxis - faceW * 0.6, 0, cxAxis + faceW * 0.6, 0);
+          gx.addColorStop(0, "rgba(0,0,0,1)");
+          gx.addColorStop(0.45, "rgba(0,0,0,1)");
+          gx.addColorStop(0.5, "rgba(0,0,0,0.35)");
+          gx.addColorStop(0.55, "rgba(0,0,0,1)");
+          gx.addColorStop(1, "rgba(0,0,0,1)");
+          blurCtx.fillStyle = gx;
+          blurCtx.fillRect(0, 0, W, H);
+        }
         blurCtx.globalCompositeOperation = "destination-in";
         blurCtx.drawImage(featherCanvas, 0, 0);
         blurCtx.globalCompositeOperation = "source-over";
         ctx.globalCompositeOperation = "screen";
-        ctx.globalAlpha = 0.20 + brightPct * 0.12; // was flat 0.35; max ~0.32
+        // Cap combined brighten alpha so highlight pass can't blow out center.
+        ctx.globalAlpha = Math.min(0.18, 0.20 + brightPct * 0.12);
         ctx.drawImage(blurCanvas, 0, 0);
         ctx.globalCompositeOperation = "source-over";
         ctx.globalAlpha = 1;
       }
 
       // ── B2. Skin-grain restoration — re-add micro-texture lost to smoothing.
-      // Scales with how much we smoothed, so heavy smooth = more grain back.
-      if (s.smooth > 0 && grainPattern) {
+      // Skip when smooth < 30 (cheap perf win on phones; grain isn't needed).
+      if (s.smooth >= 30 && grainPattern) {
         const grainAlpha = 0.04 + smoothPct * 0.05; // 0.04-0.09
         blurCtx.globalCompositeOperation = "source-over";
         blurCtx.filter = "none";
@@ -503,6 +523,39 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         ctx.globalCompositeOperation = "source-over";
         ctx.globalAlpha = 1;
       }
+
+      // ── B3. Auto white-balance — sample forehead every 60 frames, push a
+      // tiny cool/warm overlay onto face mask if cast detected.
+      if (frameCounter % 60 === 0) {
+        const fh = lms[LM_FOREHEAD];
+        if (fh) {
+          const fx = Math.floor(fh.x * W);
+          const fy = Math.floor(fh.y * H + H * 0.02);
+          const sw = Math.max(8, Math.floor(W * 0.04));
+          try {
+            const d = ctx.getImageData(Math.max(0, fx - sw / 2), Math.max(0, fy - sw / 2), sw, sw).data;
+            let r = 0, b = 0, n = 0;
+            for (let i = 0; i < d.length; i += 16) {
+              r += d[i]; b += d[i + 2]; n++;
+            }
+            const ratio = (r / n) / Math.max(1, b / n);
+            wbRatio = wbRatio * 0.6 + ratio * 0.4;
+          } catch { /* ignore */ }
+        }
+      }
+      if (wbRatio > 1.15 || wbRatio < 0.92) {
+        const cool = wbRatio > 1.15;
+        blurCtx.globalCompositeOperation = "source-over";
+        blurCtx.filter = "none";
+        blurCtx.clearRect(0, 0, W, H);
+        blurCtx.fillStyle = cool ? "rgba(180, 200, 255, 0.04)" : "rgba(255, 210, 180, 0.04)";
+        blurCtx.fillRect(0, 0, W, H);
+        blurCtx.globalCompositeOperation = "destination-in";
+        blurCtx.drawImage(featherCanvas, 0, 0);
+        blurCtx.globalCompositeOperation = "source-over";
+        ctx.drawImage(blurCanvas, 0, 0);
+      }
+
 
       // ── C. Lip enhance — subtle tint, isolated mask, persistent canvas ──
       if (s.lips > 0) {
