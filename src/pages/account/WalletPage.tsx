@@ -24,7 +24,7 @@ import { useWalletTransactions, useWalletCredits, useWalletSummary } from "@/hoo
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
 import { useLiveEarnings } from "@/hooks/useLiveEarnings";
 import AddCardForm from "@/components/wallet/AddCardForm";
-import StripeConnectPayoutCard from "@/components/wallet/StripeConnectPayoutCard";
+import UnifiedPayoutCard from "@/components/wallet/UnifiedPayoutCard";
 import SEOHead from "@/components/SEOHead";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow, format } from "date-fns";
@@ -491,8 +491,8 @@ export default function WalletPage() {
                 </div>
               </div>
 
-              {/* Stripe Connect — Instant payout to debit card */}
-              <StripeConnectPayoutCard balanceDollars={balanceDollars} />
+              {/* Unified payout — Stripe (instant card) + PayPal (global) */}
+              <UnifiedPayoutCard balanceDollars={balanceDollars} />
 
               <div className="flex items-center gap-3 my-1">
                 <div className="flex-1 h-px bg-border/50" />
