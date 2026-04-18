@@ -105,6 +105,7 @@ const BookmarksPage = lazy(() => import("./pages/BookmarksPage"));
 const PrivacySettingsPage = lazy(() => import("./pages/account/PrivacySettingsPage"));
 const CreatorDashboardPage = lazy(() => import("./pages/CreatorDashboardPage"));
 const CreatorAnalyticsPage = lazy(() => import("./pages/CreatorAnalyticsPage"));
+const CreatorSetupPage = lazy(() => import("./pages/CreatorSetupPage"));
 const CreatorLiveEarningsPage = lazy(() => import("./pages/CreatorLiveEarningsPage"));
 const AffiliateHubPage = lazy(() => import("./pages/AffiliateHubPage"));
 const DigitalProductsPage = lazy(() => import("./pages/DigitalProductsPage"));
