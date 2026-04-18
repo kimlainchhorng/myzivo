@@ -147,7 +147,8 @@ Deno.serve(async (req) => {
     }
   }
 
-  if (!effectiveUserId) {
+  // Anonymous viewers are allowed (read-only role); publishers must be authenticated.
+  if (!effectiveUserId && from_role !== "viewer") {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -175,7 +176,8 @@ Deno.serve(async (req) => {
     });
   }
 
-  if (!rateLimit(`${effectiveUserId}:${stream_id}`) || !minuteLimit(`${stream_id}`)) {
+  const rateKey = effectiveUserId ?? `anon:${req.headers.get("x-forwarded-for") ?? "unknown"}`;
+  if (!rateLimit(`${rateKey}:${stream_id}`) || !minuteLimit(`${stream_id}`)) {
     return new Response(JSON.stringify({ error: "rate_limited" }), {
       status: 429,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
