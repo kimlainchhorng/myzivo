@@ -896,6 +896,94 @@ export default function GoLivePage() {
         </button>
       </div>
 
+      {/* Beauty panel — Bigo-style bottom sheet */}
+      <AnimatePresence>
+        {showBeautyPanel && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] flex items-end"
+            onClick={() => setShowBeautyPanel(false)}
+          >
+            <div className="absolute inset-0 bg-black/30" />
+            <motion.div
+              initial={{ y: 400 }}
+              animate={{ y: 0 }}
+              exit={{ y: 400 }}
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full bg-zinc-900/95 backdrop-blur-xl rounded-t-3xl border-t border-white/10 px-5 pt-4 pb-8"
+              style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}
+            >
+              <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-3" />
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-pink-400" />
+                  <h3 className="text-white font-bold text-base">Beauty</h3>
+                </div>
+                <button
+                  onClick={() => setBeauty((b) => ({ ...b, enabled: !b.enabled }))}
+                  className={cn(
+                    "relative w-11 h-6 rounded-full transition-colors",
+                    beauty.enabled ? "bg-pink-500" : "bg-white/20",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform",
+                      beauty.enabled ? "translate-x-5" : "translate-x-0.5",
+                    )}
+                  />
+                </button>
+              </div>
+
+              {[
+                { key: "smooth", label: "Skin smoothing", icon: "✨" },
+                { key: "slim", label: "Face slim", icon: "💎" },
+                { key: "eyes", label: "Eye enlarge", icon: "👁️" },
+              ].map((row) => (
+                <div key={row.key} className={cn("mb-4", !beauty.enabled && "opacity-40 pointer-events-none")}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-white/90 text-sm font-medium">
+                      <span className="mr-1.5">{row.icon}</span>{row.label}
+                    </span>
+                    <span className="text-pink-300 text-xs font-bold tabular-nums">
+                      {beauty[row.key as keyof BeautySettings] as number}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={beauty[row.key as keyof BeautySettings] as number}
+                    onChange={(e) =>
+                      setBeauty((b) => ({ ...b, [row.key]: Number(e.target.value) }))
+                    }
+                    className="w-full accent-pink-500 h-1"
+                  />
+                </div>
+              ))}
+
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setBeauty({ ...DEFAULT_BEAUTY, enabled: beauty.enabled })}
+                  className="flex-1 h-10 rounded-full bg-white/10 text-white text-sm font-bold"
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={() => setShowBeautyPanel(false)}
+                  className="flex-1 h-10 rounded-full bg-pink-500 text-white text-sm font-bold"
+                >
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* End confirm */}
       <AnimatePresence>
         {showEndConfirm && (
