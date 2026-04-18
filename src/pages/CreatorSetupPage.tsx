@@ -606,12 +606,6 @@ function TierStep({ tiers, userId, onSaved }: any) {
           </div>
         )}
 
-        {/* Perks */}
-        <div>
-          <Label className="text-xs font-bold">Perks (one per line)</Label>
-          <Textarea value={perks} onChange={(e) => setPerks(e.target.value)} rows={3} className="mt-1 resize-none text-xs" />
-        </div>
-
         {/* Preview */}
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
           <p className="text-[10px] uppercase font-bold text-primary tracking-wider mb-1.5">Preview</p>
