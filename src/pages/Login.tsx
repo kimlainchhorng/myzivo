@@ -430,6 +430,43 @@ const Login = () => {
         boxShadow: "0 25px 60px -15px rgba(0,0,0,0.5), 0 10px 25px -10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)",
       };
 
+  const renderEmailField = (
+    field: LoginFormData["email"] extends string
+      ? {
+          name: string;
+          value: string;
+          onBlur: () => void;
+          onChange: (...event: any[]) => void;
+          ref: React.Ref<any>;
+        }
+      : never
+  ) => (
+    <FormItem className="space-y-1">
+      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
+      <div className="relative z-10">
+        {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
+        <FormControl>
+          <input
+            type="email"
+            inputMode="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            enterKeyHint="next"
+            placeholder="you@example.com"
+            autoComplete="username"
+            className={input3DLg}
+            style={mobileInputStyle}
+            onTouchStartCapture={forceMobileInputFocus}
+            onPointerDownCapture={forceMobileInputFocus}
+            {...field}
+          />
+        </FormControl>
+      </div>
+      <FormMessage className="text-red-400 text-xs" />
+    </FormItem>
+  );
+
   const cardContent = (
     <>
       {!isTouchDevice && <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-transparent to-white/[0.04] rounded-3xl pointer-events-none" />}
@@ -460,18 +497,7 @@ const Login = () => {
         {isLogin ? (
           <Form {...loginForm}>
             <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-2.5">
-              <FormField control={loginForm.control} name="email" render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
-                  <div className="relative z-10">
-                    {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
-                    <FormControl>
-                      <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="username" className={input3DLg} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                    </FormControl>
-                  </div>
-                  <FormMessage className="text-red-400 text-xs" />
-                </FormItem>
-              )} />
+              <FormField control={loginForm.control} name="email" render={({ field }) => renderEmailField(field)} />
 
               <FormField control={loginForm.control} name="password" render={({ field }) => (
                 <FormItem className="space-y-1">
@@ -541,18 +567,7 @@ const Login = () => {
                 )} />
               </div>
 
-              <FormField control={signupForm.control} name="email" render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
-                  <div className="relative z-10">
-                    {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />}
-                    <FormControl>
-                      <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="username" className={input3DLg} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
-                    </FormControl>
-                  </div>
-                  <FormMessage className="text-red-400 text-xs" />
-                </FormItem>
-              )} />
+              <FormField control={signupForm.control} name="email" render={({ field }) => renderEmailField(field)} />
 
               <div className="grid grid-cols-2 gap-2">
                 <FormField control={signupForm.control} name="password" render={({ field }) => {
