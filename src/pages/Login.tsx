@@ -417,28 +417,30 @@ const Login = () => {
       <div className="w-full max-w-md relative z-10 px-4" style={isTouchDevice ? undefined : { perspective: "1200px" }}>
         <motion.div
           ref={cardRef}
-          initial={{ opacity: 0, y: 30, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          initial={isTouchDevice ? false : { opacity: 0, y: 30, scale: 0.95 }}
+          animate={isTouchDevice ? undefined : { opacity: 1, y: 0, scale: 1 }}
+          transition={isTouchDevice ? undefined : { duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           style={{
-            ...(isTouchDevice ? {} : { rotateX, rotateY, transformStyle: "preserve-3d" as const }),
-            boxShadow: "0 25px 60px -15px rgba(0,0,0,0.5), 0 10px 25px -10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)",
+            ...(isTouchDevice ? { transform: "none" } : { rotateX, rotateY, transformStyle: "preserve-3d" as const }),
+            boxShadow: isTouchDevice
+              ? "0 24px 60px -20px rgba(0,0,0,0.6)"
+              : "0 25px 60px -15px rgba(0,0,0,0.5), 0 10px 25px -10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)",
           }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
+          onMouseMove={isTouchDevice ? undefined : handleMouseMove}
+          onMouseLeave={isTouchDevice ? undefined : handleMouseLeave}
           className={cn(
             "relative rounded-3xl p-4 sm:p-5 flex flex-col",
             isTouchDevice
-              ? "bg-black/60 border border-white/15"
+              ? "bg-black/70 border border-white/15 mt-4 mb-6"
               : "bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15]"
           )}
         >
           {/* Glass shimmer */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-transparent to-white/[0.04] rounded-3xl pointer-events-none" />
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
+          {!isTouchDevice && <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-transparent to-white/[0.04] rounded-3xl pointer-events-none" />}
+          {!isTouchDevice && <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />}
 
           {/* Header */}
-          <div className="text-center mb-3 relative z-20" style={isTouchDevice ? undefined : { transform: "translateZ(30px)" }}>
+          <div className="text-center mb-3 relative z-20">
             <div className="absolute -left-2 -top-2">
               <button onClick={(e) => { e.stopPropagation(); navigate("/"); }} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation relative z-30" aria-label="Go to Home">
                 <Home className="w-5 h-5 text-white/70" />
@@ -450,13 +452,17 @@ const Login = () => {
               </button>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight drop-shadow-lg">ZIVO ID</h1>
-            <motion.p key={isLogin ? "login" : "signup"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-white/60 mt-0.5 text-xs">
-              {isLogin ? t("auth.welcome_back") : "Get Started Free — No credit card needed"}
-            </motion.p>
+            {isTouchDevice ? (
+              <p className="text-white/60 mt-0.5 text-xs">{isLogin ? t("auth.welcome_back") : "Get Started Free — No credit card needed"}</p>
+            ) : (
+              <motion.p key={isLogin ? "login" : "signup"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-white/60 mt-0.5 text-xs">
+                {isLogin ? t("auth.welcome_back") : "Get Started Free — No credit card needed"}
+              </motion.p>
+            )}
           </div>
 
           {/* Forms */}
-          <div className="relative z-10" style={isTouchDevice ? undefined : { transform: "translateZ(20px)" }}>
+          <div className="relative z-20">
           {isLogin ? (
             <Form {...loginForm}>
               <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-2.5">
@@ -464,7 +470,7 @@ const Login = () => {
                   <FormItem className="space-y-1">
                     <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
                     <FormControl>
-                      <div className="relative">
+                      <div className="relative z-10">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
                         <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3DLg} {...field} />
                       </div>
@@ -547,7 +553,7 @@ const Login = () => {
                   <FormItem className="space-y-0.5">
                     <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
                     <FormControl>
-                      <div className="relative">
+                      <div className="relative z-10">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
                         <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3D} {...field} />
                       </div>
