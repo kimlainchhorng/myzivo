@@ -172,8 +172,8 @@ export function useVirtualBackground(
               mask.height = mh;
               const maskData = conf.getAsFloat32Array();
               const img = mctx.createImageData(mw, mh);
-              const LO = 0.55;
-              const HI = 0.62;
+              const LO = 0.50;
+              const HI = 0.58;
               const RANGE = HI - LO;
               for (let i = 0; i < maskData.length; i++) {
                 const v = maskData[i];
@@ -195,15 +195,13 @@ export function useVirtualBackground(
               mhctx.drawImage(mask, 0, 0, W, H);
               mhctx.filter = "none";
 
-              // 2b-erode. 1px erosion: keep only pixels whose 4-neighbours are also opaque.
-              // Composite mask onto itself shifted by ±1px in destination-in mode → opens
-              // negative spaces (between fingers, around hair strands) that bilinear upscale filled in.
+              // 2b-erode. Light horizontal-only 1px erosion — opens vertical gaps between
+              // fingers without eating into the top of the head (where mask confidence is
+              // naturally lower on hair). Vertical erosion was clipping the scalp.
               mhctx.globalCompositeOperation = "destination-in";
               mhctx.filter = "none";
               mhctx.drawImage(maskHi, 1, 0, W, H);
               mhctx.drawImage(maskHi, -1, 0, W, H);
-              mhctx.drawImage(maskHi, 0, 1, W, H);
-              mhctx.drawImage(maskHi, 0, -1, W, H);
               mhctx.globalCompositeOperation = "source-over";
 
               // 2c. Motion-aware temporal smoothing.
