@@ -244,18 +244,15 @@ export function useVirtualBackground(
               mpctx.drawImage(maskHi, 0, 0, W, H);
               hasPrev = true;
 
-              // 2d. SMART AI — color-guided edge refinement.
-              // Sample the actual video pixels in the uncertain edge band
-              // (alpha ∈ [30,220]) and reclassify each as FG/BG by YCbCr
-              // distance to inward (FG-ref) vs outward (BG-ref) neighbors.
-              // Kills color halos by culling edge pixels that visually
-              // match the background, keeps hair strands that don't.
+              // 2d. SMART AI — conservative color-guided halo culling.
+              // Only operates on OUTER edge band (alpha 30-160 = likely halo).
+              // Verifies FG-ref is solid foreground (α>240) AND BG-ref is solid
+              // background (α<15) before acting. Only CULLS halo pixels — never
+              // promotes to FG, so face/skin can never be erased.
               try {
-                const DS = 2; // downsample factor (½ res for speed)
+                const DS = 2;
                 const dw = (W / DS) | 0;
                 const dh = (H / DS) | 0;
-                // Tmp canvases (reuse via closure-scoped lazy create would be ideal,
-                // but per-frame ImageData is fine at ½ res — ~3ms on 720p).
                 const tmpV = document.createElement("canvas");
                 tmpV.width = dw; tmpV.height = dh;
                 const tvctx = tmpV.getContext("2d")!;
@@ -267,48 +264,51 @@ export function useVirtualBackground(
                 const vData = tvctx.getImageData(0, 0, dw, dh).data;
                 const mImg = tmctx.getImageData(0, 0, dw, dh);
                 const mData = mImg.data;
-                const OFF = 3; // 3px @ ½ res = 6px @ full res
+                // Snapshot original alpha so neighbor reads aren't affected by writes
+                const origA = new Uint8ClampedArray(mData.length / 4);
+                for (let i = 0, j = 3; j < mData.length; i++, j += 4) origA[i] = mData[j];
+                const OFF = 4;
                 const toY = (r: number, g: number, b: number) => 0.299 * r + 0.587 * g + 0.114 * b;
                 const toCb = (r: number, g: number, b: number) => -0.169 * r - 0.331 * g + 0.5 * b + 128;
                 const toCr = (r: number, g: number, b: number) => 0.5 * r - 0.419 * g - 0.081 * b + 128;
                 for (let y = OFF; y < dh - OFF; y++) {
                   for (let x = OFF; x < dw - OFF; x++) {
-                    const idx = (y * dw + x) * 4;
-                    const a = mData[idx + 3];
-                    if (a < 30 || a > 220) continue;
-                    // Estimate gradient direction from mask: sample horiz+vert
-                    // and pick steepest axis to decide inward/outward.
-                    const aL = mData[(y * dw + (x - OFF)) * 4 + 3];
-                    const aR = mData[(y * dw + (x + OFF)) * 4 + 3];
-                    const aU = mData[((y - OFF) * dw + x) * 4 + 3];
-                    const aD = mData[((y + OFF) * dw + x) * 4 + 3];
-                    const dx = aR - aL;
-                    const dy = aD - aU;
-                    let fx: number, fy: number, bx: number, by: number;
-                    if (Math.abs(dx) > Math.abs(dy)) {
-                      // horizontal edge: FG = side with higher alpha
-                      fx = dx > 0 ? x + OFF : x - OFF; fy = y;
-                      bx = dx > 0 ? x - OFF : x + OFF; by = y;
+                    const pi = y * dw + x;
+                    const a = origA[pi];
+                    if (a < 30 || a > 160) continue;
+                    const aL = origA[y * dw + (x - OFF)];
+                    const aR = origA[y * dw + (x + OFF)];
+                    const aU = origA[(y - OFF) * dw + x];
+                    const aD = origA[(y + OFF) * dw + x];
+                    const gx = aR - aL;
+                    const gy = aD - aU;
+                    let fxp: number, fyp: number, bxp: number, byp: number;
+                    if (Math.abs(gx) > Math.abs(gy)) {
+                      fxp = gx > 0 ? x + OFF : x - OFF; fyp = y;
+                      bxp = gx > 0 ? x - OFF : x + OFF; byp = y;
                     } else {
-                      fx = x; fy = dy > 0 ? y + OFF : y - OFF;
-                      bx = x; by = dy > 0 ? y - OFF : y + OFF;
+                      fxp = x; fyp = gy > 0 ? y + OFF : y - OFF;
+                      bxp = x; byp = gy > 0 ? y - OFF : y + OFF;
                     }
-                    const fi = (fy * dw + fx) * 4;
-                    const bi = (by * dw + bx) * 4;
+                    const fAlpha = origA[fyp * dw + fxp];
+                    const bAlpha = origA[byp * dw + bxp];
+                    if (fAlpha < 240 || bAlpha > 15) continue; // need strong refs
+                    const fi = (fyp * dw + fxp) * 4;
+                    const bi = (byp * dw + bxp) * 4;
+                    const idx = pi * 4;
                     const fr = vData[fi], fg = vData[fi + 1], fb = vData[fi + 2];
                     const br = vData[bi], bg = vData[bi + 1], bb = vData[bi + 2];
                     const pr = vData[idx], pg = vData[idx + 1], pb = vData[idx + 2];
-                    // YCbCr distance (chroma weighted higher — color > luma for hair vs bg)
                     const py = toY(pr, pg, pb), pcb = toCb(pr, pg, pb), pcr = toCr(pr, pg, pb);
                     const fy2 = toY(fr, fg, fb), fcb = toCb(fr, fg, fb), fcr = toCr(fr, fg, fb);
                     const by2 = toY(br, bg, bb), bcb = toCb(br, bg, bb), bcr = toCr(br, bg, bb);
                     const dF = (py - fy2) ** 2 + 2 * ((pcb - fcb) ** 2 + (pcr - fcr) ** 2);
                     const dB = (py - by2) ** 2 + 2 * ((pcb - bcb) ** 2 + (pcr - bcr) ** 2);
-                    mData[idx + 3] = dF < dB ? 255 : 0;
+                    // Only CULL clear halo (BG much closer); never promote
+                    if (dB < dF * 0.5) mData[idx + 3] = 0;
                   }
                 }
                 tmctx.putImageData(mImg, 0, 0);
-                // Write refined mask back upscaled (light blur for AA)
                 mhctx.clearRect(0, 0, W, H);
                 mhctx.imageSmoothingEnabled = true;
                 mhctx.imageSmoothingQuality = "high";
