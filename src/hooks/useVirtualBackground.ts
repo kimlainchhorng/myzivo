@@ -47,9 +47,11 @@ export function useVirtualBackground(
     const out = document.createElement("canvas");
     const person = document.createElement("canvas");
     const mask = document.createElement("canvas");
+    const maskHi = document.createElement("canvas");
     const octx = out.getContext("2d")!;
     const pctx = person.getContext("2d")!;
     const mctx = mask.getContext("2d")!;
+    const mhctx = maskHi.getContext("2d")!;
 
     setStatus("loading");
 
