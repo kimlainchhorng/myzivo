@@ -593,6 +593,37 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
       }
     };
 
+    let lumaAcc = 0.5;
+    let lastLumaEmit = 0;
+
+    const sampleLuma = (lms: Landmark[] | null, now: number) => {
+      // Sample center of forehead/cheek region every 30 frames (~0.5s)
+      if (frameCounter % 30 !== 0) return;
+      const cx = lms?.[LM_NOSE_TIP] ? lms[LM_NOSE_TIP].x * W : W / 2;
+      const cy = lms?.[LM_NOSE_TIP] ? lms[LM_NOSE_TIP].y * H : H * 0.45;
+      const sw = Math.max(20, Math.floor(W * 0.08));
+      const sx = Math.max(0, Math.floor(cx - sw / 2));
+      const sy = Math.max(0, Math.floor(cy - sw / 2));
+      try {
+        const data = ctx.getImageData(sx, sy, sw, sw).data;
+        let sum = 0;
+        const step = 4 * 4; // every 4th pixel
+        let n = 0;
+        for (let i = 0; i < data.length; i += step) {
+          sum += (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+          n++;
+        }
+        const l = sum / (n * 255);
+        lumaAcc = lumaAcc * 0.7 + l * 0.3;
+        if (now - lastLumaEmit > 1500) {
+          lastLumaEmit = now;
+          setLuma(lumaAcc);
+        }
+      } catch {
+        // cross-origin/security; ignore
+      }
+    };
+
     const draw = () => {
       if (cancelled) return;
       const now = performance.now();
@@ -609,6 +640,7 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
       ctx.drawImage(video, 0, 0, W, H);
 
       if (!s.enabled) {
+        sampleLuma(lastLandmarks, now);
         rafId = requestAnimationFrame(draw);
         return;
       }
@@ -645,6 +677,7 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         }
       }
 
+      sampleLuma(lastLandmarks, now);
       rafId = requestAnimationFrame(draw);
     };
 
