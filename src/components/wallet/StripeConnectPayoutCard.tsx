@@ -10,9 +10,27 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useConnectStatus, useConnectOnboard, useInstantPayout } from "@/hooks/useStripeConnect";
 import StripeEmbeddedOnboarding from "./StripeEmbeddedOnboarding";
+import { detectInAppBrowser } from "@/lib/isInAppBrowser";
 
 interface Props {
   balanceDollars: number;
+}
+
+/** Embedded Stripe Connect only works in true desktop browsers, not mobile webviews/iframes. */
+function shouldUseEmbedded(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    if (window.innerWidth < 1024) return false;
+    if ((window as any).Capacitor?.isNativePlatform?.()) return false;
+    if (detectInAppBrowser()) return false;
+    if (window.self !== window.top) {
+      const host = window.location.hostname || "";
+      if (host.includes("lovableproject.com") || host.includes("lovable.app")) return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
