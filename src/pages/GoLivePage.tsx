@@ -998,7 +998,10 @@ export default function GoLivePage() {
                 ] as const).map((p) => (
                   <button
                     key={p.key}
-                    onClick={() => { setBeauty(BEAUTY_PRESETS[p.key]); setActivePreset(p.key); }}
+                    onClick={() => {
+                      setBeauty((b) => ({ ...BEAUTY_PRESETS[p.key], tone: b.tone, blurBg: b.blurBg }));
+                      setActivePreset(p.key);
+                    }}
                     className={cn(
                       "flex-1 h-8 rounded-full text-xs font-semibold transition-colors",
                       activePreset === p.key
@@ -1009,6 +1012,57 @@ export default function GoLivePage() {
                     {p.label}
                   </button>
                 ))}
+              </div>
+
+              {/* Tone LUTs */}
+              <div className={cn("mb-3", !beauty.enabled && "opacity-40 pointer-events-none")}>
+                <div className="text-white/70 text-[11px] font-semibold mb-1.5 uppercase tracking-wider">Tone</div>
+                <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+                  {([
+                    { key: "natural", label: "Natural", swatch: "from-zinc-300 to-zinc-100" },
+                    { key: "warm",    label: "Warm",    swatch: "from-orange-300 to-amber-200" },
+                    { key: "cool",    label: "Cool",    swatch: "from-sky-300 to-blue-200" },
+                    { key: "film",    label: "Film",    swatch: "from-amber-200 to-rose-200" },
+                    { key: "pink",    label: "Pink",    swatch: "from-pink-300 to-rose-200" },
+                  ] as const).map((t) => {
+                    const active = (beauty.tone ?? "natural") === t.key;
+                    return (
+                      <button
+                        key={t.key}
+                        onClick={() => setBeauty((b) => ({ ...b, tone: t.key }))}
+                        className={cn(
+                          "flex-shrink-0 flex flex-col items-center gap-1 px-2 py-1.5 rounded-xl border transition-colors",
+                          active ? "bg-pink-500/20 border-pink-400" : "bg-white/5 border-white/10 hover:bg-white/10",
+                        )}
+                      >
+                        <span className={cn("w-7 h-7 rounded-full bg-gradient-to-br border border-white/20", t.swatch)} />
+                        <span className={cn("text-[10px] font-semibold", active ? "text-pink-200" : "text-white/80")}>{t.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Background blur */}
+              <div className={cn("flex items-center justify-between mb-3 p-2.5 rounded-xl bg-white/5 border border-white/10", !beauty.enabled && "opacity-40 pointer-events-none")}>
+                <div className="flex flex-col">
+                  <span className="text-white text-sm font-semibold">Blur background</span>
+                  <span className="text-white/50 text-[10px]">Soft bokeh behind your face</span>
+                </div>
+                <button
+                  onClick={() => setBeauty((b) => ({ ...b, blurBg: !b.blurBg }))}
+                  className={cn(
+                    "relative w-11 h-6 rounded-full transition-colors flex-shrink-0",
+                    beauty.blurBg ? "bg-pink-500" : "bg-white/20",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform",
+                      beauty.blurBg ? "translate-x-5" : "translate-x-0.5",
+                    )}
+                  />
+                </button>
               </div>
 
               {/* Hold-to-compare */}

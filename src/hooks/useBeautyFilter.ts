@@ -24,6 +24,7 @@
 import { useEffect, useRef, useState } from "react";
 
 export type BeautyStatus = "loading" | "pro" | "lite";
+export type BeautyTone = "natural" | "warm" | "cool" | "film" | "pink";
 
 export interface BeautySettings {
   enabled: boolean;
@@ -33,6 +34,8 @@ export interface BeautySettings {
   eyes: number;     // 0-100 eye enlarge
   lips: number;     // 0-100 lip enhance
   nose: number;     // 0-100 nose slim
+  tone?: BeautyTone;     // color tone LUT
+  blurBg?: boolean;      // soft background blur
 }
 
 export const DEFAULT_BEAUTY: BeautySettings = {
@@ -43,6 +46,8 @@ export const DEFAULT_BEAUTY: BeautySettings = {
   eyes: 18,
   lips: 30,
   nose: 12,
+  tone: "natural",
+  blurBg: false,
 };
 
 export const BEAUTY_PRESETS: Record<"natural" | "sweet" | "glam" | "auto" | "off", BeautySettings> = {
@@ -545,6 +550,7 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
       }
 
       // ── F2. Subtle contour — restore cheekbone shadow flattened by smoothing.
+      // Hair-safe: clipped through feathered face mask via fxCanvas.
       if (s.smooth > 0 && slimPct > 0) {
         const lc = lms[LM_LEFT_CHEEK];
         const rc = lms[LM_RIGHT_CHEEK];
@@ -561,18 +567,117 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
           const cTop = (ntY + lcY) * 0.5;
           const cBot = (chY + lcY) * 0.5;
           const a = 0.06 + slimPct * 0.08;
+          // Paint stripes into fxCanvas, clip to face mask, then multiply onto ctx.
+          fxCtx.globalCompositeOperation = "source-over";
+          fxCtx.filter = "none";
+          fxCtx.clearRect(0, 0, W, H);
           const drawStripe = (cx: number, top: number, bot: number) => {
-            const g = ctx.createLinearGradient(cx - stripeW, 0, cx + stripeW, 0);
+            const g = fxCtx.createLinearGradient(cx - stripeW, 0, cx + stripeW, 0);
             g.addColorStop(0, "rgba(0,0,0,0)");
             g.addColorStop(0.5, `rgba(40,25,20,${a})`);
             g.addColorStop(1, "rgba(0,0,0,0)");
-            ctx.fillStyle = g;
-            ctx.fillRect(cx - stripeW, top, stripeW * 2, bot - top);
+            fxCtx.fillStyle = g;
+            fxCtx.fillRect(cx - stripeW, top, stripeW * 2, bot - top);
           };
-          ctx.globalCompositeOperation = "multiply";
           drawStripe(lcX + stripeW * 0.6, cTop, cBot);
           drawStripe(rcX - stripeW * 0.6, cTop, cBot);
+          fxCtx.globalCompositeOperation = "destination-in";
+          fxCtx.drawImage(featherCanvas, 0, 0);
+          fxCtx.globalCompositeOperation = "source-over";
+          ctx.globalCompositeOperation = "multiply";
+          ctx.drawImage(fxCanvas, 0, 0);
           ctx.globalCompositeOperation = "source-over";
+        }
+      }
+
+      // ── F3. Highlight pass — soft 3D glow on nose bridge / cheekbones / chin.
+      if (s.brighten > 0) {
+        const noseTip = lms[LM_NOSE_TIP];
+        const forehead = lms[LM_FOREHEAD];
+        const lc = lms[LM_LEFT_CHEEK];
+        const rc = lms[LM_RIGHT_CHEEK];
+        const chin = lms[LM_CHIN];
+        if (noseTip && forehead && lc && rc && chin) {
+          const faceW = (rc.x - lc.x) * W;
+          const a = 0.05 + brightPct * 0.10;
+          const paintGlow = (x: number, y: number, r: number, alpha: number) => {
+            const g = fxCtx.createRadialGradient(x, y, 0, x, y, r);
+            g.addColorStop(0, `rgba(255,250,240,${alpha})`);
+            g.addColorStop(1, "rgba(255,250,240,0)");
+            fxCtx.fillStyle = g;
+            fxCtx.beginPath();
+            fxCtx.arc(x, y, r, 0, Math.PI * 2);
+            fxCtx.fill();
+          };
+          fxCtx.globalCompositeOperation = "source-over";
+          fxCtx.filter = "none";
+          fxCtx.clearRect(0, 0, W, H);
+          // Nose bridge
+          const nbx = noseTip.x * W;
+          const nby = (noseTip.y + forehead.y) * 0.5 * H;
+          paintGlow(nbx, nby, faceW * 0.07, a);
+          // Cheekbone tops (above contour stripe)
+          const chTop = (lc.y * H + noseTip.y * H) * 0.5;
+          paintGlow(lc.x * W + faceW * 0.08, chTop, faceW * 0.10, a * 0.85);
+          paintGlow(rc.x * W - faceW * 0.08, chTop, faceW * 0.10, a * 0.85);
+          // Chin tip
+          paintGlow(chin.x * W, chin.y * H - faceW * 0.04, faceW * 0.06, a * 0.7);
+          // Clip to face oval (no glow on hair)
+          fxCtx.globalCompositeOperation = "destination-in";
+          fxCtx.drawImage(featherCanvas, 0, 0);
+          fxCtx.globalCompositeOperation = "source-over";
+          ctx.globalCompositeOperation = "screen";
+          ctx.drawImage(fxCanvas, 0, 0);
+          ctx.globalCompositeOperation = "source-over";
+        }
+      }
+
+      // ── F4. Teeth whitening — when mouth open, brighten light pixels in inner-lip region.
+      if (s.lips > 0) {
+        // Inner-lip vertical gap (upper lip 13, lower lip 14)
+        const upper = lms[13];
+        const lower = lms[14];
+        const lc = lms[LM_LEFT_CHEEK];
+        const rc = lms[LM_RIGHT_CHEEK];
+        if (upper && lower && lc && rc) {
+          const gap = (lower.y - upper.y) * H;
+          const faceW = (rc.x - lc.x) * W;
+          const open = gap > faceW * 0.04;
+          if (open) {
+            const cx = (upper.x + lower.x) * 0.5 * W;
+            const cy = (upper.y + lower.y) * 0.5 * H;
+            const w = Math.max(20, faceW * 0.18);
+            const h = Math.max(10, gap * 1.1);
+            const sx = Math.max(0, Math.floor(cx - w / 2));
+            const sy = Math.max(0, Math.floor(cy - h / 2));
+            const sw = Math.min(W - sx, Math.floor(w));
+            const sh = Math.min(H - sy, Math.floor(h));
+            try {
+              const img = ctx.getImageData(sx, sy, sw, sh);
+              const d = img.data;
+              const a = 0.4 + lipsPct * 0.5;
+              for (let i = 0; i < d.length; i += 4) {
+                const r = d[i], g = d[i + 1], b = d[i + 2];
+                const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+                if (luma < 110) continue;
+                const mx = Math.max(r, g, b);
+                const mn = Math.min(r, g, b);
+                if (mx - mn > 55) continue; // skip saturated (lip) pixels
+                // Desaturate yellow + brighten
+                const avg = (r + g + b) / 3;
+                const dr = r + (avg - r) * 0.45;
+                const dg = g + (avg - g) * 0.45;
+                const db = b + (avg - b) * 0.25;
+                const boost = 1.12;
+                d[i]     = Math.min(255, d[i]     * (1 - a) + dr * boost * a);
+                d[i + 1] = Math.min(255, d[i + 1] * (1 - a) + dg * boost * a);
+                d[i + 2] = Math.min(255, d[i + 2] * (1 - a) + db * boost * a);
+              }
+              ctx.putImageData(img, sx, sy);
+            } catch {
+              // ignore (security/cross-origin)
+            }
+          }
         }
       }
 
@@ -590,6 +695,47 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         ctx.globalCompositeOperation = "multiply";
         ctx.drawImage(blurCanvas, 0, 0);
         ctx.globalCompositeOperation = "source-over";
+      }
+
+      // ── H. Background blur — blur everything OUTSIDE the face mask.
+      if (s.blurBg) {
+        blurCtx.globalCompositeOperation = "source-over";
+        blurCtx.globalAlpha = 1;
+        blurCtx.filter = "blur(6px)";
+        blurCtx.drawImage(canvas, 0, 0);
+        blurCtx.filter = "none";
+        // Punch a hole where the face is (keep face sharp)
+        blurCtx.globalCompositeOperation = "destination-out";
+        blurCtx.drawImage(featherCanvas, 0, 0);
+        blurCtx.globalCompositeOperation = "source-over";
+        ctx.drawImage(blurCanvas, 0, 0);
+      }
+
+      // ── I. Tone LUT — full-frame color overlay.
+      const tone = s.tone ?? "natural";
+      if (tone !== "natural") {
+        const tones: Record<string, { color: string; sat: number; con: number }> = {
+          warm: { color: "rgba(255, 200, 150, 0.10)", sat: 1.08, con: 1.0 },
+          cool: { color: "rgba(180, 210, 255, 0.10)", sat: 1.05, con: 1.0 },
+          film: { color: "rgba(255, 220, 180, 0.14)", sat: 0.95, con: 1.05 },
+          pink: { color: "rgba(255, 200, 210, 0.12)", sat: 1.12, con: 1.0 },
+        };
+        const t = tones[tone];
+        if (t) {
+          // Saturation/contrast: re-render canvas through filter
+          if (t.sat !== 1 || t.con !== 1) {
+            blurCtx.globalCompositeOperation = "source-over";
+            blurCtx.globalAlpha = 1;
+            blurCtx.filter = `saturate(${t.sat}) contrast(${t.con})`;
+            blurCtx.clearRect(0, 0, W, H);
+            blurCtx.drawImage(canvas, 0, 0);
+            blurCtx.filter = "none";
+            ctx.drawImage(blurCanvas, 0, 0);
+          }
+          // Color overlay
+          ctx.fillStyle = t.color;
+          ctx.fillRect(0, 0, W, H);
+        }
       }
     };
 
