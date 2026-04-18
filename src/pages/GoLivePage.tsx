@@ -213,12 +213,13 @@ export default function GoLivePage() {
   }, [startCamera]);
 
   // Bind whichever stream is current (beautified preferred) to the preview <video>.
+  // While holding "Compare", switch to the raw stream so the streamer sees the before/after.
   useEffect(() => {
-    if (videoRef.current && localStream) {
-      videoRef.current.srcObject = localStream;
+    if (videoRef.current && previewStream) {
+      videoRef.current.srcObject = previewStream;
       videoRef.current.play().catch(() => {});
     }
-  }, [localStream]);
+  }, [previewStream]);
 
   const toggleCamera = useCallback(() => {
     streamRef.current?.getVideoTracks().forEach((t) => (t.enabled = !t.enabled));
@@ -941,10 +942,25 @@ export default function GoLivePage() {
                 </button>
               </div>
 
+              {/* Status pill */}
+              <div className="flex justify-center mb-3">
+                <span className={cn(
+                  "px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide",
+                  beautyStatus === "pro" && "bg-pink-500/20 text-pink-200 border border-pink-400/40",
+                  beautyStatus === "lite" && "bg-amber-500/20 text-amber-200 border border-amber-400/40",
+                  beautyStatus === "loading" && "bg-white/10 text-white/70 border border-white/20",
+                )}>
+                  {beautyStatus === "pro" && "● Beauty: Pro (face tracking)"}
+                  {beautyStatus === "lite" && "● Beauty: Lite (no face tracking)"}
+                  {beautyStatus === "loading" && "Loading…"}
+                </span>
+              </div>
+
               {/* Quick presets */}
-              <div className="flex gap-2 mb-4">
+              <div className="flex gap-2 mb-3">
                 {([
                   { key: "natural", label: "Natural" },
+                  { key: "sweet", label: "Sweet" },
                   { key: "glam", label: "Glam" },
                   { key: "off", label: "Off" },
                 ] as const).map((p) => (
@@ -958,19 +974,31 @@ export default function GoLivePage() {
                 ))}
               </div>
 
-              {!beautyReady && beauty.enabled && (
-                <div className="mb-3 text-[11px] text-pink-300/80 text-center animate-pulse">
-                  Loading face tracking…
-                </div>
-              )}
+              {/* Hold-to-compare */}
+              <button
+                onPointerDown={() => setCompareHold(true)}
+                onPointerUp={() => setCompareHold(false)}
+                onPointerLeave={() => setCompareHold(false)}
+                onPointerCancel={() => setCompareHold(false)}
+                className={cn(
+                  "w-full h-9 rounded-full mb-4 text-xs font-bold border transition-colors select-none",
+                  compareHold
+                    ? "bg-white text-zinc-900 border-white"
+                    : "bg-white/10 text-white border-white/20 hover:bg-white/15",
+                )}
+              >
+                {compareHold ? "Showing original — release to compare" : "Hold to compare (before / after)"}
+              </button>
 
               {[
                 { key: "smooth", label: "Skin smoothing", icon: "✨" },
                 { key: "brighten", label: "Brighten", icon: "🌟" },
                 { key: "slim", label: "Face slim", icon: "💎" },
                 { key: "eyes", label: "Eye enlarge", icon: "👁️" },
+                { key: "lips", label: "Lip enhance", icon: "💋" },
+                { key: "nose", label: "Nose slim", icon: "👃" },
               ].map((row) => (
-                <div key={row.key} className={cn("mb-4", !beauty.enabled && "opacity-40 pointer-events-none")}>
+                <div key={row.key} className={cn("mb-3", !beauty.enabled && "opacity-40 pointer-events-none")}>
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-white/90 text-sm font-medium">
                       <span className="mr-1.5">{row.icon}</span>{row.label}
