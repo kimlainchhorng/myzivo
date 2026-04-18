@@ -190,6 +190,18 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
     const eyeCanvas = document.createElement("canvas");
     const eyeCtx = eyeCanvas.getContext("2d")!;
 
+    // Persistent feather canvas for lip mask (avoids per-frame allocation).
+    const featherLipsCanvas = document.createElement("canvas");
+    featherLipsCanvas.width = W;
+    featherLipsCanvas.height = H;
+    const featherLipsCtx = featherLipsCanvas.getContext("2d")!;
+
+    // Persistent canvas for warped slim/nose composite (pre-smoothing).
+    const warpCanvas = document.createElement("canvas");
+    warpCanvas.width = W;
+    warpCanvas.height = H;
+    const warpCtx = warpCanvas.getContext("2d")!;
+
     let landmarker: any = null;
     let lastLandmarks: Landmark[] | null = null;
     let lastLandmarksAt = 0;
