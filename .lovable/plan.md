@@ -1,49 +1,29 @@
 
+The face in the screenshot shows a soft, blurred halo around the silhouette — the segmentation mask is still being applied, which causes the "filter/mask" feel even though no beauty filter is active. The user wants raw face pixels with only the background swapped behind them.
 
-## Goal
-Make the virtual background look like a real, professionally-shot photo — sharp person edges, no halo bleed, and natural color/light blending with the chosen scene.
+Looking at the current `useVirtualBackground.ts`, the mask thresholding band (`LO=0.5, HI=0.62`) still produces semi-transparent pixels at the silhouette edge, and the `imageSmoothingEnabled` upscaling of the low-res MediaPipe mask (256px) onto the 720p person canvas creates a soft, mask-like edge across the face perimeter.
 
-## Issues in current screenshot
-1. Person edges are mushy — background blur leaks into the face/hair
-2. Threshold band (0.35–0.7) is too wide → translucent halo around shoulders
-3. Mask runs at low MediaPipe resolution (256px) without upscaling smoothing
-4. No light/color matching, so person looks "pasted on"
-5. Background is too sharp/bright → competes with subject
+## Fix
+Make the mask **fully binary** (no anti-aliased edge band) and **pixel-perfect upscale** so the face inside the silhouette is 100% raw video, with no transparency falloff anywhere.
 
-## Fix plan (single file: `src/hooks/useVirtualBackground.ts`)
+### Single file: `src/hooks/useVirtualBackground.ts`
 
-**1. Tighter, cleaner mask**
-- Narrow the smoothstep band to `0.5–0.62` (sharper silhouette, no halo)
-- Add a 2-pass dilate+erode-style refinement: blur mask `0.8px`, then re-threshold high (≥0.55→255) so edges stay crisp but anti-aliased
-- Upscale mask with `imageSmoothingQuality: "high"` when drawing into personCanvas
+1. **Binary mask** — replace smoothstep band with hard threshold:
+   ```ts
+   const T = 0.5;
+   for (i): a = maskData[i] >= T ? 255 : 0;
+   ```
+   No partial alpha → no halo, no soft edge that reads as "mask on face."
 
-**2. Edge treatment (real-camera feel)**
-- Draw person with a **1px inner feather only** (not 1.2px full blur which softens face)
-- Add a thin dark inner rim (1px shadow at edges) using a second masked draw with `0.5px` offset → gives natural depth separation
+2. **Disable smoothing on mask upscale** — set `pctx.imageSmoothingEnabled = false` before the `destination-in` draw so the mask scales nearest-neighbor (sharp, no blur into face).
 
-**3. Background realism**
-- Increase background blur to `4px` + `brightness(0.88)` + `saturate(1.1)` → mimics shallow depth-of-field, pushes scene back
-- Add a soft radial vignette over the background only (darker corners) for cinematic framing
-- Keep ambient tint but lift to `rgba(0,0,0,0.06)` for stronger grounding
+3. **Keep person draw smooth** — only the mask upscale is nearest-neighbor; the video itself stays high-quality.
 
-**4. Color/light match**
-- Sample average background color (downscale bg to 1×1 px once on load) and overlay it on the person at `rgba(R,G,B,0.05)` with `multiply` blend → ties subject lighting to scene
+4. **Remove vignette** — it darkens the edge of the frame around the face, contributing to the "processed" look. Background stays clean: just blur + slight brightness.
 
-**5. Pipeline order**
-```text
-[bg image] → blur+vignette+tint
-   ↓
-[mask] → refine (blur→threshold→upscale smooth)
-   ↓
-[person] = video ∩ refined-mask + inner rim shadow
-   ↓
-[person] → light-match overlay (multiply with bg avg color)
-   ↓
-composite onto bg
-```
-
-## Files
-- `src/hooks/useVirtualBackground.ts` — refine mask thresholds, add vignette + bg-avg color sampling + inner rim, tune filters
+### Result
+- Face = 100% raw camera pixels, no edge softening
+- Background swaps cleanly behind a hard silhouette
+- No filter/mask appearance on skin
 
 No new dependencies. No UI changes.
-
