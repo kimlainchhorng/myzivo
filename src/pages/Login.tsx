@@ -547,7 +547,7 @@ const Login = () => {
                   <FormControl>
                     <div className="relative z-10">
                       {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
-                      <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={isTouchDevice ? input3DLg : input3D} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} onClick={(event) => { if (isTouchDevice) { event.currentTarget.focus({ preventScroll: true }); } }} {...field} />
+                      <input type={isTouchDevice ? "text" : "email"} inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete={isTouchDevice ? "off" : "email"} className={isTouchDevice ? input3DLg : input3D} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} onClick={(event) => { if (isTouchDevice) { event.currentTarget.focus({ preventScroll: true }); } }} {...field} />
                     </div>
                   </FormControl>
                   <FormMessage className="text-red-400 text-xs" />
