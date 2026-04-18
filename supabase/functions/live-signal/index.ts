@@ -147,8 +147,9 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Anonymous viewers are allowed (read-only role); publishers must be authenticated.
-  if (!effectiveUserId && from_role !== "viewer") {
+  // Anonymous viewers are allowed (read-only); heartbeats are allowed unauthenticated
+  // (they're harmless pings). Other publisher signals require auth.
+  if (!effectiveUserId && from_role !== "viewer" && type !== "heartbeat") {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
