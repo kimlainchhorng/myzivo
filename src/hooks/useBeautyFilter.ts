@@ -131,6 +131,7 @@ function pathFromIndices(
 export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautySettings) {
   const [outputStream, setOutputStream] = useState<MediaStream | null>(null);
   const [status, setStatus] = useState<BeautyStatus>("loading");
+  const [luma, setLuma] = useState<number>(0.5); // 0-1, smoothed face luma
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
 
