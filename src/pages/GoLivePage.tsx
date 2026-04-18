@@ -122,7 +122,7 @@ export default function GoLivePage() {
   const [rawStream, setRawStream] = useState<MediaStream | null>(null);
   const [beauty, setBeauty] = useState<BeautySettings>(DEFAULT_BEAUTY);
   const [showBeautyPanel, setShowBeautyPanel] = useState(false);
-  const [activePreset, setActivePreset] = useState<"natural" | "sweet" | "glam" | "auto" | "off" | "custom">("custom");
+  const [activePreset, setActivePreset] = useState<"real" | "natural" | "sweet" | "glam" | "auto" | "off" | "custom">("custom");
   const { stream: beautifiedStream, status: beautyStatus, luma } = useBeautyFilter(rawStream, beauty);
   const [compareHold, setCompareHold] = useState(false);
 
@@ -988,8 +988,9 @@ export default function GoLivePage() {
               </div>
 
               {/* Quick presets */}
-              <div className="flex gap-1.5 mb-3">
+              <div className="flex gap-1 mb-3 overflow-x-auto -mx-1 px-1 pb-1">
                 {([
+                  { key: "real", label: "Real" },
                   { key: "auto", label: "Auto" },
                   { key: "natural", label: "Natural" },
                   { key: "sweet", label: "Sweet" },
@@ -1003,7 +1004,7 @@ export default function GoLivePage() {
                       setActivePreset(p.key);
                     }}
                     className={cn(
-                      "flex-1 h-8 rounded-full text-xs font-semibold transition-colors",
+                      "flex-shrink-0 min-w-[60px] h-8 px-3 rounded-full text-xs font-semibold transition-colors",
                       activePreset === p.key
                         ? "bg-pink-500 text-white"
                         : "bg-white/10 hover:bg-white/15 text-white",
