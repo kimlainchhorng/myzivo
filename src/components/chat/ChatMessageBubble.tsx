@@ -30,6 +30,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { openExternalUrl } from "@/lib/openExternalUrl";
+import ExternalLinkWarning from "@/components/security/ExternalLinkWarning";
 import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
 
 import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
@@ -1032,6 +1033,7 @@ function parseLegacyMusicShare(messageText?: string | null): LegacyMusicShareMet
 /* ── Link Preview Card ─────────────────────────────────────────── */
 function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isMe: boolean; hasText: boolean; messageText?: string }) {
   const navigate = useNavigate();
+  const [warnOpen, setWarnOpen] = useState(false);
   const [preview, setPreview] = useState<{
     mediaUrl?: string | null;
     mediaType?: "image" | "video";
@@ -1191,11 +1193,18 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
     if (isInternalLink) {
       navigate(getInAppPath());
     } else {
-      void openExternalUrl(url);
+      setWarnOpen(true);
     }
   };
 
   return (
+    <>
+    <ExternalLinkWarning
+      url={url}
+      open={warnOpen}
+      onOpenChange={setWarnOpen}
+      onConfirm={(u) => { void openExternalUrl(u); }}
+    />
     <div
       onClick={handleClick}
       className={`block mx-1.5 mb-1.5 ${!hasText ? "mt-1.5" : "mt-0.5"} rounded-2xl overflow-hidden cursor-pointer ${
@@ -1263,6 +1272,7 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
         </div>
       </div>
     </div>
+    </>
   );
 }
 
