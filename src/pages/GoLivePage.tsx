@@ -122,7 +122,7 @@ export default function GoLivePage() {
   const [rawStream, setRawStream] = useState<MediaStream | null>(null);
   const [beauty, setBeauty] = useState<BeautySettings>(DEFAULT_BEAUTY);
   const [showBeautyPanel, setShowBeautyPanel] = useState(false);
-  const [activePreset, setActivePreset] = useState<"real" | "natural" | "sweet" | "glam" | "auto" | "off" | "custom">("custom");
+  const [activePreset, setActivePreset] = useState<"real" | "natural" | "sweet" | "pro" | "glam" | "auto" | "off" | "custom">("custom");
   const { stream: beautifiedStream, status: beautyStatus, luma } = useBeautyFilter(rawStream, beauty);
   const [compareHold, setCompareHold] = useState(false);
 
@@ -994,6 +994,7 @@ export default function GoLivePage() {
                   { key: "auto", label: "Auto" },
                   { key: "natural", label: "Natural" },
                   { key: "sweet", label: "Sweet" },
+                  { key: "pro", label: "Pro" },
                   { key: "glam", label: "Glam" },
                   { key: "off", label: "Off" },
                 ] as const).map((p) => (
