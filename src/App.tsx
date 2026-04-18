@@ -16,6 +16,7 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
 import { BrandProvider } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import GuestOrUser from "@/components/auth/GuestOrUser";
 import PhoneRequiredGate from "@/components/auth/PhoneRequiredGate";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import { RouteErrorBoundary } from "./components/shared/RouteErrorBoundary";
@@ -748,7 +749,7 @@ const App = () => (
                 <Route path="/verify-new-device" element={<VerifyNewDevice />} />
                 <Route path="/setup" element={<Setup />} />
                 
-                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/profile" element={<GuestOrUser guestPreview={<GuestProfilePreview />}><Profile /></GuestOrUser>} />
                 <Route path="/more" element={<ProtectedRoute><MorePage /></ProtectedRoute>} />
                 <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
                 <Route path="/user/:userId" element={<PublicProfilePage />} />
