@@ -68,6 +68,8 @@ const ReferAShopPage = lazy(() => import("./pages/app/shop/ReferAShopPage"));
 const ReferAFriendPage = lazy(() => import("./pages/app/ReferAFriendPage"));
 const MetaPrivacyDisclosure = lazy(() => import("./pages/legal/MetaPrivacyDisclosure"));
 const CreateCVPage = lazy(() => import("./pages/app/CreateCVPage"));
+const ApplyJobHubPage = lazy(() => import("./pages/app/personal/ApplyJobHubPage"));
+const FindEmployeePage = lazy(() => import("./pages/app/personal/FindEmployeePage"));
 const PersonalEmployeesPage = lazy(() => import("./pages/app/personal/PersonalEmployeesPage"));
 const PersonalSchedulePage = lazy(() => import("./pages/app/personal/PersonalSchedulePage"));
 const PersonalTimesheetPage = lazy(() => import("./pages/app/personal/PersonalTimesheetPage"));
@@ -534,6 +536,8 @@ const App = () => (
                 <Route path="/travel" element={<ProtectedRoute><AppTravel /></ProtectedRoute>} />
                 <Route path="/more" element={<ProtectedRoute><AppMore /></ProtectedRoute>} />
                 <Route path="/personal-dashboard" element={<ProtectedRoute><PersonalDashboard /></ProtectedRoute>} />
+                <Route path="/personal/apply-job" element={<ProtectedRoute><ApplyJobHubPage /></ProtectedRoute>} />
+                <Route path="/personal/find-employee" element={<ProtectedRoute><FindEmployeePage /></ProtectedRoute>} />
                 <Route path="/personal/create-cv" element={<ProtectedRoute><CreateCVPage /></ProtectedRoute>} />
                 <Route path="/personal/employees" element={<ProtectedRoute><PersonalEmployeesPage /></ProtectedRoute>} />
                 <Route path="/personal/schedule" element={<ProtectedRoute><PersonalSchedulePage /></ProtectedRoute>} />
