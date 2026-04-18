@@ -554,7 +554,7 @@ const Login = () => {
                         <FormControl>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                            <input type={showSignupPwd ? "text" : "password"} placeholder="Min 6 chars" autoComplete="new-password" className={input3D + " pr-9"} {...field} />
+                            <input type={showSignupPwd ? "text" : "password"} placeholder="8+ chars, letters & numbers" autoComplete="new-password" className={input3D + " pr-9"} {...field} />
                             <button type="button" onClick={() => setShowSignupPwd(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showSignupPwd ? "Hide password" : "Show password"}>
                               {showSignupPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                             </button>
