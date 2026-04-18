@@ -93,116 +93,123 @@ export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
 
   // Connected — show payout form
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-      <div className="rounded-2xl bg-gradient-to-br from-[#635bff] to-[#4b44d9] text-white p-4 shadow-lg shadow-[#635bff]/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5" />
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider opacity-90">Stripe Connected</p>
-              <p className="text-sm font-semibold">
-                {status.instant_eligible ? "Instant payouts ready ⚡" : "Standard payouts ready"}
-              </p>
+    <>
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+        <div className="rounded-2xl bg-gradient-to-br from-[#635bff] to-[#4b44d9] text-white p-4 shadow-lg shadow-[#635bff]/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5" />
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider opacity-90">Stripe Connected</p>
+                <p className="text-sm font-semibold">
+                  {status.instant_eligible ? "Instant payouts ready ⚡" : "Standard payouts ready"}
+                </p>
+              </div>
             </div>
+            <button
+              onClick={() => setEmbedOpen(true)}
+              className="text-[11px] underline opacity-80 hover:opacity-100"
+            >
+              Manage
+            </button>
           </div>
+        </div>
+
+        {/* Method toggle */}
+        <div className="flex gap-2">
           <button
-            onClick={() => onboard.mutate("US")}
-            className="text-[11px] underline opacity-80 hover:opacity-100"
+            onClick={() => setMethod("instant")}
+            disabled={!status.instant_eligible}
+            className={`flex-1 p-3 rounded-2xl border-2 transition-all text-left ${
+              method === "instant"
+                ? "border-[#635bff] bg-[#635bff]/5"
+                : "border-border/40 bg-card opacity-70"
+            } ${!status.instant_eligible ? "opacity-40 cursor-not-allowed" : ""}`}
           >
-            Manage
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <Zap className="w-3.5 h-3.5 text-[#635bff]" />
+              <span className="text-[12px] font-bold">Instant</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground">Minutes · 1.5% fee</p>
+          </button>
+          <button
+            onClick={() => setMethod("standard")}
+            className={`flex-1 p-3 rounded-2xl border-2 transition-all text-left ${
+              method === "standard" ? "border-[#635bff] bg-[#635bff]/5" : "border-border/40 bg-card opacity-70"
+            }`}
+          >
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <CreditCard className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-[12px] font-bold">Standard</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground">2 business days · Free</p>
           </button>
         </div>
-      </div>
 
-      {/* Method toggle */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => setMethod("instant")}
-          disabled={!status.instant_eligible}
-          className={`flex-1 p-3 rounded-2xl border-2 transition-all text-left ${
-            method === "instant"
-              ? "border-[#635bff] bg-[#635bff]/5"
-              : "border-border/40 bg-card opacity-70"
-          } ${!status.instant_eligible ? "opacity-40 cursor-not-allowed" : ""}`}
-        >
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <Zap className="w-3.5 h-3.5 text-[#635bff]" />
-            <span className="text-[12px] font-bold">Instant</span>
+        {/* Amount */}
+        <div>
+          <div className="flex gap-2 flex-wrap mb-2">
+            {[5, 25, 50, 100].filter((a) => a <= balanceDollars).map((amt) => (
+              <button
+                key={amt}
+                onClick={() => setAmount(String(amt))}
+                className={`px-3 py-1.5 rounded-xl text-[12px] font-semibold ${
+                  amount === String(amt) ? "bg-[#635bff] text-white" : "bg-muted/50 border border-border/40"
+                }`}
+              >
+                ${amt}
+              </button>
+            ))}
+            {balanceDollars >= 1 && (
+              <button
+                onClick={() => setAmount(balanceDollars.toFixed(2))}
+                className={`px-3 py-1.5 rounded-xl text-[12px] font-semibold ${
+                  amount === balanceDollars.toFixed(2) ? "bg-[#635bff] text-white" : "bg-muted/50 border border-border/40"
+                }`}
+              >
+                All
+              </button>
+            )}
           </div>
-          <p className="text-[10px] text-muted-foreground">Minutes · 1.5% fee</p>
-        </button>
-        <button
-          onClick={() => setMethod("standard")}
-          className={`flex-1 p-3 rounded-2xl border-2 transition-all text-left ${
-            method === "standard" ? "border-[#635bff] bg-[#635bff]/5" : "border-border/40 bg-card opacity-70"
-          }`}
-        >
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <CreditCard className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-[12px] font-bold">Standard</span>
-          </div>
-          <p className="text-[10px] text-muted-foreground">2 business days · Free</p>
-        </button>
-      </div>
-
-      {/* Amount */}
-      <div>
-        <div className="flex gap-2 flex-wrap mb-2">
-          {[5, 25, 50, 100].filter((a) => a <= balanceDollars).map((amt) => (
-            <button
-              key={amt}
-              onClick={() => setAmount(String(amt))}
-              className={`px-3 py-1.5 rounded-xl text-[12px] font-semibold ${
-                amount === String(amt) ? "bg-[#635bff] text-white" : "bg-muted/50 border border-border/40"
-              }`}
-            >
-              ${amt}
-            </button>
-          ))}
-          {balanceDollars >= 1 && (
-            <button
-              onClick={() => setAmount(balanceDollars.toFixed(2))}
-              className={`px-3 py-1.5 rounded-xl text-[12px] font-semibold ${
-                amount === balanceDollars.toFixed(2) ? "bg-[#635bff] text-white" : "bg-muted/50 border border-border/40"
-              }`}
-            >
-              All
-            </button>
-          )}
+          <Input
+            type="number"
+            placeholder="Amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="rounded-xl h-11"
+            min="1"
+            max={balanceDollars}
+          />
         </div>
-        <Input
-          type="number"
-          placeholder="Amount"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="rounded-xl h-11"
-          min="1"
-          max={balanceDollars}
-        />
-      </div>
 
-      <Button
-        onClick={() => payout.mutate({ amount_cents: Math.round(amountNum * 100), method })}
-        disabled={!canPayout}
-        className="w-full h-12 rounded-2xl font-bold gap-2 bg-[#635bff] hover:bg-[#4b44d9] text-white"
-      >
-        {payout.isPending ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : method === "instant" ? (
-          <Zap className="w-4 h-4" />
-        ) : (
-          <ArrowRight className="w-4 h-4" />
-        )}
-        {payout.isPending
-          ? "Processing…"
-          : `${method === "instant" ? "Instant payout" : "Cash out"} $${amountNum.toFixed(2)}`}
-      </Button>
+        <Button
+          onClick={() => payout.mutate({ amount_cents: Math.round(amountNum * 100), method })}
+          disabled={!canPayout}
+          className="w-full h-12 rounded-2xl font-bold gap-2 bg-[#635bff] hover:bg-[#4b44d9] text-white"
+        >
+          {payout.isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : method === "instant" ? (
+            <Zap className="w-4 h-4" />
+          ) : (
+            <ArrowRight className="w-4 h-4" />
+          )}
+          {payout.isPending
+            ? "Processing…"
+            : `${method === "instant" ? "Instant payout" : "Cash out"} $${amountNum.toFixed(2)}`}
+        </Button>
 
-      <p className="text-[10px] text-muted-foreground/70 text-center">
-        {method === "instant"
-          ? "Funds typically arrive within minutes to eligible debit cards."
-          : "Funds arrive in 1–2 business days via ACH."}
-      </p>
-    </motion.div>
+        <p className="text-[10px] text-muted-foreground/70 text-center">
+          {method === "instant"
+            ? "Funds typically arrive within minutes to eligible debit cards."
+            : "Funds arrive in 1–2 business days via ACH."}
+        </p>
+      </motion.div>
+      <StripeEmbeddedOnboarding
+        open={embedOpen}
+        onClose={() => setEmbedOpen(false)}
+        onComplete={handleComplete}
+      />
+    </>
   );
 }
