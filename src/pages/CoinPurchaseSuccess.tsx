@@ -90,9 +90,17 @@ export default function CoinPurchaseSuccess() {
                 New balance: {balance.toLocaleString()} Z Coins
               </p>
             )}
-            <Button className="w-full rounded-xl font-bold" onClick={() => navigate("/wallet")}>
-              Back to Wallet
+            <Button className="w-full rounded-xl font-bold" onClick={() => navigate(returnTo, { replace: true })}>
+              {isLiveReturn ? `Back to Live (${countdown})` : "Back to Wallet"}
             </Button>
+            {isLiveReturn && (
+              <button
+                onClick={() => navigate("/wallet")}
+                className="mt-3 text-xs text-muted-foreground underline"
+              >
+                Go to Wallet instead
+              </button>
+            )}
           </>
         )}
 
