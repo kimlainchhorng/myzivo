@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, type CSSProperties, type PointerEvent as ReactPointerEvent, type TouchEvent as ReactTouchEvent } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
@@ -141,6 +141,10 @@ const Login = () => {
       confirmPassword: "",
       agreeToTerms: undefined as unknown as true,
     },
+  });
+  const signupPassword = useWatch({
+    control: signupForm.control,
+    name: "password",
   });
 
   // Reset forms when switching modes
@@ -543,7 +547,7 @@ const Login = () => {
                   <FormControl>
                     <div className="relative z-10">
                       {!isTouchDevice && <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />}
-                      <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3D} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} {...field} />
+                      <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={isTouchDevice ? input3DLg : input3D} style={mobileInputStyle} onTouchStartCapture={forceMobileInputFocus} onPointerDownCapture={forceMobileInputFocus} onClick={(event) => { if (isTouchDevice) { event.currentTarget.focus({ preventScroll: true }); } }} {...field} />
                     </div>
                   </FormControl>
                   <FormMessage className="text-red-400 text-xs" />
@@ -582,7 +586,7 @@ const Login = () => {
                   );
                 }} />
                 <FormField control={signupForm.control} name="confirmPassword" render={({ field }) => {
-                  const pwd = signupForm.watch("password");
+                  const pwd = signupPassword;
                   const matches = field.value && pwd && field.value === pwd;
                   return (
                     <FormItem className="space-y-0.5">
