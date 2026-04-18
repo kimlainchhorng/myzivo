@@ -70,6 +70,15 @@ export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
     queryClient.invalidateQueries({ queryKey: ["stripe-connect-status"] });
   };
 
+  const country = (status as any)?.country || "US";
+  const openOnboarding = () => {
+    if (shouldUseEmbedded()) {
+      setEmbedOpen(true);
+    } else {
+      onboard.mutate(country);
+    }
+  };
+
   // Not connected yet
   if (!status?.connected || !status?.details_submitted) {
     return (
