@@ -1,58 +1,54 @@
 
 
-## Why nothing changed for you
-The model is still showing **"Loading face tracking…"** in your screenshot — that means MediaPipe never loaded, so the filter is silently running the *fallback* path (a tiny 10% brightness bump, no smoothing, no slim, no eye enlarge). That's why you can crank every slider to 100 and see basically zero difference.
+## Why the screenshot looks broken
+The white rectangular patches over the forehead, eyes, and chin are bugs in the Pro pipeline — not a tuning issue:
 
-Two likely root causes:
-1. **WASM CDN blocked / slow** — `cdn.jsdelivr.net/.../tasks-vision/wasm` sometimes fails on mobile carriers. We never recover from that.
-2. **GPU delegate fails on Safari iOS** → throws → we never retry on CPU.
+1. **Eye enlarge paints square patches.** `clearRect` on the helper canvas leaves a transparent rectangle, then we copy that whole 3r × 3r region onto the output. The clipping circle only protects the *write* but not the *read*, so a hard-edged square around each eye gets stamped onto the face. That's the two boxes over the eyes and the box over the forehead.
+2. **Lip enhance leaks as a colored rectangle on the chin.** The lip block reuses the shared `maskCanvas` for two different purposes in the same frame, so the lips-only mask is briefly the wrong shape and the saturated/contrasted layer is composited as an opaque blob below the mouth.
+3. **Brighten is way too strong.** Screen-blend at α 0.8 with a warm fill blows out skin to near-white, killing detail.
+4. **Face mask flicker.** When the landmarker drops a frame we fall straight to the lite oval, which doesn't align with the real face → visible "mask jumping" between frames.
 
-The fallback itself is also way too weak — even if MediaPipe never loads, the user should still see a clearly beautified face.
+## Fix plan — `src/hooks/useBeautyFilter.ts`
 
-## Plan — make beauty *actually* look like Bigo/TikTok
+### A. Eye enlarge — rebuild correctly
+- Use a dedicated offscreen canvas (`eyeCanvas`) sized only to 3r × 3r, draw the scaled eye into it, then composite onto the output **inside** a feathered radial-gradient alpha mask drawn with `globalCompositeOperation = "destination-in"` on the eye canvas itself. Result: soft circular blend, zero square edges.
+- Cap scale at +22% (28% looked alien).
 
-### 1. Make MediaPipe actually load (root-cause fix)
-- Self-host the WASM + `face_landmarker.task` model under `/public/mediapipe/` so there's no CDN dependency.
-- Try **GPU delegate first → auto-retry with CPU delegate** on failure.
-- Add a 6-second timeout: if still not ready, fall through to the *strong* fallback (below) instead of staying stuck on "Loading…".
-- Surface real status: `loading → ready` or `loading → fallback` so the UI shows "Beauty active (lite)" instead of an infinite spinner.
+### B. Lip enhance — isolate the mask
+- Use a third dedicated canvas (`fxCanvas`) for per-feature masks so we never stomp on the main face mask mid-frame.
+- Drop saturation boost from 1.6 → 1.35, contrast 1.2 → 1.1, alpha 0.85 → 0.55. Subtle "Bigo lip tint", not lipstick paint.
 
-### 2. Strong fallback that always looks good (no MediaPipe required)
-Replace the current 10% brighten with a **real beauty pass** that runs on every device:
-- **Bilateral-style smoothing**: draw the frame, then composite a softly-blurred copy on top with `globalAlpha = 0.45` clipped to a **center oval** (estimated face region — most users frame their face center). No more global mush.
-- **Brighten + warmth + saturation lift** inside the same oval.
-- **Soft vignette** outside the oval to draw the eye to the face (Bigo signature look).
-- **Teeth/eye sharpening pass**: slight unsharp mask in the lower-center region.
+### C. Brighten — tone it down + soften
+- Screen alpha 0.8 → 0.35.
+- Warm overlay alpha 0.15-0.42 → 0.08-0.22.
+- Add a tiny `brightness(1 + brighten * 0.08)` pass on the masked region instead of relying entirely on screen blend.
 
-This alone will look 5× better than today even when MediaPipe fails.
+### D. Smoothing — feather the mask edge
+- Apply `filter: blur(8px)` when drawing the face mask into a copy, then use *that* feathered mask for `destination-in`. Eliminates the hard oval edge that was visible across the forehead.
+- Reduce smoothing alpha range from 0.7-0.95 → 0.55-0.85 so pores don't fully disappear.
 
-### 3. Stronger landmark-based effects (when MediaPipe loads)
-Current values are too subtle. Bump the upper range:
-- **Skin smoothing**: blur 4–10px → **6–18px**, alpha 0.55–0.9 → **0.7–0.95**. Add a second pass with `saturate(1.1) contrast(1.05)` inside mask for the "glow".
-- **Brighten**: warm overlay alpha 0.10–0.28 → **0.15–0.42**, also lift mid-tones with a `brightness(1.0–1.15)` pass on the masked region.
-- **Face slim**: pinch 0–20px → **0–45px** scaled by face width (so it works zoomed in or out). Use 4 cheek slices per side (feathered) instead of 2 hard slices — kills any residual seam.
-- **Eye enlarge**: 0–18% → **0–28%**, with proper feathered radial gradient mask (no hard circle edge).
-- **NEW – Lip enhance**: subtle saturation+contrast bump inside the lip contour (very Bigo).
-- **NEW – Nose slim**: tiny horizontal pinch around nose-tip landmark 4 (just ~6–10% reduction).
+### E. Stability — keep last good landmarks longer
+- Keep `lastLandmarks` for up to 500ms instead of falling back to lite oval on a single missed detection. Eliminates mask-jumping flicker.
 
-### 4. Auto-on, smarter defaults
-- Change `DEFAULT_BEAUTY` to `{ smooth: 80, brighten: 55, slim: 35, eyes: 25, lips: 40, nose: 20 }` — closer to Bigo defaults so the *first frame* with Beauty on already looks dramatically better.
-- Update **Glam preset** to push everything to 90+ for the "filter face" look users expect.
-- Add a new **"Sweet"** preset (high smooth+brighten, low slim) for the soft kawaii look.
+### F. Defaults — more flattering, less "filter face"
+- `DEFAULT_BEAUTY`: `{ smooth: 70, brighten: 35, slim: 25, eyes: 18, lips: 30, nose: 12 }`
+- `glam` preset: lower smooth 95→85, brighten 75→55, lips 70→55. Still glam, no longer plastic.
+- `sweet`: smooth 92→82, brighten 70→50, eyes 32→25.
 
-### 5. UI tweaks (`GoLivePage.tsx`)
-- Replace "Loading face tracking…" with a status pill: **"Beauty: Pro"** (landmarks) / **"Beauty: Lite"** (fallback) / **"Loading…"** (first 2s only).
-- Add **Lip** and **Nose** sliders to the panel.
-- Add a **Sweet** preset chip next to Natural / Glam / Off.
-- Show a live A/B "Compare" press-and-hold button on the preview so the user can *see* the before/after instantly — this is the #1 reason users say "nothing changed" (they don't have a reference).
+### G. Add subtle "Bigo finishing pass" (only inside face mask)
+- Tiny unsharp on lips + eyes region so they look defined, not blurred away.
+- Mid-tone lift via a single `multiply` pass with rgba(255,235,225,0.08) — gives the warm Bigo glow without washing out.
+
+### H. UI (`src/pages/GoLivePage.tsx`)
+- No layout changes — just wire the new defaults.
+- Add a small subtitle under the status pill: *"Move closer for best results"* — helps when the landmarker can't find a face.
 
 ### Files
-- `src/hooks/useBeautyFilter.ts` — self-host WASM, GPU→CPU retry, timeout, much stronger fallback, stronger landmark effects, add lips + nose.
-- `src/pages/GoLivePage.tsx` — status pill, Lip/Nose sliders, Sweet preset, hold-to-compare button.
-- `public/mediapipe/` — bundled WASM + model file (added via download script).
+- `src/hooks/useBeautyFilter.ts` — fix eye/lip/brighten bugs, feather mask, stabilize landmarks, retune defaults.
+- `src/pages/GoLivePage.tsx` — minor copy tweak under status pill.
 
-### Out of scope (next iteration)
+### Out of scope (later)
 - AR stickers / face masks
-- Background blur / replacement
-- Color LUTs (warm/cool/film)
+- Background blur
+- Color LUTs (warm/cool/film tone)
 
