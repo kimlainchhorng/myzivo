@@ -49,6 +49,7 @@ import { playGiftSound, playPremiumGiftSound, playLegendaryGiftSound } from "@/u
 const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 const GiftAnimationOverlay = lazy(() => import("@/components/live/GiftAnimationOverlay"));
 const CoinRechargeSheet = lazy(() => import("@/components/live/CoinRechargeSheet"));
+const LiveWebRTCVideo = lazy(() => import("@/components/live/LiveWebRTCVideo"));
 
 interface LiveStream {
   id: string;
@@ -423,9 +424,14 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () => v
           </button>
         </div>
       )}
-      {/* Background */}
+      {/* Background — real WebRTC video from publisher */}
       <div className="absolute inset-0" onClick={handleDoubleTap} onTouchEnd={handleDoubleTap}>
         <div className="absolute inset-0 bg-gradient-to-br from-violet-900/80 via-black to-rose-900/60" />
+        <Suspense fallback={null}>
+          <LiveWebRTCVideo streamId={stream.id} muted={muted} />
+        </Suspense>
+        {/* Subtle dim overlay for legibility of chat / controls */}
+        <div className="absolute inset-0 bg-black/20 pointer-events-none" />
         <AnimatePresence>
           {doubleTapHeart && (
             <motion.div
