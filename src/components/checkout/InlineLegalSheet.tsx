@@ -30,6 +30,9 @@ export default function InlineLegalSheet({ open, onOpenChange, title, url }: Inl
   const basePath = url.split("#")[0];
   const PageComponent = legalPages[basePath];
 
+  // Avoid mounting any sheet portal/focus guards until actually opened.
+  if (!open) return null;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0 flex flex-col [&>button]:hidden">
