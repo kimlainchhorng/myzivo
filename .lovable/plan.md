@@ -1,32 +1,48 @@
 
 
-## Problem
-On mobile, the "Set up instant payouts" button opens the embedded Stripe modal, which tries to load Stripe's `connect.js` script. In Lovable preview, in-app webviews (Instagram/Facebook/TikTok), and many mobile Safari/Chrome contexts, that script is blocked or throws an unhandled rejection. Users see "Couldn't load Stripe" / runtime error and have to tap a second "Continue to Stripe" button.
+## Goal
+Upgrade the **Tier** step in `/creator/setup?step=tier` to support flexible subscription pricing (free, paid, custom, multiple billing intervals, free trial), and surface those tiers on the creator's public profile so fans can subscribe.
 
-I cannot log in with the credentials you shared (security policy — never use user passwords). But the bug is environment-level, not auth-level, and the fix doesn't need a logged-in test.
+## What changes
 
-## Root Cause
-Stripe Connect Embedded Components are not designed for mobile webviews or sandboxed iframes. The embedded flow should only be attempted on a true desktop browser. Everywhere else, we should go straight to the hosted Stripe onboarding URL (the redirect flow that already works).
+### 1. Database — extend `subscription_tiers`
+Add columns:
+- `billing_interval` text — `'month' | '3_months' | '6_months' | 'year' | 'lifetime'`
+- `is_free` boolean default false — free tier (members-only access, no payment)
+- `trial_days` integer default 0 — free trial length (e.g. 3, 7, 14, 30)
+- `is_custom_price` boolean default false — fan chooses their own amount (pay-what-you-want, with `price_cents` as the suggested minimum)
 
-## Fix
+No data migration needed (defaults backfill cleanly).
 
-**1. `src/components/wallet/StripeConnectPayoutCard.tsx`** — Detect environment and route accordingly:
-- Add a small `shouldUseEmbedded()` helper: returns `true` only if desktop viewport (`window.innerWidth >= 1024`), not in Capacitor native, not in an in-app browser (FB/IG/TikTok/Line UA), and not inside the Lovable preview iframe (`window.self !== window.top` and host contains `lovableproject.com`).
-- "Set up instant payouts" button: if `shouldUseEmbedded()` → open embedded modal (current behavior). Otherwise → call `onboard.mutate(country)` directly (same-tab redirect to Stripe — this already works on mobile).
-- "Manage" link: same routing logic.
+### 2. Tier step UI rebuild — `src/pages/CreatorSetupPage.tsx` → `TierStep`
+Replace the single-price form with a richer composer:
 
-**2. `src/components/wallet/StripeEmbeddedOnboarding.tsx`** — Tighten the fallback so users never see the error screen:
-- When `blocked` is detected, don't render the error UI at all — automatically trigger `onboard.mutate(country)` and close the modal. The redirect flow takes over silently.
-- Keep the script-loading pre-check and the async rejection swallow as a safety net.
+- **Tier type chips**: `Paid` · `Free` · `Pay what you want`
+- **Billing period chips** (hidden when Free): `1 month` · `3 months` · `6 months` · `1 year` · `Lifetime`
+- **Price input**: hidden when Free; labeled "Suggested minimum" when Pay-what-you-want; auto-calculated /mo helper text below ("$24.99 every 3 months ≈ $8.33/mo")
+- **Free trial chips** (hidden when Free): `None` · `3 days` · `7 days` · `14 days` · `30 days`
+- **Tier name** and **Perks** (existing)
+- **Preview card** at the bottom showing how the tier will appear to fans
+- Tier list above the form shows interval/trial/free badges per tier, with edit + delete actions (currently no edit — adding inline)
 
-**3. No edge function changes needed.** `connect-onboard` already returns a working `accountLinks.create` URL with proper `return_url` back to `/wallet?connect=done`, and `StripeConnectPayoutCard` already handles that param to refresh status.
+### 3. Surface tiers on creator profile
+Find the existing creator profile page (or add a section if missing) and render the tiers as a "Subscribe" block:
+- Card per active tier with name, price+interval, trial badge, perks
+- "Subscribe" button → for paid tiers, opens existing checkout flow (`create-zivo-plus-checkout`-style edge function call, or insert into `creator_subscriptions` for free); for free tiers, one-tap join; for pay-what-you-want, opens an amount picker
+- Hide the section on the creator's own profile (they see "Manage tiers" link to `/creator/setup?step=tier` instead)
 
-## Result
-- Mobile users: tap "Set up instant payouts" → instantly redirected to Stripe's hosted onboarding (works everywhere) → returned to `/wallet` with status refreshed.
-- Desktop users on the published site: still get the in-app embedded experience.
-- Lovable preview: skips embedded, uses redirect — no more error screens.
+### 4. Dashboard tier card
+Update `CreatorDashboardPage.tsx` tier list rendering to show interval and trial info (small change, just display).
 
-## Files Changed
-- `src/components/wallet/StripeConnectPayoutCard.tsx` — environment detection + conditional routing
-- `src/components/wallet/StripeEmbeddedOnboarding.tsx` — auto-fallback to redirect when blocked (no error UI)
+## Files changed
+- `supabase/migrations/<new>.sql` — add 4 columns to `subscription_tiers`
+- `src/pages/CreatorSetupPage.tsx` — rebuild `TierStep`
+- `src/pages/CreatorDashboardPage.tsx` — display interval/trial in tier list
+- Creator profile page (to be located on implementation) — add Subscribe section with tier cards
+- (optional) New tiny edge function `subscribe-to-tier` to handle Stripe checkout for creator subs, OR reuse existing Stripe checkout pattern
+
+## Open questions (defaults assumed unless you say otherwise)
+- Payment for paid creator subs: route through Stripe Checkout (same pattern as `create-zivo-plus-checkout`) — assumed yes.
+- Pay-what-you-want minimum: $0.99 — assumed.
+- Lifetime billing: kept as an option since you mentioned "something like that" — say if you'd rather drop it.
 
