@@ -252,13 +252,22 @@ export function useVirtualBackground(
               pctx.clearRect(0, 0, W, H);
               pctx.drawImage(video!, 0, 0, W, H);
 
-              // 3b. Clip with refined mask — tiny 0.4px feather for antialiasing
-              // (sub-pixel, smooths jagged hand edges without measurable dilation).
+              // 3b. Two-step clip: sharp core + feathered edge band.
+              // First pass clips with the crisp mask (interior stays 100% opaque,
+              // face is not washed out). Second pass softens ONLY the silhouette
+              // boundary by drawing a blurred copy at half alpha, antialiasing
+              // edges without dilating the mask or veiling interior pixels.
               pctx.globalCompositeOperation = "destination-in";
-              pctx.filter = "blur(0.4px)";
+              pctx.filter = "none";
               pctx.imageSmoothingEnabled = true;
               pctx.imageSmoothingQuality = "high";
               pctx.drawImage(maskHi, 0, 0, W, H);
+              // Edge-only feather: blur(0.6px) at 0.5 alpha only affects the
+              // boundary because interior is already fully opaque.
+              pctx.filter = "blur(0.6px)";
+              pctx.globalAlpha = 0.5;
+              pctx.drawImage(maskHi, 0, 0, W, H);
+              pctx.globalAlpha = 1;
               pctx.filter = "none";
               pctx.globalCompositeOperation = "source-over";
 
