@@ -146,6 +146,79 @@ export default function CreatorDashboardPage() {
           </div>
         </motion.div>
 
+        {/* Setup Your Monetization — onboarding checklist */}
+        {(() => {
+          const setupSteps = [
+            { label: "Complete your profile", desc: "Add bio, avatar & links", icon: UserCircle2, href: "/account/profile/edit", done: !!creator?.display_name || !!creator?.bio, accent: "hsl(263 70% 58%)" },
+            { label: "Verify your identity", desc: "Required for payouts", icon: ShieldCheck, href: "/account/verification", done: !!creator?.is_verified, accent: "hsl(142 71% 45%)" },
+            { label: "Add payout method", desc: "Bank or PayPal", icon: CreditCard, href: "/wallet", done: !!creator?.payout_method, accent: "hsl(38 92% 50%)" },
+            { label: "Create a subscription tier", desc: "Set your monthly price", icon: Crown, href: "/monetization", done: tiers.length > 0, accent: "hsl(340 75% 55%)" },
+            { label: "Enable tips", desc: "Let fans support you", icon: Heart, href: "/monetization", done: !!creator?.tips_enabled, accent: "hsl(199 89% 48%)" },
+            { label: "Launch your first program", desc: "Affiliate, shop or digital", icon: Rocket, href: "/monetization", done: (creator?.total_earnings_cents ?? 0) > 0, accent: "hsl(172 66% 50%)" },
+          ];
+          const completed = setupSteps.filter((s) => s.done).length;
+          const pct = Math.round((completed / setupSteps.length) * 100);
+          if (completed === setupSteps.length) return null;
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="zivo-card-organic p-4"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="zivo-icon-pill w-9 h-9 rounded-xl" style={{ color: "hsl(142 71% 45%)", background: "hsl(142 71% 45% / 0.12)" }}>
+                    <Rocket className="w-4 h-4" style={{ color: "hsl(142 71% 45%)" }} />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-[15px] leading-tight">Setup Your Monetization</h3>
+                    <p className="text-[10px] text-muted-foreground">{completed} of {setupSteps.length} complete</p>
+                  </div>
+                </div>
+                <span className="text-xs font-extrabold" style={{ color: "hsl(142 71% 45%)" }}>{pct}%</span>
+              </div>
+
+              {/* Progress bar */}
+              <div className="h-1.5 rounded-full bg-muted/50 overflow-hidden mb-3">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                  className="h-full rounded-full"
+                  style={{ background: "linear-gradient(90deg, hsl(142 71% 45%), hsl(172 66% 50%))" }}
+                />
+              </div>
+
+              {/* Steps */}
+              <div className="space-y-1.5">
+                {setupSteps.map((step) => (
+                  <Link
+                    key={step.label}
+                    to={step.href}
+                    className={`flex items-center gap-3 p-2.5 rounded-xl border touch-manipulation active:scale-[0.98] transition-transform ${
+                      step.done ? "border-border/20 bg-muted/20 opacity-70" : "border-border/40 bg-card hover:bg-muted/30"
+                    }`}
+                  >
+                    {step.done ? (
+                      <CheckCircle2 className="w-5 h-5 shrink-0" style={{ color: "hsl(142 71% 45%)" }} />
+                    ) : (
+                      <div className="zivo-icon-pill w-9 h-9 rounded-xl shrink-0" style={{ color: step.accent, background: `${step.accent}15` }}>
+                        <step.icon className="w-4 h-4" style={{ color: step.accent }} />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs font-bold leading-tight ${step.done ? "line-through text-muted-foreground" : ""}`}>{step.label}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{step.desc}</p>
+                    </div>
+                    {!step.done && <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />}
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
+          );
+        })()}
+
         {/* Live Earnings Spotlight — only shown if user has earned from gifts */}
         {liveEarningsCents > 0 && (
           <motion.button
