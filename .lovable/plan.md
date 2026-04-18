@@ -1,54 +1,47 @@
 
 
-## Why the screenshot looks broken
-The white rectangular patches over the forehead, eyes, and chin are bugs in the Pro pipeline — not a tuning issue:
+## What you're seeing
+Faint rectangular ghost-patches on forehead and right cheek = **hard-edged source-over rectangles** from face-slim and nose-slim. They paint a clean video copy on top of the already-smoothed face, so the smoothed/unsmoothed boundary forms a visible rectangle.
 
-1. **Eye enlarge paints square patches.** `clearRect` on the helper canvas leaves a transparent rectangle, then we copy that whole 3r × 3r region onto the output. The clipping circle only protects the *write* but not the *read*, so a hard-edged square around each eye gets stamped onto the face. That's the two boxes over the eyes and the box over the forehead.
-2. **Lip enhance leaks as a colored rectangle on the chin.** The lip block reuses the shared `maskCanvas` for two different purposes in the same frame, so the lips-only mask is briefly the wrong shape and the saturated/contrasted layer is composited as an opaque blob below the mouth.
-3. **Brighten is way too strong.** Screen-blend at α 0.8 with a warm fill blows out skin to near-white, killing detail.
-4. **Face mask flicker.** When the landmarker drops a frame we fall straight to the lite oval, which doesn't align with the real face → visible "mask jumping" between frames.
+## Root causes
+1. **Face slim** (lines 399-413): 4 cheek slices per side drawn with `ctx.drawImage(video, ...)` — that's *unfiltered* video stamped on top of the smoothed face. Each slice = 1 visible rectangle.
+2. **Nose slim** (lines 429-438): Same problem — 2 hard rectangles around the nose.
+3. **Smoothing alpha too low** (0.55-0.85) — the boundary contrast between smoothed face and unsmoothed slim/nose patches is amplified.
+4. **Lip enhance** allocates a *new canvas every frame* (line 366) — memory churn / GC pauses on mobile.
 
 ## Fix plan — `src/hooks/useBeautyFilter.ts`
 
-### A. Eye enlarge — rebuild correctly
-- Use a dedicated offscreen canvas (`eyeCanvas`) sized only to 3r × 3r, draw the scaled eye into it, then composite onto the output **inside** a feathered radial-gradient alpha mask drawn with `globalCompositeOperation = "destination-in"` on the eye canvas itself. Result: soft circular blend, zero square edges.
-- Cap scale at +22% (28% looked alien).
+### A. Reorder pipeline — slim/nose BEFORE smoothing
+Currently: draw video → smooth → brighten → lips → **slim (hard rect)** → nose (hard rect) → eyes.
+New order: draw video → **slim → nose** → rebuild face mask (slim moved cheeks!) → smooth → brighten → lips → eyes → finishing.
+This way slim/nose warps go *under* the smoothing pass — patches get blended away.
 
-### B. Lip enhance — isolate the mask
-- Use a third dedicated canvas (`fxCanvas`) for per-feature masks so we never stomp on the main face mask mid-frame.
-- Drop saturation boost from 1.6 → 1.35, contrast 1.2 → 1.1, alpha 0.85 → 0.55. Subtle "Bigo lip tint", not lipstick paint.
+### B. Feather slim/nose slices
+Even pre-smooth, draw each slice into `fxCanvas` first, then composite onto `ctx` through a vertical-gradient alpha mask (transparent at top/bottom edges of each slice, opaque in middle). Eliminates horizontal seams between slice rows entirely.
 
-### C. Brighten — tone it down + soften
-- Screen alpha 0.8 → 0.35.
-- Warm overlay alpha 0.15-0.42 → 0.08-0.22.
-- Add a tiny `brightness(1 + brighten * 0.08)` pass on the masked region instead of relying entirely on screen blend.
+### C. Slim slices — overlap + crossfade
+Draw 6 slices instead of 4, each overlapping its neighbor by 30%, with `globalAlpha = sin(π·t)` per slice. No piece-edge boundaries.
 
-### D. Smoothing — feather the mask edge
-- Apply `filter: blur(8px)` when drawing the face mask into a copy, then use *that* feathered mask for `destination-in`. Eliminates the hard oval edge that was visible across the forehead.
-- Reduce smoothing alpha range from 0.7-0.95 → 0.55-0.85 so pores don't fully disappear.
+### D. Reuse the lip-feather canvas
+Promote `featherLips` to a hook-scoped persistent canvas (allocated once). Stops per-frame allocation jank.
 
-### E. Stability — keep last good landmarks longer
-- Keep `lastLandmarks` for up to 500ms instead of falling back to lite oval on a single missed detection. Eliminates mask-jumping flicker.
+### E. Bump smoothing alpha back up
+Range 0.65-0.92 (was 0.55-0.85). Stronger smoothing also hides any residual slim/nose seams.
 
-### F. Defaults — more flattering, less "filter face"
-- `DEFAULT_BEAUTY`: `{ smooth: 70, brighten: 35, slim: 25, eyes: 18, lips: 30, nose: 12 }`
-- `glam` preset: lower smooth 95→85, brighten 75→55, lips 70→55. Still glam, no longer plastic.
-- `sweet`: smooth 92→82, brighten 70→50, eyes 32→25.
+### F. Tighten slim band
+Currently `top = forehead + 25%` of face height — that puts slim slices on the **forehead**. Move to `top = nose-tip y` so slim only affects jaw/cheeks. This alone removes the forehead ghost-patch.
 
-### G. Add subtle "Bigo finishing pass" (only inside face mask)
-- Tiny unsharp on lips + eyes region so they look defined, not blurred away.
-- Mid-tone lift via a single `multiply` pass with rgba(255,235,225,0.08) — gives the warm Bigo glow without washing out.
+### G. Tone down nose pinch on small faces
+Cap nose pinch at `min(noseW * 0.06, 6px)` — too aggressive on phone-distance faces creates the side-of-nose rectangles you see.
 
-### H. UI (`src/pages/GoLivePage.tsx`)
-- No layout changes — just wire the new defaults.
-- Add a small subtitle under the status pill: *"Move closer for best results"* — helps when the landmarker can't find a face.
+### H. Add cheap frame-pacing guard
+Skip the *finishing pass* (G) when avgFrameMs > 33ms so low-end devices don't drop below 24fps.
 
 ### Files
-- `src/hooks/useBeautyFilter.ts` — fix eye/lip/brighten bugs, feather mask, stabilize landmarks, retune defaults.
-- `src/pages/GoLivePage.tsx` — minor copy tweak under status pill.
+- `src/hooks/useBeautyFilter.ts` — reorder pipeline, feather slim/nose slices, persistent lip-feather canvas, tighten slim band, cap nose pinch.
 
-### Out of scope (later)
-- AR stickers / face masks
+### Out of scope
+- WebGL pipeline (would fix this perfectly but ~2 days of work)
+- AR stickers
 - Background blur
-- Color LUTs (warm/cool/film tone)
 
