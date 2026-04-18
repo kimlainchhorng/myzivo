@@ -1,38 +1,43 @@
 
 
-## Diagnosis
-The face area looks washed out and the head has a thick halo because:
-1. **0.4px Pass-2 feather is being applied to the WHOLE silhouette** — it softens the face perimeter, letting background blur bleed inward
-2. **Hair-zone ramp (0.42 LO)** is too loose — captures background pixels above the head as semi-foreground → grey halo
-3. **No edge-only feather** — antialiasing should only apply to the silhouette boundary, not the interior
+## Real Smart AI Upgrade — Guided Edge Refinement
 
-## Smart AI Upgrade — `src/hooks/useVirtualBackground.ts`
+Add a **color-guided mask refinement** pass. Instead of trusting MediaPipe's blurry edge, we sample the actual video pixels in a narrow band around the silhouette and reclassify each edge pixel as foreground/background based on **color similarity to nearby confirmed-foreground pixels**.
 
-**1. Mask sharpening via threshold curve** — replace linear ramp with an S-curve (smoothstep). Pixels near the middle of the ramp get pushed harder toward 0 or 255, producing a crisper edge with the same LO/HI bounds. This is what "smart" segmenters do.
+### Algorithm (per frame, edge band only — fast)
 
-**2. Tighten hair zone** — `LO 0.42 → 0.46`, `HI 0.55 → 0.58`. Still looser than body but no longer accepts low-confidence background pixels as hair.
+1. **Identify edge band** — pixels where mask alpha is between 30 and 220 (the uncertain zone)
+2. **Sample reference colors** — for each edge pixel, look at a 5px-inward neighbor (confirmed foreground) and a 5px-outward neighbor (confirmed background)
+3. **Color distance test** — compute YCbCr distance from the edge pixel to both references. Closer to FG → set alpha 255, closer to BG → set alpha 0
+4. **Result** — hair strands that are visually distinct from the background get correctly classified; halo pixels (which match background color) get culled
 
-**3. Edge-only Pass-2 feather** — instead of blurring the whole mask in destination-in, generate a thin edge-band (mask minus eroded mask) and feather only that band. Interior stays 100% opaque, only the silhouette gets antialiased. Done by:
-   - Draw mask normally (sharp interior)
-   - Then blur(0.6px) only at edge composite step using a smaller offset trick
+### Why this kills the halo
+The orange/warm halo around your head right now is background-blur pixels showing through the semi-transparent edge. Color-guided refinement looks at those pixels, sees they match the background (orange) not the foreground (skin/hair), and zeros their alpha. Halo gone.
 
-   Practical implementation: skip Pass-2 blur entirely on interior, apply blur ONLY when drawing maskHi the second time with `globalAlpha=0.5` for sub-pixel edge smoothing. Net effect = crisp face, smooth edges.
+### Implementation
+- Operate on a downsampled (¼ resolution) edge band → ~5ms overhead
+- Use simple Euclidean distance in YCbCr space (perceptually weighted)
+- Apply ONCE after the existing smoothstep + erosion, before Pass-2 feather
+- Keep all current logic intact (motion blend, hair zone, single-sided erosion)
 
-**4. Background re-clip** — after compositing person over background, paint a 2px feathered alpha gradient at the silhouette boundary using the eroded mask as a "core" and the original mask as "edge". Removes the residual halo entirely.
-
-### Net diff
+### Net change
 ```text
-Ramp curve: linear → smoothstep S-curve (sharper midtones)
-Hair zone:  0.42/0.55 → 0.46/0.58
-Pass-2:     full-mask 0.4px blur → edge-only 0.6px (interior stays crisp)
-NEW:        2-step composite — eroded core (sharp) + feathered edge band
+NEW pass between mask build and Pass-2 clip:
+  - Read video ImageData (downsampled)
+  - Read mask ImageData
+  - For each pixel with alpha ∈ [30,220]:
+      sample FG-ref (5px toward mask interior)
+      sample BG-ref (5px toward mask exterior)
+      classify by YCbCr distance
+      write back hard 0 or 255
+  - Putback to mask
 ```
 
-### Expected result
-- Face: crisp, no veil/wash
-- Head halo: gone (tighter hair ramp + edge-only feather)
-- Hand edges: still smooth (edge feather is now bigger, 0.6px)
-- Finger gaps: preserved (single-sided erosion untouched)
+One file. ~40 lines added.
 
-One file. ~25 lines changed.
+### Expected
+- Halo around head: gone (background-colored edge pixels culled)
+- Face: stays crisp (interior alpha already 255, untouched)
+- Hair strands: preserved if visually distinct from background
+- Performance: +3-5ms/frame on 720p (still 30fps headroom)
 
