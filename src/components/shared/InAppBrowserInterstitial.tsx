@@ -4,6 +4,7 @@
  * Shows once per session; can be dismissed.
  */
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { detectInAppBrowser } from "@/lib/isInAppBrowser";
 import { X, Smartphone, Zap, Bell, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,17 +26,24 @@ const features = [
 ];
 
 export default function InAppBrowserInterstitial() {
+  const location = useLocation();
   const [visible, setVisible] = useState(false);
   const [platform, setPlatform] = useState<string | null>(null);
 
+  const authRoutes = ["/login", "/signup", "/verify-email", "/verify-otp", "/verify-new-device", "/forgot-password", "/reset-password", "/setup"];
+  const onAuthRoute = authRoutes.some((r) => location.pathname.startsWith(r));
+
   useEffect(() => {
+    if (onAuthRoute) return;
     if (sessionStorage.getItem(SESSION_KEY)) return;
     const detected = detectInAppBrowser();
     if (detected) {
       setPlatform(detected);
       setVisible(true);
     }
-  }, []);
+  }, [onAuthRoute]);
+
+  if (onAuthRoute) return null;
 
   const dismiss = () => {
     sessionStorage.setItem(SESSION_KEY, "1");

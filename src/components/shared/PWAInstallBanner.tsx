@@ -30,6 +30,9 @@ export function PWAInstallBanner() {
     if (!isMobile) return;
     // Don't interrupt full-screen ride booking flows
     if (location.pathname.startsWith("/rides")) return;
+    // Never show on auth routes — must not block input focus
+    const authRoutes = ["/login", "/signup", "/verify-email", "/verify-otp", "/verify-new-device", "/forgot-password", "/reset-password", "/setup"];
+    if (authRoutes.some((r) => location.pathname.startsWith(r))) return;
     // Don't show if dismissed recently (7 days)
     const dismissed = localStorage.getItem("pwa_banner_dismissed");
     if (dismissed && Date.now() - Number(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
@@ -67,6 +70,9 @@ export function PWAInstallBanner() {
 
   // Only show in mobile browsers, never in native Capacitor apps or standalone PWA
   if (!isMobile || Capacitor.isNativePlatform() || window.matchMedia("(display-mode: standalone)").matches) return null;
+  // Never render on auth routes
+  const authRoutes = ["/login", "/signup", "/verify-email", "/verify-otp", "/verify-new-device", "/forgot-password", "/reset-password", "/setup"];
+  if (authRoutes.some((r) => location.pathname.startsWith(r))) return null;
 
   return (
     <AnimatePresence>
