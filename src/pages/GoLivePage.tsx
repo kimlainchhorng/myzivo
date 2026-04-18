@@ -1021,6 +1021,63 @@ export default function GoLivePage() {
         )}
       </AnimatePresence>
 
+      {/* Background picker sheet (live) */}
+      <AnimatePresence>
+        {showBgSheet && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/60 flex items-end"
+            onClick={() => setShowBgSheet(false)}
+          >
+            <motion.div
+              initial={{ y: 300 }} animate={{ y: 0 }} exit={{ y: 300 }}
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              className="w-full bg-zinc-900 rounded-t-3xl p-5 border-t border-white/10"
+              style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4" />
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-white font-bold text-base">Background</h3>
+                {bgChoice.kind !== "off" && (
+                  <span className="text-[11px] text-white/60">
+                    {bgStatus === "loading" ? "Loading…" : bgStatus === "error" ? "Unavailable" : "Active"}
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-4 gap-2.5">
+                {BG_PRESETS.map((p) => {
+                  const active = bgChoice.id === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setBgChoice(p)}
+                      className={cn(
+                        "aspect-square rounded-2xl overflow-hidden border-2 relative",
+                        active ? "border-red-500" : "border-white/15",
+                      )}
+                    >
+                      {p.kind === "off" && (
+                        <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-xs text-white/80 font-semibold">None</div>
+                      )}
+                      {p.kind === "blur" && (
+                        <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center text-xs text-white font-semibold">Blur</div>
+                      )}
+                      {p.kind === "image" && p.url && (
+                        <>
+                          <img src={p.url} alt={p.label} className="w-full h-full object-cover" />
+                          <span className="absolute bottom-0 inset-x-0 bg-black/55 text-[10px] text-white text-center py-0.5 font-semibold">{p.label}</span>
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <Suspense fallback={null}>
         <CoinRechargeSheet
           open={showRechargeSheet}
