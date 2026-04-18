@@ -34,7 +34,9 @@ export function useConnectOnboard() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (country: string = "US") => {
-      const returnUrl = `${window.location.origin}${window.location.pathname}?connect=done`;
+      // Return to the EXACT page user started on so it feels in-app
+      const sep = window.location.search ? "&" : "?";
+      const returnUrl = `${window.location.origin}${window.location.pathname}${window.location.search}${sep}connect=done`;
       const { data, error } = await supabase.functions.invoke("connect-onboard", {
         body: { country, return_url: returnUrl },
       });
@@ -43,33 +45,14 @@ export function useConnectOnboard() {
       return data as { url: string; account_id: string };
     },
     onSuccess: (data) => {
-      // Open Stripe onboarding in a centered popup so the user stays in-app.
-      const w = 520;
-      const h = 720;
-      const left = window.screenX + (window.outerWidth - w) / 2;
-      const top = window.screenY + (window.outerHeight - h) / 2;
-      const popup = window.open(
-        data.url,
-        "stripe-connect-onboarding",
-        `width=${w},height=${h},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`
-      );
-
-      if (!popup) {
-        // Popup blocked → fallback to same-tab redirect
-        window.location.href = data.url;
-        return;
-      }
-
-      toast.info("Complete Stripe setup in the popup window…");
-
-      // Poll for popup close, then refresh status
-      const timer = window.setInterval(() => {
-        if (popup.closed) {
-          window.clearInterval(timer);
-          queryClient.invalidateQueries({ queryKey: ["stripe-connect-status"] });
-          toast.success("Checking Stripe status…");
-        }
-      }, 800);
+      // Stripe blocks iframe embedding (X-Frame-Options) and popups are
+      // unreliable inside the Lovable preview iframe + mobile Safari.
+      // Same-tab navigation is the only reliable path. Stripe returns the
+      // user to `return_url` (the exact page they started on) so the flow
+      // feels in-app.
+      queryClient.invalidateQueries({ queryKey: ["stripe-connect-status"] });
+      toast.info("Opening Stripe…");
+      window.location.assign(data.url);
     },
     onError: (e: any) => toast.error(e?.message || "Onboarding failed"),
   });
