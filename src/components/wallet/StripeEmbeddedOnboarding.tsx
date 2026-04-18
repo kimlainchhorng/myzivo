@@ -68,7 +68,7 @@ export default function StripeEmbeddedOnboarding({ open, onClose, onComplete, co
           return;
         }
 
-        let connect;
+        let connect: any;
         try {
           connect = loadConnectAndInitialize({
             publishableKey: STRIPE_PUBLISHABLE_KEY,
@@ -81,6 +81,16 @@ export default function StripeEmbeddedOnboarding({ open, onClose, onComplete, co
               },
             },
           });
+          // Swallow internal async load rejections so they don't surface as runtime errors
+          if (connect && typeof (connect as any).then === "function") {
+            (connect as any).catch?.(() => {
+              if (!cancelled) {
+                setBlocked(true);
+                setError("Embedded Stripe is blocked in this browser/preview. Use secure redirect instead.");
+                setLoading(false);
+              }
+            });
+          }
         } catch (loadErr: any) {
           if (!cancelled) {
             setBlocked(true);
