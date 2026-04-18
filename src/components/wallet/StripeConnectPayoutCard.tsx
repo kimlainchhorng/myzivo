@@ -135,7 +135,7 @@ export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
               </div>
             </div>
             <button
-              onClick={() => setEmbedOpen(true)}
+              onClick={openOnboarding}
               className="text-[11px] underline opacity-80 hover:opacity-100"
             >
               Manage
