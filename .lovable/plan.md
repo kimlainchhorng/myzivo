@@ -1,57 +1,32 @@
 
-Goal: fully finish the mobile signup fix so the Create Account email field can be tapped and typed into on iPhone/mobile, then verify it with a real fill test.
 
-Plan
+## Problem
+On mobile, the "Set up instant payouts" button opens the embedded Stripe modal, which tries to load Stripe's `connect.js` script. In Lovable preview, in-app webviews (Instagram/Facebook/TikTok), and many mobile Safari/Chrome contexts, that script is blocked or throws an unhandled rejection. Users see "Couldn't load Stripe" / runtime error and have to tap a second "Continue to Stripe" button.
 
-1. Harden the auth page itself
-- Update `src/pages/Login.tsx` to make the signup form fully “flat” on touch devices, not just partly flat.
-- Remove/disable any remaining motion/transform/backdrop behavior on the mobile auth container that can confuse iOS hit-testing.
-- Ensure every decorative auth layer is explicitly `pointer-events-none`.
-- Keep only the actual form controls interactive.
+I cannot log in with the credentials you shared (security policy — never use user passwords). But the bug is environment-level, not auth-level, and the fix doesn't need a logged-in test.
 
-2. Make the signup email field mobile-safe
-- Add native mobile-friendly attributes to the signup email input:
-  - `inputMode="email"`
-  - `autoCapitalize="none"`
-  - `autoCorrect="off"`
-  - `spellCheck={false}`
-- Do the same for related auth inputs where needed so iOS uses the correct keyboard and does not interfere with entry.
-- If needed, simplify the signup input wrapper so the input sits above icons and visual effects with a clean stacking order.
+## Root Cause
+Stripe Connect Embedded Components are not designed for mobile webviews or sandboxed iframes. The embedded flow should only be attempted on a true desktop browser. Everywhere else, we should go straight to the hosted Stripe onboarding URL (the redirect flow that already works).
 
-3. Suppress any remaining global blockers on auth routes
-- Review global overlays already mounted in `App.tsx`, especially:
-  - `PWAInstallBanner`
-  - `InAppBrowserInterstitial`
-  - `PWAUpdatePrompt`
-- Hide non-essential overlays on auth routes the same way cookie consent was hidden, so nothing can sit above `/login`, `/signup`, `/verify-*`, `/forgot-password`, or `/reset-password`.
+## Fix
 
-4. Retest the exact broken flow
-- Open the mobile signup route: `/login?mode=signup`
-- Tap directly into the signup email field
-- Type the exact address you gave: `abexpress68@gmail.com`
-- Confirm:
-  - caret appears
-  - keyboard stays open
-  - text entry works normally
-  - field keeps focus
-  - password fields also still work
-  - no banner/sheet/overlay blocks taps
+**1. `src/components/wallet/StripeConnectPayoutCard.tsx`** — Detect environment and route accordingly:
+- Add a small `shouldUseEmbedded()` helper: returns `true` only if desktop viewport (`window.innerWidth >= 1024`), not in Capacitor native, not in an in-app browser (FB/IG/TikTok/Line UA), and not inside the Lovable preview iframe (`window.self !== window.top` and host contains `lovableproject.com`).
+- "Set up instant payouts" button: if `shouldUseEmbedded()` → open embedded modal (current behavior). Otherwise → call `onboard.mutate(country)` directly (same-tab redirect to Stripe — this already works on mobile).
+- "Manage" link: same routing logic.
 
-5. Final cleanup if anything still blocks taps
-- If mobile typing still fails after the above, I’ll do one more pass to temporarily strip the auth card down to a plain mobile container, verify input works, then reintroduce visuals safely.
-- That guarantees the fix is completed instead of stopping at a partial patch.
+**2. `src/components/wallet/StripeEmbeddedOnboarding.tsx`** — Tighten the fallback so users never see the error screen:
+- When `blocked` is detected, don't render the error UI at all — automatically trigger `onboard.mutate(country)` and close the modal. The redirect flow takes over silently.
+- Keep the script-loading pre-check and the async rejection swallow as a safety net.
 
-Files likely involved
-- `src/pages/Login.tsx`
-- `src/components/shared/PWAInstallBanner.tsx`
-- `src/components/shared/InAppBrowserInterstitial.tsx`
-- `src/components/shared/PWAUpdatePrompt.tsx`
-- possibly `src/components/common/CookieConsent.tsx` only if route guards need aligning
+**3. No edge function changes needed.** `connect-onboard` already returns a working `accountLinks.create` URL with proper `return_url` back to `/wallet?connect=done`, and `StripeConnectPayoutCard` already handles that param to refresh status.
 
-Technical details
-- The pattern in the code suggests this is most likely a mobile hit-testing / overlay / transform stacking issue, not a validation issue.
-- The signup screen still has layered visuals and app-level overlays that can interfere with focus on iOS even when the input itself looks correct.
-- The fix should prioritize reliable native text entry over decorative effects on touch devices.
+## Result
+- Mobile users: tap "Set up instant payouts" → instantly redirected to Stripe's hosted onboarding (works everywhere) → returned to `/wallet` with status refreshed.
+- Desktop users on the published site: still get the in-app embedded experience.
+- Lovable preview: skips embedded, uses redirect — no more error screens.
 
-Definition of done
-- On mobile signup, I can tap the email box and successfully type `abexpress68@gmail.com` end-to-end without the field losing focus or being blocked.
+## Files Changed
+- `src/components/wallet/StripeConnectPayoutCard.tsx` — environment detection + conditional routing
+- `src/components/wallet/StripeEmbeddedOnboarding.tsx` — auto-fallback to redirect when blocked (no error UI)
+
