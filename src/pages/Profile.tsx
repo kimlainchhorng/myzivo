@@ -28,6 +28,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { openExternalUrl } from "@/lib/openExternalUrl";
+import { assessLinkSync } from "@/hooks/useLinkRisk";
+import ExternalLinkWarning from "@/components/security/ExternalLinkWarning";
+import { stripTrackingParams } from "@/lib/linkSafetyExtras";
 import ProfileContentTabs from "@/components/profile/ProfileContentTabs";
 import ProfileStories from "@/components/profile/ProfileStories";
 import SocialListModal from "@/components/profile/SocialListModal";
@@ -179,6 +182,7 @@ const Profile = () => {
   const [coverPosition, setCoverPosition] = useState<number>(profile?.cover_position ?? 50);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [bioDraft, setBioDraft] = useState("");
+  const [safeLinkPrompt, setSafeLinkPrompt] = useState<string | null>(null);
   const coverDragRef = useRef<{ startY: number; startPos: number } | null>(null);
 
   const profileTilt = use3DTilt(profileCardRef);
@@ -934,7 +938,18 @@ const Profile = () => {
                                 key={social.name}
                                 whileTap={{ scale: 0.85 }}
                                 whileHover={{ scale: 1.1, y: -2 }}
-                                onClick={() => void openExternalUrl((profile as any)[social.key])}
+                                onClick={() => {
+                                  const raw = (profile as any)[social.key];
+                                  if (!raw) return;
+                                  const cleaned = stripTrackingParams(raw);
+                                  const r = assessLinkSync(cleaned);
+                                  if (r.level === "blocked") {
+                                    toast.error("This link looks unsafe and was blocked.");
+                                    return;
+                                  }
+                                  if (r.level === "trusted") { void openExternalUrl(cleaned); return; }
+                                  setSafeLinkPrompt(cleaned);
+                                }}
                                 title={social.name}
                                 className={`w-10 h-10 rounded-full ${social.color} flex items-center justify-center shadow-md hover:shadow-lg transition-shadow`}
                               >
@@ -968,6 +983,13 @@ const Profile = () => {
       </div>
 
       <ZivoMobileNav />
+
+      <ExternalLinkWarning
+        url={safeLinkPrompt}
+        open={!!safeLinkPrompt}
+        onOpenChange={(o) => { if (!o) setSafeLinkPrompt(null); }}
+        onConfirm={(u) => { void openExternalUrl(u); setSafeLinkPrompt(null); }}
+      />
 
       {showLangPicker && langTriggerRef.current && createPortal(
         <>
