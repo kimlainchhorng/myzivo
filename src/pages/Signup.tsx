@@ -1,20 +1,18 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-
 /**
- * Signup page - redirects to unified login page with signup mode
- * The premium auth design combines login/signup in a single component
+ * Placeholder signup page — auth UI was wiped at user request.
+ * Rebuild from scratch when ready.
  */
 const Signup = () => {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Redirect to login page with signup mode active
-    navigate("/login?mode=signup", { replace: true });
-  }, [navigate]);
-
-  // Show nothing while redirecting
-  return null;
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background px-6">
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl font-bold text-foreground">Sign up coming soon</h1>
+        <p className="text-sm text-muted-foreground">
+          The signup experience is being rebuilt.
+        </p>
+      </div>
+    </div>
+  );
 };
 
 export default Signup;
