@@ -39,6 +39,7 @@ export default function CreatorSetupPage() {
   const [params, setParams] = useSearchParams();
   const { user } = useAuth();
   const qc = useQueryClient();
+  const { data: stripeStatus } = useConnectStatus();
 
   const { data: creator, refetch: refetchCreator } = useQuery({
     queryKey: ["creator-profile-setup", user?.id],
@@ -103,7 +104,7 @@ export default function CreatorSetupPage() {
       title: "Set up your payout method",
       desc: "Where should we send your money?",
       icon: CreditCard,
-      done: !!creator?.stripe_payouts_enabled,
+      done: !!stripeStatus?.payouts_enabled,
     },
     {
       key: "tier" as StepKey,
@@ -129,7 +130,7 @@ export default function CreatorSetupPage() {
       icon: Rocket,
       done: enrollments.length > 0,
     },
-  ]), [creator, tiers, enrollments]);
+  ]), [creator, tiers, enrollments, stripeStatus]);
 
   const initialStep = (() => {
     const requested = params.get("step") as StepKey | null;
