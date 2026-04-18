@@ -396,37 +396,111 @@ function PayoutStep({ onSaved }: any) {
   );
 }
 
+type TierType = "paid" | "free" | "custom";
+type TierInterval = "month" | "3_months" | "6_months" | "year" | "lifetime";
+const INTERVAL_OPTS: { v: TierInterval; label: string }[] = [
+  { v: "month", label: "1 month" },
+  { v: "3_months", label: "3 months" },
+  { v: "6_months", label: "6 months" },
+  { v: "year", label: "1 year" },
+  { v: "lifetime", label: "Lifetime" },
+];
+const TRIAL_OPTS = [0, 3, 7, 14, 30];
+const INTERVAL_MONTHS_LOCAL: Record<TierInterval, number> = {
+  month: 1, "3_months": 3, "6_months": 6, year: 12, lifetime: 0,
+};
+
 function TierStep({ tiers, userId, onSaved }: any) {
+  const [type, setType] = useState<TierType>("paid");
+  const [interval, setInterval] = useState<TierInterval>("month");
+  const [trialDays, setTrialDays] = useState<number>(0);
   const [name, setName] = useState("Supporter");
   const [price, setPrice] = useState("4.99");
   const [perks, setPerks] = useState("Exclusive posts\nDirect messages\nSubscriber badge");
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const create = async () => {
+  const cents = Math.round((parseFloat(price) || 0) * 100);
+  const months = INTERVAL_MONTHS_LOCAL[interval];
+  const monthlyHelper = type !== "free" && months > 1 && cents > 0
+    ? `≈ $${(cents / 100 / months).toFixed(2)}/mo`
+    : null;
+
+  const reset = () => {
+    setType("paid"); setInterval("month"); setTrialDays(0);
+    setName(""); setPrice(""); setPerks(""); setEditingId(null);
+  };
+
+  const startEdit = (t: any) => {
+    setEditingId(t.id);
+    setType(t.is_free ? "free" : t.is_custom_price ? "custom" : "paid");
+    setInterval((t.billing_interval || "month") as TierInterval);
+    setTrialDays(t.trial_days || 0);
+    setName(t.name || "");
+    setPrice(((t.price_cents || 0) / 100).toFixed(2));
+    setPerks((t.benefits || []).join("\n"));
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm("Delete this tier?")) return;
+    const { error } = await (supabase as any).from("subscription_tiers").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Tier deleted");
+    await onSaved();
+    if (editingId === id) reset();
+  };
+
+  const save = async () => {
     if (!userId) return;
-    const cents = Math.round(parseFloat(price) * 100);
     if (!name.trim()) return toast.error("Tier name required");
-    if (!Number.isFinite(cents) || cents < 99) return toast.error("Minimum price is $0.99");
+    if (type !== "free" && (!Number.isFinite(cents) || cents < 99)) {
+      return toast.error("Minimum price is $0.99");
+    }
     setSaving(true);
     try {
       const benefits = perks.split("\n").map((p) => p.trim()).filter(Boolean);
-      const { error } = await (supabase as any).from("subscription_tiers").insert({
+      const payload: any = {
         creator_id: userId,
         name: name.trim(),
-        price_cents: cents,
+        price_cents: type === "free" ? 0 : cents,
         currency: "USD",
         benefits,
         is_active: true,
-        sort_order: tiers.length,
-      });
-      if (error) throw error;
-      toast.success("Tier created");
-      setName(""); setPrice(""); setPerks("");
+        billing_interval: type === "free" ? "month" : interval,
+        is_free: type === "free",
+        is_custom_price: type === "custom",
+        trial_days: type === "free" ? 0 : trialDays,
+      };
+      if (editingId) {
+        const { error } = await (supabase as any).from("subscription_tiers").update(payload).eq("id", editingId);
+        if (error) throw error;
+        toast.success("Tier updated");
+      } else {
+        payload.sort_order = tiers.length;
+        const { error } = await (supabase as any).from("subscription_tiers").insert(payload);
+        if (error) throw error;
+        toast.success("Tier created");
+      }
+      reset();
       await onSaved();
     } catch (e: any) {
-      toast.error(e.message || "Failed to create tier");
+      toast.error(e.message || "Failed to save tier");
     } finally { setSaving(false); }
   };
+
+  const Chip = ({ active, onClick, children }: any) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${
+        active
+          ? "bg-primary text-primary-foreground border-primary"
+          : "bg-card text-muted-foreground border-border/60 hover:border-border"
+      }`}
+    >
+      {children}
+    </button>
+  );
 
   return (
     <div className="space-y-3">
@@ -434,34 +508,129 @@ function TierStep({ tiers, userId, onSaved }: any) {
         <div className="space-y-1.5">
           <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Your tiers</p>
           {tiers.map((t: any) => (
-            <div key={t.id} className="flex items-center gap-3 p-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/5">
-              <Crown className="w-4 h-4 text-emerald-500" />
+            <div
+              key={t.id}
+              className={`flex items-center gap-3 p-2.5 rounded-xl border ${
+                editingId === t.id
+                  ? "border-primary/60 bg-primary/5"
+                  : "border-emerald-500/30 bg-emerald-500/5"
+              }`}
+            >
+              <Crown className="w-4 h-4 text-emerald-500 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold truncate">{t.name}</p>
-                <p className="text-[10px] text-muted-foreground">${(t.price_cents / 100).toFixed(2)}/mo</p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <p className="text-xs font-bold truncate">{t.name}</p>
+                  {t.is_free && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-600">Free</span>}
+                  {t.is_custom_price && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-violet-500/20 text-violet-600">PWYW</span>}
+                  {t.trial_days > 0 && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-sky-500/20 text-sky-600">{t.trial_days}d trial</span>}
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  {t.is_free ? "Free" : `$${((t.price_cents || 0) / 100).toFixed(2)} / ${(t.billing_interval || "month").replace("_", " ")}`}
+                </p>
               </div>
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              <button onClick={() => startEdit(t)} className="text-[10px] font-bold text-primary px-2 py-1 hover:underline">Edit</button>
+              <button onClick={() => remove(t.id)} className="text-[10px] font-bold text-destructive px-2 py-1 hover:underline">Delete</button>
             </div>
           ))}
         </div>
       )}
 
-      <div className="rounded-xl border border-border/40 bg-card p-3 space-y-2">
-        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{tiers.length > 0 ? "Add another tier" : "Create your first tier"}</p>
+      <div className="rounded-xl border border-border/40 bg-card p-3 space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+            {editingId ? "Edit tier" : tiers.length > 0 ? "Add another tier" : "Create your first tier"}
+          </p>
+          {editingId && (
+            <button onClick={reset} className="text-[10px] font-bold text-muted-foreground hover:text-foreground">Cancel</button>
+          )}
+        </div>
+
+        {/* Type chips */}
+        <div>
+          <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Tier type</Label>
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
+            <Chip active={type === "paid"} onClick={() => setType("paid")}>Paid</Chip>
+            <Chip active={type === "free"} onClick={() => setType("free")}>Free</Chip>
+            <Chip active={type === "custom"} onClick={() => setType("custom")}>Pay what you want</Chip>
+          </div>
+        </div>
+
+        {/* Billing interval */}
+        {type !== "free" && (
+          <div>
+            <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Billing period</Label>
+            <div className="flex flex-wrap gap-1.5 mt-1.5">
+              {INTERVAL_OPTS.map((o) => (
+                <Chip key={o.v} active={interval === o.v} onClick={() => setInterval(o.v)}>{o.label}</Chip>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Name */}
         <div>
           <Label className="text-xs font-bold">Tier name</Label>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Supporter, VIP…" className="mt-1" />
         </div>
-        <div>
-          <Label className="text-xs font-bold">Monthly price (USD)</Label>
-          <Input value={price} onChange={(e) => setPrice(e.target.value.replace(/[^0-9.]/g, ""))} placeholder="4.99" className="mt-1" inputMode="decimal" />
-        </div>
+
+        {/* Price */}
+        {type !== "free" && (
+          <div>
+            <Label className="text-xs font-bold">
+              {type === "custom" ? "Suggested minimum (USD)" : `Price every ${INTERVAL_OPTS.find((o) => o.v === interval)?.label.toLowerCase()} (USD)`}
+            </Label>
+            <Input
+              value={price}
+              onChange={(e) => setPrice(e.target.value.replace(/[^0-9.]/g, ""))}
+              placeholder="4.99"
+              className="mt-1"
+              inputMode="decimal"
+            />
+            {monthlyHelper && (
+              <p className="text-[10px] text-muted-foreground mt-1">{monthlyHelper}</p>
+            )}
+          </div>
+        )}
+
+        {/* Trial */}
+        {type !== "free" && interval !== "lifetime" && (
+          <div>
+            <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Free trial</Label>
+            <div className="flex flex-wrap gap-1.5 mt-1.5">
+              {TRIAL_OPTS.map((d) => (
+                <Chip key={d} active={trialDays === d} onClick={() => setTrialDays(d)}>
+                  {d === 0 ? "None" : `${d} days`}
+                </Chip>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Perks */}
         <div>
           <Label className="text-xs font-bold">Perks (one per line)</Label>
           <Textarea value={perks} onChange={(e) => setPerks(e.target.value)} rows={3} className="mt-1 resize-none text-xs" />
         </div>
-        <Button onClick={create} disabled={saving} className="w-full font-bold">
-          {saving && <Loader2 className="w-4 h-4 animate-spin" />} Create tier
+
+        {/* Preview */}
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+          <p className="text-[10px] uppercase font-bold text-primary tracking-wider mb-1.5">Preview</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="font-bold text-sm">{name || "Tier name"}</p>
+            {type === "free" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-600">Free</span>}
+            {type === "custom" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-600">PWYW</span>}
+            {trialDays > 0 && type !== "free" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-600">{trialDays}-day trial</span>}
+          </div>
+          <p className="text-base font-bold mt-1">
+            {type === "free"
+              ? "Free"
+              : `${type === "custom" ? "From $" : "$"}${(cents / 100).toFixed(2)} / ${INTERVAL_OPTS.find((o) => o.v === interval)?.label.toLowerCase()}`}
+            {monthlyHelper && <span className="text-[10px] font-normal text-muted-foreground ml-1.5">{monthlyHelper}</span>}
+          </p>
+        </div>
+
+        <Button onClick={save} disabled={saving} className="w-full font-bold">
+          {saving && <Loader2 className="w-4 h-4 animate-spin" />} {editingId ? "Save changes" : "Create tier"}
         </Button>
       </div>
     </div>
