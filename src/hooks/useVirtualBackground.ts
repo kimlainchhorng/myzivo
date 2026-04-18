@@ -195,9 +195,25 @@ export function useVirtualBackground(
               mhctx.drawImage(mask, 0, 0, W, H);
               mhctx.filter = "none";
 
-              // 2c. Temporal smoothing — blend 60% current + 40% previous
+              // 2c. Motion-aware temporal smoothing.
+              // Sample-diff current vs previous mask → if user is moving fast
+              // (waving hand), drop blend weight so silhouette snaps instead
+              // of trailing. Static frames keep full smoothing.
+              let blendW = 0.4;
               if (hasPrev) {
-                mhctx.globalAlpha = 0.4;
+                try {
+                  // Cheap motion estimate from a downsampled center strip
+                  const SX = 32, SY = 32;
+                  const cur = mhctx.getImageData(W / 2 - SX / 2, H / 2 - SY / 2, SX, SY).data;
+                  const prv = mpctx.getImageData(W / 2 - SX / 2, H / 2 - SY / 2, SX, SY).data;
+                  let diff = 0;
+                  for (let i = 3; i < cur.length; i += 4) diff += Math.abs(cur[i] - prv[i]);
+                  const avgDiff = diff / (SX * SY); // 0..255
+                  // >18 ≈ noticeable hand/body motion → snap
+                  if (avgDiff > 18) blendW = 0.1;
+                  else if (avgDiff > 10) blendW = 0.25;
+                } catch {}
+                mhctx.globalAlpha = blendW;
                 mhctx.drawImage(maskPrev, 0, 0, W, H);
                 mhctx.globalAlpha = 1;
               }

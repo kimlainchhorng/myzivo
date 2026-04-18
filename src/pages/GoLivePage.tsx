@@ -913,6 +913,11 @@ export default function GoLivePage() {
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
       <video ref={videoRef} autoPlay muted playsInline className={cn("absolute inset-0 w-full h-full object-cover", facingMode === "user" && "scale-x-[-1]")} />
 
+      {/* Top legibility gradient — keeps chips readable on bright scenes */}
+      <div className="absolute inset-x-0 top-0 h-32 z-[5] pointer-events-none bg-gradient-to-b from-black/55 via-black/20 to-transparent" />
+      {/* Bottom legibility gradient — keeps chat + controls readable */}
+      <div className="absolute inset-x-0 bottom-0 h-56 z-[5] pointer-events-none bg-gradient-to-t from-black/60 via-black/25 to-transparent" />
+
       {/* Top bar */}
       <div className="relative z-10 flex items-center gap-1.5 px-3 pt-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}>
         <div className="flex items-center gap-1 bg-red-500 rounded-full px-2 py-1 shadow-lg shrink-0">
@@ -926,7 +931,7 @@ export default function GoLivePage() {
               {hostDisplayName?.[0]?.toUpperCase() ?? "S"}
             </AvatarFallback>
           </Avatar>
-          <span className="text-[11px] font-semibold text-white truncate max-w-[80px]">{hostDisplayName}</span>
+          <span className="text-[11px] font-semibold text-white truncate max-w-[80px] drop-shadow">{hostDisplayName}</span>
           {isPaired && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" title="Paired" />}
         </div>
         <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-1.5 py-1 shrink-0">
@@ -942,9 +947,9 @@ export default function GoLivePage() {
           <span className="text-[11px] text-amber-300 font-bold">{coinsEarned}</span>
         </div>
         <div className="flex-1" />
-        <span className="text-white/70 text-[10px] font-mono bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">{formatTime(elapsed)}</span>
-        <button onClick={() => setShowEndConfirm(true)} className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
-          <X className="h-4 w-4 text-white" />
+        <span className="text-white font-mono text-[10px] bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 drop-shadow">{formatTime(elapsed)}</span>
+        <button onClick={() => setShowEndConfirm(true)} className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center shadow-lg">
+          <X className="h-4 w-4 text-white drop-shadow" />
         </button>
       </div>
 
@@ -957,7 +962,7 @@ export default function GoLivePage() {
       <div className="absolute left-0 right-16 z-10" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}>
         <div className="pl-3 pr-3 max-h-[200px] overflow-y-auto scrollbar-hide space-y-1.5 flex flex-col items-start">
           {chatMessages.length === 0 ? (
-            <div className="text-[11px] text-white/40 italic px-2">Waiting for viewers…</div>
+            <div className="text-[11px] text-white/80 italic px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm drop-shadow inline-block self-start">Waiting for viewers…</div>
           ) : (
             chatMessages.slice(-10).map((m) => (
               <motion.div
@@ -978,30 +983,33 @@ export default function GoLivePage() {
         </div>
       </div>
 
-      {/* Right tools */}
-      <div className="absolute right-3 z-10 flex flex-col gap-2.5 items-center" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}>
-        <button onClick={toggleMic} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+      {/* Right tools — single glass rail (legible on any background) */}
+      <div
+        className="absolute right-2.5 z-10 flex flex-col gap-1.5 items-center bg-black/35 backdrop-blur-md rounded-full px-1.5 py-2 border border-white/10 shadow-xl shadow-black/40"
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}
+      >
+        <button onClick={toggleMic} className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
           {micOn ? <Mic className="h-4 w-4 text-white" /> : <MicOff className="h-4 w-4 text-red-400" />}
         </button>
-        <button onClick={toggleCamera} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+        <button onClick={toggleCamera} className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
           {cameraOn ? <Camera className="h-4 w-4 text-white" /> : <CameraOff className="h-4 w-4 text-red-400" />}
         </button>
-        <button onClick={flipCamera} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+        <button onClick={flipCamera} className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
           <RotateCcw className="h-4 w-4 text-white" />
         </button>
         <button
           onClick={() => setShowBgSheet(true)}
           className={cn(
-            "w-10 h-10 rounded-full backdrop-blur-sm flex flex-col items-center justify-center",
-            bgChoice.kind !== "off" ? "bg-red-500/30 border border-red-400/50" : "bg-black/40",
+            "w-9 h-9 rounded-full active:scale-95 transition flex flex-col items-center justify-center",
+            bgChoice.kind !== "off" ? "bg-red-500/40 border border-red-400/60" : "bg-white/5 hover:bg-white/15",
           )}
         >
-          <ImageIcon className="h-4 w-4 text-white" />
-          <span className="text-[7px] text-white/90 -mt-0.5">BG</span>
+          <ImageIcon className="h-3.5 w-3.5 text-white" />
+          <span className="text-[7px] text-white/90 -mt-0.5 font-semibold">BG</span>
         </button>
-        <button onClick={() => setShowRechargeSheet(true)} className="w-10 h-10 rounded-full bg-amber-500/30 border border-amber-500/40 backdrop-blur-sm flex flex-col items-center justify-center">
-          <img src={goldCoinIcon} alt="" className="h-4 w-4" />
-          <span className="text-[7px] text-amber-200 -mt-0.5">+Coin</span>
+        <button onClick={() => setShowRechargeSheet(true)} className="w-9 h-9 rounded-full bg-amber-500/40 hover:bg-amber-500/55 border border-amber-400/60 active:scale-95 transition flex flex-col items-center justify-center">
+          <img src={goldCoinIcon} alt="" className="h-3.5 w-3.5" />
+          <span className="text-[7px] text-amber-100 -mt-0.5 font-bold">+Coin</span>
         </button>
       </div>
 
