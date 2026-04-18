@@ -1,21 +1,14 @@
 /**
- * useVirtualBackground — MediaPipe Selfie Segmentation that replaces the
+ * useVirtualBackground — MediaPipe Image Segmenter that replaces the
  * background of a MediaStream with a chosen image (or blur).
- *
- * Mirrors the architecture of useBeautyFilter:
- *   - Self-hosts WASM + model under /public/mediapipe
- *   - GPU delegate first, auto-falls-back to CPU
- *   - 6s timeout; if it never loads we just pass the raw stream through
- *
- * Output: a MediaStream you can publish or hand to <video>.
  */
 import { useEffect, useRef, useState } from "react";
 
 export type VirtualBgKind = "off" | "blur" | "image";
 export interface VirtualBgConfig {
   kind: VirtualBgKind;
-  imageUrl?: string; // used when kind === "image"
-  blurPx?: number;   // used when kind === "blur" (default 18)
+  imageUrl?: string;
+  blurPx?: number;
 }
 
 export type VirtualBgStatus = "loading" | "ready" | "off" | "error";
@@ -40,6 +33,8 @@ export function useVirtualBackground(
     let cancelled = false;
     let segmenter: any = null;
     let raf = 0;
+    let timeoutId = 0;
+
     const video = document.createElement("video");
     video.autoplay = true;
     video.muted = true;
@@ -47,9 +42,14 @@ export function useVirtualBackground(
     video.srcObject = source;
 
     const out = document.createElement("canvas");
-    const ctx = out.getContext("2d", { willReadFrequently: false })!;
+    const ctx = out.getContext("2d")!;
+    // Reusable person-cutout canvas (don't allocate per frame!)
+    const personCanvas = document.createElement("canvas");
+    const pctx = personCanvas.getContext("2d")!;
+    // Reusable mask canvas
     const maskCanvas = document.createElement("canvas");
     const maskCtx = maskCanvas.getContext("2d")!;
+
     const bgImg = new Image();
     bgImg.crossOrigin = "anonymous";
     let bgImgLoaded = false;
@@ -58,34 +58,71 @@ export function useVirtualBackground(
       bgImg.onload = () => { bgImgLoaded = true; };
     }
 
+    const drawBackground = (cfg: VirtualBgConfig) => {
+      if (cfg.kind === "blur") {
+        ctx.save();
+        ctx.filter = `blur(${cfg.blurPx ?? 18}px)`;
+        ctx.drawImage(video, 0, 0, out.width, out.height);
+        ctx.restore();
+      } else if (cfg.kind === "image" && bgImgLoaded) {
+        const ir = bgImg.width / bgImg.height;
+        const or = out.width / out.height;
+        let dw = out.width, dh = out.height, dx = 0, dy = 0;
+        if (ir > or) { dh = out.height; dw = dh * ir; dx = (out.width - dw) / 2; }
+        else { dw = out.width; dh = dw / ir; dy = (out.height - dh) / 2; }
+        ctx.drawImage(bgImg, dx, dy, dw, dh);
+      } else {
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, out.width, out.height);
+      }
+    };
+
     const start = async () => {
       setStatus("loading");
-      try {
-        await video.play();
-      } catch {}
-      const track = source.getVideoTracks()[0];
-      const settings = track?.getSettings?.() ?? {};
-      const w = settings.width ?? video.videoWidth ?? 720;
-      const h = settings.height ?? video.videoHeight ?? 1280;
-      out.width = w; out.height = h;
-      maskCanvas.width = w; maskCanvas.height = h;
+      try { await video.play(); } catch {}
 
+      // Wait for video metadata so dimensions are correct
+      if (video.readyState < 2) {
+        await new Promise<void>((res) => {
+          const on = () => { video.removeEventListener("loadeddata", on); res(); };
+          video.addEventListener("loadeddata", on);
+          setTimeout(res, 1500);
+        });
+      }
+
+      const w = video.videoWidth || 720;
+      const h = video.videoHeight || 1280;
+      out.width = w; out.height = h;
+      personCanvas.width = w; personCanvas.height = h;
+
+      // Draw an initial frame so captureStream has data right away
+      ctx.drawImage(video, 0, 0, w, h);
+
+      // Capture the canvas stream NOW and publish it, regardless of segmenter readiness
+      const captured = (out as any).captureStream?.(30) as MediaStream | undefined;
+      if (captured) {
+        source.getAudioTracks().forEach((t) => captured.addTrack(t));
+        if (!cancelled) setStream(captured);
+      } else {
+        if (!cancelled) { setStream(source); setStatus("error"); }
+        return;
+      }
+
+      // Initialize segmenter (GPU → CPU fallback)
       try {
         const { FilesetResolver, ImageSegmenter } = await import("@mediapipe/tasks-vision");
         const fileset = await FilesetResolver.forVisionTasks("/mediapipe");
-        segmenter = await ImageSegmenter.createFromOptions(fileset, {
-          baseOptions: {
-            modelAssetPath: "/mediapipe/selfie_segmenter.tflite",
-            delegate: "GPU",
-          },
-          runningMode: "VIDEO",
-          outputCategoryMask: false,
-          outputConfidenceMasks: true,
-        });
-      } catch (e) {
         try {
-          const { FilesetResolver, ImageSegmenter } = await import("@mediapipe/tasks-vision");
-          const fileset = await FilesetResolver.forVisionTasks("/mediapipe");
+          segmenter = await ImageSegmenter.createFromOptions(fileset, {
+            baseOptions: {
+              modelAssetPath: "/mediapipe/selfie_segmenter.tflite",
+              delegate: "GPU",
+            },
+            runningMode: "VIDEO",
+            outputCategoryMask: false,
+            outputConfidenceMasks: true,
+          });
+        } catch {
           segmenter = await ImageSegmenter.createFromOptions(fileset, {
             baseOptions: {
               modelAssetPath: "/mediapipe/selfie_segmenter.tflite",
@@ -95,11 +132,18 @@ export function useVirtualBackground(
             outputCategoryMask: false,
             outputConfidenceMasks: true,
           });
-        } catch (err) {
-          console.error("[virtualBg] segmenter init failed", err);
-          if (!cancelled) { setStream(source); setStatus("error"); }
-          return;
         }
+      } catch (err) {
+        console.error("[virtualBg] segmenter init failed", err);
+        if (!cancelled) setStatus("error");
+        // keep canvas stream running with raw video pass-through
+        const passTick = () => {
+          if (cancelled) return;
+          raf = requestAnimationFrame(passTick);
+          if (video.readyState >= 2) ctx.drawImage(video, 0, 0, out.width, out.height);
+        };
+        raf = requestAnimationFrame(passTick);
+        return;
       }
 
       if (cancelled) return;
@@ -111,32 +155,25 @@ export function useVirtualBackground(
         if (video.readyState < 2) return;
         const cfg = configRef.current;
         const ts = performance.now();
+
         try {
           segmenter.segmentForVideo(video, ts, (result: any) => {
             const mask = result.confidenceMasks?.[0];
-            if (!mask) return;
-            // 1) Draw background layer
-            if (cfg.kind === "blur") {
-              ctx.save();
-              ctx.filter = `blur(${cfg.blurPx ?? 18}px)`;
+            if (!mask) {
+              // no mask — just show raw
               ctx.drawImage(video, 0, 0, out.width, out.height);
-              ctx.restore();
-            } else if (cfg.kind === "image" && bgImgLoaded) {
-              // cover-fit
-              const ir = bgImg.width / bgImg.height;
-              const or = out.width / out.height;
-              let dw = out.width, dh = out.height, dx = 0, dy = 0;
-              if (ir > or) { dh = out.height; dw = dh * ir; dx = (out.width - dw) / 2; }
-              else { dw = out.width; dh = dw / ir; dy = (out.height - dh) / 2; }
-              ctx.drawImage(bgImg, dx, dy, dw, dh);
-            } else {
-              ctx.fillStyle = "#000";
-              ctx.fillRect(0, 0, out.width, out.height);
+              return;
             }
 
-            // 2) Build mask alpha image
+            // 1) Background layer
+            drawBackground(cfg);
+
+            // 2) Build alpha mask image
             const mw = mask.width, mh = mask.height;
             const maskData = mask.getAsFloat32Array();
+            if (maskCanvas.width !== mw || maskCanvas.height !== mh) {
+              maskCanvas.width = mw; maskCanvas.height = mh;
+            }
             const tmp = maskCtx.createImageData(mw, mh);
             const data = tmp.data;
             for (let i = 0; i < maskData.length; i++) {
@@ -145,59 +182,42 @@ export function useVirtualBackground(
               const j = i * 4;
               data[j] = 255; data[j+1] = 255; data[j+2] = 255; data[j+3] = a;
             }
-            // resize mask to output via scratch canvas
-            maskCanvas.width = mw; maskCanvas.height = mh;
             maskCtx.putImageData(tmp, 0, 0);
 
-            // 3) Composite person on top using mask
-            ctx.save();
-            // Draw mask scaled, then keep video where mask alpha exists
-            ctx.globalCompositeOperation = "source-over";
-            // Use offscreen approach: draw video clipped to mask
-            const personCanvas = document.createElement("canvas");
-            personCanvas.width = out.width; personCanvas.height = out.height;
-            const pctx = personCanvas.getContext("2d")!;
-            pctx.drawImage(video, 0, 0, out.width, out.height);
-            pctx.globalCompositeOperation = "destination-in";
-            // soften mask edges
-            pctx.filter = "blur(2px)";
-            pctx.drawImage(maskCanvas, 0, 0, out.width, out.height);
+            // 3) Compose person cutout on offscreen canvas
+            pctx.globalCompositeOperation = "source-over";
             pctx.filter = "none";
+            pctx.clearRect(0, 0, personCanvas.width, personCanvas.height);
+            pctx.drawImage(video, 0, 0, personCanvas.width, personCanvas.height);
+            pctx.globalCompositeOperation = "destination-in";
+            pctx.filter = "blur(2px)";
+            pctx.drawImage(maskCanvas, 0, 0, personCanvas.width, personCanvas.height);
+            pctx.filter = "none";
+
+            // 4) Draw person on top of background
             ctx.drawImage(personCanvas, 0, 0);
-            ctx.restore();
+
+            try { mask.close?.(); } catch {}
           });
-        } catch (e) {
-          // swallow per-frame errors
+        } catch {
+          // swallow per-frame errors — keep last good frame
         }
       };
       raf = requestAnimationFrame(tick);
-
-      const captured = (out as any).captureStream?.(30) as MediaStream | undefined;
-      if (captured) {
-        // attach original audio
-        source.getAudioTracks().forEach((t) => captured.addTrack(t));
-        if (!cancelled) setStream(captured);
-      } else {
-        if (!cancelled) { setStream(source); setStatus("error"); }
-      }
     };
 
-    const timeout = window.setTimeout(() => {
-      if (status === "loading") {
-        // give up — pass through
-        setStream(source);
-        setStatus("error");
-      }
-    }, 6000);
+    timeoutId = window.setTimeout(() => {
+      // If still loading after 8s, mark error but keep running
+      setStatus((s) => (s === "loading" ? "error" : s));
+    }, 8000);
 
     start();
 
     return () => {
       cancelled = true;
       cancelAnimationFrame(raf);
-      window.clearTimeout(timeout);
+      window.clearTimeout(timeoutId);
       try { segmenter?.close?.(); } catch {}
-      try { (out as any).captureStream?.()?.getTracks?.().forEach?.((t: MediaStreamTrack) => t.stop()); } catch {}
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source, config.kind, config.imageUrl]);
