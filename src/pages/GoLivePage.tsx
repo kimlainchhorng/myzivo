@@ -122,8 +122,32 @@ export default function GoLivePage() {
   const [rawStream, setRawStream] = useState<MediaStream | null>(null);
   const [beauty, setBeauty] = useState<BeautySettings>(DEFAULT_BEAUTY);
   const [showBeautyPanel, setShowBeautyPanel] = useState(false);
-  const { stream: beautifiedStream, status: beautyStatus } = useBeautyFilter(rawStream, beauty);
+  const [activePreset, setActivePreset] = useState<"natural" | "sweet" | "glam" | "auto" | "off" | "custom">("custom");
+  const { stream: beautifiedStream, status: beautyStatus, luma } = useBeautyFilter(rawStream, beauty);
   const [compareHold, setCompareHold] = useState(false);
+
+  // Toast when Beauty Pro becomes active for the first time
+  const proAnnouncedRef = useRef(false);
+  useEffect(() => {
+    if (beautyStatus === "pro" && beauty.enabled && !proAnnouncedRef.current) {
+      proAnnouncedRef.current = true;
+      toast.success("Beauty Pro active", { description: "Face tracking enabled", duration: 1500 });
+    }
+  }, [beautyStatus, beauty.enabled]);
+
+  // Auto preset: self-tune brighten/smooth from sampled face luma
+  useEffect(() => {
+    if (activePreset !== "auto" || !beauty.enabled) return;
+    // luma 0..1 ; target ~0.55
+    const base = BEAUTY_PRESETS.auto;
+    let brighten = base.brighten;
+    let smooth = base.smooth;
+    if (luma < 0.35) { brighten = Math.min(85, base.brighten + 25); smooth = Math.min(95, base.smooth + 10); }
+    else if (luma < 0.5) { brighten = Math.min(75, base.brighten + 12); }
+    else if (luma > 0.75) { brighten = Math.max(15, base.brighten - 18); }
+    setBeauty((b) => (b.brighten === brighten && b.smooth === smooth ? b : { ...b, brighten, smooth }));
+  }, [luma, activePreset, beauty.enabled]);
+
   // When user is holding "Compare", show raw camera so they can see the before/after.
   const previewStream = compareHold ? rawStream : (beautifiedStream ?? rawStream);
   const localStream = beautifiedStream ?? rawStream;
@@ -945,21 +969,28 @@ export default function GoLivePage() {
               {/* Status pill */}
               <div className="flex flex-col items-center gap-1 mb-3">
                 <span className={cn(
-                  "px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide",
+                  "px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide inline-flex items-center gap-1.5",
                   beautyStatus === "pro" && "bg-pink-500/20 text-pink-200 border border-pink-400/40",
                   beautyStatus === "lite" && "bg-amber-500/20 text-amber-200 border border-amber-400/40",
                   beautyStatus === "loading" && "bg-white/10 text-white/70 border border-white/20",
                 )}>
-                  {beautyStatus === "pro" && "● Beauty: Pro (face tracking)"}
-                  {beautyStatus === "lite" && "● Beauty: Lite (no face tracking)"}
+                  {beauty.enabled && (beautyStatus === "pro" || beautyStatus === "lite") && (
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                    </span>
+                  )}
+                  {beautyStatus === "pro" && "Beauty: Pro (face tracking)"}
+                  {beautyStatus === "lite" && "Beauty: Lite (no face tracking)"}
                   {beautyStatus === "loading" && "Loading…"}
                 </span>
                 <span className="text-[10px] text-white/50">Move closer for best results</span>
               </div>
 
               {/* Quick presets */}
-              <div className="flex gap-2 mb-3">
+              <div className="flex gap-1.5 mb-3">
                 {([
+                  { key: "auto", label: "Auto" },
                   { key: "natural", label: "Natural" },
                   { key: "sweet", label: "Sweet" },
                   { key: "glam", label: "Glam" },
@@ -967,8 +998,13 @@ export default function GoLivePage() {
                 ] as const).map((p) => (
                   <button
                     key={p.key}
-                    onClick={() => setBeauty(BEAUTY_PRESETS[p.key])}
-                    className="flex-1 h-8 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs font-semibold"
+                    onClick={() => { setBeauty(BEAUTY_PRESETS[p.key]); setActivePreset(p.key); }}
+                    className={cn(
+                      "flex-1 h-8 rounded-full text-xs font-semibold transition-colors",
+                      activePreset === p.key
+                        ? "bg-pink-500 text-white"
+                        : "bg-white/10 hover:bg-white/15 text-white",
+                    )}
                   >
                     {p.label}
                   </button>
@@ -1013,9 +1049,10 @@ export default function GoLivePage() {
                     min={0}
                     max={100}
                     value={beauty[row.key as keyof BeautySettings] as number}
-                    onChange={(e) =>
-                      setBeauty((b) => ({ ...b, [row.key]: Number(e.target.value) }))
-                    }
+                    onChange={(e) => {
+                      setBeauty((b) => ({ ...b, [row.key]: Number(e.target.value) }));
+                      if (activePreset !== "custom") setActivePreset("custom");
+                    }}
                     className="w-full accent-pink-500 h-1"
                   />
                 </div>

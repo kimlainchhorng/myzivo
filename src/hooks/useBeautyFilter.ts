@@ -45,10 +45,12 @@ export const DEFAULT_BEAUTY: BeautySettings = {
   nose: 12,
 };
 
-export const BEAUTY_PRESETS: Record<"natural" | "sweet" | "glam" | "off", BeautySettings> = {
+export const BEAUTY_PRESETS: Record<"natural" | "sweet" | "glam" | "auto" | "off", BeautySettings> = {
   natural: { enabled: true, smooth: 60, brighten: 30, slim: 20, eyes: 15, lips: 25, nose: 10 },
   sweet:   { enabled: true, smooth: 82, brighten: 50, slim: 22, eyes: 25, lips: 45, nose: 12 },
   glam:    { enabled: true, smooth: 85, brighten: 55, slim: 45, eyes: 35, lips: 55, nose: 28 },
+  // Auto = balanced starting point; the hook auto-tunes brighten/smooth from luma.
+  auto:    { enabled: true, smooth: 72, brighten: 40, slim: 25, eyes: 22, lips: 35, nose: 14 },
   off:     { enabled: false, smooth: 0, brighten: 0, slim: 0, eyes: 0, lips: 0, nose: 0 },
 };
 
@@ -129,6 +131,7 @@ function pathFromIndices(
 export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautySettings) {
   const [outputStream, setOutputStream] = useState<MediaStream | null>(null);
   const [status, setStatus] = useState<BeautyStatus>("loading");
+  const [luma, setLuma] = useState<number>(0.5); // 0-1, smoothed face luma
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
 
@@ -484,7 +487,7 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         ctx.globalAlpha = 1;
       }
 
-      // ── F. Eye enlarge — dedicated canvas + feathered radial alpha ──
+      // ── F. Eye enlarge + sparkle (iris brighten + catchlight) ──
       if (s.eyes > 0) {
         const scale = 1 + eyesPct * 0.22;
         const eyes: Point[] = [];
@@ -506,12 +509,15 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
           eyeCanvas.height = size;
 
           eyeCtx.globalCompositeOperation = "source-over";
+          eyeCtx.globalAlpha = 1;
+          eyeCtx.filter = `brightness(${(1 + eyesPct * 0.10).toFixed(3)}) saturate(${(1 + eyesPct * 0.12).toFixed(3)})`;
           eyeCtx.clearRect(0, 0, size, size);
           eyeCtx.drawImage(
             video,
             eye.x - r, eye.y - r, r * 2, r * 2,
             r - sr, r - sr, sr * 2, sr * 2,
           );
+          eyeCtx.filter = "none";
 
           eyeCtx.globalCompositeOperation = "destination-in";
           const grad = eyeCtx.createRadialGradient(r, r, r * 0.45, r, r, r);
@@ -523,6 +529,50 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
           eyeCtx.globalCompositeOperation = "source-over";
 
           ctx.drawImage(eyeCanvas, eye.x - r, eye.y - r);
+
+          // Catchlight — soft white dot at upper-inner iris
+          const cxDot = eye.x - r * 0.18;
+          const cyDot = eye.y - r * 0.22;
+          const dotR = Math.max(1.2, r * 0.10);
+          const cg = ctx.createRadialGradient(cxDot, cyDot, 0, cxDot, cyDot, dotR);
+          cg.addColorStop(0, `rgba(255,255,255,${0.20 + eyesPct * 0.18})`);
+          cg.addColorStop(1, "rgba(255,255,255,0)");
+          ctx.fillStyle = cg;
+          ctx.beginPath();
+          ctx.arc(cxDot, cyDot, dotR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // ── F2. Subtle contour — restore cheekbone shadow flattened by smoothing.
+      if (s.smooth > 0 && slimPct > 0) {
+        const lc = lms[LM_LEFT_CHEEK];
+        const rc = lms[LM_RIGHT_CHEEK];
+        const chin = lms[LM_CHIN];
+        const noseTip = lms[LM_NOSE_TIP];
+        if (lc && rc && chin && noseTip) {
+          const lcX = lc.x * W;
+          const lcY = lc.y * H;
+          const rcX = rc.x * W;
+          const chY = chin.y * H;
+          const ntY = noseTip.y * H;
+          const faceW = rcX - lcX;
+          const stripeW = Math.max(8, faceW * 0.05);
+          const cTop = (ntY + lcY) * 0.5;
+          const cBot = (chY + lcY) * 0.5;
+          const a = 0.06 + slimPct * 0.08;
+          const drawStripe = (cx: number, top: number, bot: number) => {
+            const g = ctx.createLinearGradient(cx - stripeW, 0, cx + stripeW, 0);
+            g.addColorStop(0, "rgba(0,0,0,0)");
+            g.addColorStop(0.5, `rgba(40,25,20,${a})`);
+            g.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = g;
+            ctx.fillRect(cx - stripeW, top, stripeW * 2, bot - top);
+          };
+          ctx.globalCompositeOperation = "multiply";
+          drawStripe(lcX + stripeW * 0.6, cTop, cBot);
+          drawStripe(rcX - stripeW * 0.6, cTop, cBot);
+          ctx.globalCompositeOperation = "source-over";
         }
       }
 
@@ -543,6 +593,37 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
       }
     };
 
+    let lumaAcc = 0.5;
+    let lastLumaEmit = 0;
+
+    const sampleLuma = (lms: Landmark[] | null, now: number) => {
+      // Sample center of forehead/cheek region every 30 frames (~0.5s)
+      if (frameCounter % 30 !== 0) return;
+      const cx = lms?.[LM_NOSE_TIP] ? lms[LM_NOSE_TIP].x * W : W / 2;
+      const cy = lms?.[LM_NOSE_TIP] ? lms[LM_NOSE_TIP].y * H : H * 0.45;
+      const sw = Math.max(20, Math.floor(W * 0.08));
+      const sx = Math.max(0, Math.floor(cx - sw / 2));
+      const sy = Math.max(0, Math.floor(cy - sw / 2));
+      try {
+        const data = ctx.getImageData(sx, sy, sw, sw).data;
+        let sum = 0;
+        const step = 4 * 4; // every 4th pixel
+        let n = 0;
+        for (let i = 0; i < data.length; i += step) {
+          sum += (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+          n++;
+        }
+        const l = sum / (n * 255);
+        lumaAcc = lumaAcc * 0.7 + l * 0.3;
+        if (now - lastLumaEmit > 1500) {
+          lastLumaEmit = now;
+          setLuma(lumaAcc);
+        }
+      } catch {
+        // cross-origin/security; ignore
+      }
+    };
+
     const draw = () => {
       if (cancelled) return;
       const now = performance.now();
@@ -559,6 +640,7 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
       ctx.drawImage(video, 0, 0, W, H);
 
       if (!s.enabled) {
+        sampleLuma(lastLandmarks, now);
         rafId = requestAnimationFrame(draw);
         return;
       }
@@ -595,6 +677,7 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         }
       }
 
+      sampleLuma(lastLandmarks, now);
       rafId = requestAnimationFrame(draw);
     };
 
@@ -634,5 +717,5 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
     };
   }, [rawStream]);
 
-  return { stream: outputStream, status, ready: status !== "loading" };
+  return { stream: outputStream, status, ready: status !== "loading", luma };
 }
