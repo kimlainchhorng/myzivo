@@ -130,7 +130,7 @@ const Signup = () => {
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="John"
                   disabled={submitting}
-                  className="w-full h-12 pl-10 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                  className="w-full h-10 pl-9 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
                 />
               </div>
             </div>
@@ -146,7 +146,7 @@ const Signup = () => {
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Doe"
                   disabled={submitting}
-                  className="w-full h-12 pl-10 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                  className="w-full h-10 pl-9 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
                 />
               </div>
             </div>
@@ -169,7 +169,7 @@ const Signup = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 disabled={submitting}
-                className="w-full h-12 pl-10 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                className="w-full h-10 pl-9 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
               />
             </div>
           </div>
@@ -188,7 +188,7 @@ const Signup = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="8+ chars"
                   disabled={submitting}
-                  className="w-full h-12 pl-10 pr-10 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                  className="w-full h-10 pl-9 pr-10 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
                 />
                 <button
                   type="button"
@@ -213,7 +213,7 @@ const Signup = () => {
                   onChange={(e) => setConfirm(e.target.value)}
                   placeholder="Re-enter"
                   disabled={submitting}
-                  className="w-full h-12 pl-10 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                  className="w-full h-10 pl-9 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
                 />
               </div>
             </div>
