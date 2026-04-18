@@ -913,6 +913,11 @@ export default function GoLivePage() {
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
       <video ref={videoRef} autoPlay muted playsInline className={cn("absolute inset-0 w-full h-full object-cover", facingMode === "user" && "scale-x-[-1]")} />
 
+      {/* Top legibility gradient — keeps chips readable on bright scenes */}
+      <div className="absolute inset-x-0 top-0 h-32 z-[5] pointer-events-none bg-gradient-to-b from-black/55 via-black/20 to-transparent" />
+      {/* Bottom legibility gradient — keeps chat + controls readable */}
+      <div className="absolute inset-x-0 bottom-0 h-56 z-[5] pointer-events-none bg-gradient-to-t from-black/60 via-black/25 to-transparent" />
+
       {/* Top bar */}
       <div className="relative z-10 flex items-center gap-1.5 px-3 pt-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}>
         <div className="flex items-center gap-1 bg-red-500 rounded-full px-2 py-1 shadow-lg shrink-0">
@@ -926,7 +931,7 @@ export default function GoLivePage() {
               {hostDisplayName?.[0]?.toUpperCase() ?? "S"}
             </AvatarFallback>
           </Avatar>
-          <span className="text-[11px] font-semibold text-white truncate max-w-[80px]">{hostDisplayName}</span>
+          <span className="text-[11px] font-semibold text-white truncate max-w-[80px] drop-shadow">{hostDisplayName}</span>
           {isPaired && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" title="Paired" />}
         </div>
         <div className="flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-1.5 py-1 shrink-0">
@@ -942,9 +947,9 @@ export default function GoLivePage() {
           <span className="text-[11px] text-amber-300 font-bold">{coinsEarned}</span>
         </div>
         <div className="flex-1" />
-        <span className="text-white/70 text-[10px] font-mono bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">{formatTime(elapsed)}</span>
-        <button onClick={() => setShowEndConfirm(true)} className="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
-          <X className="h-4 w-4 text-white" />
+        <span className="text-white font-mono text-[10px] bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 drop-shadow">{formatTime(elapsed)}</span>
+        <button onClick={() => setShowEndConfirm(true)} className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center shadow-lg">
+          <X className="h-4 w-4 text-white drop-shadow" />
         </button>
       </div>
 
