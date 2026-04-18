@@ -61,6 +61,28 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://hizivo.com";
 
+    // Build per-tier discount via Stripe coupon (creator-set launch discount)
+    const discounts: Array<{ coupon: string }> = [];
+    const pct = Number(tier.discount_percent || 0);
+    if (pct > 0) {
+      const months = Number(tier.discount_months || 0);
+      const couponParams: any = {
+        percent_off: pct,
+        name: `${tier.name} launch discount`,
+      };
+      if (isOneTime) {
+        couponParams.duration = "once";
+      } else if (months > 1) {
+        couponParams.duration = "repeating";
+        couponParams.duration_in_months = months;
+      } else {
+        couponParams.duration = "once";
+      }
+      const coupon = await stripe.coupons.create(couponParams);
+      discounts.push({ coupon: coupon.id });
+      log("Applied tier discount", { pct, months, couponId: coupon.id });
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -84,10 +106,12 @@ serve(async (req) => {
       ...(!isOneTime && tier.trial_days > 0
         ? { subscription_data: { trial_period_days: tier.trial_days } }
         : {}),
+      ...(discounts.length > 0
+        ? { discounts }
+        : { allow_promotion_codes: true }),
       metadata: { tier_id, creator_id, subscriber_id: user.id },
       success_url: `${origin}/u/${creator_id}?subscribed=true`,
       cancel_url: `${origin}/u/${creator_id}?canceled=true`,
-      allow_promotion_codes: true,
     });
 
     log("Session created", { id: session.id });
