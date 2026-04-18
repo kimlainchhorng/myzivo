@@ -669,6 +669,20 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
           ctx.beginPath();
           ctx.arc(cxDot, cyDot, dotR, 0, Math.PI * 2);
           ctx.fill();
+
+          // Under-eye de-darkening — soft warm-white radial below each eye
+          const ueY = eye.y + r * 0.55;
+          const ueR = r * 1.05;
+          const ueg = ctx.createRadialGradient(eye.x, ueY, 0, eye.x, ueY, ueR);
+          const ueA = 0.06 + eyesPct * 0.04;
+          ueg.addColorStop(0, `rgba(255, 235, 220, ${ueA})`);
+          ueg.addColorStop(1, "rgba(255, 235, 220, 0)");
+          ctx.globalCompositeOperation = "screen";
+          ctx.fillStyle = ueg;
+          ctx.beginPath();
+          ctx.arc(eye.x, ueY, ueR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalCompositeOperation = "source-over";
         }
       }
 
