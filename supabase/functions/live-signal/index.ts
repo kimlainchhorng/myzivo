@@ -225,7 +225,7 @@ Deno.serve(async (req) => {
   }
 
   // Refresh heartbeat on every publisher signal too
-  if (from_role === "publisher") {
+  if (from_role === "publisher" && effectiveUserId) {
     await admin
       .from("live_streams")
       .update({ last_publisher_heartbeat: new Date().toISOString() })
