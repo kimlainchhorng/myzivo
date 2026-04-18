@@ -26,12 +26,15 @@ export default function StripeEmbeddedOnboarding({ open, onClose, onComplete, co
   const [instance, setInstance] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState(false);
+  const onboard = useConnectOnboard();
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setBlocked(false);
 
     (async () => {
       try {
@@ -42,26 +45,39 @@ export default function StripeEmbeddedOnboarding({ open, onClose, onComplete, co
         if (data?.error) throw new Error(data.error);
         if (cancelled) return;
 
-        const connect = loadConnectAndInitialize({
-          publishableKey: STRIPE_PUBLISHABLE_KEY,
-          fetchClientSecret: async () => data.client_secret,
-          appearance: {
-            overlays: "dialog",
-            variables: {
-              colorPrimary: "#10b981",
-              borderRadius: "12px",
+        let connect;
+        try {
+          connect = await loadConnectAndInitialize({
+            publishableKey: STRIPE_PUBLISHABLE_KEY,
+            fetchClientSecret: async () => data.client_secret,
+            appearance: {
+              overlays: "dialog",
+              variables: {
+                colorPrimary: "#10b981",
+                borderRadius: "12px",
+              },
             },
-          },
-        });
+          });
+        } catch (loadErr: any) {
+          if (!cancelled) {
+            setBlocked(true);
+            setError("Embedded Stripe is blocked in this browser/preview. Use secure redirect instead.");
+            setLoading(false);
+          }
+          return;
+        }
+
         if (!cancelled) {
           setInstance(connect);
           setLoading(false);
         }
       } catch (e: any) {
         if (!cancelled) {
-          setError(e?.message || "Failed to load Stripe");
+          const msg = e?.message || "Failed to load Stripe";
+          const isBlocked = msg.includes("Connect.js") || msg.includes("connect-js");
+          setBlocked(isBlocked);
+          setError(isBlocked ? "Embedded Stripe is blocked in this browser/preview. Use secure redirect instead." : msg);
           setLoading(false);
-          toast.error(e?.message || "Failed to load Stripe");
         }
       }
     })();
