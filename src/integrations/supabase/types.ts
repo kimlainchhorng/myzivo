@@ -10865,6 +10865,7 @@ export type Database = {
           payout_details: Json | null
           payout_method: string | null
           subscriber_count: number | null
+          tips_enabled: boolean
           total_earnings_cents: number | null
           updated_at: string | null
           user_id: string
@@ -10883,6 +10884,7 @@ export type Database = {
           payout_details?: Json | null
           payout_method?: string | null
           subscriber_count?: number | null
+          tips_enabled?: boolean
           total_earnings_cents?: number | null
           updated_at?: string | null
           user_id: string
@@ -10901,6 +10903,7 @@ export type Database = {
           payout_details?: Json | null
           payout_method?: string | null
           subscriber_count?: number | null
+          tips_enabled?: boolean
           total_earnings_cents?: number | null
           updated_at?: string | null
           user_id?: string
