@@ -29,10 +29,13 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance }: Coi
 
   const handleConfirm = useCallback(async () => {
     if (!selected) return;
+
+    // Open a tab immediately from the user gesture so Stripe can launch reliably,
+    // especially inside the Lovable preview iframe.
+    const checkoutTab = window.open("", "_blank");
+
     setStep("processing");
     try {
-      // Capture where to send the user back after payment.
-      // If they're inside a live stream, return them to that exact stream.
       const returnTo = window.location.pathname + window.location.search;
       const { data, error } = await supabase.functions.invoke("create-coin-checkout", {
         body: { package_id: selected.id, return_to: returnTo },
@@ -40,12 +43,22 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance }: Coi
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
       if (!data?.url) throw new Error("No checkout URL returned");
+
+      if (checkoutTab) {
+        checkoutTab.location.href = data.url;
+        setStep("select");
+        setSelected(null);
+        onClose();
+        return;
+      }
+
       window.location.href = data.url;
     } catch (e: any) {
+      checkoutTab?.close();
       setStep("confirm");
       toast.error("Couldn't start checkout", { description: e?.message ?? "Please try again." });
     }
-  }, [selected]);
+  }, [selected, onClose]);
 
   const handleClose = useCallback(() => {
     if (step === "processing") return; // prevent close during processing

@@ -57,12 +57,15 @@ export default function CoinPurchaseSuccess() {
   useEffect(() => {
     if (status !== "success") return;
     if (countdown <= 0) {
+      if (isLiveReturn) {
+        window.close();
+      }
       navigate(returnTo, { replace: true });
       return;
     }
     const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(t);
-  }, [status, countdown, navigate, returnTo]);
+  }, [status, countdown, navigate, returnTo, isLiveReturn]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-6">
