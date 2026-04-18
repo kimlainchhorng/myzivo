@@ -175,7 +175,7 @@ export function useVirtualBackground(
               // Asymmetric vertical ramp: looser on top 25% (hair zone) so fine
               // strands aren't clipped, tighter elsewhere to keep body/hands clean.
               const LO_BODY = 0.50, HI_BODY = 0.58;
-              const LO_HAIR = 0.42, HI_HAIR = 0.55;
+              const LO_HAIR = 0.46, HI_HAIR = 0.58;
               const HAIR_BAND = Math.floor(mh * 0.25);
               for (let i = 0; i < maskData.length; i++) {
                 const v = maskData[i];
@@ -183,7 +183,15 @@ export function useVirtualBackground(
                 const inHair = y < HAIR_BAND;
                 const LO = inHair ? LO_HAIR : LO_BODY;
                 const HI = inHair ? HI_HAIR : HI_BODY;
-                const a = v <= LO ? 0 : v >= HI ? 255 : Math.round(((v - LO) / (HI - LO)) * 255);
+                let a: number;
+                if (v <= LO) a = 0;
+                else if (v >= HI) a = 255;
+                else {
+                  // Smoothstep S-curve: push mid-confidence pixels toward 0/1
+                  // → crisper silhouette without changing thresholds.
+                  const t = (v - LO) / (HI - LO);
+                  a = Math.round(t * t * (3 - 2 * t) * 255);
+                }
                 const j = i * 4;
                 img.data[j] = 255;
                 img.data[j + 1] = 255;
