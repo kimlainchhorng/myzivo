@@ -10937,6 +10937,42 @@ export type Database = {
         }
         Relationships: []
       }
+      creator_promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          creator_id: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          percent_off: number
+          uses_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          creator_id: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          percent_off: number
+          uses_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          creator_id?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          percent_off?: number
+          uses_count?: number
+        }
+        Relationships: []
+      }
       creator_subscriptions: {
         Row: {
           cancelled_at: string | null
@@ -44609,12 +44645,16 @@ export type Database = {
       }
       subscription_tiers: {
         Row: {
+          badge_color: string | null
+          badge_emoji: string | null
           benefits: Json | null
           billing_interval: string
           created_at: string | null
           creator_id: string
           currency: string | null
           description: string | null
+          discount_months: number | null
+          discount_percent: number | null
           id: string
           is_active: boolean | null
           is_custom_price: boolean
@@ -44624,14 +44664,19 @@ export type Database = {
           price_cents: number
           sort_order: number | null
           trial_days: number
+          welcome_message: string | null
         }
         Insert: {
+          badge_color?: string | null
+          badge_emoji?: string | null
           benefits?: Json | null
           billing_interval?: string
           created_at?: string | null
           creator_id: string
           currency?: string | null
           description?: string | null
+          discount_months?: number | null
+          discount_percent?: number | null
           id?: string
           is_active?: boolean | null
           is_custom_price?: boolean
@@ -44641,14 +44686,19 @@ export type Database = {
           price_cents: number
           sort_order?: number | null
           trial_days?: number
+          welcome_message?: string | null
         }
         Update: {
+          badge_color?: string | null
+          badge_emoji?: string | null
           benefits?: Json | null
           billing_interval?: string
           created_at?: string | null
           creator_id?: string
           currency?: string | null
           description?: string | null
+          discount_months?: number | null
+          discount_percent?: number | null
           id?: string
           is_active?: boolean | null
           is_custom_price?: boolean
@@ -44658,6 +44708,7 @@ export type Database = {
           price_cents?: number
           sort_order?: number | null
           trial_days?: number
+          welcome_message?: string | null
         }
         Relationships: []
       }
