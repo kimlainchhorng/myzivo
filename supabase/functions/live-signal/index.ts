@@ -170,7 +170,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  if (from_role === "publisher" && stream.user_id !== effectiveUserId) {
+  if (from_role === "publisher" && effectiveUserId && stream.user_id !== effectiveUserId) {
     return new Response(JSON.stringify({ error: "not_publisher" }), {
       status: 403,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
