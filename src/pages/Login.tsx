@@ -380,8 +380,14 @@ const Login = () => {
     mouseY.set(0);
   }, [mouseX, mouseY]);
 
-  const input3D = "relative z-20 w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2 pl-9 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)] touch-manipulation [-webkit-user-select:text] [user-select:text] pointer-events-auto";
-  const input3DLg = "relative z-20 w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)] touch-manipulation [-webkit-user-select:text] [user-select:text] pointer-events-auto";
+  // On touch devices, use simpler styles (no backdrop-blur, 16px font to prevent iOS zoom-on-focus)
+  // Keep z-index minimal and avoid filters/transforms inside the input wrapper.
+  const input3D = isTouchDevice
+    ? "relative w-full bg-white/15 border border-white/25 rounded-xl py-2.5 pl-9 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors text-base touch-manipulation [-webkit-user-select:text] [user-select:text]"
+    : "relative z-20 w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2 pl-9 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)] touch-manipulation [-webkit-user-select:text] [user-select:text] pointer-events-auto";
+  const input3DLg = isTouchDevice
+    ? "relative w-full bg-white/15 border border-white/25 rounded-xl py-3 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors text-base touch-manipulation [-webkit-user-select:text] [user-select:text]"
+    : "relative z-20 w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)] touch-manipulation [-webkit-user-select:text] [user-select:text] pointer-events-auto";
 
   return (
     <div className="h-[100dvh] flex flex-col items-center justify-center relative overflow-hidden">
@@ -418,7 +424,12 @@ const Login = () => {
           }}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15] rounded-3xl p-4 sm:p-5 flex flex-col"
+          className={cn(
+            "relative rounded-3xl p-4 sm:p-5 flex flex-col",
+            isTouchDevice
+              ? "bg-black/60 border border-white/15"
+              : "bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15]"
+          )}
         >
           {/* Glass shimmer */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-transparent to-white/[0.04] rounded-3xl pointer-events-none" />
@@ -453,7 +464,7 @@ const Login = () => {
                     <FormControl>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
-                        <input type="email" placeholder="you@example.com" autoComplete="email" className={input3DLg} {...field} />
+                        <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3DLg} {...field} />
                       </div>
                     </FormControl>
                     <FormMessage className="text-red-400 text-xs" />
@@ -536,7 +547,7 @@ const Login = () => {
                     <FormControl>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
-                        <input type="email" placeholder="you@example.com" autoComplete="email" className={input3D} {...field} />
+                        <input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="you@example.com" autoComplete="email" className={input3D} {...field} />
                       </div>
                     </FormControl>
                     <FormMessage className="text-red-400 text-xs" />
