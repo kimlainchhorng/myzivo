@@ -147,8 +147,9 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Anonymous viewers are allowed (read-only role); publishers must be authenticated.
-  if (!effectiveUserId && from_role !== "viewer") {
+  // Anonymous viewers are allowed (read-only); heartbeats are allowed unauthenticated
+  // (they're harmless pings). Other publisher signals require auth.
+  if (!effectiveUserId && from_role !== "viewer" && type !== "heartbeat") {
     return new Response(JSON.stringify({ error: "unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -169,7 +170,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  if (from_role === "publisher" && stream.user_id !== effectiveUserId) {
+  if (from_role === "publisher" && effectiveUserId && stream.user_id !== effectiveUserId) {
     return new Response(JSON.stringify({ error: "not_publisher" }), {
       status: 403,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -198,7 +199,7 @@ Deno.serve(async (req) => {
 
   // Heartbeat is a no-op signal that just refreshes the row
   if (type === "heartbeat") {
-    if (from_role === "publisher") {
+    if (from_role === "publisher" && effectiveUserId) {
       await admin
         .from("live_streams")
         .update({ last_publisher_heartbeat: new Date().toISOString() })
