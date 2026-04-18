@@ -1272,6 +1272,7 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
         </div>
       </div>
     </div>
+    </>
   );
 }
 
