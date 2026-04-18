@@ -26,11 +26,21 @@ const loginSchema = z.object({
 
 
 // Signup schema (extends login with name + confirm)
+// Password rules align with Supabase pwned-password protection:
+// require 8+ chars and a mix of letters & numbers to avoid common/breached passwords.
 const signupSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(50),
   lastName: z.string().min(1, "Last name is required").max(50),
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .refine((v) => /[A-Za-z]/.test(v) && /\d/.test(v), {
+      message: "Use a mix of letters and numbers",
+    })
+    .refine((v) => !/^(password|12345678|qwerty|letmein|welcome)/i.test(v), {
+      message: "Password is too common — try something more unique",
+    }),
   confirmPassword: z.string(),
   agreeToTerms: z.literal(true, { errorMap: () => ({ message: "You must agree to the Terms of Service" }) }),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -544,7 +554,7 @@ const Login = () => {
                         <FormControl>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                            <input type={showSignupPwd ? "text" : "password"} placeholder="Min 6 chars" autoComplete="new-password" className={input3D + " pr-9"} {...field} />
+                            <input type={showSignupPwd ? "text" : "password"} placeholder="8+ chars, letters & numbers" autoComplete="new-password" className={input3D + " pr-9"} {...field} />
                             <button type="button" onClick={() => setShowSignupPwd(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors" aria-label={showSignupPwd ? "Hide password" : "Show password"}>
                               {showSignupPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                             </button>
