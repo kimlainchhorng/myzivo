@@ -50,10 +50,11 @@ export const DEFAULT_BEAUTY: BeautySettings = {
   blurBg: false,
 };
 
-export const BEAUTY_PRESETS: Record<"real" | "natural" | "sweet" | "glam" | "auto" | "off", BeautySettings> = {
+export const BEAUTY_PRESETS: Record<"real" | "natural" | "sweet" | "pro" | "glam" | "auto" | "off", BeautySettings> = {
   real:    { enabled: true, smooth: 25, brighten: 12, slim: 10, eyes: 8,  lips: 10, nose: 5  },
   natural: { enabled: true, smooth: 35, brighten: 20, slim: 15, eyes: 10, lips: 18, nose: 8  },
   sweet:   { enabled: true, smooth: 50, brighten: 30, slim: 25, eyes: 25, lips: 30, nose: 12 },
+  pro:     { enabled: true, smooth: 60, brighten: 35, slim: 30, eyes: 28, lips: 35, nose: 18 },
   glam:    { enabled: true, smooth: 78, brighten: 48, slim: 40, eyes: 35, lips: 50, nose: 25 },
   // Auto = balanced starting point; the hook auto-tunes brighten/smooth from luma.
   auto:    { enabled: true, smooth: 45, brighten: 25, slim: 18, eyes: 15, lips: 22, nose: 10 },
