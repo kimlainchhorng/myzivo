@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useSearchParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RemoteConfigProvider } from "@/contexts/RemoteConfigContext";
@@ -500,6 +500,28 @@ const PartnerOnboardingDispatcher = () => {
   return params.get("type") ? <PartnerOnboarding /> : <PartnerWithZivo />;
 };
 
+function RouteAwareGlobalUI() {
+  const location = useLocation();
+  const blockedRoutes = ["/login", "/signup", "/setup", "/forgot-password", "/reset-password", "/verify-email", "/verify-otp", "/verify-new-device"];
+  const hideGlobalUI = blockedRoutes.some((route) => location.pathname.startsWith(route));
+
+  if (hideGlobalUI) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <CookieConsent />
+      <PWAUpdatePrompt />
+      <PWAInstallBanner />
+      <InAppBrowserInterstitial />
+      <SpatialCursor />
+      <RuntimeSecurityGuard />
+      <IncomingCallListener />
+      <ChatNotificationListener />
+    </Suspense>
+  );
+}
+
+
 const App = () => (
   <ErrorBoundary>
     <HelmetProvider>
@@ -950,16 +972,7 @@ const App = () => (
           </UTMProvider>
           </CurrencyProvider>
           </CustomerCityProvider>
-          <Suspense fallback={null}>
-            <CookieConsent />
-            <PWAUpdatePrompt />
-            <PWAInstallBanner />
-            <InAppBrowserInterstitial />
-            <SpatialCursor />
-            <RuntimeSecurityGuard />
-            <IncomingCallListener />
-            <ChatNotificationListener />
-          </Suspense>
+          <RouteAwareGlobalUI />
           <BrandThemeApplicator />
         </ZivoPlusProvider>
         </RemoteConfigProvider>
