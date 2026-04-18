@@ -87,22 +87,69 @@ const ALLOWED_PAYMENT_DOMAINS: string[] = [
   'paypal.me',
 ];
 
+/** TLDs frequently abused for phishing — block by default */
+const SUSPICIOUS_TLDS = new Set([
+  '.zip', '.mov', '.country', '.kim', '.cricket', '.science', '.work',
+  '.party', '.gq', '.cf', '.tk', '.ml', '.ga', '.top', '.xin', '.loan',
+]);
+
 /**
  * Check if a URL uses a safe protocol (http/https only).
- * Blocks javascript:, data:, vbscript:, etc.
+ * Blocks javascript:, data:, vbscript:, file:, etc.
  */
 export function isSafeProtocol(url: string): boolean {
   const trimmed = url.trim().toLowerCase();
-  // Block dangerous protocols
   if (
     trimmed.startsWith('javascript:') ||
     trimmed.startsWith('data:') ||
     trimmed.startsWith('vbscript:') ||
-    trimmed.startsWith('blob:')
+    trimmed.startsWith('blob:') ||
+    trimmed.startsWith('file:') ||
+    trimmed.startsWith('about:') ||
+    trimmed.startsWith('chrome:') ||
+    trimmed.startsWith('chrome-extension:')
   ) {
     return false;
   }
   return true;
+}
+
+/**
+ * Detect punycode/IDN homograph attacks (e.g. xn--pple-43d.com mimicking apple.com).
+ * Returns true if the hostname uses punycode encoding.
+ */
+export function isPunycodeHost(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname.toLowerCase().split('.').some(part => part.startsWith('xn--'));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Detect URLs ending in suspicious TLDs commonly used for phishing.
+ */
+export function hasSuspiciousTld(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    return Array.from(SUSPICIOUS_TLDS).some(tld => host.endsWith(tld));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Detect URLs that embed credentials (https://user:pass@host) — common phishing vector.
+ */
+export function hasEmbeddedCredentials(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.username.length > 0 || parsed.password.length > 0;
+  } catch {
+    return false;
+  }
 }
 
 /**
