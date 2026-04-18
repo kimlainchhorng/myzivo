@@ -36,6 +36,7 @@ import Plane from "lucide-react/dist/esm/icons/plane";
 import Globe from "lucide-react/dist/esm/icons/globe";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import { useBeautyFilter, DEFAULT_BEAUTY, BEAUTY_PRESETS, type BeautySettings } from "@/hooks/useBeautyFilter";
+import { useVirtualBackground } from "@/hooks/useVirtualBackground";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
