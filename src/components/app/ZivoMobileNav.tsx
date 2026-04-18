@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { usePriceAlerts } from "@/hooks/usePriceAlerts";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useI18n } from "@/hooks/useI18n";
+import { useAuth } from "@/contexts/AuthContext";
 import navHomeBg from "@/assets/nav-home-bg.jpg";
 import navSearchBg from "@/assets/nav-search-bg.jpg";
 import navTripsBg from "@/assets/nav-trips-bg.jpg";
@@ -32,6 +33,11 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
   const { activeAlertsCount } = usePriceAlerts();
   const { impact } = useHaptics();
   const { t } = useI18n();
+  const { user } = useAuth();
+
+  // Guests: Account tab opens the sign-in page directly so they don't see
+  // the "Welcome to ZIVO" preview card first.
+  const accountPath = user ? "/profile" : "/login?redirect=%2Fprofile";
 
   const tabs: NavTab[] = [
     { id: "live", labelKey: "nav.live", icon: Radio, path: "/live", bg: navAlertsBg, cssVar: "var(--cars)" },
@@ -40,7 +46,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
     { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
     { id: "map", labelKey: "nav.map", icon: MapPin, path: "/store-map", bg: navTripsBg, cssVar: "var(--hotels)" },
     { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: "/chat", bg: navAlertsBg, cssVar: "var(--cars)" },
-    { id: "account", labelKey: "nav.account", icon: User, path: "/profile", bg: navAccountBg, cssVar: "var(--primary)" },
+    { id: "account", labelKey: "nav.account", icon: User, path: accountPath, bg: navAccountBg, cssVar: "var(--primary)" },
   ];
 
   const getActiveTab = () => {
