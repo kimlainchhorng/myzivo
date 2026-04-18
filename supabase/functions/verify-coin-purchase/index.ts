@@ -4,7 +4,7 @@ import Stripe from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -28,38 +28,72 @@ serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const sessionId = String(body?.session_id || "");
-    if (!sessionId) throw new Error("Missing session_id");
+    const paymentIntentId = String(body?.payment_intent_id || "");
+    if (!sessionId && !paymentIntentId) throw new Error("Missing payment reference");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    if (session.metadata?.user_id !== user.id) {
-      throw new Error("Session does not belong to this user");
+    let paymentStatus = "pending";
+    let paymentRef = sessionId;
+    let coins = 0;
+    let packageId = "unknown";
+    let amountCents = 0;
+    let currency = "usd";
+
+    if (paymentIntentId) {
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      if (paymentIntent.metadata?.user_id !== user.id) {
+        throw new Error("Payment does not belong to this user");
+      }
+
+      paymentStatus = paymentIntent.status;
+      paymentRef = paymentIntent.id;
+      if (paymentIntent.status !== "succeeded") {
+        return new Response(JSON.stringify({ status: paymentIntent.status, credited: false }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
+      coins = parseInt(paymentIntent.metadata?.coins || "0", 10);
+      packageId = paymentIntent.metadata?.package_id || "unknown";
+      amountCents = paymentIntent.amount_received || paymentIntent.amount || 0;
+      currency = paymentIntent.currency ?? "usd";
+    } else {
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      if (session.metadata?.user_id !== user.id) {
+        throw new Error("Session does not belong to this user");
+      }
+
+      paymentStatus = session.payment_status || "pending";
+      paymentRef = session.id;
+      if (session.payment_status !== "paid") {
+        return new Response(JSON.stringify({ status: session.payment_status, credited: false }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
+      coins = parseInt(session.metadata?.coins || "0", 10);
+      packageId = session.metadata?.package_id || "unknown";
+      amountCents = session.amount_total ?? 0;
+      currency = session.currency ?? "usd";
     }
 
-    if (session.payment_status !== "paid") {
-      return new Response(JSON.stringify({ status: session.payment_status, credited: false }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
-    const coins = parseInt(session.metadata?.coins || "0", 10);
-    const packageId = session.metadata?.package_id || "unknown";
-    if (!coins || coins <= 0) throw new Error("Invalid coin amount in session");
+    if (!coins || coins <= 0) throw new Error("Invalid coin amount in payment");
 
     const { data: balance, error: rpcErr } = await supabaseAdmin.rpc("credit_coin_purchase", {
       _user_id: user.id,
-      _session_id: sessionId,
+      _session_id: paymentRef,
       _package_id: packageId,
       _coins: coins,
-      _amount_cents: session.amount_total ?? 0,
-      _currency: session.currency ?? "usd",
+      _amount_cents: amountCents,
+      _currency: currency,
     });
 
     if (rpcErr) throw new Error(rpcErr.message);
 
-    return new Response(JSON.stringify({ status: "paid", credited: true, coins, balance }), {
+    return new Response(JSON.stringify({ status: paymentStatus, credited: true, coins, balance }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

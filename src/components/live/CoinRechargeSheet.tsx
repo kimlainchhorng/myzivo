@@ -1,24 +1,41 @@
-/**
- * CoinRechargeSheet — Real Stripe-powered Z Coin top-up sheet.
- * Redirects the user to Stripe Checkout; coins are credited on the success page.
- */
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShieldCheck, Sparkles, Loader2 } from "lucide-react";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { X, ShieldCheck, Sparkles, Loader2, CreditCard } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
 import { coinPackages, type CoinPackage } from "@/config/coinPackages";
 import { supabase } from "@/integrations/supabase/client";
+import { getStripe } from "@/lib/stripe";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CoinRechargeSheetProps {
   open: boolean;
   onClose: () => void;
   currentBalance: number;
-  /** Optional legacy hook — no longer used for the real Stripe flow. */
   onPurchase?: (coins: number) => Promise<void> | void;
 }
 
-export default function CoinRechargeSheet({ open, onClose, currentBalance }: CoinRechargeSheetProps) {
+const CARD_ELEMENT_OPTIONS = {
+  style: {
+    base: {
+      fontSize: "16px",
+      color: "rgba(255,255,255,0.92)",
+      fontFamily: "system-ui, sans-serif",
+      "::placeholder": { color: "rgba(255,255,255,0.35)" },
+      iconColor: "rgba(255,255,255,0.72)",
+    },
+    invalid: { color: "#ef4444" },
+  },
+  hidePostalCode: false,
+};
+
+function CoinRechargeSheetInner({ open, onClose, currentBalance }: CoinRechargeSheetProps) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [selected, setSelected] = useState<CoinPackage | null>(null);
   const [step, setStep] = useState<"select" | "confirm" | "processing">("select");
 
@@ -27,51 +44,67 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance }: Coi
     setStep("confirm");
   }, []);
 
-  const handleConfirm = useCallback(async () => {
-    if (!selected) return;
-
-    // Open a tab immediately from the user gesture so Stripe can launch reliably,
-    // especially inside the Lovable preview iframe.
-    const checkoutTab = window.open("", "_blank");
-
-    setStep("processing");
-    try {
-      const returnTo = window.location.pathname + window.location.search;
-      const { data, error } = await supabase.functions.invoke("create-coin-checkout", {
-        body: { package_id: selected.id, return_to: returnTo },
-      });
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
-      if (!data?.url) throw new Error("No checkout URL returned");
-
-      if (checkoutTab) {
-        checkoutTab.location.href = data.url;
-        setStep("select");
-        setSelected(null);
-        onClose();
-        return;
-      }
-
-      window.location.href = data.url;
-    } catch (e: any) {
-      checkoutTab?.close();
-      setStep("confirm");
-      toast.error("Couldn't start checkout", { description: e?.message ?? "Please try again." });
-    }
-  }, [selected, onClose]);
-
   const handleClose = useCallback(() => {
-    if (step === "processing") return; // prevent close during processing
+    if (step === "processing") return;
     setStep("select");
     setSelected(null);
     onClose();
   }, [step, onClose]);
 
+  const handleConfirm = useCallback(async () => {
+    if (!user) {
+      toast.error("Please sign in to buy coins");
+      return;
+    }
+    if (!selected) return;
+    if (!stripe || !elements) {
+      toast.error("Payment form is still loading");
+      return;
+    }
+
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) {
+      toast.error("Card form not ready");
+      return;
+    }
+
+    setStep("processing");
+    try {
+      const { data, error } = await supabase.functions.invoke("create-coin-payment-intent", {
+        body: { package_id: selected.id },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "Failed to start payment");
+      if (!data?.client_secret) throw new Error("No payment secret returned");
+
+      const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(data.client_secret, {
+        payment_method: { card: cardElement },
+      });
+      if (confirmError) throw new Error(confirmError.message || "Payment failed");
+      if (!paymentIntent?.id) throw new Error("Payment confirmation failed");
+
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-coin-purchase", {
+        body: { payment_intent_id: paymentIntent.id },
+      });
+      if (verifyError) throw new Error(verifyError.message);
+      if (verifyData?.error) throw new Error(verifyData.error);
+      if (!verifyData?.credited) throw new Error("Payment received, but coins are still processing");
+
+      queryClient.invalidateQueries();
+      toast.success("Coins added", {
+        description: `+${(verifyData.coins ?? (selected.coins + (selected.bonus || 0))).toLocaleString()} Z Coins`,
+      });
+      handleClose();
+    } catch (e: any) {
+      setStep("confirm");
+      toast.error("Couldn't complete payment", { description: e?.message ?? "Please try again." });
+    }
+  }, [user, selected, stripe, elements, queryClient, handleClose]);
+
   return (
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -80,7 +113,6 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance }: Coi
             onClick={handleClose}
           />
 
-          {/* Sheet */}
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
@@ -88,14 +120,12 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance }: Coi
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
             className="fixed bottom-0 left-0 right-0 z-[201] bg-gradient-to-b from-gray-900 to-black rounded-t-3xl max-h-[85vh] overflow-hidden"
           >
-            {/* Handle */}
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-white/20" />
             </div>
 
             {step === "select" && (
               <div className="px-4 pb-6">
-                {/* Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <img src={goldCoinIcon} alt="" className="w-6 h-6" />
@@ -109,7 +139,6 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance }: Coi
                   </button>
                 </div>
 
-                {/* Packages grid */}
                 <div className="grid grid-cols-2 gap-2.5">
                   {coinPackages.map((pkg) => (
                     <button
@@ -148,7 +177,6 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance }: Coi
                   ))}
                 </div>
 
-                {/* Trust badges */}
                 <div className="flex items-center justify-center gap-4 mt-4 text-white/30">
                   <div className="flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3" />
@@ -164,9 +192,9 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance }: Coi
 
             {step === "confirm" && selected && (
               <div className="px-6 pb-8 flex flex-col items-center">
-                <h3 className="text-white font-bold text-lg mb-6">Confirm Purchase</h3>
+                <h3 className="text-white font-bold text-lg mb-6">Pay in Live</h3>
 
-                <div className="w-full bg-white/5 rounded-2xl p-5 border border-white/10 mb-6">
+                <div className="w-full bg-white/5 rounded-2xl p-5 border border-white/10 mb-4">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-white/50 text-sm">Coins</span>
                     <div className="flex items-center gap-1.5">
@@ -188,6 +216,20 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance }: Coi
                   </div>
                 </div>
 
+                <div className="w-full bg-white/5 rounded-2xl p-4 border border-white/10 mb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CreditCard className="w-4 h-4 text-white/70" />
+                    <span className="text-sm font-semibold text-white">Card Details</span>
+                  </div>
+                  <div className="rounded-xl border border-white/10 p-3 bg-white/5">
+                    <CardElement options={CARD_ELEMENT_OPTIONS} />
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-3 text-[10px] text-white/45">
+                    <ShieldCheck className="w-3 h-3" />
+                    Your payment stays inside live and is processed by Stripe.
+                  </div>
+                </div>
+
                 <div className="w-full bg-white/5 rounded-2xl p-4 border border-white/10 mb-6 flex items-center justify-between">
                   <span className="text-white/60 text-sm">Amount</span>
                   <span className="text-white font-bold text-xl">${selected.price.toFixed(2)}</span>
@@ -202,7 +244,8 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance }: Coi
                   </button>
                   <button
                     onClick={handleConfirm}
-                    className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold text-sm shadow-lg shadow-amber-500/30 active:scale-95 transition-transform"
+                    disabled={!stripe}
+                    className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold text-sm shadow-lg shadow-amber-500/30 active:scale-95 transition-transform disabled:opacity-60"
                   >
                     Pay ${selected.price.toFixed(2)}
                   </button>
@@ -213,13 +256,21 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance }: Coi
             {step === "processing" && (
               <div className="px-6 pb-12 flex flex-col items-center justify-center py-12">
                 <Loader2 className="w-12 h-12 text-amber-400 animate-spin mb-6" />
-                <h3 className="text-white font-bold text-lg mb-1">Redirecting to checkout…</h3>
-                <p className="text-white/40 text-sm text-center">Opening Stripe — your coins will land in your wallet right after payment.</p>
+                <h3 className="text-white font-bold text-lg mb-1">Processing payment…</h3>
+                <p className="text-white/40 text-sm text-center">Stay here — we’ll add your coins right inside the live.</p>
               </div>
             )}
           </motion.div>
         </>
       )}
     </AnimatePresence>
+  );
+}
+
+export default function CoinRechargeSheet(props: CoinRechargeSheetProps) {
+  return (
+    <Elements stripe={getStripe()}>
+      <CoinRechargeSheetInner {...props} />
+    </Elements>
   );
 }
