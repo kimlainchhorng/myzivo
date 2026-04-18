@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import StripeConnectPayoutCard from "@/components/wallet/StripeConnectPayoutCard";
+import UnifiedPayoutCard from "@/components/wallet/UnifiedPayoutCard";
 import { useConnectStatus } from "@/hooks/useStripeConnect";
 
 type StepKey = "profile" | "verify" | "payout" | "tier" | "tips" | "launch";
@@ -389,9 +389,9 @@ function PayoutStep({ onSaved }: any) {
   return (
     <div className="space-y-3">
       <div className="rounded-xl bg-muted/30 border border-border/40 p-3 text-[11px] text-muted-foreground">
-        Powered by <span className="font-bold">Stripe Connect</span> — we never store your bank or card info. Cash out to a debit card in minutes, or to a bank in 1–2 business days.
+        Choose <span className="font-bold">Stripe</span> for instant debit card payouts (US/EU/45+ countries) or <span className="font-bold">PayPal</span> for global coverage including Cambodia, Vietnam, and beyond.
       </div>
-      <StripeConnectPayoutCard balanceDollars={0} />
+      <UnifiedPayoutCard balanceDollars={0} />
     </div>
   );
 }
