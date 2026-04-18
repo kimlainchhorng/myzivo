@@ -237,6 +237,9 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
     let lastFrameTime = performance.now();
     let avgFrameMs = 16;
     let mode: BeautyStatus = "loading";
+    // Auto white-balance: smoothed R/B ratio sampled from forehead.
+    let wbRatio = 1.0; // R/B; >1 = warm, <1 = cool
+
 
     const timeoutId = window.setTimeout(() => {
       if (mode === "loading" && !cancelled) {
