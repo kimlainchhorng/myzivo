@@ -10,9 +10,27 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useConnectStatus, useConnectOnboard, useInstantPayout } from "@/hooks/useStripeConnect";
 import StripeEmbeddedOnboarding from "./StripeEmbeddedOnboarding";
+import { detectInAppBrowser } from "@/lib/isInAppBrowser";
 
 interface Props {
   balanceDollars: number;
+}
+
+/** Embedded Stripe Connect only works in true desktop browsers, not mobile webviews/iframes. */
+function shouldUseEmbedded(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    if (window.innerWidth < 1024) return false;
+    if ((window as any).Capacitor?.isNativePlatform?.()) return false;
+    if (detectInAppBrowser()) return false;
+    if (window.self !== window.top) {
+      const host = window.location.hostname || "";
+      if (host.includes("lovableproject.com") || host.includes("lovable.app")) return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
@@ -52,6 +70,15 @@ export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
     queryClient.invalidateQueries({ queryKey: ["stripe-connect-status"] });
   };
 
+  const country = (status as any)?.country || "US";
+  const openOnboarding = () => {
+    if (shouldUseEmbedded()) {
+      setEmbedOpen(true);
+    } else {
+      onboard.mutate(country);
+    }
+  };
+
   // Not connected yet
   if (!status?.connected || !status?.details_submitted) {
     return (
@@ -70,7 +97,8 @@ export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
             Connect your debit card and cash out in minutes — 24/7, including weekends.
           </p>
           <Button
-            onClick={() => setEmbedOpen(true)}
+            onClick={openOnboarding}
+            disabled={onboard.isPending}
             className="w-full h-11 rounded-xl bg-white text-[#635bff] hover:bg-white/90 font-bold gap-2"
           >
             <ArrowRight className="w-4 h-4" />
@@ -107,7 +135,7 @@ export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
               </div>
             </div>
             <button
-              onClick={() => setEmbedOpen(true)}
+              onClick={openOnboarding}
               className="text-[11px] underline opacity-80 hover:opacity-100"
             >
               Manage
