@@ -172,8 +172,8 @@ export function useVirtualBackground(
               mask.height = mh;
               const maskData = conf.getAsFloat32Array();
               const img = mctx.createImageData(mw, mh);
-              const LO = 0.45;
-              const HI = 0.60;
+              const LO = 0.55;
+              const HI = 0.62;
               const RANGE = HI - LO;
               for (let i = 0; i < maskData.length; i++) {
                 const v = maskData[i];
@@ -186,14 +186,25 @@ export function useVirtualBackground(
               }
               mctx.putImageData(img, 0, 0);
 
-              // 2b. Pass 1 — upscale low-res mask to full resolution with bilinear + light blur
+              // 2b. Pass 1 — upscale low-res mask to full resolution with bilinear + minimal blur
               mhctx.clearRect(0, 0, W, H);
               mhctx.globalAlpha = 1;
               mhctx.imageSmoothingEnabled = true;
               mhctx.imageSmoothingQuality = "high";
-              mhctx.filter = "blur(1px)";
+              mhctx.filter = "blur(0.5px)";
               mhctx.drawImage(mask, 0, 0, W, H);
               mhctx.filter = "none";
+
+              // 2b-erode. 1px erosion: keep only pixels whose 4-neighbours are also opaque.
+              // Composite mask onto itself shifted by ±1px in destination-in mode → opens
+              // negative spaces (between fingers, around hair strands) that bilinear upscale filled in.
+              mhctx.globalCompositeOperation = "destination-in";
+              mhctx.filter = "none";
+              mhctx.drawImage(maskHi, 1, 0, W, H);
+              mhctx.drawImage(maskHi, -1, 0, W, H);
+              mhctx.drawImage(maskHi, 0, 1, W, H);
+              mhctx.drawImage(maskHi, 0, -1, W, H);
+              mhctx.globalCompositeOperation = "source-over";
 
               // 2c. Motion-aware temporal smoothing.
               // Sample-diff current vs previous mask → if user is moving fast
@@ -230,12 +241,12 @@ export function useVirtualBackground(
               pctx.clearRect(0, 0, W, H);
               pctx.drawImage(video!, 0, 0, W, H);
 
+              // 3b. Clip with refined mask — no Pass-2 blur (would re-dilate the eroded edges)
               pctx.globalCompositeOperation = "destination-in";
-              pctx.filter = "blur(0.8px)";
+              pctx.filter = "none";
               pctx.imageSmoothingEnabled = true;
               pctx.imageSmoothingQuality = "high";
               pctx.drawImage(maskHi, 0, 0, W, H);
-              pctx.filter = "none";
               pctx.globalCompositeOperation = "source-over";
 
               // 4. Composite person over background
