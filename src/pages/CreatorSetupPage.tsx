@@ -725,54 +725,6 @@ function TierStep({ tiers, userId, onSaved }: any) {
           </div>
         )}
 
-        {/* Badge */}
-        <div className="rounded-lg border border-border/40 p-2.5 space-y-2">
-          <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Subscriber badge</Label>
-          <div>
-            <p className="text-[10px] text-muted-foreground mb-1">Color</p>
-            <div className="flex flex-wrap gap-1.5">
-              {BADGE_COLORS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setBadgeColor(c)}
-                  className={`w-7 h-7 rounded-full border-2 transition ${badgeColor === c ? "border-foreground scale-110" : "border-transparent"}`}
-                  style={{ backgroundColor: c }}
-                />
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="text-[10px] text-muted-foreground mb-1">Emoji</p>
-            <div className="flex flex-wrap gap-1">
-              {BADGE_EMOJIS.map((e) => (
-                <button
-                  key={e}
-                  type="button"
-                  onClick={() => setBadgeEmoji(e)}
-                  className={`w-8 h-8 rounded-lg text-base transition ${badgeEmoji === e ? "bg-primary/15 ring-2 ring-primary" : "bg-muted hover:bg-muted/70"}`}
-                >
-                  {e}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Welcome message */}
-        <div>
-          <Label className="text-xs font-bold">Welcome message <span className="font-normal text-muted-foreground">(sent on join)</span></Label>
-          <Textarea
-            value={welcomeMsg}
-            onChange={(e) => setWelcomeMsg(e.target.value)}
-            placeholder="Thanks for subscribing! Here's what to expect…"
-            maxLength={500}
-            rows={2}
-            className="mt-1 resize-none"
-          />
-          <p className="text-[10px] text-muted-foreground mt-1 text-right">{welcomeMsg.length}/500</p>
-        </div>
-
         {/* Preview */}
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
           <p className="text-[10px] uppercase font-bold text-primary tracking-wider mb-1.5">Preview</p>
