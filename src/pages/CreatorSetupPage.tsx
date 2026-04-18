@@ -20,6 +20,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import StripeConnectPayoutCard from "@/components/wallet/StripeConnectPayoutCard";
+import { useConnectStatus } from "@/hooks/useStripeConnect";
 
 type StepKey = "profile" | "verify" | "payout" | "tier" | "tips" | "launch";
 
@@ -37,6 +39,7 @@ export default function CreatorSetupPage() {
   const [params, setParams] = useSearchParams();
   const { user } = useAuth();
   const qc = useQueryClient();
+  const { data: stripeStatus } = useConnectStatus();
 
   const { data: creator, refetch: refetchCreator } = useQuery({
     queryKey: ["creator-profile-setup", user?.id],
@@ -101,7 +104,7 @@ export default function CreatorSetupPage() {
       title: "Set up your payout method",
       desc: "Where should we send your money?",
       icon: CreditCard,
-      done: !!creator?.payout_method,
+      done: !!stripeStatus?.payouts_enabled,
     },
     {
       key: "tier" as StepKey,
@@ -127,7 +130,7 @@ export default function CreatorSetupPage() {
       icon: Rocket,
       done: enrollments.length > 0,
     },
-  ]), [creator, tiers, enrollments]);
+  ]), [creator, tiers, enrollments, stripeStatus]);
 
   const initialStep = (() => {
     const requested = params.get("step") as StepKey | null;
@@ -368,93 +371,27 @@ function VerifyStep({ verified }: { verified: boolean }) {
   );
 }
 
-function PayoutStep({ creator, userId, onSaved }: any) {
-  const [method, setMethod] = useState<string>(creator?.payout_method ?? "");
-  const details = (creator?.payout_details as any) || {};
-  const [bankName, setBankName] = useState(details.bank_name ?? "");
-  const [accountLast4, setAccountLast4] = useState(details.account_last4 ?? "");
-  const [paypalEmail, setPaypalEmail] = useState(details.paypal_email ?? "");
-  const [saving, setSaving] = useState(false);
+function PayoutStep({ onSaved }: any) {
+  const { data: status, isLoading } = useConnectStatus();
 
-  const options = [
-    { id: "bank", label: "Bank transfer", desc: "ACH / SEPA · 1-3 business days", icon: CreditCard },
-    { id: "paypal", label: "PayPal", desc: "Instant · 2.9% fee", icon: DollarSign },
-    { id: "wallet", label: "ZIVO Wallet", desc: "Free · use for in-app purchases", icon: Sparkles },
-  ];
-
-  const save = async () => {
-    if (!userId || !method) return toast.error("Pick a payout method");
-    let payload: any = {};
-    if (method === "bank") {
-      if (!bankName.trim() || !/^\d{4}$/.test(accountLast4)) return toast.error("Bank name and 4-digit account end required");
-      payload = { bank_name: bankName.trim(), account_last4: accountLast4 };
-    } else if (method === "paypal") {
-      if (!/^\S+@\S+\.\S+$/.test(paypalEmail)) return toast.error("Valid PayPal email required");
-      payload = { paypal_email: paypalEmail.trim() };
+  // Auto-mark step done when Stripe onboarding is complete
+  useEffect(() => {
+    if (status?.details_submitted && status?.payouts_enabled) {
+      onSaved?.();
     }
-    setSaving(true);
-    try {
-      await ensureCreatorRow(userId);
-      const { error } = await (supabase as any)
-        .from("creator_profiles")
-        .update({ payout_method: method, payout_details: payload })
-        .eq("user_id", userId);
-      if (error) throw error;
-      toast.success("Payout method saved");
-      await onSaved();
-    } catch (e: any) {
-      toast.error(e.message || "Failed to save");
-    } finally { setSaving(false); }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status?.details_submitted, status?.payouts_enabled]);
+
+  if (isLoading) {
+    return <div className="h-32 bg-muted/30 rounded-2xl animate-pulse" />;
+  }
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-1 gap-2">
-        {options.map((o) => {
-          const isActive = method === o.id;
-          return (
-            <button
-              key={o.id}
-              onClick={() => setMethod(o.id)}
-              className={`flex items-center gap-3 p-3 rounded-xl border text-left touch-manipulation active:scale-[0.98] transition-transform ${
-                isActive ? "border-primary bg-primary/5" : "border-border/40 bg-card"
-              }`}
-            >
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isActive ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
-                <o.icon className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold">{o.label}</p>
-                <p className="text-[10px] text-muted-foreground">{o.desc}</p>
-              </div>
-              {isActive && <CheckCircle2 className="w-4 h-4 text-primary" />}
-            </button>
-          );
-        })}
+      <div className="rounded-xl bg-muted/30 border border-border/40 p-3 text-[11px] text-muted-foreground">
+        Powered by <span className="font-bold">Stripe Connect</span> — we never store your bank or card info. Cash out to a debit card in minutes, or to a bank in 1–2 business days.
       </div>
-
-      {method === "bank" && (
-        <div className="space-y-2 pt-1">
-          <div>
-            <Label className="text-xs font-bold">Bank name</Label>
-            <Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Chase, Bank of America…" className="mt-1" />
-          </div>
-          <div>
-            <Label className="text-xs font-bold">Last 4 of account #</Label>
-            <Input value={accountLast4} onChange={(e) => setAccountLast4(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="1234" className="mt-1" inputMode="numeric" />
-          </div>
-        </div>
-      )}
-      {method === "paypal" && (
-        <div className="pt-1">
-          <Label className="text-xs font-bold">PayPal email</Label>
-          <Input value={paypalEmail} onChange={(e) => setPaypalEmail(e.target.value)} placeholder="you@example.com" type="email" className="mt-1" />
-        </div>
-      )}
-
-      <Button onClick={save} disabled={saving || !method} className="w-full font-bold">
-        {saving && <Loader2 className="w-4 h-4 animate-spin" />} Save payout method
-      </Button>
+      <StripeConnectPayoutCard balanceDollars={0} />
     </div>
   );
 }
