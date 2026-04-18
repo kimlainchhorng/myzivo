@@ -785,6 +785,13 @@ export default function LiveStreamPage() {
   const { data: streams = [], isLoading, isFetching, refetch } = useQuery({
     queryKey: ["live-streams-real"],
     queryFn: async (): Promise<LiveStream[]> => {
+      // Sweep ghost streams (publisher heartbeat older than 60s) before listing.
+      // Safe to ignore errors — worst case we briefly show a stale row.
+      try {
+        await (supabase as any).rpc("expire_all_stale_live_streams");
+      } catch {
+        /* non-fatal */
+      }
       const { data: rows } = await (supabase as any)
         .from("live_streams")
         .select("id, user_id, title, topic, viewer_count, like_count, status, started_at, ended_at, host_name, host_avatar")
