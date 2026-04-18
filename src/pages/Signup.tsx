@@ -100,25 +100,25 @@ const Signup = () => {
   }
 
   return (
-    <div className="min-h-[100dvh] w-full bg-gradient-to-br from-emerald-950 via-background to-background flex items-center justify-center px-4 py-10">
+    <div className="min-h-[100dvh] w-full bg-gradient-to-br from-emerald-950 via-background to-background flex items-center justify-center px-4 py-3">
       <SEOHead title="Create your ZIVO account" description="Sign up for ZIVO to search flights, hotels and more." />
 
       <div className="w-full max-w-md">
         {/* Brand */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-foreground">ZIVO ID</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+        <div className="text-center mb-3">
+          <h1 className="text-2xl font-bold text-foreground">ZIVO ID</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Get Started Free — No credit card needed
           </p>
         </div>
 
         <form
           onSubmit={onSubmit}
-          className="rounded-2xl border border-emerald-500/20 bg-card/70 backdrop-blur-xl shadow-2xl p-6 space-y-4"
+          className="rounded-2xl border border-emerald-500/20 bg-card/70 backdrop-blur-xl shadow-2xl p-4 space-y-2.5"
         >
           {/* Names */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
               <label htmlFor="su-first" className="text-sm font-medium text-foreground">First Name</label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -130,11 +130,11 @@ const Signup = () => {
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="John"
                   disabled={submitting}
-                  className="w-full h-12 pl-10 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                  className="w-full h-10 pl-9 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
                 />
               </div>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label htmlFor="su-last" className="text-sm font-medium text-foreground">Last Name</label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -146,14 +146,14 @@ const Signup = () => {
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Doe"
                   disabled={submitting}
-                  className="w-full h-12 pl-10 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                  className="w-full h-10 pl-9 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
                 />
               </div>
             </div>
           </div>
 
           {/* Email */}
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <label htmlFor="su-email" className="text-sm font-medium text-foreground">Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -169,14 +169,14 @@ const Signup = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 disabled={submitting}
-                className="w-full h-12 pl-10 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                className="w-full h-10 pl-9 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
               />
             </div>
           </div>
 
           {/* Passwords */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
               <label htmlFor="su-pw" className="text-sm font-medium text-foreground">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -188,7 +188,7 @@ const Signup = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="8+ chars"
                   disabled={submitting}
-                  className="w-full h-12 pl-10 pr-10 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                  className="w-full h-10 pl-9 pr-10 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
                 />
                 <button
                   type="button"
@@ -201,7 +201,7 @@ const Signup = () => {
                 </button>
               </div>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label htmlFor="su-pw2" className="text-sm font-medium text-foreground">Confirm Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -213,7 +213,7 @@ const Signup = () => {
                   onChange={(e) => setConfirm(e.target.value)}
                   placeholder="Re-enter"
                   disabled={submitting}
-                  className="w-full h-12 pl-10 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                  className="w-full h-10 pl-9 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
                 />
               </div>
             </div>
@@ -238,7 +238,7 @@ const Signup = () => {
           <Button
             type="submit"
             disabled={submitting}
-            className="w-full h-12 rounded-xl text-base font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+            className="w-full h-11 rounded-xl text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
           >
             {submitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />
