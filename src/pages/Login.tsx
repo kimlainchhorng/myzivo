@@ -55,9 +55,6 @@ const Login = () => {
       <div className="w-full max-w-md">
         {/* Brand */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 mb-3">
-            <ShieldCheck className="w-7 h-7 text-emerald-400" />
-          </div>
           <h1 className="text-3xl font-bold text-foreground">ZIVO ID</h1>
           <p className="text-sm text-muted-foreground mt-1">Welcome back, Traveler</p>
         </div>
