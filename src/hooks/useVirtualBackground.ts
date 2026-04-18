@@ -244,6 +244,79 @@ export function useVirtualBackground(
               mpctx.drawImage(maskHi, 0, 0, W, H);
               hasPrev = true;
 
+              // 2d. SMART AI — color-guided edge refinement.
+              // Sample the actual video pixels in the uncertain edge band
+              // (alpha ∈ [30,220]) and reclassify each as FG/BG by YCbCr
+              // distance to inward (FG-ref) vs outward (BG-ref) neighbors.
+              // Kills color halos by culling edge pixels that visually
+              // match the background, keeps hair strands that don't.
+              try {
+                const DS = 2; // downsample factor (½ res for speed)
+                const dw = (W / DS) | 0;
+                const dh = (H / DS) | 0;
+                // Tmp canvases (reuse via closure-scoped lazy create would be ideal,
+                // but per-frame ImageData is fine at ½ res — ~3ms on 720p).
+                const tmpV = document.createElement("canvas");
+                tmpV.width = dw; tmpV.height = dh;
+                const tvctx = tmpV.getContext("2d")!;
+                tvctx.drawImage(video!, 0, 0, dw, dh);
+                const tmpM = document.createElement("canvas");
+                tmpM.width = dw; tmpM.height = dh;
+                const tmctx = tmpM.getContext("2d")!;
+                tmctx.drawImage(maskHi, 0, 0, dw, dh);
+                const vData = tvctx.getImageData(0, 0, dw, dh).data;
+                const mImg = tmctx.getImageData(0, 0, dw, dh);
+                const mData = mImg.data;
+                const OFF = 3; // 3px @ ½ res = 6px @ full res
+                const toY = (r: number, g: number, b: number) => 0.299 * r + 0.587 * g + 0.114 * b;
+                const toCb = (r: number, g: number, b: number) => -0.169 * r - 0.331 * g + 0.5 * b + 128;
+                const toCr = (r: number, g: number, b: number) => 0.5 * r - 0.419 * g - 0.081 * b + 128;
+                for (let y = OFF; y < dh - OFF; y++) {
+                  for (let x = OFF; x < dw - OFF; x++) {
+                    const idx = (y * dw + x) * 4;
+                    const a = mData[idx + 3];
+                    if (a < 30 || a > 220) continue;
+                    // Estimate gradient direction from mask: sample horiz+vert
+                    // and pick steepest axis to decide inward/outward.
+                    const aL = mData[(y * dw + (x - OFF)) * 4 + 3];
+                    const aR = mData[(y * dw + (x + OFF)) * 4 + 3];
+                    const aU = mData[((y - OFF) * dw + x) * 4 + 3];
+                    const aD = mData[((y + OFF) * dw + x) * 4 + 3];
+                    const dx = aR - aL;
+                    const dy = aD - aU;
+                    let fx: number, fy: number, bx: number, by: number;
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                      // horizontal edge: FG = side with higher alpha
+                      fx = dx > 0 ? x + OFF : x - OFF; fy = y;
+                      bx = dx > 0 ? x - OFF : x + OFF; by = y;
+                    } else {
+                      fx = x; fy = dy > 0 ? y + OFF : y - OFF;
+                      bx = x; by = dy > 0 ? y - OFF : y + OFF;
+                    }
+                    const fi = (fy * dw + fx) * 4;
+                    const bi = (by * dw + bx) * 4;
+                    const fr = vData[fi], fg = vData[fi + 1], fb = vData[fi + 2];
+                    const br = vData[bi], bg = vData[bi + 1], bb = vData[bi + 2];
+                    const pr = vData[idx], pg = vData[idx + 1], pb = vData[idx + 2];
+                    // YCbCr distance (chroma weighted higher — color > luma for hair vs bg)
+                    const py = toY(pr, pg, pb), pcb = toCb(pr, pg, pb), pcr = toCr(pr, pg, pb);
+                    const fy2 = toY(fr, fg, fb), fcb = toCb(fr, fg, fb), fcr = toCr(fr, fg, fb);
+                    const by2 = toY(br, bg, bb), bcb = toCb(br, bg, bb), bcr = toCr(br, bg, bb);
+                    const dF = (py - fy2) ** 2 + 2 * ((pcb - fcb) ** 2 + (pcr - fcr) ** 2);
+                    const dB = (py - by2) ** 2 + 2 * ((pcb - bcb) ** 2 + (pcr - bcr) ** 2);
+                    mData[idx + 3] = dF < dB ? 255 : 0;
+                  }
+                }
+                tmctx.putImageData(mImg, 0, 0);
+                // Write refined mask back upscaled (light blur for AA)
+                mhctx.clearRect(0, 0, W, H);
+                mhctx.imageSmoothingEnabled = true;
+                mhctx.imageSmoothingQuality = "high";
+                mhctx.filter = "blur(0.4px)";
+                mhctx.drawImage(tmpM, 0, 0, W, H);
+                mhctx.filter = "none";
+              } catch {}
+
               // 3. Draw raw person, then clip with refined mask (Pass 2 — light 0.8px blur)
               pctx.globalCompositeOperation = "source-over";
               pctx.filter = "none";
