@@ -50,10 +50,11 @@ export const DEFAULT_BEAUTY: BeautySettings = {
   blurBg: false,
 };
 
-export const BEAUTY_PRESETS: Record<"real" | "natural" | "sweet" | "glam" | "auto" | "off", BeautySettings> = {
+export const BEAUTY_PRESETS: Record<"real" | "natural" | "sweet" | "pro" | "glam" | "auto" | "off", BeautySettings> = {
   real:    { enabled: true, smooth: 25, brighten: 12, slim: 10, eyes: 8,  lips: 10, nose: 5  },
   natural: { enabled: true, smooth: 35, brighten: 20, slim: 15, eyes: 10, lips: 18, nose: 8  },
   sweet:   { enabled: true, smooth: 50, brighten: 30, slim: 25, eyes: 25, lips: 30, nose: 12 },
+  pro:     { enabled: true, smooth: 60, brighten: 35, slim: 30, eyes: 28, lips: 35, nose: 18 },
   glam:    { enabled: true, smooth: 78, brighten: 48, slim: 40, eyes: 35, lips: 50, nose: 25 },
   // Auto = balanced starting point; the hook auto-tunes brighten/smooth from luma.
   auto:    { enabled: true, smooth: 45, brighten: 25, slim: 18, eyes: 15, lips: 22, nose: 10 },
@@ -236,6 +237,9 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
     let lastFrameTime = performance.now();
     let avgFrameMs = 16;
     let mode: BeautyStatus = "loading";
+    // Auto white-balance: smoothed R/B ratio sampled from forehead.
+    let wbRatio = 1.0; // R/B; >1 = warm, <1 = cool
+
 
     const timeoutId = window.setTimeout(() => {
       if (mode === "loading" && !cancelled) {
@@ -277,8 +281,9 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
       maskCtx.globalCompositeOperation = "source-over";
 
       // Feathered copy: blur the mask so composites have soft edges.
+      // Extra-soft (blur 14) so the jawline transition into the neck is refined.
       featherCtx.clearRect(0, 0, W, H);
-      featherCtx.filter = "blur(10px)";
+      featherCtx.filter = "blur(14px)";
       featherCtx.drawImage(maskCanvas, 0, 0);
       featherCtx.filter = "none";
     };
@@ -435,6 +440,29 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
           }
         }
 
+        // ── E2. Micro chin-lift — pull chin region up by slim*0.5% face height.
+        if (s.slim > 0) {
+          const chin = lms[LM_CHIN];
+          const fh = lms[LM_FOREHEAD];
+          const lc = lms[LM_LEFT_CHEEK];
+          const rc = lms[LM_RIGHT_CHEEK];
+          if (chin && fh && lc && rc) {
+            const faceH = (chin.y - fh.y) * H;
+            const lift = Math.min(8, faceH * 0.005) * slimPct;
+            const cxC = chin.x * W;
+            const cyC = chin.y * H;
+            const wC = Math.max(40, (rc.x - lc.x) * W * 0.45);
+            const hC = Math.max(20, faceH * 0.18);
+            warpCtx.globalAlpha = 0.85;
+            warpCtx.drawImage(
+              video,
+              cxC - wC / 2, cyC - hC, wC, hC,
+              cxC - wC / 2, cyC - hC - lift, wC, hC,
+            );
+            warpCtx.globalAlpha = 1;
+          }
+        }
+
         // Composite warp onto ctx (already has raw video). Source-over with
         // full opacity — but we masked through feathered face mask first to
         // avoid hard edges where slices end.
@@ -463,27 +491,46 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         ctx.globalAlpha = 1;
       }
 
-      // ── B. Brighten + warmth — gentler ──
+      // ── B. Brighten + warmth — gentler, with side-gradient mask so the
+      // central nose/forehead axis isn't double-hit by the highlight pass.
       if (s.brighten > 0) {
-        const a = 0.06 + brightPct * 0.10; // softer overlay
+        const a = 0.06 + brightPct * 0.10;
         blurCtx.globalCompositeOperation = "source-over";
         blurCtx.filter = "none";
         blurCtx.clearRect(0, 0, W, H);
         blurCtx.fillStyle = `rgba(255, 232, 210, ${a})`;
         blurCtx.fillRect(0, 0, W, H);
+        // Horizontal gradient: stronger at cheeks, fade out at center axis.
+        const lc = lms[LM_LEFT_CHEEK];
+        const rc = lms[LM_RIGHT_CHEEK];
+        const nt = lms[LM_NOSE_TIP];
+        if (lc && rc && nt) {
+          const cxAxis = nt.x * W;
+          const faceW = (rc.x - lc.x) * W;
+          blurCtx.globalCompositeOperation = "destination-in";
+          const gx = blurCtx.createLinearGradient(cxAxis - faceW * 0.6, 0, cxAxis + faceW * 0.6, 0);
+          gx.addColorStop(0, "rgba(0,0,0,1)");
+          gx.addColorStop(0.45, "rgba(0,0,0,1)");
+          gx.addColorStop(0.5, "rgba(0,0,0,0.35)");
+          gx.addColorStop(0.55, "rgba(0,0,0,1)");
+          gx.addColorStop(1, "rgba(0,0,0,1)");
+          blurCtx.fillStyle = gx;
+          blurCtx.fillRect(0, 0, W, H);
+        }
         blurCtx.globalCompositeOperation = "destination-in";
         blurCtx.drawImage(featherCanvas, 0, 0);
         blurCtx.globalCompositeOperation = "source-over";
         ctx.globalCompositeOperation = "screen";
-        ctx.globalAlpha = 0.20 + brightPct * 0.12; // was flat 0.35; max ~0.32
+        // Cap combined brighten alpha so highlight pass can't blow out center.
+        ctx.globalAlpha = Math.min(0.18, 0.20 + brightPct * 0.12);
         ctx.drawImage(blurCanvas, 0, 0);
         ctx.globalCompositeOperation = "source-over";
         ctx.globalAlpha = 1;
       }
 
       // ── B2. Skin-grain restoration — re-add micro-texture lost to smoothing.
-      // Scales with how much we smoothed, so heavy smooth = more grain back.
-      if (s.smooth > 0 && grainPattern) {
+      // Skip when smooth < 30 (cheap perf win on phones; grain isn't needed).
+      if (s.smooth >= 30 && grainPattern) {
         const grainAlpha = 0.04 + smoothPct * 0.05; // 0.04-0.09
         blurCtx.globalCompositeOperation = "source-over";
         blurCtx.filter = "none";
@@ -499,6 +546,39 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         ctx.globalCompositeOperation = "source-over";
         ctx.globalAlpha = 1;
       }
+
+      // ── B3. Auto white-balance — sample forehead every 60 frames, push a
+      // tiny cool/warm overlay onto face mask if cast detected.
+      if (frameCounter % 60 === 0) {
+        const fh = lms[LM_FOREHEAD];
+        if (fh) {
+          const fx = Math.floor(fh.x * W);
+          const fy = Math.floor(fh.y * H + H * 0.02);
+          const sw = Math.max(8, Math.floor(W * 0.04));
+          try {
+            const d = ctx.getImageData(Math.max(0, fx - sw / 2), Math.max(0, fy - sw / 2), sw, sw).data;
+            let r = 0, b = 0, n = 0;
+            for (let i = 0; i < d.length; i += 16) {
+              r += d[i]; b += d[i + 2]; n++;
+            }
+            const ratio = (r / n) / Math.max(1, b / n);
+            wbRatio = wbRatio * 0.6 + ratio * 0.4;
+          } catch { /* ignore */ }
+        }
+      }
+      if (wbRatio > 1.15 || wbRatio < 0.92) {
+        const cool = wbRatio > 1.15;
+        blurCtx.globalCompositeOperation = "source-over";
+        blurCtx.filter = "none";
+        blurCtx.clearRect(0, 0, W, H);
+        blurCtx.fillStyle = cool ? "rgba(180, 200, 255, 0.04)" : "rgba(255, 210, 180, 0.04)";
+        blurCtx.fillRect(0, 0, W, H);
+        blurCtx.globalCompositeOperation = "destination-in";
+        blurCtx.drawImage(featherCanvas, 0, 0);
+        blurCtx.globalCompositeOperation = "source-over";
+        ctx.drawImage(blurCanvas, 0, 0);
+      }
+
 
       // ── C. Lip enhance — subtle tint, isolated mask, persistent canvas ──
       if (s.lips > 0) {
@@ -525,6 +605,37 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         ctx.globalAlpha = 0.55;
         ctx.drawImage(blurCanvas, 0, 0);
         ctx.globalAlpha = 1;
+
+        // ── C2. Lip definition — cupid's bow line + lower-lip glossy highlight.
+        const upperCtr = lms[0];   // upper-lip center top
+        const lowerCtr = lms[17];  // lower-lip center bottom
+        const lipL = lms[61];
+        const lipR = lms[291];
+        if (upperCtr && lowerCtr && lipL && lipR) {
+          const lipWpx = Math.abs(lipR.x - lipL.x) * W;
+          // Cupid's bow — thin dark line for definition
+          ctx.save();
+          ctx.globalAlpha = 0.10 + lipsPct * 0.08;
+          ctx.strokeStyle = "rgba(80, 30, 35, 1)";
+          ctx.lineWidth = Math.max(1, lipWpx * 0.012);
+          ctx.beginPath();
+          ctx.moveTo(lipL.x * W + lipWpx * 0.15, upperCtr.y * H + 1);
+          ctx.lineTo(upperCtr.x * W, upperCtr.y * H);
+          ctx.lineTo(lipR.x * W - lipWpx * 0.15, upperCtr.y * H + 1);
+          ctx.stroke();
+          ctx.restore();
+          // Lower-lip glossy highlight
+          const glossR = Math.max(3, lipWpx * 0.10);
+          const gx = lowerCtr.x * W;
+          const gy = lowerCtr.y * H - glossR * 0.4;
+          const gg = ctx.createRadialGradient(gx, gy, 0, gx, gy, glossR);
+          gg.addColorStop(0, `rgba(255,240,235,${0.10 + lipsPct * 0.08})`);
+          gg.addColorStop(1, "rgba(255,240,235,0)");
+          ctx.fillStyle = gg;
+          ctx.beginPath();
+          ctx.arc(gx, gy, glossR, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       // ── F. Eye enlarge + sparkle (iris brighten + catchlight) ──
@@ -581,6 +692,20 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
           ctx.beginPath();
           ctx.arc(cxDot, cyDot, dotR, 0, Math.PI * 2);
           ctx.fill();
+
+          // Under-eye de-darkening — soft warm-white radial below each eye
+          const ueY = eye.y + r * 0.55;
+          const ueR = r * 1.05;
+          const ueg = ctx.createRadialGradient(eye.x, ueY, 0, eye.x, ueY, ueR);
+          const ueA = 0.06 + eyesPct * 0.04;
+          ueg.addColorStop(0, `rgba(255, 235, 220, ${ueA})`);
+          ueg.addColorStop(1, "rgba(255, 235, 220, 0)");
+          ctx.globalCompositeOperation = "screen";
+          ctx.fillStyle = ueg;
+          ctx.beginPath();
+          ctx.arc(eye.x, ueY, ueR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalCompositeOperation = "source-over";
         }
       }
 
