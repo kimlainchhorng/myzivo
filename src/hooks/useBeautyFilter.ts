@@ -612,6 +612,10 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
       featherCanvas.height = canvas.height;
       fxCanvas.width = canvas.width;
       fxCanvas.height = canvas.height;
+      featherLipsCanvas.width = canvas.width;
+      featherLipsCanvas.height = canvas.height;
+      warpCanvas.width = canvas.width;
+      warpCanvas.height = canvas.height;
       start();
     };
 
