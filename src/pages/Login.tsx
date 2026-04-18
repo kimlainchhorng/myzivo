@@ -50,10 +50,19 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-gradient-to-br from-emerald-950 via-background to-background flex items-center justify-center px-4 py-10">
+    <div className="relative min-h-[100dvh] w-full overflow-hidden bg-[radial-gradient(ellipse_at_top,_hsl(var(--background))_0%,_#020a08_60%,_#000_100%)] flex items-center justify-center px-4 py-10">
       <SEOHead title="Sign in to ZIVO" description="Sign in to your ZIVO account" />
 
-      <div className="w-full max-w-md">
+      {/* Aurora background */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-32 -left-24 w-[420px] h-[420px] rounded-full bg-emerald-500/30 blur-[120px] animate-pulse" />
+        <div className="absolute top-1/3 -right-32 w-[460px] h-[460px] rounded-full bg-teal-400/20 blur-[140px] animate-pulse" style={{ animationDelay: "1.2s" }} />
+        <div className="absolute -bottom-40 left-1/4 w-[520px] h-[520px] rounded-full bg-emerald-700/25 blur-[160px] animate-pulse" style={{ animationDelay: "2.4s" }} />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent,hsl(var(--background)/0.6))]" />
+        <div className="absolute inset-0 opacity-[0.04] [background-image:linear-gradient(hsl(var(--foreground))_1px,transparent_1px),linear-gradient(90deg,hsl(var(--foreground))_1px,transparent_1px)] [background-size:48px_48px]" />
+      </div>
+
+      <div className="relative w-full max-w-md">
         {/* Brand */}
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-foreground">ZIVO ID</h1>
