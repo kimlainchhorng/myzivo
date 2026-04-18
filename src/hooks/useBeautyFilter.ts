@@ -717,5 +717,5 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
     };
   }, [rawStream]);
 
-  return { stream: outputStream, status, ready: status !== "loading" };
+  return { stream: outputStream, status, ready: status !== "loading", luma };
 }
