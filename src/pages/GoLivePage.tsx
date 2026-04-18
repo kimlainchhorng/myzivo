@@ -153,7 +153,7 @@ export default function GoLivePage() {
   const startCamera = useCallback(async () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
-    setLocalStream(null);
+    setRawStream(null);
 
     const attempts: MediaStreamConstraints[] = [
       { video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }, audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, sampleRate: 48000 } as any },
