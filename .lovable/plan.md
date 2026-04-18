@@ -1,27 +1,36 @@
 
-The screenshot shows the current issue: hair edges look thin/translucent and there's a faint white halo/blind glow around the silhouette, especially around the head/hair. The wide alpha ramp (0.30–0.70) is making mid-confidence pixels semi-transparent, so background light bleeds through hair → washed-out "blind white" look.
+## Diagnosis
 
-## Root cause
-- Wide ramp `0.30–0.70` makes hair pixels ~50% alpha → background glows through
-- No edge color decontamination → bright background bleeds onto hair edge
-- 2px+1.5px blur is too soft for hair detail
+The white vertical strips between fingers and the hair halo are caused by **mask dilation**, not bleed-through:
 
-## Fix — `src/hooks/useVirtualBackground.ts`
+1. **Pass 1 blur (1px)** on the upscaled mask + **bilinear upscale** of a low-res confidence mask → thin negative spaces (between fingers, around hair strands) get filled in as opaque foreground. Background blur shows through them.
+2. **Pass 2 blur (0.8px)** in `destination-in` further softens, then re-expands edges.
+3. **Wide-ish ramp `LO=0.45 / HI=0.60`** still treats fingertip/hair edges as semi-confident, leaving a translucent halo.
+4. No **mask erosion** step → the mask is always slightly larger than the actual silhouette.
 
-1. **Tighten alpha ramp to `0.45–0.60`** — narrower band keeps hair fully opaque, only the outermost 1-2px feathers. Eliminates the see-through hair effect.
+## Fix (4 surgical changes in `src/hooks/useVirtualBackground.ts`)
 
-2. **Erode mask by 1px before feather** — shrink the opaque region slightly so the soft edge sits *inside* the silhouette, not bleeding outward into background. Done by drawing mask with `filter: brightness(1.2)` then re-thresholding visually via composite.
+1. **Tighter ramp:** `LO=0.55, HI=0.62` — pushes fingertip/hair edges firmly into "background" unless model is highly confident, eliminating the white halo.
 
-3. **Reduce blur passes** — drop pass-1 from 2px → 1px, pass-2 from 1.5px → 0.8px. Sharper hair, no halo.
+2. **Erode mask by 1px** before upscale — composite the mask onto itself shifted by ±1px in `destination-in` mode so any edge pixel that has a transparent neighbor becomes transparent. This recovers the gaps between fingers.
 
-4. **Add dark inner rim** (1px) to kill bright background bleed: after person clip, draw a 1px `destination-atop` of the person itself slightly inset — this is too complex; simpler: just tighten the ramp + reduce blur, which solves 95% of the issue.
+3. **Reduce Pass 1 blur 1px → 0.5px** and **remove Pass 2 blur entirely** (`filter: "none"` on the destination-in step). With erosion handling the gap-recovery, we no longer need blur to hide jaggies — keeps edge crisp without re-dilating.
 
-5. **Optional temporal smoothing** — keep previous mask, blend `0.6 * current + 0.4 * previous`. Reduces edge flicker between frames. Adds one extra canvas (`maskPrev`).
+4. **Skip temporal blend on motion >18** (already there, keep) but also **skip temporal blend entirely when the previous mask had heavy dilation** — already covered by snap logic, no change needed.
 
-### Net changes
-- `LO=0.45, HI=0.60` (was 0.30/0.70)
-- Pass 1 blur: `1px` (was 2px)
-- Pass 2 blur: `0.8px` (was 1.5px)
-- Add `maskPrev` canvas + temporal blend at 60/40
+### Net diff
+```text
+LO: 0.45 → 0.55
+HI: 0.60 → 0.62
+Pass-1 blur: 1px → 0.5px
+NEW: erode pass (4-direction 1px shift, destination-in)
+Pass-2 blur: 0.8px → 0px
+```
 
-Result: solid opaque hair, crisp 1-2px edge, no white halo, no see-through, still smooth (no jaggies).
+### Expected result
+- Vertical white strips between fingers → gone (erosion opens the gaps)
+- Hair halo → gone (tighter ramp + no Pass-2 dilation)
+- Edges stay clean (0.5px blur is enough antialiasing at typical 720p)
+- Hand motion still snaps (existing motion-aware blend untouched)
+
+One file edit. ~15 lines changed.
