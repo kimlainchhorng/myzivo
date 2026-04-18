@@ -11,7 +11,8 @@ import {
   ArrowLeft, DollarSign, Users, TrendingUp, Heart, Crown, BarChart3, Wallet,
   Eye, Video, Gift, Star, Zap, Clock, ChevronRight, ArrowUpRight,
   Download, Calendar, Target, Award, Store, PenTool, Share2, Bell,
-  Sparkles, ArrowRight, Radio, Coins,
+  Sparkles, ArrowRight, Radio, Coins, CheckCircle2, Circle, ShieldCheck,
+  CreditCard, UserCircle2, Rocket,
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
