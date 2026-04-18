@@ -390,27 +390,29 @@ const Login = () => {
     : "relative z-20 w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)] touch-manipulation [-webkit-user-select:text] [user-select:text] pointer-events-auto";
 
   return (
-    <div className="h-[100dvh] flex flex-col items-center justify-center relative overflow-hidden">
+    <div className={cn("relative flex flex-col items-center", isTouchDevice ? "min-h-[100dvh] justify-start overflow-x-hidden overflow-y-auto pt-6 pb-8" : "h-[100dvh] justify-center overflow-hidden")}>
       <SEOHead title={isLogin ? "Sign In – ZIVO" : "Create Account – ZIVO"} description="Sign in or create your ZIVO account to search flights, hotels, and car rentals." noIndex={true} />
 
       {/* 3D Background */}
-      <div className="absolute inset-0">
-        <img src="/images/auth-bg-3d.jpg" alt="" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 pointer-events-none">
+        <img src="/images/auth-bg-3d.jpg" alt="" className="w-full h-full object-cover pointer-events-none" />
+        <div className={cn("absolute inset-0 pointer-events-none", isTouchDevice ? "bg-black/45" : "bg-black/40 backdrop-blur-[2px]")} />
       </div>
 
       {/* Floating particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-primary/40 rounded-full"
-            animate={{ y: [0, -200, 0], x: [0, Math.sin(i) * 50, 0], opacity: [0, 0.8, 0] }}
-            transition={{ duration: 4 + i * 0.8, repeat: Infinity, delay: i * 0.7, ease: "easeInOut" }}
-            style={{ left: `${15 + i * 14}%`, bottom: "10%" }}
-          />
-        ))}
-      </div>
+      {!isTouchDevice && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-primary/40 rounded-full"
+              animate={{ y: [0, -200, 0], x: [0, Math.sin(i) * 50, 0], opacity: [0, 0.8, 0] }}
+              transition={{ duration: 4 + i * 0.8, repeat: Infinity, delay: i * 0.7, ease: "easeInOut" }}
+              style={{ left: `${15 + i * 14}%`, bottom: "10%" }}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="w-full max-w-md relative z-10 px-4" style={isTouchDevice ? undefined : { perspective: "1200px" }}>
         <motion.div
