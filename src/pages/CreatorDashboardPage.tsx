@@ -149,12 +149,12 @@ export default function CreatorDashboardPage() {
         {/* Setup Your Monetization — onboarding checklist */}
         {(() => {
           const setupSteps = [
-            { label: "Complete your profile", desc: "Add bio, avatar & links", icon: UserCircle2, href: "/account/profile/edit", done: !!creator?.display_name || !!creator?.bio, accent: "hsl(263 70% 58%)" },
-            { label: "Verify your identity", desc: "Required for payouts", icon: ShieldCheck, href: "/account/verification", done: !!creator?.is_verified, accent: "hsl(142 71% 45%)" },
-            { label: "Add payout method", desc: "Bank or PayPal", icon: CreditCard, href: "/wallet", done: !!creator?.payout_method, accent: "hsl(38 92% 50%)" },
-            { label: "Create a subscription tier", desc: "Set your monthly price", icon: Crown, href: "/monetization", done: tiers.length > 0, accent: "hsl(340 75% 55%)" },
-            { label: "Enable tips", desc: "Let fans support you", icon: Heart, href: "/monetization", done: !!creator?.tips_enabled, accent: "hsl(199 89% 48%)" },
-            { label: "Launch your first program", desc: "Affiliate, shop or digital", icon: Rocket, href: "/monetization", done: (creator?.total_earnings_cents ?? 0) > 0, accent: "hsl(172 66% 50%)" },
+            { label: "Complete your profile", desc: "Add bio, avatar & links", icon: UserCircle2, href: "/creator/setup?step=profile", done: !!(creator?.display_name && creator?.bio), accent: "hsl(263 70% 58%)" },
+            { label: "Verify your identity", desc: "Required for payouts", icon: ShieldCheck, href: "/creator/setup?step=verify", done: !!creator?.is_verified, accent: "hsl(142 71% 45%)" },
+            { label: "Add payout method", desc: "Bank, PayPal or Wallet", icon: CreditCard, href: "/creator/setup?step=payout", done: !!creator?.payout_method, accent: "hsl(38 92% 50%)" },
+            { label: "Create a subscription tier", desc: "Set your monthly price", icon: Crown, href: "/creator/setup?step=tier", done: tiers.length > 0, accent: "hsl(340 75% 55%)" },
+            { label: "Enable tips", desc: "Let fans support you", icon: Heart, href: "/creator/setup?step=tips", done: !!creator?.tips_enabled, accent: "hsl(199 89% 48%)" },
+            { label: "Launch your first program", desc: "Affiliate, shop or digital", icon: Rocket, href: "/creator/setup?step=launch", done: (creator?.total_earnings_cents ?? 0) > 0, accent: "hsl(172 66% 50%)" },
           ];
           const completed = setupSteps.filter((s) => s.done).length;
           const pct = Math.round((completed / setupSteps.length) * 100);
