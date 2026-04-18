@@ -144,10 +144,10 @@ export default function StripeEmbeddedOnboarding({ open, onClose, onComplete, co
 
       {/* Body */}
       <div className="flex-1 overflow-y-auto">
-        {loading && (
+        {(loading || blocked) && (
           <div className="flex flex-col items-center justify-center h-full gap-3">
             <Loader2 className="w-8 h-8 animate-spin text-[#635bff]" />
-            <p className="text-sm text-muted-foreground">Loading Stripe…</p>
+            <p className="text-sm text-muted-foreground">{blocked ? "Redirecting to Stripe…" : "Loading Stripe…"}</p>
           </div>
         )}
         {error && (
