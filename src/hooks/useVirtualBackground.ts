@@ -237,24 +237,9 @@ export function useVirtualBackground(
             pctx.drawImage(maskCanvas, 0, 0, personCanvas.width, personCanvas.height);
             pctx.filter = "none";
 
-            // 3b) Light/color match — multiply bg avg color over person, then re-clip
-            if (cfg.kind === "image" && bgImgLoaded) {
-              pctx.globalCompositeOperation = "multiply";
-              pctx.fillStyle = `rgba(${bgAvgColor.r},${bgAvgColor.g},${bgAvgColor.b},0.18)`;
-              pctx.fillRect(0, 0, personCanvas.width, personCanvas.height);
-              pctx.globalCompositeOperation = "destination-in";
-              pctx.drawImage(maskCanvas, 0, 0, personCanvas.width, personCanvas.height);
-            }
             pctx.globalCompositeOperation = "source-over";
 
-            // 4) Subtle inner rim shadow for depth separation
-            ctx.save();
-            ctx.globalAlpha = 0.3;
-            ctx.filter = "blur(1.5px) brightness(0.35)";
-            ctx.drawImage(personCanvas, 0, 1);
-            ctx.restore();
-
-            // 5) Draw person on top of background
+            // 4) Draw person on top of background — no filters, natural skin tone
             ctx.drawImage(personCanvas, 0, 0);
 
             try { mask.close?.(); } catch {}
