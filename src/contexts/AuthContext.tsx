@@ -139,18 +139,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth-callback`,
-          data: {
-            full_name: fullName,
-            ...(phone ? { phone } : {}),
-          },
+      const { data, error } = await supabase.functions.invoke("public-signup", {
+        body: {
+          email,
+          password,
+          fullName,
+          ...(phone ? { phone } : {}),
         },
       });
-      return { error };
+
+      if (error) {
+        return { error: new Error(error.message || "Could not create account") };
+      }
+
+      if (!data?.success) {
+        return { error: new Error(data?.error || "Could not create account") };
+      }
+
+      return { error: null };
     } catch (err) {
       return { error: err as Error };
     }

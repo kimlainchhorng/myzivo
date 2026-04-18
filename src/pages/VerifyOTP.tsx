@@ -18,6 +18,7 @@ const VerifyOTP = () => {
   const [params] = useSearchParams();
   const email = params.get("email") || "";
   const redirect = params.get("redirect") || "/";
+  const mode = params.get("mode") === "signup" ? "signup" : "login";
 
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [submitting, setSubmitting] = useState(false);
@@ -45,6 +46,25 @@ const VerifyOTP = () => {
   const submit = async (fullCode: string) => {
     if (submitting) return;
     setSubmitting(true);
+
+    if (mode === "signup") {
+      const { data, error } = await supabase.functions.invoke("verify-otp-code", {
+        body: { email, code: fullCode },
+      });
+      setSubmitting(false);
+
+      if (error || !data?.success) {
+        toast.error(data?.error || error?.message || "Invalid or expired code.");
+        setCode(["", "", "", "", "", ""]);
+        inputRefs.current[0]?.focus();
+        return;
+      }
+
+      toast.success("Email verified. Please sign in.");
+      navigate(`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`, { replace: true });
+      return;
+    }
+
     const { error } = await supabase.auth.verifyOtp({
       email,
       token: fullCode,
@@ -87,6 +107,21 @@ const VerifyOTP = () => {
   const resend = async () => {
     if (cooldown > 0 || resending) return;
     setResending(true);
+
+    if (mode === "signup") {
+      const { error } = await supabase.functions.invoke("send-otp-email", {
+        body: { email },
+      });
+      setResending(false);
+      if (error) {
+        toast.error(error.message || "Could not resend code.");
+        return;
+      }
+      toast.success("New code sent!");
+      setCooldown(RESEND_COOLDOWN);
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithOtp({ email });
     setResending(false);
     if (error) {
@@ -137,7 +172,7 @@ const VerifyOTP = () => {
             disabled={submitting || code.some((c) => !c)}
             className="w-full h-12 rounded-xl text-base font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
           >
-            {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Verify <ArrowRight className="w-4 h-4 ml-1" /></>}
+            {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{mode === "signup" ? "Confirm Email" : "Verify"} <ArrowRight className="w-4 h-4 ml-1" /></>}
           </Button>
 
           <div className="text-center text-sm text-muted-foreground">

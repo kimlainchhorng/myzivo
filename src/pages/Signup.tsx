@@ -69,7 +69,7 @@ const Signup = () => {
     }
 
     toast.success("Account created! Check your email for a 6-digit code.");
-    navigate(`/verify-otp?email=${encodeURIComponent(email.trim())}${redirect ? `&redirect=${encodeURIComponent(redirect)}` : ""}`);
+    navigate(`/verify-otp?mode=signup&email=${encodeURIComponent(email.trim())}${redirect ? `&redirect=${encodeURIComponent(redirect)}` : ""}`);
     return;
   };
 
