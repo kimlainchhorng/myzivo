@@ -29,6 +29,7 @@ import CommentsSheet from "@/components/social/CommentsSheet";
 import ReelThumbnail from "@/components/social/ReelThumbnail";
 import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolveSharedOrigins";
 import { toUserPostInteractionId } from "@/lib/social/postInteraction";
+import CreatorTiersSubscribe from "@/components/creator/CreatorTiersSubscribe";
 
 type PostTab = "all" | "photos" | "videos";
 
@@ -909,6 +910,15 @@ export default function PublicProfilePage() {
             </div>
           ) : (
             <>
+              {/* Creator subscription tiers */}
+              {targetUserId && (
+                <CreatorTiersSubscribe
+                  creatorId={targetUserId}
+                  creatorName={resolvedProfile?.full_name || undefined}
+                  isOwnProfile={isOwnProfile}
+                />
+              )}
+
               {/* Content Tabs */}
               <div className="border-b border-border/30 max-w-3xl mx-auto">
                 <div className="flex">

@@ -370,17 +370,28 @@ export default function CreatorDashboardPage() {
           </div>
           {tiers.length > 0 ? (
             <div className="space-y-1.5">
-              {tiers.map((tier: any) => (
-                <div key={tier.id} className="zivo-card-organic flex items-center gap-3 p-3">
-                  <div className="zivo-icon-pill w-9 h-9 rounded-xl" style={{ color: "hsl(38 92% 50%)", background: "hsl(38 92% 50% / 0.15)" }}>
-                    <Crown className="w-4 h-4" style={{ color: "hsl(38 92% 50%)" }} />
+              {tiers.map((tier: any) => {
+                const interval = (tier.billing_interval || "month").replace("_", " ");
+                const priceLabel = tier.is_free
+                  ? "Free"
+                  : `${tier.is_custom_price ? "From $" : "$"}${((tier.price_cents || 0) / 100).toFixed(2)} / ${interval}`;
+                return (
+                  <div key={tier.id} className="zivo-card-organic flex items-center gap-3 p-3">
+                    <div className="zivo-icon-pill w-9 h-9 rounded-xl" style={{ color: "hsl(38 92% 50%)", background: "hsl(38 92% 50% / 0.15)" }}>
+                      <Crown className="w-4 h-4" style={{ color: "hsl(38 92% 50%)" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="font-bold text-sm truncate">{tier.name}</p>
+                        {tier.is_free && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-600">Free</span>}
+                        {tier.is_custom_price && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-violet-500/20 text-violet-600">PWYW</span>}
+                        {tier.trial_days > 0 && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-sky-500/20 text-sky-600">{tier.trial_days}d trial</span>}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">{priceLabel}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-sm">{tier.name}</p>
-                    <p className="text-[10px] text-muted-foreground">${(tier.price_cents / 100).toFixed(2)}/mo</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="zivo-card-organic p-6 text-center border-dashed">
