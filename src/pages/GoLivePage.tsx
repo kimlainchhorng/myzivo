@@ -989,6 +989,16 @@ export default function GoLivePage() {
         <button onClick={flipCamera} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
           <RotateCcw className="h-4 w-4 text-white" />
         </button>
+        <button
+          onClick={() => setShowBgSheet(true)}
+          className={cn(
+            "w-10 h-10 rounded-full backdrop-blur-sm flex flex-col items-center justify-center",
+            bgChoice.kind !== "off" ? "bg-red-500/30 border border-red-400/50" : "bg-black/40",
+          )}
+        >
+          <ImageIcon className="h-4 w-4 text-white" />
+          <span className="text-[7px] text-white/90 -mt-0.5">BG</span>
+        </button>
         <button onClick={() => setShowRechargeSheet(true)} className="w-10 h-10 rounded-full bg-amber-500/30 border border-amber-500/40 backdrop-blur-sm flex flex-col items-center justify-center">
           <img src={goldCoinIcon} alt="" className="h-4 w-4" />
           <span className="text-[7px] text-amber-200 -mt-0.5">+Coin</span>
