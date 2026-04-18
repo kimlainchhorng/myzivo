@@ -198,24 +198,16 @@ export function useVirtualBackground(
             }
             const tmp = maskCtx.createImageData(mw, mh);
             const data = tmp.data;
-            const LO = 0.5, HI = 0.62, BAND = HI - LO;
+            const T = 0.5;
             for (let i = 0; i < maskData.length; i++) {
-              const v = maskData[i];
-              let a: number;
-              if (v >= HI) a = 255;
-              else if (v <= LO) a = 0;
-              else {
-                const t = (v - LO) / BAND;
-                a = Math.round(t * t * (3 - 2 * t) * 255);
-              }
+              const a = maskData[i] >= T ? 255 : 0;
               const j = i * 4;
               data[j] = 255; data[j+1] = 255; data[j+2] = 255; data[j+3] = a;
             }
             maskCtx.putImageData(tmp, 0, 0);
-            // No mask refinement blur — keep edges raw to avoid softening face
             maskCtx.globalCompositeOperation = "source-over";
 
-            // 3) Compose person cutout — NO blur/filter on person, raw video pixels
+            // 3) Compose person cutout — raw video, hard binary mask (nearest-neighbor)
             pctx.globalCompositeOperation = "source-over";
             pctx.filter = "none";
             pctx.imageSmoothingEnabled = true;
@@ -224,6 +216,7 @@ export function useVirtualBackground(
             pctx.drawImage(video, 0, 0, personCanvas.width, personCanvas.height);
             pctx.globalCompositeOperation = "destination-in";
             pctx.filter = "none";
+            pctx.imageSmoothingEnabled = false;
             pctx.drawImage(maskCanvas, 0, 0, personCanvas.width, personCanvas.height);
 
             pctx.globalCompositeOperation = "source-over";
