@@ -24,6 +24,7 @@
 import { useEffect, useRef, useState } from "react";
 
 export type BeautyStatus = "loading" | "pro" | "lite";
+export type BeautyTone = "natural" | "warm" | "cool" | "film" | "pink";
 
 export interface BeautySettings {
   enabled: boolean;
@@ -33,6 +34,8 @@ export interface BeautySettings {
   eyes: number;     // 0-100 eye enlarge
   lips: number;     // 0-100 lip enhance
   nose: number;     // 0-100 nose slim
+  tone?: BeautyTone;     // color tone LUT
+  blurBg?: boolean;      // soft background blur
 }
 
 export const DEFAULT_BEAUTY: BeautySettings = {
@@ -43,6 +46,8 @@ export const DEFAULT_BEAUTY: BeautySettings = {
   eyes: 18,
   lips: 30,
   nose: 12,
+  tone: "natural",
+  blurBg: false,
 };
 
 export const BEAUTY_PRESETS: Record<"natural" | "sweet" | "glam" | "auto" | "off", BeautySettings> = {
