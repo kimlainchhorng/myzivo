@@ -122,7 +122,8 @@ export default function GoLivePage() {
   const [rawStream, setRawStream] = useState<MediaStream | null>(null);
   const [beauty, setBeauty] = useState<BeautySettings>(DEFAULT_BEAUTY);
   const [showBeautyPanel, setShowBeautyPanel] = useState(false);
-  const { stream: beautifiedStream, status: beautyStatus } = useBeautyFilter(rawStream, beauty);
+  const [activePreset, setActivePreset] = useState<"natural" | "sweet" | "glam" | "auto" | "off" | "custom">("custom");
+  const { stream: beautifiedStream, status: beautyStatus, luma } = useBeautyFilter(rawStream, beauty);
   const [compareHold, setCompareHold] = useState(false);
   // When user is holding "Compare", show raw camera so they can see the before/after.
   const previewStream = compareHold ? rawStream : (beautifiedStream ?? rawStream);
