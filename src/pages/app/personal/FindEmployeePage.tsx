@@ -1,6 +1,6 @@
-/** Find Employee — company-side hiring hub */
+/** Find Company — browse companies and apply to open roles */
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, Plus, Users, Briefcase } from "lucide-react";
+import { ArrowLeft, Search, Building2, Briefcase, Bookmark } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,42 +13,42 @@ export default function FindEmployeePage() {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-bold">Find Employee</h1>
+        <h1 className="text-lg font-bold">Find Company</h1>
       </header>
 
       <div className="space-y-5 p-4">
         <Card className="space-y-3 p-4">
-          <h2 className="font-semibold">Search candidates</h2>
+          <h2 className="font-semibold">Search companies</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Job title, skill, or location" className="pl-9" />
+            <Input placeholder="Company name, industry, or location" className="pl-9" />
           </div>
-          <Button className="w-full">Search Candidates</Button>
+          <Button className="w-full">Search Companies</Button>
         </Card>
 
         <Card className="space-y-3 p-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-              <Plus className="h-5 w-5 text-primary" />
+              <Building2 className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h2 className="font-semibold">Post a Job</h2>
-              <p className="text-xs text-muted-foreground">Reach thousands of applicants</p>
+              <h2 className="font-semibold">Browse Top Companies</h2>
+              <p className="text-xs text-muted-foreground">Discover employers actively hiring</p>
             </div>
           </div>
-          <Button variant="outline" className="w-full">Create Job Post</Button>
+          <Button variant="outline" className="w-full">View Companies</Button>
         </Card>
 
         <div className="grid grid-cols-2 gap-3">
           <Card className="space-y-2 p-4">
             <Briefcase className="h-5 w-5 text-indigo-500" />
-            <div className="text-sm font-semibold">My Job Posts</div>
-            <p className="text-xs text-muted-foreground">0 active</p>
+            <div className="text-sm font-semibold">Open Jobs</div>
+            <p className="text-xs text-muted-foreground">0 available</p>
           </Card>
           <Card className="space-y-2 p-4">
-            <Users className="h-5 w-5 text-emerald-500" />
-            <div className="text-sm font-semibold">Applicants</div>
-            <p className="text-xs text-muted-foreground">0 new</p>
+            <Bookmark className="h-5 w-5 text-emerald-500" />
+            <div className="text-sm font-semibold">Saved</div>
+            <p className="text-xs text-muted-foreground">0 companies</p>
           </Card>
         </div>
       </div>

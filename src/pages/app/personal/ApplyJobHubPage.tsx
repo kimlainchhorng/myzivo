@@ -36,8 +36,8 @@ export default function ApplyJobHubPage() {
               <Search className="h-6 w-6 text-emerald-500" />
             </div>
             <div className="flex-1">
-              <h2 className="font-semibold">Find Employee</h2>
-              <p className="text-sm text-muted-foreground">Post a job & search candidates for your company</p>
+              <h2 className="font-semibold">Find Company</h2>
+              <p className="text-sm text-muted-foreground">Browse companies hiring & apply to open roles</p>
             </div>
           </Card>
         </button>
