@@ -172,8 +172,8 @@ export function useVirtualBackground(
               mask.height = mh;
               const maskData = conf.getAsFloat32Array();
               const img = mctx.createImageData(mw, mh);
-              const LO = 0.45;
-              const HI = 0.60;
+              const LO = 0.55;
+              const HI = 0.62;
               const RANGE = HI - LO;
               for (let i = 0; i < maskData.length; i++) {
                 const v = maskData[i];
