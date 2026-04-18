@@ -468,13 +468,23 @@ const INTERVAL_MONTHS_LOCAL: Record<TierInterval, number> = {
   month: 1, "3_months": 3, "6_months": 6, year: 12, lifetime: 0,
 };
 
+const BADGE_COLORS = [
+  "#10b981", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b",
+  "#ef4444", "#14b8a6", "#0ea5e9", "#a855f7", "#f43f5e",
+];
+const BADGE_EMOJIS = ["⭐", "👑", "💎", "🔥", "💖", "🚀", "🌟", "🎁", "🏆", "🦄", "✨", "🎯"];
+
 function TierStep({ tiers, userId, onSaved }: any) {
   const [type, setType] = useState<TierType>("paid");
   const [interval, setInterval] = useState<TierInterval>("month");
   const [trialDays, setTrialDays] = useState<number>(0);
   const [name, setName] = useState("Supporter");
   const [price, setPrice] = useState("4.99");
-  const [perks, setPerks] = useState("Exclusive posts\nDirect messages\nSubscriber badge");
+  const [discountPct, setDiscountPct] = useState<number>(0);
+  const [discountMonths, setDiscountMonths] = useState<number>(0);
+  const [welcomeMsg, setWelcomeMsg] = useState("");
+  const [badgeColor, setBadgeColor] = useState<string>(BADGE_COLORS[0]);
+  const [badgeEmoji, setBadgeEmoji] = useState<string>("⭐");
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -483,10 +493,13 @@ function TierStep({ tiers, userId, onSaved }: any) {
   const monthlyHelper = type !== "free" && months > 1 && cents > 0
     ? `≈ $${(cents / 100 / months).toFixed(2)}/mo`
     : null;
+  const discountedCents = discountPct > 0 ? Math.round(cents * (1 - discountPct / 100)) : cents;
 
   const reset = () => {
     setType("paid"); setInterval("month"); setTrialDays(0);
-    setName(""); setPrice(""); setPerks(""); setEditingId(null);
+    setName(""); setPrice(""); setEditingId(null);
+    setDiscountPct(0); setDiscountMonths(0);
+    setWelcomeMsg(""); setBadgeColor(BADGE_COLORS[0]); setBadgeEmoji("⭐");
   };
 
   const startEdit = (t: any) => {
@@ -496,7 +509,11 @@ function TierStep({ tiers, userId, onSaved }: any) {
     setTrialDays(t.trial_days || 0);
     setName(t.name || "");
     setPrice(((t.price_cents || 0) / 100).toFixed(2));
-    setPerks((t.benefits || []).join("\n"));
+    setDiscountPct(t.discount_percent || 0);
+    setDiscountMonths(t.discount_months || 0);
+    setWelcomeMsg(t.welcome_message || "");
+    setBadgeColor(t.badge_color || BADGE_COLORS[0]);
+    setBadgeEmoji(t.badge_emoji || "⭐");
   };
 
   const remove = async (id: string) => {
@@ -516,18 +533,22 @@ function TierStep({ tiers, userId, onSaved }: any) {
     }
     setSaving(true);
     try {
-      const benefits = perks.split("\n").map((p) => p.trim()).filter(Boolean);
       const payload: any = {
         creator_id: userId,
         name: name.trim(),
         price_cents: type === "free" ? 0 : cents,
         currency: "USD",
-        benefits,
+        benefits: [],
         is_active: true,
         billing_interval: type === "free" ? "month" : interval,
         is_free: type === "free",
         is_custom_price: type === "custom",
         trial_days: type === "free" ? 0 : trialDays,
+        discount_percent: type === "free" ? 0 : discountPct,
+        discount_months: type === "free" || interval === "lifetime" ? 0 : discountMonths,
+        welcome_message: welcomeMsg.trim() || null,
+        badge_color: badgeColor,
+        badge_emoji: badgeEmoji,
       };
       if (editingId) {
         const { error } = await (supabase as any).from("subscription_tiers").update(payload).eq("id", editingId);
@@ -574,13 +595,19 @@ function TierStep({ tiers, userId, onSaved }: any) {
                   : "border-emerald-500/30 bg-emerald-500/5"
               }`}
             >
-              <Crown className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+              <span
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
+                style={{ backgroundColor: (t.badge_color || "#10b981") + "26", color: t.badge_color || "#10b981" }}
+              >
+                {t.badge_emoji || "⭐"}
+              </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <p className="text-xs font-bold truncate">{t.name}</p>
                   {t.is_free && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-600">Free</span>}
                   {t.is_custom_price && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-violet-500/20 text-violet-600">PWYW</span>}
                   {t.trial_days > 0 && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-sky-500/20 text-sky-600">{t.trial_days}d trial</span>}
+                  {t.discount_percent > 0 && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-amber-500/20 text-amber-600">-{t.discount_percent}%{t.discount_months ? ` x${t.discount_months}mo` : ""}</span>}
                 </div>
                 <p className="text-[10px] text-muted-foreground">
                   {t.is_free ? "Free" : `$${((t.price_cents || 0) / 100).toFixed(2)} / ${(t.billing_interval || "month").replace("_", " ")}`}
@@ -650,6 +677,40 @@ function TierStep({ tiers, userId, onSaved }: any) {
           </div>
         )}
 
+        {/* Discount */}
+        {type !== "free" && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 space-y-2">
+            <Label className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-400 tracking-wider">Launch discount (optional)</Label>
+            <div>
+              <p className="text-[10px] text-muted-foreground mb-1">Percent off</p>
+              <div className="flex flex-wrap gap-1.5">
+                {[0, 10, 20, 25, 50, 75].map((p) => (
+                  <Chip key={p} active={discountPct === p} onClick={() => setDiscountPct(p)}>
+                    {p === 0 ? "None" : `${p}%`}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+            {discountPct > 0 && interval !== "lifetime" && (
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1">Apply for</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {[0, 1, 3, 6, 12].map((m) => (
+                    <Chip key={m} active={discountMonths === m} onClick={() => setDiscountMonths(m)}>
+                      {m === 0 ? "First payment only" : m === 1 ? "1 month" : `${m} months`}
+                    </Chip>
+                  ))}
+                </div>
+              </div>
+            )}
+            {discountPct > 0 && (
+              <p className="text-[11px] font-bold text-amber-700 dark:text-amber-400">
+                Fans pay ${(discountedCents / 100).toFixed(2)} {discountMonths > 0 ? `for ${discountMonths} ${discountMonths === 1 ? "month" : "months"}` : "on first payment"}, then ${(cents / 100).toFixed(2)}.
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Trial */}
         {type !== "free" && interval !== "lifetime" && (
           <div>
@@ -664,19 +725,79 @@ function TierStep({ tiers, userId, onSaved }: any) {
           </div>
         )}
 
+        {/* Badge */}
+        <div className="rounded-lg border border-border/40 p-2.5 space-y-2">
+          <Label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Subscriber badge</Label>
+          <div>
+            <p className="text-[10px] text-muted-foreground mb-1">Color</p>
+            <div className="flex flex-wrap gap-1.5">
+              {BADGE_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setBadgeColor(c)}
+                  className={`w-7 h-7 rounded-full border-2 transition ${badgeColor === c ? "border-foreground scale-110" : "border-transparent"}`}
+                  style={{ backgroundColor: c }}
+                />
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground mb-1">Emoji</p>
+            <div className="flex flex-wrap gap-1">
+              {BADGE_EMOJIS.map((e) => (
+                <button
+                  key={e}
+                  type="button"
+                  onClick={() => setBadgeEmoji(e)}
+                  className={`w-8 h-8 rounded-lg text-base transition ${badgeEmoji === e ? "bg-primary/15 ring-2 ring-primary" : "bg-muted hover:bg-muted/70"}`}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Welcome message */}
+        <div>
+          <Label className="text-xs font-bold">Welcome message <span className="font-normal text-muted-foreground">(sent on join)</span></Label>
+          <Textarea
+            value={welcomeMsg}
+            onChange={(e) => setWelcomeMsg(e.target.value)}
+            placeholder="Thanks for subscribing! Here's what to expect…"
+            maxLength={500}
+            rows={2}
+            className="mt-1 resize-none"
+          />
+          <p className="text-[10px] text-muted-foreground mt-1 text-right">{welcomeMsg.length}/500</p>
+        </div>
+
         {/* Preview */}
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
           <p className="text-[10px] uppercase font-bold text-primary tracking-wider mb-1.5">Preview</p>
           <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className="w-6 h-6 rounded-md flex items-center justify-center text-sm"
+              style={{ backgroundColor: badgeColor + "26", color: badgeColor }}
+            >
+              {badgeEmoji}
+            </span>
             <p className="font-bold text-sm">{name || "Tier name"}</p>
             {type === "free" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-600">Free</span>}
             {type === "custom" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-600">PWYW</span>}
             {trialDays > 0 && type !== "free" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-600">{trialDays}-day trial</span>}
+            {discountPct > 0 && type !== "free" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600">-{discountPct}%</span>}
           </div>
           <p className="text-base font-bold mt-1">
-            {type === "free"
-              ? "Free"
-              : `${type === "custom" ? "From $" : "$"}${(cents / 100).toFixed(2)} / ${INTERVAL_OPTS.find((o) => o.v === interval)?.label.toLowerCase()}`}
+            {type === "free" ? "Free" : (
+              <>
+                {discountPct > 0 && (
+                  <span className="text-muted-foreground line-through text-xs mr-1.5">${(cents / 100).toFixed(2)}</span>
+                )}
+                {type === "custom" ? "From $" : "$"}{(discountedCents / 100).toFixed(2)} / {INTERVAL_OPTS.find((o) => o.v === interval)?.label.toLowerCase()}
+              </>
+            )}
             {monthlyHelper && <span className="text-[10px] font-normal text-muted-foreground ml-1.5">{monthlyHelper}</span>}
           </p>
         </div>
@@ -685,6 +806,122 @@ function TierStep({ tiers, userId, onSaved }: any) {
           {saving && <Loader2 className="w-4 h-4 animate-spin" />} {editingId ? "Save changes" : "Create tier"}
         </Button>
       </div>
+
+      <PromoCodesManager userId={userId} />
+    </div>
+  );
+}
+
+function PromoCodesManager({ userId }: { userId: string }) {
+  const qc = useQueryClient();
+  const [code, setCode] = useState("");
+  const [percent, setPercent] = useState("20");
+  const [maxUses, setMaxUses] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  const { data: codes = [] } = useQuery({
+    queryKey: ["creator-promo-codes", userId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("creator_promo_codes")
+        .select("*")
+        .eq("creator_id", userId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userId,
+  });
+
+  const create = async () => {
+    const cleanCode = code.trim().toUpperCase().replace(/\s+/g, "");
+    const pct = parseInt(percent, 10);
+    if (!cleanCode) return toast.error("Code required");
+    if (!pct || pct < 1 || pct > 100) return toast.error("Percent must be 1-100");
+    setCreating(true);
+    try {
+      const { error } = await (supabase as any).from("creator_promo_codes").insert({
+        creator_id: userId,
+        code: cleanCode,
+        percent_off: pct,
+        max_uses: maxUses ? parseInt(maxUses, 10) : null,
+        expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+      });
+      if (error) throw error;
+      toast.success(`Code ${cleanCode} created`);
+      setCode(""); setMaxUses(""); setExpiresAt("");
+      qc.invalidateQueries({ queryKey: ["creator-promo-codes", userId] });
+    } catch (e: any) {
+      toast.error(e.message?.includes("unique") ? "Code already exists" : e.message || "Failed");
+    } finally { setCreating(false); }
+  };
+
+  const toggle = async (id: string, is_active: boolean) => {
+    await (supabase as any).from("creator_promo_codes").update({ is_active: !is_active }).eq("id", id);
+    qc.invalidateQueries({ queryKey: ["creator-promo-codes", userId] });
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm("Delete this code?")) return;
+    await (supabase as any).from("creator_promo_codes").delete().eq("id", id);
+    qc.invalidateQueries({ queryKey: ["creator-promo-codes", userId] });
+  };
+
+  return (
+    <div className="rounded-xl border border-border/40 bg-card p-3 space-y-2.5">
+      <div className="flex items-center gap-1.5">
+        <Gift className="w-3.5 h-3.5 text-primary" />
+        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Global promo codes</p>
+      </div>
+      <p className="text-[11px] text-muted-foreground">Codes work across all your tiers. Fans enter them at Stripe checkout.</p>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="col-span-2">
+          <Label className="text-[10px] font-bold">Code</Label>
+          <Input
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase().replace(/\s+/g, ""))}
+            placeholder="LAUNCH50"
+            maxLength={24}
+            className="mt-1 font-mono uppercase"
+          />
+        </div>
+        <div>
+          <Label className="text-[10px] font-bold">% Off</Label>
+          <Input value={percent} onChange={(e) => setPercent(e.target.value.replace(/\D/g, ""))} placeholder="20" inputMode="numeric" className="mt-1" />
+        </div>
+        <div>
+          <Label className="text-[10px] font-bold">Max uses</Label>
+          <Input value={maxUses} onChange={(e) => setMaxUses(e.target.value.replace(/\D/g, ""))} placeholder="Unlimited" inputMode="numeric" className="mt-1" />
+        </div>
+        <div className="col-span-2">
+          <Label className="text-[10px] font-bold">Expires (optional)</Label>
+          <Input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} className="mt-1" />
+        </div>
+      </div>
+      <Button onClick={create} disabled={creating} size="sm" className="w-full font-bold">
+        {creating && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Create code
+      </Button>
+
+      {codes.length > 0 && (
+        <div className="space-y-1.5 pt-1">
+          {codes.map((c: any) => (
+            <div key={c.id} className={`flex items-center gap-2 p-2 rounded-lg border ${c.is_active ? "border-emerald-500/30 bg-emerald-500/5" : "border-border/40 bg-muted/30"}`}>
+              <span className="font-mono text-xs font-bold">{c.code}</span>
+              <span className="text-[10px] font-bold text-amber-600">−{c.percent_off}%</span>
+              <span className="text-[10px] text-muted-foreground flex-1">
+                {c.uses_count}{c.max_uses ? `/${c.max_uses}` : ""} uses
+                {c.expires_at && ` · exp ${new Date(c.expires_at).toLocaleDateString()}`}
+              </span>
+              <button onClick={() => toggle(c.id, c.is_active)} className="text-[10px] font-bold text-muted-foreground hover:text-foreground">
+                {c.is_active ? "Pause" : "Resume"}
+              </button>
+              <button onClick={() => remove(c.id)} className="text-[10px] font-bold text-destructive">Delete</button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
