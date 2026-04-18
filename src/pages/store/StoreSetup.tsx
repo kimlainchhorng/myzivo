@@ -245,6 +245,7 @@ export default function StoreSetup() {
       await supabase.from("profiles").update({
         full_name: ownerName || undefined,
         phone: ownerPhone.replace(/\D/g, "") || null,
+        email: ownerEmail.trim() || user.email || null,
       }).eq("user_id", user.id);
 
       const hoursJson = JSON.stringify(schedule);
@@ -306,6 +307,7 @@ export default function StoreSetup() {
       await supabase.from("profiles").update({
         full_name: ownerName,
         phone: ownerPhone.replace(/\D/g, "") || null,
+        email: ownerEmail.trim() || user.email || null,
       }).eq("user_id", user.id);
 
       const hoursJson = JSON.stringify(schedule);
@@ -446,8 +448,14 @@ export default function StoreSetup() {
                         <Label className="text-white/60 text-[13px]">Email</Label>
                         <Input
                           value={ownerEmail}
-                          disabled
-                          className="bg-white/[0.03] border-white/[0.08] text-white/50 h-11 rounded-xl"
+                          onChange={e => setOwnerEmail(e.target.value)}
+                          type="email"
+                          autoComplete="email"
+                          autoCapitalize="off"
+                          autoCorrect="off"
+                          inputMode="email"
+                          placeholder="owner@yourstore.com"
+                          className="bg-white/[0.07] border-white/[0.12] text-white placeholder:text-white/30 h-11 rounded-xl focus:border-primary/50 focus:ring-primary/20"
                         />
                       </div>
                       <div className="space-y-1.5">
