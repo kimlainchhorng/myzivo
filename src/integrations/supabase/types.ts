@@ -44610,42 +44610,54 @@ export type Database = {
       subscription_tiers: {
         Row: {
           benefits: Json | null
+          billing_interval: string
           created_at: string | null
           creator_id: string
           currency: string | null
           description: string | null
           id: string
           is_active: boolean | null
+          is_custom_price: boolean
+          is_free: boolean
           max_subscribers: number | null
           name: string
           price_cents: number
           sort_order: number | null
+          trial_days: number
         }
         Insert: {
           benefits?: Json | null
+          billing_interval?: string
           created_at?: string | null
           creator_id: string
           currency?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
+          is_custom_price?: boolean
+          is_free?: boolean
           max_subscribers?: number | null
           name: string
           price_cents: number
           sort_order?: number | null
+          trial_days?: number
         }
         Update: {
           benefits?: Json | null
+          billing_interval?: string
           created_at?: string | null
           creator_id?: string
           currency?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
+          is_custom_price?: boolean
+          is_free?: boolean
           max_subscribers?: number | null
           name?: string
           price_cents?: number
           sort_order?: number | null
+          trial_days?: number
         }
         Relationships: []
       }
