@@ -30,6 +30,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { openExternalUrl } from "@/lib/openExternalUrl";
+import ExternalLinkWarning from "@/components/security/ExternalLinkWarning";
 import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
 
 import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
