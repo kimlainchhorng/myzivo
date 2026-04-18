@@ -628,6 +628,7 @@ const App = () => (
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
                 <Route path="/creator-dashboard" element={<ProtectedRoute><CreatorDashboardPage /></ProtectedRoute>} />
+                <Route path="/creator/setup" element={<ProtectedRoute><CreatorSetupPage /></ProtectedRoute>} />
                 <Route path="/creator-analytics" element={<ProtectedRoute><CreatorAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/creator/live-earnings" element={<ProtectedRoute><CreatorLiveEarningsPage /></ProtectedRoute>} />
                 <Route path="/affiliate-hub" element={<ProtectedRoute><AffiliateHubPage /></ProtectedRoute>} />
