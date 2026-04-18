@@ -241,12 +241,12 @@ export function useVirtualBackground(
               pctx.clearRect(0, 0, W, H);
               pctx.drawImage(video!, 0, 0, W, H);
 
+              // 3b. Clip with refined mask — no Pass-2 blur (would re-dilate the eroded edges)
               pctx.globalCompositeOperation = "destination-in";
-              pctx.filter = "blur(0.8px)";
+              pctx.filter = "none";
               pctx.imageSmoothingEnabled = true;
               pctx.imageSmoothingQuality = "high";
               pctx.drawImage(maskHi, 0, 0, W, H);
-              pctx.filter = "none";
               pctx.globalCompositeOperation = "source-over";
 
               // 4. Composite person over background
