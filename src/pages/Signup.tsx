@@ -100,21 +100,21 @@ const Signup = () => {
   }
 
   return (
-    <div className="min-h-[100dvh] w-full bg-gradient-to-br from-emerald-950 via-background to-background flex items-center justify-center px-4 py-10">
+    <div className="min-h-[100dvh] w-full bg-gradient-to-br from-emerald-950 via-background to-background flex items-center justify-center px-4 py-3">
       <SEOHead title="Create your ZIVO account" description="Sign up for ZIVO to search flights, hotels and more." />
 
       <div className="w-full max-w-md">
         {/* Brand */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-foreground">ZIVO ID</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+        <div className="text-center mb-3">
+          <h1 className="text-2xl font-bold text-foreground">ZIVO ID</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Get Started Free — No credit card needed
           </p>
         </div>
 
         <form
           onSubmit={onSubmit}
-          className="rounded-2xl border border-emerald-500/20 bg-card/70 backdrop-blur-xl shadow-2xl p-6 space-y-4"
+          className="rounded-2xl border border-emerald-500/20 bg-card/70 backdrop-blur-xl shadow-2xl p-4 space-y-2.5"
         >
           {/* Names */}
           <div className="grid grid-cols-2 gap-3">
