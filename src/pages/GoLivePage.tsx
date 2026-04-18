@@ -977,27 +977,6 @@ export default function GoLivePage() {
                 </button>
               </div>
 
-              {/* Status pill */}
-              <div className="flex flex-col items-center gap-1 mb-3">
-                <span className={cn(
-                  "px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide inline-flex items-center gap-1.5",
-                  beautyStatus === "pro" && "bg-pink-500/20 text-pink-200 border border-pink-400/40",
-                  beautyStatus === "lite" && "bg-amber-500/20 text-amber-200 border border-amber-400/40",
-                  beautyStatus === "loading" && "bg-white/10 text-white/70 border border-white/20",
-                )}>
-                  {beauty.enabled && (beautyStatus === "pro" || beautyStatus === "lite") && (
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
-                    </span>
-                  )}
-                  {beautyStatus === "pro" && "Beauty: Pro (face tracking)"}
-                  {beautyStatus === "lite" && "Beauty: Lite (no face tracking)"}
-                  {beautyStatus === "loading" && "Loading…"}
-                </span>
-                <span className="text-[10px] text-white/50">Move closer for best results</span>
-              </div>
-
               {/* Quick presets */}
               <div className="flex gap-1 mb-3 overflow-x-auto -mx-1 px-1 pb-1">
                 {([
