@@ -171,8 +171,9 @@ export default function GoLivePage() {
   }, [luma, activePreset, beauty.enabled]);
 
   // When user is holding "Compare", show raw camera so they can see the before/after.
-  const previewStream = compareHold ? rawStream : (beautifiedStream ?? rawStream);
-  const localStream = beautifiedStream ?? rawStream;
+  const filteredStream = bgStream ?? beautifiedStream ?? rawStream;
+  const previewStream = compareHold ? rawStream : filteredStream;
+  const localStream = filteredStream;
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const [phase, setPhase] = useState<LivePhase>("setup");
