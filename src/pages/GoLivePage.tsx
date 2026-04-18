@@ -36,6 +36,7 @@ import Plane from "lucide-react/dist/esm/icons/plane";
 import Globe from "lucide-react/dist/esm/icons/globe";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import { useBeautyFilter, DEFAULT_BEAUTY, BEAUTY_PRESETS, type BeautySettings } from "@/hooks/useBeautyFilter";
+import { useVirtualBackground } from "@/hooks/useVirtualBackground";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,24 @@ import {
 } from "@/lib/livePairing";
 import { ICE_SERVERS, getIceServers, logSelectedCandidatePair, sendSignal, subscribeSignals } from "@/lib/liveWebrtc";
 import goldCoinIcon from "@/assets/gifts/gold-coin.png";
+import bgOffice from "@/assets/bg-office.jpg";
+import bgBeach from "@/assets/bg-beach.jpg";
+import bgCafe from "@/assets/bg-cafe.jpg";
+import bgCity from "@/assets/bg-city.jpg";
+import bgStudio from "@/assets/bg-studio.jpg";
+import bgNature from "@/assets/bg-nature.jpg";
+
+type BgPreset = { id: string; kind: "off" | "blur" | "image"; url?: string; label: string };
+const BG_PRESETS: BgPreset[] = [
+  { id: "off",    kind: "off",   label: "None" },
+  { id: "blur",   kind: "blur",  label: "Blur" },
+  { id: "office", kind: "image", url: bgOffice, label: "Office" },
+  { id: "studio", kind: "image", url: bgStudio, label: "Studio" },
+  { id: "cafe",   kind: "image", url: bgCafe,   label: "Cafe" },
+  { id: "beach",  kind: "image", url: bgBeach,  label: "Beach" },
+  { id: "city",   kind: "image", url: bgCity,   label: "City" },
+  { id: "nature", kind: "image", url: bgNature, label: "Nature" },
+];
 
 const CoinRechargeSheet = lazy(() => import("@/components/live/CoinRechargeSheet"));
 
@@ -126,6 +145,16 @@ export default function GoLivePage() {
   const { stream: beautifiedStream, status: beautyStatus, luma } = useBeautyFilter(rawStream, beauty);
   const [compareHold, setCompareHold] = useState(false);
 
+  // Virtual background (segmentation) — chosen on setup screen.
+  const [bgChoice, setBgChoice] = useState<{ id: string; kind: "off" | "blur" | "image"; url?: string; label: string }>(
+    { id: "off", kind: "off", label: "None" },
+  );
+  const bgConfig = useMemo(
+    () => ({ kind: bgChoice.kind, imageUrl: bgChoice.url, blurPx: 22 }),
+    [bgChoice.kind, bgChoice.url],
+  );
+  const { stream: bgStream, status: bgStatus } = useVirtualBackground(beautifiedStream ?? rawStream, bgConfig);
+
   // Toast when Beauty Pro becomes active for the first time
   const proAnnouncedRef = useRef(false);
   useEffect(() => {
@@ -160,8 +189,9 @@ export default function GoLivePage() {
   }, [luma, activePreset, beauty.enabled]);
 
   // When user is holding "Compare", show raw camera so they can see the before/after.
-  const previewStream = compareHold ? rawStream : (beautifiedStream ?? rawStream);
-  const localStream = beautifiedStream ?? rawStream;
+  const filteredStream = bgStream ?? beautifiedStream ?? rawStream;
+  const previewStream = compareHold ? rawStream : filteredStream;
+  const localStream = filteredStream;
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const [phase, setPhase] = useState<LivePhase>("setup");
@@ -761,6 +791,47 @@ export default function GoLivePage() {
                     </button>
                   );
                 })}
+              </div>
+
+              {/* Virtual background picker */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5 px-1">
+                  <span className="text-white/80 text-xs font-semibold">Background</span>
+                  {bgChoice.kind !== "off" && (
+                    <span className="text-[10px] text-white/50">
+                      {bgStatus === "loading" ? "Loading…" : bgStatus === "error" ? "Unavailable" : "Active"}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                  {BG_PRESETS.map((p) => {
+                    const active = bgChoice.id === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => setBgChoice(p)}
+                        className={cn(
+                          "shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 relative",
+                          active ? "border-red-500" : "border-white/20",
+                        )}
+                        title={p.label}
+                      >
+                        {p.kind === "off" && (
+                          <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-[10px] text-white/70 font-semibold">None</div>
+                        )}
+                        {p.kind === "blur" && (
+                          <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center text-[10px] text-white font-semibold" style={{ filter: "blur(0px)" }}>Blur</div>
+                        )}
+                        {p.kind === "image" && p.url && (
+                          <>
+                            <img src={p.url} alt={p.label} className="w-full h-full object-cover" />
+                            <span className="absolute bottom-0 inset-x-0 bg-black/55 text-[9px] text-white text-center py-0.5 font-semibold">{p.label}</span>
+                          </>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="flex justify-center gap-3 py-2">
