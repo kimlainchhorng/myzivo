@@ -1,11 +1,13 @@
 /**
  * StripeConnectPayoutCard — Instant payout to debit card via Stripe Connect Express.
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Zap, CheckCircle2, AlertCircle, ArrowRight, CreditCard, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { useConnectStatus, useConnectOnboard, useInstantPayout } from "@/hooks/useStripeConnect";
 
 interface Props {
@@ -16,8 +18,21 @@ export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
   const { data: status, isLoading } = useConnectStatus();
   const onboard = useConnectOnboard();
   const payout = useInstantPayout();
+  const queryClient = useQueryClient();
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<"instant" | "standard">("instant");
+
+  // When Stripe redirects user back with ?connect=done, refresh status & clean URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("connect") === "done") {
+      queryClient.invalidateQueries({ queryKey: ["stripe-connect-status"] });
+      toast.success("Stripe setup updated — refreshing status…");
+      params.delete("connect");
+      const qs = params.toString();
+      window.history.replaceState({}, "", `${window.location.pathname}${qs ? "?" + qs : ""}`);
+    }
+  }, [queryClient]);
 
   const amountNum = Number(amount) || 0;
   const canPayout =
