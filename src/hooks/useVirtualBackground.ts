@@ -24,11 +24,9 @@ export function useVirtualBackground(
 
   useEffect(() => {
     if (!source) { setStream(null); setStatus("off"); return; }
-    if (config.kind === "off") {
-      setStream(source);
-      setStatus("off");
-      return;
-    }
+    setStream(source);
+    setStatus("off");
+    return;
 
     let cancelled = false;
     let segmenter: any = null;
