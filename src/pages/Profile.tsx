@@ -984,6 +984,13 @@ const Profile = () => {
 
       <ZivoMobileNav />
 
+      <ExternalLinkWarning
+        url={safeLinkPrompt}
+        open={!!safeLinkPrompt}
+        onOpenChange={(o) => { if (!o) setSafeLinkPrompt(null); }}
+        onConfirm={(u) => { void openExternalUrl(u); setSafeLinkPrompt(null); }}
+      />
+
       {showLangPicker && langTriggerRef.current && createPortal(
         <>
           <div className="fixed inset-0 z-[90]" onClick={() => setShowLangPicker(false)} />
