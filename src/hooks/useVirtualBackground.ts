@@ -72,9 +72,9 @@ export function useVirtualBackground(
 
     const drawVignette = () => {
       const w = out.width, h = out.height;
-      const grd = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.35, w/2, h/2, Math.max(w,h)*0.75);
+      const grd = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.4, w/2, h/2, Math.max(w,h)*0.8);
       grd.addColorStop(0, "rgba(0,0,0,0)");
-      grd.addColorStop(1, "rgba(0,0,0,0.45)");
+      grd.addColorStop(1, "rgba(0,0,0,0.25)");
       ctx.save();
       ctx.fillStyle = grd;
       ctx.fillRect(0, 0, w, h);
@@ -84,10 +84,9 @@ export function useVirtualBackground(
     const drawBackground = (cfg: VirtualBgConfig) => {
       if (cfg.kind === "blur") {
         ctx.save();
-        ctx.filter = `blur(${cfg.blurPx ?? 24}px) saturate(1.05) brightness(0.92)`;
+        ctx.filter = `blur(${cfg.blurPx ?? 22}px) saturate(1.05)`;
         ctx.drawImage(video, 0, 0, out.width, out.height);
         ctx.restore();
-        drawVignette();
       } else if (cfg.kind === "image" && bgImgLoaded) {
         const ir = bgImg.width / bgImg.height;
         const or = out.width / out.height;
@@ -95,16 +94,11 @@ export function useVirtualBackground(
         if (ir > or) { dh = out.height; dw = dh * ir; dx = (out.width - dw) / 2; }
         else { dw = out.width; dh = dw / ir; dy = (out.height - dh) / 2; }
         ctx.save();
-        // Stronger DoF blur + brightness drop pushes scene back
-        ctx.filter = "blur(4px) saturate(1.1) brightness(0.88)";
+        // DoF blur — keep brightness natural, no heavy tint
+        ctx.filter = "blur(3px) saturate(1.05) brightness(0.96)";
         ctx.drawImage(bgImg, dx, dy, dw, dh);
         ctx.restore();
         drawVignette();
-        // ambient grounding tint
-        ctx.save();
-        ctx.fillStyle = "rgba(0,0,0,0.06)";
-        ctx.fillRect(0, 0, out.width, out.height);
-        ctx.restore();
       } else {
         ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, out.width, out.height);
@@ -243,24 +237,9 @@ export function useVirtualBackground(
             pctx.drawImage(maskCanvas, 0, 0, personCanvas.width, personCanvas.height);
             pctx.filter = "none";
 
-            // 3b) Light/color match — multiply bg avg color over person, then re-clip
-            if (cfg.kind === "image" && bgImgLoaded) {
-              pctx.globalCompositeOperation = "multiply";
-              pctx.fillStyle = `rgba(${bgAvgColor.r},${bgAvgColor.g},${bgAvgColor.b},0.18)`;
-              pctx.fillRect(0, 0, personCanvas.width, personCanvas.height);
-              pctx.globalCompositeOperation = "destination-in";
-              pctx.drawImage(maskCanvas, 0, 0, personCanvas.width, personCanvas.height);
-            }
             pctx.globalCompositeOperation = "source-over";
 
-            // 4) Subtle inner rim shadow for depth separation
-            ctx.save();
-            ctx.globalAlpha = 0.3;
-            ctx.filter = "blur(1.5px) brightness(0.35)";
-            ctx.drawImage(personCanvas, 0, 1);
-            ctx.restore();
-
-            // 5) Draw person on top of background
+            // 4) Draw person on top of background — no filters, natural skin tone
             ctx.drawImage(personCanvas, 0, 0);
 
             try { mask.close?.(); } catch {}
