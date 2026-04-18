@@ -358,6 +358,7 @@ const NotificationSettings = lazy(() => import("./pages/account/NotificationSett
 const AccountReferralsPage = lazy(() => import("./pages/account/ReferralsPage"));
 const AccountWalletPage = lazy(() => import("./pages/account/WalletPage"));
 const CoinPurchaseSuccess = lazy(() => import("./pages/CoinPurchaseSuccess"));
+const GuestProfilePreview = lazy(() => import("./components/auth/GuestProfilePreview"));
 const GiftCardsPage = lazy(() => import("./pages/account/GiftCardsPage"));
 const GiftCardSuccessPage = lazy(() => import("./pages/account/GiftCardSuccessPage"));
 const AccountAddressesPage = lazy(() => import("./pages/account/AddressesPage"));
