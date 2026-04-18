@@ -3,7 +3,7 @@ import { ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { assessLinkSync } from "@/hooks/useLinkRisk";
 import { stripTrackingParams } from "@/lib/linkSafetyExtras";
 import ExternalLinkWarning from "./ExternalLinkWarning";
-import { openExternalUrl } from "@/lib/native";
+import { openExternalUrl } from "@/lib/openExternalUrl";
 import { cn } from "@/lib/utils";
 
 interface Props {
