@@ -70,6 +70,11 @@ const MetaPrivacyDisclosure = lazy(() => import("./pages/legal/MetaPrivacyDisclo
 const CreateCVPage = lazy(() => import("./pages/app/CreateCVPage"));
 const ApplyJobHubPage = lazy(() => import("./pages/app/personal/ApplyJobHubPage"));
 const FindEmployeePage = lazy(() => import("./pages/app/personal/FindEmployeePage"));
+const CompanyDetailPage = lazy(() => import("./pages/app/personal/CompanyDetailPage"));
+const JobDetailPage = lazy(() => import("./pages/app/personal/JobDetailPage"));
+const MyApplicationsPage = lazy(() => import("./pages/app/personal/MyApplicationsPage"));
+const EmployerDashboardPage = lazy(() => import("./pages/app/personal/EmployerDashboardPage"));
+const JobApplicantsPage = lazy(() => import("./pages/app/personal/JobApplicantsPage"));
 const PersonalEmployeesPage = lazy(() => import("./pages/app/personal/PersonalEmployeesPage"));
 const PersonalSchedulePage = lazy(() => import("./pages/app/personal/PersonalSchedulePage"));
 const PersonalTimesheetPage = lazy(() => import("./pages/app/personal/PersonalTimesheetPage"));
@@ -538,6 +543,11 @@ const App = () => (
                 <Route path="/personal-dashboard" element={<ProtectedRoute><PersonalDashboard /></ProtectedRoute>} />
                 <Route path="/personal/apply-job" element={<ProtectedRoute><ApplyJobHubPage /></ProtectedRoute>} />
                 <Route path="/personal/find-employee" element={<ProtectedRoute><FindEmployeePage /></ProtectedRoute>} />
+                <Route path="/personal/companies/:id" element={<ProtectedRoute><CompanyDetailPage /></ProtectedRoute>} />
+                <Route path="/personal/jobs/:id" element={<ProtectedRoute><JobDetailPage /></ProtectedRoute>} />
+                <Route path="/personal/my-applications" element={<ProtectedRoute><MyApplicationsPage /></ProtectedRoute>} />
+                <Route path="/personal/employer" element={<ProtectedRoute><EmployerDashboardPage /></ProtectedRoute>} />
+                <Route path="/personal/employer/jobs/:id/applicants" element={<ProtectedRoute><JobApplicantsPage /></ProtectedRoute>} />
                 <Route path="/personal/create-cv" element={<ProtectedRoute><CreateCVPage /></ProtectedRoute>} />
                 <Route path="/personal/employees" element={<ProtectedRoute><PersonalEmployeesPage /></ProtectedRoute>} />
                 <Route path="/personal/schedule" element={<ProtectedRoute><PersonalSchedulePage /></ProtectedRoute>} />
