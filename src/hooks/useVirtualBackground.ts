@@ -177,7 +177,7 @@ export function useVirtualBackground(
             // 1) Background layer
             drawBackground(cfg);
 
-            // 2) Build alpha mask image
+            // 2) Build alpha mask with S-curve threshold (sharper silhouette, less halo)
             const mw = mask.width, mh = mask.height;
             const maskData = mask.getAsFloat32Array();
             if (maskCanvas.width !== mw || maskCanvas.height !== mh) {
@@ -187,19 +187,25 @@ export function useVirtualBackground(
             const data = tmp.data;
             for (let i = 0; i < maskData.length; i++) {
               const v = maskData[i];
-              const a = v > 0.5 ? 255 : Math.max(0, Math.min(255, v * 510));
+              let a: number;
+              if (v >= 0.7) a = 255;
+              else if (v <= 0.35) a = 0;
+              else {
+                const t = (v - 0.35) / 0.35;
+                a = Math.round(t * t * (3 - 2 * t) * 255); // smoothstep
+              }
               const j = i * 4;
               data[j] = 255; data[j+1] = 255; data[j+2] = 255; data[j+3] = a;
             }
             maskCtx.putImageData(tmp, 0, 0);
 
-            // 3) Compose person cutout on offscreen canvas
+            // 3) Compose person cutout with subtle feather to hide jagged edges
             pctx.globalCompositeOperation = "source-over";
             pctx.filter = "none";
             pctx.clearRect(0, 0, personCanvas.width, personCanvas.height);
             pctx.drawImage(video, 0, 0, personCanvas.width, personCanvas.height);
             pctx.globalCompositeOperation = "destination-in";
-            pctx.filter = "blur(2px)";
+            pctx.filter = "blur(1.2px)";
             pctx.drawImage(maskCanvas, 0, 0, personCanvas.width, personCanvas.height);
             pctx.filter = "none";
 
