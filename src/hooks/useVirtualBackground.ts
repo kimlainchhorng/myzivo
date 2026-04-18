@@ -53,17 +53,41 @@ export function useVirtualBackground(
     const bgImg = new Image();
     bgImg.crossOrigin = "anonymous";
     let bgImgLoaded = false;
+    let bgAvgColor = { r: 128, g: 128, b: 128 };
     if (config.imageUrl) {
       bgImg.src = config.imageUrl;
-      bgImg.onload = () => { bgImgLoaded = true; };
+      bgImg.onload = () => {
+        bgImgLoaded = true;
+        // Sample average color via 1x1 downscale
+        try {
+          const c = document.createElement("canvas");
+          c.width = 1; c.height = 1;
+          const cx = c.getContext("2d")!;
+          cx.drawImage(bgImg, 0, 0, 1, 1);
+          const d = cx.getImageData(0, 0, 1, 1).data;
+          bgAvgColor = { r: d[0], g: d[1], b: d[2] };
+        } catch {}
+      };
     }
+
+    const drawVignette = () => {
+      const w = out.width, h = out.height;
+      const grd = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.35, w/2, h/2, Math.max(w,h)*0.75);
+      grd.addColorStop(0, "rgba(0,0,0,0)");
+      grd.addColorStop(1, "rgba(0,0,0,0.45)");
+      ctx.save();
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    };
 
     const drawBackground = (cfg: VirtualBgConfig) => {
       if (cfg.kind === "blur") {
         ctx.save();
-        ctx.filter = `blur(${cfg.blurPx ?? 22}px) saturate(1.05)`;
+        ctx.filter = `blur(${cfg.blurPx ?? 24}px) saturate(1.05) brightness(0.92)`;
         ctx.drawImage(video, 0, 0, out.width, out.height);
         ctx.restore();
+        drawVignette();
       } else if (cfg.kind === "image" && bgImgLoaded) {
         const ir = bgImg.width / bgImg.height;
         const or = out.width / out.height;
@@ -71,13 +95,14 @@ export function useVirtualBackground(
         if (ir > or) { dh = out.height; dw = dh * ir; dx = (out.width - dw) / 2; }
         else { dw = out.width; dh = dw / ir; dy = (out.height - dh) / 2; }
         ctx.save();
-        // subtle blur on bg image to match camera DoF — much more realistic
-        ctx.filter = "blur(2px) saturate(1.08) brightness(0.96)";
+        // Stronger DoF blur + brightness drop pushes scene back
+        ctx.filter = "blur(4px) saturate(1.1) brightness(0.88)";
         ctx.drawImage(bgImg, dx, dy, dw, dh);
         ctx.restore();
-        // ambient tint from bg → person, very subtle
+        drawVignette();
+        // ambient grounding tint
         ctx.save();
-        ctx.fillStyle = "rgba(0,0,0,0.04)";
+        ctx.fillStyle = "rgba(0,0,0,0.06)";
         ctx.fillRect(0, 0, out.width, out.height);
         ctx.restore();
       } else {
@@ -177,7 +202,7 @@ export function useVirtualBackground(
             // 1) Background layer
             drawBackground(cfg);
 
-            // 2) Build alpha mask with S-curve threshold (sharper silhouette, less halo)
+            // 2) Build tight alpha mask — narrow smoothstep band for crisp silhouette
             const mw = mask.width, mh = mask.height;
             const maskData = mask.getAsFloat32Array();
             if (maskCanvas.width !== mw || maskCanvas.height !== mh) {
@@ -185,31 +210,57 @@ export function useVirtualBackground(
             }
             const tmp = maskCtx.createImageData(mw, mh);
             const data = tmp.data;
+            const LO = 0.5, HI = 0.62, BAND = HI - LO;
             for (let i = 0; i < maskData.length; i++) {
               const v = maskData[i];
               let a: number;
-              if (v >= 0.7) a = 255;
-              else if (v <= 0.35) a = 0;
+              if (v >= HI) a = 255;
+              else if (v <= LO) a = 0;
               else {
-                const t = (v - 0.35) / 0.35;
-                a = Math.round(t * t * (3 - 2 * t) * 255); // smoothstep
+                const t = (v - LO) / BAND;
+                a = Math.round(t * t * (3 - 2 * t) * 255);
               }
               const j = i * 4;
               data[j] = 255; data[j+1] = 255; data[j+2] = 255; data[j+3] = a;
             }
             maskCtx.putImageData(tmp, 0, 0);
+            // Refinement: slight blur + high contrast re-threshold (dilate/erode-ish)
+            maskCtx.globalCompositeOperation = "copy";
+            maskCtx.filter = "blur(0.8px) contrast(1.6)";
+            maskCtx.drawImage(maskCanvas, 0, 0);
+            maskCtx.filter = "none";
+            maskCtx.globalCompositeOperation = "source-over";
 
-            // 3) Compose person cutout with subtle feather to hide jagged edges
+            // 3) Compose person cutout with high-quality upscale + 1px inner feather
             pctx.globalCompositeOperation = "source-over";
             pctx.filter = "none";
+            pctx.imageSmoothingEnabled = true;
+            (pctx as any).imageSmoothingQuality = "high";
             pctx.clearRect(0, 0, personCanvas.width, personCanvas.height);
             pctx.drawImage(video, 0, 0, personCanvas.width, personCanvas.height);
             pctx.globalCompositeOperation = "destination-in";
-            pctx.filter = "blur(1.2px)";
+            pctx.filter = "blur(1px)";
             pctx.drawImage(maskCanvas, 0, 0, personCanvas.width, personCanvas.height);
             pctx.filter = "none";
 
-            // 4) Draw person on top of background
+            // 3b) Light/color match — multiply bg avg color over person, then re-clip
+            if (cfg.kind === "image" && bgImgLoaded) {
+              pctx.globalCompositeOperation = "multiply";
+              pctx.fillStyle = `rgba(${bgAvgColor.r},${bgAvgColor.g},${bgAvgColor.b},0.18)`;
+              pctx.fillRect(0, 0, personCanvas.width, personCanvas.height);
+              pctx.globalCompositeOperation = "destination-in";
+              pctx.drawImage(maskCanvas, 0, 0, personCanvas.width, personCanvas.height);
+            }
+            pctx.globalCompositeOperation = "source-over";
+
+            // 4) Subtle inner rim shadow for depth separation
+            ctx.save();
+            ctx.globalAlpha = 0.3;
+            ctx.filter = "blur(1.5px) brightness(0.35)";
+            ctx.drawImage(personCanvas, 0, 1);
+            ctx.restore();
+
+            // 5) Draw person on top of background
             ctx.drawImage(personCanvas, 0, 0);
 
             try { mask.close?.(); } catch {}
