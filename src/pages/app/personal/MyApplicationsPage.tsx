@@ -1,6 +1,7 @@
 /** My job applications */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSmartBack } from "@/lib/smartBack";
 import { ArrowLeft, Briefcase } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ const statusColor: Record<string, string> = {
 
 export default function MyApplicationsPage() {
   const navigate = useNavigate();
+  const goBack = useSmartBack("/personal/apply-job");
   const { user } = useAuth();
   const [apps, setApps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +40,7 @@ export default function MyApplicationsPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back">
+        <Button variant="ghost" size="icon" onClick={goBack} aria-label="Back">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-lg font-bold">My Applications</h1>

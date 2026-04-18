@@ -8,10 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useSmartBack } from "@/lib/smartBack";
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const goBack = useSmartBack("/personal/find-employee");
   const { user } = useAuth();
   const [job, setJob] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -87,7 +89,7 @@ export default function JobDetailPage() {
   return (
     <div className="min-h-screen bg-background pb-32">
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back">
+        <Button variant="ghost" size="icon" onClick={goBack} aria-label="Back">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="truncate text-lg font-bold">{job.title}</h1>

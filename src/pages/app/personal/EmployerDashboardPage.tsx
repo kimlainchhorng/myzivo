@@ -9,9 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useSmartBack } from "@/lib/smartBack";
 
 export default function EmployerDashboardPage() {
   const navigate = useNavigate();
+  const goBack = useSmartBack("/personal");
   const { user } = useAuth();
   const [company, setCompany] = useState<any>(null);
   const [jobs, setJobs] = useState<any[]>([]);
@@ -109,7 +111,7 @@ export default function EmployerDashboardPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back">
+        <Button variant="ghost" size="icon" onClick={goBack} aria-label="Back">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-lg font-bold">Employer Hub</h1>

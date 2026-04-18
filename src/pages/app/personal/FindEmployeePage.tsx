@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSmartBack } from "@/lib/smartBack";
 
 type CareerCompany = {
   id: string;
@@ -35,6 +36,7 @@ type CareerJob = {
 
 export default function FindEmployeePage() {
   const navigate = useNavigate();
+  const goBack = useSmartBack("/personal/apply-job");
   const { user } = useAuth();
   const [tab, setTab] = useState<"jobs" | "companies">("jobs");
   const [q, setQ] = useState("");
@@ -81,7 +83,7 @@ export default function FindEmployeePage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Back">
+        <Button variant="ghost" size="icon" onClick={goBack} aria-label="Back">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-lg font-bold">Find Company</h1>
