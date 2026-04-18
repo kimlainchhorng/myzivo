@@ -135,6 +135,17 @@ export default function GoLivePage() {
     }
   }, [beautyStatus, beauty.enabled]);
 
+  // Auto-match face: when the Beauty panel opens, snap to "Auto" preset so
+  // brightness/smoothing self-tune to the user's lighting + skin in real time.
+  useEffect(() => {
+    if (!showBeautyPanel) return;
+    setActivePreset((prev) => (prev === "custom" || prev === "off" ? "auto" : prev));
+    setBeauty((b) => {
+      if (!b.enabled) return { ...BEAUTY_PRESETS.auto, tone: b.tone, blurBg: b.blurBg };
+      return b;
+    });
+  }, [showBeautyPanel]);
+
   // Auto preset: self-tune brighten/smooth from sampled face luma
   useEffect(() => {
     if (activePreset !== "auto" || !beauty.enabled) return;
