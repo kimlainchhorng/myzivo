@@ -53,17 +53,41 @@ export function useVirtualBackground(
     const bgImg = new Image();
     bgImg.crossOrigin = "anonymous";
     let bgImgLoaded = false;
+    let bgAvgColor = { r: 128, g: 128, b: 128 };
     if (config.imageUrl) {
       bgImg.src = config.imageUrl;
-      bgImg.onload = () => { bgImgLoaded = true; };
+      bgImg.onload = () => {
+        bgImgLoaded = true;
+        // Sample average color via 1x1 downscale
+        try {
+          const c = document.createElement("canvas");
+          c.width = 1; c.height = 1;
+          const cx = c.getContext("2d")!;
+          cx.drawImage(bgImg, 0, 0, 1, 1);
+          const d = cx.getImageData(0, 0, 1, 1).data;
+          bgAvgColor = { r: d[0], g: d[1], b: d[2] };
+        } catch {}
+      };
     }
+
+    const drawVignette = () => {
+      const w = out.width, h = out.height;
+      const grd = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.35, w/2, h/2, Math.max(w,h)*0.75);
+      grd.addColorStop(0, "rgba(0,0,0,0)");
+      grd.addColorStop(1, "rgba(0,0,0,0.45)");
+      ctx.save();
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    };
 
     const drawBackground = (cfg: VirtualBgConfig) => {
       if (cfg.kind === "blur") {
         ctx.save();
-        ctx.filter = `blur(${cfg.blurPx ?? 22}px) saturate(1.05)`;
+        ctx.filter = `blur(${cfg.blurPx ?? 24}px) saturate(1.05) brightness(0.92)`;
         ctx.drawImage(video, 0, 0, out.width, out.height);
         ctx.restore();
+        drawVignette();
       } else if (cfg.kind === "image" && bgImgLoaded) {
         const ir = bgImg.width / bgImg.height;
         const or = out.width / out.height;
@@ -71,13 +95,14 @@ export function useVirtualBackground(
         if (ir > or) { dh = out.height; dw = dh * ir; dx = (out.width - dw) / 2; }
         else { dw = out.width; dh = dw / ir; dy = (out.height - dh) / 2; }
         ctx.save();
-        // subtle blur on bg image to match camera DoF — much more realistic
-        ctx.filter = "blur(2px) saturate(1.08) brightness(0.96)";
+        // Stronger DoF blur + brightness drop pushes scene back
+        ctx.filter = "blur(4px) saturate(1.1) brightness(0.88)";
         ctx.drawImage(bgImg, dx, dy, dw, dh);
         ctx.restore();
-        // ambient tint from bg → person, very subtle
+        drawVignette();
+        // ambient grounding tint
         ctx.save();
-        ctx.fillStyle = "rgba(0,0,0,0.04)";
+        ctx.fillStyle = "rgba(0,0,0,0.06)";
         ctx.fillRect(0, 0, out.width, out.height);
         ctx.restore();
       } else {
