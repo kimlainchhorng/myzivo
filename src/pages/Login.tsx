@@ -380,8 +380,8 @@ const Login = () => {
     mouseY.set(0);
   }, [mouseX, mouseY]);
 
-  const input3D = "w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2 pl-9 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]";
-  const input3DLg = "w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]";
+  const input3D = "relative z-20 w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2 pl-9 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)] touch-manipulation [-webkit-user-select:text] [user-select:text] pointer-events-auto";
+  const input3DLg = "relative z-20 w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)] touch-manipulation [-webkit-user-select:text] [user-select:text] pointer-events-auto";
 
   return (
     <div className="h-[100dvh] flex flex-col items-center justify-center relative overflow-hidden">
