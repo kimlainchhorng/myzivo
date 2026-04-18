@@ -218,14 +218,10 @@ export function useVirtualBackground(
               data[j] = 255; data[j+1] = 255; data[j+2] = 255; data[j+3] = a;
             }
             maskCtx.putImageData(tmp, 0, 0);
-            // Refinement: slight blur + high contrast re-threshold (dilate/erode-ish)
-            maskCtx.globalCompositeOperation = "copy";
-            maskCtx.filter = "blur(0.8px) contrast(1.6)";
-            maskCtx.drawImage(maskCanvas, 0, 0);
-            maskCtx.filter = "none";
+            // No mask refinement blur — keep edges raw to avoid softening face
             maskCtx.globalCompositeOperation = "source-over";
 
-            // 3) Compose person cutout with high-quality upscale + 1px inner feather
+            // 3) Compose person cutout — NO blur/filter on person, raw video pixels
             pctx.globalCompositeOperation = "source-over";
             pctx.filter = "none";
             pctx.imageSmoothingEnabled = true;
@@ -233,9 +229,8 @@ export function useVirtualBackground(
             pctx.clearRect(0, 0, personCanvas.width, personCanvas.height);
             pctx.drawImage(video, 0, 0, personCanvas.width, personCanvas.height);
             pctx.globalCompositeOperation = "destination-in";
-            pctx.filter = "blur(1px)";
-            pctx.drawImage(maskCanvas, 0, 0, personCanvas.width, personCanvas.height);
             pctx.filter = "none";
+            pctx.drawImage(maskCanvas, 0, 0, personCanvas.width, personCanvas.height);
 
             pctx.globalCompositeOperation = "source-over";
 
