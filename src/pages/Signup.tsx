@@ -271,6 +271,7 @@ const Signup = () => {
             </Link>
           </p>
         </form>
+        </div>
 
         <p className="text-center text-xs text-muted-foreground mt-4">
           By signing up, you agree to our Terms of Service
