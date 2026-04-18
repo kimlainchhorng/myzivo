@@ -60,7 +60,6 @@ export default function LiveWebRTCVideo({
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
     pcRef.current = pc;
 
-    // Upgrade to TURN as soon as the edge function returns.
     getIceServers().then((servers) => {
       if (!active) return;
       try {
@@ -84,6 +83,10 @@ export default function LiveWebRTCVideo({
     pc.ontrack = (ev) => {
       if (videoRef.current && ev.streams[0]) {
         videoRef.current.srcObject = ev.streams[0];
+        videoRef.current.muted = muted;
+        void videoRef.current.play().catch((e) => {
+          console.warn("[live-viewer] autoplay blocked", e);
+        });
         setState("live");
         onLive?.();
       }
@@ -130,7 +133,6 @@ export default function LiveWebRTCVideo({
           restartTimer = setTimeout(() => {
             if (!active) return;
             if (pc.connectionState === "connected") return;
-            // Tear down — caller can remount.
             if (videoRef.current) videoRef.current.srcObject = null;
           }, 6000);
         }
@@ -172,7 +174,6 @@ export default function LiveWebRTCVideo({
       }
     });
 
-    // Kick off — request the publisher to send us an offer.
     sendSignal(streamId, "viewer", "publisher", "join", {});
     const joinRetry = setInterval(() => {
       if (!active) return;
@@ -197,9 +198,15 @@ export default function LiveWebRTCVideo({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [streamId, user?.id]);
 
-  // Apply muted prop changes live (so the watcher's mute toggle works).
   useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = muted;
+    if (videoRef.current) {
+      videoRef.current.muted = muted;
+      if (videoRef.current.srcObject) {
+        void videoRef.current.play().catch((e) => {
+          console.warn("[live-viewer] play() after mute toggle failed", e);
+        });
+      }
+    }
   }, [muted]);
 
   return (
