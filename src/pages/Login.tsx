@@ -56,7 +56,7 @@ const Login = () => {
         {/* Brand */}
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-foreground">ZIVO ID</h1>
-          <p className="text-sm text-muted-foreground mt-1">Welcome back, Traveler</p>
+          <p className="text-sm text-muted-foreground mt-1">Welcome Back — Zivo All in One Place</p>
         </div>
 
         {/* Glass card */}
