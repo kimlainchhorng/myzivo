@@ -111,9 +111,25 @@ export default function StripeEmbeddedOnboarding({ open, onClose, onComplete, co
           </div>
         )}
         {error && (
-          <div className="p-6 text-center">
-            <p className="text-sm text-destructive mb-3">{error}</p>
-            <Button onClick={onClose} variant="outline">Close</Button>
+          <div className="p-6 text-center max-w-md mx-auto flex flex-col items-center justify-center h-full">
+            <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-3">
+              <ExternalLink className="w-6 h-6 text-amber-600" />
+            </div>
+            <p className="text-sm font-semibold mb-1">{blocked ? "Open Stripe in secure tab" : "Couldn't load Stripe"}</p>
+            <p className="text-xs text-muted-foreground mb-4">{error}</p>
+            {blocked && (
+              <Button
+                onClick={() => {
+                  onboard.mutate(country, { onSuccess: () => onClose() });
+                }}
+                disabled={onboard.isPending}
+                className="w-full h-11 rounded-xl bg-[#635bff] hover:bg-[#4b44d9] text-white font-bold gap-2 mb-2"
+              >
+                {onboard.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
+                Continue to Stripe
+              </Button>
+            )}
+            <Button onClick={onClose} variant="outline" className="w-full h-11 rounded-xl">Close</Button>
           </div>
         )}
         {instance && !loading && !error && (
