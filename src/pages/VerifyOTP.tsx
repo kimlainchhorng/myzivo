@@ -51,15 +51,40 @@ const VerifyOTP = () => {
       const { data, error } = await supabase.functions.invoke("verify-otp-code", {
         body: { email, code: fullCode },
       });
-      setSubmitting(false);
 
       if (error || !data?.success) {
+        setSubmitting(false);
         toast.error(data?.error || error?.message || "Invalid or expired code.");
         setCode(["", "", "", "", "", ""]);
         inputRefs.current[0]?.focus();
         return;
       }
 
+      // Try to auto-sign-in via the magic link returned by the function
+      const actionLink: string | undefined = data?.actionLink;
+      if (actionLink) {
+        try {
+          const url = new URL(actionLink);
+          const tokenHash = url.searchParams.get("token") || url.searchParams.get("token_hash");
+          if (tokenHash) {
+            const { error: vErr } = await supabase.auth.verifyOtp({
+              type: "magiclink",
+              token_hash: tokenHash,
+            });
+            if (!vErr) {
+              setSubmitting(false);
+              toast.success("Email verified! Welcome to ZIVO.");
+              navigate(redirect && redirect !== "/" ? redirect : "/account", { replace: true });
+              return;
+            }
+            console.warn("Auto sign-in failed:", vErr);
+          }
+        } catch (e) {
+          console.warn("Magic link parse failed:", e);
+        }
+      }
+
+      setSubmitting(false);
       toast.success("Email verified. Please sign in.");
       navigate(`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`, { replace: true });
       return;

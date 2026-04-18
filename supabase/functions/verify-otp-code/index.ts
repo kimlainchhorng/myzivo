@@ -164,11 +164,30 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // Generate a magic link the client can exchange for a session
+    let actionLink: string | null = null;
+    if (resolvedUserId) {
+      try {
+        const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+          type: "magiclink",
+          email: normalizedEmail,
+        });
+        if (linkError) {
+          console.error("Failed to generate magic link:", linkError);
+        } else {
+          actionLink = linkData?.properties?.action_link ?? null;
+        }
+      } catch (e) {
+        console.error("generateLink threw:", e);
+      }
+    }
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: "Email verified successfully",
-        userId: resolvedUserId
+        userId: resolvedUserId,
+        actionLink,
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
