@@ -172,12 +172,18 @@ export function useVirtualBackground(
               mask.height = mh;
               const maskData = conf.getAsFloat32Array();
               const img = mctx.createImageData(mw, mh);
-              const LO = 0.50;
-              const HI = 0.58;
-              const RANGE = HI - LO;
+              // Asymmetric vertical ramp: looser on top 25% (hair zone) so fine
+              // strands aren't clipped, tighter elsewhere to keep body/hands clean.
+              const LO_BODY = 0.50, HI_BODY = 0.58;
+              const LO_HAIR = 0.42, HI_HAIR = 0.55;
+              const HAIR_BAND = Math.floor(mh * 0.25);
               for (let i = 0; i < maskData.length; i++) {
                 const v = maskData[i];
-                const a = v <= LO ? 0 : v >= HI ? 255 : Math.round(((v - LO) / RANGE) * 255);
+                const y = (i / mw) | 0;
+                const inHair = y < HAIR_BAND;
+                const LO = inHair ? LO_HAIR : LO_BODY;
+                const HI = inHair ? HI_HAIR : HI_BODY;
+                const a = v <= LO ? 0 : v >= HI ? 255 : Math.round(((v - LO) / (HI - LO)) * 255);
                 const j = i * 4;
                 img.data[j] = 255;
                 img.data[j + 1] = 255;
@@ -201,7 +207,6 @@ export function useVirtualBackground(
               mhctx.globalCompositeOperation = "destination-in";
               mhctx.filter = "none";
               mhctx.drawImage(maskHi, 1, 0, W, H);
-              mhctx.drawImage(maskHi, -1, 0, W, H);
               mhctx.globalCompositeOperation = "source-over";
 
               // 2c. Motion-aware temporal smoothing.
@@ -239,12 +244,14 @@ export function useVirtualBackground(
               pctx.clearRect(0, 0, W, H);
               pctx.drawImage(video!, 0, 0, W, H);
 
-              // 3b. Clip with refined mask — no Pass-2 blur (would re-dilate the eroded edges)
+              // 3b. Clip with refined mask — tiny 0.4px feather for antialiasing
+              // (sub-pixel, smooths jagged hand edges without measurable dilation).
               pctx.globalCompositeOperation = "destination-in";
-              pctx.filter = "none";
+              pctx.filter = "blur(0.4px)";
               pctx.imageSmoothingEnabled = true;
               pctx.imageSmoothingQuality = "high";
               pctx.drawImage(maskHi, 0, 0, W, H);
+              pctx.filter = "none";
               pctx.globalCompositeOperation = "source-over";
 
               // 4. Composite person over background
