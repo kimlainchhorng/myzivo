@@ -150,8 +150,8 @@ export default function GoLivePage() {
     setLocalStream(null);
 
     const attempts: MediaStreamConstraints[] = [
-      { video: { facingMode: { ideal: facingMode }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30 } }, audio: true },
-      { video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }, audio: true },
+      { video: { facingMode: { ideal: facingMode }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 60 } }, audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, sampleRate: 48000 } as any },
+      { video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 60 } }, audio: true },
       { video: { facingMode: { ideal: facingMode } }, audio: true },
       { video: true, audio: true },
       { video: true, audio: false },
@@ -393,12 +393,36 @@ export default function GoLivePage() {
         if (!params.encodings || params.encodings.length === 0) {
           params.encodings = [{}];
         }
-        params.encodings[0].maxBitrate = 2_500_000; // 2.5 Mbps
-        params.encodings[0].maxFramerate = 30;
-        (params as any).degradationPreference = "maintain-resolution";
+        // Push way higher: 6 Mbps + 60fps for crisp, fluid 1080p.
+        params.encodings[0].maxBitrate = 6_000_000;
+        params.encodings[0].maxFramerate = 60;
+        (params as any).degradationPreference = "maintain-framerate";
         videoSender.setParameters(params).catch((e) =>
           console.warn("[publisher] setParameters failed", e),
         );
+      }
+      // Prefer H.264 when available — hardware-accelerated on iOS/Android,
+      // lower CPU = less heat-throttling = sustained high bitrate.
+      const audioSender = pc.getSenders().find((s) => s.track?.kind === "audio");
+      try {
+        const caps = (RTCRtpSender as any).getCapabilities?.("video");
+        const tx = pc.getTransceivers().find((t) => t.sender === videoSender);
+        if (caps?.codecs && tx?.setCodecPreferences) {
+          const preferred = [
+            ...caps.codecs.filter((c: any) => /H264/i.test(c.mimeType)),
+            ...caps.codecs.filter((c: any) => !/H264/i.test(c.mimeType)),
+          ];
+          tx.setCodecPreferences(preferred);
+        }
+      } catch (e) {
+        console.warn("[publisher] codec preference failed", e);
+      }
+      // Boost audio bitrate too (Opus default ~32kbps → 128kbps stereo).
+      if (audioSender) {
+        const aParams = audioSender.getParameters();
+        if (!aParams.encodings || aParams.encodings.length === 0) aParams.encodings = [{}];
+        aParams.encodings[0].maxBitrate = 128_000;
+        audioSender.setParameters(aParams).catch(() => {});
       }
     } catch (e) {
       console.warn("[publisher] bitrate boost failed", e);
