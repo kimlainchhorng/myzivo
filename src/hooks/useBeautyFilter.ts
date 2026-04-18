@@ -582,6 +582,37 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
         ctx.globalAlpha = 0.55;
         ctx.drawImage(blurCanvas, 0, 0);
         ctx.globalAlpha = 1;
+
+        // ── C2. Lip definition — cupid's bow line + lower-lip glossy highlight.
+        const upperCtr = lms[0];   // upper-lip center top
+        const lowerCtr = lms[17];  // lower-lip center bottom
+        const lipL = lms[61];
+        const lipR = lms[291];
+        if (upperCtr && lowerCtr && lipL && lipR) {
+          const lipWpx = Math.abs(lipR.x - lipL.x) * W;
+          // Cupid's bow — thin dark line for definition
+          ctx.save();
+          ctx.globalAlpha = 0.10 + lipsPct * 0.08;
+          ctx.strokeStyle = "rgba(80, 30, 35, 1)";
+          ctx.lineWidth = Math.max(1, lipWpx * 0.012);
+          ctx.beginPath();
+          ctx.moveTo(lipL.x * W + lipWpx * 0.15, upperCtr.y * H + 1);
+          ctx.lineTo(upperCtr.x * W, upperCtr.y * H);
+          ctx.lineTo(lipR.x * W - lipWpx * 0.15, upperCtr.y * H + 1);
+          ctx.stroke();
+          ctx.restore();
+          // Lower-lip glossy highlight
+          const glossR = Math.max(3, lipWpx * 0.10);
+          const gx = lowerCtr.x * W;
+          const gy = lowerCtr.y * H - glossR * 0.4;
+          const gg = ctx.createRadialGradient(gx, gy, 0, gx, gy, glossR);
+          gg.addColorStop(0, `rgba(255,240,235,${0.10 + lipsPct * 0.08})`);
+          gg.addColorStop(1, "rgba(255,240,235,0)");
+          ctx.fillStyle = gg;
+          ctx.beginPath();
+          ctx.arc(gx, gy, glossR, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       // ── F. Eye enlarge + sparkle (iris brighten + catchlight) ──
