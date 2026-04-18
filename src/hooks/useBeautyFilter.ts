@@ -440,6 +440,29 @@ export function useBeautyFilter(rawStream: MediaStream | null, settings: BeautyS
           }
         }
 
+        // ── E2. Micro chin-lift — pull chin region up by slim*0.5% face height.
+        if (s.slim > 0) {
+          const chin = lms[LM_CHIN];
+          const fh = lms[LM_FOREHEAD];
+          const lc = lms[LM_LEFT_CHEEK];
+          const rc = lms[LM_RIGHT_CHEEK];
+          if (chin && fh && lc && rc) {
+            const faceH = (chin.y - fh.y) * H;
+            const lift = Math.min(8, faceH * 0.005) * slimPct;
+            const cxC = chin.x * W;
+            const cyC = chin.y * H;
+            const wC = Math.max(40, (rc.x - lc.x) * W * 0.45);
+            const hC = Math.max(20, faceH * 0.18);
+            warpCtx.globalAlpha = 0.85;
+            warpCtx.drawImage(
+              video,
+              cxC - wC / 2, cyC - hC, wC, hC,
+              cxC - wC / 2, cyC - hC - lift, wC, hC,
+            );
+            warpCtx.globalAlpha = 1;
+          }
+        }
+
         // Composite warp onto ctx (already has raw video). Source-over with
         // full opacity — but we masked through feathered face mask first to
         // avoid hard edges where slices end.
