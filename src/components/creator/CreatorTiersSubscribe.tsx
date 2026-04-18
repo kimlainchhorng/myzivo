@@ -258,8 +258,7 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
           {others.map((t: any) => <MiniTierRow key={t.id} tier={t} />)}
         </div>
       )}
-    </div>
-  );
+
       {/* Pay-what-you-want dialog */}
       <Dialog open={!!pwywTier} onOpenChange={(o) => !o && setPwywTier(null)}>
         <DialogContent className="max-w-sm">
