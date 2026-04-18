@@ -1198,6 +1198,13 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
   };
 
   return (
+    <>
+    <ExternalLinkWarning
+      url={url}
+      open={warnOpen}
+      onOpenChange={setWarnOpen}
+      onConfirm={(u) => { void openExternalUrl(u); }}
+    />
     <div
       onClick={handleClick}
       className={`block mx-1.5 mb-1.5 ${!hasText ? "mt-1.5" : "mt-0.5"} rounded-2xl overflow-hidden cursor-pointer ${
