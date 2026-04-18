@@ -353,11 +353,11 @@ export default function GoLivePage() {
     return () => { supabase.removeChannel(channel); };
   }, [streamId]);
 
-  // ── WebRTC publisher: when paired and live, broadcast camera to the desktop viewer ──
+  // ── WebRTC publisher: when live, broadcast camera to watchers via Supabase signaling ──
   // IMPORTANT: depends on `localStream` so when the camera becomes ready slightly
   // AFTER the stream is created, this effect will rerun and start publishing.
   useEffect(() => {
-    if (!streamId || phase !== "live" || !isPaired) return;
+    if (!streamId || phase !== "live") return;
     if (!localStream || localStream.getTracks().length === 0) {
       console.log("[publisher] waiting for local media stream...");
       return;
@@ -470,7 +470,7 @@ export default function GoLivePage() {
       // toggles. The explicit "End Stream" flow handles teardown.
       try { pc?.close(); } catch {}
     };
-  }, [streamId, phase, isPaired, localStream]);
+  }, [streamId, phase, localStream]);
 
   // Stream timer
   useEffect(() => {
