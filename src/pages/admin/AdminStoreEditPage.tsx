@@ -1779,7 +1779,8 @@ export default function AdminStoreEditPage() {
 
   const employeeTitles: Record<string, string> = { employees: "Employees", payroll: "Payroll", "employee-schedule": "Employee Schedule", "time-clock": "Time Clock", "employee-rules": "Employee Rules", attendance: "Attendance & Leave", training: "Training & Onboarding", documents: "Documents & Files" };
   const isAutoRepair = form.category === "auto-repair";
-  const storeOwnerTitle = employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? (isAutoRepair ? "Services" : "Products") : activeTab === "payment" ? (form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : t("admin.store.payment")) : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "livestream" ? "Live Stream" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
+  const autoRepairTitles: Record<string, string> = { "ar-invoices": "Invoices & Estimates", "ar-autocheck": "Auto Check (VIN)", "ar-parts": "Part Shop", "ar-inspections": "Digital Inspections", "ar-vehicles": "Customer Vehicles" };
+  const storeOwnerTitle = autoRepairTitles[activeTab] || employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? (isAutoRepair ? "Services" : "Products") : activeTab === "payment" ? (form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : t("admin.store.payment")) : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "livestream" ? "Live Stream" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
   const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
     <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} storeCategory={form.category} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
   );
@@ -3313,6 +3314,16 @@ export default function AdminStoreEditPage() {
                 </CardContent>
               </Card>
             </TabsContent>
+          )}
+
+          {form.category === "auto-repair" && (
+            <>
+              <TabsContent value="ar-invoices"><AutoRepairInvoicesSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-autocheck"><AutoRepairAutoCheckSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-parts"><AutoRepairPartShopSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-inspections"><AutoRepairInspectionsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-vehicles"><AutoRepairVehiclesSection storeId={storeId!} /></TabsContent>
+            </>
           )}
 
         </Tabs>
