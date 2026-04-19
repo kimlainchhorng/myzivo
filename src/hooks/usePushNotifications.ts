@@ -2,13 +2,14 @@
  * Push Notifications Hook
  * Handles push notification registration and management for Capacitor apps
  */
-import { useState, useEffect, useCallback, useRef } from "react";
+import { createElement, useState, useEffect, useCallback, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from "@capacitor/push-notifications";
 import { supabase, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import ChatNotificationToast from "@/components/chat/ChatNotificationToast";
 import { safeInternalPath } from "@/lib/urlSafety";
 
 export interface NotificationData {
@@ -101,6 +102,39 @@ export const usePushNotifications = () => {
   const tokenRetryAttemptsRef = useRef<Record<string, number>>({});
   const pendingNativeTokenRef = useRef<string | null>(null);
   const recentIncomingPushRef = useRef<Record<string, number>>({});
+  const activeChatRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const handleChatOpen = (event: Event) => {
+      const customEvent = event as CustomEvent<{ recipientId?: string }>;
+      activeChatRef.current = customEvent.detail?.recipientId || null;
+    };
+    const handleChatClose = () => {
+      activeChatRef.current = null;
+    };
+
+    window.addEventListener("chat-opened" as any, handleChatOpen);
+    window.addEventListener("chat-closed" as any, handleChatClose);
+
+    return () => {
+      window.removeEventListener("chat-opened" as any, handleChatOpen);
+      window.removeEventListener("chat-closed" as any, handleChatClose);
+    };
+  }, []);
+
+  const showChatToast = useCallback((senderId: string, senderName: string, messageText: string, senderAvatar?: string | null) => {
+    toast.custom((toastId) => createElement(ChatNotificationToast, {
+      senderId,
+      senderName,
+      senderAvatar,
+      messageText: messageText || "Sent you a message",
+      onDismiss: () => toast.dismiss(toastId),
+      onReply: (id: string) => {
+        try { sessionStorage.setItem("pendingChatWith", id); } catch {}
+        window.location.href = `/chat?with=${encodeURIComponent(id)}`;
+      },
+    }), { duration: 5000 });
+  }, []);
 
   // Check if push notifications are supported (native or web with service worker)
   const checkSupport = useCallback(() => {
@@ -309,7 +343,11 @@ export const usePushNotifications = () => {
         setNotifications(prev => [notification, ...prev].slice(0, 50));
 
         const payloadData = notification.data as Record<string, any> | undefined;
-        const incomingCall = normalizeIncomingCallPayload(payloadData, notification.title, notification.body);
+        const nestedPayloadData = typeof payloadData?.data === "object" && payloadData.data !== null
+          ? payloadData.data as Record<string, any>
+          : {};
+        const mergedPayloadData = { ...nestedPayloadData, ...(payloadData || {}) };
+        const incomingCall = normalizeIncomingCallPayload(mergedPayloadData, notification.title, notification.body);
 
         if (incomingCall) {
           const dedupeKey = incomingCall.call_id || `${incomingCall.caller_id || "unknown"}:${incomingCall.call_type || "voice"}`;
@@ -330,24 +368,28 @@ export const usePushNotifications = () => {
           return;
         }
 
-        // For chat messages, show actionable toast with Reply button
-        const notifType = String(payloadData?.type || payloadData?.notification_type || "").toLowerCase();
-        const chatSenderId = payloadData?.sender_id || payloadData?.senderId || payloadData?.from_user_id;
-        const chatActionUrl = typeof payloadData?.action_url === "string" ? payloadData.action_url : "";
+        // For chat messages, show actionable toast with profile avatar.
+        const notifType = String(mergedPayloadData.type || mergedPayloadData.notification_type || "").toLowerCase();
+        const chatSenderId = mergedPayloadData.sender_id || mergedPayloadData.senderId || mergedPayloadData.from_user_id;
+        const chatSenderName = mergedPayloadData.sender_name || mergedPayloadData.senderName || notification.title || "Someone";
+        const chatSenderAvatar = mergedPayloadData.sender_avatar_url || mergedPayloadData.senderAvatarUrl || mergedPayloadData.image_url || null;
+        const chatActionUrl = typeof mergedPayloadData.action_url === "string" ? mergedPayloadData.action_url : "";
         const chatSenderFromUrl = (() => {
           try { return chatActionUrl ? new URL(chatActionUrl, "https://x").searchParams.get("with") : null; } catch { return null; }
         })();
         const resolvedChatSenderId = chatSenderId || chatSenderFromUrl;
         const isForegroundChat = notifType === "chat_message" || notifType === "new_message" || chatActionUrl.startsWith("/chat");
         if (isForegroundChat && resolvedChatSenderId) {
-          toast.info(notification.title || "New Message", {
-            description: notification.body,
-            duration: 5000,
-            action: {
-              label: "Reply",
-              onClick: () => { window.location.href = `/chat?with=${encodeURIComponent(String(resolvedChatSenderId))}`; },
-            },
-          });
+          const normalizedSenderId = String(resolvedChatSenderId);
+          if (normalizedSenderId === user?.id) return;
+          if (activeChatRef.current === normalizedSenderId) return;
+
+          showChatToast(
+            normalizedSenderId,
+            String(chatSenderName),
+            notification.body || "Sent you a message",
+            typeof chatSenderAvatar === "string" ? chatSenderAvatar : null,
+          );
         } else {
           // Show in-app toast for other foreground notifications
           toast.info(notification.title || "Notification", {
@@ -380,7 +422,7 @@ export const usePushNotifications = () => {
       notificationReceivedListener.then(l => l.remove());
       notificationActionListener.then(l => l.remove());
     };
-  }, [user?.id, checkSupport, register, saveToken]);
+  }, [user?.id, checkSupport, register, saveToken, showChatToast]);
 
   // Handle notification action (when user taps notification)
   const handleNotificationAction = (action: ActionPerformed) => {
