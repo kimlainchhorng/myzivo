@@ -2163,3 +2163,41 @@ html[lang="km"] textarea {
 .cv-doc.cv-header-minimal .cv-hero h1 { font-weight: 600; letter-spacing: 0; }
 .cv-doc.cv-header-minimal .cv-hero .cv-photo { width: 3rem; height: 3rem; }
 
+/* Split header — accent left bar */
+.cv-doc.cv-header-split .cv-hero {
+  border-left: 6px solid hsl(var(--primary)) !important;
+  background: hsl(var(--primary) / 0.05) !important;
+}
+/* Stripe header — top accent stripe */
+.cv-doc.cv-header-stripe .cv-hero {
+  border-top: 5px solid hsl(var(--primary)) !important;
+  background: linear-gradient(180deg, hsl(var(--primary) / 0.08), transparent) !important;
+}
+
+/* ── Photo shape overrides ── */
+.cv-doc.cv-photo-round .cv-photo { border-radius: 9999px !important; }
+.cv-doc.cv-photo-square .cv-photo { border-radius: 0 !important; }
+.cv-doc.cv-photo-rounded .cv-photo { border-radius: 0.75rem !important; }
+
+/* ── Section divider overrides — apply to <h3> headings inside cv-main / cv-sidebar ── */
+.cv-doc.cv-divider-underline .cv-main h3,
+.cv-doc.cv-divider-underline .cv-sidebar h3 {
+  border-bottom: 2px solid hsl(var(--primary) / 0.4) !important;
+  padding-bottom: 0.25rem !important;
+}
+.cv-doc.cv-divider-pill .cv-main h3,
+.cv-doc.cv-divider-pill .cv-sidebar h3 {
+  display: inline-block !important;
+  background: hsl(var(--primary) / 0.12) !important;
+  color: hsl(var(--primary)) !important;
+  padding: 0.15rem 0.6rem !important;
+  border-radius: 9999px !important;
+  border: none !important;
+}
+.cv-doc.cv-divider-bar .cv-main h3,
+.cv-doc.cv-divider-bar .cv-sidebar h3 {
+  border-left: 4px solid hsl(var(--primary)) !important;
+  padding-left: 0.5rem !important;
+  border-bottom: none !important;
+}
+

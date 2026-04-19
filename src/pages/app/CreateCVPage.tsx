@@ -53,6 +53,12 @@ const CV_TEMPLATES = [
   { id: "executive", name: "Executive", desc: "Dark elegant", color: "#0f172a", gradient: "from-slate-900 to-zinc-800" },
   { id: "creative", name: "Creative", desc: "Vibrant artist", color: "#db2777", gradient: "from-pink-500 via-fuchsia-500 to-purple-600" },
   { id: "elegant", name: "Elegant", desc: "Burgundy serif", color: "#9f1239", gradient: "from-rose-700 to-red-900" },
+  { id: "timeline", name: "Timeline", desc: "Vertical journey", color: "#0ea5e9", gradient: "from-sky-500 to-cyan-600" },
+  { id: "compact", name: "Compact", desc: "Dense one-pager", color: "#475569", gradient: "from-slate-500 to-slate-700" },
+  { id: "sidebar", name: "Sidebar", desc: "Dark left rail", color: "#18181b", gradient: "from-zinc-900 to-neutral-800" },
+  { id: "bold", name: "Bold", desc: "Color block hero", color: "#f97316", gradient: "from-orange-500 to-red-600" },
+  { id: "academic", name: "Academic", desc: "Scholar serif", color: "#7c2d12", gradient: "from-amber-900 to-stone-800" },
+  { id: "tech", name: "Tech", desc: "Mono dev style", color: "#22c55e", gradient: "from-green-500 to-emerald-700" },
 ] as const;
 type TemplateId = typeof CV_TEMPLATES[number]["id"];
 
@@ -676,6 +682,215 @@ function ElegantLayout({ data }: { data: any }) {
   );
 }
 
+/* ── Timeline Template ── */
+function TimelineLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full">
+      <div className="cv-hero px-5 py-4 cv-accent-soft border-l-[5px] cv-accent-border flex items-center gap-4">
+        {data.photo
+          ? <img src={data.photo} alt="" className="cv-photo w-16 h-16 rounded-full object-cover cv-accent-ring" />
+          : <div className="cv-photo w-16 h-16 rounded-full bg-white/60 flex items-center justify-center"><User className="w-7 h-7 cv-accent-text opacity-60" /></div>}
+        <div className="min-w-0 flex-1">
+          <h1 className="cv-name text-[20px] font-extrabold text-foreground leading-tight">{data.fullName || "Your Name"}</h1>
+          {data.jobTitle && <p className="text-[11px] cv-accent-text font-semibold uppercase tracking-wider mt-0.5">{data.jobTitle}</p>}
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[9px] text-foreground/65">
+            {data.email && <span>✉ {data.email}</span>}
+            {data.phone && <span>☎ {data.phone}</span>}
+            {data.location && <span>📍 {data.location}</span>}
+          </div>
+        </div>
+      </div>
+      <div className="cv-main p-4 space-y-4">
+        {data.summary && <div><h3 className="text-[11px] font-extrabold cv-accent-text uppercase tracking-wider mb-1.5">About</h3><p className="text-[10px] text-foreground/75 leading-relaxed">{data.summary}</p></div>}
+        <div className="relative pl-4 border-l-2 cv-accent-border space-y-3">
+          <h3 className="text-[11px] font-extrabold cv-accent-text uppercase tracking-wider -ml-4 mb-1">Journey</h3>
+          {(data.experiences || []).filter((e: any) => e.company || e.position).map((e: any, i: number) => (
+            <div key={i} className="relative">
+              <span className="absolute -left-[21px] top-1 w-3 h-3 rounded-full cv-accent-bg border-2 border-white" />
+              <p className="text-[11px] font-bold text-foreground">{e.company}{e.position ? ` · ${e.position}` : ""}</p>
+              {e.startDate && <p className="text-[9px] cv-accent-text font-semibold">{formatDate(e.startDate)} – {e.current ? "Present" : formatDate(e.endDate)}</p>}
+              {e.description && <p className="text-[10px] text-foreground/70 leading-relaxed mt-0.5">{e.description}</p>}
+            </div>
+          ))}
+        </div>
+        <EducationBlock data={data} />
+        <SkillsList data={data} />
+        <LanguagesList data={data} />
+        <CertsList data={data} />
+        <RefsBlock data={data} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Compact Template ── */
+function CompactLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full p-4 space-y-3">
+      <div className="cv-hero flex items-center gap-3 pb-2 border-b-2 cv-accent-border">
+        {data.photo && <img src={data.photo} alt="" className="cv-photo w-14 h-14 rounded-md object-cover" />}
+        <div className="min-w-0 flex-1">
+          <h1 className="cv-name text-[18px] font-extrabold leading-tight">{data.fullName || "Your Name"}</h1>
+          {data.jobTitle && <p className="text-[10px] cv-accent-text font-bold uppercase tracking-wider">{data.jobTitle}</p>}
+          <div className="flex flex-wrap gap-x-2 text-[9px] text-foreground/60 mt-0.5">
+            {data.email && <span>{data.email}</span>}{data.phone && <span>· {data.phone}</span>}{data.location && <span>· {data.location}</span>}
+          </div>
+        </div>
+      </div>
+      <div className="cv-main grid grid-cols-3 gap-3">
+        <div className="col-span-2 space-y-2.5">
+          {data.summary && <p className="text-[10px] text-foreground/75 leading-snug italic border-l-2 cv-accent-border pl-2">{data.summary}</p>}
+          <ExperienceBlock data={data} />
+          <EducationBlock data={data} />
+        </div>
+        <div className="space-y-2.5">
+          <SkillsList data={data} />
+          <LanguagesList data={data} />
+          <CertsList data={data} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Sidebar (dark rail) Template ── */
+function SidebarLayout({ data }: { data: any }) {
+  return (
+    <div className="cv-flex-cols flex min-h-full">
+      <div className="cv-sidebar w-[36%] shrink-0 p-4 space-y-5 text-white" style={{ background: 'linear-gradient(180deg, #18181b, #27272a)' }}>
+        <div className="text-center">
+          {data.photo
+            ? <img src={data.photo} alt="" className="cv-photo w-20 h-20 rounded-full object-cover mx-auto border-2" style={{ borderColor: 'hsl(var(--primary))' }} />
+            : <div className="cv-photo w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mx-auto"><User className="w-9 h-9 text-white/50" /></div>}
+          <h1 className="cv-name text-[15px] font-extrabold mt-2 leading-tight">{data.fullName || "Your Name"}</h1>
+          {data.jobTitle && <p className="text-[10px] mt-0.5 uppercase tracking-wider" style={{ color: 'hsl(var(--primary))' }}>{data.jobTitle}</p>}
+        </div>
+        <div className="space-y-1 text-[10px] text-white/80">
+          <p className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'hsl(var(--primary))' }}>Contact</p>
+          {data.email && <p className="break-all">✉ {data.email}</p>}
+          {data.phone && <p>☎ {data.phone}</p>}
+          {data.location && <p>📍 {data.location}</p>}
+          {data.linkedin && <p className="break-all">in/ {data.linkedin}</p>}
+        </div>
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'hsl(var(--primary))' }}>Skills</p>
+          <div className="flex flex-wrap gap-1">
+            {(data.skills || []).filter((s: any) => s.name).map((s: any, i: number) => (
+              <span key={i} className="text-[9px] px-2 py-0.5 rounded-full bg-white/10 text-white/90">{s.name}</span>
+            ))}
+          </div>
+        </div>
+        {(data.languages || []).filter((l: any) => l.name).length > 0 && (
+          <div>
+            <p className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'hsl(var(--primary))' }}>Languages</p>
+            {(data.languages || []).filter((l: any) => l.name).map((l: any, i: number) => (
+              <p key={i} className="text-[10px] text-white/80">{l.name} <span className="text-white/50">· {l.proficiency}</span></p>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="cv-main flex-1 p-4 space-y-4 bg-white">
+        {data.summary && <div><h3 className="text-[11px] font-extrabold cv-accent-text uppercase tracking-wider mb-1.5">Profile</h3><p className="text-[10px] text-foreground/75 leading-relaxed">{data.summary}</p></div>}
+        <ExperienceBlock data={data} />
+        <EducationBlock data={data} />
+        <CertsList data={data} />
+        <RefsBlock data={data} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Bold Color Block Template ── */
+function BoldLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full">
+      <div className="cv-hero cv-accent-bg p-6 relative overflow-hidden">
+        <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10" />
+        <div className="absolute -right-4 bottom-0 w-24 h-24 rounded-full bg-white/10" />
+        <div className="relative flex items-end gap-4">
+          {data.photo && <img src={data.photo} alt="" className="cv-photo w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-xl" />}
+          <div className="flex-1 min-w-0 pb-1">
+            <h1 className="cv-name text-[26px] font-black text-white leading-none uppercase tracking-tight">{data.fullName || "Your Name"}</h1>
+            {data.jobTitle && <p className="text-[12px] font-bold text-white/95 mt-1">{data.jobTitle}</p>}
+          </div>
+        </div>
+      </div>
+      <div className="cv-main p-5 space-y-4">
+        <div className="grid grid-cols-3 gap-2 -mt-5 relative z-10">
+          {data.email && <div className="bg-white shadow-md rounded-lg p-2 text-[9px]"><p className="cv-accent-text font-bold uppercase">Email</p><p className="break-all">{data.email}</p></div>}
+          {data.phone && <div className="bg-white shadow-md rounded-lg p-2 text-[9px]"><p className="cv-accent-text font-bold uppercase">Phone</p><p>{data.phone}</p></div>}
+          {data.location && <div className="bg-white shadow-md rounded-lg p-2 text-[9px]"><p className="cv-accent-text font-bold uppercase">Location</p><p>{data.location}</p></div>}
+        </div>
+        {data.summary && <div><h3 className="text-[12px] font-black cv-accent-text uppercase tracking-wider mb-1.5">▍ About Me</h3><p className="text-[10px] text-foreground/75 leading-relaxed">{data.summary}</p></div>}
+        <ExperienceBlock data={data} />
+        <EducationBlock data={data} />
+        <SkillsList data={data} />
+        <LanguagesList data={data} />
+        <CertsList data={data} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Academic Serif Template ── */
+function AcademicLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full p-5 space-y-4" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+      <div className="cv-hero text-center pb-3 border-b-[3px] border-double cv-accent-border">
+        <h1 className="cv-name text-[24px] font-bold text-foreground leading-tight">{data.fullName || "Your Name"}</h1>
+        {data.jobTitle && <p className="text-[11px] cv-accent-text mt-1 italic">{data.jobTitle}</p>}
+        <div className="flex flex-wrap justify-center gap-x-3 mt-2 text-[10px] text-foreground/70">
+          {data.email && <span>{data.email}</span>}
+          {data.phone && <span>· {data.phone}</span>}
+          {data.location && <span>· {data.location}</span>}
+        </div>
+      </div>
+      <div className="cv-main space-y-3">
+        {data.summary && <div><h3 className="text-[12px] font-bold cv-accent-text uppercase tracking-[0.15em] mb-1">Summary</h3><p className="text-[10px] text-foreground/80 leading-relaxed text-justify">{data.summary}</p></div>}
+        <ExperienceBlock data={data} />
+        <EducationBlock data={data} />
+        <CertsList data={data} />
+        <SkillsList data={data} />
+        <LanguagesList data={data} />
+        <RefsBlock data={data} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Tech Mono Template ── */
+function TechLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full" style={{ fontFamily: '"JetBrains Mono", "Fira Code", ui-monospace, monospace' }}>
+      <div className="cv-hero p-4 border-b-2 cv-accent-border bg-foreground/[0.03]">
+        <p className="text-[9px] cv-accent-text font-semibold mb-1">{`> whoami`}</p>
+        <h1 className="cv-name text-[22px] font-bold text-foreground leading-tight">{data.fullName || "Your Name"}</h1>
+        {data.jobTitle && <p className="text-[11px] text-foreground/70 mt-0.5">{`// ${data.jobTitle}`}</p>}
+        <div className="flex flex-wrap gap-x-3 mt-2 text-[9px] text-foreground/60">
+          {data.email && <span>email: <span className="cv-accent-text">{data.email}</span></span>}
+          {data.phone && <span>tel: <span className="cv-accent-text">{data.phone}</span></span>}
+          {data.location && <span>loc: <span className="cv-accent-text">{data.location}</span></span>}
+        </div>
+      </div>
+      <div className="cv-main p-4 space-y-4">
+        {data.summary && <div><h3 className="text-[11px] font-bold cv-accent-text mb-1">{`## summary`}</h3><p className="text-[10px] text-foreground/75 leading-relaxed">{data.summary}</p></div>}
+        <div>
+          <h3 className="text-[11px] font-bold cv-accent-text mb-1">{`## stack`}</h3>
+          <div className="flex flex-wrap gap-1">
+            {(data.skills || []).filter((s: any) => s.name).map((s: any, i: number) => (
+              <span key={i} className="text-[9px] px-2 py-0.5 rounded cv-accent-soft cv-accent-text border cv-accent-border">{s.name}</span>
+            ))}
+          </div>
+        </div>
+        <ExperienceBlock data={data} />
+        <EducationBlock data={data} />
+        <CertsList data={data} />
+        <LanguagesList data={data} />
+      </div>
+    </div>
+  );
+}
+
 /* ── Style Customization ────────────────────────── */
 const ACCENT_COLORS = [
   { id: "emerald", name: "Emerald", hsl: "152 60% 40%" },
@@ -686,6 +901,10 @@ const ACCENT_COLORS = [
   { id: "purple", name: "Purple", hsl: "270 70% 50%" },
   { id: "slate", name: "Slate", hsl: "215 20% 35%" },
   { id: "black", name: "Mono", hsl: "0 0% 12%" },
+  { id: "teal", name: "Teal", hsl: "180 65% 35%" },
+  { id: "orange", name: "Sunset", hsl: "22 90% 50%" },
+  { id: "burgundy", name: "Burgundy", hsl: "350 60% 32%" },
+  { id: "forest", name: "Forest", hsl: "140 55% 25%" },
 ] as const;
 type AccentId = typeof ACCENT_COLORS[number]["id"];
 
@@ -694,6 +913,8 @@ const HEADER_STYLES = [
   { id: "bold", name: "Bold" },
   { id: "banner", name: "Banner" },
   { id: "minimal", name: "Minimal" },
+  { id: "split", name: "Split" },
+  { id: "stripe", name: "Stripe" },
 ] as const;
 type HeaderStyleId = typeof HEADER_STYLES[number]["id"];
 
@@ -704,26 +925,56 @@ const COLUMN_STYLES = [
 ] as const;
 type ColumnStyleId = typeof COLUMN_STYLES[number]["id"];
 
+const FONT_FAMILIES = [
+  { id: "sans", name: "Sans", css: "" },
+  { id: "serif", name: "Serif", css: "Georgia, 'Times New Roman', serif" },
+  { id: "mono", name: "Mono", css: "'JetBrains Mono', 'Fira Code', ui-monospace, monospace" },
+  { id: "display", name: "Display", css: "'Inter', system-ui, -apple-system, sans-serif" },
+] as const;
+type FontFamilyId = typeof FONT_FAMILIES[number]["id"];
+
+const PHOTO_SHAPES = [
+  { id: "default", name: "Default" },
+  { id: "round", name: "Circle" },
+  { id: "square", name: "Square" },
+  { id: "rounded", name: "Rounded" },
+] as const;
+type PhotoShapeId = typeof PHOTO_SHAPES[number]["id"];
+
+const SECTION_DIVIDERS = [
+  { id: "default", name: "Default" },
+  { id: "underline", name: "Underline" },
+  { id: "pill", name: "Pill" },
+  { id: "bar", name: "Side Bar" },
+] as const;
+type SectionDividerId = typeof SECTION_DIVIDERS[number]["id"];
+
 export interface CVStyle {
   accent: AccentId;
   header: HeaderStyleId;
   columns: ColumnStyleId;
   fontScale: number; // 0.9 - 1.15
+  fontFamily?: FontFamilyId;
+  photoShape?: PhotoShapeId;
+  sectionDivider?: SectionDividerId;
 }
 
 function CVDocumentLayout({ data, template, style }: { data: any; template: TemplateId; style?: CVStyle }) {
   const accent = ACCENT_COLORS.find(a => a.id === style?.accent) || ACCENT_COLORS[0];
+  const fontFamily = FONT_FAMILIES.find(f => f.id === style?.fontFamily);
   const wrapStyle: React.CSSProperties = {
-    // Override accent + primary tokens scoped to the CV document
     ['--primary' as any]: accent.hsl,
     ['--accent' as any]: accent.hsl,
     fontSize: `${style?.fontScale ?? 1}em`,
+    ...(fontFamily?.css ? { fontFamily: fontFamily.css } : {}),
   };
   const cls = cn(
     "cv-doc h-full",
     style?.columns === "one" && "cv-cols-1",
     style?.columns === "two" && "cv-cols-2",
     style?.header && `cv-header-${style.header}`,
+    style?.photoShape && style.photoShape !== "default" && `cv-photo-${style.photoShape}`,
+    style?.sectionDivider && style.sectionDivider !== "default" && `cv-divider-${style.sectionDivider}`,
   );
   const inner = (() => {
     if (template === "modern") return <ModernLayout data={data} />;
@@ -733,6 +984,12 @@ function CVDocumentLayout({ data, template, style }: { data: any; template: Temp
     if (template === "executive") return <ExecutiveLayout data={data} />;
     if (template === "creative") return <CreativeLayout data={data} />;
     if (template === "elegant") return <ElegantLayout data={data} />;
+    if (template === "timeline") return <TimelineLayout data={data} />;
+    if (template === "compact") return <CompactLayout data={data} />;
+    if (template === "sidebar") return <SidebarLayout data={data} />;
+    if (template === "bold") return <BoldLayout data={data} />;
+    if (template === "academic") return <AcademicLayout data={data} />;
+    if (template === "tech") return <TechLayout data={data} />;
     return <ClassicLayout data={data} />;
   })();
   return <div className={cls} style={wrapStyle}>{inner}</div>;
@@ -841,7 +1098,7 @@ const CreateCVPage = () => {
       const raw = localStorage.getItem("zivo.cv.style");
       if (raw) return JSON.parse(raw) as CVStyle;
     } catch {}
-    return { accent: "emerald", header: "standard", columns: "auto", fontScale: 1 };
+    return { accent: "emerald", header: "standard", columns: "auto", fontScale: 1, fontFamily: "sans" as const, photoShape: "default" as const, sectionDivider: "default" as const };
   });
   useEffect(() => {
     try { localStorage.setItem("zivo.cv.style", JSON.stringify(cvStyle)); } catch {}
@@ -1333,7 +1590,7 @@ const CreateCVPage = () => {
           <div className="flex items-center gap-1.5">
             <Palette className="w-3.5 h-3.5 text-primary" />
             <span className="text-[11px] font-bold text-foreground">Customize Style</span>
-            <button onClick={() => setCvStyle({ accent: "emerald", header: "standard", columns: "auto", fontScale: 1 })}
+            <button onClick={() => setCvStyle({ accent: "emerald", header: "standard", columns: "auto", fontScale: 1, fontFamily: "sans", photoShape: "default", sectionDivider: "default" })}
               className="ml-auto text-[9px] font-semibold text-muted-foreground hover:text-primary">Reset</button>
           </div>
 
@@ -1376,11 +1633,63 @@ const CreateCVPage = () => {
           {/* Header style */}
           <div>
             <p className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/70 mb-1">Header Style</p>
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5">
               {HEADER_STYLES.map(o => {
                 const active = cvStyle.header === o.id;
                 return (
                   <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, header: o.id }))}
+                    className={cn("px-2 py-1.5 rounded-lg text-[10px] font-semibold border transition-all touch-manipulation active:scale-95",
+                      active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
+                    {o.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Font family */}
+          <div>
+            <p className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/70 mb-1">Font Family</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {FONT_FAMILIES.map(o => {
+                const active = (cvStyle.fontFamily || "sans") === o.id;
+                return (
+                  <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, fontFamily: o.id }))}
+                    style={o.css ? { fontFamily: o.css } : undefined}
+                    className={cn("px-2 py-1.5 rounded-lg text-[10px] font-semibold border transition-all touch-manipulation active:scale-95",
+                      active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
+                    {o.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Photo shape */}
+          <div>
+            <p className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/70 mb-1">Photo Shape</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {PHOTO_SHAPES.map(o => {
+                const active = (cvStyle.photoShape || "default") === o.id;
+                return (
+                  <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, photoShape: o.id }))}
+                    className={cn("px-2 py-1.5 rounded-lg text-[10px] font-semibold border transition-all touch-manipulation active:scale-95",
+                      active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
+                    {o.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section divider */}
+          <div>
+            <p className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/70 mb-1">Section Divider</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {SECTION_DIVIDERS.map(o => {
+                const active = (cvStyle.sectionDivider || "default") === o.id;
+                return (
+                  <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, sectionDivider: o.id }))}
                     className={cn("px-2 py-1.5 rounded-lg text-[10px] font-semibold border transition-all touch-manipulation active:scale-95",
                       active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
                     {o.name}
