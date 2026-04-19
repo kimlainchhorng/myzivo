@@ -93,6 +93,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
   const [vinLoading, setVinLoading] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<Doc | null>(null);
   const draftKey = useMemo(() => `autorepair:invoice-draft:${storeId}`, [storeId]);
   const saveTimer = useRef<number | null>(null);
   const skipNextSave = useRef(true);
