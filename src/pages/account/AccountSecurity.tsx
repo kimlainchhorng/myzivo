@@ -82,8 +82,48 @@ export default function AccountSecurity() {
   const [passwordForm, setPasswordForm] = useState({ current: "", new: "", confirm: "" });
   const [loginAlerts, setLoginAlerts] = useState(true);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [twoFactorLoading, setTwoFactorLoading] = useState(true);
+  const [twoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
+
+  // Load real 2FA status from Supabase Auth MFA
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.mfa.listFactors();
+      if (cancelled) return;
+      const hasVerified = (data?.totp ?? []).some((f) => (f.status as string) === "verified");
+      setTwoFactorEnabled(hasVerified);
+      setTwoFactorLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const refreshTwoFactor = async () => {
+    const { data } = await supabase.auth.mfa.listFactors();
+    const hasVerified = (data?.totp ?? []).some((f) => (f.status as string) === "verified");
+    setTwoFactorEnabled(hasVerified);
+  };
+
+  const handleToggle2FA = async (checked: boolean) => {
+    if (checked) {
+      setTwoFactorDialogOpen(true);
+      return;
+    }
+    // Disable: unenroll all verified TOTP factors
+    try {
+      const { data } = await supabase.auth.mfa.listFactors();
+      for (const f of data?.totp ?? []) {
+        await supabase.auth.mfa.unenroll({ factorId: f.id });
+      }
+      setTwoFactorEnabled(false);
+      toast.success("Two-factor authentication disabled");
+    } catch (e: any) {
+      toast.error(e.message || "Could not disable 2FA");
+    }
+  };
+
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
