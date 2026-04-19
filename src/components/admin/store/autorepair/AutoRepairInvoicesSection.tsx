@@ -60,22 +60,76 @@ const seed: Doc[] = [
 
 interface Props { storeId: string }
 
-export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) {
+export default function AutoRepairInvoicesSection({ storeId }: Props) {
   const [docs, setDocs] = useState<Doc[]>(seed);
   const [tab, setTab] = useState<"estimate" | "invoice">("estimate");
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState<Doc>(emptyDraft());
   const [vinLoading, setVinLoading] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const draftKey = useMemo(() => `autorepair:invoice-draft:${storeId}`, [storeId]);
+  const saveTimer = useRef<number | null>(null);
+  const skipNextSave = useRef(true);
 
   const filtered = useMemo(() => docs.filter(d => d.type === tab), [docs, tab]);
 
   const total = (items: LineItem[]) => items.reduce((s, i) => s + i.qty * i.price, 0);
 
+  // Autosave draft to localStorage (debounced) while creating
+  useEffect(() => {
+    if (!creating) return;
+    if (skipNextSave.current) { skipNextSave.current = false; return; }
+    setSaveState("saving");
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => {
+      try {
+        localStorage.setItem(draftKey, JSON.stringify(draft));
+        setLastSaved(new Date());
+        setSaveState("saved");
+      } catch {
+        setSaveState("idle");
+      }
+    }, 600);
+    return () => { if (saveTimer.current) window.clearTimeout(saveTimer.current); };
+  }, [draft, creating, draftKey]);
+
+  const clearDraft = () => {
+    try { localStorage.removeItem(draftKey); } catch {}
+    setLastSaved(null);
+    setSaveState("idle");
+  };
+
   const startNew = (type: "estimate" | "invoice") => {
+    // Try resume saved draft of same type
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const saved = JSON.parse(raw) as Doc;
+        if (saved && saved.type === type) {
+          skipNextSave.current = true;
+          setDraft(saved);
+          setLastSaved(new Date());
+          setSaveState("saved");
+          setCreating(true);
+          toast.info("Resumed your saved draft");
+          return;
+        }
+      }
+    } catch {}
     const prefix = type === "estimate" ? "EST-" : "INV-";
     const num = `${prefix}${Math.floor(1000 + Math.random() * 9000)}`;
+    skipNextSave.current = true;
     setDraft({ ...emptyDraft(), id: crypto.randomUUID(), type, number: num });
+    setLastSaved(null);
+    setSaveState("idle");
     setCreating(true);
+  };
+
+  const discardDraft = () => {
+    clearDraft();
+    setCreating(false);
+    toast.success("Draft discarded");
   };
 
   const lookupVin = async (vin: string) => {
