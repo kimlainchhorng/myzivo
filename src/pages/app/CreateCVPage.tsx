@@ -1535,24 +1535,24 @@ const CreateCVPage = () => {
         </div>
 
         {/* Template Selector */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5">
-              <Palette className="w-3.5 h-3.5 text-primary" />
-              <span className="text-[11px] font-bold text-foreground">CV Template</span>
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Palette className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+              <span className="text-[11px] sm:text-sm md:text-base font-bold text-foreground">CV Template</span>
             </div>
-            <span className="text-[9px] text-muted-foreground">{CV_TEMPLATES.length} designs</span>
+            <span className="text-[9px] sm:text-xs text-muted-foreground">{CV_TEMPLATES.length} designs</span>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x scrollbar-hide">
+          <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-1 -mx-1 px-1 snap-x scrollbar-hide">
             {CV_TEMPLATES.map(t => {
               const active = selectedTemplate === t.id;
               const accentHsl = ACCENT_COLORS.find(a => a.id === cvStyle.accent)?.hsl || ACCENT_COLORS[0].hsl;
               return (
                 <button key={t.id} onClick={() => setSelectedTemplate(t.id)}
-                  className={cn("shrink-0 w-[110px] snap-start rounded-xl border-2 overflow-hidden text-left touch-manipulation active:scale-95 transition-all",
+                  className={cn("shrink-0 w-[110px] sm:w-[140px] md:w-[160px] snap-start rounded-xl border-2 overflow-hidden text-left touch-manipulation active:scale-95 transition-all",
                     active ? "border-primary shadow-md" : "border-border/30 bg-card")}>
                   <div
-                    className="h-12 relative"
+                    className="h-12 sm:h-16 md:h-20 relative"
                     style={{
                       background: t.id === "classic"
                         ? `linear-gradient(135deg, hsl(${accentHsl} / 0.18), hsl(${accentHsl} / 0.05))`
