@@ -31,11 +31,26 @@ type Doc = {
   trim: string;
   engine: string;
   transmission: string;
+  driveType: string;
+  bodyClass: string;
+  doors: string;
+  fuel: string;
+  plant: string;
   vehicle: string;
   items: LineItem[];
   status: "draft" | "sent" | "paid" | "approved";
   createdAt: string;
 };
+
+const emptyDraft = (): Doc => ({
+  id: "", type: "estimate", number: "", customer: "",
+  firstName: "", lastName: "", phone: "", email: "", address: "",
+  vin: "", year: "", make: "", model: "", trim: "", engine: "", transmission: "",
+  driveType: "", bodyClass: "", doors: "", fuel: "", plant: "",
+  vehicle: "",
+  items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
+  status: "draft", createdAt: new Date().toISOString(),
+});
 
 const seed: Doc[] = [
   { id: "1", type: "estimate", number: "EST-1042", customer: "Maria Lopez", firstName: "Maria", lastName: "Lopez", phone: "(225) 555-0142", email: "maria.lopez@example.com", address: "1420 Highland Rd, Baton Rouge, LA", vin: "4T1B11HK5JU123456", year: "2018", make: "Toyota", model: "Camry", trim: "LE", engine: "2.5L L4 DOHC", transmission: "8-Speed Automatic", vehicle: "2018 Toyota Camry", items: [{ id: "a", description: "Brake Pad Replacement (Front)", qty: 1, price: 180 }, { id: "b", description: "Rotor Resurface", qty: 2, price: 45 }], status: "sent", createdAt: new Date().toISOString() },
