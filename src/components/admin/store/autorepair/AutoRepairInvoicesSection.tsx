@@ -2,7 +2,7 @@
  * Auto Repair — Invoices Section
  * Two views: Estimates and Invoices, with inline create flow.
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
