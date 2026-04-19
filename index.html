@@ -126,15 +126,28 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "ZIVO",
-      "legalName": "ZIVO Inc",
+      "legalName": "ZIVO LLC",
+      "alternateName": ["ZIVO App", "Hizivo", "ZivoLLC"],
       "url": "https://hizivo.com",
       "logo": "https://hizivo.com/og-image.png",
-      "description": "ZIVO is a travel and lifestyle super-app helping users find flights, hotels, car rentals, rides, and food delivery. ZIVO is not the merchant of record.",
+      "image": "https://hizivo.com/og-image.png",
+      "description": "ZIVO is an all-in-one travel and lifestyle super-app. Search and compare flights, hotels, and car rentals from 500+ trusted partners; book rides; order food delivery; share short videos and reels; chat; and discover local experiences — all in one place. ZIVO is a booking agent and is not the merchant of record for airline tickets.",
+      "foundingDate": "2024",
+      "knowsAbout": [
+        "Flight booking",
+        "Hotel reservations",
+        "Car rentals",
+        "Rideshare",
+        "Food delivery",
+        "Travel deals",
+        "Short-form video"
+      ],
       "contactPoint": [
         {
           "@type": "ContactPoint",
           "email": "support@hizivo.com",
-          "contactType": "customer support"
+          "contactType": "customer support",
+          "availableLanguage": ["English", "Khmer", "Arabic", "French"]
         },
         {
           "@type": "ContactPoint",
@@ -144,7 +157,8 @@
       ],
       "sameAs": [
         "https://zivollc.com",
-        "https://www.zivollc.com"
+        "https://www.zivollc.com",
+        "https://apps.apple.com/app/id6759480121"
       ]
     }
     </script>
@@ -157,7 +171,15 @@
       "name": "ZIVO",
       "alternateName": "ZIVO App",
       "url": "https://hizivo.com",
-      "description": "One app for every journey. Flights, hotels, cars, rides, and food delivery.",
+      "description": "Compare flights, hotels, and car rentals. Book rides, order food, share reels, and chat — all on ZIVO.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "ZIVO",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://hizivo.com/og-image.png"
+        }
+      },
       "potentialAction": {
         "@type": "SearchAction",
         "target": {
@@ -165,6 +187,28 @@
           "urlTemplate": "https://hizivo.com/flights?q={search_term_string}"
         },
         "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- MobileApplication Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "MobileApplication",
+      "name": "ZIVO",
+      "operatingSystem": "iOS, Android, Web",
+      "applicationCategory": "TravelApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "downloadUrl": "https://apps.apple.com/app/id6759480121",
+      "screenshot": "https://hizivo.com/og-image.png",
+      "publisher": {
+        "@type": "Organization",
+        "name": "ZIVO"
       }
     }
     </script>
