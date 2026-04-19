@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/components/app/AppLayout";
 import { toast } from "sonner";
-import { SkillLogo, PRESET_SKILLS, findPresetSkill, getSkillLogoUrl } from "@/components/cv/SkillLogo";
+import { SkillLogo, PRESET_SKILLS, findPresetSkill } from "@/components/cv/SkillLogo";
 
 const CV_TEMPLATES = [
   { id: "classic", name: "Classic", desc: "Two-column professional" },
@@ -1133,7 +1133,7 @@ const CreateCVPage = () => {
                             already && "opacity-40"
                           )}
                         >
-                          <img src={getSkillLogoUrl(p.slug, p.color)} alt="" className="w-3 h-3 object-contain" loading="lazy" />
+                          <SkillLogo name={p.name} size={12} />
                           {p.name}
                         </button>
                       );
@@ -1147,7 +1147,7 @@ const CreateCVPage = () => {
                       <div className="flex-1 relative">
                         <input className={cn(inputCls, "w-full", preset && "pl-7")} placeholder="e.g. React, Python" value={sk.name} onChange={e => updateSkill(sk.id, "name", e.target.value)} />
                         {preset && (
-                          <img src={getSkillLogoUrl(preset.slug, preset.color)} alt="" className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none" loading="lazy" />
+                          <SkillLogo name={preset.name} size={16} className="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                         )}
                       </div>
                       <select className={cn(inputCls, "w-[105px] text-[11px]")} value={sk.level} onChange={e => updateSkill(sk.id, "level", e.target.value)}>
