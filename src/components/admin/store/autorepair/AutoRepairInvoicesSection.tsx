@@ -13,7 +13,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2, Check, CloudUpload } from "lucide-react";
 import { toast } from "sonner";
 
-type LineItem = { id: string; description: string; qty: number; price: number };
+type LineCategory = "labor" | "part" | "diagnosis";
+type LineItem = {
+  id: string;
+  category: LineCategory;
+  description: string;
+  qty: number;          // parts: quantity. labor/diagnosis: 1
+  price: number;        // parts: unit price. labor: hourly rate. diagnosis: flat fee
+  hours?: number;       // labor only
+  discount?: number;    // % discount for this line
+};
 type Doc = {
   id: string;
   type: "estimate" | "invoice";
