@@ -274,9 +274,12 @@ export default function LoginHistorySection() {
                         </div>
                       </div>
 
-                      {login.latitude && login.longitude && (
-                        <MiniMap lat={login.latitude} lon={login.longitude} city={login.city} />
-                      )}
+                      <MiniMap
+                        lat={login.latitude}
+                        lon={login.longitude}
+                        city={login.city}
+                        query={[login.city, login.country].filter(Boolean).join(", ")}
+                      />
 
                       {login.is_suspicious && (
                         <div className="flex items-start gap-2 p-2.5 rounded-lg bg-destructive/10 text-destructive text-xs">
