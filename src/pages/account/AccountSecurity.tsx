@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import TwoFactorSetupDialog from "@/components/auth/TwoFactorSetupDialog";
 import PhoneOtpVerifyDialog from "@/components/auth/PhoneOtpVerifyDialog";
+import PasswordChangeVerifyDialog from "@/components/auth/PasswordChangeVerifyDialog";
 import { 
   Shield, Lock, Smartphone, Monitor, MapPin, Clock, MessageSquare, Mail,
   LogOut, Download, Trash2, AlertTriangle, Key,
