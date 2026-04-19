@@ -1302,7 +1302,21 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         </div>
 
         {/* Share */}
-        <button onClick={() => setShowShareSheet(true)} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
+        <button
+          onClick={async () => {
+            const text = item.caption || `Check out this post by ${item.author_name}`;
+            try {
+              if (typeof navigator !== "undefined" && (navigator as any).share) {
+                await (navigator as any).share({ title: "ZIVO", text, url: shareUrl });
+                return;
+              }
+            } catch (e: any) {
+              if (e?.name === "AbortError") return;
+            }
+            setShowShareSheet(true);
+          }}
+          className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center"
+        >
           <Share2 className="h-7 w-7 text-white drop-shadow-lg" />
           <span className="text-white text-[10px] font-medium drop-shadow">Share</span>
         </button>
@@ -1886,7 +1900,16 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
     toast.success(`Reacted with ${emoji}`);
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
+    const text = item.caption || `Check out this post by ${item.author_name}`;
+    try {
+      if (typeof navigator !== "undefined" && (navigator as any).share) {
+        await (navigator as any).share({ title: "ZIVO", text, url: shareUrl });
+        return;
+      }
+    } catch (e: any) {
+      if (e?.name === "AbortError") return;
+    }
     setShowShareSheet(true);
   };
 
