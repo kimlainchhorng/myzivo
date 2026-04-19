@@ -477,7 +477,7 @@ function MinimalLayout({ data }: { data: any }) {
 function ProfessionalLayout({ data }: { data: any }) {
   return (
     <div className="min-h-full bg-white">
-      <div className="cv-hero cv-accent-bg text-white px-5 py-5 flex items-center gap-4 border-b-4" style={{ borderBottomColor: '#facc15' }}>
+      <div className="cv-hero cv-accent-bg text-white px-5 py-5 flex items-center gap-4 border-b-4" style={{ borderBottomColor: 'hsl(var(--primary) / 0.45)' }}>
         {data.photo ? (
           <img src={data.photo} alt="" className="cv-photo w-20 h-20 rounded-full object-cover border-2 border-white/40" />
         ) : (
@@ -557,7 +557,7 @@ function PremiumLayout({ data }: { data: any }) {
 function ExecutiveLayout({ data }: { data: any }) {
   return (
     <div className="min-h-full bg-white">
-      <div className="cv-hero bg-[#0f172a] text-white p-5">
+      <div className="cv-hero text-white p-5" style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.95), hsl(var(--primary) / 0.65))' }}>
         <div className="flex items-center gap-4">
           {data.photo ? (
             <img src={data.photo} alt="" className="cv-photo w-20 h-20 rounded-sm object-cover border border-white/20" />
@@ -1399,6 +1399,28 @@ const CreateCVPage = () => {
             <input type="range" min={0.9} max={1.15} step={0.05} value={cvStyle.fontScale}
               onChange={e => setCvStyle(s => ({ ...s, fontScale: parseFloat(e.target.value) }))}
               className="w-full accent-primary" />
+          </div>
+        </div>
+
+        {/* Live Preview (inline) — instantly reflects template + style */}
+        <div className="mb-4 rounded-2xl border border-border/30 bg-card/60 overflow-hidden">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-border/20 bg-muted/30">
+            <div className="flex items-center gap-1.5">
+              <Eye className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[11px] font-bold text-foreground">Live Preview</span>
+              <span className="text-[9px] text-muted-foreground bg-background px-1.5 py-0.5 rounded capitalize">{selectedTemplate}</span>
+            </div>
+            <button onClick={() => setShowPreview(true)}
+              className="text-[10px] font-semibold text-primary px-2 py-1 rounded-md bg-primary/10 active:scale-95 transition-transform">
+              Full View
+            </button>
+          </div>
+          <div className="bg-muted/10 p-2 max-h-[360px] overflow-hidden">
+            <div className="origin-top mx-auto bg-white rounded shadow-sm overflow-hidden" style={{ transform: 'scale(0.78)', transformOrigin: 'top center', width: '128%', marginLeft: '-14%' }}>
+              <div className="w-full" style={{ minHeight: 440 }}>
+                <CVDocumentLayout data={previewData} template={selectedTemplate} style={cvStyle} />
+              </div>
+            </div>
           </div>
         </div>
 
