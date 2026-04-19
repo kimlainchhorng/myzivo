@@ -707,7 +707,7 @@ const CreateCVPage = () => {
     );
   }
 
-  const previewData = { photo, fullName, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies };
+  const previewData = { photo, fullName, dateOfBirth, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies };
 
   const handleShare = () => {
     if (!shareCode) { toast.error("Save your CV first to get a share link"); return; }
