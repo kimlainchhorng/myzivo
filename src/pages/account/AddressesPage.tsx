@@ -206,12 +206,52 @@ export default function AddressesPage() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold mb-0.5">Private to you</p>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Your saved addresses are visible only to you and are used solely to fulfill your orders and deliveries. Read our{" "}
-              <Link to="/privacy" className="text-primary hover:underline font-medium">Privacy Policy</Link>
-              {" "}and{" "}
-              <Link to="/terms" className="text-primary hover:underline font-medium">Terms</Link>.
+            <p className="text-[11px] text-muted-foreground leading-relaxed mb-2">
+              Your saved addresses are visible only to you and are used solely to fulfill your orders and deliveries.
             </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button type="button" className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline">
+                    <ShieldCheck className="w-3 h-3" /> Privacy Policy
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
+                  <SheetHeader className="text-left">
+                    <SheetTitle className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-primary" /> Address Privacy</SheetTitle>
+                    <SheetDescription>How ZIVO handles your saved addresses.</SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-4 space-y-3 text-sm leading-relaxed">
+                    <p><strong>Visibility.</strong> Your saved addresses are visible only to you on your signed-in account. They are never shown on your public profile, in search, or to other users.</p>
+                    <p><strong>Use.</strong> Addresses are used only when you choose one for an order, ride, or delivery — to route the driver, calculate fees, and complete fulfillment.</p>
+                    <p><strong>Sharing with partners.</strong> When you place an order, the address you select is shared only with the assigned driver or merchant for that specific order, and only for the time needed to complete it.</p>
+                    <p><strong>Storage.</strong> Addresses are stored securely with row-level access controls so only your account can read or edit them.</p>
+                    <p><strong>Control.</strong> You can edit or delete any saved address at any time from this page. Deletion is immediate.</p>
+                  </div>
+                </SheetContent>
+              </Sheet>
+              <span className="text-[11px] text-muted-foreground">·</span>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button type="button" className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline">
+                    <FileText className="w-3 h-3" /> Terms
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
+                  <SheetHeader className="text-left">
+                    <SheetTitle className="flex items-center gap-2"><FileText className="w-5 h-5 text-primary" /> Address Terms</SheetTitle>
+                    <SheetDescription>Your responsibilities when saving addresses.</SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-4 space-y-3 text-sm leading-relaxed">
+                    <p><strong>Accuracy.</strong> You agree to provide accurate address information. ZIVO is not responsible for failed deliveries caused by incorrect or outdated addresses.</p>
+                    <p><strong>Authorization.</strong> You confirm that you are authorized to receive deliveries at any address you save (e.g., your home, your workplace).</p>
+                    <p><strong>Prohibited use.</strong> Do not save addresses you do not own or have permission to use, and do not use saved addresses to harass or surveil others.</p>
+                    <p><strong>Service limits.</strong> Some addresses may be outside our service area; orders to those addresses may be rejected or cancelled.</p>
+                    <p><strong>Updates.</strong> Keep your default address current to avoid order issues. You can change the default at any time.</p>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
 
