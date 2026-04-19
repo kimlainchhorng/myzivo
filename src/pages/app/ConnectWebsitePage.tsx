@@ -19,6 +19,14 @@ import { useAuth } from "@/contexts/AuthContext";
 
 type PublishStatus = "live" | "draft";
 type PreviewTheme = "light" | "dark";
+type Niche = "flights" | "hotels" | "deals" | "blog";
+
+const NICHES: { id: Niche; label: string; desc: string; icon: typeof Plane }[] = [
+  { id: "flights", label: "Flight Deals", desc: "Live cheap flight cards", icon: Plane },
+  { id: "hotels", label: "Hotel Picks", desc: "Top-rated stays widget", icon: Hotel },
+  { id: "deals", label: "Mixed Deals", desc: "Flights + hotels combo", icon: Sparkles },
+  { id: "blog", label: "Travel Blog", desc: "SEO articles auto-feed", icon: Globe2 },
+];
 
 const ConnectWebsitePage = () => {
   const navigate = useNavigate();
@@ -27,13 +35,18 @@ const ConnectWebsitePage = () => {
   const [status, setStatus] = useState<PublishStatus>("live");
   const [theme, setTheme] = useState<PreviewTheme>("light");
   const [connected, setConnected] = useState(true);
+  const [niche, setNiche] = useState<Niche>("flights");
+  const [dofollow, setDofollow] = useState(true);
 
   const siteId = useMemo(
     () => (user?.id ? user.id.replace(/-/g, "").slice(0, 24) : "zivo-demo-site-0001"),
     [user?.id]
   );
 
-  const snippet = `<div id="zivo-widget"></div>\n<script src="https://hizivo.com/api/embed/${siteId}" defer></script>`;
+  const snippet = `<!-- ZIVO Travel Widget — SEO optimized -->
+<div id="zivo-widget" data-niche="${niche}" data-rel="${dofollow ? "dofollow" : "nofollow"}"></div>
+<script src="https://hizivo.com/api/embed/${siteId}.js" defer></script>
+<noscript><a href="https://hizivo.com/?ref=${siteId}" rel="${dofollow ? "" : "nofollow "}noopener">Travel deals by ZIVO</a></noscript>`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(snippet);
