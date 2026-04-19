@@ -741,7 +741,7 @@ function CVDocumentLayout({ data, template, style }: { data: any; template: Temp
 }
 
 /* ── CV Preview Modal ─────────────────────────────── */
-const CVPreviewModal = forwardRef<HTMLDivElement, { open: boolean; onClose: () => void; data: any; template: TemplateId }>(({ open, onClose, data, template }, ref) => {
+const CVPreviewModal = forwardRef<HTMLDivElement, { open: boolean; onClose: () => void; data: any; template: TemplateId; style?: CVStyle }>(({ open, onClose, data, template, style }, ref) => {
   if (!open) return null;
 
   return (
