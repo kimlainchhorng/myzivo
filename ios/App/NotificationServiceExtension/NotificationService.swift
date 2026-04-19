@@ -73,8 +73,8 @@ class NotificationService: UNNotificationServiceExtension {
         nameComponents.givenName = parts.first ?? senderName
         if parts.count > 1 { nameComponents.familyName = parts.last }
         
-        // Create the sender as an INPerson — use emailAddress handle for better matching
-        let handle = INPersonHandle(value: "zivo-\(senderId)@hizovo.com", type: .emailAddress)
+        // Create the sender as an INPerson with a neutral handle so iOS doesn't surface email text
+        let handle = INPersonHandle(value: "zivo-user-\(senderId)", type: .unknown)
         let sender = INPerson(
             personHandle: handle,
             nameComponents: nameComponents,
@@ -84,25 +84,13 @@ class NotificationService: UNNotificationServiceExtension {
             customIdentifier: "zivo-user-\(senderId)"
         )
         
-        // Create the INCOMING message intent (recipients = "me", sender = other person)
-        var meNameComponents = PersonNameComponents()
-        meNameComponents.givenName = "You"
-        let me = INPerson(
-            personHandle: INPersonHandle(value: "zivo-me", type: .unknown),
-            nameComponents: meNameComponents,
-            displayName: "You",
-            image: nil,
-            contactIdentifier: nil,
-            customIdentifier: "zivo-me"
-        )
-        
         let intent = INSendMessageIntent(
-            recipients: [me],
+            recipients: nil,
             outgoingMessageType: .outgoingMessageText,
             content: content.body,
             speakableGroupName: nil,
-            conversationIdentifier: "zivo-chat-\(senderId)",
-            serviceName: nil,
+            conversationIdentifier: "zivo-direct-message-\(senderId)",
+            serviceName: "ZIVO",
             sender: sender,
             attachments: nil
         )
