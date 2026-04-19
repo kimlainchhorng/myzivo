@@ -625,7 +625,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
           </TabsContent>
         </Tabs>
       </CardContent>
-      <AutoRepairDocPreviewDialog open={!!previewDoc} onOpenChange={(v) => !v && setPreviewDoc(null)} doc={previewDoc} />
+      <AutoRepairDocPreviewDialog open={!!previewDoc} onOpenChange={(v) => !v && setPreviewDoc(null)} doc={previewDoc} storeName={storeInfo.name} storeAddress={storeInfo.address} storePhone={storeInfo.phone} />
     </Card>
   );
 }
