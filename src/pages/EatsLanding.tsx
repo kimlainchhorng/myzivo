@@ -18,6 +18,7 @@ import { getWalletBalance } from "@/hooks/useWalletPayment";
 import { useAuth } from "@/contexts/AuthContext";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
 
 // ─── Types ───────────────────────────────────────────────────────────
 type Step = "browse" | "restaurant" | "cart" | "checkout";

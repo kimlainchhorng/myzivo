@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 const NavBar = lazy(() => import("@/components/home/NavBar"));
+import SEOHead from "@/components/SEOHead";
 const TipSheet = lazy(() => import("@/components/social/TipSheet"));
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Heart from "lucide-react/dist/esm/icons/heart";
