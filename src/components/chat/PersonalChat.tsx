@@ -425,11 +425,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       if (hasUnread) {
         bgTasks.push((supabase as any)
           .from("direct_messages")
-          .update({ is_read: true })
+          .update({ is_read: true, delivered_at: new Date().toISOString() })
           .eq("receiver_id", user.id)
           .eq("sender_id", recipientId)
           .eq("is_read", false)
-          .then(() => {})
+          .then(({ error }: any) => {
+            if (error) console.error("[Chat] mark-read failed:", error);
+          })
         );
       }
 
