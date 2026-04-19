@@ -79,9 +79,8 @@ export default function AccountSecurity() {
   const { user } = useAuth();
   const { t } = useI18n();
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [passwordForm, setPasswordForm] = useState({ current: "", new: "", confirm: "" });
+  const [passwordForm, setPasswordForm] = useState({ new: "", confirm: "" });
   const [loginAlerts, setLoginAlerts] = useState(true);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [twoFactorLoading, setTwoFactorLoading] = useState(true);
@@ -156,14 +155,6 @@ export default function AccountSecurity() {
       toast.error("Password must be at least 8 characters");
       return false;
     }
-    if (!passwordForm.current) {
-      toast.error("Please enter your current password");
-      return false;
-    }
-    if (passwordForm.new === passwordForm.current) {
-      toast.error("New password must be different from your current one");
-      return false;
-    }
     const throttle = checkPasswordChangeThrottle();
     if (!throttle.allowed) {
       toast.error(`Too many attempts. Try again in ~${throttle.retryInMin} minute(s).`);
@@ -205,17 +196,7 @@ export default function AccountSecurity() {
         // Continue if breach check fails
       }
 
-      // Verify current password by re-authenticating
-      const { error: verifyError } = await supabase.auth.signInWithPassword({
-        email: user?.email ?? "",
-        password: passwordForm.current,
-      });
-      if (verifyError) {
-        toast.error("Current password is incorrect");
-        return;
-      }
-
-      // Update to new password
+      // Update to new password (identity already verified via OTP)
       const { error } = await supabase.auth.updateUser({ password: passwordForm.new });
       if (error) throw error;
 
@@ -223,7 +204,7 @@ export default function AccountSecurity() {
       await supabase.auth.signOut({ scope: "others" });
 
       toast.success("Password updated. All other sessions have been signed out.");
-      setPasswordForm({ current: "", new: "", confirm: "" });
+      setPasswordForm({ new: "", confirm: "" });
       setPwdVerified(false); // require re-verification for next change
     } catch (error: any) {
       toast.error(error.message || "Failed to update password");
@@ -321,27 +302,6 @@ export default function AccountSecurity() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handlePasswordChange} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="current-password">{t("security.current_password")}</Label>
-                  <div className="relative">
-                    <Input
-                      id="current-password"
-                      type={showCurrentPassword ? "text" : "password"}
-                      value={passwordForm.current}
-                      onChange={(e) => setPasswordForm(p => ({ ...p, current: e.target.value }))}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    >
-                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="new-password">{t("security.new_password")}</Label>
