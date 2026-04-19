@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft } from "lucide-react";
+import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 type LineItem = { id: string; description: string; qty: number; price: number };
@@ -23,6 +23,13 @@ type Doc = {
   phone: string;
   email: string;
   address: string;
+  vin: string;
+  year: string;
+  make: string;
+  model: string;
+  trim: string;
+  engine: string;
+  transmission: string;
   vehicle: string;
   items: LineItem[];
   status: "draft" | "sent" | "paid" | "approved";
@@ -30,9 +37,9 @@ type Doc = {
 };
 
 const seed: Doc[] = [
-  { id: "1", type: "estimate", number: "EST-1042", customer: "Maria Lopez", firstName: "Maria", lastName: "Lopez", phone: "(225) 555-0142", email: "maria.lopez@example.com", address: "1420 Highland Rd, Baton Rouge, LA", vehicle: "2018 Toyota Camry", items: [{ id: "a", description: "Brake Pad Replacement (Front)", qty: 1, price: 180 }, { id: "b", description: "Rotor Resurface", qty: 2, price: 45 }], status: "sent", createdAt: new Date().toISOString() },
-  { id: "2", type: "invoice", number: "INV-2031", customer: "James Carter", firstName: "James", lastName: "Carter", phone: "(225) 555-0188", email: "james.carter@example.com", address: "88 Government St, Baton Rouge, LA", vehicle: "2020 Ford F-150", items: [{ id: "c", description: "Full Synthetic Oil Change", qty: 1, price: 89.99 }], status: "paid", createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: "3", type: "invoice", number: "INV-2032", customer: "Linda Park", firstName: "Linda", lastName: "Park", phone: "(225) 555-0210", email: "linda.park@example.com", address: "305 Perkins Rd, Baton Rouge, LA", vehicle: "2019 Honda Civic", items: [{ id: "d", description: "AC Recharge", qty: 1, price: 149 }, { id: "e", description: "Cabin Air Filter", qty: 1, price: 35 }], status: "sent", createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
+  { id: "1", type: "estimate", number: "EST-1042", customer: "Maria Lopez", firstName: "Maria", lastName: "Lopez", phone: "(225) 555-0142", email: "maria.lopez@example.com", address: "1420 Highland Rd, Baton Rouge, LA", vin: "4T1B11HK5JU123456", year: "2018", make: "Toyota", model: "Camry", trim: "LE", engine: "2.5L L4 DOHC", transmission: "8-Speed Automatic", vehicle: "2018 Toyota Camry", items: [{ id: "a", description: "Brake Pad Replacement (Front)", qty: 1, price: 180 }, { id: "b", description: "Rotor Resurface", qty: 2, price: 45 }], status: "sent", createdAt: new Date().toISOString() },
+  { id: "2", type: "invoice", number: "INV-2031", customer: "James Carter", firstName: "James", lastName: "Carter", phone: "(225) 555-0188", email: "james.carter@example.com", address: "88 Government St, Baton Rouge, LA", vin: "1FTEW1EP5LFA12345", year: "2020", make: "Ford", model: "F-150", trim: "XLT", engine: "3.5L V6 EcoBoost", transmission: "10-Speed Automatic", vehicle: "2020 Ford F-150", items: [{ id: "c", description: "Full Synthetic Oil Change", qty: 1, price: 89.99 }], status: "paid", createdAt: new Date(Date.now() - 86400000).toISOString() },
+  { id: "3", type: "invoice", number: "INV-2032", customer: "Linda Park", firstName: "Linda", lastName: "Park", phone: "(225) 555-0210", email: "linda.park@example.com", address: "305 Perkins Rd, Baton Rouge, LA", vin: "2HGFC2F59KH512345", year: "2019", make: "Honda", model: "Civic", trim: "LX", engine: "2.0L L4", transmission: "CVT", vehicle: "2019 Honda Civic", items: [{ id: "d", description: "AC Recharge", qty: 1, price: 149 }, { id: "e", description: "Cabin Air Filter", qty: 1, price: 35 }], status: "sent", createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
 ];
 
 interface Props { storeId: string }
@@ -44,10 +51,12 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
   const [draft, setDraft] = useState<Doc>({
     id: "", type: "estimate", number: "", customer: "",
     firstName: "", lastName: "", phone: "", email: "", address: "",
+    vin: "", year: "", make: "", model: "", trim: "", engine: "", transmission: "",
     vehicle: "",
     items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
     status: "draft", createdAt: new Date().toISOString(),
   });
+  const [vinLoading, setVinLoading] = useState(false);
 
   const filtered = useMemo(() => docs.filter(d => d.type === tab), [docs, tab]);
 
@@ -59,11 +68,40 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
     setDraft({
       id: crypto.randomUUID(), type, number: num, customer: "",
       firstName: "", lastName: "", phone: "", email: "", address: "",
+      vin: "", year: "", make: "", model: "", trim: "", engine: "", transmission: "",
       vehicle: "",
       items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
       status: "draft", createdAt: new Date().toISOString(),
     });
     setCreating(true);
+  };
+
+  const lookupVin = async (vin: string) => {
+    const clean = vin.trim().toUpperCase();
+    if (clean.length !== 17) { toast.error("VIN must be 17 characters"); return; }
+    setVinLoading(true);
+    try {
+      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${encodeURIComponent(clean)}?format=json`);
+      const data = await res.json();
+      const r = data?.Results?.[0];
+      if (!r || (!r.Make && !r.Model && !r.ModelYear)) { toast.error("No vehicle data found for this VIN"); return; }
+      const year = r.ModelYear || "";
+      const make = r.Make ? r.Make.replace(/\b\w/g, (c: string) => c.toUpperCase()) : "";
+      const model = r.Model || "";
+      const trim = r.Trim || r.Series || "";
+      const displ = r.DisplacementL ? `${parseFloat(r.DisplacementL).toFixed(1)}L` : "";
+      const cyl = r.EngineCylinders ? ` ${r.EngineCylinders === "4" ? "L4" : r.EngineCylinders === "6" ? "V6" : r.EngineCylinders === "8" ? "V8" : `${r.EngineCylinders}-cyl`}` : "";
+      const fuel = r.FuelTypePrimary && r.FuelTypePrimary !== "Gasoline" ? ` ${r.FuelTypePrimary}` : "";
+      const engine = `${displ}${cyl}${fuel}`.trim();
+      const trans = [r.TransmissionStyle, r.TransmissionSpeeds ? `${r.TransmissionSpeeds}-Speed` : ""].filter(Boolean).join(" ").trim();
+      const vehicle = [year, make, model].filter(Boolean).join(" ");
+      setDraft(d => ({ ...d, vin: clean, year, make, model, trim, engine, transmission: trans, vehicle }));
+      toast.success("Vehicle details auto-filled");
+    } catch (e) {
+      toast.error("VIN lookup failed");
+    } finally {
+      setVinLoading(false);
+    }
   };
 
   const save = () => {
@@ -121,9 +159,62 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
                 <label className="text-xs font-medium text-muted-foreground">Address</label>
                 <Input placeholder="Street, City, State" value={draft.address} onChange={e => setDraft({ ...draft, address: e.target.value })} />
               </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-xs font-medium text-muted-foreground">Vehicle</label>
-                <Input placeholder="Year / Make / Model" value={draft.vehicle} onChange={e => setDraft({ ...draft, vehicle: e.target.value })} />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vehicle details</div>
+              {draft.vin && draft.vin.length === 17 && (
+                <span className="text-[10px] text-muted-foreground font-mono">VIN-decoded</span>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">VIN (auto-fills vehicle details)</label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="17-character VIN"
+                  maxLength={17}
+                  value={draft.vin}
+                  onChange={e => setDraft({ ...draft, vin: e.target.value.toUpperCase() })}
+                  className="font-mono"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => lookupVin(draft.vin)}
+                  disabled={vinLoading || draft.vin.length !== 17}
+                  className="gap-1.5 shrink-0"
+                >
+                  {vinLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ScanSearch className="w-4 h-4" />}
+                  Decode
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Year</label>
+                <Input placeholder="2020" value={draft.year} onChange={e => setDraft({ ...draft, year: e.target.value, vehicle: [e.target.value, draft.make, draft.model].filter(Boolean).join(" ") })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Make</label>
+                <Input placeholder="Toyota" value={draft.make} onChange={e => setDraft({ ...draft, make: e.target.value, vehicle: [draft.year, e.target.value, draft.model].filter(Boolean).join(" ") })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Model</label>
+                <Input placeholder="Camry" value={draft.model} onChange={e => setDraft({ ...draft, model: e.target.value, vehicle: [draft.year, draft.make, e.target.value].filter(Boolean).join(" ") })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Trim</label>
+                <Input placeholder="LE" value={draft.trim} onChange={e => setDraft({ ...draft, trim: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Engine</label>
+                <Input placeholder="2.5L L4" value={draft.engine} onChange={e => setDraft({ ...draft, engine: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Transmission</label>
+                <Input placeholder="Automatic" value={draft.transmission} onChange={e => setDraft({ ...draft, transmission: e.target.value })} />
               </div>
             </div>
           </div>
