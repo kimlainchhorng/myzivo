@@ -43,9 +43,33 @@ import SEOHead from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/hooks/useI18n";
 import { supabase } from "@/integrations/supabase/client";
-import { checkPasswordBreach } from "@/lib/security/passwordStrength";
+import { checkPasswordBreach, analyzePassword } from "@/lib/security/passwordStrength";
 import { formatDistanceToNow } from "date-fns";
 import LoginHistorySection from "@/components/auth/LoginHistorySection";
+
+// Client-side throttle: prevent rapid password change attempts (anti-brute-force)
+const PWD_CHANGE_THROTTLE_KEY = "zivo_pwd_change_attempts";
+const PWD_CHANGE_MAX_ATTEMPTS = 5;
+const PWD_CHANGE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+function checkPasswordChangeThrottle(): { allowed: boolean; retryInMin: number } {
+  try {
+    const raw = sessionStorage.getItem(PWD_CHANGE_THROTTLE_KEY);
+    const now = Date.now();
+    const attempts: number[] = raw ? JSON.parse(raw) : [];
+    const recent = attempts.filter((t) => now - t < PWD_CHANGE_WINDOW_MS);
+    if (recent.length >= PWD_CHANGE_MAX_ATTEMPTS) {
+      const oldest = Math.min(...recent);
+      const retryInMin = Math.ceil((PWD_CHANGE_WINDOW_MS - (now - oldest)) / 60_000);
+      return { allowed: false, retryInMin };
+    }
+    recent.push(now);
+    sessionStorage.setItem(PWD_CHANGE_THROTTLE_KEY, JSON.stringify(recent));
+    return { allowed: true, retryInMin: 0 };
+  } catch {
+    return { allowed: true, retryInMin: 0 };
+  }
+}
 
 export default function AccountSecurity() {
   const navigate = useNavigate();
@@ -75,9 +99,28 @@ export default function AccountSecurity() {
       return;
     }
 
+    if (passwordForm.new === passwordForm.current) {
+      toast.error("New password must be different from your current one");
+      return;
+    }
+
+    // Client-side throttle (defense-in-depth; server enforces real limits)
+    const throttle = checkPasswordChangeThrottle();
+    if (!throttle.allowed) {
+      toast.error(`Too many attempts. Try again in ~${throttle.retryInMin} minute(s).`);
+      return;
+    }
+
+    // Strength gate
+    const analysis = analyzePassword(passwordForm.new);
+    if (analysis.strength === "weak") {
+      toast.error(`Password too weak. ${analysis.feedback[0] ?? "Use a stronger password."}`);
+      return;
+    }
+
     setIsChangingPassword(true);
     try {
-      // Step 0: Check new password against known breaches
+      // Step 0: Check new password against known breaches (k-anonymity, safe)
       try {
         const breach = await checkPasswordBreach(passwordForm.new);
         if (breach.breached) {
@@ -178,6 +221,18 @@ export default function AccountSecurity() {
           <p className="text-muted-foreground text-sm mb-6">
             {t("security.subtitle")}
           </p>
+
+          {/* Phishing & link safety notice */}
+          <div className="mb-6 p-4 rounded-xl border border-primary/20 bg-primary/5 flex gap-3">
+            <Shield className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-semibold text-foreground mb-1">You're protected</p>
+              <p className="text-muted-foreground leading-relaxed">
+                ZIVO scans every external link before opening it and blocks suspicious or
+                phishing URLs. Never share your password — staff will never ask for it.
+              </p>
+            </div>
+          </div>
 
           {/* Phishing warning removed */}
 
