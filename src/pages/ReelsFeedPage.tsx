@@ -647,6 +647,11 @@ export default function ReelsFeedPage() {
 
   return (
     <>
+      <SEOHead
+        title="ZIVO Reels – Trending Short Videos & Creator Posts"
+        description="Discover trending reels, follow your favorite creators, support them with tips, and shop products straight from videos on ZIVO."
+        canonical="/reels"
+      />
       {/* Desktop NavBar */}
       <div className="hidden lg:block relative z-[1200]">
         <Suspense fallback={null}><NavBar /></Suspense>
