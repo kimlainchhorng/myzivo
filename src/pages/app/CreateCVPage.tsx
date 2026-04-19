@@ -7,7 +7,29 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
-import { saveAs } from "file-saver";
+/**
+ * Robust download that works inside Lovable's sandboxed preview iframe.
+ * Falls back to opening the blob URL in a new top-level tab if the
+ * synthetic anchor click is blocked.
+ */
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  try {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.rel = "noopener";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch {
+    // Fallback for restrictive sandboxes
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+  // Revoke later so the browser has time to start the download
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
 import {
   ArrowLeft, Plus, Trash2, User, Briefcase, GraduationCap,
   Wrench, Globe, Award, Save, FileText, Link2, Linkedin,
@@ -863,7 +885,7 @@ const CreateCVPage = () => {
 
       const doc = new Document({ sections: [{ children }] });
       const blob = await Packer.toBlob(doc);
-      saveAs(blob, `${fileBaseName()}.docx`);
+      downloadBlob(blob, `${fileBaseName()}.docx`);
       toast.success("Word document downloaded");
     } catch (err) {
       console.error(err);
@@ -911,7 +933,7 @@ const CreateCVPage = () => {
 
       const csv = "\uFEFF" + rows.map(r => r.map(esc).join(",")).join("\n");
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      saveAs(blob, `${fileBaseName()}.csv`);
+      downloadBlob(blob, `${fileBaseName()}.csv`);
       toast.success("Excel (CSV) downloaded");
     } catch (err) {
       console.error(err);
