@@ -1215,6 +1215,14 @@ const CreateCVPage = () => {
             className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all">
             <Share2 className="w-3.5 h-3.5" /> Share Link
           </button>
+          <button onClick={() => void handleDownloadWord()} disabled={downloading}
+            className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
+            <FileText className="w-3.5 h-3.5" /> Word (.docx)
+          </button>
+          <button onClick={handleDownloadExcel} disabled={downloading}
+            className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
+            <FileSpreadsheet className="w-3.5 h-3.5" /> Excel (.csv)
+          </button>
         </div>
 
         {/* Delete CV */}
