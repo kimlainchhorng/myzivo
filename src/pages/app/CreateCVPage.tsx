@@ -573,6 +573,7 @@ const CreateCVPage = () => {
         setCvId(data.id);
         setFullName(data.full_name || "");
         setJobTitle((data as any).job_title || "");
+        setDateOfBirth((data as any).date_of_birth || "");
         setEmail(data.email || "");
         setPhone(data.phone || "");
         setLocation(data.location || "");
