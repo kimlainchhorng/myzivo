@@ -1,0 +1,307 @@
+/**
+ * Connect Your Website
+ * Embed a ZIVO travel widget/blog on any external site with a snippet.
+ */
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Code2, Copy, Check, CheckCircle2, Plug, Plane, Hotel } from "lucide-react";
+import AppLayout from "@/components/app/AppLayout";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+
+type PublishStatus = "live" | "draft";
+type PreviewTheme = "light" | "dark";
+
+const ConnectWebsitePage = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<PublishStatus>("live");
+  const [theme, setTheme] = useState<PreviewTheme>("light");
+  const [connected, setConnected] = useState(true);
+
+  const siteId = useMemo(
+    () => (user?.id ? user.id.replace(/-/g, "").slice(0, 24) : "zivo-demo-site-0001"),
+    [user?.id]
+  );
+
+  const snippet = `<div id="zivo-widget"></div>\n<script src="https://hizivo.com/api/embed/${siteId}" defer></script>`;
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(snippet);
+    setCopied(true);
+    toast.success("Snippet copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDisconnect = () => {
+    setConnected(false);
+    toast.message("Widget disconnected", { description: "Your website will stop receiving updates." });
+  };
+
+  const handleReconnect = () => {
+    setConnected(true);
+    toast.success("Widget reconnected");
+  };
+
+  return (
+    <AppLayout hideHeader>
+      <div className="min-h-screen bg-muted/20">
+        {/* Top bar */}
+        <div className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-md">
+          <div className="container max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="-ml-2">
+              <ArrowLeft className="w-4 h-4 mr-1" /> Settings
+            </Button>
+          </div>
+        </div>
+
+        <div className="container max-w-6xl mx-auto px-4 py-8 grid lg:grid-cols-[1fr_400px] gap-8">
+          {/* Left: Setup */}
+          <div className="space-y-6">
+            <div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Code2 className="w-5 h-5 text-primary" />
+                </div>
+                <h1 className="text-3xl font-bold tracking-tight">Connect Your Website</h1>
+                <Badge variant="secondary" className="rounded-full">Takes 2 min</Badge>
+              </div>
+              <p className="mt-2 text-muted-foreground">
+                Add a ZIVO travel search widget to any website with a simple code snippet.
+              </p>
+            </div>
+
+            {/* Status banner */}
+            <Card
+              className={cn(
+                "p-4 border-2 transition-colors",
+                connected
+                  ? "border-emerald-500/30 bg-emerald-500/5"
+                  : "border-muted bg-muted/30"
+              )}
+            >
+              <div className="flex items-start gap-3">
+                <CheckCircle2
+                  className={cn(
+                    "w-5 h-5 mt-0.5 shrink-0",
+                    connected ? "text-emerald-500" : "text-muted-foreground"
+                  )}
+                />
+                <div>
+                  <div className="font-semibold">
+                    {connected ? "Active" : "Not connected"}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {connected
+                      ? "New travel deals will automatically appear on your website."
+                      : "Paste the snippet below to activate the widget."}
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Code snippet */}
+            <Card className="overflow-hidden">
+              <div className="bg-foreground/[0.03] border-b border-border px-4 py-2 flex items-center justify-between">
+                <span className="text-xs font-mono text-muted-foreground">embed snippet</span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">HTML</span>
+              </div>
+              <pre className="p-4 text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto bg-background">
+                <code className="text-foreground">{snippet}</code>
+              </pre>
+              <div className="p-3 border-t border-border">
+                <Button
+                  onClick={handleCopy}
+                  variant="outline"
+                  className="w-full justify-center gap-2 h-11"
+                >
+                  {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                  {copied ? "Copied!" : "Copy code"}
+                </Button>
+              </div>
+            </Card>
+
+            {/* Publish status */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3">Publish status</h3>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <button
+                  onClick={() => setStatus("live")}
+                  className={cn(
+                    "text-left p-4 rounded-xl border-2 transition-all",
+                    status === "live"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/40"
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="font-semibold">Publish to website</div>
+                    {status === "live" && (
+                      <Badge className="bg-primary/15 text-primary hover:bg-primary/15 rounded-full">
+                        Recommended
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">Goes live immediately</p>
+                </button>
+
+                <button
+                  onClick={() => setStatus("draft")}
+                  className={cn(
+                    "text-left p-4 rounded-xl border-2 transition-all",
+                    status === "draft"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/40"
+                  )}
+                >
+                  <div className="font-semibold">Save as Draft</div>
+                  <p className="text-sm text-muted-foreground mt-1">Review before it goes live</p>
+                </button>
+              </div>
+            </div>
+
+            {/* Disconnect */}
+            <Card className="p-1">
+              {connected ? (
+                <Button
+                  onClick={handleDisconnect}
+                  variant="ghost"
+                  className="w-full h-12 text-destructive hover:text-destructive hover:bg-destructive/5 gap-2"
+                >
+                  <Plug className="w-4 h-4" />
+                  Disconnect
+                </Button>
+              ) : (
+                <Button onClick={handleReconnect} className="w-full h-12 gap-2">
+                  <Plug className="w-4 h-4" />
+                  Reconnect widget
+                </Button>
+              )}
+            </Card>
+          </div>
+
+          {/* Right: Live preview */}
+          <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+            {/* Theme toggle */}
+            <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-full">
+              {(["light", "dark"] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTheme(t)}
+                  className={cn(
+                    "h-9 rounded-full text-sm font-medium capitalize transition-all flex items-center justify-center gap-2",
+                    theme === t ? "bg-background shadow-sm" : "text-muted-foreground"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "w-2 h-2 rounded-full",
+                      t === "light" ? "bg-amber-400" : "bg-foreground"
+                    )}
+                  />
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            {/* Browser mockup */}
+            <Card className="overflow-hidden shadow-xl">
+              {/* Browser chrome */}
+              <div className="bg-muted px-3 py-2 flex items-center gap-2 border-b border-border">
+                <div className="flex gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                </div>
+                <div className="flex-1 mx-2 px-3 py-1 bg-background rounded-md text-xs text-muted-foreground text-center">
+                  yourwebsite.com/travel
+                </div>
+              </div>
+
+              {/* Preview content */}
+              <div
+                className={cn(
+                  "p-4 space-y-3 transition-colors",
+                  theme === "dark" ? "bg-zinc-900" : "bg-white"
+                )}
+              >
+                {[
+                  {
+                    icon: Plane,
+                    title: "Cheap flights to Tokyo",
+                    sub: connected ? "From $589 · Live deal" : "Draft — publish to make visible",
+                  },
+                  {
+                    icon: Hotel,
+                    title: "Top-rated hotels in Bali",
+                    sub: connected ? "From $42/night · 4.8★" : "Draft — publish to make visible",
+                  },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "flex gap-3 p-3 rounded-xl",
+                      theme === "dark" ? "bg-zinc-800/60" : "bg-muted/40"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "w-12 h-12 rounded-lg flex items-center justify-center shrink-0",
+                        theme === "dark" ? "bg-zinc-700" : "bg-primary/10"
+                      )}
+                    >
+                      <item.icon
+                        className={cn(
+                          "w-5 h-5",
+                          theme === "dark" ? "text-primary" : "text-primary"
+                        )}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <div
+                        className={cn(
+                          "font-semibold text-sm truncate",
+                          theme === "dark" ? "text-white" : "text-foreground"
+                        )}
+                      >
+                        {item.title}
+                      </div>
+                      <div
+                        className={cn(
+                          "text-xs mt-0.5",
+                          connected
+                            ? theme === "dark"
+                              ? "text-zinc-400"
+                              : "text-muted-foreground"
+                            : "text-amber-600"
+                        )}
+                      >
+                        {item.sub}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <div
+                  className={cn(
+                    "text-[10px] text-center pt-2",
+                    theme === "dark" ? "text-zinc-500" : "text-muted-foreground"
+                  )}
+                >
+                  Powered by ZIVO
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </AppLayout>
+  );
+};
+
+export default ConnectWebsitePage;
