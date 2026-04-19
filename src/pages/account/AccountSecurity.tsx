@@ -79,9 +79,8 @@ export default function AccountSecurity() {
   const { user } = useAuth();
   const { t } = useI18n();
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [passwordForm, setPasswordForm] = useState({ current: "", new: "", confirm: "" });
+  const [passwordForm, setPasswordForm] = useState({ new: "", confirm: "" });
   const [loginAlerts, setLoginAlerts] = useState(true);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [twoFactorLoading, setTwoFactorLoading] = useState(true);
