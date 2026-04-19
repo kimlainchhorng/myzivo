@@ -889,7 +889,7 @@ const CreateCVPage = () => {
       const raw = localStorage.getItem("zivo.cv.style");
       if (raw) return JSON.parse(raw) as CVStyle;
     } catch {}
-    return { accent: "emerald", header: "standard", columns: "auto", fontScale: 1 };
+    return { accent: "emerald", header: "standard", columns: "auto", fontScale: 1, fontFamily: "sans" as const, photoShape: "default" as const, sectionDivider: "default" as const };
   });
   useEffect(() => {
     try { localStorage.setItem("zivo.cv.style", JSON.stringify(cvStyle)); } catch {}
@@ -1381,7 +1381,7 @@ const CreateCVPage = () => {
           <div className="flex items-center gap-1.5">
             <Palette className="w-3.5 h-3.5 text-primary" />
             <span className="text-[11px] font-bold text-foreground">Customize Style</span>
-            <button onClick={() => setCvStyle({ accent: "emerald", header: "standard", columns: "auto", fontScale: 1 })}
+            <button onClick={() => setCvStyle({ accent: "emerald", header: "standard", columns: "auto", fontScale: 1, fontFamily: "sans", photoShape: "default", sectionDivider: "default" })}
               className="ml-auto text-[9px] font-semibold text-muted-foreground hover:text-primary">Reset</button>
           </div>
 
@@ -1424,11 +1424,63 @@ const CreateCVPage = () => {
           {/* Header style */}
           <div>
             <p className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/70 mb-1">Header Style</p>
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5">
               {HEADER_STYLES.map(o => {
                 const active = cvStyle.header === o.id;
                 return (
                   <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, header: o.id }))}
+                    className={cn("px-2 py-1.5 rounded-lg text-[10px] font-semibold border transition-all touch-manipulation active:scale-95",
+                      active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
+                    {o.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Font family */}
+          <div>
+            <p className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/70 mb-1">Font Family</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {FONT_FAMILIES.map(o => {
+                const active = (cvStyle.fontFamily || "sans") === o.id;
+                return (
+                  <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, fontFamily: o.id }))}
+                    style={o.css ? { fontFamily: o.css } : undefined}
+                    className={cn("px-2 py-1.5 rounded-lg text-[10px] font-semibold border transition-all touch-manipulation active:scale-95",
+                      active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
+                    {o.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Photo shape */}
+          <div>
+            <p className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/70 mb-1">Photo Shape</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {PHOTO_SHAPES.map(o => {
+                const active = (cvStyle.photoShape || "default") === o.id;
+                return (
+                  <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, photoShape: o.id }))}
+                    className={cn("px-2 py-1.5 rounded-lg text-[10px] font-semibold border transition-all touch-manipulation active:scale-95",
+                      active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
+                    {o.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section divider */}
+          <div>
+            <p className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/70 mb-1">Section Divider</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {SECTION_DIVIDERS.map(o => {
+                const active = (cvStyle.sectionDivider || "default") === o.id;
+                return (
+                  <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, sectionDivider: o.id }))}
                     className={cn("px-2 py-1.5 rounded-lg text-[10px] font-semibold border transition-all touch-manipulation active:scale-95",
                       active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
                     {o.name}
