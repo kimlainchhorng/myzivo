@@ -682,6 +682,215 @@ function ElegantLayout({ data }: { data: any }) {
   );
 }
 
+/* ── Timeline Template ── */
+function TimelineLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full">
+      <div className="cv-hero px-5 py-4 cv-accent-soft border-l-[5px] cv-accent-border flex items-center gap-4">
+        {data.photo
+          ? <img src={data.photo} alt="" className="cv-photo w-16 h-16 rounded-full object-cover cv-accent-ring" />
+          : <div className="cv-photo w-16 h-16 rounded-full bg-white/60 flex items-center justify-center"><User className="w-7 h-7 cv-accent-text opacity-60" /></div>}
+        <div className="min-w-0 flex-1">
+          <h1 className="cv-name text-[20px] font-extrabold text-foreground leading-tight">{data.fullName || "Your Name"}</h1>
+          {data.jobTitle && <p className="text-[11px] cv-accent-text font-semibold uppercase tracking-wider mt-0.5">{data.jobTitle}</p>}
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[9px] text-foreground/65">
+            {data.email && <span>✉ {data.email}</span>}
+            {data.phone && <span>☎ {data.phone}</span>}
+            {data.location && <span>📍 {data.location}</span>}
+          </div>
+        </div>
+      </div>
+      <div className="cv-main p-4 space-y-4">
+        {data.summary && <div><h3 className="text-[11px] font-extrabold cv-accent-text uppercase tracking-wider mb-1.5">About</h3><p className="text-[10px] text-foreground/75 leading-relaxed">{data.summary}</p></div>}
+        <div className="relative pl-4 border-l-2 cv-accent-border space-y-3">
+          <h3 className="text-[11px] font-extrabold cv-accent-text uppercase tracking-wider -ml-4 mb-1">Journey</h3>
+          {(data.experiences || []).filter((e: any) => e.company || e.position).map((e: any, i: number) => (
+            <div key={i} className="relative">
+              <span className="absolute -left-[21px] top-1 w-3 h-3 rounded-full cv-accent-bg border-2 border-white" />
+              <p className="text-[11px] font-bold text-foreground">{e.company}{e.position ? ` · ${e.position}` : ""}</p>
+              {e.startDate && <p className="text-[9px] cv-accent-text font-semibold">{formatDate(e.startDate)} – {e.current ? "Present" : formatDate(e.endDate)}</p>}
+              {e.description && <p className="text-[10px] text-foreground/70 leading-relaxed mt-0.5">{e.description}</p>}
+            </div>
+          ))}
+        </div>
+        <EducationBlock data={data} />
+        <SkillsList data={data} />
+        <LanguagesList data={data} />
+        <CertsList data={data} />
+        <RefsBlock data={data} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Compact Template ── */
+function CompactLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full p-4 space-y-3">
+      <div className="cv-hero flex items-center gap-3 pb-2 border-b-2 cv-accent-border">
+        {data.photo && <img src={data.photo} alt="" className="cv-photo w-14 h-14 rounded-md object-cover" />}
+        <div className="min-w-0 flex-1">
+          <h1 className="cv-name text-[18px] font-extrabold leading-tight">{data.fullName || "Your Name"}</h1>
+          {data.jobTitle && <p className="text-[10px] cv-accent-text font-bold uppercase tracking-wider">{data.jobTitle}</p>}
+          <div className="flex flex-wrap gap-x-2 text-[9px] text-foreground/60 mt-0.5">
+            {data.email && <span>{data.email}</span>}{data.phone && <span>· {data.phone}</span>}{data.location && <span>· {data.location}</span>}
+          </div>
+        </div>
+      </div>
+      <div className="cv-main grid grid-cols-3 gap-3">
+        <div className="col-span-2 space-y-2.5">
+          {data.summary && <p className="text-[10px] text-foreground/75 leading-snug italic border-l-2 cv-accent-border pl-2">{data.summary}</p>}
+          <ExperienceBlock data={data} />
+          <EducationBlock data={data} />
+        </div>
+        <div className="space-y-2.5">
+          <SkillsList data={data} />
+          <LanguagesList data={data} />
+          <CertsList data={data} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Sidebar (dark rail) Template ── */
+function SidebarLayout({ data }: { data: any }) {
+  return (
+    <div className="cv-flex-cols flex min-h-full">
+      <div className="cv-sidebar w-[36%] shrink-0 p-4 space-y-5 text-white" style={{ background: 'linear-gradient(180deg, #18181b, #27272a)' }}>
+        <div className="text-center">
+          {data.photo
+            ? <img src={data.photo} alt="" className="cv-photo w-20 h-20 rounded-full object-cover mx-auto border-2" style={{ borderColor: 'hsl(var(--primary))' }} />
+            : <div className="cv-photo w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mx-auto"><User className="w-9 h-9 text-white/50" /></div>}
+          <h1 className="cv-name text-[15px] font-extrabold mt-2 leading-tight">{data.fullName || "Your Name"}</h1>
+          {data.jobTitle && <p className="text-[10px] mt-0.5 uppercase tracking-wider" style={{ color: 'hsl(var(--primary))' }}>{data.jobTitle}</p>}
+        </div>
+        <div className="space-y-1 text-[10px] text-white/80">
+          <p className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'hsl(var(--primary))' }}>Contact</p>
+          {data.email && <p className="break-all">✉ {data.email}</p>}
+          {data.phone && <p>☎ {data.phone}</p>}
+          {data.location && <p>📍 {data.location}</p>}
+          {data.linkedin && <p className="break-all">in/ {data.linkedin}</p>}
+        </div>
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'hsl(var(--primary))' }}>Skills</p>
+          <div className="flex flex-wrap gap-1">
+            {(data.skills || []).filter((s: any) => s.name).map((s: any, i: number) => (
+              <span key={i} className="text-[9px] px-2 py-0.5 rounded-full bg-white/10 text-white/90">{s.name}</span>
+            ))}
+          </div>
+        </div>
+        {(data.languages || []).filter((l: any) => l.name).length > 0 && (
+          <div>
+            <p className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: 'hsl(var(--primary))' }}>Languages</p>
+            {(data.languages || []).filter((l: any) => l.name).map((l: any, i: number) => (
+              <p key={i} className="text-[10px] text-white/80">{l.name} <span className="text-white/50">· {l.proficiency}</span></p>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="cv-main flex-1 p-4 space-y-4 bg-white">
+        {data.summary && <div><h3 className="text-[11px] font-extrabold cv-accent-text uppercase tracking-wider mb-1.5">Profile</h3><p className="text-[10px] text-foreground/75 leading-relaxed">{data.summary}</p></div>}
+        <ExperienceBlock data={data} />
+        <EducationBlock data={data} />
+        <CertsList data={data} />
+        <RefsBlock data={data} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Bold Color Block Template ── */
+function BoldLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full">
+      <div className="cv-hero cv-accent-bg p-6 relative overflow-hidden">
+        <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10" />
+        <div className="absolute -right-4 bottom-0 w-24 h-24 rounded-full bg-white/10" />
+        <div className="relative flex items-end gap-4">
+          {data.photo && <img src={data.photo} alt="" className="cv-photo w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-xl" />}
+          <div className="flex-1 min-w-0 pb-1">
+            <h1 className="cv-name text-[26px] font-black text-white leading-none uppercase tracking-tight">{data.fullName || "Your Name"}</h1>
+            {data.jobTitle && <p className="text-[12px] font-bold text-white/95 mt-1">{data.jobTitle}</p>}
+          </div>
+        </div>
+      </div>
+      <div className="cv-main p-5 space-y-4">
+        <div className="grid grid-cols-3 gap-2 -mt-5 relative z-10">
+          {data.email && <div className="bg-white shadow-md rounded-lg p-2 text-[9px]"><p className="cv-accent-text font-bold uppercase">Email</p><p className="break-all">{data.email}</p></div>}
+          {data.phone && <div className="bg-white shadow-md rounded-lg p-2 text-[9px]"><p className="cv-accent-text font-bold uppercase">Phone</p><p>{data.phone}</p></div>}
+          {data.location && <div className="bg-white shadow-md rounded-lg p-2 text-[9px]"><p className="cv-accent-text font-bold uppercase">Location</p><p>{data.location}</p></div>}
+        </div>
+        {data.summary && <div><h3 className="text-[12px] font-black cv-accent-text uppercase tracking-wider mb-1.5">▍ About Me</h3><p className="text-[10px] text-foreground/75 leading-relaxed">{data.summary}</p></div>}
+        <ExperienceBlock data={data} />
+        <EducationBlock data={data} />
+        <SkillsList data={data} />
+        <LanguagesList data={data} />
+        <CertsList data={data} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Academic Serif Template ── */
+function AcademicLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full p-5 space-y-4" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+      <div className="cv-hero text-center pb-3 border-b-[3px] border-double cv-accent-border">
+        <h1 className="cv-name text-[24px] font-bold text-foreground leading-tight">{data.fullName || "Your Name"}</h1>
+        {data.jobTitle && <p className="text-[11px] cv-accent-text mt-1 italic">{data.jobTitle}</p>}
+        <div className="flex flex-wrap justify-center gap-x-3 mt-2 text-[10px] text-foreground/70">
+          {data.email && <span>{data.email}</span>}
+          {data.phone && <span>· {data.phone}</span>}
+          {data.location && <span>· {data.location}</span>}
+        </div>
+      </div>
+      <div className="cv-main space-y-3">
+        {data.summary && <div><h3 className="text-[12px] font-bold cv-accent-text uppercase tracking-[0.15em] mb-1">Summary</h3><p className="text-[10px] text-foreground/80 leading-relaxed text-justify">{data.summary}</p></div>}
+        <ExperienceBlock data={data} />
+        <EducationBlock data={data} />
+        <CertsList data={data} />
+        <SkillsList data={data} />
+        <LanguagesList data={data} />
+        <RefsBlock data={data} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Tech Mono Template ── */
+function TechLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full" style={{ fontFamily: '"JetBrains Mono", "Fira Code", ui-monospace, monospace' }}>
+      <div className="cv-hero p-4 border-b-2 cv-accent-border bg-foreground/[0.03]">
+        <p className="text-[9px] cv-accent-text font-semibold mb-1">{`> whoami`}</p>
+        <h1 className="cv-name text-[22px] font-bold text-foreground leading-tight">{data.fullName || "Your Name"}</h1>
+        {data.jobTitle && <p className="text-[11px] text-foreground/70 mt-0.5">{`// ${data.jobTitle}`}</p>}
+        <div className="flex flex-wrap gap-x-3 mt-2 text-[9px] text-foreground/60">
+          {data.email && <span>email: <span className="cv-accent-text">{data.email}</span></span>}
+          {data.phone && <span>tel: <span className="cv-accent-text">{data.phone}</span></span>}
+          {data.location && <span>loc: <span className="cv-accent-text">{data.location}</span></span>}
+        </div>
+      </div>
+      <div className="cv-main p-4 space-y-4">
+        {data.summary && <div><h3 className="text-[11px] font-bold cv-accent-text mb-1">{`## summary`}</h3><p className="text-[10px] text-foreground/75 leading-relaxed">{data.summary}</p></div>}
+        <div>
+          <h3 className="text-[11px] font-bold cv-accent-text mb-1">{`## stack`}</h3>
+          <div className="flex flex-wrap gap-1">
+            {(data.skills || []).filter((s: any) => s.name).map((s: any, i: number) => (
+              <span key={i} className="text-[9px] px-2 py-0.5 rounded cv-accent-soft cv-accent-text border cv-accent-border">{s.name}</span>
+            ))}
+          </div>
+        </div>
+        <ExperienceBlock data={data} />
+        <EducationBlock data={data} />
+        <CertsList data={data} />
+        <LanguagesList data={data} />
+      </div>
+    </div>
+  );
+}
+
 /* ── Style Customization ────────────────────────── */
 const ACCENT_COLORS = [
   { id: "emerald", name: "Emerald", hsl: "152 60% 40%" },
