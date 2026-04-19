@@ -351,7 +351,10 @@ const AppMore = () => {
       </Sheet>
       {/* Switch Account Sheet */}
       <Sheet open={showSwitchSheet} onOpenChange={setShowSwitchSheet}>
-        <SheetContent side="bottom" className="rounded-t-3xl max-h-[85dvh] overflow-auto pb-10">
+        <SheetContent
+          side="bottom"
+          className="rounded-t-3xl max-h-[85dvh] overflow-auto pb-10 md:!inset-auto md:left-1/2 md:top-1/2 md:bottom-auto md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md md:rounded-3xl md:pb-6 md:border md:border-border/40 md:shadow-2xl"
+        >
           <SheetHeader className="pb-4">
             <SheetTitle className="text-lg font-display">Switch Account</SheetTitle>
           </SheetHeader>
