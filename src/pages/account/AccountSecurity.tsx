@@ -302,27 +302,6 @@ export default function AccountSecurity() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handlePasswordChange} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="current-password">{t("security.current_password")}</Label>
-                  <div className="relative">
-                    <Input
-                      id="current-password"
-                      type={showCurrentPassword ? "text" : "password"}
-                      value={passwordForm.current}
-                      onChange={(e) => setPasswordForm(p => ({ ...p, current: e.target.value }))}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    >
-                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="new-password">{t("security.new_password")}</Label>
