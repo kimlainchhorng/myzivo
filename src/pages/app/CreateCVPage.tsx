@@ -1097,17 +1097,53 @@ const CreateCVPage = () => {
           {expandedSections.skills && (
             <CollapseWrap>
               <div className="space-y-2">
-                {skills.map(sk => (
-                  <div key={sk.id} className="flex items-center gap-2">
-                    <input className={cn(inputCls, "flex-1")} placeholder="e.g. React, Python" value={sk.name} onChange={e => updateSkill(sk.id, "name", e.target.value)} />
-                    <select className={cn(inputCls, "w-[105px] text-[11px]")} value={sk.level} onChange={e => updateSkill(sk.id, "level", e.target.value)}>
-                      {SKILL_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
-                    </select>
-                    {skills.length > 1 && (
-                      <button onClick={() => setSkills(p => p.filter(s => s.id !== sk.id))} className="w-7 h-7 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 touch-manipulation"><Trash2 className="w-3 h-3 text-destructive" /></button>
-                    )}
+                {/* Quick-pick popular skills with real logos */}
+                <div className="rounded-xl border border-border/40 bg-muted/20 p-2">
+                  <p className="text-[10px] font-semibold text-muted-foreground/80 mb-1.5 uppercase tracking-wider">Quick add</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {PRESET_SKILLS.slice(0, 14).map(p => {
+                      const already = skills.some(s => s.name.trim().toLowerCase() === p.name.toLowerCase());
+                      return (
+                        <button
+                          key={p.slug}
+                          type="button"
+                          disabled={already}
+                          onClick={() => setSkills(prev => {
+                            const empty = prev.find(s => !s.name.trim());
+                            if (empty) return prev.map(s => s.id === empty.id ? { ...s, name: p.name } : s);
+                            return [...prev, { id: uid(), name: p.name, level: "Intermediate" }];
+                          })}
+                          className={cn(
+                            "h-7 px-2 rounded-full border border-border/50 bg-card flex items-center gap-1 text-[10px] font-semibold text-foreground/80 touch-manipulation active:scale-95 transition-all",
+                            already && "opacity-40"
+                          )}
+                        >
+                          <img src={getSkillLogoUrl(p.slug, p.color)} alt="" className="w-3 h-3 object-contain" loading="lazy" />
+                          {p.name}
+                        </button>
+                      );
+                    })}
                   </div>
-                ))}
+                </div>
+                {skills.map(sk => {
+                  const preset = findPresetSkill(sk.name);
+                  return (
+                    <div key={sk.id} className="flex items-center gap-2">
+                      <div className="flex-1 relative">
+                        <input className={cn(inputCls, "w-full", preset && "pl-7")} placeholder="e.g. React, Python" value={sk.name} onChange={e => updateSkill(sk.id, "name", e.target.value)} />
+                        {preset && (
+                          <img src={getSkillLogoUrl(preset.slug, preset.color)} alt="" className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 object-contain pointer-events-none" loading="lazy" />
+                        )}
+                      </div>
+                      <select className={cn(inputCls, "w-[105px] text-[11px]")} value={sk.level} onChange={e => updateSkill(sk.id, "level", e.target.value)}>
+                        {SKILL_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+                      </select>
+                      {skills.length > 1 && (
+                        <button onClick={() => setSkills(p => p.filter(s => s.id !== sk.id))} className="w-7 h-7 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 touch-manipulation"><Trash2 className="w-3 h-3 text-destructive" /></button>
+                      )}
+                    </div>
+                  );
+                })}
                 <AddBtn label="Add Skill" onClick={() => setSkills(p => [...p, { id: uid(), name: "", level: "Intermediate" }])} />
               </div>
             </CollapseWrap>
@@ -1218,11 +1254,11 @@ const CreateCVPage = () => {
           </button>
           <button onClick={() => void handleDownloadWord()} disabled={downloading}
             className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
-            <FileText className="w-3.5 h-3.5" /> Word (.docx)
+            <img src="https://cdn.simpleicons.org/microsoftword/2B579A" alt="" className="w-3.5 h-3.5" loading="lazy" /> Word (.docx)
           </button>
           <button onClick={handleDownloadExcel} disabled={downloading}
             className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
-            <FileSpreadsheet className="w-3.5 h-3.5" /> Excel (.csv)
+            <img src="https://cdn.simpleicons.org/microsoftexcel/217346" alt="" className="w-3.5 h-3.5" loading="lazy" /> Excel (.csv)
           </button>
         </div>
 
