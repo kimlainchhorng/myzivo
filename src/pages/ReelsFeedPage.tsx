@@ -1900,7 +1900,16 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
     toast.success(`Reacted with ${emoji}`);
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
+    const text = item.caption || `Check out this post by ${item.author_name}`;
+    try {
+      if (typeof navigator !== "undefined" && (navigator as any).share) {
+        await (navigator as any).share({ title: "ZIVO", text, url: shareUrl });
+        return;
+      }
+    } catch (e: any) {
+      if (e?.name === "AbortError") return;
+    }
     setShowShareSheet(true);
   };
 
