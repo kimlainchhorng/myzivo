@@ -53,6 +53,12 @@ const CV_TEMPLATES = [
   { id: "executive", name: "Executive", desc: "Dark elegant", color: "#0f172a", gradient: "from-slate-900 to-zinc-800" },
   { id: "creative", name: "Creative", desc: "Vibrant artist", color: "#db2777", gradient: "from-pink-500 via-fuchsia-500 to-purple-600" },
   { id: "elegant", name: "Elegant", desc: "Burgundy serif", color: "#9f1239", gradient: "from-rose-700 to-red-900" },
+  { id: "timeline", name: "Timeline", desc: "Vertical journey", color: "#0ea5e9", gradient: "from-sky-500 to-cyan-600" },
+  { id: "compact", name: "Compact", desc: "Dense one-pager", color: "#475569", gradient: "from-slate-500 to-slate-700" },
+  { id: "sidebar", name: "Sidebar", desc: "Dark left rail", color: "#18181b", gradient: "from-zinc-900 to-neutral-800" },
+  { id: "bold", name: "Bold", desc: "Color block hero", color: "#f97316", gradient: "from-orange-500 to-red-600" },
+  { id: "academic", name: "Academic", desc: "Scholar serif", color: "#7c2d12", gradient: "from-amber-900 to-stone-800" },
+  { id: "tech", name: "Tech", desc: "Mono dev style", color: "#22c55e", gradient: "from-green-500 to-emerald-700" },
 ] as const;
 type TemplateId = typeof CV_TEMPLATES[number]["id"];
 
