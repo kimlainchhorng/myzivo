@@ -1566,17 +1566,17 @@ const CreateCVPage = () => {
                     }}
                   >
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-6 h-6 rounded-full bg-white/40 backdrop-blur-sm border border-white/60" />
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full bg-white/40 backdrop-blur-sm border border-white/60" />
                     </div>
                     {active && (
-                      <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white flex items-center justify-center shadow">
-                        <Check className="w-2.5 h-2.5 text-primary" strokeWidth={3} />
+                      <div className="absolute top-1 right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white flex items-center justify-center shadow">
+                        <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary" strokeWidth={3} />
                       </div>
                     )}
                   </div>
-                  <div className="p-2">
-                    <span className={cn("text-[11px] font-bold block leading-tight", active ? "text-primary" : "text-foreground")}>{t.name}</span>
-                    <span className="text-[9px] text-muted-foreground leading-tight">{t.desc}</span>
+                  <div className="p-2 sm:p-3">
+                    <span className={cn("text-[11px] sm:text-sm font-bold block leading-tight", active ? "text-primary" : "text-foreground")}>{t.name}</span>
+                    <span className="text-[9px] sm:text-xs text-muted-foreground leading-tight">{t.desc}</span>
                   </div>
                 </button>
               );
