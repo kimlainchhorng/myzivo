@@ -33,6 +33,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [employeesOpen, setEmployeesOpen] = useState(false);
 
   const isAutoRepair = storeCategory === "auto-repair";
   const productsLabel = isAutoRepair ? "Services" : "Products";
@@ -130,28 +131,47 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
               })}
             </div>
 
-            <div className="my-4 px-3">
+            <div className="my-3 px-3">
               <div className="border-t border-border" />
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-3 mb-1 px-1">Employee Management</p>
             </div>
 
+            {/* Collapsible Employees group */}
             <div className="space-y-1">
-              {employeeItems.map((item) => {
-                const isActive = activeTab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => { onTabChange?.(item.id); setSidebarOpen(false); }}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
-                      isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    )}
-                  >
-                    <item.icon className="w-4.5 h-4.5 shrink-0" />
-                    {item.label}
-                  </button>
-                );
-              })}
+              <button
+                onClick={() => setEmployeesOpen((v) => !v)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                  employeeItems.some((i) => i.id === activeTab)
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+                aria-expanded={employeesOpen}
+              >
+                <Users className="w-4.5 h-4.5 shrink-0" />
+                <span className="flex-1 text-left">Employees</span>
+                <ChevronDown className={cn("w-4 h-4 transition-transform", employeesOpen && "rotate-180")} />
+              </button>
+
+              {employeesOpen && (
+                <div className="ml-3 pl-3 border-l border-border space-y-1">
+                  {employeeItems.map((item) => {
+                    const isActive = activeTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => { onTabChange?.(item.id); setSidebarOpen(false); }}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all",
+                          isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                      >
+                        <item.icon className="w-4 h-4 shrink-0" />
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </nav>
 
