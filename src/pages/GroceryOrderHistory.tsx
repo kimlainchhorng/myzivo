@@ -483,13 +483,22 @@ export default function GroceryOrderHistory() {
 
   const handleRefresh = () => { setRefreshing(true); fetchOrders(); };
 
-  const filtered = orders.filter((o) => {
+  // Auto-hide cancelled orders 14 days after cancellation
+  const CANCELLED_HIDE_MS = 14 * 24 * 60 * 60 * 1000;
+  const visibleOrders = orders.filter((o) => {
+    if (o.status !== "cancelled") return true;
+    const cancelledAt = (o as any).cancelled_at || o.placed_at;
+    if (!cancelledAt) return true;
+    return Date.now() - new Date(cancelledAt).getTime() < CANCELLED_HIDE_MS;
+  });
+
+  const filtered = visibleOrders.filter((o) => {
     if (filter === "active") return !["delivered", "cancelled"].includes(o.status);
     if (filter === "past") return ["delivered", "cancelled"].includes(o.status);
     return true;
   });
 
-  const activeCount = orders.filter((o) => !["delivered", "cancelled"].includes(o.status)).length;
+  const activeCount = visibleOrders.filter((o) => !["delivered", "cancelled"].includes(o.status)).length;
 
   // Real reorder: add items to cart and navigate to store
   const handleReorder = (items: OrderItem[]) => {
