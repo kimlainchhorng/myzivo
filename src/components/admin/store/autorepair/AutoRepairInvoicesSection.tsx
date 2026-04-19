@@ -118,7 +118,7 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{draft.type === "estimate" ? "New Estimate" : "New Invoice"} · {draft.number}</DialogTitle>
+              <DialogTitle>{draft.type === "estimate" ? "Create Estimate" : "Create Invoice"} · {draft.number}</DialogTitle>
             </DialogHeader>
             <div className="space-y-3 py-2">
               <div className="grid grid-cols-2 gap-3">
@@ -147,7 +147,7 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button onClick={save}>Create</Button>
+              <Button onClick={save}>{draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
