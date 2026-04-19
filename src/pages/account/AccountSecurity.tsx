@@ -8,9 +8,10 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import TwoFactorSetupDialog from "@/components/auth/TwoFactorSetupDialog";
 import PhoneOtpVerifyDialog from "@/components/auth/PhoneOtpVerifyDialog";
+import PasswordChangeVerifyDialog from "@/components/auth/PasswordChangeVerifyDialog";
 import { 
   Shield, Lock, Smartphone, Monitor, MapPin, Clock, MessageSquare, Mail,
-  LogOut, Download, Trash2, AlertTriangle, Key,
+  LogOut, Download, Trash2, AlertTriangle, Key, ShieldCheck as ShieldCheckIcon,
   CheckCircle2, Loader2, Eye, EyeOff, Bell, ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,8 @@ export default function AccountSecurity() {
   const [twoFactorLoading, setTwoFactorLoading] = useState(true);
   const [twoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
   const [phoneOtpDialogOpen, setPhoneOtpDialogOpen] = useState(false);
+  const [pwdVerifyDialogOpen, setPwdVerifyDialogOpen] = useState(false);
+  const [pwdVerified, setPwdVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [userPhone, setUserPhone] = useState<string>("");
   const [emailOtpBackup, setEmailOtpBackup] = useState(true);
@@ -144,43 +147,51 @@ export default function AccountSecurity() {
   };
 
 
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validatePasswordForm = (): boolean => {
     if (passwordForm.new !== passwordForm.confirm) {
       toast.error("New passwords don't match");
-      return;
+      return false;
     }
     if (passwordForm.new.length < 8) {
       toast.error("Password must be at least 8 characters");
-      return;
+      return false;
     }
     if (!passwordForm.current) {
       toast.error("Please enter your current password");
-      return;
+      return false;
     }
-
     if (passwordForm.new === passwordForm.current) {
       toast.error("New password must be different from your current one");
-      return;
+      return false;
     }
-
-    // Client-side throttle (defense-in-depth; server enforces real limits)
     const throttle = checkPasswordChangeThrottle();
     if (!throttle.allowed) {
       toast.error(`Too many attempts. Try again in ~${throttle.retryInMin} minute(s).`);
-      return;
+      return false;
     }
-
-    // Strength gate
     const analysis = analyzePassword(passwordForm.new);
     if (analysis.strength === "weak") {
       toast.error(`Password too weak. ${analysis.feedback[0] ?? "Use a stronger password."}`);
+      return false;
+    }
+    return true;
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validatePasswordForm()) return;
+    // Step 1: Require OTP verification (email or SMS) before changing password
+    if (!pwdVerified) {
+      setPwdVerifyDialogOpen(true);
       return;
     }
+    await commitPasswordChange();
+  };
 
+  const commitPasswordChange = async () => {
     setIsChangingPassword(true);
     try {
-      // Step 0: Check new password against known breaches (k-anonymity, safe)
+      // Check new password against known breaches (k-anonymity, safe)
       try {
         const breach = await checkPasswordBreach(passwordForm.new);
         if (breach.breached) {
@@ -194,7 +205,7 @@ export default function AccountSecurity() {
         // Continue if breach check fails
       }
 
-      // Step 1: Verify current password by re-authenticating
+      // Verify current password by re-authenticating
       const { error: verifyError } = await supabase.auth.signInWithPassword({
         email: user?.email ?? "",
         password: passwordForm.current,
@@ -204,15 +215,16 @@ export default function AccountSecurity() {
         return;
       }
 
-      // Step 2: Update to new password
+      // Update to new password
       const { error } = await supabase.auth.updateUser({ password: passwordForm.new });
       if (error) throw error;
 
       // Invalidate all other sessions after password change
-      await supabase.auth.signOut({ scope: 'others' });
+      await supabase.auth.signOut({ scope: "others" });
 
       toast.success("Password updated. All other sessions have been signed out.");
       setPasswordForm({ current: "", new: "", confirm: "" });
+      setPwdVerified(false); // require re-verification for next change
     } catch (error: any) {
       toast.error(error.message || "Failed to update password");
     } finally {
@@ -370,10 +382,18 @@ export default function AccountSecurity() {
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       {t("security.updating")}
                     </>
-                  ) : (
+                  ) : pwdVerified ? (
                     t("security.update_password")
+                  ) : (
+                    <>
+                      <ShieldCheckIcon className="w-4 h-4 mr-2" />
+                      Verify & update password
+                    </>
                   )}
                 </Button>
+                <p className="text-xs text-muted-foreground">
+                  For your security, we'll send a one-time code to your email or phone before changing your password.
+                </p>
               </form>
             </CardContent>
           </Card>
@@ -631,6 +651,19 @@ export default function AccountSecurity() {
                 }
               });
           }
+        }}
+      />
+
+      <PasswordChangeVerifyDialog
+        open={pwdVerifyDialogOpen}
+        onOpenChange={setPwdVerifyDialogOpen}
+        email={user?.email ?? ""}
+        phoneE164={userPhone}
+        phoneVerified={phoneVerified}
+        onVerified={async () => {
+          setPwdVerified(true);
+          // Continue with password change immediately
+          await commitPasswordChange();
         }}
       />
     </div>
