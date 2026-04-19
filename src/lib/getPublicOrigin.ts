@@ -6,10 +6,13 @@ const POST_OG_FUNCTION = "https://slirphzzwcogdbkeicff.supabase.co/functions/v1/
 
 /**
  * Returns the public-facing origin for shareable URLs.
+ * Always returns the production zivollc.com domain so links shared from
+ * preview/staging environments never leak temporary hosts (netlify.app,
+ * lovable.app, localhost, etc.) to social networks.
  */
 export function getPublicOrigin(): string {
   const configuredOrigin = import.meta.env.VITE_PUBLIC_ORIGIN?.trim();
-  if (configuredOrigin) {
+  if (configuredOrigin && /^https:\/\/(www\.)?(zivollc\.com|hizivo\.com)/i.test(configuredOrigin)) {
     return configuredOrigin;
   }
 
