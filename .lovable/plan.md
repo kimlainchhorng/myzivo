@@ -1,43 +1,39 @@
 
+Goal: fix the Go Live back button so it always leaves `/go-live`, even when the page was opened directly and there is no usable browser history.
 
-## Real Smart AI Upgrade — Guided Edge Refinement
+What’s actually wrong:
+- The button in `src/pages/GoLivePage.tsx` currently does `navigate(-1)`.
+- In the screenshot, the preview is already loaded directly on `/go-live`, so there may be no prior app route to go back to.
+- That means the click can fire correctly and still appear to “do nothing.”
+- The earlier `pointer-events-none` overlay fix may be valid, but it does not solve the missing-history case.
 
-Add a **color-guided mask refinement** pass. Instead of trusting MediaPipe's blurry edge, we sample the actual video pixels in a narrow band around the silhouette and reclassify each edge pixel as foreground/background based on **color similarity to nearby confirmed-foreground pixels**.
+Implementation plan:
+1. Replace the raw `navigate(-1)` handler in `GoLivePage` with the shared `useSmartBack()` helper from `src/lib/smartBack.ts`.
+2. Use a concrete fallback route for Go Live, likely `/live`, so:
+   - if history exists: go back
+   - if not: go to the live discovery page instead of staying stuck on `/go-live`
+3. Keep the existing visual button, but make sure the button itself remains explicitly clickable above overlays.
+4. Check other live-entry paths (`/pair/:token`, Live page, wallet/admin shortcuts) so the new fallback does not break those flows.
 
-### Algorithm (per frame, edge band only — fast)
+Files to update:
+- `src/pages/GoLivePage.tsx`
+  - import `useSmartBack`
+  - create `const goBack = useSmartBack("/live")`
+  - change the top-left back button to `onClick={goBack}`
+- Possibly `src/lib/smartBack.ts`
+  - only if needed to make history detection more reliable than plain `window.history.length`
 
-1. **Identify edge band** — pixels where mask alpha is between 30 and 220 (the uncertain zone)
-2. **Sample reference colors** — for each edge pixel, look at a 5px-inward neighbor (confirmed foreground) and a 5px-outward neighbor (confirmed background)
-3. **Color distance test** — compute YCbCr distance from the edge pixel to both references. Closer to FG → set alpha 255, closer to BG → set alpha 0
-4. **Result** — hair strands that are visually distinct from the background get correctly classified; halo pixels (which match background color) get culled
-
-### Why this kills the halo
-The orange/warm halo around your head right now is background-blur pixels showing through the semi-transparent edge. Color-guided refinement looks at those pixels, sees they match the background (orange) not the foreground (skin/hair), and zeros their alpha. Halo gone.
-
-### Implementation
-- Operate on a downsampled (¼ resolution) edge band → ~5ms overhead
-- Use simple Euclidean distance in YCbCr space (perceptually weighted)
-- Apply ONCE after the existing smoothstep + erosion, before Pass-2 feather
-- Keep all current logic intact (motion blend, hair zone, single-sided erosion)
-
-### Net change
+Technical note:
+- If needed, I’ll harden `useSmartBack()` to use a more reliable signal than `window.history.length` alone, because iframe/preview history can be misleading.
+- Preferred behavior:
 ```text
-NEW pass between mask build and Pass-2 clip:
-  - Read video ImageData (downsampled)
-  - Read mask ImageData
-  - For each pixel with alpha ∈ [30,220]:
-      sample FG-ref (5px toward mask interior)
-      sample BG-ref (5px toward mask exterior)
-      classify by YCbCr distance
-      write back hard 0 or 255
-  - Putback to mask
+/go-live back button
+  -> previous in-app page if available
+  -> otherwise /live
 ```
 
-One file. ~40 lines added.
-
-### Expected
-- Halo around head: gone (background-colored edge pixels culled)
-- Face: stays crisp (interior alpha already 255, untouched)
-- Hair strands: preserved if visually distinct from background
-- Performance: +3-5ms/frame on 720p (still 30fps headroom)
-
+What I’ll verify after implementation:
+- Open `/go-live` directly and tap back: should go to `/live`
+- Enter `/go-live` from `/live` and tap back: should return to `/live`
+- Enter via `/pair/:token` flow and tap back: should still leave the studio correctly
+- Confirm the button is clickable on mobile viewport and not blocked by overlays
