@@ -326,11 +326,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     else if (messageType === "locked_video") preview = "Sent you a locked video 🔒🎥";
     else if (messageType === "voice") preview = "Sent you a voice message 🎤";
     else if (messageType === "location") preview = "Shared a location 📍";
-    else if (messageType === "sticker") preview = "Sent a sticker 🎭";
-    else if (messageType === "gif") preview = "Sent a GIF";
+    else if (messageType === "sticker") preview = "Sent you a sticker 🎭";
+    else if (messageType === "gif") preview = "Sent you a GIF";
     else if (messageText.trim()) {
-      const trimmed = messageText.trim();
-      preview = trimmed.length > 100 ? `${trimmed.slice(0, 97)}...` : trimmed;
+      preview = "Sent you a message";
     } else {
       preview = "Sent you a message";
     }
@@ -347,7 +346,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             sender_id: user.id,
             sender_name: senderName,
             sender_avatar_url: senderAvatarUrl,
-            action_url: `/chat`,
+            action_url: `/chat?with=${user.id}`,
           },
           image_url: senderAvatarUrl,
         },
