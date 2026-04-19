@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2 } from "lucide-react";
+import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2, Check, CloudUpload } from "lucide-react";
 import { toast } from "sonner";
 
 type LineItem = { id: string; description: string; qty: number; price: number };
