@@ -342,112 +342,125 @@ export const usePushNotifications = () => {
 
   // Handle notification action (when user taps notification)
   const handleNotificationAction = (action: ActionPerformed) => {
-    const rawData = action.notification.data as Record<string, any>;
-    const incomingCall = normalizeIncomingCallPayload(rawData, action.notification.title, action.notification.body);
-    const data = incomingCall ? { ...rawData, ...incomingCall, type: "incoming_call" } : rawData;
-    
-    if (data?.type) {
-      switch (data.type) {
-        // Ride notifications
-        case "driver_assigned":
-        case "driver_en_route":
-        case "driver_arrived":
-        case "trip_started":
-        case "trip_completed":
-        case "driver_status":
-          window.location.href = safeInternalPath('/rides/tracking', data.trip_id, '/rides');
-          break;
-        case "trip_cancelled":
-          window.location.href = `/rides`;
-          break;
+    const rawData = (action.notification.data || {}) as Record<string, any>;
+    const nestedData = typeof rawData.data === "object" && rawData.data !== null
+      ? rawData.data as Record<string, any>
+      : {};
+    const mergedData = { ...nestedData, ...rawData };
+    const incomingCall = normalizeIncomingCallPayload(mergedData, action.notification.title, action.notification.body);
+    const normalizedType = String(mergedData.type || mergedData.notification_type || "").toLowerCase();
+    const actionUrl = typeof mergedData.action_url === "string" ? mergedData.action_url : "";
+    const senderId = mergedData.sender_id || mergedData.from_user_id || mergedData.user_id;
+    const isChatAction = Boolean(
+      senderId ||
+      normalizedType === "chat_message" ||
+      normalizedType === "new_message" ||
+      normalizedType === "message_received" ||
+      actionUrl.startsWith("/chat")
+    );
 
-        // Flight notifications
-        case "booking_confirmed":
-        case "booking_confirmation":
-        case "checkin_reminder":
-        case "gate_change":
-        case "flight_delayed":
-        case "flight_cancelled":
-        case "boarding_soon":
-        case "flight_departed":
-        case "flight_landed":
-        case "itinerary_update":
-          window.location.href = safeInternalPath('/bookings', data.booking_id, '/bookings');
-          break;
-        case "price_drop":
-          window.location.href = `/flights`;
-          break;
-        case "refund_processed":
-        case "refund_update":
-          window.location.href = `/wallet`;
-          break;
-
-        // Food delivery
-        case "delivery_update":
-        case "order_placed":
-        case "order_confirmed":
-        case "order_preparing":
-        case "order_ready":
-        case "driver_pickup":
-        case "out_for_delivery":
-        case "order_delivered":
-        case "order_cancelled":
-        case "new_order_restaurant":
-        case "new_delivery_driver":
-          window.location.href = safeInternalPath('/eats', data.order_id, '/eats');
-          break;
-        case "pickup_reminder":
-          window.location.href = safeInternalPath('/p2p/bookings', data.rental_id, '/p2p');
-          break;
-
-        // Promos
-        case "surge_alert":
-        case "promo_available":
-          window.location.href = `/rides`;
-          break;
-
-        // Chat messages — open conversation directly
-        case "chat_message":
-        case "new_message":
-        case "message_received": {
-          const senderId = data.sender_id || data.from_user_id;
-          if (senderId) {
-            window.location.href = `/chat?with=${encodeURIComponent(String(senderId))}`;
-          } else {
-            window.location.href = `/chat`;
-          }
-          break;
-        }
-
-        // Calling
-        case "incoming_call":
-          try {
-            sessionStorage.setItem("pendingIncomingCallPush", JSON.stringify({
-              call_id: data.call_id,
-              caller_id: data.caller_id,
-              call_type: data.call_type,
-              caller_name: data.caller_name || action.notification.title,
-              caller_avatar: data.caller_avatar,
-              ts: Date.now(),
-            }));
-          } catch {
-            // Storage can fail in some restricted contexts; fallback still dispatches event.
-          }
-
-          window.dispatchEvent(new CustomEvent("incoming-call-push", {
-            detail: {
-              call_id: data.call_id,
-              caller_id: data.caller_id,
-              call_type: data.call_type,
-              caller_name: data.caller_name || action.notification.title,
-              caller_avatar: data.caller_avatar,
-            },
-          }));
-          break;
-
-        default:
-          window.location.href = `/notifications`;
+    if (incomingCall) {
+      try {
+        sessionStorage.setItem("pendingIncomingCallPush", JSON.stringify({
+          call_id: incomingCall.call_id,
+          caller_id: incomingCall.caller_id,
+          call_type: incomingCall.call_type,
+          caller_name: incomingCall.caller_name || action.notification.title,
+          caller_avatar: incomingCall.caller_avatar,
+          ts: Date.now(),
+        }));
+      } catch {
+        // Storage can fail in some restricted contexts; fallback still dispatches event.
       }
+
+      window.dispatchEvent(new CustomEvent("incoming-call-push", {
+        detail: {
+          call_id: incomingCall.call_id,
+          caller_id: incomingCall.caller_id,
+          call_type: incomingCall.call_type,
+          caller_name: incomingCall.caller_name || action.notification.title,
+          caller_avatar: incomingCall.caller_avatar,
+        },
+      }));
+      return;
+    }
+
+    if (isChatAction) {
+      if (senderId) {
+        window.location.href = `/chat?with=${encodeURIComponent(String(senderId))}`;
+        return;
+      }
+
+      if (actionUrl.startsWith("/chat")) {
+        window.location.href = actionUrl;
+        return;
+      }
+
+      window.location.href = `/chat`;
+      return;
+    }
+
+    switch (normalizedType) {
+      // Ride notifications
+      case "driver_assigned":
+      case "driver_en_route":
+      case "driver_arrived":
+      case "trip_started":
+      case "trip_completed":
+      case "driver_status":
+        window.location.href = safeInternalPath('/rides/tracking', mergedData.trip_id, '/rides');
+        break;
+      case "trip_cancelled":
+        window.location.href = `/rides`;
+        break;
+
+      // Flight notifications
+      case "booking_confirmed":
+      case "booking_confirmation":
+      case "checkin_reminder":
+      case "gate_change":
+      case "flight_delayed":
+      case "flight_cancelled":
+      case "boarding_soon":
+      case "flight_departed":
+      case "flight_landed":
+      case "itinerary_update":
+        window.location.href = safeInternalPath('/bookings', mergedData.booking_id, '/bookings');
+        break;
+      case "price_drop":
+        window.location.href = `/flights`;
+        break;
+      case "refund_processed":
+      case "refund_update":
+        window.location.href = `/wallet`;
+        break;
+
+      // Food delivery
+      case "delivery_update":
+      case "order_placed":
+      case "order_confirmed":
+      case "order_preparing":
+      case "order_ready":
+      case "driver_pickup":
+      case "out_for_delivery":
+      case "order_delivered":
+      case "order_cancelled":
+      case "new_order_restaurant":
+      case "new_delivery_driver":
+        window.location.href = safeInternalPath('/eats', mergedData.order_id, '/eats');
+        break;
+      case "pickup_reminder":
+        window.location.href = safeInternalPath('/p2p/bookings', mergedData.rental_id, '/p2p');
+        break;
+
+      // Promos
+      case "surge_alert":
+      case "promo_available":
+        window.location.href = `/rides`;
+        break;
+
+      default:
+        window.location.href = `/notifications`;
     }
   };
 
