@@ -68,11 +68,40 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
     setDraft({
       id: crypto.randomUUID(), type, number: num, customer: "",
       firstName: "", lastName: "", phone: "", email: "", address: "",
+      vin: "", year: "", make: "", model: "", trim: "", engine: "", transmission: "",
       vehicle: "",
       items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
       status: "draft", createdAt: new Date().toISOString(),
     });
     setCreating(true);
+  };
+
+  const lookupVin = async (vin: string) => {
+    const clean = vin.trim().toUpperCase();
+    if (clean.length !== 17) { toast.error("VIN must be 17 characters"); return; }
+    setVinLoading(true);
+    try {
+      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${encodeURIComponent(clean)}?format=json`);
+      const data = await res.json();
+      const r = data?.Results?.[0];
+      if (!r || (!r.Make && !r.Model && !r.ModelYear)) { toast.error("No vehicle data found for this VIN"); return; }
+      const year = r.ModelYear || "";
+      const make = r.Make ? r.Make.replace(/\b\w/g, (c: string) => c.toUpperCase()) : "";
+      const model = r.Model || "";
+      const trim = r.Trim || r.Series || "";
+      const displ = r.DisplacementL ? `${parseFloat(r.DisplacementL).toFixed(1)}L` : "";
+      const cyl = r.EngineCylinders ? ` ${r.EngineCylinders === "4" ? "L4" : r.EngineCylinders === "6" ? "V6" : r.EngineCylinders === "8" ? "V8" : `${r.EngineCylinders}-cyl`}` : "";
+      const fuel = r.FuelTypePrimary && r.FuelTypePrimary !== "Gasoline" ? ` ${r.FuelTypePrimary}` : "";
+      const engine = `${displ}${cyl}${fuel}`.trim();
+      const trans = [r.TransmissionStyle, r.TransmissionSpeeds ? `${r.TransmissionSpeeds}-Speed` : ""].filter(Boolean).join(" ").trim();
+      const vehicle = [year, make, model].filter(Boolean).join(" ");
+      setDraft(d => ({ ...d, vin: clean, year, make, model, trim, engine, transmission: trans, vehicle }));
+      toast.success("Vehicle details auto-filled");
+    } catch (e) {
+      toast.error("VIN lookup failed");
+    } finally {
+      setVinLoading(false);
+    }
   };
 
   const save = () => {
