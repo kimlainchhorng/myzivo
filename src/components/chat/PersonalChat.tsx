@@ -575,14 +575,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         insertData.expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       }
 
-      const { data, error } = await (supabase as any)
+      // Fire-and-forget insert; realtime INSERT echo will replace the optimistic row.
+      // Skipping `.select().single()` cuts ~100-300ms of perceived send latency.
+      const { error } = await (supabase as any)
         .from("direct_messages")
-        .insert(insertData)
-        .select()
-        .single();
+        .insert(insertData);
 
       if (error) throw error;
-      setMessages((prev) => prev.map((m) => m.id === optimisticId ? data : m));
       void sendChatPush(msgType, text);
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
