@@ -52,6 +52,7 @@ import {
 } from "@/hooks/useNotificationPreferences";
 import { NotificationChannelCard } from "@/components/account/NotificationChannelCard";
 import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
+import InstallAppCard from "@/components/account/InstallAppCard";
 import { toast } from "sonner";
 
 interface NotificationCategory {
