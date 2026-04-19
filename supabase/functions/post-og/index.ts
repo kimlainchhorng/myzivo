@@ -121,7 +121,7 @@ async function resolvePostMeta(
 ): Promise<PostMeta | null> {
   const { data: userPost } = await supabase
     .from("user_posts")
-    .select("id, caption, media_url, media_type, user_id")
+    .select("id, caption, media_url, media_type, thumbnail_url, user_id")
     .eq("id", postId)
     .maybeSingle();
 
@@ -133,7 +133,7 @@ async function resolvePostMeta(
       .maybeSingle();
 
     const isVideo = userPost.media_type === "video" || userPost.media_type === "reel";
-    const fallbackImage = (profile?.avatar_url as string) || `${APP_ORIGIN}/og-image.png`;
+    const fallbackImage = (userPost.thumbnail_url as string) || (profile?.avatar_url as string) || `${APP_ORIGIN}/og-image.png`;
 
     return {
       id: userPost.id as string,
