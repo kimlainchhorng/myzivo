@@ -83,10 +83,17 @@ export default function ShareSheet({
     onClose();
   };
 
-  const handleOptionClick = (opt: { url: string; copyMessage?: string }) => {
+  const handleOptionClick = (opt: { label?: string; url: string; copyMessage?: string }) => {
     if (opt.url === "__copy__") {
       handleCopyLink();
       if (opt.copyMessage) toast.success(opt.copyMessage);
+      if (opt.label === "Facebook") {
+        setTimeout(() => {
+          import("@/lib/openExternalUrl").then(({ openExternalUrl }) =>
+            openExternalUrl("https://www.facebook.com/")
+          );
+        }, 400);
+      }
     } else {
       onClose();
       import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(opt.url));
