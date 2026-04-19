@@ -406,6 +406,19 @@ export const usePushNotifications = () => {
           window.location.href = `/rides`;
           break;
 
+        // Chat messages — open conversation directly
+        case "chat_message":
+        case "new_message":
+        case "message_received": {
+          const senderId = data.sender_id || data.from_user_id;
+          if (senderId) {
+            window.location.href = `/chat?with=${encodeURIComponent(String(senderId))}`;
+          } else {
+            window.location.href = `/chat`;
+          }
+          break;
+        }
+
         // Calling
         case "incoming_call":
           try {

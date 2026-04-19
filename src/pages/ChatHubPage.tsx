@@ -172,6 +172,27 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     verify();
   }, [searchParams, user]);
 
+  // Handle ?with=<userId> deep-link from push notification tap
+  useEffect(() => {
+    const withId = searchParams.get("with");
+    if (!withId || !user) return;
+    searchParams.delete("with");
+    setSearchParams(searchParams, { replace: true });
+    setActive("personal");
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("user_id", withId)
+        .maybeSingle();
+      setOpenPersonalChat({
+        id: withId,
+        name: data?.full_name || "Chat",
+        avatar: data?.avatar_url || null,
+      });
+    })();
+  }, [searchParams, user, setSearchParams]);
+
   // Handle deep-link from profile page chat button OR share-to-chat OR start call
   const [pendingCall, setPendingCall] = useState<"voice" | "video" | null>(null);
   useEffect(() => {
