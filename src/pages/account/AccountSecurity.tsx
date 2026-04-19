@@ -610,6 +610,29 @@ export default function AccountSecurity() {
         onOpenChange={setTwoFactorDialogOpen}
         onEnrolled={refreshTwoFactor}
       />
+
+      <PhoneOtpVerifyDialog
+        open={phoneOtpDialogOpen}
+        onOpenChange={setPhoneOtpDialogOpen}
+        initialPhone={userPhone}
+        onVerified={() => {
+          setPhoneVerified(true);
+          // Refresh phone from profile in case the user changed it
+          if (user?.id) {
+            supabase
+              .from("profiles")
+              .select("phone_e164, phone_verified")
+              .eq("user_id", user.id)
+              .maybeSingle()
+              .then(({ data }: any) => {
+                if (data) {
+                  setUserPhone(data.phone_e164 || "");
+                  setPhoneVerified(!!data.phone_verified);
+                }
+              });
+          }
+        }}
+      />
     </div>
   );
 }
