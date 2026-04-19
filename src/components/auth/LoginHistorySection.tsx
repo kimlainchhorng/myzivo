@@ -1,7 +1,8 @@
+/// <reference types="google.maps" />
 /**
  * LoginHistorySection — Shows login history with device, IP, location & map
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Monitor, Smartphone, Tablet, MapPin, Clock, Globe, Shield,
+  Monitor, Smartphone, Tablet, MapPin, Clock, Shield,
   AlertTriangle, ChevronDown, ChevronUp, LogOut, Loader2
 } from "lucide-react";
 import {
@@ -19,20 +20,85 @@ import {
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
 
-// Cache the Google Maps API key for the session
 let cachedMapsKey: string | null = null;
+let googleMapsPromise: Promise<void> | null = null;
+let googleMapsLoaded = false;
+let googleMapsAuthFailed = false;
+
 async function getMapsKey(): Promise<string> {
   if (cachedMapsKey !== null) return cachedMapsKey;
-  const envKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || "";
-  if (envKey) { cachedMapsKey = envKey; return envKey; }
+  const envKey = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_GOOGLE_MAPS_API_KEY || "";
+  if (envKey) {
+    cachedMapsKey = envKey;
+    return envKey;
+  }
   try {
-    const { data, error } = await supabase.functions.invoke("maps-api-key");
-    if (!error && data?.key) { cachedMapsKey = data.key; return data.key; }
-  } catch {}
+    const { data, error } = await supabase.functions.invoke<{ key?: string }>("maps-api-key");
+    if (!error && data?.key) {
+      cachedMapsKey = data.key;
+      return data.key;
+    }
+  } catch {
+    // ignore and use empty fallback
+  }
   cachedMapsKey = "";
   return "";
 }
 
+(window as Window & { gm_authFailure?: () => void }).gm_authFailure = () => {
+  googleMapsAuthFailed = true;
+  googleMapsPromise = null;
+  googleMapsLoaded = false;
+};
+
+function loadGoogleMapsScript(apiKey: string): Promise<void> {
+  if (googleMapsAuthFailed) return Promise.reject(new Error("Google Maps auth failed"));
+  if (googleMapsLoaded && window.google?.maps) return Promise.resolve();
+  if (googleMapsPromise) return googleMapsPromise;
+
+  googleMapsPromise = new Promise<void>((resolve, reject) => {
+    if (window.google?.maps) {
+      googleMapsLoaded = true;
+      resolve();
+      return;
+    }
+
+    const existing = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]') as HTMLScriptElement | null;
+    if (existing) {
+      const waitForMaps = () => {
+        if (window.google?.maps) {
+          googleMapsLoaded = true;
+          resolve();
+          return;
+        }
+        setTimeout(waitForMaps, 200);
+      };
+      waitForMaps();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (googleMapsAuthFailed) {
+        googleMapsPromise = null;
+        reject(new Error("Google Maps auth failed"));
+        return;
+      }
+      googleMapsLoaded = true;
+      resolve();
+    };
+    script.onerror = () => {
+      googleMapsPromise = null;
+      reject(new Error("Failed to load Google Maps script"));
+    };
+    document.head.appendChild(script);
+  });
+
+  return googleMapsPromise;
+}
 
 interface LoginEntry {
   id: string;
@@ -64,16 +130,84 @@ function MiniMap({
   city?: string | null;
   query?: string | null;
 }) {
-  const [mapsKey, setMapsKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    getMapsKey().then((k) => { if (!cancelled) setMapsKey(k); });
-    return () => { cancelled = true; };
-  }, []);
+  const mapRef = useRef<HTMLDivElement | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasFailed, setHasFailed] = useState(false);
 
   const hasCoords = typeof lat === "number" && typeof lon === "number";
   const q = (query || city || "").trim();
+  const viewerHref = hasCoords
+    ? `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!hasCoords && !q) {
+      setIsLoading(false);
+      setHasFailed(true);
+      return;
+    }
+
+    const init = async () => {
+      try {
+        setIsLoading(true);
+        setHasFailed(false);
+
+        const key = await getMapsKey();
+        if (!key) throw new Error("Missing Google Maps key");
+
+        await loadGoogleMapsScript(key);
+        if (cancelled || !mapRef.current || !window.google?.maps) return;
+
+        const map = new window.google.maps.Map(mapRef.current, {
+          center: hasCoords ? { lat: lat!, lng: lon! } : { lat: 39.8283, lng: -98.5795 },
+          zoom: hasCoords ? 11 : 10,
+          disableDefaultUI: true,
+          gestureHandling: "cooperative",
+          clickableIcons: false,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+        });
+
+        if (hasCoords) {
+          new window.google.maps.Marker({
+            map,
+            position: { lat: lat!, lng: lon! },
+            title: q || city || "Login location",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ address: q }, (results, status) => {
+          if (cancelled) return;
+          if (status === "OK" && results?.[0]) {
+            const location = results[0].geometry.location;
+            map.setCenter(location);
+            new window.google.maps.Marker({ map, position: location, title: q || city || "Login location" });
+            setIsLoading(false);
+          } else {
+            setHasFailed(true);
+            setIsLoading(false);
+          }
+        });
+      } catch (error) {
+        console.warn("[LoginHistorySection] MiniMap failed to initialize", error);
+        if (!cancelled) {
+          setHasFailed(true);
+          setIsLoading(false);
+        }
+      }
+    };
+
+    init();
+    return () => {
+      cancelled = true;
+    };
+  }, [hasCoords, lat, lon, q, city]);
 
   if (!hasCoords && !q) {
     return (
@@ -84,67 +218,33 @@ function MiniMap({
     );
   }
 
-  // Loading state while fetching key
-  if (mapsKey === null) {
+  if (hasFailed) {
     return (
-      <div className="rounded-lg border border-border mt-2 h-[180px] flex items-center justify-center bg-muted/30">
-        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+      <div className="rounded-lg overflow-hidden border border-border mt-2 relative bg-muted/30 h-[180px] flex items-center justify-center px-4 text-center">
+        <div className="space-y-2">
+          <MapPin className="w-5 h-5 mx-auto text-muted-foreground" />
+          <p className="text-xs text-muted-foreground">Map preview unavailable in this view</p>
+          <a
+            href={viewerHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex text-xs text-primary underline underline-offset-2"
+          >
+            Open in Google Maps
+          </a>
+        </div>
       </div>
     );
   }
 
-  const viewerHref = hasCoords
-    ? `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
-
-  // Primary: Google Maps Embed iframe (interactive)
-  if (mapsKey) {
-    const embedSrc = hasCoords
-      ? `https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=${lat},${lon}&zoom=11`
-      : `https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=${encodeURIComponent(q)}&zoom=10`;
-    return (
-      <div className="rounded-lg overflow-hidden border border-border mt-2 relative bg-muted/30">
-        <iframe
-          title={`Login location${city ? ` - ${city}` : ""}`}
-          width="100%"
-          height="180"
-          style={{ border: 0, display: "block" }}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          src={embedSrc}
-          allowFullScreen
-          onError={(e) => {
-            // Hide broken iframe; the static fallback link below remains
-            (e.currentTarget as HTMLIFrameElement).style.display = "none";
-          }}
-        />
-        <a
-          href={viewerHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute bottom-1 right-1 text-[10px] bg-background/90 backdrop-blur px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground border border-border/50"
-        >
-          View larger
-        </a>
-      </div>
-    );
-  }
-
-  // Fallback: OpenStreetMap if no Google key
-  const bbox = hasCoords ? `${lon! - 0.5},${lat! - 0.3},${lon! + 0.5},${lat! + 0.3}` : "";
-  const osmSrc = hasCoords
-    ? `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`
-    : `https://www.openstreetmap.org/export/embed.html?layer=mapnik&search=${encodeURIComponent(q)}`;
   return (
-    <div className="rounded-lg overflow-hidden border border-border mt-2 relative bg-muted/30">
-      <iframe
-        title={`Login location${city ? ` - ${city}` : ""}`}
-        width="100%"
-        height="180"
-        style={{ border: 0, display: "block" }}
-        loading="lazy"
-        src={osmSrc}
-      />
+    <div className="rounded-lg overflow-hidden border border-border mt-2 relative bg-muted/30 h-[180px]">
+      <div ref={mapRef} className="h-full w-full" />
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[1px]">
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        </div>
+      )}
       <a
         href={viewerHref}
         target="_blank"
@@ -156,6 +256,7 @@ function MiniMap({
     </div>
   );
 }
+
 
 export default function LoginHistorySection() {
   const { user } = useAuth();
