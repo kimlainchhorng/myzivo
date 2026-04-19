@@ -1081,7 +1081,6 @@ function SoundOverlay({
         description="Watch and share short videos, reels, and stories from creators around the world. Like, comment, follow, and discover trending content on ZIVO."
         canonical="/feed"
       />
-    <>
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
