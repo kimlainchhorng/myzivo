@@ -2116,3 +2116,50 @@ html[lang="km"] textarea {
   background: conic-gradient(from 0deg, #b388ff, #6a1b9a, #b388ff, #2a0845, #b388ff);
   filter: drop-shadow(0 0 5px rgba(140,80,220,0.45));
 }
+
+/* =============================================
+   CV BUILDER — Style Customizer Hooks
+   These rules let the Customize Style panel
+   (accent / header / columns / font scale) take
+   real visual effect over any template.
+   ============================================= */
+.cv-doc { color: #1a1a1a; }
+
+/* Accent surfaces use the live --primary token set inline */
+.cv-doc .cv-accent-bg { background-color: hsl(var(--primary)); color: #fff; }
+.cv-doc .cv-accent-text { color: hsl(var(--primary)); }
+.cv-doc .cv-accent-border { border-color: hsl(var(--primary)); }
+.cv-doc .cv-accent-soft { background-color: hsl(var(--primary) / 0.08); }
+.cv-doc .cv-accent-rule { background-color: hsl(var(--primary)); }
+.cv-doc .cv-accent-ring { box-shadow: 0 0 0 2px hsl(var(--primary) / 0.35); }
+
+/* ── Column overrides ── */
+.cv-doc.cv-cols-1 .cv-sidebar { display: none; }
+.cv-doc.cv-cols-1 .cv-main { width: 100% !important; padding: 1rem 1.25rem; }
+.cv-doc.cv-cols-1 .cv-flex-cols { display: block; }
+
+.cv-doc.cv-cols-2 .cv-sidebar { display: block; width: 38% !important; }
+.cv-doc.cv-cols-2 .cv-main { flex: 1 1 0%; }
+.cv-doc.cv-cols-2 .cv-flex-cols { display: flex; }
+
+/* ── Header style overrides (apply to any template) ── */
+.cv-doc.cv-header-bold .cv-hero h1,
+.cv-doc.cv-header-bold .cv-name { font-weight: 900 !important; letter-spacing: -0.01em; }
+.cv-doc.cv-header-bold .cv-hero { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+
+.cv-doc.cv-header-banner .cv-hero {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7)) !important;
+  color: #fff !important;
+}
+.cv-doc.cv-header-banner .cv-hero h1,
+.cv-doc.cv-header-banner .cv-hero p,
+.cv-doc.cv-header-banner .cv-hero span { color: #fff !important; }
+
+.cv-doc.cv-header-minimal .cv-hero {
+  background: transparent !important;
+  border-bottom: 1px solid hsl(var(--primary) / 0.25);
+  padding: 0.75rem 1rem;
+}
+.cv-doc.cv-header-minimal .cv-hero h1 { font-weight: 600; letter-spacing: 0; }
+.cv-doc.cv-header-minimal .cv-hero .cv-photo { width: 3rem; height: 3rem; }
+
