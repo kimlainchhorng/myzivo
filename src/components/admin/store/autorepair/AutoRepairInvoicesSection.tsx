@@ -31,16 +31,31 @@ type Doc = {
   trim: string;
   engine: string;
   transmission: string;
+  driveType: string;
+  bodyClass: string;
+  doors: string;
+  fuel: string;
+  plant: string;
   vehicle: string;
   items: LineItem[];
   status: "draft" | "sent" | "paid" | "approved";
   createdAt: string;
 };
 
+const emptyDraft = (): Doc => ({
+  id: "", type: "estimate", number: "", customer: "",
+  firstName: "", lastName: "", phone: "", email: "", address: "",
+  vin: "", year: "", make: "", model: "", trim: "", engine: "", transmission: "",
+  driveType: "", bodyClass: "", doors: "", fuel: "", plant: "",
+  vehicle: "",
+  items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
+  status: "draft", createdAt: new Date().toISOString(),
+});
+
 const seed: Doc[] = [
-  { id: "1", type: "estimate", number: "EST-1042", customer: "Maria Lopez", firstName: "Maria", lastName: "Lopez", phone: "(225) 555-0142", email: "maria.lopez@example.com", address: "1420 Highland Rd, Baton Rouge, LA", vin: "4T1B11HK5JU123456", year: "2018", make: "Toyota", model: "Camry", trim: "LE", engine: "2.5L L4 DOHC", transmission: "8-Speed Automatic", vehicle: "2018 Toyota Camry", items: [{ id: "a", description: "Brake Pad Replacement (Front)", qty: 1, price: 180 }, { id: "b", description: "Rotor Resurface", qty: 2, price: 45 }], status: "sent", createdAt: new Date().toISOString() },
-  { id: "2", type: "invoice", number: "INV-2031", customer: "James Carter", firstName: "James", lastName: "Carter", phone: "(225) 555-0188", email: "james.carter@example.com", address: "88 Government St, Baton Rouge, LA", vin: "1FTEW1EP5LFA12345", year: "2020", make: "Ford", model: "F-150", trim: "XLT", engine: "3.5L V6 EcoBoost", transmission: "10-Speed Automatic", vehicle: "2020 Ford F-150", items: [{ id: "c", description: "Full Synthetic Oil Change", qty: 1, price: 89.99 }], status: "paid", createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: "3", type: "invoice", number: "INV-2032", customer: "Linda Park", firstName: "Linda", lastName: "Park", phone: "(225) 555-0210", email: "linda.park@example.com", address: "305 Perkins Rd, Baton Rouge, LA", vin: "2HGFC2F59KH512345", year: "2019", make: "Honda", model: "Civic", trim: "LX", engine: "2.0L L4", transmission: "CVT", vehicle: "2019 Honda Civic", items: [{ id: "d", description: "AC Recharge", qty: 1, price: 149 }, { id: "e", description: "Cabin Air Filter", qty: 1, price: 35 }], status: "sent", createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
+  { id: "1", type: "estimate", number: "EST-1042", customer: "Maria Lopez", firstName: "Maria", lastName: "Lopez", phone: "(225) 555-0142", email: "maria.lopez@example.com", address: "1420 Highland Rd, Baton Rouge, LA", vin: "4T1B11HK5JU123456", year: "2018", make: "Toyota", model: "Camry", trim: "LE", engine: "2.5L L4 DOHC", transmission: "8-Speed Automatic", driveType: "FWD", bodyClass: "Sedan/Saloon", doors: "4", fuel: "Gasoline", plant: "Georgetown, KY, USA", vehicle: "2018 Toyota Camry", items: [{ id: "a", description: "Brake Pad Replacement (Front)", qty: 1, price: 180 }, { id: "b", description: "Rotor Resurface", qty: 2, price: 45 }], status: "sent", createdAt: new Date().toISOString() },
+  { id: "2", type: "invoice", number: "INV-2031", customer: "James Carter", firstName: "James", lastName: "Carter", phone: "(225) 555-0188", email: "james.carter@example.com", address: "88 Government St, Baton Rouge, LA", vin: "1FTEW1EP5LFA12345", year: "2020", make: "Ford", model: "F-150", trim: "XLT", engine: "3.5L V6 EcoBoost", transmission: "10-Speed Automatic", driveType: "4WD", bodyClass: "Pickup", doors: "4", fuel: "Gasoline", plant: "Dearborn, MI, USA", vehicle: "2020 Ford F-150", items: [{ id: "c", description: "Full Synthetic Oil Change", qty: 1, price: 89.99 }], status: "paid", createdAt: new Date(Date.now() - 86400000).toISOString() },
+  { id: "3", type: "invoice", number: "INV-2032", customer: "Linda Park", firstName: "Linda", lastName: "Park", phone: "(225) 555-0210", email: "linda.park@example.com", address: "305 Perkins Rd, Baton Rouge, LA", vin: "2HGFC2F59KH512345", year: "2019", make: "Honda", model: "Civic", trim: "LX", engine: "2.0L L4", transmission: "CVT", driveType: "FWD", bodyClass: "Sedan/Saloon", doors: "4", fuel: "Gasoline", plant: "Greensburg, IN, USA", vehicle: "2019 Honda Civic", items: [{ id: "d", description: "AC Recharge", qty: 1, price: 149 }, { id: "e", description: "Cabin Air Filter", qty: 1, price: 35 }], status: "sent", createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
 ];
 
 interface Props { storeId: string }
@@ -49,14 +64,7 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
   const [docs, setDocs] = useState<Doc[]>(seed);
   const [tab, setTab] = useState<"estimate" | "invoice">("estimate");
   const [creating, setCreating] = useState(false);
-  const [draft, setDraft] = useState<Doc>({
-    id: "", type: "estimate", number: "", customer: "",
-    firstName: "", lastName: "", phone: "", email: "", address: "",
-    vin: "", year: "", make: "", model: "", trim: "", engine: "", transmission: "",
-    vehicle: "",
-    items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
-    status: "draft", createdAt: new Date().toISOString(),
-  });
+  const [draft, setDraft] = useState<Doc>(emptyDraft());
   const [vinLoading, setVinLoading] = useState(false);
 
   const filtered = useMemo(() => docs.filter(d => d.type === tab), [docs, tab]);
@@ -66,14 +74,7 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
   const startNew = (type: "estimate" | "invoice") => {
     const prefix = type === "estimate" ? "EST-" : "INV-";
     const num = `${prefix}${Math.floor(1000 + Math.random() * 9000)}`;
-    setDraft({
-      id: crypto.randomUUID(), type, number: num, customer: "",
-      firstName: "", lastName: "", phone: "", email: "", address: "",
-      vin: "", year: "", make: "", model: "", trim: "", engine: "", transmission: "",
-      vehicle: "",
-      items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
-      status: "draft", createdAt: new Date().toISOString(),
-    });
+    setDraft({ ...emptyDraft(), id: crypto.randomUUID(), type, number: num });
     setCreating(true);
   };
 
@@ -97,6 +98,11 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
         trim: data.trim || "",
         engine: data.engine || "",
         transmission: data.transmission || "",
+        driveType: data.driveType || "",
+        bodyClass: data.bodyClass || "",
+        doors: data.doors || "",
+        fuel: data.fuel || "",
+        plant: data.plant || "",
         vehicle: data.vehicle || [data.year, data.make, data.model].filter(Boolean).join(" "),
       }));
 
@@ -226,7 +232,52 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">Transmission</label>
-                  <Input placeholder="Automatic" value={draft.transmission} onChange={e => setDraft({ ...draft, transmission: e.target.value })} />
+                  <Input placeholder="8-Speed Automatic" value={draft.transmission} onChange={e => setDraft({ ...draft, transmission: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Drivetrain</label>
+                  <select
+                    value={draft.driveType}
+                    onChange={e => setDraft({ ...draft, driveType: e.target.value })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">Select…</option>
+                    <option value="FWD">FWD · Front-Wheel Drive</option>
+                    <option value="RWD">RWD · Rear-Wheel Drive</option>
+                    <option value="AWD">AWD · All-Wheel Drive</option>
+                    <option value="4WD">4WD · 4x4 / Four-Wheel Drive</option>
+                    <option value="2WD">2WD · Two-Wheel Drive</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Body class</label>
+                  <Input placeholder="Sedan, SUV, Pickup…" value={draft.bodyClass} onChange={e => setDraft({ ...draft, bodyClass: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Doors</label>
+                  <Input type="number" min={2} max={6} placeholder="4" value={draft.doors} onChange={e => setDraft({ ...draft, doors: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Fuel type</label>
+                  <select
+                    value={draft.fuel}
+                    onChange={e => setDraft({ ...draft, fuel: e.target.value })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">Select…</option>
+                    <option value="Gasoline">Gasoline</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="Plug-In Hybrid">Plug-In Hybrid (PHEV)</option>
+                    <option value="Electric">Electric (EV)</option>
+                    <option value="Flex Fuel (E85)">Flex Fuel (E85)</option>
+                    <option value="CNG">CNG</option>
+                    <option value="Hydrogen">Hydrogen</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5 col-span-2 sm:col-span-3">
+                  <label className="text-xs font-medium text-muted-foreground">Manufacturing plant</label>
+                  <Input placeholder="City, State, Country" value={draft.plant} onChange={e => setDraft({ ...draft, plant: e.target.value })} />
                 </div>
               </div>
             </CardContent>

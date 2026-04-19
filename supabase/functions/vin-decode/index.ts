@@ -19,18 +19,46 @@ type VpicResult = {
   DisplacementL?: string;
   EngineCylinders?: string;
   EngineConfiguration?: string;
+  EngineHP?: string;
   EngineModel?: string;
   FuelTypePrimary?: string;
+  FuelTypeSecondary?: string;
   TransmissionStyle?: string;
   TransmissionSpeeds?: string;
   BodyClass?: string;
+  Doors?: string;
   DriveType?: string;
   PlantCity?: string;
+  PlantCountry?: string;
+  PlantState?: string;
+  GVWR?: string;
+  Turbo?: string;
 };
 
 const sanitizeVin = (value: string) => value.trim().toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, "");
-
 const toTitle = (value = "") => value.replace(/\b\w/g, (c) => c.toUpperCase());
+
+const normalizeDriveType = (raw = "") => {
+  const v = raw.toLowerCase();
+  if (!v) return "";
+  if (v.includes("4wd") || v.includes("4x4") || v.includes("4-wheel")) return "4WD";
+  if (v.includes("awd") || v.includes("all-wheel") || v.includes("all wheel")) return "AWD";
+  if (v.includes("fwd") || v.includes("front-wheel") || v.includes("front wheel")) return "FWD";
+  if (v.includes("rwd") || v.includes("rear-wheel") || v.includes("rear wheel")) return "RWD";
+  if (v.includes("2wd")) return "2WD";
+  return toTitle(raw);
+};
+
+const normalizeTransmissionStyle = (raw = "") => {
+  const v = raw.toLowerCase();
+  if (!v) return "";
+  if (v.includes("continuously variable") || v === "cvt") return "CVT";
+  if (v.includes("dual-clutch") || v.includes("dual clutch") || v.includes("dct")) return "DCT";
+  if (v.includes("automated manual") || v.includes("amt")) return "Automated Manual";
+  if (v.includes("automatic")) return "Automatic";
+  if (v.includes("manual")) return "Manual";
+  return toTitle(raw);
+};
 
 const buildEngine = (r: VpicResult) => {
   const displ = r.DisplacementL ? `${parseFloat(r.DisplacementL).toFixed(1)}L` : "";
@@ -40,7 +68,15 @@ const buildEngine = (r: VpicResult) => {
     : "";
   const config = r.EngineConfiguration && !cyl ? ` ${r.EngineConfiguration}` : "";
   const fuel = r.FuelTypePrimary && r.FuelTypePrimary !== "Gasoline" ? ` ${r.FuelTypePrimary}` : "";
-  return `${displ}${cyl}${config}${fuel}`.trim() || (r.EngineModel || "");
+  const turbo = r.Turbo && /yes|turbo/i.test(r.Turbo) ? " Turbo" : "";
+  const hp = r.EngineHP ? ` (${r.EngineHP} hp)` : "";
+  return `${displ}${cyl}${config}${fuel}${turbo}${hp}`.trim() || (r.EngineModel || "");
+};
+
+const buildTransmission = (r: VpicResult) => {
+  const style = normalizeTransmissionStyle(r.TransmissionStyle || "");
+  const speeds = r.TransmissionSpeeds ? `${r.TransmissionSpeeds}-Speed` : "";
+  return [speeds, style].filter(Boolean).join(" ").trim();
 };
 
 Deno.serve(async (req) => {
@@ -88,7 +124,13 @@ Deno.serve(async (req) => {
     const model = r.Model || "";
     const trim = r.Trim || r.Series || r.Series2 || "";
     const engine = buildEngine(r);
-    const transmission = [r.TransmissionStyle, r.TransmissionSpeeds ? `${r.TransmissionSpeeds}-Speed` : ""].filter(Boolean).join(" ").trim();
+    const transmission = buildTransmission(r);
+    const driveType = normalizeDriveType(r.DriveType || "");
+    const bodyClass = r.BodyClass ? toTitle(r.BodyClass) : "";
+    const doors = r.Doors || "";
+    const fuel = r.FuelTypePrimary || "";
+    const fuelSecondary = r.FuelTypeSecondary || "";
+    const plant = [r.PlantCity, r.PlantState, r.PlantCountry].filter(Boolean).map(toTitle).join(", ");
     const vehicle = [year, make, model].filter(Boolean).join(" ");
     const partial = !!(r.ErrorCode && r.ErrorCode !== "0");
 
@@ -102,13 +144,16 @@ Deno.serve(async (req) => {
       trim,
       engine,
       transmission,
+      driveType,
+      bodyClass,
+      doors,
+      fuel,
+      fuelSecondary,
+      plant,
+      manufacturer: r.ManufacturerName ? toTitle(r.ManufacturerName) : "",
+      vehicleType: r.VehicleType ? toTitle(r.VehicleType) : "",
+      gvwr: r.GVWR || "",
       vehicle,
-      bodyClass: r.BodyClass || "",
-      fuel: r.FuelTypePrimary || "",
-      manufacturer: r.ManufacturerName || "",
-      plant: r.PlantCity || "",
-      driveType: r.DriveType || "",
-      vehicleType: r.VehicleType || "",
       errorCode: r.ErrorCode || "0",
       errorText: r.ErrorText || "",
     }), {
