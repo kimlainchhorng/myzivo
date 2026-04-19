@@ -425,11 +425,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       if (hasUnread) {
         bgTasks.push((supabase as any)
           .from("direct_messages")
-          .update({ is_read: true })
+          .update({ is_read: true, delivered_at: new Date().toISOString() })
           .eq("receiver_id", user.id)
           .eq("sender_id", recipientId)
           .eq("is_read", false)
-          .then(() => {})
+          .then(({ error }: any) => {
+            if (error) console.error("[Chat] mark-read failed:", error);
+          })
         );
       }
 
@@ -451,7 +453,21 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           (msg.sender_id === recipientId && msg.receiver_id === user.id)
         ) {
           setMessages((prev) => {
+            // Already have the real row → ignore
             if (prev.some((m) => m.id === msg.id)) return prev;
+            // Replace any optimistic placeholder from this sender with same content
+            const optIdx = prev.findIndex((m) =>
+              m.id.startsWith("opt-") &&
+              m.sender_id === msg.sender_id &&
+              m.receiver_id === msg.receiver_id &&
+              (m.message || "") === (msg.message || "") &&
+              (m.message_type || "text") === (msg.message_type || "text")
+            );
+            if (optIdx >= 0) {
+              const next = [...prev];
+              next[optIdx] = msg;
+              return next;
+            }
             return [...prev, msg];
           });
           scrollToBottom();
