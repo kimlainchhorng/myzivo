@@ -478,9 +478,214 @@ function MinimalLayout({ data }: { data: any }) {
   );
 }
 
+/* ── Professional Template — Corporate navy with sidebar accent ── */
+function ProfessionalLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full bg-white">
+      <div className="bg-[#1e3a8a] text-white px-5 py-5 flex items-center gap-4 border-b-4 border-[#facc15]">
+        {data.photo ? (
+          <img src={data.photo} alt="" className="w-20 h-20 rounded-full object-cover border-2 border-[#facc15]" />
+        ) : (
+          <div className="w-20 h-20 rounded-full bg-white/10 border-2 border-[#facc15] flex items-center justify-center"><User className="w-8 h-8 text-white/60" /></div>
+        )}
+        <div className="flex-1 min-w-0">
+          <h1 className="text-[22px] font-extrabold leading-tight uppercase tracking-wide">{data.fullName || "Your Name"}</h1>
+          {data.jobTitle && <p className="text-[11px] font-semibold text-[#facc15] mt-0.5 uppercase tracking-widest">{data.jobTitle}</p>}
+        </div>
+      </div>
+      <div className="flex">
+        <div className="w-[35%] bg-slate-50 p-4 space-y-4 border-r border-slate-200">
+          <div className="space-y-2">
+            <h3 className="text-[10px] font-extrabold text-[#1e3a8a] uppercase tracking-wider border-b-2 border-[#1e3a8a] pb-1">Contact</h3>
+            <ContactLine icon={Phone} text={data.phone} />
+            <ContactLine icon={Mail} text={data.email} />
+            <ContactLine icon={MapPin} text={data.location} />
+            <ContactLine icon={Linkedin} text={data.linkedin} />
+            <ContactLine icon={Globe} text={data.website} />
+          </div>
+          <SkillsList data={data} />
+          <LanguagesList data={data} />
+          <CertsList data={data} />
+        </div>
+        <div className="flex-1 p-4 space-y-4">
+          {data.summary && <div><h3 className="text-[11px] font-extrabold text-[#1e3a8a] uppercase tracking-wider border-b-2 border-[#1e3a8a] pb-1 mb-1.5">Profile</h3><p className="text-[10px] text-foreground/75 leading-relaxed text-justify">{data.summary}</p></div>}
+          <ExperienceBlock data={data} />
+          <EducationBlock data={data} />
+          <RefsBlock data={data} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Premium Template — Gold luxury accents ── */
+function PremiumLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full bg-gradient-to-br from-[#fffbeb] to-white">
+      <div className="px-5 py-6 text-center border-b-2 border-[#b45309] relative">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#b45309] to-transparent" />
+        {data.photo && (
+          <div className="flex justify-center mb-3">
+            <div className="p-1 rounded-full bg-gradient-to-br from-[#b45309] to-[#fde68a]">
+              <img src={data.photo} alt="" className="w-20 h-20 rounded-full object-cover border-2 border-white" />
+            </div>
+          </div>
+        )}
+        <h1 className="text-[24px] font-extrabold text-[#451a03] tracking-[0.15em] uppercase leading-tight" style={{ fontFamily: 'Georgia, serif' }}>{data.fullName || "Your Name"}</h1>
+        <div className="flex items-center justify-center gap-2 my-1.5">
+          <span className="h-px w-8 bg-[#b45309]" />
+          {data.jobTitle && <p className="text-[10px] font-semibold text-[#b45309] uppercase tracking-[0.25em]">{data.jobTitle}</p>}
+          <span className="h-px w-8 bg-[#b45309]" />
+        </div>
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 text-[9px] text-[#78350f]">
+          {data.email && <span>✉ {data.email}</span>}
+          {data.phone && <span>☎ {data.phone}</span>}
+          {data.location && <span>◉ {data.location}</span>}
+        </div>
+      </div>
+      <div className="p-5 space-y-4">
+        {data.summary && <div><h3 className="text-[11px] font-extrabold text-[#b45309] uppercase tracking-[0.2em] mb-1.5" style={{ fontFamily: 'Georgia, serif' }}>❖ Profile</h3><p className="text-[10px] text-foreground/75 leading-relaxed italic">{data.summary}</p></div>}
+        <ExperienceBlock data={data} />
+        <EducationBlock data={data} />
+        <div className="grid grid-cols-2 gap-4">
+          <SkillsList data={data} />
+          <LanguagesList data={data} />
+        </div>
+        <CertsList data={data} />
+        <RefsBlock data={data} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Executive Template — Dark elegant ── */
+function ExecutiveLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full bg-white">
+      <div className="bg-[#0f172a] text-white p-5">
+        <div className="flex items-center gap-4">
+          {data.photo ? (
+            <img src={data.photo} alt="" className="w-20 h-20 rounded-sm object-cover border border-white/20" />
+          ) : (
+            <div className="w-20 h-20 rounded-sm bg-white/5 border border-white/20 flex items-center justify-center"><User className="w-8 h-8 text-white/40" /></div>
+          )}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[22px] font-light tracking-[0.1em] uppercase leading-tight">{data.fullName || "Your Name"}</h1>
+            <div className="h-px w-12 bg-[#f59e0b] my-1.5" />
+            {data.jobTitle && <p className="text-[10px] text-white/70 uppercase tracking-[0.3em]">{data.jobTitle}</p>}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 pt-3 border-t border-white/10 text-[9px] text-white/60">
+          {data.email && <span>{data.email}</span>}
+          {data.phone && <span>{data.phone}</span>}
+          {data.location && <span>{data.location}</span>}
+          {data.linkedin && <span>{data.linkedin}</span>}
+        </div>
+      </div>
+      <div className="p-5 space-y-4">
+        {data.summary && <div><h3 className="text-[10px] font-bold text-[#0f172a] uppercase tracking-[0.25em] mb-1.5">— Executive Summary</h3><p className="text-[10px] text-foreground/75 leading-relaxed">{data.summary}</p></div>}
+        <ExperienceBlock data={data} />
+        <EducationBlock data={data} />
+        <SkillsList data={data} />
+        <LanguagesList data={data} />
+        <CertsList data={data} />
+        <RefsBlock data={data} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Creative Template — Vibrant gradient ── */
+function CreativeLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full bg-white">
+      <div className="bg-gradient-to-br from-pink-500 via-fuchsia-500 to-purple-600 p-5 text-white relative overflow-hidden">
+        <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10" />
+        <div className="absolute -left-6 -bottom-6 w-24 h-24 rounded-full bg-yellow-300/20" />
+        <div className="relative flex items-center gap-4">
+          {data.photo ? (
+            <img src={data.photo} alt="" className="w-20 h-20 rounded-2xl object-cover border-[3px] border-white shadow-lg rotate-[-3deg]" />
+          ) : (
+            <div className="w-20 h-20 rounded-2xl bg-white/20 border-[3px] border-white flex items-center justify-center rotate-[-3deg]"><User className="w-8 h-8 text-white" /></div>
+          )}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[22px] font-black leading-tight">{data.fullName || "Your Name"}</h1>
+            {data.jobTitle && <p className="text-[11px] font-bold text-yellow-200 mt-0.5">✦ {data.jobTitle}</p>}
+            <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2 text-[9px] text-white/90">
+              {data.email && <span>{data.email}</span>}
+              {data.phone && <span>• {data.phone}</span>}
+              {data.location && <span>• {data.location}</span>}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="p-4 space-y-4">
+        {data.summary && <div><h3 className="text-[11px] font-black text-fuchsia-600 uppercase tracking-wider mb-1.5">✦ Hello!</h3><p className="text-[10px] text-foreground/75 leading-relaxed">{data.summary}</p></div>}
+        <ExperienceBlock data={data} />
+        <EducationBlock data={data} />
+        {data.skills?.some((s: any) => s.name) && (
+          <div>
+            <h3 className="text-[11px] font-black text-fuchsia-600 uppercase tracking-wider mb-1.5">✦ Skills</h3>
+            <div className="flex flex-wrap gap-1.5">
+              {data.skills.filter((s: any) => s.name).map((s: any, i: number) => (
+                <span key={i} className="text-[9px] font-semibold px-2.5 py-1 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white">{s.name}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        <LanguagesList data={data} />
+        <CertsList data={data} />
+        <RefsBlock data={data} />
+        {data.hobbies && <div><h3 className="text-[11px] font-black text-fuchsia-600 uppercase tracking-wider mb-1.5">✦ Interests</h3><p className="text-[10px] text-foreground/70">{data.hobbies}</p></div>}
+      </div>
+    </div>
+  );
+}
+
+/* ── Elegant Template — Burgundy serif ── */
+function ElegantLayout({ data }: { data: any }) {
+  return (
+    <div className="min-h-full bg-[#fdf2f4]" style={{ fontFamily: 'Georgia, serif' }}>
+      <div className="px-5 py-6 text-center">
+        {data.photo && (
+          <div className="flex justify-center mb-3">
+            <img src={data.photo} alt="" className="w-20 h-20 rounded-full object-cover border-[3px] border-[#9f1239]" />
+          </div>
+        )}
+        <h1 className="text-[26px] font-bold text-[#9f1239] leading-tight italic">{data.fullName || "Your Name"}</h1>
+        {data.jobTitle && <p className="text-[11px] text-[#9f1239]/80 mt-1 italic tracking-wide">— {data.jobTitle} —</p>}
+        <div className="flex items-center justify-center gap-2 my-3">
+          <span className="h-px w-12 bg-[#9f1239]/40" />
+          <span className="text-[#9f1239]">❦</span>
+          <span className="h-px w-12 bg-[#9f1239]/40" />
+        </div>
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[9px] text-[#7f1d1d]">
+          {data.email && <span>{data.email}</span>}
+          {data.phone && <span>· {data.phone}</span>}
+          {data.location && <span>· {data.location}</span>}
+        </div>
+      </div>
+      <div className="px-5 pb-5 space-y-4 bg-white mx-3 mb-3 rounded-sm border border-[#9f1239]/15 pt-4">
+        {data.summary && <div><h3 className="text-[12px] font-bold text-[#9f1239] mb-1.5 italic">Profile</h3><p className="text-[10px] text-foreground/75 leading-relaxed">{data.summary}</p></div>}
+        <ExperienceBlock data={data} />
+        <EducationBlock data={data} />
+        <SkillsList data={data} />
+        <LanguagesList data={data} />
+        <CertsList data={data} />
+        <RefsBlock data={data} />
+      </div>
+    </div>
+  );
+}
+
 function CVDocumentLayout({ data, template }: { data: any; template: TemplateId }) {
   if (template === "modern") return <ModernLayout data={data} />;
   if (template === "minimal") return <MinimalLayout data={data} />;
+  if (template === "professional") return <ProfessionalLayout data={data} />;
+  if (template === "premium") return <PremiumLayout data={data} />;
+  if (template === "executive") return <ExecutiveLayout data={data} />;
+  if (template === "creative") return <CreativeLayout data={data} />;
+  if (template === "elegant") return <ElegantLayout data={data} />;
   return <ClassicLayout data={data} />;
 }
 
