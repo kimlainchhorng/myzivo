@@ -3,9 +3,10 @@
  * User-facing security controls: password, 2FA, sessions, data management
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import TwoFactorSetupDialog from "@/components/auth/TwoFactorSetupDialog";
 import { 
   Shield, Lock, Smartphone, Monitor, MapPin, Clock, 
   LogOut, Download, Trash2, AlertTriangle, Key,
