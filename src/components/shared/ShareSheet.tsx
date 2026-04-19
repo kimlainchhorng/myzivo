@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MoreHorizontal, X, MessageCircle, User, UserCircle } from "lucide-react";
+import { MoreHorizontal, X, MessageCircle, User, UserCircle, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { getPostShareUrl } from "@/lib/getPublicOrigin";
+import { getPostShareUrl, getProfileShareUrl, getPublicOrigin } from "@/lib/getPublicOrigin";
 
 interface ShareSheetProps {
   shareUrl: string;
@@ -157,10 +157,49 @@ export default function ShareSheet({
     }
   };
 
+  const handleShareAuthorProfile = async () => {
+    if (!sharePostAuthorId) {
+      toast.error("Author not available");
+      return;
+    }
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("share_code")
+        .eq("user_id", sharePostAuthorId)
+        .maybeSingle();
+      const code = (data as any)?.share_code;
+      const profileUrl = code
+        ? getProfileShareUrl(code)
+        : `${getPublicOrigin()}/user/${sharePostAuthorId}`;
+      const text = `Check out ${sharePostAuthorName || "this profile"} on ZIVO`;
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: text, text, url: profileUrl });
+          onClose();
+          return;
+        }
+      } catch {}
+      const ta = document.createElement("textarea");
+      ta.value = profileUrl;
+      ta.style.cssText = "position:fixed;opacity:0;left:-9999px";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      toast.success("Profile link copied!");
+      onClose();
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to share profile");
+    }
+  };
+
   // ── In-app share options (first row) ────────────────────────────────────
   const inAppOptions = [
     { key: "chat", label: "Chat", icon: MessageCircle, color: "hsl(var(--primary))", onClick: handleShareToChat },
     { key: "profile", label: "Profile", icon: User, color: "hsl(var(--primary))", onClick: handleShareToProfile },
+    ...(sharePostAuthorId ? [{ key: "share-profile", label: "Share Profile", icon: Share2, color: "hsl(var(--primary))", onClick: handleShareAuthorProfile }] : []),
     ...(onVisitProfile ? [{ key: "visit", label: visitProfileLabel || "Visit Profile", icon: UserCircle, color: "hsl(var(--primary))", onClick: () => { onClose(); onVisitProfile(); } }] : []),
   ];
 
