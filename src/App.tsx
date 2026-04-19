@@ -496,6 +496,8 @@ const GeofenceBootstrap = lazy(() => import("@/hooks/useGeofenceNotifications").
   return { default: GeofenceComp };
 }));
 
+const DeletionReturnDialog = lazy(() => import("@/components/account/DeletionReturnDialog"));
+
 /** Routes /partner-with-zivo: with ?type= → onboarding wizard, otherwise landing page */
 const PartnerOnboardingDispatcher = () => {
   const [params] = useSearchParams();
@@ -542,6 +544,7 @@ const App = () => (
                 <AuthProvider>
                   <PushNotificationsBootstrap />
                   <Suspense fallback={null}><GeofenceBootstrap /></Suspense>
+                  <Suspense fallback={null}><DeletionReturnDialog /></Suspense>
                    <RemoteConfigProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
