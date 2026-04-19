@@ -1220,19 +1220,37 @@ const CreateCVPage = () => {
 
         {/* Template Selector */}
         <div className="mb-4">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Palette className="w-3.5 h-3.5 text-primary" />
-            <span className="text-[11px] font-bold text-foreground">CV Template</span>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <Palette className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[11px] font-bold text-foreground">CV Template</span>
+            </div>
+            <span className="text-[9px] text-muted-foreground">{CV_TEMPLATES.length} designs</span>
           </div>
-          <div className="flex gap-2">
-            {CV_TEMPLATES.map(t => (
-              <button key={t.id} onClick={() => setSelectedTemplate(t.id)}
-                className={cn("flex-1 py-2 px-2 rounded-xl border-2 text-center touch-manipulation active:scale-95 transition-all",
-                  selectedTemplate === t.id ? "border-primary bg-primary/5" : "border-border/30 bg-card")}>
-                <span className={cn("text-[11px] font-bold block", selectedTemplate === t.id ? "text-primary" : "text-foreground")}>{t.name}</span>
-                <span className="text-[9px] text-muted-foreground">{t.desc}</span>
-              </button>
-            ))}
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x scrollbar-hide">
+            {CV_TEMPLATES.map(t => {
+              const active = selectedTemplate === t.id;
+              return (
+                <button key={t.id} onClick={() => setSelectedTemplate(t.id)}
+                  className={cn("shrink-0 w-[110px] snap-start rounded-xl border-2 overflow-hidden text-left touch-manipulation active:scale-95 transition-all",
+                    active ? "border-primary shadow-md" : "border-border/30 bg-card")}>
+                  <div className={cn("h-12 bg-gradient-to-br relative", t.gradient)}>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full bg-white/30 backdrop-blur-sm border border-white/50" />
+                    </div>
+                    {active && (
+                      <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white flex items-center justify-center">
+                        <Check className="w-2.5 h-2.5 text-primary" strokeWidth={3} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-2">
+                    <span className={cn("text-[11px] font-bold block leading-tight", active ? "text-primary" : "text-foreground")}>{t.name}</span>
+                    <span className="text-[9px] text-muted-foreground leading-tight">{t.desc}</span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
