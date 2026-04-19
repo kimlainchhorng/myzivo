@@ -11,7 +11,7 @@ import PhoneOtpVerifyDialog from "@/components/auth/PhoneOtpVerifyDialog";
 import PasswordChangeVerifyDialog from "@/components/auth/PasswordChangeVerifyDialog";
 import { 
   Shield, Lock, Smartphone, Monitor, MapPin, Clock, MessageSquare, Mail,
-  LogOut, Download, Trash2, AlertTriangle, Key,
+  LogOut, Download, Trash2, AlertTriangle, Key, ShieldCheck as ShieldCheckIcon,
   CheckCircle2, Loader2, Eye, EyeOff, Bell, ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
