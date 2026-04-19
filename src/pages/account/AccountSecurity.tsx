@@ -7,8 +7,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import TwoFactorSetupDialog from "@/components/auth/TwoFactorSetupDialog";
+import PhoneOtpVerifyDialog from "@/components/auth/PhoneOtpVerifyDialog";
 import { 
-  Shield, Lock, Smartphone, Monitor, MapPin, Clock, 
+  Shield, Lock, Smartphone, Monitor, MapPin, Clock, MessageSquare, Mail,
   LogOut, Download, Trash2, AlertTriangle, Key,
   CheckCircle2, Loader2, Eye, EyeOff, Bell, ArrowLeft
 } from "lucide-react";
