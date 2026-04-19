@@ -33,7 +33,8 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [employeesOpen, setEmployeesOpen] = useState(false);
+  const employeeIds = ["employees", "payroll", "employee-schedule", "time-clock", "attendance", "training", "documents", "employee-rules"];
+  const [employeesOpen, setEmployeesOpen] = useState(employeeIds.includes(activeTab || ""));
 
   const isAutoRepair = storeCategory === "auto-repair";
   const productsLabel = isAutoRepair ? "Services" : "Products";
