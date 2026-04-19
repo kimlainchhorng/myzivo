@@ -251,6 +251,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
                 {saveState === "saved" && (<><Check className="w-3 h-3 text-primary" /> Saved{lastSaved ? ` · ${lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}</>)}
                 {saveState === "idle" && (<><CloudUpload className="w-3 h-3" /> Autosave on</>)}
               </span>
+              <Button variant="outline" size="sm" onClick={() => setPreviewDoc({ ...draft, customer: `${draft.firstName} ${draft.lastName}`.trim() })} className="gap-1.5"><Eye className="w-3.5 h-3.5" /> Preview</Button>
               <Button variant="outline" size="sm" onClick={saveDraftNow}>Save draft</Button>
               <Button variant="ghost" size="sm" onClick={discardDraft} className="text-destructive hover:text-destructive">Discard</Button>
               <Button onClick={save} className="gap-1.5">
