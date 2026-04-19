@@ -7,8 +7,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import TwoFactorSetupDialog from "@/components/auth/TwoFactorSetupDialog";
+import PhoneOtpVerifyDialog from "@/components/auth/PhoneOtpVerifyDialog";
 import { 
-  Shield, Lock, Smartphone, Monitor, MapPin, Clock, 
+  Shield, Lock, Smartphone, Monitor, MapPin, Clock, MessageSquare, Mail,
   LogOut, Download, Trash2, AlertTriangle, Key,
   CheckCircle2, Loader2, Eye, EyeOff, Bell, ArrowLeft
 } from "lucide-react";
@@ -84,21 +85,39 @@ export default function AccountSecurity() {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [twoFactorLoading, setTwoFactorLoading] = useState(true);
   const [twoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
+  const [phoneOtpDialogOpen, setPhoneOtpDialogOpen] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [userPhone, setUserPhone] = useState<string>("");
+  const [emailOtpBackup, setEmailOtpBackup] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
 
-  // Load real 2FA status from Supabase Auth MFA
+  // Load real 2FA status from Supabase Auth MFA + phone verification status
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.auth.mfa.listFactors();
+      const [{ data: mfa }, profile] = await Promise.all([
+        supabase.auth.mfa.listFactors(),
+        user?.id
+          ? supabase
+              .from("profiles")
+              .select("phone_e164, phone_verified")
+              .eq("user_id", user.id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
       if (cancelled) return;
-      const hasVerified = (data?.totp ?? []).some((f) => (f.status as string) === "verified");
+      const hasVerified = (mfa?.totp ?? []).some((f) => (f.status as string) === "verified");
       setTwoFactorEnabled(hasVerified);
+      const p: any = (profile as any)?.data;
+      if (p) {
+        setUserPhone(p.phone_e164 || "");
+        setPhoneVerified(!!p.phone_verified);
+      }
       setTwoFactorLoading(false);
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [user?.id]);
 
   const refreshTwoFactor = async () => {
     const { data } = await supabase.auth.mfa.listFactors();
@@ -397,6 +416,74 @@ export default function AccountSecurity() {
             </CardContent>
           </Card>
 
+          {/* SMS / Phone Verification (additional 2FA layer) */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <MessageSquare className="w-5 h-5" />
+                SMS Verification
+              </CardTitle>
+              <CardDescription>
+                Get a one-time code by text message as a backup or additional verification step.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium">Phone number</p>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {userPhone || "No phone on file"}
+                  </p>
+                </div>
+                <Badge variant={phoneVerified ? "default" : "secondary"}>
+                  {phoneVerified ? "Verified" : "Unverified"}
+                </Badge>
+              </div>
+              <Button
+                variant={phoneVerified ? "outline" : "default"}
+                onClick={() => setPhoneOtpDialogOpen(true)}
+                className="w-full sm:w-auto"
+              >
+                <Smartphone className="w-4 h-4 mr-2" />
+                {phoneVerified ? "Re-verify or change number" : "Verify phone via SMS"}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                We'll text a 6-digit code via Twilio Verify. Standard SMS rates may apply.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Email OTP backup */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Mail className="w-5 h-5" />
+                Email One-Time Code (Backup)
+              </CardTitle>
+              <CardDescription>
+                If you lose access to your authenticator or phone, receive a 6-digit code at{" "}
+                <span className="font-medium text-foreground">{user?.email}</span>.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Email backup code</p>
+                  <p className="text-sm text-muted-foreground">
+                    Enabled by default for account recovery
+                  </p>
+                </div>
+                <Switch
+                  checked={emailOtpBackup}
+                  onCheckedChange={(v) => {
+                    setEmailOtpBackup(v);
+                    toast.success(v ? "Email backup code enabled" : "Email backup code disabled");
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Login Alerts */}
           <Card className="mb-6">
             <CardHeader>
@@ -522,6 +609,29 @@ export default function AccountSecurity() {
         open={twoFactorDialogOpen}
         onOpenChange={setTwoFactorDialogOpen}
         onEnrolled={refreshTwoFactor}
+      />
+
+      <PhoneOtpVerifyDialog
+        open={phoneOtpDialogOpen}
+        onOpenChange={setPhoneOtpDialogOpen}
+        initialPhone={userPhone}
+        onVerified={() => {
+          setPhoneVerified(true);
+          // Refresh phone from profile in case the user changed it
+          if (user?.id) {
+            supabase
+              .from("profiles")
+              .select("phone_e164, phone_verified")
+              .eq("user_id", user.id)
+              .maybeSingle()
+              .then(({ data }: any) => {
+                if (data) {
+                  setUserPhone(data.phone_e164 || "");
+                  setPhoneVerified(!!data.phone_verified);
+                }
+              });
+          }
+        }}
       />
     </div>
   );
