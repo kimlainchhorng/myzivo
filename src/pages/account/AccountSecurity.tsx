@@ -386,7 +386,7 @@ export default function AccountSecurity() {
                     t("security.update_password")
                   ) : (
                     <>
-                      <ShieldCheck className="w-4 h-4 mr-2" />
+                      <ShieldCheckIcon className="w-4 h-4 mr-2" />
                       Verify & update password
                     </>
                   )}
