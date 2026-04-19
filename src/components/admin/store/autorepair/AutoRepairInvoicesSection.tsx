@@ -23,6 +23,13 @@ type Doc = {
   phone: string;
   email: string;
   address: string;
+  vin: string;
+  year: string;
+  make: string;
+  model: string;
+  trim: string;
+  engine: string;
+  transmission: string;
   vehicle: string;
   items: LineItem[];
   status: "draft" | "sent" | "paid" | "approved";
