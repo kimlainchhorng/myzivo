@@ -511,7 +511,16 @@ const CreateCVPage = () => {
 
   // Personal info
   const [photo, setPhoto] = useState<string | null>(null);
-  const [fullName, setFullName] = useState(user?.user_metadata?.full_name || "");
+  const initialFull = (user?.user_metadata?.full_name || "").trim();
+  const initialParts = initialFull.split(/\s+/);
+  const [firstName, setFirstName] = useState(initialParts[0] || "");
+  const [lastName, setLastName] = useState(initialParts.slice(1).join(" ") || "");
+  const fullName = [firstName, lastName].map(s => s.trim()).filter(Boolean).join(" ");
+  const setFullName = (v: string) => {
+    const parts = v.trim().split(/\s+/);
+    setFirstName(parts[0] || "");
+    setLastName(parts.slice(1).join(" ") || "");
+  };
   const [dateOfBirth, setDateOfBirth] = useState(""); // YYYY-MM-DD
   const [jobTitle, setJobTitle] = useState("");
   const [email, setEmail] = useState(user?.email || "");
@@ -1003,9 +1012,15 @@ const CreateCVPage = () => {
             <CollapseWrap>
               <div className="space-y-2.5">
                 <PhotoUpload photo={photo} onPhotoChange={setPhoto} userId={user?.id} />
-                <div>
-                  <label className={lblCls}>Full Name *</label>
-                  <input className={inputCls} placeholder="John Doe" value={fullName} onChange={e => setFullName(e.target.value)} />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className={lblCls}>First Name *</label>
+                    <input className={inputCls} placeholder="John" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className={lblCls}>Last Name</label>
+                    <input className={inputCls} placeholder="Doe" value={lastName} onChange={e => setLastName(e.target.value)} />
+                  </div>
                 </div>
                 <div>
                   <label className={lblCls}>Date of Birth</label>
