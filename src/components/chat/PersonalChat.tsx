@@ -809,19 +809,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     scrollToBottom();
 
     try {
-      const { data, error } = await (supabase as any)
+      const { error } = await (supabase as any)
         .from("direct_messages")
         .insert({
           sender_id: user.id,
           receiver_id: recipientId,
           message: text,
           message_type: msgType,
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
-      setMessages((prev) => prev.map((m) => m.id === optimisticId ? data : m));
       void sendChatPush(msgType, text);
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
