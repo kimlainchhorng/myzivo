@@ -93,31 +93,36 @@ function MiniMap({
     );
   }
 
-  // Use Google Maps Embed when key is available
+  const viewerHref = hasCoords
+    ? `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+
+  // Primary: Google Maps Embed iframe (interactive)
   if (mapsKey) {
-    const src = hasCoords
+    const embedSrc = hasCoords
       ? `https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=${lat},${lon}&zoom=11`
       : `https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=${encodeURIComponent(q)}&zoom=10`;
-    const viewerHref = hasCoords
-      ? `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
     return (
-      <div className="rounded-lg overflow-hidden border border-border mt-2 relative">
+      <div className="rounded-lg overflow-hidden border border-border mt-2 relative bg-muted/30">
         <iframe
           title={`Login location${city ? ` - ${city}` : ""}`}
           width="100%"
           height="180"
-          style={{ border: 0 }}
+          style={{ border: 0, display: "block" }}
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          src={src}
+          src={embedSrc}
           allowFullScreen
+          onError={(e) => {
+            // Hide broken iframe; the static fallback link below remains
+            (e.currentTarget as HTMLIFrameElement).style.display = "none";
+          }}
         />
         <a
           href={viewerHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="absolute bottom-1 right-1 text-[10px] bg-background/80 backdrop-blur px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground"
+          className="absolute bottom-1 right-1 text-[10px] bg-background/90 backdrop-blur px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground border border-border/50"
         >
           View larger
         </a>
@@ -130,24 +135,21 @@ function MiniMap({
   const osmSrc = hasCoords
     ? `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`
     : `https://www.openstreetmap.org/export/embed.html?layer=mapnik&search=${encodeURIComponent(q)}`;
-  const osmHref = hasCoords
-    ? `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=12/${lat}/${lon}`
-    : `https://www.openstreetmap.org/search?query=${encodeURIComponent(q)}`;
   return (
-    <div className="rounded-lg overflow-hidden border border-border mt-2 relative">
+    <div className="rounded-lg overflow-hidden border border-border mt-2 relative bg-muted/30">
       <iframe
         title={`Login location${city ? ` - ${city}` : ""}`}
         width="100%"
         height="180"
-        style={{ border: 0 }}
+        style={{ border: 0, display: "block" }}
         loading="lazy"
         src={osmSrc}
       />
       <a
-        href={osmHref}
+        href={viewerHref}
         target="_blank"
         rel="noopener noreferrer"
-        className="absolute bottom-1 right-1 text-[10px] bg-background/80 backdrop-blur px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground"
+        className="absolute bottom-1 right-1 text-[10px] bg-background/90 backdrop-blur px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground border border-border/50"
       >
         View larger
       </a>
