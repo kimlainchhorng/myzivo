@@ -147,7 +147,7 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button onClick={save}>Create</Button>
+              <Button onClick={save}>{draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
