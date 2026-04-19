@@ -1304,33 +1304,50 @@ const CreateCVPage = () => {
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       await waitForExportAssets(el);
 
+      // A4 dimensions in px at 96dpi (1mm ≈ 3.7795px)
+      const PX_PER_MM = 3.7795275591;
+      const a4WidthPx = Math.round(210 * PX_PER_MM); // 794
+
+      // Render full content at A4 width
       const canvas = await html2canvas(el, {
         backgroundColor: "#ffffff",
         scale: 2,
         useCORS: true,
         logging: false,
-        windowWidth: el.scrollWidth,
+        width: a4WidthPx,
+        height: el.scrollHeight,
+        windowWidth: a4WidthPx,
         windowHeight: el.scrollHeight,
       });
 
       const pdf = new jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const imageWidth = pageWidth;
-      const imageHeight = (canvas.height * imageWidth) / canvas.width;
-      const imageData = canvas.toDataURL("image/png");
+      const pageWidthMm = pdf.internal.pageSize.getWidth();   // 210
+      const pageHeightMm = pdf.internal.pageSize.getHeight(); // 297
 
-      let heightLeft = imageHeight;
-      let position = 0;
+      // Slice the tall canvas into A4-sized pages (no stretching, no zoom)
+      const pxPerPage = Math.floor((canvas.width * pageHeightMm) / pageWidthMm);
+      const totalPages = Math.max(1, Math.ceil(canvas.height / pxPerPage));
 
-      pdf.addImage(imageData, "PNG", 0, position, imageWidth, imageHeight);
-      heightLeft -= pageHeight;
+      for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+        const sliceHeight = Math.min(pxPerPage, canvas.height - pageIdx * pxPerPage);
+        const sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = sliceHeight;
+        const ctx = sliceCanvas.getContext("2d");
+        if (!ctx) continue;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+        ctx.drawImage(
+          canvas,
+          0, pageIdx * pxPerPage, canvas.width, sliceHeight,
+          0, 0, canvas.width, sliceHeight,
+        );
 
-      while (heightLeft > 0.1) {
-        position = heightLeft - imageHeight;
-        pdf.addPage();
-        pdf.addImage(imageData, "PNG", 0, position, imageWidth, imageHeight);
-        heightLeft -= pageHeight;
+        const renderedHeightMm = (sliceHeight * pageWidthMm) / canvas.width;
+        const imageData = sliceCanvas.toDataURL("image/jpeg", 0.95);
+
+        if (pageIdx > 0) pdf.addPage();
+        pdf.addImage(imageData, "JPEG", 0, 0, pageWidthMm, renderedHeightMm);
       }
 
       const fileBaseName = (fullName.trim() || "cv")
@@ -2047,9 +2064,21 @@ const CreateCVPage = () => {
         {showPreview && <CVPreviewModal open={showPreview} onClose={() => setShowPreview(false)} data={previewData} template={selectedTemplate} style={cvStyle} />}
       </AnimatePresence>
 
-      {/* Hidden A4 export container */}
+      {/* Hidden A4 export container (210mm × 297mm with 12mm padding) */}
       <div className="fixed left-[-10000px] top-0 pointer-events-none" aria-hidden="true">
-        <div ref={exportRef} id="cv-export-area" className="w-[210mm] min-h-[297mm] bg-white" style={{ fontFamily: "system-ui, sans-serif", color: "#1a1a1a" }}>
+        <div
+          ref={exportRef}
+          id="cv-export-area"
+          className="bg-white"
+          style={{
+            width: "210mm",
+            minHeight: "297mm",
+            padding: "12mm",
+            boxSizing: "border-box",
+            fontFamily: "system-ui, sans-serif",
+            color: "#1a1a1a",
+          }}
+        >
           <CVDocumentLayout data={previewData} template={selectedTemplate} style={cvStyle} />
         </div>
       </div>
