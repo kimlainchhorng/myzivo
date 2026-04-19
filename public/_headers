@@ -1,0 +1,25 @@
+# Long-cache hashed assets (Vite outputs hashes in filenames)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache fonts aggressively
+*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache images (filenames are stable but bumped via build hash in JS imports)
+*.webp
+  Cache-Control: public, max-age=31536000, immutable
+*.jpg
+  Cache-Control: public, max-age=2592000
+*.png
+  Cache-Control: public, max-age=2592000
+*.svg
+  Cache-Control: public, max-age=2592000
+
+# HTML — short cache so updates ship fast
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Service worker — never cache
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate

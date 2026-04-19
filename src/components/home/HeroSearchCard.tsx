@@ -106,6 +106,10 @@ export default function HeroSearchCard() {
                   <img
                     src={tab.bg}
                     alt=""
+                    width={120}
+                    height={48}
+                    loading="lazy"
+                    decoding="async"
                     className="absolute inset-0 w-full h-full object-cover rounded-xl"
                     style={{
                       opacity: isActive ? 0.7 : 0.15,
