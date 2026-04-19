@@ -211,7 +211,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-muted-foreground flex items-center gap-1.5 mr-1">
                 {saveState === "saving" && (<><Loader2 className="w-3 h-3 animate-spin" /> Saving…</>)}
-                {saveState === "saved" && (<><Check className="w-3 h-3 text-emerald-600" /> Saved{lastSaved ? ` · ${lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}</>)}
+                {saveState === "saved" && (<><Check className="w-3 h-3 text-primary" /> Saved{lastSaved ? ` · ${lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}</>)}
                 {saveState === "idle" && (<><CloudUpload className="w-3 h-3" /> Autosave on</>)}
               </span>
               <Button variant="outline" size="sm" onClick={saveDraftNow}>Save draft</Button>
