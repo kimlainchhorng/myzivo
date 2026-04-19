@@ -98,14 +98,33 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
           </Button>
         </CardHeader>
         <CardContent className="space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Customer name</label>
-              <Input placeholder="e.g. Maria Lopez" value={draft.customer} onChange={e => setDraft({ ...draft, customer: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Vehicle</label>
-              <Input placeholder="Year / Make / Model" value={draft.vehicle} onChange={e => setDraft({ ...draft, vehicle: e.target.value })} />
+          <div className="space-y-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Customer details</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">First name</label>
+                <Input placeholder="First name" value={draft.firstName} onChange={e => setDraft({ ...draft, firstName: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Last name</label>
+                <Input placeholder="Last name" value={draft.lastName} onChange={e => setDraft({ ...draft, lastName: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Phone</label>
+                <Input type="tel" placeholder="(555) 123-4567" value={draft.phone} onChange={e => setDraft({ ...draft, phone: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Email</label>
+                <Input type="email" placeholder="customer@example.com" value={draft.email} onChange={e => setDraft({ ...draft, email: e.target.value })} />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-xs font-medium text-muted-foreground">Address</label>
+                <Input placeholder="Street, City, State" value={draft.address} onChange={e => setDraft({ ...draft, address: e.target.value })} />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-xs font-medium text-muted-foreground">Vehicle</label>
+                <Input placeholder="Year / Make / Model" value={draft.vehicle} onChange={e => setDraft({ ...draft, vehicle: e.target.value })} />
+              </div>
             </div>
           </div>
 
