@@ -3245,6 +3245,12 @@ export default function AdminStoreEditPage() {
                   </div>
                 </CardContent>
               </Card>
+            ) : form.category === "auto-repair" ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <AdminBookingsTab storeId={storeId!} />
+                </CardContent>
+              </Card>
             ) : (
               <StorePaymentSection storeId={storeId!} market={form.market} />
             )}
