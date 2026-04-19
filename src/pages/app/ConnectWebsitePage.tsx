@@ -1,10 +1,14 @@
 /**
  * Connect Your Website
- * Embed a ZIVO travel widget/blog on any external site with a snippet.
+ * SEO-focused embed: drives backlinks, indexable travel content, and referral traffic.
  */
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Code2, Copy, Check, CheckCircle2, Plug, Plane, Hotel } from "lucide-react";
+import { Helmet } from "react-helmet-async";
+import {
+  ArrowLeft, Code2, Copy, Check, CheckCircle2, Plug, Plane, Hotel,
+  TrendingUp, Link2, Search, Globe2, Sparkles, ShieldCheck,
+} from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +19,14 @@ import { useAuth } from "@/contexts/AuthContext";
 
 type PublishStatus = "live" | "draft";
 type PreviewTheme = "light" | "dark";
+type Niche = "flights" | "hotels" | "deals" | "blog";
+
+const NICHES: { id: Niche; label: string; desc: string; icon: typeof Plane }[] = [
+  { id: "flights", label: "Flight Deals", desc: "Live cheap flight cards", icon: Plane },
+  { id: "hotels", label: "Hotel Picks", desc: "Top-rated stays widget", icon: Hotel },
+  { id: "deals", label: "Mixed Deals", desc: "Flights + hotels combo", icon: Sparkles },
+  { id: "blog", label: "Travel Blog", desc: "SEO articles auto-feed", icon: Globe2 },
+];
 
 const ConnectWebsitePage = () => {
   const navigate = useNavigate();
@@ -23,13 +35,18 @@ const ConnectWebsitePage = () => {
   const [status, setStatus] = useState<PublishStatus>("live");
   const [theme, setTheme] = useState<PreviewTheme>("light");
   const [connected, setConnected] = useState(true);
+  const [niche, setNiche] = useState<Niche>("flights");
+  const [dofollow, setDofollow] = useState(true);
 
   const siteId = useMemo(
     () => (user?.id ? user.id.replace(/-/g, "").slice(0, 24) : "zivo-demo-site-0001"),
     [user?.id]
   );
 
-  const snippet = `<div id="zivo-widget"></div>\n<script src="https://hizivo.com/api/embed/${siteId}" defer></script>`;
+  const snippet = `<!-- ZIVO Travel Widget — SEO optimized -->
+<div id="zivo-widget" data-niche="${niche}" data-rel="${dofollow ? "dofollow" : "nofollow"}"></div>
+<script src="https://hizivo.com/api/embed/${siteId}.js" defer></script>
+<noscript><a href="https://hizivo.com/?ref=${siteId}" rel="${dofollow ? "" : "nofollow "}noopener">Travel deals by ZIVO</a></noscript>`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(snippet);
@@ -50,6 +67,19 @@ const ConnectWebsitePage = () => {
 
   return (
     <AppLayout hideHeader>
+      <Helmet>
+        <title>Connect Your Website — Free SEO Travel Widget | ZIVO</title>
+        <meta
+          name="description"
+          content="Embed ZIVO's free travel widget on your site. Auto-updating flight & hotel deals, dofollow backlinks, schema-ready content — built for SEO traffic and AdSense."
+        />
+        <link rel="canonical" href="https://hizivo.com/connect-website" />
+        <meta property="og:title" content="Free SEO Travel Widget for Your Website — ZIVO" />
+        <meta
+          property="og:description"
+          content="One snippet. Auto-updating travel deals + indexable content + backlinks. Built to grow organic traffic."
+        />
+      </Helmet>
       <div className="min-h-screen bg-muted/20">
         {/* Top bar */}
         <div className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-md">
@@ -68,20 +98,92 @@ const ConnectWebsitePage = () => {
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <Code2 className="w-5 h-5 text-primary" />
                 </div>
-                <h1 className="text-3xl font-bold tracking-tight">Connect Your Website</h1>
-                <Badge variant="secondary" className="rounded-full">Takes 2 min</Badge>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Connect Your Website</h1>
+                <Badge variant="secondary" className="rounded-full gap-1">
+                  <Search className="w-3 h-3" /> SEO ready
+                </Badge>
               </div>
               <p className="mt-2 text-muted-foreground">
-                Add a ZIVO travel search widget to any website with a simple code snippet.
+                Add auto-updating travel content to any site. Indexable HTML, schema.org markup, and backlinks built in — designed to grow organic traffic.
               </p>
             </div>
+
+            {/* SEO benefits */}
+            <div className="grid sm:grid-cols-3 gap-3">
+              {[
+                { icon: TrendingUp, label: "Fresh content daily", desc: "Auto-refreshed for SEO" },
+                { icon: Link2, label: "Dofollow backlinks", desc: "Boosts your domain authority" },
+                { icon: ShieldCheck, label: "Schema.org markup", desc: "Rich results in Google" },
+              ].map((b) => (
+                <Card key={b.label} className="p-3">
+                  <b.icon className="w-4 h-4 text-primary mb-2" />
+                  <div className="text-sm font-semibold">{b.label}</div>
+                  <div className="text-xs text-muted-foreground">{b.desc}</div>
+                </Card>
+              ))}
+            </div>
+
+            {/* Niche picker */}
+            <div>
+              <h3 className="text-sm font-semibold mb-3">1. Pick your content niche</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {NICHES.map((n) => (
+                  <button
+                    key={n.id}
+                    onClick={() => setNiche(n.id)}
+                    className={cn(
+                      "text-left p-3 rounded-xl border-2 transition-all flex gap-3 items-start",
+                      niche === n.id
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/40"
+                    )}
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <n.icon className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-semibold text-sm">{n.label}</div>
+                      <div className="text-xs text-muted-foreground">{n.desc}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dofollow toggle */}
+            <Card className="p-4 flex items-start gap-3">
+              <Link2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="font-semibold text-sm">Dofollow backlink</div>
+                  <button
+                    onClick={() => setDofollow((v) => !v)}
+                    className={cn(
+                      "h-6 w-11 rounded-full transition-colors relative shrink-0",
+                      dofollow ? "bg-primary" : "bg-muted"
+                    )}
+                    aria-label="Toggle dofollow"
+                  >
+                    <span
+                      className={cn(
+                        "absolute top-0.5 w-5 h-5 bg-background rounded-full shadow transition-transform",
+                        dofollow ? "translate-x-5" : "translate-x-0.5"
+                      )}
+                    />
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Pass SEO link equity to ZIVO. Recommended for partner & affiliate sites.
+                </p>
+              </div>
+            </Card>
 
             {/* Status banner */}
             <Card
               className={cn(
                 "p-4 border-2 transition-colors",
                 connected
-                  ? "border-emerald-500/30 bg-emerald-500/5"
+                  ? "border-primary/30 bg-primary/5"
                   : "border-muted bg-muted/30"
               )}
             >
@@ -89,16 +191,16 @@ const ConnectWebsitePage = () => {
                 <CheckCircle2
                   className={cn(
                     "w-5 h-5 mt-0.5 shrink-0",
-                    connected ? "text-emerald-500" : "text-muted-foreground"
+                    connected ? "text-primary" : "text-muted-foreground"
                   )}
                 />
                 <div>
                   <div className="font-semibold">
-                    {connected ? "Active" : "Not connected"}
+                    {connected ? "Active & indexed" : "Not connected"}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {connected
-                      ? "New travel deals will automatically appear on your website."
+                      ? "Google can crawl your widget content. Sitemap auto-pinged on update."
                       : "Paste the snippet below to activate the widget."}
                   </p>
                 </div>
