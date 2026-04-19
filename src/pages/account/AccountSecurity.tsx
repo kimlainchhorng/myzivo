@@ -222,6 +222,18 @@ export default function AccountSecurity() {
             {t("security.subtitle")}
           </p>
 
+          {/* Phishing & link safety notice */}
+          <div className="mb-6 p-4 rounded-xl border border-primary/20 bg-primary/5 flex gap-3">
+            <Shield className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-semibold text-foreground mb-1">You're protected</p>
+              <p className="text-muted-foreground leading-relaxed">
+                ZIVO scans every external link before opening it and blocks suspicious or
+                phishing URLs. Never share your password — staff will never ask for it.
+              </p>
+            </div>
+          </div>
+
           {/* Phishing warning removed */}
 
           {/* Change Password */}
