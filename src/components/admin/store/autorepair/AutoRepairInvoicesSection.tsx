@@ -158,6 +158,7 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
               <div className="space-y-1.5 sm:col-span-2">
                 <label className="text-xs font-medium text-muted-foreground">Address</label>
                 <Input placeholder="Street, City, State" value={draft.address} onChange={e => setDraft({ ...draft, address: e.target.value })} />
+              </div>
             </div>
           </div>
 
