@@ -2064,9 +2064,21 @@ const CreateCVPage = () => {
         {showPreview && <CVPreviewModal open={showPreview} onClose={() => setShowPreview(false)} data={previewData} template={selectedTemplate} style={cvStyle} />}
       </AnimatePresence>
 
-      {/* Hidden A4 export container */}
+      {/* Hidden A4 export container (210mm × 297mm with 12mm padding) */}
       <div className="fixed left-[-10000px] top-0 pointer-events-none" aria-hidden="true">
-        <div ref={exportRef} id="cv-export-area" className="w-[210mm] min-h-[297mm] bg-white" style={{ fontFamily: "system-ui, sans-serif", color: "#1a1a1a" }}>
+        <div
+          ref={exportRef}
+          id="cv-export-area"
+          className="bg-white"
+          style={{
+            width: "210mm",
+            minHeight: "297mm",
+            padding: "12mm",
+            boxSizing: "border-box",
+            fontFamily: "system-ui, sans-serif",
+            color: "#1a1a1a",
+          }}
+        >
           <CVDocumentLayout data={previewData} template={selectedTemplate} style={cvStyle} />
         </div>
       </div>
