@@ -92,18 +92,32 @@ export default function AccountSecurity() {
   const [isExporting, setIsExporting] = useState(false);
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
 
-  // Load real 2FA status from Supabase Auth MFA
+  // Load real 2FA status from Supabase Auth MFA + phone verification status
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.auth.mfa.listFactors();
+      const [{ data: mfa }, profile] = await Promise.all([
+        supabase.auth.mfa.listFactors(),
+        user?.id
+          ? supabase
+              .from("profiles")
+              .select("phone_e164, phone_verified")
+              .eq("user_id", user.id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
       if (cancelled) return;
-      const hasVerified = (data?.totp ?? []).some((f) => (f.status as string) === "verified");
+      const hasVerified = (mfa?.totp ?? []).some((f) => (f.status as string) === "verified");
       setTwoFactorEnabled(hasVerified);
+      const p: any = (profile as any)?.data;
+      if (p) {
+        setUserPhone(p.phone_e164 || "");
+        setPhoneVerified(!!p.phone_verified);
+      }
       setTwoFactorLoading(false);
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [user?.id]);
 
   const refreshTwoFactor = async () => {
     const { data } = await supabase.auth.mfa.listFactors();
