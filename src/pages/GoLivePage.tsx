@@ -729,7 +729,7 @@ export default function GoLivePage() {
             </div>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 pointer-events-none" />
 
         {phase === "setup" && (
           <>
