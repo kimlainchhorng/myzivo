@@ -68,7 +68,29 @@ const normalizeIncomingCallPayload = (
   };
 };
 
-export const usePushNotifications = () => {
+
+const normalizeLaunchUrl = (url: string | undefined | null): string | null => {
+  if (!url) return null;
+
+  try {
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      const parsed = new URL(url);
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
+
+    const schemeMatch = url.match(/^[a-z][a-z0-9+.-]*:\/\/(.*)$/i);
+    if (schemeMatch) {
+      const remainder = schemeMatch[1] || "";
+      return remainder.startsWith("/") ? remainder : `/${remainder}`;
+    }
+
+    return url.startsWith("/") ? url : `/${url}`;
+  } catch {
+    return null;
+  }
+};
+
+
   const { user, session } = useAuth();
   const [state, setState] = useState<PushNotificationState>({
     isSupported: false,
