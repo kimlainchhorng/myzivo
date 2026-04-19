@@ -48,9 +48,9 @@ export function findPresetSkill(name: string): PresetSkill | null {
   );
 }
 
-/** Build a CDN URL for the simpleicons SVG. */
-export function getSkillLogoUrl(slug: string, color: string): string {
-  return `https://cdn.simpleicons.org/${slug}/${color}`;
+/** Build a CDN URL for the simpleicons SVG (jsDelivr — more reliable than cdn.simpleicons.org on mobile). */
+export function getSkillLogoUrl(slug: string, _color: string): string {
+  return `https://cdn.jsdelivr.net/npm/simple-icons@11/icons/${slug}.svg`;
 }
 
 interface SkillLogoProps {
