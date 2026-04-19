@@ -51,10 +51,12 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
   const [draft, setDraft] = useState<Doc>({
     id: "", type: "estimate", number: "", customer: "",
     firstName: "", lastName: "", phone: "", email: "", address: "",
+    vin: "", year: "", make: "", model: "", trim: "", engine: "", transmission: "",
     vehicle: "",
     items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
     status: "draft", createdAt: new Date().toISOString(),
   });
+  const [vinLoading, setVinLoading] = useState(false);
 
   const filtered = useMemo(() => docs.filter(d => d.type === tab), [docs, tab]);
 
