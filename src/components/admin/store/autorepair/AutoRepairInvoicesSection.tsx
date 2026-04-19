@@ -232,7 +232,52 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">Transmission</label>
-                  <Input placeholder="Automatic" value={draft.transmission} onChange={e => setDraft({ ...draft, transmission: e.target.value })} />
+                  <Input placeholder="8-Speed Automatic" value={draft.transmission} onChange={e => setDraft({ ...draft, transmission: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Drivetrain</label>
+                  <select
+                    value={draft.driveType}
+                    onChange={e => setDraft({ ...draft, driveType: e.target.value })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">Select…</option>
+                    <option value="FWD">FWD · Front-Wheel Drive</option>
+                    <option value="RWD">RWD · Rear-Wheel Drive</option>
+                    <option value="AWD">AWD · All-Wheel Drive</option>
+                    <option value="4WD">4WD · 4x4 / Four-Wheel Drive</option>
+                    <option value="2WD">2WD · Two-Wheel Drive</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Body class</label>
+                  <Input placeholder="Sedan, SUV, Pickup…" value={draft.bodyClass} onChange={e => setDraft({ ...draft, bodyClass: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Doors</label>
+                  <Input type="number" min={2} max={6} placeholder="4" value={draft.doors} onChange={e => setDraft({ ...draft, doors: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Fuel type</label>
+                  <select
+                    value={draft.fuel}
+                    onChange={e => setDraft({ ...draft, fuel: e.target.value })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="">Select…</option>
+                    <option value="Gasoline">Gasoline</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="Plug-In Hybrid">Plug-In Hybrid (PHEV)</option>
+                    <option value="Electric">Electric (EV)</option>
+                    <option value="Flex Fuel (E85)">Flex Fuel (E85)</option>
+                    <option value="CNG">CNG</option>
+                    <option value="Hydrogen">Hydrogen</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5 col-span-2 sm:col-span-3">
+                  <label className="text-xs font-medium text-muted-foreground">Manufacturing plant</label>
+                  <Input placeholder="City, State, Country" value={draft.plant} onChange={e => setDraft({ ...draft, plant: e.target.value })} />
                 </div>
               </div>
             </CardContent>
