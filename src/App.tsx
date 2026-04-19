@@ -542,6 +542,7 @@ const App = () => (
                 <AuthProvider>
                   <PushNotificationsBootstrap />
                   <Suspense fallback={null}><GeofenceBootstrap /></Suspense>
+                  <Suspense fallback={null}><DeletionReturnDialog /></Suspense>
                    <RemoteConfigProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
