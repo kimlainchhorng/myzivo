@@ -1315,6 +1315,80 @@ const CreateCVPage = () => {
           </div>
         </div>
 
+        {/* Style Customization Panel */}
+        <div className="mb-4 rounded-2xl border border-border/30 bg-card/60 p-3 space-y-3">
+          <div className="flex items-center gap-1.5">
+            <Palette className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[11px] font-bold text-foreground">Customize Style</span>
+            <button onClick={() => setCvStyle({ accent: "emerald", header: "standard", columns: "auto", fontScale: 1 })}
+              className="ml-auto text-[9px] font-semibold text-muted-foreground hover:text-primary">Reset</button>
+          </div>
+
+          {/* Accent color */}
+          <div>
+            <p className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/70 mb-1">Accent Color</p>
+            <div className="flex gap-1.5 flex-wrap">
+              {ACCENT_COLORS.map(c => {
+                const active = cvStyle.accent === c.id;
+                return (
+                  <button key={c.id} onClick={() => setCvStyle(s => ({ ...s, accent: c.id }))}
+                    aria-label={c.name}
+                    className={cn("w-7 h-7 rounded-full border-2 transition-all touch-manipulation active:scale-90",
+                      active ? "border-foreground scale-110 shadow-md" : "border-white/60 hover:border-foreground/40")}
+                    style={{ backgroundColor: `hsl(${c.hsl})` }}>
+                    {active && <Check className="w-3 h-3 text-white mx-auto" strokeWidth={3} />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Layout columns */}
+          <div>
+            <p className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/70 mb-1">Layout</p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {COLUMN_STYLES.map(o => {
+                const active = cvStyle.columns === o.id;
+                return (
+                  <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, columns: o.id }))}
+                    className={cn("px-2 py-1.5 rounded-lg text-[10px] font-semibold border transition-all touch-manipulation active:scale-95",
+                      active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
+                    {o.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Header style */}
+          <div>
+            <p className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/70 mb-1">Header Style</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {HEADER_STYLES.map(o => {
+                const active = cvStyle.header === o.id;
+                return (
+                  <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, header: o.id }))}
+                    className={cn("px-2 py-1.5 rounded-lg text-[10px] font-semibold border transition-all touch-manipulation active:scale-95",
+                      active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
+                    {o.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Font size */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/70">Font Size</p>
+              <span className="text-[10px] font-bold text-primary">{Math.round(cvStyle.fontScale * 100)}%</span>
+            </div>
+            <input type="range" min={0.9} max={1.15} step={0.05} value={cvStyle.fontScale}
+              onChange={e => setCvStyle(s => ({ ...s, fontScale: parseFloat(e.target.value) }))}
+              className="w-full accent-primary" />
+          </div>
+        </div>
+
         {/* Progress Tips */}
         <ProgressTips data={previewData} />
 
