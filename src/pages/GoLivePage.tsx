@@ -13,6 +13,7 @@
  */
 import { useState, useRef, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSmartBack } from "@/lib/smartBack";
 import { motion, AnimatePresence } from "framer-motion";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Radio from "lucide-react/dist/esm/icons/radio";
@@ -95,6 +96,7 @@ const TOPICS = [
 
 export default function GoLivePage() {
   const navigate = useNavigate();
+  const goBack = useSmartBack("/live");
   const { user } = useAuth();
   const { data: userProfile } = useUserProfile();
   const { balance: coinBalance, recharge } = useCoinBalance();
@@ -734,7 +736,7 @@ export default function GoLivePage() {
         {phase === "setup" && (
           <>
             <div className="relative z-10 flex items-center gap-2 px-3 pt-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}>
-              <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shrink-0">
+              <button type="button" onClick={goBack} className="relative z-20 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shrink-0 pointer-events-auto">
                 <ArrowLeft className="h-5 w-5 text-white" />
               </button>
               {isPaired ? (
