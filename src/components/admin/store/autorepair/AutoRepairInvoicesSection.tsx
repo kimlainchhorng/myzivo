@@ -120,142 +120,155 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
 
   if (creating) {
     return (
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setCreating(false)}>
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <CardTitle className="text-base flex items-center gap-2">
-              {draft.type === "estimate" ? <ClipboardList className="w-4 h-4" /> : <Receipt className="w-4 h-4" />}
-              {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"} · {draft.number}
-            </CardTitle>
-          </div>
-          <Button onClick={save} className="gap-1.5">
-            {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="space-y-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Customer details</div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">First name</label>
-                <Input placeholder="First name" value={draft.firstName} onChange={e => setDraft({ ...draft, firstName: e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Last name</label>
-                <Input placeholder="Last name" value={draft.lastName} onChange={e => setDraft({ ...draft, lastName: e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Phone</label>
-                <Input type="tel" placeholder="(555) 123-4567" value={draft.phone} onChange={e => setDraft({ ...draft, phone: e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Email</label>
-                <Input type="email" placeholder="customer@example.com" value={draft.email} onChange={e => setDraft({ ...draft, email: e.target.value })} />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-xs font-medium text-muted-foreground">Address</label>
-                <Input placeholder="Street, City, State" value={draft.address} onChange={e => setDraft({ ...draft, address: e.target.value })} />
-              </div>
+      <div className="space-y-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setCreating(false)}>
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <CardTitle className="text-base flex items-center gap-2">
+                {draft.type === "estimate" ? <ClipboardList className="w-4 h-4" /> : <Receipt className="w-4 h-4" />}
+                {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"} · {draft.number}
+              </CardTitle>
             </div>
-          </div>
+            <Button onClick={save} className="gap-1.5">
+              {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}
+            </Button>
+          </CardHeader>
+        </Card>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vehicle details</div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Customer details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">First name</label>
+                  <Input placeholder="First name" value={draft.firstName} onChange={e => setDraft({ ...draft, firstName: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Last name</label>
+                  <Input placeholder="Last name" value={draft.lastName} onChange={e => setDraft({ ...draft, lastName: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Phone</label>
+                  <Input type="tel" placeholder="(555) 123-4567" value={draft.phone} onChange={e => setDraft({ ...draft, phone: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Email</label>
+                  <Input type="email" placeholder="customer@example.com" value={draft.email} onChange={e => setDraft({ ...draft, email: e.target.value })} />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-medium text-muted-foreground">Address</label>
+                  <Input placeholder="Street, City, State" value={draft.address} onChange={e => setDraft({ ...draft, address: e.target.value })} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Vehicle details</CardTitle>
               {draft.vin && draft.vin.length === 17 && (
                 <span className="text-[10px] text-muted-foreground font-mono">VIN-decoded</span>
               )}
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">VIN (auto-fills vehicle details)</label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="17-character VIN"
+                    maxLength={17}
+                    value={draft.vin}
+                    onChange={e => setDraft({ ...draft, vin: e.target.value.toUpperCase() })}
+                    className="font-mono"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => lookupVin(draft.vin)}
+                    disabled={vinLoading || draft.vin.length !== 17}
+                    className="gap-1.5 shrink-0"
+                  >
+                    {vinLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ScanSearch className="w-4 h-4" />}
+                    Decode
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Year</label>
+                  <Input placeholder="2020" value={draft.year} onChange={e => setDraft({ ...draft, year: e.target.value, vehicle: [e.target.value, draft.make, draft.model].filter(Boolean).join(" ") })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Make</label>
+                  <Input placeholder="Toyota" value={draft.make} onChange={e => setDraft({ ...draft, make: e.target.value, vehicle: [draft.year, e.target.value, draft.model].filter(Boolean).join(" ") })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Model</label>
+                  <Input placeholder="Camry" value={draft.model} onChange={e => setDraft({ ...draft, model: e.target.value, vehicle: [draft.year, draft.make, e.target.value].filter(Boolean).join(" ") })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Trim</label>
+                  <Input placeholder="LE" value={draft.trim} onChange={e => setDraft({ ...draft, trim: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Engine</label>
+                  <Input placeholder="2.5L L4" value={draft.engine} onChange={e => setDraft({ ...draft, engine: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Transmission</label>
+                  <Input placeholder="Automatic" value={draft.transmission} onChange={e => setDraft({ ...draft, transmission: e.target.value })} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardContent className="space-y-5 pt-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold">Line items</span>
+                <Button size="sm" variant="outline" onClick={addItem} className="h-8 gap-1"><Plus className="w-3.5 h-3.5" /> Add item</Button>
+              </div>
+              <div className="grid grid-cols-[1fr_80px_110px_36px] gap-2 px-1 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                <span>Description</span>
+                <span>Qty</span>
+                <span>Price</span>
+                <span></span>
+              </div>
+              {draft.items.map(it => (
+                <div key={it.id} className="grid grid-cols-[1fr_80px_110px_36px] gap-2 items-center">
+                  <Input placeholder="Service or part" value={it.description} onChange={e => updateItem(it.id, { description: e.target.value })} />
+                  <Input type="number" min={1} value={it.qty} onChange={e => updateItem(it.id, { qty: Number(e.target.value) || 1 })} />
+                  <Input type="number" min={0} step={0.01} value={it.price} onChange={e => updateItem(it.id, { price: Number(e.target.value) || 0 })} />
+                  <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => removeItem(it.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                </div>
+              ))}
             </div>
+
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">VIN (auto-fills vehicle details)</label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="17-character VIN"
-                  maxLength={17}
-                  value={draft.vin}
-                  onChange={e => setDraft({ ...draft, vin: e.target.value.toUpperCase() })}
-                  className="font-mono"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => lookupVin(draft.vin)}
-                  disabled={vinLoading || draft.vin.length !== 17}
-                  className="gap-1.5 shrink-0"
-                >
-                  {vinLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ScanSearch className="w-4 h-4" />}
-                  Decode
-                </Button>
-              </div>
+              <label className="text-xs font-medium text-muted-foreground">Notes (optional)</label>
+              <Textarea placeholder="Notes for the customer…" rows={3} />
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Year</label>
-                <Input placeholder="2020" value={draft.year} onChange={e => setDraft({ ...draft, year: e.target.value, vehicle: [e.target.value, draft.make, draft.model].filter(Boolean).join(" ") })} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Make</label>
-                <Input placeholder="Toyota" value={draft.make} onChange={e => setDraft({ ...draft, make: e.target.value, vehicle: [draft.year, e.target.value, draft.model].filter(Boolean).join(" ") })} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Model</label>
-                <Input placeholder="Camry" value={draft.model} onChange={e => setDraft({ ...draft, model: e.target.value, vehicle: [draft.year, draft.make, e.target.value].filter(Boolean).join(" ") })} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Trim</label>
-                <Input placeholder="LE" value={draft.trim} onChange={e => setDraft({ ...draft, trim: e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Engine</label>
-                <Input placeholder="2.5L L4" value={draft.engine} onChange={e => setDraft({ ...draft, engine: e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Transmission</label>
-                <Input placeholder="Automatic" value={draft.transmission} onChange={e => setDraft({ ...draft, transmission: e.target.value })} />
-              </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-border">
+              <span className="text-sm text-muted-foreground">Total</span>
+              <span className="text-2xl font-bold flex items-center"><DollarSign className="w-5 h-5" />{total(draft.items).toFixed(2)}</span>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold">Line items</span>
-              <Button size="sm" variant="outline" onClick={addItem} className="h-8 gap-1"><Plus className="w-3.5 h-3.5" /> Add item</Button>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setCreating(false)}>Cancel</Button>
+              <Button onClick={save}>{draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}</Button>
             </div>
-            <div className="grid grid-cols-[1fr_80px_110px_36px] gap-2 px-1 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-              <span>Description</span>
-              <span>Qty</span>
-              <span>Price</span>
-              <span></span>
-            </div>
-            {draft.items.map(it => (
-              <div key={it.id} className="grid grid-cols-[1fr_80px_110px_36px] gap-2 items-center">
-                <Input placeholder="Service or part" value={it.description} onChange={e => updateItem(it.id, { description: e.target.value })} />
-                <Input type="number" min={1} value={it.qty} onChange={e => updateItem(it.id, { qty: Number(e.target.value) || 1 })} />
-                <Input type="number" min={0} step={0.01} value={it.price} onChange={e => updateItem(it.id, { price: Number(e.target.value) || 0 })} />
-                <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => removeItem(it.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
-              </div>
-            ))}
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Notes (optional)</label>
-            <Textarea placeholder="Notes for the customer…" rows={3} />
-          </div>
-
-          <div className="flex items-center justify-between pt-3 border-t border-border">
-            <span className="text-sm text-muted-foreground">Total</span>
-            <span className="text-2xl font-bold flex items-center"><DollarSign className="w-5 h-5" />{total(draft.items).toFixed(2)}</span>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setCreating(false)}>Cancel</Button>
-            <Button onClick={save}>{draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}</Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
