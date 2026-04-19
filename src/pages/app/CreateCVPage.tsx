@@ -7,12 +7,13 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
+import { saveAs } from "file-saver";
 import {
   ArrowLeft, Plus, Trash2, User, Briefcase, GraduationCap,
   Wrench, Globe, Award, Save, FileText, Link2, Linkedin,
   Heart, Users, ChevronDown, ChevronUp, Loader2, Check,
   Star, MapPin, Mail, Phone, Eye, Camera, Image as ImageIcon,
-  Download, Share2, Copy, Lightbulb, Palette,
+  Download, Share2, Copy, Lightbulb, Palette, FileSpreadsheet,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
