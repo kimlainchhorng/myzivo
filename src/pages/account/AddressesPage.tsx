@@ -3,8 +3,8 @@
  * Manage saved delivery addresses
  */
 import { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, Home, Briefcase, Pin, Plus, Pencil, Trash2, Star, Loader2, Navigation } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, MapPin, Home, Briefcase, Pin, Plus, Pencil, Trash2, Star, Loader2, Navigation, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -197,6 +197,22 @@ export default function AddressesPage() {
           <Plus className="w-5 h-5" />
           {t("address.add_new")}
         </Button>
+
+        {/* Privacy Notice */}
+        <div className="flex gap-3 p-3 rounded-xl bg-muted/50 border border-border/50">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Lock className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold mb-0.5">Private to you</p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Your saved addresses are visible only to you and are used solely to fulfill your orders and deliveries. Read our{" "}
+              <Link to="/privacy" className="text-primary hover:underline font-medium">Privacy Policy</Link>
+              {" "}and{" "}
+              <Link to="/terms" className="text-primary hover:underline font-medium">Terms</Link>.
+            </p>
+          </div>
+        </div>
 
         {/* Loading */}
         {isLoading && (
