@@ -51,6 +51,11 @@ import StorePerformanceSection from "@/components/admin/store/StorePerformanceSe
 import StoreDocumentsSection from "@/components/admin/store/StoreDocumentsSection";
 import StoreEmployeeRulesSection from "@/components/admin/store/StoreEmployeeRulesSection";
 import StoreOrdersSection from "@/components/admin/StoreOrdersSection";
+import AutoRepairInvoicesSection from "@/components/admin/store/autorepair/AutoRepairInvoicesSection";
+import AutoRepairAutoCheckSection from "@/components/admin/store/autorepair/AutoRepairAutoCheckSection";
+import AutoRepairPartShopSection from "@/components/admin/store/autorepair/AutoRepairPartShopSection";
+import AutoRepairInspectionsSection from "@/components/admin/store/autorepair/AutoRepairInspectionsSection";
+import AutoRepairVehiclesSection from "@/components/admin/store/autorepair/AutoRepairVehiclesSection";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
