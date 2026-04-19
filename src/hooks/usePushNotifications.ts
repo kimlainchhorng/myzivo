@@ -68,7 +68,6 @@ const normalizeIncomingCallPayload = (
   };
 };
 
-
 const normalizeLaunchUrl = (url: string | undefined | null): string | null => {
   if (!url) return null;
 
@@ -90,7 +89,7 @@ const normalizeLaunchUrl = (url: string | undefined | null): string | null => {
   }
 };
 
-
+export const usePushNotifications = () => {
   const { user, session } = useAuth();
   const [state, setState] = useState<PushNotificationState>({
     isSupported: false,
