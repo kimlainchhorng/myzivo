@@ -208,7 +208,7 @@ export default function AutoRepairDocPreviewDialog({ open, onOpenChange, doc, st
             <Button size="sm" variant="outline" onClick={handleDownload} className="gap-1.5"><Download className="w-3.5 h-3.5" /> Download</Button>
             <Button size="sm" variant="outline" onClick={handleEmail} className="gap-1.5"><Mail className="w-3.5 h-3.5" /> Email</Button>
             <Button size="sm" variant="outline" onClick={handleSms} className="gap-1.5"><MessageSquare className="w-3.5 h-3.5" /> SMS</Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onOpenChange(false)}><X className="w-4 h-4" /></Button>
+            
           </div>
         </DialogHeader>
         <div className="flex-1 overflow-auto bg-muted/30 p-4">
