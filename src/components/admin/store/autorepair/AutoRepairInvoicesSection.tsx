@@ -601,8 +601,9 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
                 <div className="text-right shrink-0 ml-3">
                   <p className="font-bold text-sm">${total(d.items).toFixed(2)}</p>
                   <div className="flex gap-1 mt-1">
-                    <Button size="icon" variant="ghost" className="h-7 w-7"><Send className="w-3.5 h-3.5" /></Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7"><Printer className="w-3.5 h-3.5" /></Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPreviewDoc(d)} title="Preview"><Eye className="w-3.5 h-3.5" /></Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPreviewDoc(d)} title="Send"><Send className="w-3.5 h-3.5" /></Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPreviewDoc(d)} title="Print"><Printer className="w-3.5 h-3.5" /></Button>
                   </div>
                 </div>
               </div>
@@ -610,6 +611,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
           </TabsContent>
         </Tabs>
       </CardContent>
+      <AutoRepairDocPreviewDialog open={!!previewDoc} onOpenChange={(v) => !v && setPreviewDoc(null)} doc={previewDoc} />
     </Card>
   );
 }
