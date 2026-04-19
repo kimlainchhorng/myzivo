@@ -57,14 +57,24 @@ const emptyDraft = (): Doc => ({
   vin: "", year: "", make: "", model: "", trim: "", engine: "", transmission: "",
   driveType: "", bodyClass: "", doors: "", fuel: "", plant: "",
   vehicle: "",
-  items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
+  items: [{ id: crypto.randomUUID(), category: "labor", description: "", qty: 1, price: 0, hours: 1, discount: 0 }],
   status: "draft", createdAt: new Date().toISOString(),
 });
 
+// Compute the dollar amount for a single line item
+const lineAmount = (i: LineItem): number => {
+  const gross =
+    i.category === "labor" ? (i.hours ?? 0) * (i.price ?? 0) :
+    i.category === "part" ? (i.qty ?? 0) * (i.price ?? 0) :
+    (i.price ?? 0); // diagnosis = flat fee
+  const disc = Math.max(0, Math.min(100, i.discount ?? 0));
+  return gross * (1 - disc / 100);
+};
+
 const seed: Doc[] = [
-  { id: "1", type: "estimate", number: "EST-1042", customer: "Maria Lopez", firstName: "Maria", lastName: "Lopez", phone: "(225) 555-0142", email: "maria.lopez@example.com", address: "1420 Highland Rd, Baton Rouge, LA", vin: "4T1B11HK5JU123456", year: "2018", make: "Toyota", model: "Camry", trim: "LE", engine: "2.5L L4 DOHC", transmission: "8-Speed Automatic", driveType: "FWD", bodyClass: "Sedan/Saloon", doors: "4", fuel: "Gasoline", plant: "Georgetown, KY, USA", vehicle: "2018 Toyota Camry", items: [{ id: "a", description: "Brake Pad Replacement (Front)", qty: 1, price: 180 }, { id: "b", description: "Rotor Resurface", qty: 2, price: 45 }], status: "sent", createdAt: new Date().toISOString() },
-  { id: "2", type: "invoice", number: "INV-2031", customer: "James Carter", firstName: "James", lastName: "Carter", phone: "(225) 555-0188", email: "james.carter@example.com", address: "88 Government St, Baton Rouge, LA", vin: "1FTEW1EP5LFA12345", year: "2020", make: "Ford", model: "F-150", trim: "XLT", engine: "3.5L V6 EcoBoost", transmission: "10-Speed Automatic", driveType: "4WD", bodyClass: "Pickup", doors: "4", fuel: "Gasoline", plant: "Dearborn, MI, USA", vehicle: "2020 Ford F-150", items: [{ id: "c", description: "Full Synthetic Oil Change", qty: 1, price: 89.99 }], status: "paid", createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: "3", type: "invoice", number: "INV-2032", customer: "Linda Park", firstName: "Linda", lastName: "Park", phone: "(225) 555-0210", email: "linda.park@example.com", address: "305 Perkins Rd, Baton Rouge, LA", vin: "2HGFC2F59KH512345", year: "2019", make: "Honda", model: "Civic", trim: "LX", engine: "2.0L L4", transmission: "CVT", driveType: "FWD", bodyClass: "Sedan/Saloon", doors: "4", fuel: "Gasoline", plant: "Greensburg, IN, USA", vehicle: "2019 Honda Civic", items: [{ id: "d", description: "AC Recharge", qty: 1, price: 149 }, { id: "e", description: "Cabin Air Filter", qty: 1, price: 35 }], status: "sent", createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
+  { id: "1", type: "estimate", number: "EST-1042", customer: "Maria Lopez", firstName: "Maria", lastName: "Lopez", phone: "(225) 555-0142", email: "maria.lopez@example.com", address: "1420 Highland Rd, Baton Rouge, LA", vin: "4T1B11HK5JU123456", year: "2018", make: "Toyota", model: "Camry", trim: "LE", engine: "2.5L L4 DOHC", transmission: "8-Speed Automatic", driveType: "FWD", bodyClass: "Sedan/Saloon", doors: "4", fuel: "Gasoline", plant: "Georgetown, KY, USA", vehicle: "2018 Toyota Camry", items: [{ id: "a", category: "labor", description: "Brake Pad Replacement (Front)", qty: 1, price: 120, hours: 1.5, discount: 0 }, { id: "b", category: "part", description: "Front Brake Pads (set)", qty: 1, price: 80, discount: 0 }], status: "sent", createdAt: new Date().toISOString() },
+  { id: "2", type: "invoice", number: "INV-2031", customer: "James Carter", firstName: "James", lastName: "Carter", phone: "(225) 555-0188", email: "james.carter@example.com", address: "88 Government St, Baton Rouge, LA", vin: "1FTEW1EP5LFA12345", year: "2020", make: "Ford", model: "F-150", trim: "XLT", engine: "3.5L V6 EcoBoost", transmission: "10-Speed Automatic", driveType: "4WD", bodyClass: "Pickup", doors: "4", fuel: "Gasoline", plant: "Dearborn, MI, USA", vehicle: "2020 Ford F-150", items: [{ id: "c", category: "labor", description: "Full Synthetic Oil Change", qty: 1, price: 90, hours: 1, discount: 0 }], status: "paid", createdAt: new Date(Date.now() - 86400000).toISOString() },
+  { id: "3", type: "invoice", number: "INV-2032", customer: "Linda Park", firstName: "Linda", lastName: "Park", phone: "(225) 555-0210", email: "linda.park@example.com", address: "305 Perkins Rd, Baton Rouge, LA", vin: "2HGFC2F59KH512345", year: "2019", make: "Honda", model: "Civic", trim: "LX", engine: "2.0L L4", transmission: "CVT", driveType: "FWD", bodyClass: "Sedan/Saloon", doors: "4", fuel: "Gasoline", plant: "Greensburg, IN, USA", vehicle: "2019 Honda Civic", items: [{ id: "d", category: "diagnosis", description: "AC System Diagnostic", qty: 1, price: 89, discount: 0 }, { id: "e", category: "part", description: "Cabin Air Filter", qty: 1, price: 35, discount: 0 }], status: "sent", createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
 ];
 
 interface Props { storeId: string }
