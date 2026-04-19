@@ -240,9 +240,9 @@ const Signup = () => {
             />
             <span className="text-sm text-muted-foreground">
               I agree to the{" "}
-              <Link to="/terms" className="text-emerald-400 hover:text-emerald-300 font-medium">Terms of Service</Link>
+              <LegalPreviewLink kind="terms" className="text-emerald-400 hover:text-emerald-300 font-medium underline-offset-2 hover:underline">Terms of Service</LegalPreviewLink>
               {" "}and{" "}
-              <Link to="/privacy" className="text-emerald-400 hover:text-emerald-300 font-medium">Privacy Policy</Link>
+              <LegalPreviewLink kind="privacy" className="text-emerald-400 hover:text-emerald-300 font-medium underline-offset-2 hover:underline">Privacy Policy</LegalPreviewLink>
             </span>
           </label>
 
