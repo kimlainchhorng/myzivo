@@ -57,7 +57,9 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
     const prefix = type === "estimate" ? "EST-" : "INV-";
     const num = `${prefix}${Math.floor(1000 + Math.random() * 9000)}`;
     setDraft({
-      id: crypto.randomUUID(), type, number: num, customer: "", vehicle: "",
+      id: crypto.randomUUID(), type, number: num, customer: "",
+      firstName: "", lastName: "", phone: "", email: "", address: "",
+      vehicle: "",
       items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
       status: "draft", createdAt: new Date().toISOString(),
     });
