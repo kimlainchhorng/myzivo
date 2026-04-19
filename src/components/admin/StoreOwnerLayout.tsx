@@ -6,7 +6,7 @@ import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  LogOut, ChevronLeft, Menu, Home, Store,
+  LogOut, ChevronLeft, ChevronDown, Menu, Home, Store,
   Package, CreditCard, MessageCircle, Users, Megaphone, ClipboardList, Settings,
   Wallet, Calendar, Clock, Shield, CalendarCheck, GraduationCap, Star, FolderOpen, Radio,
   FileText, ScanSearch, Wrench, ClipboardCheck, Car
