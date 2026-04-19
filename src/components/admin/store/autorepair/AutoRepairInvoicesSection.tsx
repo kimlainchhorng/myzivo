@@ -10,8 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2, Check, CloudUpload, Wrench, Package, Stethoscope } from "lucide-react";
+import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2, Check, CloudUpload, Wrench, Package, Stethoscope, Eye } from "lucide-react";
 import { toast } from "sonner";
+import AutoRepairDocPreviewDialog from "./AutoRepairDocPreviewDialog";
 
 type LineCategory = "labor" | "part" | "diagnosis";
 type LineItem = {
@@ -92,6 +93,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
   const [vinLoading, setVinLoading] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<Doc | null>(null);
   const draftKey = useMemo(() => `autorepair:invoice-draft:${storeId}`, [storeId]);
   const saveTimer = useRef<number | null>(null);
   const skipNextSave = useRef(true);
@@ -249,6 +251,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
                 {saveState === "saved" && (<><Check className="w-3 h-3 text-primary" /> Saved{lastSaved ? ` · ${lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}</>)}
                 {saveState === "idle" && (<><CloudUpload className="w-3 h-3" /> Autosave on</>)}
               </span>
+              <Button variant="outline" size="sm" onClick={() => setPreviewDoc({ ...draft, customer: `${draft.firstName} ${draft.lastName}`.trim() })} className="gap-1.5"><Eye className="w-3.5 h-3.5" /> Preview</Button>
               <Button variant="outline" size="sm" onClick={saveDraftNow}>Save draft</Button>
               <Button variant="ghost" size="sm" onClick={discardDraft} className="text-destructive hover:text-destructive">Discard</Button>
               <Button onClick={save} className="gap-1.5">
@@ -511,6 +514,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
             </div>
           </CardContent>
         </Card>
+        <AutoRepairDocPreviewDialog open={!!previewDoc} onOpenChange={(v) => !v && setPreviewDoc(null)} doc={previewDoc} />
       </div>
     );
   }
@@ -598,8 +602,9 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
                 <div className="text-right shrink-0 ml-3">
                   <p className="font-bold text-sm">${total(d.items).toFixed(2)}</p>
                   <div className="flex gap-1 mt-1">
-                    <Button size="icon" variant="ghost" className="h-7 w-7"><Send className="w-3.5 h-3.5" /></Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7"><Printer className="w-3.5 h-3.5" /></Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPreviewDoc(d)} title="Preview"><Eye className="w-3.5 h-3.5" /></Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPreviewDoc(d)} title="Send"><Send className="w-3.5 h-3.5" /></Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPreviewDoc(d)} title="Print"><Printer className="w-3.5 h-3.5" /></Button>
                   </div>
                 </div>
               </div>
@@ -607,6 +612,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
           </TabsContent>
         </Tabs>
       </CardContent>
+      <AutoRepairDocPreviewDialog open={!!previewDoc} onOpenChange={(v) => !v && setPreviewDoc(null)} doc={previewDoc} />
     </Card>
   );
 }
