@@ -26,7 +26,14 @@ export function getPostShareUrl(postId: string): string {
 
 /**
  * Returns the profile share URL for social networks.
+ * Uses the branded zivollc.com domain (routes through /p/:code which redirects
+ * to the OG edge function for crawlers and to the in-app profile for humans).
  */
 export function getProfileShareUrl(shareCode: string): string {
+  return `${getPublicOrigin()}/p/${encodeURIComponent(shareCode)}`;
+}
+
+/** Internal: direct edge function URL (used by server-side OG redirects). */
+export function getProfileOgFunctionUrl(shareCode: string): string {
   return `${PROFILE_OG_FUNCTION}?code=${encodeURIComponent(shareCode)}`;
 }
