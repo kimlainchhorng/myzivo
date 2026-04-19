@@ -103,8 +103,8 @@ export default function AutoRepairDocPreviewDialog({ open, onOpenChange, doc, st
   <div class="head">
     <div>
       <div class="brand">${storeName || "AB Complete Car Care"}</div>
-      <div class="sub">${storeAddress || ""}</div>
-      <div class="sub">${storePhone || ""}</div>
+      ${storeAddress ? `<div class="sub"><span style="color:#888;font-weight:600">Shop:</span> ${storeAddress}</div>` : ""}
+      ${storePhone ? `<div class="sub"><span style="color:#888;font-weight:600">Phone:</span> ${storePhone}</div>` : ""}
     </div>
     <div style="text-align:right">
       <div class="badge">${docTypeLabel}</div>
