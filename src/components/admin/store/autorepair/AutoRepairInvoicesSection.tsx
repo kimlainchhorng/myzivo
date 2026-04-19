@@ -357,26 +357,107 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
 
         <Card>
           <CardContent className="space-y-5 pt-6">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold">Line items</span>
-                <Button size="sm" variant="outline" onClick={addItem} className="h-8 gap-1"><Plus className="w-3.5 h-3.5" /> Add item</Button>
+            <Tabs defaultValue="labor" className="w-full">
+              <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+                <TabsList className="grid grid-cols-3 w-full max-w-md">
+                  <TabsTrigger value="labor" className="gap-1.5"><Wrench className="w-3.5 h-3.5" /> Labor</TabsTrigger>
+                  <TabsTrigger value="part" className="gap-1.5"><Package className="w-3.5 h-3.5" /> Parts</TabsTrigger>
+                  <TabsTrigger value="diagnosis" className="gap-1.5"><Stethoscope className="w-3.5 h-3.5" /> Diagnosis</TabsTrigger>
+                </TabsList>
               </div>
-              <div className="grid grid-cols-[1fr_80px_110px_36px] gap-2 px-1 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-                <span>Description</span>
-                <span>Qty</span>
-                <span>Price</span>
-                <span></span>
-              </div>
-              {draft.items.map(it => (
-                <div key={it.id} className="grid grid-cols-[1fr_80px_110px_36px] gap-2 items-center">
-                  <Input placeholder="Service or part" value={it.description} onChange={e => updateItem(it.id, { description: e.target.value })} />
-                  <Input type="number" min={1} value={it.qty} onChange={e => updateItem(it.id, { qty: Number(e.target.value) || 1 })} />
-                  <Input type="number" min={0} step={0.01} value={it.price} onChange={e => updateItem(it.id, { price: Number(e.target.value) || 0 })} />
-                  <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => removeItem(it.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
-                </div>
-              ))}
-            </div>
+
+              {(["labor", "part", "diagnosis"] as LineCategory[]).map(cat => {
+                const rows = draft.items.filter(i => i.category === cat);
+                const catSubtotal = subtotalByCat(draft.items, cat);
+                return (
+                  <TabsContent key={cat} value={cat} className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold capitalize">
+                        {cat === "labor" ? "Labor services" : cat === "part" ? "Parts & materials" : "Diagnosis & inspection"}
+                      </span>
+                      <Button size="sm" variant="outline" onClick={() => addItem(cat)} className="h-8 gap-1">
+                        <Plus className="w-3.5 h-3.5" /> Add {cat === "part" ? "part" : cat === "labor" ? "labor" : "diagnosis"}
+                      </Button>
+                    </div>
+
+                    {rows.length === 0 && (
+                      <div className="text-center py-8 text-xs text-muted-foreground border border-dashed border-border rounded-lg">
+                        No {cat === "part" ? "parts" : cat === "labor" ? "labor lines" : "diagnosis fees"} yet.
+                      </div>
+                    )}
+
+                    {/* Headers */}
+                    {rows.length > 0 && (
+                      <div className={`grid gap-2 px-1 text-[11px] font-medium text-muted-foreground uppercase tracking-wide ${
+                        cat === "labor"
+                          ? "grid-cols-[1fr_70px_90px_70px_90px_36px]"
+                          : cat === "part"
+                          ? "grid-cols-[1fr_70px_90px_70px_90px_36px]"
+                          : "grid-cols-[1fr_110px_70px_90px_36px]"
+                      }`}>
+                        <span>Service detail</span>
+                        {cat === "labor" && <><span>Hours</span><span>Hour rate</span><span>Disc %</span><span className="text-right">Total</span></>}
+                        {cat === "part" && <><span>Qty</span><span>Unit price</span><span>Disc %</span><span className="text-right">Total</span></>}
+                        {cat === "diagnosis" && <><span>Flat fee</span><span>Disc %</span><span className="text-right">Total</span></>}
+                        <span></span>
+                      </div>
+                    )}
+
+                    {rows.map(it => (
+                      <div
+                        key={it.id}
+                        className={`grid gap-2 items-center ${
+                          cat === "labor"
+                            ? "grid-cols-[1fr_70px_90px_70px_90px_36px]"
+                            : cat === "part"
+                            ? "grid-cols-[1fr_70px_90px_70px_90px_36px]"
+                            : "grid-cols-[1fr_110px_70px_90px_36px]"
+                        }`}
+                      >
+                        <Input
+                          placeholder={cat === "labor" ? "e.g. Front brake pad replacement" : cat === "part" ? "e.g. Front brake pads (set)" : "e.g. AC system diagnostic"}
+                          value={it.description}
+                          onChange={e => updateItem(it.id, { description: e.target.value })}
+                        />
+
+                        {cat === "labor" && (
+                          <>
+                            <Input type="number" min={0} step={0.25} value={it.hours ?? 0} onChange={e => updateItem(it.id, { hours: Number(e.target.value) || 0 })} />
+                            <Input type="number" min={0} step={0.01} value={it.price} onChange={e => updateItem(it.id, { price: Number(e.target.value) || 0 })} />
+                            <Input type="number" min={0} max={100} value={it.discount ?? 0} onChange={e => updateItem(it.id, { discount: Number(e.target.value) || 0 })} />
+                          </>
+                        )}
+
+                        {cat === "part" && (
+                          <>
+                            <Input type="number" min={1} value={it.qty} onChange={e => updateItem(it.id, { qty: Number(e.target.value) || 1 })} />
+                            <Input type="number" min={0} step={0.01} value={it.price} onChange={e => updateItem(it.id, { price: Number(e.target.value) || 0 })} />
+                            <Input type="number" min={0} max={100} value={it.discount ?? 0} onChange={e => updateItem(it.id, { discount: Number(e.target.value) || 0 })} />
+                          </>
+                        )}
+
+                        {cat === "diagnosis" && (
+                          <>
+                            <Input type="number" min={0} step={0.01} value={it.price} onChange={e => updateItem(it.id, { price: Number(e.target.value) || 0 })} />
+                            <Input type="number" min={0} max={100} value={it.discount ?? 0} onChange={e => updateItem(it.id, { discount: Number(e.target.value) || 0 })} />
+                          </>
+                        )}
+
+                        <span className="text-right text-sm font-semibold tabular-nums">${lineAmount(it).toFixed(2)}</span>
+                        <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => removeItem(it.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                      </div>
+                    ))}
+
+                    {rows.length > 0 && (
+                      <div className="flex items-center justify-end pt-2 text-sm">
+                        <span className="text-muted-foreground mr-3 capitalize">{cat} subtotal</span>
+                        <span className="font-semibold tabular-nums">${catSubtotal.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </TabsContent>
+                );
+              })}
+            </Tabs>
 
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Notes (optional)</label>
