@@ -68,8 +68,12 @@ const lineAmount = (i: LineItem): number => {
     i.category === "labor" ? (i.hours ?? 0) * (i.price ?? 0) :
     i.category === "part" ? (i.qty ?? 0) * (i.price ?? 0) :
     (i.price ?? 0); // diagnosis = flat fee
-  const disc = Math.max(0, Math.min(100, i.discount ?? 0));
-  return gross * (1 - disc / 100);
+  const discVal = Math.max(0, i.discount ?? 0);
+  if ((i.discountType ?? "pct") === "amt") {
+    return Math.max(0, gross - discVal);
+  }
+  const pct = Math.min(100, discVal);
+  return gross * (1 - pct / 100);
 };
 
 const seed: Doc[] = [
