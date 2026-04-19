@@ -67,20 +67,35 @@ class NotificationService: UNNotificationServiceExtension {
         avatarImage: INImage?,
         contentHandler: @escaping (UNNotificationContent) -> Void
     ) {
-        // Create the sender as an INPerson
-        let handle = INPersonHandle(value: senderId, type: .unknown)
+        // Build name components so iOS can render initials when no avatar is available
+        var nameComponents = PersonNameComponents()
+        let parts = senderName.split(separator: " ", maxSplits: 1).map(String.init)
+        nameComponents.givenName = parts.first ?? senderName
+        if parts.count > 1 { nameComponents.familyName = parts.last }
+        
+        // Create the sender as an INPerson — use emailAddress handle for better matching
+        let handle = INPersonHandle(value: "zivo-\(senderId)@hizovo.com", type: .emailAddress)
         let sender = INPerson(
             personHandle: handle,
-            nameComponents: nil,
+            nameComponents: nameComponents,
             displayName: senderName,
             image: avatarImage,
             contactIdentifier: nil,
             customIdentifier: "zivo-user-\(senderId)"
         )
         
-        // Create the message intent
+        // Create the INCOMING message intent (recipients = "me", sender = other person)
+        let me = INPerson(
+            personHandle: INPersonHandle(value: "me@hizovo.com", type: .emailAddress),
+            nameComponents: nil,
+            displayName: nil,
+            image: nil,
+            contactIdentifier: nil,
+            customIdentifier: "zivo-me"
+        )
+        
         let intent = INSendMessageIntent(
-            recipients: nil,
+            recipients: [me],
             outgoingMessageType: .outgoingMessageText,
             content: content.body,
             speakableGroupName: nil,
@@ -90,22 +105,26 @@ class NotificationService: UNNotificationServiceExtension {
             attachments: nil
         )
         
-        // Set the sender's avatar on the intent
+        // Set the sender's avatar on the intent so it shows in the notification
         if let avatarImage = avatarImage {
             intent.setImage(avatarImage, forParameterNamed: \.sender)
         }
         
-        // Donate the interaction so Siri learns about this contact
+        // Donate the interaction so iOS recognizes the sender
         let interaction = INInteraction(intent: intent, response: nil)
         interaction.direction = .incoming
-        interaction.donate(completion: nil)
+        interaction.donate(completion: { error in
+            if let error = error {
+                NSLog("[NotificationService] Donation error: \(error.localizedDescription)")
+            }
+        })
         
         // Update the notification content with the communication style
         do {
             let updatedContent = try content.updating(from: intent)
             contentHandler(updatedContent)
         } catch {
-            // Fallback to regular notification if communication style fails
+            NSLog("[NotificationService] updating(from:) failed: \(error.localizedDescription)")
             contentHandler(content)
         }
     }
