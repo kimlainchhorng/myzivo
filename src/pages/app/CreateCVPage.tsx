@@ -678,15 +678,66 @@ function ElegantLayout({ data }: { data: any }) {
   );
 }
 
-function CVDocumentLayout({ data, template }: { data: any; template: TemplateId }) {
-  if (template === "modern") return <ModernLayout data={data} />;
-  if (template === "minimal") return <MinimalLayout data={data} />;
-  if (template === "professional") return <ProfessionalLayout data={data} />;
-  if (template === "premium") return <PremiumLayout data={data} />;
-  if (template === "executive") return <ExecutiveLayout data={data} />;
-  if (template === "creative") return <CreativeLayout data={data} />;
-  if (template === "elegant") return <ElegantLayout data={data} />;
-  return <ClassicLayout data={data} />;
+/* ── Style Customization ────────────────────────── */
+const ACCENT_COLORS = [
+  { id: "emerald", name: "Emerald", hsl: "152 60% 40%" },
+  { id: "blue", name: "Ocean", hsl: "217 91% 50%" },
+  { id: "navy", name: "Navy", hsl: "222 65% 22%" },
+  { id: "gold", name: "Gold", hsl: "38 78% 42%" },
+  { id: "rose", name: "Rose", hsl: "346 77% 45%" },
+  { id: "purple", name: "Purple", hsl: "270 70% 50%" },
+  { id: "slate", name: "Slate", hsl: "215 20% 35%" },
+  { id: "black", name: "Mono", hsl: "0 0% 12%" },
+] as const;
+type AccentId = typeof ACCENT_COLORS[number]["id"];
+
+const HEADER_STYLES = [
+  { id: "standard", name: "Standard" },
+  { id: "bold", name: "Bold" },
+  { id: "banner", name: "Banner" },
+  { id: "minimal", name: "Minimal" },
+] as const;
+type HeaderStyleId = typeof HEADER_STYLES[number]["id"];
+
+const COLUMN_STYLES = [
+  { id: "auto", name: "Default" },
+  { id: "one", name: "1 Column" },
+  { id: "two", name: "2 Columns" },
+] as const;
+type ColumnStyleId = typeof COLUMN_STYLES[number]["id"];
+
+export interface CVStyle {
+  accent: AccentId;
+  header: HeaderStyleId;
+  columns: ColumnStyleId;
+  fontScale: number; // 0.9 - 1.15
+}
+
+function CVDocumentLayout({ data, template, style }: { data: any; template: TemplateId; style?: CVStyle }) {
+  const accent = ACCENT_COLORS.find(a => a.id === style?.accent) || ACCENT_COLORS[0];
+  const wrapStyle: React.CSSProperties = {
+    // Override accent + primary tokens scoped to the CV document
+    ['--primary' as any]: accent.hsl,
+    ['--accent' as any]: accent.hsl,
+    fontSize: `${style?.fontScale ?? 1}em`,
+  };
+  const cls = cn(
+    "cv-doc h-full",
+    style?.columns === "one" && "cv-cols-1",
+    style?.columns === "two" && "cv-cols-2",
+    style?.header && `cv-header-${style.header}`,
+  );
+  const inner = (() => {
+    if (template === "modern") return <ModernLayout data={data} />;
+    if (template === "minimal") return <MinimalLayout data={data} />;
+    if (template === "professional") return <ProfessionalLayout data={data} />;
+    if (template === "premium") return <PremiumLayout data={data} />;
+    if (template === "executive") return <ExecutiveLayout data={data} />;
+    if (template === "creative") return <CreativeLayout data={data} />;
+    if (template === "elegant") return <ElegantLayout data={data} />;
+    return <ClassicLayout data={data} />;
+  })();
+  return <div className={cls} style={wrapStyle}>{inner}</div>;
 }
 
 /* ── CV Preview Modal ─────────────────────────────── */
