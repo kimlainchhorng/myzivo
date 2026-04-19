@@ -575,14 +575,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         insertData.expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       }
 
-      const { data, error } = await (supabase as any)
+      // Fire-and-forget insert; realtime INSERT echo will replace the optimistic row.
+      // Skipping `.select().single()` cuts ~100-300ms of perceived send latency.
+      const { error } = await (supabase as any)
         .from("direct_messages")
-        .insert(insertData)
-        .select()
-        .single();
+        .insert(insertData);
 
       if (error) throw error;
-      setMessages((prev) => prev.map((m) => m.id === optimisticId ? data : m));
       void sendChatPush(msgType, text);
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
@@ -692,7 +691,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setMessages((prev) => [...prev, optimisticMsg]);
       scrollToBottom(true);
 
-      const { data, error: insertErr } = await (supabase as any)
+      const { error: insertErr } = await (supabase as any)
         .from("direct_messages")
         .insert({
           sender_id: user.id, receiver_id: recipientId,
@@ -701,10 +700,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           video_url: isVideo ? urlData.publicUrl : null,
           message_type: messageType,
           locked_price_cents: priceCents,
-        })
-        .select().single();
+        });
       if (insertErr) throw insertErr;
-      setMessages((prev) => prev.map((m) => m.id === optimisticId ? data : m));
       void sendChatPush(messageType, text || label);
     } catch { toast.error("Failed to upload locked media"); }
     setUploadingMedia(false);
@@ -812,19 +809,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     scrollToBottom();
 
     try {
-      const { data, error } = await (supabase as any)
+      const { error } = await (supabase as any)
         .from("direct_messages")
         .insert({
           sender_id: user.id,
           receiver_id: recipientId,
           message: text,
           message_type: msgType,
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
-      setMessages((prev) => prev.map((m) => m.id === optimisticId ? data : m));
       void sendChatPush(msgType, text);
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
