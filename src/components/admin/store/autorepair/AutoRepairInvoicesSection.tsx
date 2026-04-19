@@ -198,7 +198,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
     return (
       <div className="space-y-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setCreating(false)}>
                 <ArrowLeft className="w-4 h-4" />
@@ -208,9 +208,18 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
                 {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"} · {draft.number}
               </CardTitle>
             </div>
-            <Button onClick={save} className="gap-1.5">
-              {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-muted-foreground flex items-center gap-1.5 mr-1">
+                {saveState === "saving" && (<><Loader2 className="w-3 h-3 animate-spin" /> Saving…</>)}
+                {saveState === "saved" && (<><Check className="w-3 h-3 text-emerald-600" /> Saved{lastSaved ? ` · ${lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}</>)}
+                {saveState === "idle" && (<><CloudUpload className="w-3 h-3" /> Autosave on</>)}
+              </span>
+              <Button variant="outline" size="sm" onClick={saveDraftNow}>Save draft</Button>
+              <Button variant="ghost" size="sm" onClick={discardDraft} className="text-destructive hover:text-destructive">Discard</Button>
+              <Button onClick={save} className="gap-1.5">
+                {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}
+              </Button>
+            </div>
           </CardHeader>
         </Card>
 
