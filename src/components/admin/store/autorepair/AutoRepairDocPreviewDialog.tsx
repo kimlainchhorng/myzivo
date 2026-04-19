@@ -201,7 +201,7 @@ export default function AutoRepairDocPreviewDialog({ open, onOpenChange, doc, st
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
-        <DialogHeader className="px-5 py-3 border-b border-border flex-row items-center justify-between space-y-0">
+        <DialogHeader className="px-5 py-3 pr-12 border-b border-border flex-row items-center justify-between space-y-0">
           <DialogTitle className="text-sm font-semibold">Preview · {doc.number}</DialogTitle>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={handlePrint} className="gap-1.5"><Printer className="w-3.5 h-3.5" /> Print</Button>
