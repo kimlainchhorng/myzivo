@@ -52,6 +52,7 @@ import {
 } from "@/hooks/useNotificationPreferences";
 import { NotificationChannelCard } from "@/components/account/NotificationChannelCard";
 import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
+import InstallAppCard from "@/components/account/InstallAppCard";
 import { toast } from "sonner";
 
 interface NotificationCategory {
@@ -665,30 +666,7 @@ export default function NotificationSettings() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 overflow-hidden">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                  <Phone className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Get the hiZIVO App</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Install our app for the best notification experience with
-                    instant alerts and background updates.
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-3"
-                    onClick={() => navigate("/install")}
-                  >
-                    Install App
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <InstallAppCard />
         </motion.div>
 
         {/* Help Text */}
