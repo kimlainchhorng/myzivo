@@ -94,6 +94,19 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [previewDoc, setPreviewDoc] = useState<Doc | null>(null);
+  const [storeInfo, setStoreInfo] = useState<{ name?: string; address?: string; phone?: string }>({});
+
+  useEffect(() => {
+    if (!storeId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("store_profiles")
+        .select("name, address, phone")
+        .eq("id", storeId)
+        .maybeSingle();
+      if (data) setStoreInfo({ name: data.name || undefined, address: data.address || undefined, phone: data.phone || undefined });
+    })();
+  }, [storeId]);
   const draftKey = useMemo(() => `autorepair:invoice-draft:${storeId}`, [storeId]);
   const saveTimer = useRef<number | null>(null);
   const skipNextSave = useRef(true);
@@ -514,7 +527,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
             </div>
           </CardContent>
         </Card>
-        <AutoRepairDocPreviewDialog open={!!previewDoc} onOpenChange={(v) => !v && setPreviewDoc(null)} doc={previewDoc} />
+        <AutoRepairDocPreviewDialog open={!!previewDoc} onOpenChange={(v) => !v && setPreviewDoc(null)} doc={previewDoc} storeName={storeInfo.name} storeAddress={storeInfo.address} storePhone={storeInfo.phone} />
       </div>
     );
   }
@@ -612,7 +625,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
           </TabsContent>
         </Tabs>
       </CardContent>
-      <AutoRepairDocPreviewDialog open={!!previewDoc} onOpenChange={(v) => !v && setPreviewDoc(null)} doc={previewDoc} />
+      <AutoRepairDocPreviewDialog open={!!previewDoc} onOpenChange={(v) => !v && setPreviewDoc(null)} doc={previewDoc} storeName={storeInfo.name} storeAddress={storeInfo.address} storePhone={storeInfo.phone} />
     </Card>
   );
 }
