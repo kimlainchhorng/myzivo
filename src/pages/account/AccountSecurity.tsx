@@ -416,6 +416,74 @@ export default function AccountSecurity() {
             </CardContent>
           </Card>
 
+          {/* SMS / Phone Verification (additional 2FA layer) */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <MessageSquare className="w-5 h-5" />
+                SMS Verification
+              </CardTitle>
+              <CardDescription>
+                Get a one-time code by text message as a backup or additional verification step.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium">Phone number</p>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {userPhone || "No phone on file"}
+                  </p>
+                </div>
+                <Badge variant={phoneVerified ? "default" : "secondary"}>
+                  {phoneVerified ? "Verified" : "Unverified"}
+                </Badge>
+              </div>
+              <Button
+                variant={phoneVerified ? "outline" : "default"}
+                onClick={() => setPhoneOtpDialogOpen(true)}
+                className="w-full sm:w-auto"
+              >
+                <Smartphone className="w-4 h-4 mr-2" />
+                {phoneVerified ? "Re-verify or change number" : "Verify phone via SMS"}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                We'll text a 6-digit code via Twilio Verify. Standard SMS rates may apply.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Email OTP backup */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Mail className="w-5 h-5" />
+                Email One-Time Code (Backup)
+              </CardTitle>
+              <CardDescription>
+                If you lose access to your authenticator or phone, receive a 6-digit code at{" "}
+                <span className="font-medium text-foreground">{user?.email}</span>.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Email backup code</p>
+                  <p className="text-sm text-muted-foreground">
+                    Enabled by default for account recovery
+                  </p>
+                </div>
+                <Switch
+                  checked={emailOtpBackup}
+                  onCheckedChange={(v) => {
+                    setEmailOtpBackup(v);
+                    toast.success(v ? "Email backup code enabled" : "Email backup code disabled");
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Login Alerts */}
           <Card className="mb-6">
             <CardHeader>
