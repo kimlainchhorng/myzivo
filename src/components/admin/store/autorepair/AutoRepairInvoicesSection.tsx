@@ -422,24 +422,24 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
 
                         {cat === "labor" && (
                           <>
-                            <Input type="number" min={0} step={0.25} value={it.hours ?? 0} onChange={e => updateItem(it.id, { hours: Number(e.target.value) || 0 })} />
-                            <Input type="number" min={0} step={0.01} value={it.price} onChange={e => updateItem(it.id, { price: Number(e.target.value) || 0 })} />
-                            <Input type="number" min={0} max={100} value={it.discount ?? 0} onChange={e => updateItem(it.id, { discount: Number(e.target.value) || 0 })} />
+                            <Input type="number" inputMode="decimal" min={0} step={0.25} placeholder="0" value={it.hours ? it.hours : ""} onChange={e => updateItem(it.id, { hours: e.target.value === "" ? 0 : Number(e.target.value) })} />
+                            <Input type="number" inputMode="decimal" min={0} step={0.01} placeholder="0.00" value={it.price ? it.price : ""} onChange={e => updateItem(it.id, { price: e.target.value === "" ? 0 : Number(e.target.value) })} />
+                            <Input type="number" inputMode="decimal" min={0} max={100} placeholder="0" value={it.discount ? it.discount : ""} onChange={e => updateItem(it.id, { discount: e.target.value === "" ? 0 : Number(e.target.value) })} />
                           </>
                         )}
 
                         {cat === "part" && (
                           <>
-                            <Input type="number" min={1} value={it.qty} onChange={e => updateItem(it.id, { qty: Number(e.target.value) || 1 })} />
-                            <Input type="number" min={0} step={0.01} value={it.price} onChange={e => updateItem(it.id, { price: Number(e.target.value) || 0 })} />
-                            <Input type="number" min={0} max={100} value={it.discount ?? 0} onChange={e => updateItem(it.id, { discount: Number(e.target.value) || 0 })} />
+                            <Input type="number" inputMode="numeric" min={1} placeholder="1" value={it.qty ? it.qty : ""} onChange={e => updateItem(it.id, { qty: e.target.value === "" ? 1 : Number(e.target.value) })} />
+                            <Input type="number" inputMode="decimal" min={0} step={0.01} placeholder="0.00" value={it.price ? it.price : ""} onChange={e => updateItem(it.id, { price: e.target.value === "" ? 0 : Number(e.target.value) })} />
+                            <Input type="number" inputMode="decimal" min={0} max={100} placeholder="0" value={it.discount ? it.discount : ""} onChange={e => updateItem(it.id, { discount: e.target.value === "" ? 0 : Number(e.target.value) })} />
                           </>
                         )}
 
                         {cat === "diagnosis" && (
                           <>
-                            <Input type="number" min={0} step={0.01} value={it.price} onChange={e => updateItem(it.id, { price: Number(e.target.value) || 0 })} />
-                            <Input type="number" min={0} max={100} value={it.discount ?? 0} onChange={e => updateItem(it.id, { discount: Number(e.target.value) || 0 })} />
+                            <Input type="number" inputMode="decimal" min={0} step={0.01} placeholder="0.00" value={it.price ? it.price : ""} onChange={e => updateItem(it.id, { price: e.target.value === "" ? 0 : Number(e.target.value) })} />
+                            <Input type="number" inputMode="decimal" min={0} max={100} placeholder="0" value={it.discount ? it.discount : ""} onChange={e => updateItem(it.id, { discount: e.target.value === "" ? 0 : Number(e.target.value) })} />
                           </>
                         )}
 
