@@ -18,6 +18,11 @@ type Doc = {
   type: "estimate" | "invoice";
   number: string;
   customer: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  address: string;
   vehicle: string;
   items: LineItem[];
   status: "draft" | "sent" | "paid" | "approved";
@@ -25,9 +30,9 @@ type Doc = {
 };
 
 const seed: Doc[] = [
-  { id: "1", type: "estimate", number: "EST-1042", customer: "Maria Lopez", vehicle: "2018 Toyota Camry", items: [{ id: "a", description: "Brake Pad Replacement (Front)", qty: 1, price: 180 }, { id: "b", description: "Rotor Resurface", qty: 2, price: 45 }], status: "sent", createdAt: new Date().toISOString() },
-  { id: "2", type: "invoice", number: "INV-2031", customer: "James Carter", vehicle: "2020 Ford F-150", items: [{ id: "c", description: "Full Synthetic Oil Change", qty: 1, price: 89.99 }], status: "paid", createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: "3", type: "invoice", number: "INV-2032", customer: "Linda Park", vehicle: "2019 Honda Civic", items: [{ id: "d", description: "AC Recharge", qty: 1, price: 149 }, { id: "e", description: "Cabin Air Filter", qty: 1, price: 35 }], status: "sent", createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
+  { id: "1", type: "estimate", number: "EST-1042", customer: "Maria Lopez", firstName: "Maria", lastName: "Lopez", phone: "(225) 555-0142", email: "maria.lopez@example.com", address: "1420 Highland Rd, Baton Rouge, LA", vehicle: "2018 Toyota Camry", items: [{ id: "a", description: "Brake Pad Replacement (Front)", qty: 1, price: 180 }, { id: "b", description: "Rotor Resurface", qty: 2, price: 45 }], status: "sent", createdAt: new Date().toISOString() },
+  { id: "2", type: "invoice", number: "INV-2031", customer: "James Carter", firstName: "James", lastName: "Carter", phone: "(225) 555-0188", email: "james.carter@example.com", address: "88 Government St, Baton Rouge, LA", vehicle: "2020 Ford F-150", items: [{ id: "c", description: "Full Synthetic Oil Change", qty: 1, price: 89.99 }], status: "paid", createdAt: new Date(Date.now() - 86400000).toISOString() },
+  { id: "3", type: "invoice", number: "INV-2032", customer: "Linda Park", firstName: "Linda", lastName: "Park", phone: "(225) 555-0210", email: "linda.park@example.com", address: "305 Perkins Rd, Baton Rouge, LA", vehicle: "2019 Honda Civic", items: [{ id: "d", description: "AC Recharge", qty: 1, price: 149 }, { id: "e", description: "Cabin Air Filter", qty: 1, price: 35 }], status: "sent", createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
 ];
 
 interface Props { storeId: string }
@@ -37,7 +42,9 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
   const [tab, setTab] = useState<"estimate" | "invoice">("estimate");
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState<Doc>({
-    id: "", type: "estimate", number: "", customer: "", vehicle: "",
+    id: "", type: "estimate", number: "", customer: "",
+    firstName: "", lastName: "", phone: "", email: "", address: "",
+    vehicle: "",
     items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
     status: "draft", createdAt: new Date().toISOString(),
   });
@@ -50,7 +57,9 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
     const prefix = type === "estimate" ? "EST-" : "INV-";
     const num = `${prefix}${Math.floor(1000 + Math.random() * 9000)}`;
     setDraft({
-      id: crypto.randomUUID(), type, number: num, customer: "", vehicle: "",
+      id: crypto.randomUUID(), type, number: num, customer: "",
+      firstName: "", lastName: "", phone: "", email: "", address: "",
+      vehicle: "",
       items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
       status: "draft", createdAt: new Date().toISOString(),
     });
@@ -58,8 +67,9 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
   };
 
   const save = () => {
-    if (!draft.customer || !draft.vehicle) { toast.error("Customer and vehicle required"); return; }
-    setDocs(d => [draft, ...d]);
+    if (!draft.firstName || !draft.lastName || !draft.vehicle) { toast.error("First name, last name, and vehicle are required"); return; }
+    const customer = `${draft.firstName} ${draft.lastName}`.trim();
+    setDocs(d => [{ ...draft, customer }, ...d]);
     setCreating(false);
     toast.success(`${draft.type === "estimate" ? "Estimate" : "Invoice"} ${draft.number} created`);
   };
@@ -88,14 +98,33 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
           </Button>
         </CardHeader>
         <CardContent className="space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Customer name</label>
-              <Input placeholder="e.g. Maria Lopez" value={draft.customer} onChange={e => setDraft({ ...draft, customer: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Vehicle</label>
-              <Input placeholder="Year / Make / Model" value={draft.vehicle} onChange={e => setDraft({ ...draft, vehicle: e.target.value })} />
+          <div className="space-y-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Customer details</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">First name</label>
+                <Input placeholder="First name" value={draft.firstName} onChange={e => setDraft({ ...draft, firstName: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Last name</label>
+                <Input placeholder="Last name" value={draft.lastName} onChange={e => setDraft({ ...draft, lastName: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Phone</label>
+                <Input type="tel" placeholder="(555) 123-4567" value={draft.phone} onChange={e => setDraft({ ...draft, phone: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Email</label>
+                <Input type="email" placeholder="customer@example.com" value={draft.email} onChange={e => setDraft({ ...draft, email: e.target.value })} />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-xs font-medium text-muted-foreground">Address</label>
+                <Input placeholder="Street, City, State" value={draft.address} onChange={e => setDraft({ ...draft, address: e.target.value })} />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-xs font-medium text-muted-foreground">Vehicle</label>
+                <Input placeholder="Year / Make / Model" value={draft.vehicle} onChange={e => setDraft({ ...draft, vehicle: e.target.value })} />
+              </div>
             </div>
           </div>
 
