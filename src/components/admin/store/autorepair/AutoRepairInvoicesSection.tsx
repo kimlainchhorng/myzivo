@@ -18,6 +18,11 @@ type Doc = {
   type: "estimate" | "invoice";
   number: string;
   customer: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  address: string;
   vehicle: string;
   items: LineItem[];
   status: "draft" | "sent" | "paid" | "approved";
