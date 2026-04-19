@@ -3,9 +3,10 @@
  * User-facing security controls: password, 2FA, sessions, data management
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import TwoFactorSetupDialog from "@/components/auth/TwoFactorSetupDialog";
 import { 
   Shield, Lock, Smartphone, Monitor, MapPin, Clock, 
   LogOut, Download, Trash2, AlertTriangle, Key,
@@ -81,8 +82,48 @@ export default function AccountSecurity() {
   const [passwordForm, setPasswordForm] = useState({ current: "", new: "", confirm: "" });
   const [loginAlerts, setLoginAlerts] = useState(true);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [twoFactorLoading, setTwoFactorLoading] = useState(true);
+  const [twoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
+
+  // Load real 2FA status from Supabase Auth MFA
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.mfa.listFactors();
+      if (cancelled) return;
+      const hasVerified = (data?.totp ?? []).some((f) => (f.status as string) === "verified");
+      setTwoFactorEnabled(hasVerified);
+      setTwoFactorLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const refreshTwoFactor = async () => {
+    const { data } = await supabase.auth.mfa.listFactors();
+    const hasVerified = (data?.totp ?? []).some((f) => (f.status as string) === "verified");
+    setTwoFactorEnabled(hasVerified);
+  };
+
+  const handleToggle2FA = async (checked: boolean) => {
+    if (checked) {
+      setTwoFactorDialogOpen(true);
+      return;
+    }
+    // Disable: unenroll all verified TOTP factors
+    try {
+      const { data } = await supabase.auth.mfa.listFactors();
+      for (const f of data?.totp ?? []) {
+        await supabase.auth.mfa.unenroll({ factorId: f.id });
+      }
+      setTwoFactorEnabled(false);
+      toast.success("Two-factor authentication disabled");
+    } catch (e: any) {
+      toast.error(e.message || "Could not disable 2FA");
+    }
+  };
+
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -343,10 +384,8 @@ export default function AccountSecurity() {
                   </Badge>
                   <Switch
                     checked={twoFactorEnabled}
-                    onCheckedChange={(checked) => {
-                      setTwoFactorEnabled(checked);
-                      toast.success(checked ? "2FA setup required - feature coming soon" : "2FA disabled");
-                    }}
+                    disabled={twoFactorLoading}
+                    onCheckedChange={handleToggle2FA}
                   />
                 </div>
               </div>
@@ -478,6 +517,12 @@ export default function AccountSecurity() {
           </Card>
         </motion.div>
       </main>
+
+      <TwoFactorSetupDialog
+        open={twoFactorDialogOpen}
+        onOpenChange={setTwoFactorDialogOpen}
+        onEnrolled={refreshTwoFactor}
+      />
     </div>
   );
 }
