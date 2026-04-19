@@ -368,6 +368,29 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
     );
   }
 
+  // Read persisted draft (if any) to surface a "Continue editing" banner
+  let savedDraftPreview: Doc | null = null;
+  try {
+    const raw = typeof window !== "undefined" ? localStorage.getItem(draftKey) : null;
+    if (raw) savedDraftPreview = JSON.parse(raw) as Doc;
+  } catch { /* ignore */ }
+
+  const continueDraft = () => {
+    if (!savedDraftPreview) return;
+    skipNextSave.current = true;
+    setDraft(savedDraftPreview);
+    setLastSaved(new Date());
+    setSaveState("saved");
+    setCreating(true);
+  };
+
+  const deleteSavedDraft = () => {
+    clearDraft();
+    toast.success("Saved draft removed");
+    // force rerender
+    setDocs(d => [...d]);
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -378,6 +401,31 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
         </div>
       </CardHeader>
       <CardContent>
+        {savedDraftPreview && (
+          <div className="mb-4 flex items-center justify-between gap-3 p-3 rounded-xl border border-primary/30 bg-primary/5">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                {savedDraftPreview.type === "estimate" ? <ClipboardList className="w-4 h-4 text-primary" /> : <Receipt className="w-4 h-4 text-primary" />}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold">Unsaved draft · {savedDraftPreview.number}</span>
+                  <Badge variant="outline" className="text-[10px] capitalize">{savedDraftPreview.type}</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground truncate">
+                  {[savedDraftPreview.firstName, savedDraftPreview.lastName].filter(Boolean).join(" ") || "No customer yet"}
+                  {savedDraftPreview.vehicle ? ` · ${savedDraftPreview.vehicle}` : ""}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button size="sm" onClick={continueDraft}>Continue</Button>
+              <Button size="sm" variant="ghost" onClick={deleteSavedDraft} className="text-destructive hover:text-destructive">
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          </div>
+        )}
         <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
           <TabsList className="grid w-full max-w-sm grid-cols-2 mb-4">
             <TabsTrigger value="estimate">Estimates</TabsTrigger>
