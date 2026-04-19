@@ -8,7 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   LogOut, ChevronLeft, Menu, Home, Store,
   Package, CreditCard, MessageCircle, Users, Megaphone, ClipboardList, Settings,
-  Wallet, Calendar, Clock, Shield, CalendarCheck, GraduationCap, Star, FolderOpen, Radio
+  Wallet, Calendar, Clock, Shield, CalendarCheck, GraduationCap, Star, FolderOpen, Radio,
+  FileText, ScanSearch, Wrench, ClipboardCheck, Car
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,14 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     { id: "profile", label: "Profile", icon: Store },
     { id: "orders", label: `Orders${orderCount ? ` (${orderCount})` : ""}`, icon: ClipboardList },
     { id: "products", label: `${productsLabel}${productCount != null ? ` (${productCount})` : ""}`, icon: Package },
-    { id: "payment", label: paymentLabel, icon: CreditCard },
+    { id: "payment", label: paymentLabel, icon: isAutoRepair ? Calendar : CreditCard },
+    ...(isAutoRepair ? [
+      { id: "ar-invoices", label: "Invoices", icon: FileText },
+      { id: "ar-autocheck", label: "Auto Check", icon: ScanSearch },
+      { id: "ar-parts", label: "Part Shop", icon: Wrench },
+      { id: "ar-inspections", label: "Inspections", icon: ClipboardCheck },
+      { id: "ar-vehicles", label: "Vehicles", icon: Car },
+    ] : []),
     { id: "customers", label: "Customers", icon: Users },
     { id: "marketing", label: "Marketing & Ads", icon: Megaphone },
     { id: "livestream", label: "Live Stream", icon: Radio },
