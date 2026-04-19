@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/components/app/AppLayout";
 import { toast } from "sonner";
+import { SkillLogo, PRESET_SKILLS, findPresetSkill, getSkillLogoUrl } from "@/components/cv/SkillLogo";
 
 const CV_TEMPLATES = [
   { id: "classic", name: "Classic", desc: "Two-column professional" },
@@ -246,8 +247,8 @@ function SkillsList({ data, label = "Skills" }: { data: any; label?: string }) {
       <div className="w-8 h-[2px] bg-foreground/30 mb-2" />
       <ul className="space-y-1.5">
         {items.map((s: any, i: number) => (
-          <li key={i} className="flex items-start gap-1.5">
-            <span className="w-1 h-1 rounded-full bg-foreground/50 mt-1.5 shrink-0" />
+          <li key={i} className="flex items-center gap-1.5">
+            <SkillLogo name={s.name} size={12} />
             <span className="text-[10px] text-foreground/80">{s.name}{s.level ? ` · ${s.level}` : ""}</span>
           </li>
         ))}
