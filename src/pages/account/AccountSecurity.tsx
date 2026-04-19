@@ -517,6 +517,12 @@ export default function AccountSecurity() {
           </Card>
         </motion.div>
       </main>
+
+      <TwoFactorSetupDialog
+        open={twoFactorDialogOpen}
+        onOpenChange={setTwoFactorDialogOpen}
+        onEnrolled={refreshTwoFactor}
+      />
     </div>
   );
 }
