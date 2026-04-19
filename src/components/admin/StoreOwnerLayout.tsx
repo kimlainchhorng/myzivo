@@ -55,7 +55,6 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     { id: "customers", label: "Customers", icon: Users },
     { id: "marketing", label: "Marketing & Ads", icon: Megaphone },
     { id: "livestream", label: "Live Stream", icon: Radio },
-    { id: "settings", label: "Settings", icon: Settings },
   ];
 
   const employeeItems = [
@@ -178,6 +177,16 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
 
           {/* Footer */}
           <div className="border-t border-border p-3 space-y-1">
+            <button
+              onClick={() => { onTabChange?.("settings"); setSidebarOpen(false); }}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all",
+                activeTab === "settings" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <Settings className="w-4.5 h-4.5" />
+              Settings
+            </button>
             <button
               onClick={() => navigate("/")}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
