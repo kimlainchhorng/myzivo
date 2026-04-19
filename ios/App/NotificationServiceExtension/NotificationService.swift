@@ -20,7 +20,7 @@ class NotificationService: UNNotificationServiceExtension {
         let userInfo = request.content.userInfo
         let senderName = userInfo["sender_name"] as? String ?? bestAttemptContent.title
         let senderId = userInfo["sender_id"] as? String ?? "unknown"
-        let avatarUrlString = userInfo["image_url"] as? String ?? ""
+        let avatarUrlString = userInfo["sender_avatar_url"] as? String ?? userInfo["image_url"] as? String ?? ""
         let notificationType = userInfo["type"] as? String ?? ""
         
         // Only use communication style for chat messages
