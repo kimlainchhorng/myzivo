@@ -382,10 +382,18 @@ export default function AccountSecurity() {
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       {t("security.updating")}
                     </>
-                  ) : (
+                  ) : pwdVerified ? (
                     t("security.update_password")
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4 mr-2" />
+                      Verify & update password
+                    </>
                   )}
                 </Button>
+                <p className="text-xs text-muted-foreground">
+                  For your security, we'll send a one-time code to your email or phone before changing your password.
+                </p>
               </form>
             </CardContent>
           </Card>
