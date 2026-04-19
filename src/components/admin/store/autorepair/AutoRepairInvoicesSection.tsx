@@ -168,10 +168,22 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
     }
   };
 
+  const saveDraftNow = () => {
+    try {
+      localStorage.setItem(draftKey, JSON.stringify(draft));
+      setLastSaved(new Date());
+      setSaveState("saved");
+      toast.success("Draft saved");
+    } catch {
+      toast.error("Could not save draft");
+    }
+  };
+
   const save = () => {
     if (!draft.firstName || !draft.lastName || !draft.vehicle) { toast.error("First name, last name, and vehicle are required"); return; }
     const customer = `${draft.firstName} ${draft.lastName}`.trim();
     setDocs(d => [{ ...draft, customer }, ...d]);
+    clearDraft();
     setCreating(false);
     toast.success(`${draft.type === "estimate" ? "Estimate" : "Invoice"} ${draft.number} created`);
   };
