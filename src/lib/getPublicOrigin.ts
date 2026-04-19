@@ -21,10 +21,12 @@ export function getPublicOrigin(): string {
 
 /**
  * Returns a share URL for a feed/reel post.
- * Uses edge function OG endpoint so social crawlers get post-specific previews.
+ * Points directly to the post-og edge function so social crawlers (Facebook,
+ * Twitter, etc.) receive post-specific OG tags. Humans are 302-redirected to
+ * the branded /dl/reel/:id landing page by the function itself.
  */
 export function getPostShareUrl(postId: string): string {
-  return `${getPublicOrigin()}/dl/reel/${encodeURIComponent(postId)}`;
+  return `${POST_OG_FUNCTION}?post=${encodeURIComponent(postId)}`;
 }
 
 /**
