@@ -1007,6 +1007,10 @@ const CreateCVPage = () => {
                   <input className={inputCls} placeholder="John Doe" value={fullName} onChange={e => setFullName(e.target.value)} />
                 </div>
                 <div>
+                  <label className={lblCls}>Date of Birth</label>
+                  <input type="date" className={inputCls} value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} />
+                </div>
+                <div>
                   <label className={lblCls}>Job Title / Headline</label>
                   <input className={inputCls} placeholder="Senior Software Engineer" value={jobTitle} onChange={e => setJobTitle(e.target.value)} />
                 </div>
