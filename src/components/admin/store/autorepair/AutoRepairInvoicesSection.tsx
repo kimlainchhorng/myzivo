@@ -211,7 +211,17 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
   const updateItem = (id: string, patch: Partial<LineItem>) =>
     setDraft(d => ({ ...d, items: d.items.map(i => i.id === id ? { ...i, ...patch } : i) }));
 
-  const addItem = () => setDraft(d => ({ ...d, items: [...d.items, { id: crypto.randomUUID(), description: "", qty: 1, price: 0 }] }));
+  const addItem = (category: LineCategory = "labor") => setDraft(d => ({
+    ...d,
+    items: [
+      ...d.items,
+      category === "labor"
+        ? { id: crypto.randomUUID(), category, description: "", qty: 1, price: 0, hours: 1, discount: 0 }
+        : category === "part"
+        ? { id: crypto.randomUUID(), category, description: "", qty: 1, price: 0, discount: 0 }
+        : { id: crypto.randomUUID(), category, description: "", qty: 1, price: 0, discount: 0 },
+    ],
+  }));
   const removeItem = (id: string) => setDraft(d => ({ ...d, items: d.items.filter(i => i.id !== id) }));
 
   if (creating) {
