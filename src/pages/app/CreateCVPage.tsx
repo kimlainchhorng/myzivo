@@ -885,7 +885,7 @@ const CreateCVPage = () => {
 
       const doc = new Document({ sections: [{ children }] });
       const blob = await Packer.toBlob(doc);
-      saveAs(blob, `${fileBaseName()}.docx`);
+      downloadBlob(blob, `${fileBaseName()}.docx`);
       toast.success("Word document downloaded");
     } catch (err) {
       console.error(err);
@@ -933,7 +933,7 @@ const CreateCVPage = () => {
 
       const csv = "\uFEFF" + rows.map(r => r.map(esc).join(",")).join("\n");
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      saveAs(blob, `${fileBaseName()}.csv`);
+      downloadBlob(blob, `${fileBaseName()}.csv`);
       toast.success("Excel (CSV) downloaded");
     } catch (err) {
       console.error(err);
