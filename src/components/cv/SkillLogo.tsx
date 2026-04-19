@@ -106,3 +106,5 @@ export function SkillLogo({ name, size = 14, className }: SkillLogoProps) {
     />
   );
 }
+
+export default SkillLogo;
