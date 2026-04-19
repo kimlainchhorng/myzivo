@@ -85,6 +85,10 @@ export default function AccountSecurity() {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [twoFactorLoading, setTwoFactorLoading] = useState(true);
   const [twoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
+  const [phoneOtpDialogOpen, setPhoneOtpDialogOpen] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [userPhone, setUserPhone] = useState<string>("");
+  const [emailOtpBackup, setEmailOtpBackup] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
 
