@@ -511,6 +511,7 @@ const CreateCVPage = () => {
   // Personal info
   const [photo, setPhoto] = useState<string | null>(null);
   const [fullName, setFullName] = useState(user?.user_metadata?.full_name || "");
+  const [dateOfBirth, setDateOfBirth] = useState(""); // YYYY-MM-DD
   const [jobTitle, setJobTitle] = useState("");
   const [email, setEmail] = useState(user?.email || "");
   const [phone, setPhone] = useState("");
