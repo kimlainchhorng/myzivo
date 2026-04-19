@@ -453,7 +453,21 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           (msg.sender_id === recipientId && msg.receiver_id === user.id)
         ) {
           setMessages((prev) => {
+            // Already have the real row → ignore
             if (prev.some((m) => m.id === msg.id)) return prev;
+            // Replace any optimistic placeholder from this sender with same content
+            const optIdx = prev.findIndex((m) =>
+              m.id.startsWith("opt-") &&
+              m.sender_id === msg.sender_id &&
+              m.receiver_id === msg.receiver_id &&
+              (m.message || "") === (msg.message || "") &&
+              (m.message_type || "text") === (msg.message_type || "text")
+            );
+            if (optIdx >= 0) {
+              const next = [...prev];
+              next[optIdx] = msg;
+              return next;
+            }
             return [...prev, msg];
           });
           scrollToBottom();
