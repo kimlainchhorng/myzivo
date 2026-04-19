@@ -21,7 +21,8 @@ type LineItem = {
   qty: number;          // parts: quantity. labor/diagnosis: 1
   price: number;        // parts: unit price. labor: hourly rate. diagnosis: flat fee
   hours?: number;       // labor only
-  discount?: number;    // % discount for this line
+  discount?: number;    // discount value (% or $)
+  discountType?: "pct" | "amt"; // % off or flat $ off
 };
 type Doc = {
   id: string;
@@ -67,8 +68,12 @@ const lineAmount = (i: LineItem): number => {
     i.category === "labor" ? (i.hours ?? 0) * (i.price ?? 0) :
     i.category === "part" ? (i.qty ?? 0) * (i.price ?? 0) :
     (i.price ?? 0); // diagnosis = flat fee
-  const disc = Math.max(0, Math.min(100, i.discount ?? 0));
-  return gross * (1 - disc / 100);
+  const discVal = Math.max(0, i.discount ?? 0);
+  if ((i.discountType ?? "pct") === "amt") {
+    return Math.max(0, gross - discVal);
+  }
+  const pct = Math.min(100, discVal);
+  return gross * (1 - pct / 100);
 };
 
 const seed: Doc[] = [
@@ -390,28 +395,58 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
                     {rows.length > 0 && (
                       <div className={`grid gap-2 px-1 text-[11px] font-medium text-muted-foreground uppercase tracking-wide ${
                         cat === "labor"
-                          ? "grid-cols-[1fr_70px_90px_70px_90px_36px]"
+                          ? "grid-cols-[1fr_70px_90px_120px_90px_36px]"
                           : cat === "part"
-                          ? "grid-cols-[1fr_70px_90px_70px_90px_36px]"
-                          : "grid-cols-[1fr_110px_70px_90px_36px]"
+                          ? "grid-cols-[1fr_70px_90px_120px_90px_36px]"
+                          : "grid-cols-[1fr_110px_120px_90px_36px]"
                       }`}>
                         <span>Service detail</span>
-                        {cat === "labor" && <><span>Hours</span><span>Hour rate</span><span>Disc %</span><span className="text-right">Total</span></>}
-                        {cat === "part" && <><span>Qty</span><span>Unit price</span><span>Disc %</span><span className="text-right">Total</span></>}
-                        {cat === "diagnosis" && <><span>Flat fee</span><span>Disc %</span><span className="text-right">Total</span></>}
+                        {cat === "labor" && <><span>Hours</span><span>Hour rate</span><span>Discount</span><span className="text-right">Total</span></>}
+                        {cat === "part" && <><span>Qty</span><span>Unit price</span><span>Discount</span><span className="text-right">Total</span></>}
+                        {cat === "diagnosis" && <><span>Flat fee</span><span>Discount</span><span className="text-right">Total</span></>}
                         <span></span>
                       </div>
                     )}
 
-                    {rows.map(it => (
+                    {rows.map(it => {
+                      const dType = it.discountType ?? "pct";
+                      const discountField = (
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            inputMode="decimal"
+                            min={0}
+                            max={dType === "pct" ? 100 : undefined}
+                            placeholder={dType === "pct" ? "0" : "0.00"}
+                            value={it.discount ? it.discount : ""}
+                            onChange={e => updateItem(it.id, { discount: e.target.value === "" ? 0 : Number(e.target.value) })}
+                            className="flex-1 min-w-0"
+                          />
+                          <div className="flex rounded-md border border-input overflow-hidden shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => updateItem(it.id, { discountType: "pct" })}
+                              className={`px-1.5 text-[11px] font-semibold ${dType === "pct" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+                              aria-label="Percent discount"
+                            >%</button>
+                            <button
+                              type="button"
+                              onClick={() => updateItem(it.id, { discountType: "amt" })}
+                              className={`px-1.5 text-[11px] font-semibold border-l border-input ${dType === "amt" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+                              aria-label="Flat amount discount"
+                            >$</button>
+                          </div>
+                        </div>
+                      );
+                      return (
                       <div
                         key={it.id}
                         className={`grid gap-2 items-center ${
                           cat === "labor"
-                            ? "grid-cols-[1fr_70px_90px_70px_90px_36px]"
+                            ? "grid-cols-[1fr_70px_90px_120px_90px_36px]"
                             : cat === "part"
-                            ? "grid-cols-[1fr_70px_90px_70px_90px_36px]"
-                            : "grid-cols-[1fr_110px_70px_90px_36px]"
+                            ? "grid-cols-[1fr_70px_90px_120px_90px_36px]"
+                            : "grid-cols-[1fr_110px_120px_90px_36px]"
                         }`}
                       >
                         <Input
@@ -424,7 +459,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
                           <>
                             <Input type="number" inputMode="decimal" min={0} step={0.25} placeholder="0" value={it.hours ? it.hours : ""} onChange={e => updateItem(it.id, { hours: e.target.value === "" ? 0 : Number(e.target.value) })} />
                             <Input type="number" inputMode="decimal" min={0} step={0.01} placeholder="0.00" value={it.price ? it.price : ""} onChange={e => updateItem(it.id, { price: e.target.value === "" ? 0 : Number(e.target.value) })} />
-                            <Input type="number" inputMode="decimal" min={0} max={100} placeholder="0" value={it.discount ? it.discount : ""} onChange={e => updateItem(it.id, { discount: e.target.value === "" ? 0 : Number(e.target.value) })} />
+                            {discountField}
                           </>
                         )}
 
@@ -432,21 +467,22 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
                           <>
                             <Input type="number" inputMode="numeric" min={1} placeholder="1" value={it.qty ? it.qty : ""} onChange={e => updateItem(it.id, { qty: e.target.value === "" ? 1 : Number(e.target.value) })} />
                             <Input type="number" inputMode="decimal" min={0} step={0.01} placeholder="0.00" value={it.price ? it.price : ""} onChange={e => updateItem(it.id, { price: e.target.value === "" ? 0 : Number(e.target.value) })} />
-                            <Input type="number" inputMode="decimal" min={0} max={100} placeholder="0" value={it.discount ? it.discount : ""} onChange={e => updateItem(it.id, { discount: e.target.value === "" ? 0 : Number(e.target.value) })} />
+                            {discountField}
                           </>
                         )}
 
                         {cat === "diagnosis" && (
                           <>
                             <Input type="number" inputMode="decimal" min={0} step={0.01} placeholder="0.00" value={it.price ? it.price : ""} onChange={e => updateItem(it.id, { price: e.target.value === "" ? 0 : Number(e.target.value) })} />
-                            <Input type="number" inputMode="decimal" min={0} max={100} placeholder="0" value={it.discount ? it.discount : ""} onChange={e => updateItem(it.id, { discount: e.target.value === "" ? 0 : Number(e.target.value) })} />
+                            {discountField}
                           </>
                         )}
 
                         <span className="text-right text-sm font-semibold tabular-nums">${lineAmount(it).toFixed(2)}</span>
                         <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => removeItem(it.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
                       </div>
-                    ))}
+                      );
+                    })}
 
                     {rows.length > 0 && (
                       <div className="flex items-center justify-end pt-2 text-sm">
