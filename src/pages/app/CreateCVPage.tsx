@@ -626,6 +626,7 @@ const CreateCVPage = () => {
       user_id: user.id,
       full_name: fullName.trim(),
       job_title: jobTitle.trim(),
+      date_of_birth: dateOfBirth || null,
       email: email.trim(),
       phone: phone.trim(),
       location: location.trim(),
