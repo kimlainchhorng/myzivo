@@ -155,14 +155,6 @@ export default function AccountSecurity() {
       toast.error("Password must be at least 8 characters");
       return false;
     }
-    if (!passwordForm.current) {
-      toast.error("Please enter your current password");
-      return false;
-    }
-    if (passwordForm.new === passwordForm.current) {
-      toast.error("New password must be different from your current one");
-      return false;
-    }
     const throttle = checkPasswordChangeThrottle();
     if (!throttle.allowed) {
       toast.error(`Too many attempts. Try again in ~${throttle.retryInMin} minute(s).`);
@@ -204,17 +196,7 @@ export default function AccountSecurity() {
         // Continue if breach check fails
       }
 
-      // Verify current password by re-authenticating
-      const { error: verifyError } = await supabase.auth.signInWithPassword({
-        email: user?.email ?? "",
-        password: passwordForm.current,
-      });
-      if (verifyError) {
-        toast.error("Current password is incorrect");
-        return;
-      }
-
-      // Update to new password
+      // Update to new password (identity already verified via OTP)
       const { error } = await supabase.auth.updateUser({ password: passwordForm.new });
       if (error) throw error;
 
@@ -222,7 +204,7 @@ export default function AccountSecurity() {
       await supabase.auth.signOut({ scope: "others" });
 
       toast.success("Password updated. All other sessions have been signed out.");
-      setPasswordForm({ current: "", new: "", confirm: "" });
+      setPasswordForm({ new: "", confirm: "" });
       setPwdVerified(false); // require re-verification for next change
     } catch (error: any) {
       toast.error(error.message || "Failed to update password");
