@@ -43,9 +43,33 @@ import SEOHead from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/hooks/useI18n";
 import { supabase } from "@/integrations/supabase/client";
-import { checkPasswordBreach } from "@/lib/security/passwordStrength";
+import { checkPasswordBreach, analyzePassword } from "@/lib/security/passwordStrength";
 import { formatDistanceToNow } from "date-fns";
 import LoginHistorySection from "@/components/auth/LoginHistorySection";
+
+// Client-side throttle: prevent rapid password change attempts (anti-brute-force)
+const PWD_CHANGE_THROTTLE_KEY = "zivo_pwd_change_attempts";
+const PWD_CHANGE_MAX_ATTEMPTS = 5;
+const PWD_CHANGE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+function checkPasswordChangeThrottle(): { allowed: boolean; retryInMin: number } {
+  try {
+    const raw = sessionStorage.getItem(PWD_CHANGE_THROTTLE_KEY);
+    const now = Date.now();
+    const attempts: number[] = raw ? JSON.parse(raw) : [];
+    const recent = attempts.filter((t) => now - t < PWD_CHANGE_WINDOW_MS);
+    if (recent.length >= PWD_CHANGE_MAX_ATTEMPTS) {
+      const oldest = Math.min(...recent);
+      const retryInMin = Math.ceil((PWD_CHANGE_WINDOW_MS - (now - oldest)) / 60_000);
+      return { allowed: false, retryInMin };
+    }
+    recent.push(now);
+    sessionStorage.setItem(PWD_CHANGE_THROTTLE_KEY, JSON.stringify(recent));
+    return { allowed: true, retryInMin: 0 };
+  } catch {
+    return { allowed: true, retryInMin: 0 };
+  }
+}
 
 export default function AccountSecurity() {
   const navigate = useNavigate();
