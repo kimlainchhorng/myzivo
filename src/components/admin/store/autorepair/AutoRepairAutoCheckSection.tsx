@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 import { Search, Car, Loader2, Shield, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -33,25 +34,34 @@ export default function AutoRepairAutoCheckSection({ storeId: _storeId }: Props)
   const [history, setHistory] = useState<VinResult[]>([]);
 
   const decode = async () => {
-    const v = vin.trim().toUpperCase();
-    if (v.length !== 17) { toast.error("VIN must be 17 characters"); return; }
+    const v = vin.trim().toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, "");
+    if (v.length !== 17) { toast.error("VIN must be 17 characters (no I, O, Q)"); return; }
     setLoading(true);
     try {
-      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${v}?format=json`);
-      const data = await res.json();
-      const r = data?.Results?.[0] || {};
+      const { data, error } = await supabase.functions.invoke("vin-decode", {
+        body: { vin: v },
+      });
+      if (error) throw new Error(error.message || "Function call failed");
+      if (!data?.ok) throw new Error(data?.error || "No vehicle data found");
+
       const decoded: VinResult = {
-        vin: v,
-        make: r.Make, model: r.Model, year: r.ModelYear, bodyClass: r.BodyClass,
-        engine: r.EngineModel || r.DisplacementL ? `${r.EngineModel || ""} ${r.DisplacementL ? r.DisplacementL + "L" : ""}`.trim() : undefined,
-        fuel: r.FuelTypePrimary, manufacturer: r.Manufacturer, plant: r.PlantCity,
-        driveType: r.DriveType, transmission: r.TransmissionStyle,
+        vin: data.vin || v,
+        make: data.make,
+        model: data.model,
+        year: data.year,
+        bodyClass: data.bodyClass,
+        engine: data.engine,
+        fuel: data.fuel,
+        manufacturer: data.manufacturer,
+        plant: data.plant,
+        driveType: data.driveType,
+        transmission: data.transmission,
       };
       setResult(decoded);
-      setHistory(h => [decoded, ...h.filter(x => x.vin !== v)].slice(0, 10));
-      toast.success("VIN decoded");
-    } catch (e) {
-      toast.error("Failed to decode VIN");
+      setHistory(h => [decoded, ...h.filter(x => x.vin !== decoded.vin)].slice(0, 10));
+      toast.success(data.partial ? "VIN decoded (partial)" : "VIN decoded");
+    } catch (e: any) {
+      toast.error(`Failed to decode VIN: ${e?.message || "network error"}`);
     } finally { setLoading(false); }
   };
 

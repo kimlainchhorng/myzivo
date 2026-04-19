@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -81,33 +82,25 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
     if (clean.length !== 17) { toast.error("VIN must be 17 characters (no I, O, Q)"); return; }
     setVinLoading(true);
     try {
-      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended/${encodeURIComponent(clean)}?format=json`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const r = data?.Results?.[0];
-      if (!r) { toast.error("No vehicle data returned"); return; }
-      // Accept any partial decode — show error message only if absolutely nothing came back
-      const errorCode = r.ErrorCode || "";
-      const hasAnyData = r.Make || r.Model || r.ModelYear || r.ManufacturerName || r.VehicleType;
-      if (!hasAnyData) {
-        toast.error(r.ErrorText ? `VIN: ${r.ErrorText.slice(0, 80)}` : "No vehicle data found");
-        return;
-      }
-      const year = r.ModelYear || "";
-      const make = r.Make ? r.Make.replace(/\b\w/g, (c: string) => c.toUpperCase()) : "";
-      const model = r.Model || "";
-      const trim = r.Trim || r.Series || r.Series2 || "";
-      const displ = r.DisplacementL ? `${parseFloat(r.DisplacementL).toFixed(1)}L` : "";
-      const cylRaw = r.EngineCylinders;
-      const cyl = cylRaw ? ` ${cylRaw === "4" ? "L4" : cylRaw === "6" ? "V6" : cylRaw === "8" ? "V8" : cylRaw === "10" ? "V10" : cylRaw === "12" ? "V12" : `${cylRaw}-cyl`}` : "";
-      const config = r.EngineConfiguration && !cyl ? ` ${r.EngineConfiguration}` : "";
-      const fuel = r.FuelTypePrimary && r.FuelTypePrimary !== "Gasoline" ? ` ${r.FuelTypePrimary}` : "";
-      const engine = `${displ}${cyl}${config}${fuel}`.trim() || (r.EngineModel || "");
-      const trans = [r.TransmissionStyle, r.TransmissionSpeeds ? `${r.TransmissionSpeeds}-Speed` : ""].filter(Boolean).join(" ").trim();
-      const vehicle = [year, make, model].filter(Boolean).join(" ");
-      setDraft(d => ({ ...d, vin: clean, year, make, model, trim, engine, transmission: trans, vehicle }));
-      const partial = errorCode && errorCode !== "0";
-      toast.success(partial ? "Vehicle details auto-filled (partial)" : "Vehicle details auto-filled");
+      const { data, error } = await supabase.functions.invoke("vin-decode", {
+        body: { vin: clean },
+      });
+      if (error) throw new Error(error.message || "Function call failed");
+      if (!data?.ok) throw new Error(data?.error || "No vehicle data found");
+
+      setDraft(d => ({
+        ...d,
+        vin: data.vin || clean,
+        year: data.year || "",
+        make: data.make || "",
+        model: data.model || "",
+        trim: data.trim || "",
+        engine: data.engine || "",
+        transmission: data.transmission || "",
+        vehicle: data.vehicle || [data.year, data.make, data.model].filter(Boolean).join(" "),
+      }));
+
+      toast.success(data.partial ? "Vehicle details auto-filled (partial)" : "Vehicle details auto-filled");
     } catch (e: any) {
       toast.error(`VIN lookup failed: ${e?.message || "network error"}`);
     } finally {
