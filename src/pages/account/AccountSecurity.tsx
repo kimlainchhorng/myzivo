@@ -384,10 +384,8 @@ export default function AccountSecurity() {
                   </Badge>
                   <Switch
                     checked={twoFactorEnabled}
-                    onCheckedChange={(checked) => {
-                      setTwoFactorEnabled(checked);
-                      toast.success(checked ? "2FA setup required - feature coming soon" : "2FA disabled");
-                    }}
+                    disabled={twoFactorLoading}
+                    onCheckedChange={handleToggle2FA}
                   />
                 </div>
               </div>
