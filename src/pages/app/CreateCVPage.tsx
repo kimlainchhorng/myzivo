@@ -1289,16 +1289,30 @@ const CreateCVPage = () => {
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x scrollbar-hide">
             {CV_TEMPLATES.map(t => {
               const active = selectedTemplate === t.id;
+              const accentHsl = ACCENT_COLORS.find(a => a.id === cvStyle.accent)?.hsl || ACCENT_COLORS[0].hsl;
               return (
                 <button key={t.id} onClick={() => setSelectedTemplate(t.id)}
                   className={cn("shrink-0 w-[110px] snap-start rounded-xl border-2 overflow-hidden text-left touch-manipulation active:scale-95 transition-all",
                     active ? "border-primary shadow-md" : "border-border/30 bg-card")}>
-                  <div className={cn("h-12 bg-gradient-to-br relative", t.gradient)}>
+                  <div
+                    className="h-12 relative"
+                    style={{
+                      background: t.id === "classic"
+                        ? `linear-gradient(135deg, hsl(${accentHsl} / 0.18), hsl(${accentHsl} / 0.05))`
+                        : t.id === "minimal"
+                        ? `linear-gradient(135deg, hsl(${accentHsl} / 0.08), #fafafa)`
+                        : t.id === "executive"
+                        ? `linear-gradient(135deg, #0f172a 0%, #1e293b 100%)`
+                        : t.id === "elegant"
+                        ? `linear-gradient(135deg, hsl(${accentHsl} / 0.12), #fff)`
+                        : `linear-gradient(135deg, hsl(${accentHsl}), hsl(${accentHsl} / 0.55))`,
+                    }}
+                  >
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-6 h-6 rounded-full bg-white/30 backdrop-blur-sm border border-white/50" />
+                      <div className="w-6 h-6 rounded-full bg-white/40 backdrop-blur-sm border border-white/60" />
                     </div>
                     {active && (
-                      <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white flex items-center justify-center">
+                      <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white flex items-center justify-center shadow">
                         <Check className="w-2.5 h-2.5 text-primary" strokeWidth={3} />
                       </div>
                     )}
@@ -1311,6 +1325,7 @@ const CreateCVPage = () => {
               );
             })}
           </div>
+
         </div>
 
         {/* Style Customization Panel */}
