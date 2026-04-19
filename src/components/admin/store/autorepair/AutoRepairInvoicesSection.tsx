@@ -2,7 +2,7 @@
  * Auto Repair — Invoices Section
  * Two views: Estimates and Invoices, with inline create flow.
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2 } from "lucide-react";
+import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2, Check, CloudUpload } from "lucide-react";
 import { toast } from "sonner";
 
 type LineItem = { id: string; description: string; qty: number; price: number };
@@ -60,22 +60,76 @@ const seed: Doc[] = [
 
 interface Props { storeId: string }
 
-export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) {
+export default function AutoRepairInvoicesSection({ storeId }: Props) {
   const [docs, setDocs] = useState<Doc[]>(seed);
   const [tab, setTab] = useState<"estimate" | "invoice">("estimate");
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState<Doc>(emptyDraft());
   const [vinLoading, setVinLoading] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const draftKey = useMemo(() => `autorepair:invoice-draft:${storeId}`, [storeId]);
+  const saveTimer = useRef<number | null>(null);
+  const skipNextSave = useRef(true);
 
   const filtered = useMemo(() => docs.filter(d => d.type === tab), [docs, tab]);
 
   const total = (items: LineItem[]) => items.reduce((s, i) => s + i.qty * i.price, 0);
 
+  // Autosave draft to localStorage (debounced) while creating
+  useEffect(() => {
+    if (!creating) return;
+    if (skipNextSave.current) { skipNextSave.current = false; return; }
+    setSaveState("saving");
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => {
+      try {
+        localStorage.setItem(draftKey, JSON.stringify(draft));
+        setLastSaved(new Date());
+        setSaveState("saved");
+      } catch {
+        setSaveState("idle");
+      }
+    }, 600);
+    return () => { if (saveTimer.current) window.clearTimeout(saveTimer.current); };
+  }, [draft, creating, draftKey]);
+
+  const clearDraft = () => {
+    try { localStorage.removeItem(draftKey); } catch {}
+    setLastSaved(null);
+    setSaveState("idle");
+  };
+
   const startNew = (type: "estimate" | "invoice") => {
+    // Try resume saved draft of same type
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const saved = JSON.parse(raw) as Doc;
+        if (saved && saved.type === type) {
+          skipNextSave.current = true;
+          setDraft(saved);
+          setLastSaved(new Date());
+          setSaveState("saved");
+          setCreating(true);
+          toast.info("Resumed your saved draft");
+          return;
+        }
+      }
+    } catch {}
     const prefix = type === "estimate" ? "EST-" : "INV-";
     const num = `${prefix}${Math.floor(1000 + Math.random() * 9000)}`;
+    skipNextSave.current = true;
     setDraft({ ...emptyDraft(), id: crypto.randomUUID(), type, number: num });
+    setLastSaved(null);
+    setSaveState("idle");
     setCreating(true);
+  };
+
+  const discardDraft = () => {
+    clearDraft();
+    setCreating(false);
+    toast.success("Draft discarded");
   };
 
   const lookupVin = async (vin: string) => {
@@ -114,10 +168,22 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
     }
   };
 
+  const saveDraftNow = () => {
+    try {
+      localStorage.setItem(draftKey, JSON.stringify(draft));
+      setLastSaved(new Date());
+      setSaveState("saved");
+      toast.success("Draft saved");
+    } catch {
+      toast.error("Could not save draft");
+    }
+  };
+
   const save = () => {
     if (!draft.firstName || !draft.lastName || !draft.vehicle) { toast.error("First name, last name, and vehicle are required"); return; }
     const customer = `${draft.firstName} ${draft.lastName}`.trim();
     setDocs(d => [{ ...draft, customer }, ...d]);
+    clearDraft();
     setCreating(false);
     toast.success(`${draft.type === "estimate" ? "Estimate" : "Invoice"} ${draft.number} created`);
   };
@@ -132,7 +198,7 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
     return (
       <div className="space-y-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setCreating(false)}>
                 <ArrowLeft className="w-4 h-4" />
@@ -142,9 +208,18 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
                 {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"} · {draft.number}
               </CardTitle>
             </div>
-            <Button onClick={save} className="gap-1.5">
-              {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-muted-foreground flex items-center gap-1.5 mr-1">
+                {saveState === "saving" && (<><Loader2 className="w-3 h-3 animate-spin" /> Saving…</>)}
+                {saveState === "saved" && (<><Check className="w-3 h-3 text-primary" /> Saved{lastSaved ? ` · ${lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}</>)}
+                {saveState === "idle" && (<><CloudUpload className="w-3 h-3" /> Autosave on</>)}
+              </span>
+              <Button variant="outline" size="sm" onClick={saveDraftNow}>Save draft</Button>
+              <Button variant="ghost" size="sm" onClick={discardDraft} className="text-destructive hover:text-destructive">Discard</Button>
+              <Button onClick={save} className="gap-1.5">
+                {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}
+              </Button>
+            </div>
           </CardHeader>
         </Card>
 
