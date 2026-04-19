@@ -99,9 +99,28 @@ export default function AccountSecurity() {
       return;
     }
 
+    if (passwordForm.new === passwordForm.current) {
+      toast.error("New password must be different from your current one");
+      return;
+    }
+
+    // Client-side throttle (defense-in-depth; server enforces real limits)
+    const throttle = checkPasswordChangeThrottle();
+    if (!throttle.allowed) {
+      toast.error(`Too many attempts. Try again in ~${throttle.retryInMin} minute(s).`);
+      return;
+    }
+
+    // Strength gate
+    const analysis = analyzePassword(passwordForm.new);
+    if (analysis.strength === "weak") {
+      toast.error(`Password too weak. ${analysis.feedback[0] ?? "Use a stronger password."}`);
+      return;
+    }
+
     setIsChangingPassword(true);
     try {
-      // Step 0: Check new password against known breaches
+      // Step 0: Check new password against known breaches (k-anonymity, safe)
       try {
         const breach = await checkPasswordBreach(passwordForm.new);
         if (breach.breached) {
