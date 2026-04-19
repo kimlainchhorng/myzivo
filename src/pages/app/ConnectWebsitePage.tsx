@@ -67,16 +67,6 @@ const ConnectWebsitePage = () => {
 
   return (
     <AppLayout hideHeader>
-      <div className="min-h-screen bg-muted/20">
-        {/* Top bar */}
-        <div className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-md">
-          <div className="container max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="-ml-2">
-              <ArrowLeft className="w-4 h-4 mr-1" /> Settings
-            </Button>
-          </div>
-        </div>
-
       <Helmet>
         <title>Connect Your Website — Free SEO Travel Widget | ZIVO</title>
         <meta
