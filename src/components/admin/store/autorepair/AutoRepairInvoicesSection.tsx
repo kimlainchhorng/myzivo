@@ -93,7 +93,8 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
 
   const filtered = useMemo(() => docs.filter(d => d.type === tab), [docs, tab]);
 
-  const total = (items: LineItem[]) => items.reduce((s, i) => s + i.qty * i.price, 0);
+  const total = (items: LineItem[]) => items.reduce((s, i) => s + lineAmount(i), 0);
+  const subtotalByCat = (items: LineItem[], cat: LineCategory) => items.filter(i => i.category === cat).reduce((s, i) => s + lineAmount(i), 0);
 
   // Autosave draft to localStorage (debounced) while creating
   useEffect(() => {
