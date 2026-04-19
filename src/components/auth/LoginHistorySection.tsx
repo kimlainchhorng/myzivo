@@ -38,22 +38,69 @@ function DeviceIcon({ type }: { type: string | null }) {
   return <Monitor className="w-5 h-5 text-muted-foreground" />;
 }
 
-function MiniMap({ lat, lon, city }: { lat: number; lon: number; city?: string | null }) {
-  // Use OpenStreetMap static tile — no API key needed
-  const zoom = 10;
-  const tileUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lon}&zoom=${zoom}&size=400x200&markers=color:red%7C${lat},${lon}&key=`;
-  
-  // Fallback: use an OSM embed iframe (free, no key)
+function MiniMap({
+  lat,
+  lon,
+  city,
+  query,
+}: {
+  lat?: number | null;
+  lon?: number | null;
+  city?: string | null;
+  query?: string | null;
+}) {
+  // Precise pin if we have coordinates
+  if (typeof lat === "number" && typeof lon === "number") {
+    const bbox = `${lon - 0.5},${lat - 0.3},${lon + 0.5},${lat + 0.3}`;
+    return (
+      <div className="rounded-lg overflow-hidden border border-border mt-2 relative">
+        <iframe
+          title={`Login location${city ? ` - ${city}` : ""}`}
+          width="100%"
+          height="180"
+          style={{ border: 0 }}
+          loading="lazy"
+          src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`}
+        />
+        <a
+          href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=12/${lat}/${lon}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute bottom-1 right-1 text-[10px] bg-background/80 backdrop-blur px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground"
+        >
+          View larger
+        </a>
+      </div>
+    );
+  }
+  // Fallback: city/country search embed (no coords needed)
+  const q = (query || city || "").trim();
+  if (!q) {
+    return (
+      <div className="rounded-lg border border-dashed border-border mt-2 p-4 text-center text-xs text-muted-foreground">
+        <MapPin className="w-4 h-4 mx-auto mb-1 opacity-60" />
+        Location coordinates not available for this session
+      </div>
+    );
+  }
   return (
-    <div className="rounded-lg overflow-hidden border border-border mt-2">
+    <div className="rounded-lg overflow-hidden border border-border mt-2 relative">
       <iframe
-        title={`Login location${city ? ` - ${city}` : ""}`}
+        title={`Login location - ${q}`}
         width="100%"
-        height="160"
+        height="180"
         style={{ border: 0 }}
         loading="lazy"
-        src={`https://www.openstreetmap.org/export/embed.html?bbox=${lon - 0.5},${lat - 0.3},${lon + 0.5},${lat + 0.3}&layer=mapnik&marker=${lat},${lon}`}
+        src={`https://www.openstreetmap.org/export/embed.html?layer=mapnik&search=${encodeURIComponent(q)}`}
       />
+      <a
+        href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(q)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="absolute bottom-1 right-1 text-[10px] bg-background/80 backdrop-blur px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground"
+      >
+        View larger
+      </a>
     </div>
   );
 }
