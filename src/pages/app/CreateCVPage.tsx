@@ -1012,9 +1012,15 @@ const CreateCVPage = () => {
             <CollapseWrap>
               <div className="space-y-2.5">
                 <PhotoUpload photo={photo} onPhotoChange={setPhoto} userId={user?.id} />
-                <div>
-                  <label className={lblCls}>Full Name *</label>
-                  <input className={inputCls} placeholder="John Doe" value={fullName} onChange={e => setFullName(e.target.value)} />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className={lblCls}>First Name *</label>
+                    <input className={inputCls} placeholder="John" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className={lblCls}>Last Name</label>
+                    <input className={inputCls} placeholder="Doe" value={lastName} onChange={e => setLastName(e.target.value)} />
+                  </div>
                 </div>
                 <div>
                   <label className={lblCls}>Date of Birth</label>
