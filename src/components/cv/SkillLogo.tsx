@@ -65,14 +65,13 @@ export function SkillLogo({ name, size = 14, className }: SkillLogoProps) {
     return (
       <span
         className={className}
-        style={{ width: size, height: size, display: "inline-block" }}
+        style={{ width: size, height: size, display: "inline-flex", alignItems: "center", justifyContent: "center" }}
       >
         <span
           style={{
             display: "block",
             width: size * 0.42,
             height: size * 0.42,
-            margin: `${size * 0.29}px`,
             borderRadius: "9999px",
             background: "currentColor",
             opacity: 0.45,
@@ -81,17 +80,29 @@ export function SkillLogo({ name, size = 14, className }: SkillLogoProps) {
       </span>
     );
   }
+  // Use CSS mask so we can color the SVG to the brand color reliably across browsers/CDNs.
+  const url = getSkillLogoUrl(preset.slug, preset.color);
   return (
-    <img
-      src={getSkillLogoUrl(preset.slug, preset.color)}
-      alt={preset.name}
-      width={size}
-      height={size}
+    <span
+      role="img"
+      aria-label={preset.name}
+      title={preset.name}
       className={className}
-      style={{ objectFit: "contain", display: "inline-block" }}
-      loading="lazy"
+      style={{
+        display: "inline-block",
+        width: size,
+        height: size,
+        backgroundColor: `#${preset.color}`,
+        WebkitMaskImage: `url(${url})`,
+        maskImage: `url(${url})`,
+        WebkitMaskRepeat: "no-repeat",
+        maskRepeat: "no-repeat",
+        WebkitMaskSize: "contain",
+        maskSize: "contain",
+        WebkitMaskPosition: "center",
+        maskPosition: "center",
+        flexShrink: 0,
+      }}
     />
   );
 }
-
-export default SkillLogo;
