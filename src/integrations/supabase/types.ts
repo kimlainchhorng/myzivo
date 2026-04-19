@@ -49458,6 +49458,7 @@ export type Database = {
         Row: {
           certifications: Json | null
           created_at: string
+          date_of_birth: string | null
           educations: Json | null
           email: string | null
           experiences: Json | null
@@ -49484,6 +49485,7 @@ export type Database = {
         Insert: {
           certifications?: Json | null
           created_at?: string
+          date_of_birth?: string | null
           educations?: Json | null
           email?: string | null
           experiences?: Json | null
@@ -49510,6 +49512,7 @@ export type Database = {
         Update: {
           certifications?: Json | null
           created_at?: string
+          date_of_birth?: string | null
           educations?: Json | null
           email?: string | null
           experiences?: Json | null

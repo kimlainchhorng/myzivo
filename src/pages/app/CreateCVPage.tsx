@@ -7,12 +7,13 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
+import { saveAs } from "file-saver";
 import {
   ArrowLeft, Plus, Trash2, User, Briefcase, GraduationCap,
   Wrench, Globe, Award, Save, FileText, Link2, Linkedin,
   Heart, Users, ChevronDown, ChevronUp, Loader2, Check,
   Star, MapPin, Mail, Phone, Eye, Camera, Image as ImageIcon,
-  Download, Share2, Copy, Lightbulb, Palette,
+  Download, Share2, Copy, Lightbulb, Palette, FileSpreadsheet,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -510,6 +511,7 @@ const CreateCVPage = () => {
   // Personal info
   const [photo, setPhoto] = useState<string | null>(null);
   const [fullName, setFullName] = useState(user?.user_metadata?.full_name || "");
+  const [dateOfBirth, setDateOfBirth] = useState(""); // YYYY-MM-DD
   const [jobTitle, setJobTitle] = useState("");
   const [email, setEmail] = useState(user?.email || "");
   const [phone, setPhone] = useState("");
@@ -571,6 +573,7 @@ const CreateCVPage = () => {
         setCvId(data.id);
         setFullName(data.full_name || "");
         setJobTitle((data as any).job_title || "");
+        setDateOfBirth((data as any).date_of_birth || "");
         setEmail(data.email || "");
         setPhone(data.phone || "");
         setLocation(data.location || "");
@@ -623,6 +626,7 @@ const CreateCVPage = () => {
       user_id: user.id,
       full_name: fullName.trim(),
       job_title: jobTitle.trim(),
+      date_of_birth: dateOfBirth || null,
       email: email.trim(),
       phone: phone.trim(),
       location: location.trim(),
@@ -652,7 +656,7 @@ const CreateCVPage = () => {
       if (!silent) toast.success("CV saved!");
       if (silent) { setAutoSaveStatus("saved"); setTimeout(() => setAutoSaveStatus("idle"), 2000); }
     }
-  }, [user, cvId, fullName, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies, selectedTemplate, photo]);
+  }, [user, cvId, fullName, dateOfBirth, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies, selectedTemplate, photo]);
 
   const handleSave = useCallback(() => doSave(false), [doSave]);
 
@@ -662,7 +666,7 @@ const CreateCVPage = () => {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(() => { doSave(true); }, 3000);
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
-  }, [fullName, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies, doSave]);
+  }, [fullName, dateOfBirth, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies, doSave]);
 
   /* ── Delete CV ──────────────────────────────────── */
   const handleDelete = useCallback(async () => {
@@ -703,7 +707,7 @@ const CreateCVPage = () => {
     );
   }
 
-  const previewData = { photo, fullName, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies };
+  const previewData = { photo, fullName, dateOfBirth, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies };
 
   const handleShare = () => {
     if (!shareCode) { toast.error("Save your CV first to get a share link"); return; }
@@ -781,6 +785,127 @@ const CreateCVPage = () => {
     } catch (error) {
       console.error(error);
       toast.error("Failed to download PDF");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const fileBaseName = () => (fullName.trim() || "cv")
+    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "cv";
+
+  const handleDownloadWord = async () => {
+    try {
+      setDownloading(true);
+      const docx = await import("docx");
+      const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = docx;
+
+      const H = (text: string) => new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 80 }, children: [new TextRun({ text, bold: true })] });
+      const P = (text: string, opts: any = {}) => new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text, ...opts })] });
+      const Bullet = (text: string) => new Paragraph({ bullet: { level: 0 }, children: [new TextRun(text)] });
+
+      const children: any[] = [
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: fullName || "Your Name", bold: true, size: 40 })] }),
+        jobTitle ? new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: jobTitle, size: 24, color: "555555" })] }) : null,
+        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [new TextRun({
+          text: [email, phone, location, dateOfBirth ? `DOB: ${dateOfBirth}` : ""].filter(Boolean).join("  •  "),
+          size: 20, color: "666666",
+        })] }),
+      ].filter(Boolean);
+
+      if (summary) { children.push(H("Professional Summary")); children.push(P(summary)); }
+
+      if (experiences.some(e => e.position || e.company)) {
+        children.push(H("Work Experience"));
+        experiences.forEach(e => {
+          if (!e.position && !e.company) return;
+          children.push(P(`${e.position}${e.company ? " — " + e.company : ""}`, { bold: true }));
+          children.push(P(`${e.startDate || ""} – ${e.current ? "Present" : (e.endDate || "")}`, { italics: true, color: "666666" }));
+          if (e.description) children.push(P(e.description));
+        });
+      }
+
+      if (educations.some(e => e.school || e.degree)) {
+        children.push(H("Education"));
+        educations.forEach(e => {
+          if (!e.school && !e.degree) return;
+          children.push(P(`${e.degree}${e.field ? ", " + e.field : ""}`, { bold: true }));
+          children.push(P(`${e.school} • ${e.startDate || ""} – ${e.endDate || ""}${e.gpa ? " • GPA: " + e.gpa : ""}`, { color: "666666" }));
+        });
+      }
+
+      const validSkills = skills.filter(s => s.name.trim());
+      if (validSkills.length) { children.push(H("Skills")); validSkills.forEach(s => children.push(Bullet(`${s.name} — ${s.level}`))); }
+
+      const validLangs = languages.filter(l => l.name.trim());
+      if (validLangs.length) { children.push(H("Languages")); validLangs.forEach(l => children.push(Bullet(`${l.name} — ${l.proficiency}`))); }
+
+      if (certifications.length) {
+        children.push(H("Certifications"));
+        certifications.forEach(c => children.push(Bullet(`${c.name}${c.issuer ? " — " + c.issuer : ""}${c.date ? " (" + c.date + ")" : ""}`)));
+      }
+
+      if (references.length) {
+        children.push(H("References"));
+        references.forEach(r => children.push(P(`${r.name} — ${r.position}${r.company ? ", " + r.company : ""} • ${r.email} ${r.phone}`)));
+      }
+
+      if (hobbies) { children.push(H("Hobbies & Interests")); children.push(P(hobbies)); }
+
+      const doc = new Document({ sections: [{ children }] });
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `${fileBaseName()}.docx`);
+      toast.success("Word document downloaded");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to download Word file");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleDownloadExcel = () => {
+    try {
+      setDownloading(true);
+      const esc = (v: string) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const rows: string[][] = [
+        ["Section", "Field", "Value"],
+        ["Personal", "Full Name", fullName],
+        ["Personal", "Date of Birth", dateOfBirth],
+        ["Personal", "Job Title", jobTitle],
+        ["Personal", "Email", email],
+        ["Personal", "Phone", phone],
+        ["Personal", "Location", location],
+        ["Personal", "Website", website],
+        ["Personal", "LinkedIn", linkedin],
+        ["Personal", "Portfolio", portfolio],
+        ["Personal", "Summary", summary],
+      ];
+      experiences.forEach((e, i) => {
+        rows.push([`Experience ${i + 1}`, "Position", e.position]);
+        rows.push([`Experience ${i + 1}`, "Company", e.company]);
+        rows.push([`Experience ${i + 1}`, "Period", `${e.startDate} – ${e.current ? "Present" : e.endDate}`]);
+        rows.push([`Experience ${i + 1}`, "Description", e.description]);
+      });
+      educations.forEach((e, i) => {
+        rows.push([`Education ${i + 1}`, "School", e.school]);
+        rows.push([`Education ${i + 1}`, "Degree", e.degree]);
+        rows.push([`Education ${i + 1}`, "Field", e.field]);
+        rows.push([`Education ${i + 1}`, "Period", `${e.startDate} – ${e.endDate}`]);
+        rows.push([`Education ${i + 1}`, "GPA", e.gpa]);
+      });
+      skills.forEach(s => rows.push(["Skill", s.name, s.level]));
+      languages.forEach(l => rows.push(["Language", l.name, l.proficiency]));
+      certifications.forEach(c => rows.push(["Certification", c.name, `${c.issuer} ${c.date}`]));
+      references.forEach(r => rows.push(["Reference", r.name, `${r.position}, ${r.company} • ${r.email} ${r.phone}`]));
+      if (hobbies) rows.push(["Hobbies", "—", hobbies]);
+
+      const csv = "\uFEFF" + rows.map(r => r.map(esc).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      saveAs(blob, `${fileBaseName()}.csv`);
+      toast.success("Excel (CSV) downloaded");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to download Excel");
     } finally {
       setDownloading(false);
     }
@@ -880,6 +1005,10 @@ const CreateCVPage = () => {
                 <div>
                   <label className={lblCls}>Full Name *</label>
                   <input className={inputCls} placeholder="John Doe" value={fullName} onChange={e => setFullName(e.target.value)} />
+                </div>
+                <div>
+                  <label className={lblCls}>Date of Birth</label>
+                  <input type="date" className={inputCls} value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} />
                 </div>
                 <div>
                   <label className={lblCls}>Job Title / Headline</label>
@@ -1085,6 +1214,14 @@ const CreateCVPage = () => {
           <button onClick={handleShare}
             className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all">
             <Share2 className="w-3.5 h-3.5" /> Share Link
+          </button>
+          <button onClick={() => void handleDownloadWord()} disabled={downloading}
+            className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
+            <FileText className="w-3.5 h-3.5" /> Word (.docx)
+          </button>
+          <button onClick={handleDownloadExcel} disabled={downloading}
+            className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
+            <FileSpreadsheet className="w-3.5 h-3.5" /> Excel (.csv)
           </button>
         </div>
 
