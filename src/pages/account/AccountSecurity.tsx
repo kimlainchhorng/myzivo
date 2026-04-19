@@ -560,10 +560,7 @@ export default function AccountSecurity() {
               </Button>
             </CardContent>
           </Card>
-
           <DeleteAccountFlow open={deleteFlowOpen} onOpenChange={setDeleteFlowOpen} />
-            </CardContent>
-          </Card>
         </motion.div>
       </main>
 
