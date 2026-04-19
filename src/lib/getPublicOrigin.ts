@@ -1,4 +1,4 @@
-const DEFAULT_PUBLIC_ORIGIN = "https://hizivo.com";
+const DEFAULT_PUBLIC_ORIGIN = "https://zivollc.com";
 
 // Edge function URL that serves profile OG tags and redirects humans.
 const PROFILE_OG_FUNCTION = "https://slirphzzwcogdbkeicff.supabase.co/functions/v1/profile-og";
