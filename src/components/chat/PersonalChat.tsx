@@ -691,7 +691,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       setMessages((prev) => [...prev, optimisticMsg]);
       scrollToBottom(true);
 
-      const { data, error: insertErr } = await (supabase as any)
+      const { error: insertErr } = await (supabase as any)
         .from("direct_messages")
         .insert({
           sender_id: user.id, receiver_id: recipientId,
@@ -700,10 +700,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           video_url: isVideo ? urlData.publicUrl : null,
           message_type: messageType,
           locked_price_cents: priceCents,
-        })
-        .select().single();
+        });
       if (insertErr) throw insertErr;
-      setMessages((prev) => prev.map((m) => m.id === optimisticId ? data : m));
       void sendChatPush(messageType, text || label);
     } catch { toast.error("Failed to upload locked media"); }
     setUploadingMedia(false);
