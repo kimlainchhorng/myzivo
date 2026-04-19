@@ -214,9 +214,9 @@ const ConnectWebsitePage = () => {
               {/* Browser chrome */}
               <div className="bg-muted px-3 py-2 flex items-center gap-2 border-b border-border">
                 <div className="flex gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-destructive/70" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-primary/50" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-primary" />
                 </div>
                 <div className="flex-1 mx-2 px-3 py-1 bg-background rounded-md text-xs text-muted-foreground text-center">
                   yourwebsite.com/travel
@@ -227,7 +227,7 @@ const ConnectWebsitePage = () => {
               <div
                 className={cn(
                   "p-4 space-y-3 transition-colors",
-                  theme === "dark" ? "bg-zinc-900" : "bg-white"
+                  theme === "dark" ? "bg-foreground" : "bg-background"
                 )}
               >
                 {[
@@ -246,27 +246,17 @@ const ConnectWebsitePage = () => {
                     key={i}
                     className={cn(
                       "flex gap-3 p-3 rounded-xl",
-                      theme === "dark" ? "bg-zinc-800/60" : "bg-muted/40"
+                      theme === "dark" ? "bg-background/10" : "bg-muted/40"
                     )}
                   >
-                    <div
-                      className={cn(
-                        "w-12 h-12 rounded-lg flex items-center justify-center shrink-0",
-                        theme === "dark" ? "bg-zinc-700" : "bg-primary/10"
-                      )}
-                    >
-                      <item.icon
-                        className={cn(
-                          "w-5 h-5",
-                          theme === "dark" ? "text-primary" : "text-primary"
-                        )}
-                      />
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 bg-primary/15">
+                      <item.icon className="w-5 h-5 text-primary" />
                     </div>
                     <div className="min-w-0">
                       <div
                         className={cn(
                           "font-semibold text-sm truncate",
-                          theme === "dark" ? "text-white" : "text-foreground"
+                          theme === "dark" ? "text-background" : "text-foreground"
                         )}
                       >
                         {item.title}
@@ -274,11 +264,11 @@ const ConnectWebsitePage = () => {
                       <div
                         className={cn(
                           "text-xs mt-0.5",
-                          connected
-                            ? theme === "dark"
-                              ? "text-zinc-400"
-                              : "text-muted-foreground"
-                            : "text-amber-600"
+                          !connected
+                            ? "text-primary"
+                            : theme === "dark"
+                            ? "text-background/60"
+                            : "text-muted-foreground"
                         )}
                       >
                         {item.sub}
@@ -290,7 +280,7 @@ const ConnectWebsitePage = () => {
                 <div
                   className={cn(
                     "text-[10px] text-center pt-2",
-                    theme === "dark" ? "text-zinc-500" : "text-muted-foreground"
+                    theme === "dark" ? "text-background/50" : "text-muted-foreground"
                   )}
                 >
                   Powered by ZIVO
