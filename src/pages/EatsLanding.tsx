@@ -18,6 +18,7 @@ import { getWalletBalance } from "@/hooks/useWalletPayment";
 import { useAuth } from "@/contexts/AuthContext";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
 
 // ─── Types ───────────────────────────────────────────────────────────
 type Step = "browse" | "restaurant" | "cart" | "checkout";
@@ -213,6 +214,11 @@ export default function EatsLanding() {
   // ─── Render ──────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="ZIVO Eats – Order Food Delivery from Local Restaurants"
+        description="Order from your favorite local restaurants. Fast delivery, real-time tracking, and exclusive deals on ZIVO Eats."
+        canonical="/eats"
+      />
       {step === "browse" && <NavBar />}
 
       <AnimatePresence mode="wait">

@@ -12,6 +12,7 @@ import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import { useI18n } from "@/hooks/useI18n";
 const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 const NavBar = lazy(() => import("@/components/home/NavBar"));
+import SEOHead from "@/components/SEOHead";
 const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Heart from "lucide-react/dist/esm/icons/heart";
@@ -1075,6 +1076,11 @@ function SoundOverlay({
 
   return (
     <>
+      <SEOHead
+        title="ZIVO Feed – Short Videos, Reels & Stories"
+        description="Watch and share short videos, reels, and stories from creators around the world. Like, comment, follow, and discover trending content on ZIVO."
+        canonical="/feed"
+      />
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}

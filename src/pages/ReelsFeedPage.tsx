@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 const NavBar = lazy(() => import("@/components/home/NavBar"));
+import SEOHead from "@/components/SEOHead";
 const TipSheet = lazy(() => import("@/components/social/TipSheet"));
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Heart from "lucide-react/dist/esm/icons/heart";
@@ -646,6 +647,11 @@ export default function ReelsFeedPage() {
 
   return (
     <>
+      <SEOHead
+        title="ZIVO Reels – Trending Short Videos & Creator Posts"
+        description="Discover trending reels, follow your favorite creators, support them with tips, and shop products straight from videos on ZIVO."
+        canonical="/reels"
+      />
       {/* Desktop NavBar */}
       <div className="hidden lg:block relative z-[1200]">
         <Suspense fallback={null}><NavBar /></Suspense>
