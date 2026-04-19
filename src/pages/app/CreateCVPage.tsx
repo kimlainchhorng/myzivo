@@ -692,6 +692,10 @@ const ACCENT_COLORS = [
   { id: "purple", name: "Purple", hsl: "270 70% 50%" },
   { id: "slate", name: "Slate", hsl: "215 20% 35%" },
   { id: "black", name: "Mono", hsl: "0 0% 12%" },
+  { id: "teal", name: "Teal", hsl: "180 65% 35%" },
+  { id: "orange", name: "Sunset", hsl: "22 90% 50%" },
+  { id: "burgundy", name: "Burgundy", hsl: "350 60% 32%" },
+  { id: "forest", name: "Forest", hsl: "140 55% 25%" },
 ] as const;
 type AccentId = typeof ACCENT_COLORS[number]["id"];
 
@@ -700,6 +704,8 @@ const HEADER_STYLES = [
   { id: "bold", name: "Bold" },
   { id: "banner", name: "Banner" },
   { id: "minimal", name: "Minimal" },
+  { id: "split", name: "Split" },
+  { id: "stripe", name: "Stripe" },
 ] as const;
 type HeaderStyleId = typeof HEADER_STYLES[number]["id"];
 
@@ -710,11 +716,38 @@ const COLUMN_STYLES = [
 ] as const;
 type ColumnStyleId = typeof COLUMN_STYLES[number]["id"];
 
+const FONT_FAMILIES = [
+  { id: "sans", name: "Sans", css: "" },
+  { id: "serif", name: "Serif", css: "Georgia, 'Times New Roman', serif" },
+  { id: "mono", name: "Mono", css: "'JetBrains Mono', 'Fira Code', ui-monospace, monospace" },
+  { id: "display", name: "Display", css: "'Inter', system-ui, -apple-system, sans-serif" },
+] as const;
+type FontFamilyId = typeof FONT_FAMILIES[number]["id"];
+
+const PHOTO_SHAPES = [
+  { id: "default", name: "Default" },
+  { id: "round", name: "Circle" },
+  { id: "square", name: "Square" },
+  { id: "rounded", name: "Rounded" },
+] as const;
+type PhotoShapeId = typeof PHOTO_SHAPES[number]["id"];
+
+const SECTION_DIVIDERS = [
+  { id: "default", name: "Default" },
+  { id: "underline", name: "Underline" },
+  { id: "pill", name: "Pill" },
+  { id: "bar", name: "Side Bar" },
+] as const;
+type SectionDividerId = typeof SECTION_DIVIDERS[number]["id"];
+
 export interface CVStyle {
   accent: AccentId;
   header: HeaderStyleId;
   columns: ColumnStyleId;
   fontScale: number; // 0.9 - 1.15
+  fontFamily?: FontFamilyId;
+  photoShape?: PhotoShapeId;
+  sectionDivider?: SectionDividerId;
 }
 
 function CVDocumentLayout({ data, template, style }: { data: any; template: TemplateId; style?: CVStyle }) {
