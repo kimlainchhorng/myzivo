@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
+import { LegalPreviewLink } from "@/components/legal/LegalPreviewSheet";
 
 const Signup = () => {
   const navigate = useNavigate();
