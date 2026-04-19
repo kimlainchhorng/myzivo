@@ -162,7 +162,7 @@ async function resolvePostMeta(
 
   const { data: storePost } = await supabase
     .from("store_posts")
-    .select("id, caption, media_urls, media_type, thumbnail_url, store_id")
+    .select("id, caption, media_urls, media_type, store_id")
     .eq("id", postId)
     .maybeSingle();
 
@@ -177,15 +177,19 @@ async function resolvePostMeta(
       .eq("id", storePost.store_id as string)
       .maybeSingle();
 
-    const isVideo = storePost.media_type === "video";
-    const fallbackImage = (storePost.thumbnail_url as string) || detectedImageUrl || (store?.logo_url as string) || `${APP_ORIGIN}/og-image.png`;
+    const isVideo = storePost.media_type === "video" || (!detectedImageUrl && isVideoUrl(detectedVideoUrl));
+
+    // For videos without an image in media_urls, generate a thumbnail from the video frame.
+    const ogImageUrl = isVideo
+      ? (detectedImageUrl || `https://image.thum.io/get/width/1200/video/${encodeURIComponent(detectedVideoUrl)}`)
+      : (detectedImageUrl || mediaUrls[0]);
 
     return {
       id: storePost.id as string,
       caption: storePost.caption as string | null,
       mediaType: isVideo ? "video" : "image",
       mediaUrl: isVideo ? detectedVideoUrl : (detectedImageUrl || mediaUrls[0]),
-      ogImageUrl: isVideo ? fallbackImage : (detectedImageUrl || mediaUrls[0] || fallbackImage),
+      ogImageUrl,
       authorName: (store?.name as string)?.trim() || "ZIVO Store",
     };
   }
