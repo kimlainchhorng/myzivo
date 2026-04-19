@@ -739,7 +739,7 @@ const CreateCVPage = () => {
     );
   }
 
-  const previewData = { photo, fullName, dateOfBirth, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies };
+  const previewData = { photo, firstName, lastName, fullName, dateOfBirth, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies };
 
   const handleShare = () => {
     if (!shareCode) { toast.error("Save your CV first to get a share link"); return; }
@@ -901,6 +901,8 @@ const CreateCVPage = () => {
       const esc = (v: string) => `"${String(v ?? "").replace(/"/g, '""')}"`;
       const rows: string[][] = [
         ["Section", "Field", "Value"],
+        ["Personal", "First Name", firstName],
+        ["Personal", "Last Name", lastName],
         ["Personal", "Full Name", fullName],
         ["Personal", "Date of Birth", dateOfBirth],
         ["Personal", "Job Title", jobTitle],
