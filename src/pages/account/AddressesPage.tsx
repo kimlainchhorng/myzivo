@@ -3,8 +3,9 @@
  * Manage saved delivery addresses
  */
 import { useState, useCallback } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, MapPin, Home, Briefcase, Pin, Plus, Pencil, Trash2, Star, Loader2, Navigation, Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, MapPin, Home, Briefcase, Pin, Plus, Pencil, Trash2, Star, Loader2, Navigation, Lock, ShieldCheck, FileText } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
