@@ -557,7 +557,7 @@ function PremiumLayout({ data }: { data: any }) {
 function ExecutiveLayout({ data }: { data: any }) {
   return (
     <div className="min-h-full bg-white">
-      <div className="cv-hero bg-[#0f172a] text-white p-5">
+      <div className="cv-hero text-white p-5" style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.95), hsl(var(--primary) / 0.65))' }}>
         <div className="flex items-center gap-4">
           {data.photo ? (
             <img src={data.photo} alt="" className="cv-photo w-20 h-20 rounded-sm object-cover border border-white/20" />
