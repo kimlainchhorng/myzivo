@@ -21,7 +21,8 @@ type LineItem = {
   qty: number;          // parts: quantity. labor/diagnosis: 1
   price: number;        // parts: unit price. labor: hourly rate. diagnosis: flat fee
   hours?: number;       // labor only
-  discount?: number;    // % discount for this line
+  discount?: number;    // discount value (% or $)
+  discountType?: "pct" | "amt"; // % off or flat $ off
 };
 type Doc = {
   id: string;
