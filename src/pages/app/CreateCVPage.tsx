@@ -752,17 +752,20 @@ export interface CVStyle {
 
 function CVDocumentLayout({ data, template, style }: { data: any; template: TemplateId; style?: CVStyle }) {
   const accent = ACCENT_COLORS.find(a => a.id === style?.accent) || ACCENT_COLORS[0];
+  const fontFamily = FONT_FAMILIES.find(f => f.id === style?.fontFamily);
   const wrapStyle: React.CSSProperties = {
-    // Override accent + primary tokens scoped to the CV document
     ['--primary' as any]: accent.hsl,
     ['--accent' as any]: accent.hsl,
     fontSize: `${style?.fontScale ?? 1}em`,
+    ...(fontFamily?.css ? { fontFamily: fontFamily.css } : {}),
   };
   const cls = cn(
     "cv-doc h-full",
     style?.columns === "one" && "cv-cols-1",
     style?.columns === "two" && "cv-cols-2",
     style?.header && `cv-header-${style.header}`,
+    style?.photoShape && style.photoShape !== "default" && `cv-photo-${style.photoShape}`,
+    style?.sectionDivider && style.sectionDivider !== "default" && `cv-divider-${style.sectionDivider}`,
   );
   const inner = (() => {
     if (template === "modern") return <ModernLayout data={data} />;
@@ -772,6 +775,12 @@ function CVDocumentLayout({ data, template, style }: { data: any; template: Temp
     if (template === "executive") return <ExecutiveLayout data={data} />;
     if (template === "creative") return <CreativeLayout data={data} />;
     if (template === "elegant") return <ElegantLayout data={data} />;
+    if (template === "timeline") return <TimelineLayout data={data} />;
+    if (template === "compact") return <CompactLayout data={data} />;
+    if (template === "sidebar") return <SidebarLayout data={data} />;
+    if (template === "bold") return <BoldLayout data={data} />;
+    if (template === "academic") return <AcademicLayout data={data} />;
+    if (template === "tech") return <TechLayout data={data} />;
     return <ClassicLayout data={data} />;
   })();
   return <div className={cls} style={wrapStyle}>{inner}</div>;
