@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MoreHorizontal, X, MessageCircle, User, UserCircle } from "lucide-react";
+import { MoreHorizontal, X, MessageCircle, User, UserCircle, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { getPostShareUrl } from "@/lib/getPublicOrigin";
+import { getPostShareUrl, getProfileShareUrl, getPublicOrigin } from "@/lib/getPublicOrigin";
 
 interface ShareSheetProps {
   shareUrl: string;
