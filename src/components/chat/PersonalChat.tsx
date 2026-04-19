@@ -329,7 +329,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     else if (messageType === "sticker") preview = "Sent you a sticker 🎭";
     else if (messageType === "gif") preview = "Sent you a GIF";
     else if (messageText.trim()) {
-      preview = "Sent you a message";
+      const trimmed = messageText.trim();
+      preview = trimmed.length > 140 ? `${trimmed.slice(0, 137)}...` : trimmed;
     } else {
       preview = "Sent you a message";
     }
