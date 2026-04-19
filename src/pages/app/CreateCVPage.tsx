@@ -45,9 +45,14 @@ import { toast } from "sonner";
 import { SkillLogo, PRESET_SKILLS, findPresetSkill } from "@/components/cv/SkillLogo";
 
 const CV_TEMPLATES = [
-  { id: "classic", name: "Classic", desc: "Two-column professional" },
-  { id: "modern", name: "Modern", desc: "Bold header design" },
-  { id: "minimal", name: "Minimal", desc: "Clean & simple" },
+  { id: "classic", name: "Classic", desc: "Two-column pro", color: "#10b981", gradient: "from-emerald-500 to-teal-600" },
+  { id: "modern", name: "Modern", desc: "Bold header", color: "#3b82f6", gradient: "from-blue-500 to-indigo-600" },
+  { id: "minimal", name: "Minimal", desc: "Clean & simple", color: "#64748b", gradient: "from-slate-400 to-slate-600" },
+  { id: "professional", name: "Professional", desc: "Corporate navy", color: "#1e3a8a", gradient: "from-blue-900 to-slate-800" },
+  { id: "premium", name: "Premium", desc: "Gold luxury", color: "#b45309", gradient: "from-amber-600 to-yellow-700" },
+  { id: "executive", name: "Executive", desc: "Dark elegant", color: "#0f172a", gradient: "from-slate-900 to-zinc-800" },
+  { id: "creative", name: "Creative", desc: "Vibrant artist", color: "#db2777", gradient: "from-pink-500 via-fuchsia-500 to-purple-600" },
+  { id: "elegant", name: "Elegant", desc: "Burgundy serif", color: "#9f1239", gradient: "from-rose-700 to-red-900" },
 ] as const;
 type TemplateId = typeof CV_TEMPLATES[number]["id"];
 
