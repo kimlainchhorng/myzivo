@@ -85,10 +85,12 @@ class NotificationService: UNNotificationServiceExtension {
         )
         
         // Create the INCOMING message intent (recipients = "me", sender = other person)
+        var meNameComponents = PersonNameComponents()
+        meNameComponents.givenName = "You"
         let me = INPerson(
-            personHandle: INPersonHandle(value: "me@hizovo.com", type: .emailAddress),
-            nameComponents: nil,
-            displayName: nil,
+            personHandle: INPersonHandle(value: "zivo-me", type: .unknown),
+            nameComponents: meNameComponents,
+            displayName: "You",
             image: nil,
             contactIdentifier: nil,
             customIdentifier: "zivo-me"
@@ -100,7 +102,7 @@ class NotificationService: UNNotificationServiceExtension {
             content: content.body,
             speakableGroupName: nil,
             conversationIdentifier: "zivo-chat-\(senderId)",
-            serviceName: "ZIVO",
+            serviceName: nil,
             sender: sender,
             attachments: nil
         )
