@@ -53,7 +53,7 @@ export default function TwoFactorSetupDialog({ open, onOpenChange, onEnrolled }:
       // Clean up any half-finished factors first
       const { data: list } = await supabase.auth.mfa.listFactors();
       for (const f of list?.totp ?? []) {
-        if (f.status === "unverified") {
+        if ((f.status as string) !== "verified") {
           await supabase.auth.mfa.unenroll({ factorId: f.id });
         }
       }
