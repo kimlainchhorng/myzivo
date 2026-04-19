@@ -67,8 +67,9 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
   };
 
   const save = () => {
-    if (!draft.customer || !draft.vehicle) { toast.error("Customer and vehicle required"); return; }
-    setDocs(d => [draft, ...d]);
+    if (!draft.firstName || !draft.lastName || !draft.vehicle) { toast.error("First name, last name, and vehicle are required"); return; }
+    const customer = `${draft.firstName} ${draft.lastName}`.trim();
+    setDocs(d => [{ ...draft, customer }, ...d]);
     setCreating(false);
     toast.success(`${draft.type === "estimate" ? "Estimate" : "Invoice"} ${draft.number} created`);
   };
