@@ -838,6 +838,16 @@ const CreateCVPage = () => {
   const [cvId, setCvId] = useState<string | null>(null);
   const [shareCode, setShareCode] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>("classic");
+  const [cvStyle, setCvStyle] = useState<CVStyle>(() => {
+    try {
+      const raw = localStorage.getItem("zivo.cv.style");
+      if (raw) return JSON.parse(raw) as CVStyle;
+    } catch {}
+    return { accent: "emerald", header: "standard", columns: "auto", fontScale: 1 };
+  });
+  useEffect(() => {
+    try { localStorage.setItem("zivo.cv.style", JSON.stringify(cvStyle)); } catch {}
+  }, [cvStyle]);
   const [showPreview, setShowPreview] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
