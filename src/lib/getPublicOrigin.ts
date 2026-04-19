@@ -1,4 +1,4 @@
-const DEFAULT_PUBLIC_ORIGIN = "https://endearing-tiramisu-95e81d.netlify.app";
+const DEFAULT_PUBLIC_ORIGIN = "https://hizivo.com";
 
 // Edge function URL that serves profile OG tags and redirects humans.
 const PROFILE_OG_FUNCTION = "https://slirphzzwcogdbkeicff.supabase.co/functions/v1/profile-og";
