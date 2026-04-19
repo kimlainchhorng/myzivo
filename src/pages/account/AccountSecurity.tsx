@@ -49,6 +49,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { checkPasswordBreach, analyzePassword } from "@/lib/security/passwordStrength";
 import { formatDistanceToNow } from "date-fns";
 import LoginHistorySection from "@/components/auth/LoginHistorySection";
+import DeleteAccountFlow from "@/components/account/DeleteAccountFlow";
+import PendingDeletionBanner from "@/components/account/PendingDeletionBanner";
 
 // Client-side throttle: prevent rapid password change attempts (anti-brute-force)
 const PWD_CHANGE_THROTTLE_KEY = "zivo_pwd_change_attempts";
@@ -235,10 +237,7 @@ export default function AccountSecurity() {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    // In production, this would submit a deletion request
-    toast.success("Account deletion request submitted. We'll process it within 30 days.");
-  };
+  const [deleteFlowOpen, setDeleteFlowOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -533,6 +532,9 @@ export default function AccountSecurity() {
             </CardContent>
           </Card>
 
+          {/* Pending deletion banner — shown if a deletion is scheduled */}
+          <PendingDeletionBanner />
+
           {/* Delete Account */}
           <Card className="border-destructive/30">
             <CardHeader>
@@ -547,39 +549,19 @@ export default function AccountSecurity() {
             <CardContent>
               <div className="p-4 bg-destructive/5 rounded-lg border border-destructive/20 mb-4">
                 <p className="text-sm text-muted-foreground">
-                  <strong className="text-foreground">Warning:</strong> This action cannot be undone. 
+                  <strong className="text-foreground">Warning:</strong> This action cannot be undone.
                   All your bookings, preferences, and data will be permanently deleted within 30 days.
                   Some data may be retained for legal compliance.
                 </p>
               </div>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Request Account Deletion
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete your account?</AlertDialogTitle>
-                    <AlertDialogDescription className="space-y-2">
-                      <p>This will permanently delete:</p>
-                      <ul className="list-disc list-inside text-sm">
-                        <li>Your profile and preferences</li>
-                        <li>All saved payment methods</li>
-                        <li>Booking history (after legal retention period)</li>
-                        <li>Any active bookings or reservations</li>
-                      </ul>
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive hover:bg-destructive/90">
-                      Yes, delete my account
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button variant="destructive" onClick={() => setDeleteFlowOpen(true)}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Request Account Deletion
+              </Button>
+            </CardContent>
+          </Card>
+
+          <DeleteAccountFlow open={deleteFlowOpen} onOpenChange={setDeleteFlowOpen} />
             </CardContent>
           </Card>
         </motion.div>
