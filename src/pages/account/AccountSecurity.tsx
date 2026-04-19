@@ -645,6 +645,19 @@ export default function AccountSecurity() {
           }
         }}
       />
+
+      <PasswordChangeVerifyDialog
+        open={pwdVerifyDialogOpen}
+        onOpenChange={setPwdVerifyDialogOpen}
+        email={user?.email ?? ""}
+        phoneE164={userPhone}
+        phoneVerified={phoneVerified}
+        onVerified={async () => {
+          setPwdVerified(true);
+          // Continue with password change immediately
+          await commitPasswordChange();
+        }}
+      />
     </div>
   );
 }
