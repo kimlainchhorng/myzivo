@@ -477,7 +477,7 @@ function MinimalLayout({ data }: { data: any }) {
 function ProfessionalLayout({ data }: { data: any }) {
   return (
     <div className="min-h-full bg-white">
-      <div className="cv-hero cv-accent-bg text-white px-5 py-5 flex items-center gap-4 border-b-4" style={{ borderBottomColor: '#facc15' }}>
+      <div className="cv-hero cv-accent-bg text-white px-5 py-5 flex items-center gap-4 border-b-4" style={{ borderBottomColor: 'hsl(var(--primary) / 0.45)' }}>
         {data.photo ? (
           <img src={data.photo} alt="" className="cv-photo w-20 h-20 rounded-full object-cover border-2 border-white/40" />
         ) : (
