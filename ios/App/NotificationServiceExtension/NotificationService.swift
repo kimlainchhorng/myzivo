@@ -133,15 +133,23 @@ class NotificationService: UNNotificationServiceExtension {
     
     private func downloadAvatar(from urlString: String, completion: @escaping (INImage?) -> Void) {
         guard !urlString.isEmpty, let url = URL(string: urlString) else {
+            NSLog("[NotificationService] No avatar URL provided")
             completion(nil)
             return
         }
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data, error == nil else {
+            if let error = error {
+                NSLog("[NotificationService] Avatar download error: \(error.localizedDescription)")
                 completion(nil)
                 return
             }
+            guard let data = data, !data.isEmpty else {
+                NSLog("[NotificationService] Avatar data empty for \(urlString)")
+                completion(nil)
+                return
+            }
+            NSLog("[NotificationService] Avatar downloaded: \(data.count) bytes")
             completion(INImage(imageData: data))
         }
         task.resume()
