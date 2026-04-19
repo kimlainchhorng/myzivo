@@ -4,6 +4,7 @@
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
+import { App as CapacitorApp } from "@capacitor/app";
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from "@capacitor/push-notifications";
 import { supabase, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -65,6 +66,27 @@ const normalizeIncomingCallPayload = (
     caller_name: typeof merged.caller_name === "string" ? merged.caller_name : fallbackTitle,
     caller_avatar: typeof merged.caller_avatar === "string" ? merged.caller_avatar : undefined,
   };
+};
+
+const normalizeLaunchUrl = (url: string | undefined | null): string | null => {
+  if (!url) return null;
+
+  try {
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      const parsed = new URL(url);
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
+
+    const schemeMatch = url.match(/^[a-z][a-z0-9+.-]*:\/\/(.*)$/i);
+    if (schemeMatch) {
+      const remainder = schemeMatch[1] || "";
+      return remainder.startsWith("/") ? remainder : `/${remainder}`;
+    }
+
+    return url.startsWith("/") ? url : `/${url}`;
+  } catch {
+    return null;
+  }
 };
 
 export const usePushNotifications = () => {
