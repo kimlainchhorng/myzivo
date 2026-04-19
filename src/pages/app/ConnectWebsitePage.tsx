@@ -1,10 +1,14 @@
 /**
  * Connect Your Website
- * Embed a ZIVO travel widget/blog on any external site with a snippet.
+ * SEO-focused embed: drives backlinks, indexable travel content, and referral traffic.
  */
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Code2, Copy, Check, CheckCircle2, Plug, Plane, Hotel } from "lucide-react";
+import { Helmet } from "react-helmet-async";
+import {
+  ArrowLeft, Code2, Copy, Check, CheckCircle2, Plug, Plane, Hotel,
+  TrendingUp, Link2, Search, Globe2, Sparkles, ShieldCheck,
+} from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
