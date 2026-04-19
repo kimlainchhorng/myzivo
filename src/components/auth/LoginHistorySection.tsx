@@ -1,7 +1,7 @@
 /**
  * LoginHistorySection — Shows login history with device, IP, location & map
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +18,21 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
+
+// Cache the Google Maps API key for the session
+let cachedMapsKey: string | null = null;
+async function getMapsKey(): Promise<string> {
+  if (cachedMapsKey !== null) return cachedMapsKey;
+  const envKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || "";
+  if (envKey) { cachedMapsKey = envKey; return envKey; }
+  try {
+    const { data, error } = await supabase.functions.invoke("maps-api-key");
+    if (!error && data?.key) { cachedMapsKey = data.key; return data.key; }
+  } catch {}
+  cachedMapsKey = "";
+  return "";
+}
+
 
 interface LoginEntry {
   id: string;
