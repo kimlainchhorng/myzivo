@@ -330,10 +330,30 @@ export const usePushNotifications = () => {
           return;
         }
 
-        // Show in-app toast for foreground notifications
-        toast.info(notification.title || "Notification", {
-          description: notification.body,
-        });
+        // For chat messages, show actionable toast with Reply button
+        const notifType = String(payloadData?.type || payloadData?.notification_type || "").toLowerCase();
+        const chatSenderId = payloadData?.sender_id || payloadData?.senderId || payloadData?.from_user_id;
+        const chatActionUrl = typeof payloadData?.action_url === "string" ? payloadData.action_url : "";
+        const chatSenderFromUrl = (() => {
+          try { return chatActionUrl ? new URL(chatActionUrl, "https://x").searchParams.get("with") : null; } catch { return null; }
+        })();
+        const resolvedChatSenderId = chatSenderId || chatSenderFromUrl;
+        const isForegroundChat = notifType === "chat_message" || notifType === "new_message" || chatActionUrl.startsWith("/chat");
+        if (isForegroundChat && resolvedChatSenderId) {
+          toast.info(notification.title || "New Message", {
+            description: notification.body,
+            duration: 5000,
+            action: {
+              label: "Reply",
+              onClick: () => { window.location.href = `/chat?with=${encodeURIComponent(String(resolvedChatSenderId))}`; },
+            },
+          });
+        } else {
+          // Show in-app toast for other foreground notifications
+          toast.info(notification.title || "Notification", {
+            description: notification.body,
+          });
+        }
       }
     );
 
@@ -371,8 +391,19 @@ export const usePushNotifications = () => {
     const mergedData = { ...nestedData, ...rawData };
     const incomingCall = normalizeIncomingCallPayload(mergedData, action.notification.title, action.notification.body);
     const normalizedType = String(mergedData.type || mergedData.notification_type || "").toLowerCase();
-    const actionUrl = typeof mergedData.action_url === "string" ? mergedData.action_url : "";
-    const senderId = mergedData.sender_id || mergedData.from_user_id || mergedData.user_id;
+    const actionUrl = typeof mergedData.action_url === "string" ? mergedData.action_url
+      : typeof mergedData.actionUrl === "string" ? mergedData.actionUrl : "";
+
+    // Extract sender ID from action_url (/chat?with=<id>) as a reliable fallback
+    const senderFromUrl = (() => {
+      if (!actionUrl) return null;
+      try {
+        const urlObj = new URL(actionUrl, "https://x");
+        return urlObj.searchParams.get("with");
+      } catch { return null; }
+    })();
+
+    const senderId = mergedData.sender_id || mergedData.senderId || mergedData.from_user_id || mergedData.user_id || senderFromUrl;
     const isChatAction = Boolean(
       senderId ||
       normalizedType === "chat_message" ||
@@ -409,6 +440,8 @@ export const usePushNotifications = () => {
 
     if (isChatAction) {
       if (senderId) {
+        // Persist so ChatHubPage can open the chat even if URL param is consumed before auth is ready
+        try { sessionStorage.setItem("pendingChatWith", String(senderId)); } catch {}
         window.location.href = `/chat?with=${encodeURIComponent(String(senderId))}`;
         return;
       }

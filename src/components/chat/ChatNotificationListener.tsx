@@ -4,6 +4,7 @@
  * while the user is NOT actively viewing that conversation
  */
 import { useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ const NOTIFICATION_COOLDOWN_MS = 2000; // Don't spam sounds
 
 export default function ChatNotificationListener() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastSoundRef = useRef(0);
   const activeChatRef = useRef<string | null>(null);
@@ -52,7 +54,7 @@ export default function ChatNotificationListener() {
     }
   }, []);
 
-  const showBrowserNotification = useCallback((senderName: string, messageText: string) => {
+  const showBrowserNotification = useCallback((senderName: string, messageText: string, senderId: string) => {
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
       try {
         const notif = new Notification(`${senderName}`, {
@@ -64,6 +66,7 @@ export default function ChatNotificationListener() {
         notif.onclick = () => {
           window.focus();
           notif.close();
+          window.location.href = `/chat?with=${encodeURIComponent(senderId)}`;
         };
         // Auto-close after 5s
         setTimeout(() => notif.close(), 5000);
@@ -117,16 +120,22 @@ export default function ChatNotificationListener() {
           else if (msg.message_type === "gif") preview = "GIF";
           else if (preview.length > 50) preview = preview.slice(0, 50) + "…";
 
-          // In-app toast
+          const senderId = msg.sender_id;
+
+          // In-app toast with Reply action
           toast(senderName, {
             description: preview || "Sent you a message",
             icon: <MessageSquare className="w-4 h-4 text-primary" />,
-            duration: 4000,
+            duration: 5000,
+            action: {
+              label: "Reply",
+              onClick: () => navigate(`/chat?with=${encodeURIComponent(senderId)}`),
+            },
           });
 
           // Browser notification (when tab is not focused)
           if (document.hidden) {
-            showBrowserNotification(senderName, preview);
+            showBrowserNotification(senderName, preview, senderId);
           }
         }
       )

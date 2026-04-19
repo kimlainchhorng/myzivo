@@ -174,7 +174,19 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
   // Handle ?with=<userId> deep-link from push notification tap
   useEffect(() => {
-    const withId = searchParams.get("with");
+    let withId = searchParams.get("with");
+
+    // Fallback: sessionStorage covers cold-start where the URL was set before auth rehydrated
+    if (!withId) {
+      try {
+        const pending = sessionStorage.getItem("pendingChatWith");
+        if (pending) {
+          sessionStorage.removeItem("pendingChatWith");
+          withId = pending;
+        }
+      } catch {}
+    }
+
     if (!withId || !user) return;
     searchParams.delete("with");
     setSearchParams(searchParams, { replace: true });

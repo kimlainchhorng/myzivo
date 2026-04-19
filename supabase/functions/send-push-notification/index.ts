@@ -123,13 +123,16 @@ serve(async (req) => {
       try {
         let sendResult: { success: boolean; error?: string } = { success: false };
 
+        // Always include notification_type in data so clients can route correctly
+        const enrichedData = { notification_type, ...(data || {}) };
+
         if (token.platform === "web") {
           // Legacy web tokens - use web push
-          sendResult = await sendWebPush(token.token, { title, body, data });
+          sendResult = await sendWebPush(token.token, { title, body, data: enrichedData });
         } else if (token.platform === "ios") {
-          sendResult = await sendAPNS(token.token, { title, body, data, image_url });
+          sendResult = await sendAPNS(token.token, { title, body, data: enrichedData, image_url });
         } else if (token.platform === "android") {
-          sendResult = await sendFCM(token.token, { title, body, data, image_url });
+          sendResult = await sendFCM(token.token, { title, body, data: enrichedData, image_url });
         }
 
         await updateNotificationLog(supabase, log?.id, sendResult);
