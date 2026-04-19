@@ -774,7 +774,7 @@ const CVPreviewModal = forwardRef<HTMLDivElement, { open: boolean; onClose: () =
 
         {/* CV Document */}
         <div className="overflow-y-auto flex-1">
-          <CVDocumentLayout data={data} template={template} />
+          <CVDocumentLayout data={data} template={template} style={style} />
         </div>
       </motion.div>
     </motion.div>
