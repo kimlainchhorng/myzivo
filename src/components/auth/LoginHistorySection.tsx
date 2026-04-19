@@ -64,9 +64,43 @@ function MiniMap({
   city?: string | null;
   query?: string | null;
 }) {
-  // Precise pin if we have coordinates
-  if (typeof lat === "number" && typeof lon === "number") {
-    const bbox = `${lon - 0.5},${lat - 0.3},${lon + 0.5},${lat + 0.3}`;
+  const [mapsKey, setMapsKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getMapsKey().then((k) => { if (!cancelled) setMapsKey(k); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const hasCoords = typeof lat === "number" && typeof lon === "number";
+  const q = (query || city || "").trim();
+
+  if (!hasCoords && !q) {
+    return (
+      <div className="rounded-lg border border-dashed border-border mt-2 p-4 text-center text-xs text-muted-foreground">
+        <MapPin className="w-4 h-4 mx-auto mb-1 opacity-60" />
+        Location coordinates not available for this session
+      </div>
+    );
+  }
+
+  // Loading state while fetching key
+  if (mapsKey === null) {
+    return (
+      <div className="rounded-lg border border-border mt-2 h-[180px] flex items-center justify-center bg-muted/30">
+        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Use Google Maps Embed when key is available
+  if (mapsKey) {
+    const src = hasCoords
+      ? `https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=${lat},${lon}&zoom=11`
+      : `https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=${encodeURIComponent(q)}&zoom=10`;
+    const viewerHref = hasCoords
+      ? `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
     return (
       <div className="rounded-lg overflow-hidden border border-border mt-2 relative">
         <iframe
@@ -75,10 +109,12 @@ function MiniMap({
           height="180"
           style={{ border: 0 }}
           loading="lazy"
-          src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`}
+          referrerPolicy="no-referrer-when-downgrade"
+          src={src}
+          allowFullScreen
         />
         <a
-          href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=12/${lat}/${lon}`}
+          href={viewerHref}
           target="_blank"
           rel="noopener noreferrer"
           className="absolute bottom-1 right-1 text-[10px] bg-background/80 backdrop-blur px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground"
@@ -88,28 +124,27 @@ function MiniMap({
       </div>
     );
   }
-  // Fallback: city/country search embed (no coords needed)
-  const q = (query || city || "").trim();
-  if (!q) {
-    return (
-      <div className="rounded-lg border border-dashed border-border mt-2 p-4 text-center text-xs text-muted-foreground">
-        <MapPin className="w-4 h-4 mx-auto mb-1 opacity-60" />
-        Location coordinates not available for this session
-      </div>
-    );
-  }
+
+  // Fallback: OpenStreetMap if no Google key
+  const bbox = hasCoords ? `${lon! - 0.5},${lat! - 0.3},${lon! + 0.5},${lat! + 0.3}` : "";
+  const osmSrc = hasCoords
+    ? `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`
+    : `https://www.openstreetmap.org/export/embed.html?layer=mapnik&search=${encodeURIComponent(q)}`;
+  const osmHref = hasCoords
+    ? `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=12/${lat}/${lon}`
+    : `https://www.openstreetmap.org/search?query=${encodeURIComponent(q)}`;
   return (
     <div className="rounded-lg overflow-hidden border border-border mt-2 relative">
       <iframe
-        title={`Login location - ${q}`}
+        title={`Login location${city ? ` - ${city}` : ""}`}
         width="100%"
         height="180"
         style={{ border: 0 }}
         loading="lazy"
-        src={`https://www.openstreetmap.org/export/embed.html?layer=mapnik&search=${encodeURIComponent(q)}`}
+        src={osmSrc}
       />
       <a
-        href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(q)}`}
+        href={osmHref}
         target="_blank"
         rel="noopener noreferrer"
         className="absolute bottom-1 right-1 text-[10px] bg-background/80 backdrop-blur px-1.5 py-0.5 rounded text-muted-foreground hover:text-foreground"
