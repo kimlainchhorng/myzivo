@@ -1,6 +1,6 @@
 /**
  * Auto Repair — Invoices Section
- * Two views: Estimates and Invoices, with create/list flow.
+ * Two views: Estimates and Invoices, with inline create flow.
  */
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,8 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList } from "lucide-react";
+import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 type LineItem = { id: string; description: string; qty: number; price: number };
@@ -36,7 +35,7 @@ interface Props { storeId: string }
 export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) {
   const [docs, setDocs] = useState<Doc[]>(seed);
   const [tab, setTab] = useState<"estimate" | "invoice">("estimate");
-  const [open, setOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState<Doc>({
     id: "", type: "estimate", number: "", customer: "", vehicle: "",
     items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
@@ -55,13 +54,13 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
       items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
       status: "draft", createdAt: new Date().toISOString(),
     });
-    setOpen(true);
+    setCreating(true);
   };
 
   const save = () => {
     if (!draft.customer || !draft.vehicle) { toast.error("Customer and vehicle required"); return; }
     setDocs(d => [draft, ...d]);
-    setOpen(false);
+    setCreating(false);
     toast.success(`${draft.type === "estimate" ? "Estimate" : "Invoice"} ${draft.number} created`);
   };
 
@@ -70,6 +69,75 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
 
   const addItem = () => setDraft(d => ({ ...d, items: [...d.items, { id: crypto.randomUUID(), description: "", qty: 1, price: 0 }] }));
   const removeItem = (id: string) => setDraft(d => ({ ...d, items: d.items.filter(i => i.id !== id) }));
+
+  if (creating) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setCreating(false)}>
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <CardTitle className="text-base flex items-center gap-2">
+              {draft.type === "estimate" ? <ClipboardList className="w-4 h-4" /> : <Receipt className="w-4 h-4" />}
+              {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"} · {draft.number}
+            </CardTitle>
+          </div>
+          <Button onClick={save} className="gap-1.5">
+            {draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Customer name</label>
+              <Input placeholder="e.g. Maria Lopez" value={draft.customer} onChange={e => setDraft({ ...draft, customer: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Vehicle</label>
+              <Input placeholder="Year / Make / Model" value={draft.vehicle} onChange={e => setDraft({ ...draft, vehicle: e.target.value })} />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold">Line items</span>
+              <Button size="sm" variant="outline" onClick={addItem} className="h-8 gap-1"><Plus className="w-3.5 h-3.5" /> Add item</Button>
+            </div>
+            <div className="grid grid-cols-[1fr_80px_110px_36px] gap-2 px-1 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+              <span>Description</span>
+              <span>Qty</span>
+              <span>Price</span>
+              <span></span>
+            </div>
+            {draft.items.map(it => (
+              <div key={it.id} className="grid grid-cols-[1fr_80px_110px_36px] gap-2 items-center">
+                <Input placeholder="Service or part" value={it.description} onChange={e => updateItem(it.id, { description: e.target.value })} />
+                <Input type="number" min={1} value={it.qty} onChange={e => updateItem(it.id, { qty: Number(e.target.value) || 1 })} />
+                <Input type="number" min={0} step={0.01} value={it.price} onChange={e => updateItem(it.id, { price: Number(e.target.value) || 0 })} />
+                <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => removeItem(it.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Notes (optional)</label>
+            <Textarea placeholder="Notes for the customer…" rows={3} />
+          </div>
+
+          <div className="flex items-center justify-between pt-3 border-t border-border">
+            <span className="text-sm text-muted-foreground">Total</span>
+            <span className="text-2xl font-bold flex items-center"><DollarSign className="w-5 h-5" />{total(draft.items).toFixed(2)}</span>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setCreating(false)}>Cancel</Button>
+            <Button onClick={save}>{draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}</Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -114,43 +182,6 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
             ))}
           </TabsContent>
         </Tabs>
-
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{draft.type === "estimate" ? "Create Estimate" : "Create Invoice"} · {draft.number}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3 py-2">
-              <div className="grid grid-cols-2 gap-3">
-                <Input placeholder="Customer name" value={draft.customer} onChange={e => setDraft({ ...draft, customer: e.target.value })} />
-                <Input placeholder="Vehicle (year/make/model)" value={draft.vehicle} onChange={e => setDraft({ ...draft, vehicle: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Line items</span>
-                  <Button size="sm" variant="ghost" onClick={addItem} className="h-7 gap-1"><Plus className="w-3.5 h-3.5" /> Add</Button>
-                </div>
-                {draft.items.map(it => (
-                  <div key={it.id} className="grid grid-cols-[1fr_60px_80px_32px] gap-2 items-center">
-                    <Input placeholder="Description" value={it.description} onChange={e => updateItem(it.id, { description: e.target.value })} />
-                    <Input type="number" min={1} value={it.qty} onChange={e => updateItem(it.id, { qty: Number(e.target.value) || 1 })} />
-                    <Input type="number" min={0} step={0.01} value={it.price} onChange={e => updateItem(it.id, { price: Number(e.target.value) || 0 })} />
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => removeItem(it.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center justify-between pt-2 border-t">
-                <span className="text-sm text-muted-foreground">Total</span>
-                <span className="text-lg font-bold flex items-center"><DollarSign className="w-4 h-4" />{total(draft.items).toFixed(2)}</span>
-              </div>
-              <Textarea placeholder="Notes (optional)" rows={2} />
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button onClick={save}>{draft.type === "estimate" ? "Create Estimate" : "Create Invoice"}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </CardContent>
     </Card>
   );
