@@ -121,7 +121,7 @@ async function resolvePostMeta(
 ): Promise<PostMeta | null> {
   const { data: userPost } = await supabase
     .from("user_posts")
-    .select("id, caption, media_url, media_type, thumbnail_url, user_id")
+    .select("id, caption, media_url, media_urls, media_type, user_id")
     .eq("id", postId)
     .maybeSingle();
 
@@ -132,22 +132,37 @@ async function resolvePostMeta(
       .eq("user_id", userPost.user_id as string)
       .maybeSingle();
 
-    const isVideo = userPost.media_type === "video" || userPost.media_type === "reel";
-    const fallbackImage = (userPost.thumbnail_url as string) || (profile?.avatar_url as string) || `${APP_ORIGIN}/og-image.png`;
+    const isVideo = userPost.media_type === "video" || userPost.media_type === "reel" || isVideoUrl(userPost.media_url as string);
+
+    // For videos: use thum.io to capture a frame from the video URL as the OG image.
+    // This is a free third-party service that generates a still image from any video URL.
+    // For images: use the media_url directly.
+    let ogImageUrl: string;
+    if (isVideo) {
+      const videoUrl = userPost.media_url as string;
+      // thum.io captures the first frame of a video and returns a JPG.
+      // Format: https://image.thum.io/get/width/1200/video/<encoded-video-url>
+      ogImageUrl = `https://image.thum.io/get/width/1200/video/${encodeURIComponent(videoUrl)}`;
+    } else {
+      // For images, also check media_urls array
+      const mediaUrlsArr = (userPost.media_urls as string[]) || [];
+      const firstImage = mediaUrlsArr.find(isImageUrl) || (userPost.media_url as string);
+      ogImageUrl = firstImage;
+    }
 
     return {
       id: userPost.id as string,
       caption: userPost.caption as string | null,
       mediaType: isVideo ? "video" : "image",
       mediaUrl: userPost.media_url as string,
-      ogImageUrl: isVideo ? fallbackImage : (userPost.media_url as string),
+      ogImageUrl,
       authorName: (profile?.full_name as string)?.trim() || "ZIVO User",
     };
   }
 
   const { data: storePost } = await supabase
     .from("store_posts")
-    .select("id, caption, media_urls, media_type, thumbnail_url, store_id")
+    .select("id, caption, media_urls, media_type, store_id")
     .eq("id", postId)
     .maybeSingle();
 
@@ -162,15 +177,19 @@ async function resolvePostMeta(
       .eq("id", storePost.store_id as string)
       .maybeSingle();
 
-    const isVideo = storePost.media_type === "video";
-    const fallbackImage = (storePost.thumbnail_url as string) || detectedImageUrl || (store?.logo_url as string) || `${APP_ORIGIN}/og-image.png`;
+    const isVideo = storePost.media_type === "video" || (!detectedImageUrl && isVideoUrl(detectedVideoUrl));
+
+    // For videos without an image in media_urls, generate a thumbnail from the video frame.
+    const ogImageUrl = isVideo
+      ? (detectedImageUrl || `https://image.thum.io/get/width/1200/video/${encodeURIComponent(detectedVideoUrl)}`)
+      : (detectedImageUrl || mediaUrls[0]);
 
     return {
       id: storePost.id as string,
       caption: storePost.caption as string | null,
       mediaType: isVideo ? "video" : "image",
       mediaUrl: isVideo ? detectedVideoUrl : (detectedImageUrl || mediaUrls[0]),
-      ogImageUrl: isVideo ? fallbackImage : (detectedImageUrl || mediaUrls[0] || fallbackImage),
+      ogImageUrl,
       authorName: (store?.name as string)?.trim() || "ZIVO Store",
     };
   }
