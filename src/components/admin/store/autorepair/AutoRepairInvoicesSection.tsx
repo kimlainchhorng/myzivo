@@ -42,7 +42,9 @@ export default function AutoRepairInvoicesSection({ storeId: _storeId }: Props) 
   const [tab, setTab] = useState<"estimate" | "invoice">("estimate");
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState<Doc>({
-    id: "", type: "estimate", number: "", customer: "", vehicle: "",
+    id: "", type: "estimate", number: "", customer: "",
+    firstName: "", lastName: "", phone: "", email: "", address: "",
+    vehicle: "",
     items: [{ id: crypto.randomUUID(), description: "", qty: 1, price: 0 }],
     status: "draft", createdAt: new Date().toISOString(),
   });
