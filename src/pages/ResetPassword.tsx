@@ -21,10 +21,6 @@ const resetPasswordSchema = z.object({
     .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
     .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
     .regex(/[0-9]/, { message: "Password must contain at least one number" }),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
 });
 
 type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
@@ -34,14 +30,12 @@ const ResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isValidSession, setIsValidSession] = useState<boolean | null>(null);
 
   const form = useForm<ResetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
       password: "",
-      confirmPassword: "",
     },
   });
 
@@ -214,40 +208,6 @@ const ResetPassword = () => {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm">Confirm password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type={showConfirmPassword ? "text" : "password"}
-                          placeholder="••••••••"
-                          className="h-11 sm:h-12 rounded-xl pr-12"
-                          {...field}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          aria-label="Toggle password visibility"
-                          className="absolute right-0 top-0 h-full px-3 touch-manipulation"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff className="w-4 h-4 text-muted-foreground" />
-                          ) : (
-                            <Eye className="w-4 h-4 text-muted-foreground" />
-                          )}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <div className="text-xs text-muted-foreground space-y-1 p-3 rounded-lg bg-muted/30">
                 <p className="font-medium">Password must:</p>
