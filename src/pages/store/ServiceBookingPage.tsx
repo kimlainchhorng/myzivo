@@ -149,21 +149,22 @@ export default function ServiceBookingPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 safe-area-top z-10">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+        <div className="max-w-5xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-3">
-            {store.logo_url && <img src={store.logo_url} alt="" className="w-8 h-8 rounded-full object-cover" />}
+            {store.logo_url && <img src={store.logo_url} alt="" className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover" />}
             <div>
-              <h1 className="font-semibold text-foreground text-sm">{store.name}</h1>
-              <p className="text-xs text-muted-foreground">Book a Service</p>
+              <h1 className="font-semibold text-foreground text-sm md:text-base">{store.name}</h1>
+              <p className="text-xs md:text-sm text-muted-foreground">Book a Service</p>
             </div>
           </div>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <form onSubmit={handleSubmit} className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-5 md:space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6 items-start">
         {/* Service Selection */}
         <Card>
           <CardHeader className="pb-3">
