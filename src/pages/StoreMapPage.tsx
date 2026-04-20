@@ -772,7 +772,7 @@ export default function StoreMapPage() {
                     </button>
                   </div>
                 )}
-                {selectedStoreProducts.length > 0 ? (
+                {selectedStore.category !== "auto-repair" && selectedStoreProducts.length > 0 ? (
                   <>
                     <select
                       value={selectedProductId}
@@ -830,9 +830,9 @@ export default function StoreMapPage() {
                       </button>
                     </div>
                   </>
-                ) : (
+                ) : selectedStore.category !== "auto-repair" ? (
                   <p className="text-[11px] text-muted-foreground">Add products to this store to enable Create Reel and Buy Now links.</p>
-                )}
+                ) : null}
               </div>
             </div>
           </motion.div>
