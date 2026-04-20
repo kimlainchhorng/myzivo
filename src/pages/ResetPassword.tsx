@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -31,6 +31,19 @@ const ResetPassword = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isValidSession, setIsValidSession] = useState<boolean | null>(null);
+  const hasRecoveryParams = useMemo(() => {
+    if (typeof window === "undefined") return false;
+
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const queryParams = new URLSearchParams(window.location.search);
+    const readParam = (key: string) => hashParams.get(key) ?? queryParams.get(key);
+
+    return Boolean(
+      queryParams.get("code") ||
+      readParam("type") === "recovery" ||
+      (readParam("access_token") && readParam("refresh_token"))
+    );
+  }, []);
 
   const form = useForm<ResetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),
@@ -82,7 +95,9 @@ const ResetPassword = () => {
       }
 
       const { data: { session } } = await supabase.auth.getSession();
-      if (isMounted) setIsValidSession(!!session);
+      if (isMounted) {
+        setIsValidSession(hasRecoveryParams ? !!session || recoveryType === "recovery" : !!session);
+      }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -99,7 +114,7 @@ const ResetPassword = () => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [hasRecoveryParams]);
 
   const onSubmit = async (data: ResetPasswordForm) => {
     setIsLoading(true);
