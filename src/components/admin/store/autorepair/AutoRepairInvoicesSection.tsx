@@ -545,9 +545,31 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
               })}
             </Tabs>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Notes (optional)</label>
-              <Textarea placeholder="Notes for the customer…" rows={3} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                  <Stethoscope className="w-3.5 h-3.5 text-primary" />
+                  Diagnosis Notes
+                </label>
+                <Textarea
+                  placeholder="Technician findings, root cause, recommended repairs…"
+                  rows={3}
+                  value={(draft as any).diagnosisNotes || ""}
+                  onChange={e => setDraft(d => ({ ...d, diagnosisNotes: e.target.value } as any))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-primary" />
+                  Customer Notes
+                </label>
+                <Textarea
+                  placeholder="Notes for the customer…"
+                  rows={3}
+                  value={(draft as any).customerNotes || ""}
+                  onChange={e => setDraft(d => ({ ...d, customerNotes: e.target.value } as any))}
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-between pt-3 border-t border-border">
