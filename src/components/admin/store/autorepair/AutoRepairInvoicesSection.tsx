@@ -378,19 +378,17 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
 
         {/* Service Intake — how the vehicle arrives / leaves */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Truck className="w-4 h-4 text-primary" />
-              Service Intake
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <CardContent className="py-3 px-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Truck className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-semibold">Service Intake</span>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5">
               {([
-                { id: "drop-off", label: "Drop Off", icon: KeyRound, desc: "Customer drops off" },
-                { id: "towing", label: "Towing", icon: Truck, desc: "Towed in" },
-                { id: "in-shop", label: "In Shop", icon: Car, desc: "Walk-in / waiting" },
-                { id: "pickup", label: "Pickup", icon: LogOut, desc: "Ready for pickup" },
+                { id: "drop-off", label: "Drop Off", icon: KeyRound },
+                { id: "towing", label: "Towing", icon: Truck },
+                { id: "in-shop", label: "In Shop", icon: Car },
+                { id: "pickup", label: "Pickup", icon: LogOut },
               ] as const).map(opt => {
                 const Icon = opt.icon;
                 const active = (draft as any).intakeMethod === opt.id;
@@ -399,13 +397,12 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
                     key={opt.id}
                     type="button"
                     onClick={() => setDraft(d => ({ ...d, intakeMethod: opt.id } as any))}
-                    className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition-all hover:border-primary/60 hover:bg-primary/5 ${
-                      active ? "border-primary bg-primary/10 ring-2 ring-primary/20" : "border-border bg-card"
+                    className={`flex flex-col items-center justify-center gap-1 rounded-lg border px-2 py-2 text-center transition-all hover:border-primary/60 hover:bg-primary/5 ${
+                      active ? "border-primary bg-primary/10" : "border-border bg-card"
                     }`}
                   >
-                    <Icon className={`w-5 h-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                    <span className={`text-xs font-semibold ${active ? "text-primary" : "text-foreground"}`}>{opt.label}</span>
-                    <span className="text-[10px] text-muted-foreground leading-tight">{opt.desc}</span>
+                    <Icon className={`w-3.5 h-3.5 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className={`text-[11px] font-medium leading-none ${active ? "text-primary" : "text-foreground"}`}>{opt.label}</span>
                   </button>
                 );
               })}
