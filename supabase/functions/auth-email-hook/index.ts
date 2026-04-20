@@ -218,12 +218,26 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
+  // Force confirmation URL to point to the customer app domain (hizivo.com),
+  // not whatever Supabase Site URL is configured (which may point to the driver app).
+  const CUSTOMER_APP_URL = `https://${ROOT_DOMAIN}` // https://hizivo.com
+  let confirmationUrl = payload.data.url
+  try {
+    const original = new URL(payload.data.url)
+    const target = new URL(CUSTOMER_APP_URL)
+    original.protocol = target.protocol
+    original.host = target.host
+    confirmationUrl = original.toString()
+  } catch (e) {
+    console.warn('Could not rewrite confirmation URL host', e)
+  }
+
   // Build template props from payload.data (HookData structure)
   const templateProps = {
     siteName: SITE_NAME,
-    siteUrl: `https://${ROOT_DOMAIN}`,
+    siteUrl: CUSTOMER_APP_URL,
     recipient: payload.data.email,
-    confirmationUrl: payload.data.url,
+    confirmationUrl,
     token: payload.data.token,
     email: payload.data.email,
     newEmail: payload.data.new_email,
