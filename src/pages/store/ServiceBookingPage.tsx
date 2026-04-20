@@ -61,11 +61,13 @@ export default function ServiceBookingPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const [store, setStore] = useState<any>(null);
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [date, setDate] = useState<Date>();
+  const [confirmation, setConfirmation] = useState<{ ref: string } | null>(null);
 
   const [form, setForm] = useState({
     product_id: "",
