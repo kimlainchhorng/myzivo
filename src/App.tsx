@@ -678,6 +678,7 @@ const App = () => (
                 <Route path="/book/:slug" element={<ServiceBookingPage />} />
                 <Route path="/grocery/store/:slug" element={<GroceryStorePage />} />
                 <Route path="/grocery/shop/:slug" element={<StoreProfilePage />} />
+                <Route path="/store/:slug" element={<StoreProfilePage />} />
                 <Route path="/grocery/order-placed" element={<GroceryOrderPlaced />} />
                 <Route path="/grocery/order-confirmed" element={<GroceryOrderConfirmed />} />
                 <Route path="/grocery/orders" element={<GroceryOrderHistory />} />
