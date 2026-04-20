@@ -692,52 +692,46 @@ export default function StoreMapPage() {
                 >
                   <Car className="w-3.5 h-3.5" /> Ride There
                 </button>
-                <div className="w-px bg-border/20" />
-                {selectedStore.category === "auto-repair" ? (
-                  <button
-                    className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
-                    onClick={(e) => { e.stopPropagation(); navigate(`/book/${selectedStore.slug}`); }}
-                  >
-                    <Wrench className="w-3.5 h-3.5" /> Book Service
-                  </button>
-                ) : (
-                  <button
-                    className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
-                    onClick={(e) => { e.stopPropagation(); navigate(`/grocery/shop/${selectedStore.slug}`); }}
-                  >
-                    <Store className="w-3.5 h-3.5" /> View Store
-                  </button>
-                )}
-                <div className="w-px bg-border/20" />
-                <button
-                  className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    const shareUrl = buildShopDeepLink(selectedStore.slug);
-                    const shareText = `Check out ${selectedStore.name} on ZiVo`;
-
-                    try {
-                      if (navigator.share) {
-                        await navigator.share({ title: selectedStore.name, text: shareText, url: shareUrl });
-                      } else {
-                        await navigator.clipboard.writeText(shareUrl);
-                      }
-                    } catch {
-                      await navigator.clipboard.writeText(shareUrl);
-                    }
-                  }}
-                >
-                  Share
-                </button>
-                {selectedStore.phone && (
+                {selectedStore.category !== "auto-repair" && (
                   <>
                     <div className="w-px bg-border/20" />
                     <button
                       className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
-                      onClick={(e) => { e.stopPropagation(); window.open(`tel:${selectedStore.phone}`, "_self"); }}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/grocery/shop/${selectedStore.slug}`); }}
                     >
-                      <Phone className="w-3.5 h-3.5" /> Call
+                      <Store className="w-3.5 h-3.5" /> View Store
                     </button>
+                ețe   <div className="w-px bg-border/20" />
+                    <button
+                      className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const shareUrl = buildShopDeepLink(selectedStore.slug);
+                        const shareText = `Check out ${selectedStore.name} on ZiVo`;
+                        try {
+                          if (navigator.share) {
+                            await navigator.share({ title: selectedStore.name, text: shareText, url: shareUrl });
+                          } else {
+                            await navigator.clipboard.writeText(shareUrl);
+                          }
+                        } catch {
+                          await navigator.clipboard.writeText(shareUrl);
+                        }
+                      }}
+                    >
+                      Share
+                    </button>
+                    {selectedStore.phone && (
+                      <>
+                        <div className="w-px bg-border/20" />
+                        <button
+                          className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
+                          onClick={(e) => { e.stopPropagation(); window.open(`tel:${selectedStore.phone}`, "_self"); }}
+                        >
+                          <Phone className="w-3.5 h-3.5" /> Call
+                        </button>
+                      </>
+                    )}
                   </>
                 )}
               </div>
