@@ -410,7 +410,9 @@ export default function ServiceBookingPage() {
           </CardContent>
         </Card>
 
-        <Button type="submit" className="w-full h-12 text-base" disabled={submitting}>
+        </div>
+
+        <Button type="submit" className="w-full md:w-auto md:min-w-[280px] md:mx-auto md:flex h-12 text-base" disabled={submitting}>
           {submitting ? "Submitting..." : "Submit Booking Request"}
         </Button>
       </form>
