@@ -44,7 +44,7 @@ const ForgotPassword = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `https://hizivo.com/reset-password`,
       });
 
       if (error) throw error;
