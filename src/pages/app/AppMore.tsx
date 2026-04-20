@@ -21,6 +21,9 @@ import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import DriverAppDownloadSheet from "@/components/partner/DriverAppDownloadSheet";
 
