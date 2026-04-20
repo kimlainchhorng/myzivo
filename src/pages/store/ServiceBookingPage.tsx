@@ -350,7 +350,17 @@ export default function ServiceBookingPage() {
 
           {/* Primary actions */}
           <div className="flex flex-col gap-2.5">
-            <Button onClick={() => navigate(`/store/${slug}`)} className="w-full h-12 rounded-xl font-bold gap-2 shadow-lg shadow-primary/20">
+            <Button
+              onClick={() => {
+                const shopUrl = `${getPublicOrigin()}/store/${slug}`;
+                if (typeof window !== "undefined" && window.location.origin !== getPublicOrigin()) {
+                  window.location.href = shopUrl;
+                } else {
+                  navigate(`/store/${slug}`);
+                }
+              }}
+              className="w-full h-12 rounded-xl font-bold gap-2 shadow-lg shadow-primary/20"
+            >
               <StoreIcon className="w-4 h-4" /> Back to Shop
             </Button>
             <div className="grid grid-cols-2 gap-2.5">
