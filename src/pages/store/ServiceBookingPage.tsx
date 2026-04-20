@@ -232,8 +232,8 @@ export default function ServiceBookingPage() {
             <Button onClick={() => navigate(`/store/${slug}`)} className="flex-1 h-12 rounded-xl font-bold gap-2">
               <StoreIcon className="w-4 h-4" /> Back to Shop
             </Button>
-            <Button variant="outline" onClick={() => navigate(user ? "/account/bookings" : "/")} className="flex-1 h-12 rounded-xl font-bold">
-              {user ? "My Bookings" : "Done"}
+            <Button variant="outline" onClick={() => navigate(user ? "/account" : "/")} className="flex-1 h-12 rounded-xl font-bold">
+              {user ? "My Account" : "Done"}
             </Button>
           </div>
 
