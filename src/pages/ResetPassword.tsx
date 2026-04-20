@@ -40,24 +40,65 @@ const ResetPassword = () => {
   });
 
   useEffect(() => {
-    // Check if user has a valid recovery session
-    const checkSession = async () => {
+    let isMounted = true;
+
+    const applyRecoverySession = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const queryParams = new URLSearchParams(window.location.search);
+      const readParam = (key: string) => hashParams.get(key) ?? queryParams.get(key);
+
+      const recoveryType = readParam("type");
+      const code = queryParams.get("code");
+      const accessToken = readParam("access_token");
+      const refreshToken = readParam("refresh_token");
+      const authError = readParam("error") ?? readParam("error_description");
+
+      if (authError) {
+        if (isMounted) setIsValidSession(false);
+        return;
+      }
+
+      if (code) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+        if (!error && (recoveryType === "recovery" || data.session)) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+          if (isMounted) setIsValidSession(true);
+          return;
+        }
+      }
+
+      if (recoveryType === "recovery" && accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (!error) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+          if (isMounted) setIsValidSession(true);
+          return;
+        }
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
-      setIsValidSession(!!session);
+      if (isMounted) setIsValidSession(!!session);
     };
 
-    // Listen for auth state changes (recovery link will trigger this)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setIsValidSession(true);
-      } else if (session) {
+      if (!isMounted) return;
+
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || !!session) {
         setIsValidSession(true);
       }
     });
 
-    checkSession();
+    void applyRecoverySession();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const onSubmit = async (data: ResetPasswordForm) => {
