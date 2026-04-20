@@ -32,6 +32,7 @@ interface Props {
   storeId: string;
   storeSlug?: string;
   storeName?: string;
+  storeCategory?: string;
 }
 
 /* ───── Promotion Types ───── */
@@ -104,7 +105,7 @@ function StatCard({ label, value, change, icon: Icon, color }: {
   );
 }
 
-export default function StoreMarketingSection({ storeId, storeSlug, storeName }: Props) {
+export default function StoreMarketingSection({ storeId, storeSlug, storeName, storeCategory }: Props) {
   const qc = useQueryClient();
   const [activeSubTab, setActiveSubTab] = useState("overview");
   const [promoDialogOpen, setPromoDialogOpen] = useState(false);
@@ -171,7 +172,9 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName }:
 
   const slug = storeSlug || storeProfile?.slug || "";
   const name = storeName || storeProfile?.name || "Store";
+  const isAutoRepair = storeCategory === "auto-repair";
   const storeUrl = slug ? `https://hizivo.com/store/${slug}` : "";
+  const bookingUrl = slug ? `https://hizivo.com/book/${slug}` : "";
 
   /* ───── Analytics computed from posts ───── */
   const analytics = useMemo(() => {
@@ -583,6 +586,27 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName }:
               <CardTitle className="text-sm flex items-center gap-2"><Share2 className="w-4 h-4 text-primary" /> Share Your Store</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Booking Link (auto-repair) */}
+              {isAutoRepair && (
+                <div className="p-3 rounded-xl border-2 border-primary/30 bg-primary/5 space-y-2">
+                  <Label className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                    <Rocket className="w-3.5 h-3.5" /> Direct Booking Link
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">Share this link so customers can book a service appointment instantly.</p>
+                  <div className="flex gap-2">
+                    <Input value={bookingUrl || "Loading..."} readOnly className="text-xs font-mono bg-background" />
+                    <Button variant="outline" size="sm" onClick={() => bookingUrl && copyToClipboard(bookingUrl, "Booking link")} className="shrink-0 gap-1.5">
+                      <Copy className="w-3.5 h-3.5" /> Copy
+                    </Button>
+                    {bookingUrl && (
+                      <Button variant="outline" size="sm" onClick={() => window.open(bookingUrl, "_blank")} className="shrink-0">
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Store URL */}
               <div>
                 <Label className="text-xs text-muted-foreground mb-1.5 block">Store URL</Label>

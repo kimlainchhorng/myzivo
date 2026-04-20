@@ -3268,7 +3268,7 @@ export default function AdminStoreEditPage() {
 
           {/* Marketing Tab */}
           <TabsContent value="marketing">
-            <StoreMarketingSection storeId={storeId!} storeSlug={form.slug} storeName={form.name} />
+            <StoreMarketingSection storeId={storeId!} storeSlug={form.slug} storeName={form.name} storeCategory={form.category} />
           </TabsContent>
 
           {/* Live Stream Tab */}
