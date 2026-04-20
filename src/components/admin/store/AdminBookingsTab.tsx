@@ -18,7 +18,7 @@ import {
   Search, MessageSquareText, CalendarClock, ExternalLink,
   CheckCircle2, XCircle, AlertCircle, TrendingUp, RefreshCw,
   ChevronDown, ChevronUp, Wrench, Star, BarChart3, Download,
-  Filter, SortAsc, SortDesc, Eye, Bell, Zap
+  Filter, SortAsc, SortDesc, Eye, Bell, Zap, Plus
 } from "lucide-react";
 import { format, isToday, isThisWeek, isThisMonth, parseISO, differenceInDays } from "date-fns";
 import { toast } from "sonner";
@@ -50,6 +50,59 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [calendarDate, setCalendarDate] = useState<Date | undefined>(undefined);
+  const [newDialog, setNewDialog] = useState<{
+    open: boolean;
+    customer_name: string;
+    customer_phone: string;
+    customer_email: string;
+    service_name: string;
+    vehicle_year: string;
+    vehicle_make: string;
+    vehicle_model: string;
+    notes: string;
+    date: Date | undefined;
+    time: string;
+    status: string;
+  }>({
+    open: false,
+    customer_name: "", customer_phone: "", customer_email: "",
+    service_name: "", vehicle_year: "", vehicle_make: "", vehicle_model: "",
+    notes: "", date: undefined, time: "", status: "confirmed",
+  });
+
+  const resetNewDialog = () => setNewDialog({
+    open: false, customer_name: "", customer_phone: "", customer_email: "",
+    service_name: "", vehicle_year: "", vehicle_make: "", vehicle_model: "",
+    notes: "", date: undefined, time: "", status: "confirmed",
+  });
+
+  const createBooking = async () => {
+    if (!newDialog.customer_name.trim() || !newDialog.customer_phone.trim() || !newDialog.service_name.trim() || !newDialog.date || !newDialog.time) {
+      toast.error("Name, phone, service, date and time are required");
+      return;
+    }
+    setSaving(true);
+    const payload: any = {
+      store_id: storeId,
+      customer_name: newDialog.customer_name.trim(),
+      customer_phone: newDialog.customer_phone.trim(),
+      customer_email: newDialog.customer_email.trim() || null,
+      service_name: newDialog.service_name.trim(),
+      vehicle_year: newDialog.vehicle_year.trim() || null,
+      vehicle_make: newDialog.vehicle_make.trim() || null,
+      vehicle_model: newDialog.vehicle_model.trim() || null,
+      notes: newDialog.notes.trim() || null,
+      preferred_date: format(newDialog.date, "yyyy-MM-dd"),
+      preferred_time: newDialog.time,
+      status: newDialog.status,
+    };
+    const { error } = await supabase.from("service_bookings").insert(payload);
+    setSaving(false);
+    if (error) { toast.error(error.message || "Failed to create booking"); return; }
+    toast.success("Booking created");
+    resetNewDialog();
+    fetchBookings();
+  };
 
   const fetchBookings = async () => {
     const { data } = await supabase
@@ -206,6 +259,14 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
           <p className="text-xs text-muted-foreground mt-0.5">{bookings.length} total bookings</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            onClick={() => setNewDialog(n => ({ ...n, open: true }))}
+            className="gap-1.5"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New Booking
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -824,6 +885,95 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
           <DialogFooter>
             <Button variant="outline" onClick={() => setRescheduleDialog(r => ({ ...r, open: false }))}>Cancel</Button>
             <Button onClick={saveReschedule} disabled={saving}>{saving ? "Saving..." : "Reschedule"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Booking Dialog */}
+      <Dialog open={newDialog.open} onOpenChange={open => !open && resetNewDialog()}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5 text-primary" />
+              Create New Booking
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Customer Name *</label>
+                <Input value={newDialog.customer_name} onChange={e => setNewDialog(n => ({ ...n, customer_name: e.target.value }))} placeholder="Full name" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Phone *</label>
+                <Input value={newDialog.customer_phone} onChange={e => setNewDialog(n => ({ ...n, customer_phone: e.target.value }))} placeholder="(555) 555-5555" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium mb-1.5 block">Email</label>
+                <Input type="email" value={newDialog.customer_email} onChange={e => setNewDialog(n => ({ ...n, customer_email: e.target.value }))} placeholder="customer@example.com" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium mb-1.5 block">Service *</label>
+                <Input value={newDialog.service_name} onChange={e => setNewDialog(n => ({ ...n, service_name: e.target.value }))} placeholder="e.g. Oil Change, Brake Inspection" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Vehicle Year</label>
+                <Input value={newDialog.vehicle_year} onChange={e => setNewDialog(n => ({ ...n, vehicle_year: e.target.value }))} placeholder="2020" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Make</label>
+                <Input value={newDialog.vehicle_make} onChange={e => setNewDialog(n => ({ ...n, vehicle_make: e.target.value }))} placeholder="Toyota" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium mb-1.5 block">Model</label>
+                <Input value={newDialog.vehicle_model} onChange={e => setNewDialog(n => ({ ...n, vehicle_model: e.target.value }))} placeholder="Camry" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Date *</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start text-left", !newDialog.date && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {newDialog.date ? format(newDialog.date, "PPP") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={newDialog.date} onSelect={d => setNewDialog(n => ({ ...n, date: d }))} className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Time *</label>
+                <Select value={newDialog.time} onValueChange={t => setNewDialog(n => ({ ...n, time: t }))}>
+                  <SelectTrigger><SelectValue placeholder="Select time" /></SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium mb-1.5 block">Status</label>
+                <Select value={newDialog.status} onValueChange={s => setNewDialog(n => ({ ...n, status: s }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="confirmed">Confirmed</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-sm font-medium mb-1.5 block">Notes</label>
+                <Textarea value={newDialog.notes} onChange={e => setNewDialog(n => ({ ...n, notes: e.target.value }))} placeholder="Any details about the booking..." rows={3} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={resetNewDialog}>Cancel</Button>
+            <Button onClick={createBooking} disabled={saving} className="gap-1.5">
+              <Plus className="h-3.5 w-3.5" />
+              {saving ? "Creating..." : "Create Booking"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
