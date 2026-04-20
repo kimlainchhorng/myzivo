@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { CalendarIcon, ArrowLeft, Wrench, Car, User, Clock, CheckCircle2, Calendar as CalIcon, Phone, MapPin, UserPlus, Store as StoreIcon, Share2, Navigation, CalendarPlus, Sparkles, RotateCcw, Copy, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getServiceImage } from "@/config/autoRepairServiceImages";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 
 const TIME_SLOTS = [
   "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
