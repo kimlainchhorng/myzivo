@@ -752,8 +752,8 @@ export default function StoreMapPage() {
                     Live now: purchase in last 30 minutes
                   </p>
                 )}
-                {selectedStore.category === "auto-repair" ? (
-                  <div className="grid grid-cols-2 gap-2">
+                {selectedStore.category === "auto-repair" && (
+                  <div className="grid grid-cols-2 gap-2 mb-2">
                     <button
                       className="h-10 rounded-lg bg-primary text-primary-foreground text-xs font-semibold inline-flex items-center justify-center gap-1.5"
                       onClick={(e) => { e.stopPropagation(); navigate(`/book/${selectedStore.slug}`); }}
@@ -771,7 +771,8 @@ export default function StoreMapPage() {
                       <Phone className="w-3.5 h-3.5" /> Call
                     </button>
                   </div>
-                ) : selectedStoreProducts.length > 0 ? (
+                )}
+                {selectedStoreProducts.length > 0 ? (
                   <>
                     <select
                       value={selectedProductId}
