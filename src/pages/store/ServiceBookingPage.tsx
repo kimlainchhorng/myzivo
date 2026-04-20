@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CalendarIcon, ArrowLeft, Wrench, Car, User, Clock, CheckCircle2, Calendar as CalIcon, Phone, MapPin, UserPlus, Store as StoreIcon } from "lucide-react";
+import { CalendarIcon, ArrowLeft, Wrench, Car, User, Clock, CheckCircle2, Calendar as CalIcon, Phone, MapPin, UserPlus, Store as StoreIcon, Share2, Navigation, CalendarPlus, Sparkles, RotateCcw, Copy, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getServiceImage } from "@/config/autoRepairServiceImages";
 
@@ -149,78 +149,198 @@ export default function ServiceBookingPage() {
 
   /* ───── Booking Confirmation Screen ───── */
   if (confirmation) {
+    const dateStr = date ? format(date, "yyyyMMdd") : "";
+    const [timeRaw, ampm] = (form.preferred_time || "9:00 AM").split(" ");
+    const [hRaw, mRaw] = timeRaw.split(":");
+    let hour = parseInt(hRaw, 10);
+    if (ampm === "PM" && hour !== 12) hour += 12;
+    if (ampm === "AM" && hour === 12) hour = 0;
+    const startTime = `${String(hour).padStart(2, "0")}${(mRaw || "00").padStart(2, "0")}00`;
+    const endHour = (hour + 1) % 24;
+    const endTime = `${String(endHour).padStart(2, "0")}${(mRaw || "00").padStart(2, "0")}00`;
+    const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`${form.service_name} @ ${store.name}`)}&dates=${dateStr}T${startTime}/${dateStr}T${endTime}&details=${encodeURIComponent(`Booking Ref: ${confirmation.ref}\nVehicle: ${form.vehicle_year} ${form.vehicle_make} ${form.vehicle_model}\nNotes: ${form.notes || "—"}`)}&location=${encodeURIComponent(store.address || store.name)}`;
+    const directionsUrl = store.address ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(store.address)}` : "";
+    const shareText = `I just booked ${form.service_name} at ${store.name} on ZIVO! Confirmation: ${confirmation.ref}`;
+
+    const handleShare = async () => {
+      if (navigator.share) {
+        try { await navigator.share({ title: "ZIVO Booking", text: shareText, url: window.location.origin + `/store/${slug}` }); } catch {}
+      } else {
+        await navigator.clipboard.writeText(shareText);
+        toast.success("Copied to clipboard!");
+      }
+    };
+
+    const copyRef = async () => {
+      await navigator.clipboard.writeText(confirmation.ref);
+      toast.success("Confirmation # copied!");
+    };
+
+    const bookAnother = () => {
+      setConfirmation(null);
+      setDate(undefined);
+      setForm(f => ({ ...f, service_name: "", product_id: "", preferred_time: "", notes: "" }));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
     return (
-      <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-background to-background dark:from-emerald-950/20 safe-area-top">
-        <div className="max-w-xl mx-auto px-4 py-10 md:py-16">
-          <div className="text-center mb-8 animate-in fade-in zoom-in-95 duration-500">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/40 mb-4">
-              <CheckCircle2 className="w-12 h-12 text-emerald-600 dark:text-emerald-400" />
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-background to-emerald-50/30 dark:from-emerald-950/30 dark:via-background dark:to-emerald-950/20 safe-area-top relative overflow-hidden">
+        {/* Confetti dots */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          {Array.from({ length: 24 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 rounded-sm animate-in fade-in slide-in-from-top-10"
+              style={{
+                left: `${(i * 37) % 100}%`,
+                top: `${-10 + (i % 5) * 8}%`,
+                backgroundColor: ["hsl(var(--primary))", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"][i % 5],
+                animationDelay: `${(i % 8) * 100}ms`,
+                animationDuration: "1200ms",
+                transform: `rotate(${(i * 31) % 360}deg)`,
+                opacity: 0.7,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="max-w-xl mx-auto px-4 py-8 md:py-14 relative z-10">
+          {/* Hero */}
+          <div className="text-center mb-6 animate-in fade-in zoom-in-95 duration-500">
+            <div className="relative inline-flex items-center justify-center mb-4">
+              <div className="absolute inset-0 bg-emerald-400/30 rounded-full blur-2xl animate-pulse" />
+              <div className="relative inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-2xl shadow-emerald-500/40">
+                <CheckCircle2 className="w-14 h-14 text-white" strokeWidth={2.5} />
+              </div>
             </div>
-            <h1 className="text-2xl md:text-3xl font-black text-foreground mb-2">Booking Confirmed!</h1>
-            <p className="text-sm text-muted-foreground">
-              {store.name} has received your request and will contact you shortly to confirm.
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/50 mb-3">
+              <PartyPopper className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Booked Successfully</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black text-foreground mb-2 tracking-tight">You're all set! 🎉</h1>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+              {store.name} will reach out to <span className="font-semibold text-foreground">{form.customer_phone}</span> shortly to confirm your appointment.
             </p>
           </div>
 
-          <Card className="mb-4 shadow-lg border-emerald-100 dark:border-emerald-900/40">
-            <CardContent className="pt-6 space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-border">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Confirmation #</span>
-                <span className="font-mono font-bold text-sm text-primary">{confirmation.ref}</span>
+          {/* Quick action chips */}
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            <button
+              onClick={() => window.open(calendarUrl, "_blank")}
+              className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-card hover:bg-accent border border-border transition active:scale-95"
+            >
+              <CalendarPlus className="w-5 h-5 text-primary" />
+              <span className="text-[11px] font-bold">Add Calendar</span>
+            </button>
+            <button
+              onClick={() => store.phone && window.open(`tel:${store.phone}`, "_self")}
+              disabled={!store.phone}
+              className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-card hover:bg-accent border border-border transition active:scale-95 disabled:opacity-40"
+            >
+              <Phone className="w-5 h-5 text-primary" />
+              <span className="text-[11px] font-bold">Call Shop</span>
+            </button>
+            <button
+              onClick={() => directionsUrl && window.open(directionsUrl, "_blank")}
+              disabled={!directionsUrl}
+              className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-card hover:bg-accent border border-border transition active:scale-95 disabled:opacity-40"
+            >
+              <Navigation className="w-5 h-5 text-primary" />
+              <span className="text-[11px] font-bold">Directions</span>
+            </button>
+          </div>
+
+          {/* Booking summary card */}
+          <Card className="mb-4 shadow-xl border-emerald-100 dark:border-emerald-900/40 overflow-hidden">
+            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-5 py-3 border-b border-border flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Confirmation #</p>
+                <p className="font-mono font-black text-base text-primary">{confirmation.ref}</p>
               </div>
+              <button onClick={copyRef} className="p-2 rounded-lg hover:bg-primary/10 transition" aria-label="Copy">
+                <Copy className="w-4 h-4 text-primary" />
+              </button>
+            </div>
+            <CardContent className="pt-5 space-y-4">
               <div className="flex items-start gap-3">
-                <Wrench className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Service</p>
-                  <p className="font-semibold text-sm">{form.service_name}</p>
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Wrench className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Service</p>
+                  <p className="font-bold text-sm text-foreground">{form.service_name}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <CalIcon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">When</p>
-                  <p className="font-semibold text-sm">
-                    {date ? format(date, "EEE, MMM d, yyyy") : ""} at {form.preferred_time}
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <CalIcon className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Appointment</p>
+                  <p className="font-bold text-sm text-foreground">
+                    {date ? format(date, "EEEE, MMMM d") : ""}
                   </p>
+                  <p className="text-xs text-muted-foreground">{form.preferred_time}</p>
                 </div>
               </div>
               {(form.vehicle_make || form.vehicle_model) && (
                 <div className="flex items-start gap-3">
-                  <Car className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Vehicle</p>
-                    <p className="font-semibold text-sm">{form.vehicle_year} {form.vehicle_make} {form.vehicle_model}</p>
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Car className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Vehicle</p>
+                    <p className="font-bold text-sm text-foreground">{form.vehicle_year} {form.vehicle_make} {form.vehicle_model}</p>
                   </div>
                 </div>
               )}
               <div className="flex items-start gap-3">
-                <StoreIcon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Shop</p>
-                  <p className="font-semibold text-sm">{store.name}</p>
-                  {store.address && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><MapPin className="w-3 h-3" />{store.address}</p>}
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <StoreIcon className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Shop</p>
+                  <p className="font-bold text-sm text-foreground">{store.name}</p>
+                  {store.address && <p className="text-xs text-muted-foreground flex items-start gap-1 mt-0.5"><MapPin className="w-3 h-3 mt-0.5 shrink-0" />{store.address}</p>}
                   {store.phone && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><Phone className="w-3 h-3" />{store.phone}</p>}
                 </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* What happens next */}
+          <Card className="mb-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-amber-200 dark:border-amber-900/40">
+            <CardContent className="pt-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <p className="text-sm font-bold text-foreground">What happens next</p>
+              </div>
+              <ol className="space-y-2 text-xs text-muted-foreground">
+                <li className="flex gap-2"><span className="font-bold text-foreground">1.</span> Shop reviews your request and confirms availability.</li>
+                <li className="flex gap-2"><span className="font-bold text-foreground">2.</span> You'll receive a confirmation call/text at <span className="font-semibold text-foreground">{form.customer_phone}</span>.</li>
+                <li className="flex gap-2"><span className="font-bold text-foreground">3.</span> Arrive 10 min early on appointment day with your vehicle.</li>
+              </ol>
+            </CardContent>
+          </Card>
+
           {!user && (
-            <Card className="mb-4 border-primary/30 bg-primary/5">
-              <CardContent className="pt-6">
+            <Card className="mb-4 border-primary/30 bg-gradient-to-br from-primary/10 to-primary/5">
+              <CardContent className="pt-5">
                 <div className="flex items-start gap-3">
-                  <UserPlus className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                  <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
+                    <UserPlus className="w-5 h-5 text-primary" />
+                  </div>
                   <div className="flex-1">
-                    <p className="font-bold text-sm mb-1">Track your booking with a free ZIVO account</p>
+                    <p className="font-bold text-sm mb-1">Save this booking to your ZIVO account</p>
                     <p className="text-xs text-muted-foreground mb-3">
-                      Get reminders, manage appointments, and book again with one tap.
+                      Track appointments, get reminders, and rebook in one tap.
                     </p>
                     <Button
                       size="sm"
                       onClick={() => navigate(`/auth?redirect=${encodeURIComponent(`/store/${slug}`)}`)}
-                      className="rounded-lg font-bold"
+                      className="rounded-lg font-bold h-9"
                     >
-                      Create Account
+                      Create Free Account
                     </Button>
                   </div>
                 </div>
@@ -228,17 +348,23 @@ export default function ServiceBookingPage() {
             </Card>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button onClick={() => navigate(`/store/${slug}`)} className="flex-1 h-12 rounded-xl font-bold gap-2">
+          {/* Primary actions */}
+          <div className="flex flex-col gap-2.5">
+            <Button onClick={() => navigate(`/store/${slug}`)} className="w-full h-12 rounded-xl font-bold gap-2 shadow-lg shadow-primary/20">
               <StoreIcon className="w-4 h-4" /> Back to Shop
             </Button>
-            <Button variant="outline" onClick={() => navigate(user ? "/account" : "/")} className="flex-1 h-12 rounded-xl font-bold">
-              {user ? "My Account" : "Done"}
-            </Button>
+            <div className="grid grid-cols-2 gap-2.5">
+              <Button variant="outline" onClick={bookAnother} className="h-11 rounded-xl font-bold gap-2">
+                <RotateCcw className="w-4 h-4" /> Book Another
+              </Button>
+              <Button variant="outline" onClick={handleShare} className="h-11 rounded-xl font-bold gap-2">
+                <Share2 className="w-4 h-4" /> Share
+              </Button>
+            </div>
           </div>
 
           <p className="text-[11px] text-center text-muted-foreground mt-6">
-            A confirmation has been sent to <span className="font-medium text-foreground">{form.customer_email}</span>
+            Confirmation sent to <span className="font-semibold text-foreground">{form.customer_email}</span>
           </p>
         </div>
       </div>
