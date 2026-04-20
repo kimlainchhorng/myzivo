@@ -17,7 +17,7 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Your ZIVO verification code',
+  signup: 'Confirm your email',
   invite: "You've been invited",
   magiclink: 'Your login link',
   recovery: 'Reset your password',
@@ -54,7 +54,6 @@ const SAMPLE_DATA: Record<string, object> = {
     siteUrl: SAMPLE_PROJECT_URL,
     recipient: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
-    token: '123456',
   },
   magiclink: {
     siteName: SITE_NAME,
@@ -218,26 +217,12 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
-  // Force confirmation URL to point to the customer app domain (zivollc.com),
-  // not whatever Supabase Site URL is configured (which may point to the driver app).
-  const CUSTOMER_APP_URL = `https://zivollc.com`
-  let confirmationUrl = payload.data.url
-  try {
-    const original = new URL(payload.data.url)
-    const target = new URL(CUSTOMER_APP_URL)
-    original.protocol = target.protocol
-    original.host = target.host
-    confirmationUrl = original.toString()
-  } catch (e) {
-    console.warn('Could not rewrite confirmation URL host', e)
-  }
-
   // Build template props from payload.data (HookData structure)
   const templateProps = {
     siteName: SITE_NAME,
-    siteUrl: CUSTOMER_APP_URL,
+    siteUrl: `https://${ROOT_DOMAIN}`,
     recipient: payload.data.email,
-    confirmationUrl,
+    confirmationUrl: payload.data.url,
     token: payload.data.token,
     email: payload.data.email,
     newEmail: payload.data.new_email,
