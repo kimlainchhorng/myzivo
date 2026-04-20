@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CalendarIcon, ArrowLeft, Wrench, Car, User, Clock } from "lucide-react";
+import { CalendarIcon, ArrowLeft, Wrench, Car, User, Clock, CheckCircle2, Calendar as CalIcon, Phone, MapPin, UserPlus, Store as StoreIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getServiceImage } from "@/config/autoRepairServiceImages";
 
