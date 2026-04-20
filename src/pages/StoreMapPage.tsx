@@ -701,7 +701,7 @@ export default function StoreMapPage() {
                     >
                       <Store className="w-3.5 h-3.5" /> View Store
                     </button>
-                ețe   <div className="w-px bg-border/20" />
+                <div className="w-px bg-border/20" />
                     <button
                       className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
                       onClick={async (e) => {
