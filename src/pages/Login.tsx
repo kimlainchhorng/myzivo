@@ -39,15 +39,40 @@ const Login = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await signIn(email.trim(), password);
+    const trimmedEmail = email.trim();
+
+    // Check if an account exists for this email first, so we can return a precise error
+    let accountExists: boolean | null = null;
+    try {
+      const { data: precheck } = await supabase.functions.invoke("auth_precheck_login", {
+        body: { email: trimmedEmail },
+      });
+      if (precheck && typeof precheck.exists === "boolean") accountExists = precheck.exists;
+    } catch {
+      // ignore — fall back to message parsing
+    }
+
+    const { error } = await signIn(trimmedEmail, password);
     setSubmitting(false);
     if (error) {
       const msg = (error.message || "").toLowerCase();
-      if (msg.includes("invalid login") || msg.includes("invalid credentials") || msg.includes("user not found")) {
-        toast.error("You don't have an account yet. Please sign up first.", {
+      const looksLikeBadCreds =
+        msg.includes("invalid login") ||
+        msg.includes("invalid credentials") ||
+        msg.includes("user not found");
+
+      if (accountExists === false || msg.includes("user not found")) {
+        toast.error("Wrong email — no account found for this email.", {
           action: {
             label: "Sign Up",
             onClick: () => navigate(`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`),
+          },
+        });
+      } else if (accountExists === true || looksLikeBadCreds) {
+        toast.error("Wrong password — please try again.", {
+          action: {
+            label: "Forgot?",
+            onClick: () => navigate("/forgot-password"),
           },
         });
       } else {
