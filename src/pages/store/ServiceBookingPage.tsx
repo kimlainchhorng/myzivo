@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CalendarIcon, ArrowLeft, Wrench, Car, User, Clock } from "lucide-react";
+import { CalendarIcon, ArrowLeft, Wrench, Car, User, Clock, CheckCircle2, Calendar as CalIcon, Phone, MapPin, UserPlus, Store as StoreIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getServiceImage } from "@/config/autoRepairServiceImages";
 
@@ -60,11 +61,13 @@ export default function ServiceBookingPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const [store, setStore] = useState<any>(null);
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [date, setDate] = useState<Date>();
+  const [confirmation, setConfirmation] = useState<{ ref: string } | null>(null);
 
   const [form, setForm] = useState({
     product_id: "",
@@ -116,7 +119,7 @@ export default function ServiceBookingPage() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("service_bookings").insert({
+    const { data: inserted, error } = await supabase.from("service_bookings").insert({
       store_id: store.id,
       product_id: form.product_id || null,
       service_name: form.service_name,
@@ -129,18 +132,118 @@ export default function ServiceBookingPage() {
       preferred_date: format(date, "yyyy-MM-dd"),
       preferred_time: form.preferred_time,
       notes: form.notes || null,
-    });
+    }).select("id").maybeSingle();
     setSubmitting(false);
     if (error) {
       toast.error("Failed to submit booking. Please try again.");
       return;
     }
-    toast.success("Booking submitted! We'll confirm shortly.");
-    navigate(-1);
+    toast.success("Booking submitted!");
+    const ref = inserted?.id ? `BK-${String(inserted.id).slice(0, 8).toUpperCase()}` : `BK-${Date.now().toString(36).toUpperCase()}`;
+    setConfirmation({ ref });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   if (loading) return <div className="flex items-center justify-center min-h-screen"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
-  if (!store) return <div className="flex flex-col items-center justify-center min-h-screen gap-4"><p className="text-muted-foreground">Store not found</p><Button onClick={() => navigate(-1)}>Go Back</Button></div>;
+  if (!store) return <div className="flex flex-col items-center justify-center min-h-screen gap-4"><p className="text-muted-foreground">Store not found</p><Button onClick={() => navigate("/")}>Go Home</Button></div>;
+
+  /* ───── Booking Confirmation Screen ───── */
+  if (confirmation) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-background to-background dark:from-emerald-950/20 safe-area-top">
+        <div className="max-w-xl mx-auto px-4 py-10 md:py-16">
+          <div className="text-center mb-8 animate-in fade-in zoom-in-95 duration-500">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/40 mb-4">
+              <CheckCircle2 className="w-12 h-12 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <h1 className="text-2xl md:text-3xl font-black text-foreground mb-2">Booking Confirmed!</h1>
+            <p className="text-sm text-muted-foreground">
+              {store.name} has received your request and will contact you shortly to confirm.
+            </p>
+          </div>
+
+          <Card className="mb-4 shadow-lg border-emerald-100 dark:border-emerald-900/40">
+            <CardContent className="pt-6 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-border">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Confirmation #</span>
+                <span className="font-mono font-bold text-sm text-primary">{confirmation.ref}</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <Wrench className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Service</p>
+                  <p className="font-semibold text-sm">{form.service_name}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <CalIcon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">When</p>
+                  <p className="font-semibold text-sm">
+                    {date ? format(date, "EEE, MMM d, yyyy") : ""} at {form.preferred_time}
+                  </p>
+                </div>
+              </div>
+              {(form.vehicle_make || form.vehicle_model) && (
+                <div className="flex items-start gap-3">
+                  <Car className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Vehicle</p>
+                    <p className="font-semibold text-sm">{form.vehicle_year} {form.vehicle_make} {form.vehicle_model}</p>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-start gap-3">
+                <StoreIcon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Shop</p>
+                  <p className="font-semibold text-sm">{store.name}</p>
+                  {store.address && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><MapPin className="w-3 h-3" />{store.address}</p>}
+                  {store.phone && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><Phone className="w-3 h-3" />{store.phone}</p>}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {!user && (
+            <Card className="mb-4 border-primary/30 bg-primary/5">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <UserPlus className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-bold text-sm mb-1">Track your booking with a free ZIVO account</p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Get reminders, manage appointments, and book again with one tap.
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => navigate(`/auth?redirect=/store/${slug}&prefill_email=${encodeURIComponent(form.customer_email)}&prefill_phone=${encodeURIComponent(form.customer_phone)}&prefill_name=${encodeURIComponent(form.customer_name)}`)}
+                      className="rounded-lg font-bold"
+                    >
+                      Create Account
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button onClick={() => navigate(`/store/${slug}`)} className="flex-1 h-12 rounded-xl font-bold gap-2">
+              <StoreIcon className="w-4 h-4" /> Back to Shop
+            </Button>
+            <Button variant="outline" onClick={() => navigate(user ? "/account/bookings" : "/")} className="flex-1 h-12 rounded-xl font-bold">
+              {user ? "My Bookings" : "Done"}
+            </Button>
+          </div>
+
+          <p className="text-[11px] text-center text-muted-foreground mt-6">
+            A confirmation has been sent to <span className="font-medium text-foreground">{form.customer_email}</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const selectedService = services.find(s => s.name === form.service_name);
   const serviceImg = form.service_name ? (selectedService?.image_url || getServiceImage(form.service_name)) : "";
