@@ -772,7 +772,7 @@ export default function StoreMapPage() {
                     </button>
                   </div>
                 )}
-                {selectedStoreProducts.length > 0 ? (
+                {selectedStore.category !== "auto-repair" && selectedStoreProducts.length > 0 ? (
                   <>
                     <select
                       value={selectedProductId}
