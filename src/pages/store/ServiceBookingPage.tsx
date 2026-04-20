@@ -217,7 +217,7 @@ export default function ServiceBookingPage() {
                     </p>
                     <Button
                       size="sm"
-                      onClick={() => navigate(`/auth?redirect=/store/${slug}&prefill_email=${encodeURIComponent(form.customer_email)}&prefill_phone=${encodeURIComponent(form.customer_phone)}&prefill_name=${encodeURIComponent(form.customer_name)}`)}
+                      onClick={() => navigate(`/auth?redirect=${encodeURIComponent(`/store/${slug}`)}`)}
                       className="rounded-lg font-bold"
                     >
                       Create Account
