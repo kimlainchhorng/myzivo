@@ -688,10 +688,28 @@ export default function AdminBookingsTab({ storeId }: { storeId: string }) {
                               <Button size="sm" onClick={() => updateStatus(b.id, "completed")} className="gap-1.5">
                                 <Star className="h-3.5 w-3.5" /> Mark Completed
                               </Button>
+                              <Button size="sm" variant="outline" onClick={() => updateStatus(b.id, "pending")} className="gap-1.5">
+                                <AlertCircle className="h-3.5 w-3.5" /> Set Pending
+                              </Button>
                               <Button size="sm" variant="destructive" onClick={() => updateStatus(b.id, "cancelled")} className="gap-1.5">
                                 <XCircle className="h-3.5 w-3.5" /> Cancel
                               </Button>
                             </>
+                          )}
+                          {b.status === "cancelled" && (
+                            <>
+                              <Button size="sm" onClick={() => updateStatus(b.id, "confirmed")} className="gap-1.5">
+                                <CheckCircle2 className="h-3.5 w-3.5" /> Reopen & Confirm
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => updateStatus(b.id, "pending")} className="gap-1.5">
+                                <AlertCircle className="h-3.5 w-3.5" /> Reopen as Pending
+                              </Button>
+                            </>
+                          )}
+                          {b.status === "completed" && (
+                            <Button size="sm" variant="outline" onClick={() => updateStatus(b.id, "confirmed")} className="gap-1.5">
+                              <RefreshCw className="h-3.5 w-3.5" /> Reopen
+                            </Button>
                           )}
                           <Button
                             size="sm"
