@@ -218,9 +218,9 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
-  // Force confirmation URL to point to the customer app domain (hizivo.com),
+  // Force confirmation URL to point to the customer app domain (zivollc.com),
   // not whatever Supabase Site URL is configured (which may point to the driver app).
-  const CUSTOMER_APP_URL = `https://${ROOT_DOMAIN}` // https://hizivo.com
+  const CUSTOMER_APP_URL = `https://zivollc.com`
   let confirmationUrl = payload.data.url
   try {
     const original = new URL(payload.data.url)
