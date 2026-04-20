@@ -119,7 +119,7 @@ export default function ServiceBookingPage() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("service_bookings").insert({
+    const { data: inserted, error } = await supabase.from("service_bookings").insert({
       store_id: store.id,
       product_id: form.product_id || null,
       service_name: form.service_name,
@@ -132,14 +132,16 @@ export default function ServiceBookingPage() {
       preferred_date: format(date, "yyyy-MM-dd"),
       preferred_time: form.preferred_time,
       notes: form.notes || null,
-    });
+    }).select("id").maybeSingle();
     setSubmitting(false);
     if (error) {
       toast.error("Failed to submit booking. Please try again.");
       return;
     }
-    toast.success("Booking submitted! We'll confirm shortly.");
-    navigate(-1);
+    toast.success("Booking submitted!");
+    const ref = inserted?.id ? `BK-${String(inserted.id).slice(0, 8).toUpperCase()}` : `BK-${Date.now().toString(36).toUpperCase()}`;
+    setConfirmation({ ref });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   if (loading) return <div className="flex items-center justify-center min-h-screen"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
