@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X, Locate, Car, Phone } from "lucide-react";
+import { MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X, Locate, Car, Phone, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
@@ -674,9 +674,9 @@ export default function StoreMapPage() {
                   <ChevronRight className="w-4 h-4 text-primary" />
                 </div>
               </div>
-              <div className="flex border-t border-border/20">
+              <div className="flex border-t border-border/20 flex-wrap">
                 <button
-                  className="flex-1 py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
+                  className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
                   onClick={(e) => {
                     e.stopPropagation();
                     trackInitiateCheckout({
@@ -693,15 +693,24 @@ export default function StoreMapPage() {
                   <Car className="w-3.5 h-3.5" /> Ride There
                 </button>
                 <div className="w-px bg-border/20" />
-                <button
-                  className="flex-1 py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
-                  onClick={(e) => { e.stopPropagation(); navigate(`/grocery/shop/${selectedStore.slug}`); }}
-                >
-                  <Store className="w-3.5 h-3.5" /> View Store
-                </button>
+                {selectedStore.category === "auto-repair" ? (
+                  <button
+                    className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
+                    onClick={(e) => { e.stopPropagation(); navigate(`/book/${selectedStore.slug}`); }}
+                  >
+                    <Wrench className="w-3.5 h-3.5" /> Book Service
+                  </button>
+                ) : (
+                  <button
+                    className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
+                    onClick={(e) => { e.stopPropagation(); navigate(`/grocery/shop/${selectedStore.slug}`); }}
+                  >
+                    <Store className="w-3.5 h-3.5" /> View Store
+                  </button>
+                )}
                 <div className="w-px bg-border/20" />
                 <button
-                  className="flex-1 py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
+                  className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
                   onClick={async (e) => {
                     e.stopPropagation();
                     const shareUrl = buildShopDeepLink(selectedStore.slug);
@@ -724,7 +733,7 @@ export default function StoreMapPage() {
                   <>
                     <div className="w-px bg-border/20" />
                     <button
-                      className="flex-1 py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
+                      className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
                       onClick={(e) => { e.stopPropagation(); window.open(`tel:${selectedStore.phone}`, "_self"); }}
                     >
                       <Phone className="w-3.5 h-3.5" /> Call
