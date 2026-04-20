@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2, Check, CloudUpload, Wrench, Package, Stethoscope, Eye } from "lucide-react";
+import { FileText, Plus, Send, Printer, DollarSign, Trash2, Receipt, ClipboardList, ArrowLeft, ScanSearch, Loader2, Check, CloudUpload, Wrench, Package, Stethoscope, Eye, Truck, KeyRound, Car, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import AutoRepairDocPreviewDialog from "./AutoRepairDocPreviewDialog";
 
@@ -375,6 +375,43 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
             </CardContent>
           </Card>
         </div>
+
+        {/* Service Intake — how the vehicle arrives / leaves */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Truck className="w-4 h-4 text-primary" />
+              Service Intake
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {([
+                { id: "drop-off", label: "Drop Off", icon: KeyRound, desc: "Customer drops off" },
+                { id: "towing", label: "Towing", icon: Truck, desc: "Towed in" },
+                { id: "in-shop", label: "In Shop", icon: Car, desc: "Walk-in / waiting" },
+                { id: "pickup", label: "Pickup", icon: LogOut, desc: "Ready for pickup" },
+              ] as const).map(opt => {
+                const Icon = opt.icon;
+                const active = (draft as any).intakeMethod === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setDraft(d => ({ ...d, intakeMethod: opt.id } as any))}
+                    className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition-all hover:border-primary/60 hover:bg-primary/5 ${
+                      active ? "border-primary bg-primary/10 ring-2 ring-primary/20" : "border-border bg-card"
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className={`text-xs font-semibold ${active ? "text-primary" : "text-foreground"}`}>{opt.label}</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">{opt.desc}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardContent className="space-y-5 pt-6">
