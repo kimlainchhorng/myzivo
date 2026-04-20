@@ -50,6 +50,7 @@ const partnerOptions = [
 const quickLinks = [
   { icon: Settings, label: "Settings", href: "/account/settings", description: "App settings & preferences", iconColor: "text-muted-foreground", iconBg: "bg-muted/60" },
   { icon: ShoppingBag, label: "My Orders", href: "/grocery/orders", description: "Order history & tracking", iconColor: "text-blue-500", iconBg: "bg-blue-500/10" },
+  { icon: Store, label: "Shop", href: "/store-map", description: "Browse nearby stores", iconColor: "text-emerald-600", iconBg: "bg-emerald-500/10" },
   { icon: Wallet, label: "Wallet", href: "/wallet", description: "Balance & transactions", iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10" },
   { icon: Sparkles, label: "Loyalty", href: "/account/loyalty", description: "Points & tier perks", iconColor: "text-amber-500", iconBg: "bg-amber-500/10" },
   { icon: MapPin, label: "Saved Addresses", href: "/account/addresses", description: "Delivery addresses", iconColor: "text-rose-500", iconBg: "bg-rose-500/10" },
