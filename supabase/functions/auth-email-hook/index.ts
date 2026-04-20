@@ -79,6 +79,26 @@ const SAMPLE_DATA: Record<string, object> = {
   },
 }
 
+function normalizeConfirmationUrl(rawUrl: string, emailType: string): string {
+  try {
+    const parsedUrl = new URL(rawUrl)
+
+    if (emailType === 'recovery') {
+      parsedUrl.protocol = 'https:'
+      parsedUrl.hostname = ROOT_DOMAIN
+      parsedUrl.pathname = '/reset-password'
+    }
+
+    return parsedUrl.toString()
+  } catch {
+    if (emailType === 'recovery') {
+      return `https://${ROOT_DOMAIN}/reset-password`
+    }
+
+    return rawUrl
+  }
+}
+
 // Preview endpoint handler - returns rendered HTML without sending email
 async function handlePreview(req: Request): Promise<Response> {
   const previewCorsHeaders = {
@@ -222,7 +242,7 @@ async function handleWebhook(req: Request): Promise<Response> {
     siteName: SITE_NAME,
     siteUrl: `https://${ROOT_DOMAIN}`,
     recipient: payload.data.email,
-    confirmationUrl: payload.data.url,
+    confirmationUrl: normalizeConfirmationUrl(payload.data.url, emailType),
     token: payload.data.token,
     email: payload.data.email,
     newEmail: payload.data.new_email,
