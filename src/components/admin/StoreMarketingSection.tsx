@@ -32,6 +32,7 @@ interface Props {
   storeId: string;
   storeSlug?: string;
   storeName?: string;
+  storeCategory?: string;
 }
 
 /* ───── Promotion Types ───── */
@@ -104,7 +105,7 @@ function StatCard({ label, value, change, icon: Icon, color }: {
   );
 }
 
-export default function StoreMarketingSection({ storeId, storeSlug, storeName }: Props) {
+export default function StoreMarketingSection({ storeId, storeSlug, storeName, storeCategory }: Props) {
   const qc = useQueryClient();
   const [activeSubTab, setActiveSubTab] = useState("overview");
   const [promoDialogOpen, setPromoDialogOpen] = useState(false);
@@ -171,7 +172,9 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName }:
 
   const slug = storeSlug || storeProfile?.slug || "";
   const name = storeName || storeProfile?.name || "Store";
+  const isAutoRepair = storeCategory === "auto-repair";
   const storeUrl = slug ? `https://hizivo.com/store/${slug}` : "";
+  const bookingUrl = slug ? `https://hizivo.com/book/${slug}` : "";
 
   /* ───── Analytics computed from posts ───── */
   const analytics = useMemo(() => {
