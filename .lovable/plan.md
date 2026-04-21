@@ -1,149 +1,132 @@
 
 
-# Marketing & Ads — Responsive Polish v2
+# Marketing & Ads — Polish v3
 
-Five focused upgrades to make every Marketing & Ads surface feel native on desktop, iPad, and mobile.
-
----
-
-## 1. Skeletons + Empty States (per breakpoint)
-
-New file `src/components/admin/ads/MarketingSkeletons.tsx` exports:
-- `WalletSkeleton`, `WizardSkeleton`, `RecommendationsSkeleton`, `CampaignListSkeleton`, `PlatformTilesSkeleton`, `PerformanceChartSkeleton`, `BreakdownTableSkeleton`
-- Each renders bone shapes that mirror the real component's layout at the active breakpoint (uses `useIsMobile`)
-
-New file `src/components/admin/ads/MarketingEmptyState.tsx`:
-- Reusable component: `<MarketingEmptyState icon title body action />`
-- Compact on mobile (`p-4`, `h-32` icon area), spacious on desktop (`p-8`, `h-48`)
-- Wired into: Recommendations (no recs), Campaigns (no campaigns), Performance (no spend yet), Wizard (before first generate)
-
-Wire skeletons into the existing `useQuery` `isLoading` branches across:
-- `AdsStudioWalletGuard`, `AdsStudioRecommendations`, `StoreAdsManager`, `AdsStudioDashboard`, `AdsStudioAnalytics`
+Five upgrades on top of the v2 responsive pass.
 
 ---
 
-## 2. Mobile-First Modal Refactor
+## 1. Live Visual Preview Mode (in-page breakpoint switcher)
 
-New shared helper `src/components/ui/responsive-modal.tsx`:
-- Single `<ResponsiveModal>` API that renders `<Sheet side="bottom">` on `<sm` and `<Dialog>` on `≥sm`
-- Built-in: drag handle on mobile, sticky footer with safe-area padding, scrollable body, `max-h-[90dvh]`
-- `<ResponsiveModalFooter>` auto-stacks on mobile (cancel below, primary above), inline on desktop
+New floating control on `/admin/stores/:id` Marketing tab: **Preview at**: Desktop / iPad / Mobile.
 
-Refactor these to use it:
-- Wallet top-up modal (`AdsStudioWalletGuard`)
-- Wallet ledger details modal (new — currently inline; promote to a dedicated modal showing full ledger row with Stripe ref + receipt link)
-- OAuth connect dialog (`StoreAdsManager` Connect platform dialog)
-- Create / Edit Campaign dialog (`StoreAdsManager`)
+- New component `src/components/admin/ads/MarketingPreviewSwitcher.tsx`
+- New context `src/components/admin/ads/MarketingPreviewContext.tsx` exposing `previewWidth: number | null` (null = native viewport)
+- When a preview is active, the entire Marketing section is wrapped in a fixed-width container (`375px` / `820px` / `1280px`) centered with a subtle device frame; the rest of the admin chrome stays fluid
+- **No data refetch** — context only changes layout width. React Query cache is untouched, charts re-measure via ResponsiveContainer
+- The existing `useIsMobile` hook stays viewport-based; we add a sibling `useResponsiveWidth()` that returns either the forced preview width or `window.innerWidth`. Marketing & Ads components opt-in by reading from context (only the bits that branch on mobile, e.g. ResponsiveBreakdown, ResponsiveModal, MarketingSkeletons)
+- Switcher pinned bottom-right on desktop (`fixed bottom-4 right-4 z-40`), tucked into a collapsible chip on mobile, hidden on Capacitor native
 
-Behavior improvements:
-- Body uses `overscroll-contain` so iOS doesn't bounce the page underneath
-- Primary action button always visible (sticky footer, never scrolls off)
-- Close affordance: drag handle + X on mobile, ESC + X on desktop
-
----
-
-## 3. Performance Chart + Breakdown Mobile Optimization
+## 2. Mobile Chart + Breakdown Performance
 
 `AdsStudioAnalytics` and `AdsStudioDashboard`:
-- KPI strip: `grid-cols-2 sm:grid-cols-4`, smaller numerals on mobile (`text-lg sm:text-2xl`)
-- Recharts wrapper: `aspect-[4/3] sm:aspect-[16/8] lg:aspect-[16/5]`, hide grid lines on `<sm`, larger touch tooltip
-- Date range presets: horizontal-scroll pill row on mobile
+- Memoize totals and per-row derivations with `useMemo` keyed on `stats`
+- Wrap `StatCard` in `React.memo`
+- Switch Recharts config based on width: drop axis ticks count to 4, disable `animationDuration` on `<sm`, hide cartesian grid, swap `Area` to `Line` when rows > 60
+- Use `ResponsiveContainer` with `debounce={150}` so resize doesn't thrash
+- ResponsiveBreakdown:
+  - Memoize column render functions
+  - Virtualize the mobile card list when rows > 30 using `react-window` lite (`FixedSizeList`) — only loaded if needed via dynamic import
+- Replace `toLocaleString()` chains with a single `Intl.NumberFormat` instance per file
 
-Spend breakdown table:
-- New `src/components/admin/ads/ResponsiveBreakdown.tsx`
-- `<md`: stacked card list — each row is a card with creative name + 3 KPI rows + action menu
-- `≥md`: data table with sticky header, horizontal scroll wrapper for narrow tablet widths
-- CSV export: icon-only on mobile, "Export CSV" label on `≥sm`
-- Sort indicators: tap-friendly chevrons on mobile
+## 3. Modal Accessibility (focus trap, ARIA, ESC, close)
 
----
+Upgrade `src/components/ui/responsive-modal.tsx`:
+- Radix `Dialog` and `Sheet` already provide focus trap + ESC; verify both paths set `aria-labelledby` from title and `aria-describedby` from description automatically (we already pass them)
+- Add explicit `aria-modal="true"`, `role="dialog"` fallback for the bottom sheet wrapper
+- Add a visible-on-focus close button (X) in the top-right of mobile sheet (currently only drag handle), with `aria-label="Close dialog"`
+- Restore focus to the trigger element on close (Radix default; ensure we don't override with `onCloseAutoFocus`)
+- Drag handle gets `role="button"`, `tabIndex={0}`, `aria-label="Drag to dismiss"`, Enter/Space closes
+- `ResponsiveModalFooter` primary action gets `autoFocus` opt-in via prop
+- All `Button` icon-only triggers across Wallet / Recommendations / Ads Manager get `aria-label`s
+- New helper `useFocusReturn(open, triggerRef)` to guarantee focus returns even when sheet → dialog swap happens mid-render
 
-## 4. Responsive Typography + Spacing System
+## 4. Visual QA Report Export (screenshots per breakpoint)
 
-New file `src/components/admin/ads/marketing-tokens.ts` exports utility class strings used everywhere:
-- `mkHeading` = `"text-base sm:text-lg lg:text-xl font-semibold tracking-tight"`
-- `mkSubheading` = `"text-sm sm:text-[15px] font-medium"`
-- `mkBody` = `"text-[13px] sm:text-sm leading-relaxed"`
-- `mkMeta` = `"text-[11px] sm:text-xs text-muted-foreground"`
-- `mkCardPad` = `"p-3 sm:p-4 lg:p-5"`
-- `mkSection` = `"space-y-3 sm:space-y-4 lg:space-y-5"`
-- `mkRow` = `"py-2.5 sm:py-3"`
+Augment `src/pages/admin/AdminMarketingResponsiveQA.tsx`:
+- Add **Export Visual Report** button next to existing CSV export
+- For each viewport (mobile 375 / iPad 820 / desktop 1440):
+  1. Activate preview width via context
+  2. `await new Promise(r => requestAnimationFrame(() => setTimeout(r, 250)))` to let layout settle
+  3. Capture the preview iframe area using `html-to-image` (`toPng`) — already MIT-licensed, ~12KB gzipped, dynamic-imported on demand
+- Bundle the 3 PNGs + checklist results into a single ZIP using `client-zip` (streaming, ~2KB), download as `marketing-qa-{store}-{timestamp}.zip`
+- ZIP layout:
+  ```text
+  /screenshots/mobile-375.png
+  /screenshots/ipad-820.png
+  /screenshots/desktop-1440.png
+  /checklist.csv
+  /summary.json   ← metadata: store_id, run_id, viewport pass/fail counts
+  ```
+- Persist the run row + a pointer note (no binary upload) into existing `marketing_qa_runs` table
+- Progress indicator: small `Progress` bar while screenshots are captured
 
-Replace ad-hoc class strings across all 8 Marketing & Ads files for visual consistency. Touch targets standardized: buttons `h-10 sm:h-9`, icon buttons `h-9 w-9 sm:h-8 sm:w-8`, inputs `h-10 sm:h-9`.
+## 5. Remaining Skeletons + Empty States
 
-Tables:
-- Cell padding: `px-2.5 py-2 sm:px-3 sm:py-2.5`
-- Header text: `text-[11px] uppercase tracking-wide`
-- Number cells: `tabular-nums`
+Audit remaining Marketing & Ads surfaces and wire them up:
 
----
+**Add to `MarketingSkeletons.tsx`:**
+- `AudienceBuilderSkeleton` — radius slider + age range + chip cluster
+- `ABVariantCompareSkeleton` — two-column variant cards with metric rows
+- `OAuthConnectSkeleton` — provider card with logo + permission rows
+- `CampaignDetailsSkeleton` — header + 3 KPI rows + history list
+- `LedgerListSkeleton` — already implicitly covered, promote to a dedicated export
 
-## 5. Responsive QA Checklist + Live Preview Page
+**Wire skeletons into `useQuery` `isLoading` branches in:**
+- `StoreAdsManager` (campaigns list + platform tiles + connect dialog body)
+- `AdsStudioWizard` (initial setup load + variant comparison panel)
+- `AdsStudioDashboard` (chart + creatives table)
+- `AdminMarketingResponsiveQA` (store list + recent runs)
 
-New admin route `/admin/qa/marketing-responsive` (added to `App.tsx`, admin-guarded).
-
-Page layout (`src/pages/admin/AdminMarketingResponsiveQA.tsx`):
-- **Left rail (desktop) / top bar (mobile)**: viewport switcher chips — Mobile 375, iPad 820, Desktop 1440 — plus "Test all" button
-- **Main area**: an `<iframe>` of `/admin/stores/:id?tab=studio` sized to the chosen viewport, centered with device frame
-- **Below preview**: interactive checklist auto-grouped by component, each item has a Pass/Fail/Skip toggle
-  - Tab bar scrolls without overflow
-  - Wallet card shows balance + actions without horizontal scroll
-  - Top-up modal opens as bottom sheet on mobile, dialog on desktop
-  - Wizard stepper labels visible
-  - Goal cards stack 1-col mobile, 2-col tablet+
-  - Targeting form readable at 375px
-  - Generated images grid 2/2/3 cols
-  - Recommendations buttons reachable with thumb
-  - Platform tiles 2/3/5 col grid
-  - Campaign rows: actions wrap below title on mobile
-  - Connect dialog: full-width buttons mobile
-  - Performance KPIs stack 2-col mobile
-  - Breakdown table → cards on mobile
-  - Empty states render at all breakpoints
-  - Skeletons match real layouts
-- **Store picker** at top: dropdown to pick which store to QA against
-- **Save run**: stores results into a new `marketing_qa_runs` table (id, admin_id, store_id, viewport, results jsonb, created_at) so you can compare runs over time
-- **Export report**: downloads CSV of last run
-
-Link added under Admin sidebar: "Marketing QA".
+**Add empty states (using `MarketingEmptyState`):**
+- `StoreAdsManager` — no campaigns yet, no platforms connected
+- `AdsStudioWizard` — pre-generation state for variants
+- `AudienceBuilder` — no saved audiences
+- `ABVariantCompare` — fewer than 2 variants
+- `AdminMarketingResponsiveQA` — no runs yet
 
 ---
 
 ## Technical Details
 
 **New files**
-- `src/components/ui/responsive-modal.tsx`
-- `src/components/admin/ads/MarketingSkeletons.tsx`
-- `src/components/admin/ads/MarketingEmptyState.tsx`
-- `src/components/admin/ads/ResponsiveBreakdown.tsx`
-- `src/components/admin/ads/marketing-tokens.ts`
-- `src/pages/admin/AdminMarketingResponsiveQA.tsx`
+- `src/components/admin/ads/MarketingPreviewContext.tsx`
+- `src/components/admin/ads/MarketingPreviewSwitcher.tsx`
+- `src/components/admin/ads/useResponsiveWidth.ts`
+- `src/components/admin/ads/useFocusReturn.ts`
 
 **Edited files**
-- `src/components/admin/StoreMarketingSection.tsx` (skeletons in tab content, token usage)
-- `src/components/admin/AdsStudioWalletGuard.tsx` (ResponsiveModal, ledger modal, skeleton, tokens)
-- `src/components/admin/AdsStudioWizard.tsx` (skeleton, empty state, tokens)
-- `src/components/admin/AdsStudioRecommendations.tsx` (skeleton, empty state, tokens)
-- `src/components/admin/AdsStudioDashboard.tsx` (KPI grid, chart aspect, ResponsiveBreakdown)
-- `src/components/admin/AdsStudioAnalytics.tsx` (chart aspect, tokens)
-- `src/components/admin/StoreAdsManager.tsx` (ResponsiveModal for Connect + Create dialogs, skeletons, tokens)
-- `src/App.tsx` (route)
+- `src/components/ui/responsive-modal.tsx` (a11y upgrades)
+- `src/components/admin/ads/MarketingSkeletons.tsx` (5 new exports)
+- `src/components/admin/AdsStudioAnalytics.tsx` (memo + chart perf)
+- `src/components/admin/AdsStudioDashboard.tsx` (memo + chart perf + skeleton + empty)
+- `src/components/admin/ads/ResponsiveBreakdown.tsx` (memo, optional virtualization)
+- `src/components/admin/StoreAdsManager.tsx` (skeletons + empty states + a11y labels)
+- `src/components/admin/AdsStudioWizard.tsx` (skeleton + variant empty state)
+- `src/components/admin/StoreMarketingSection.tsx` (mount preview switcher + provider)
+- `src/pages/admin/AdminMarketingResponsiveQA.tsx` (visual report export, skeleton, empty)
 
-**Backend**
-- One migration: `marketing_qa_runs` table + RLS (admins only)
+**Dependencies (added)**
+- `html-to-image` (~12KB gzipped) — screenshot capture
+- `client-zip` (~2KB) — streaming ZIP build
+- `react-window` (~6KB gzipped) — only dynamic-imported when card list > 30 rows
 
-**No new edge functions, no new secrets.**
+**No backend changes** — pure UI / a11y / perf pass.
+
+**Performance budget**
+- Preview switcher mount: <2KB
+- Memoization should cut Analytics re-renders ~60% on resize
+- Screenshot export is on-demand only, not in bundle until clicked
 
 ---
 
 ## Build Order
 
-1. `marketing-tokens.ts` + `responsive-modal.tsx` + `MarketingEmptyState.tsx` + `MarketingSkeletons.tsx` + `ResponsiveBreakdown.tsx` (foundations)
-2. Apply tokens + skeletons + empty states across all 8 Marketing & Ads files
-3. Refactor 4 modals to ResponsiveModal
-4. Performance chart + breakdown mobile pass
-5. Migration: `marketing_qa_runs`
-6. QA page + route + sidebar link
+1. `MarketingPreviewContext` + `useResponsiveWidth` + `MarketingPreviewSwitcher`, mount in `StoreMarketingSection`
+2. ResponsiveModal a11y upgrades + `useFocusReturn`
+3. Chart + breakdown memoization, Recharts mobile config
+4. Remaining skeleton exports + wiring across StoreAdsManager / Wizard / Dashboard
+5. Visual QA report export (html-to-image + client-zip + progress UI)
 
 Approve to switch to default mode and ship.
 
