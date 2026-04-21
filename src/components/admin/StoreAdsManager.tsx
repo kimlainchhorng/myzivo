@@ -519,7 +519,7 @@ export default function StoreAdsManager({ storeId }: Props) {
                   onResume={(c) => toggleStatus.mutate({ id: c.id, status: "active" })}
                   onLaunch={(c) => launchCampaign.mutate(c)}
                   onDuplicate={(c) => duplicateCampaign.mutate(c)}
-                  onClick={openEdit}
+                  onClick={(c) => setDetailCampaign(c)}
                 />
               ))}
             </div>
