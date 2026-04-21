@@ -1,79 +1,157 @@
 
 
-# Next-up: Marketing & Ads — recommended follow-ups
+# Marketing & Ads — Phase 3: Big additions
 
-The Ads tab now has a stat strip, dense platform tiles, onboarding checklist, campaign rows with sparklines, unified connect dialog, and a 4-step wizard. Here are the highest-leverage things still missing — pick any combination.
+The Ads tab now has stat strip, platforms, checklist, wallet, insights, campaign rows, detail drawer, and a 4-step wizard. The **Marketing** sibling tab is still on the older flat layout, and several high-value workflows are missing from both. This phase brings Marketing to parity and adds the next tier of pro features.
 
-## 1. Campaign detail drawer (highest impact)
-Tapping a campaign row currently does nothing useful. Add a `ResponsiveModal` drawer that shows:
-- Full creative preview (headline / body / CTA / image at 1:1, 9:16, 1.91:1 toggle)
-- KPI grid: Spend, Impressions, Clicks, CTR, CPC, Conversions, CPA, ROAS
-- 14-day line chart (clicks + spend dual-axis) using existing Recharts
-- Delivery breakdown by platform (mini bar chart)
-- Audit log: status changes, edits, who/when
-- Actions: Pause/Resume, Edit (re-opens wizard pre-filled), Duplicate, Archive, Delete
+---
 
-## 2. Wallet & billing surface
-The checklist has a "billing" step but there's no in-tab wallet view. Add:
-- Compact wallet card above the checklist: balance, pending charges, low-balance warning, "Add funds" CTA
-- Auto-reload toggle (recharge $X when balance < $Y)
-- Last 5 transactions inline, "View all" → existing `AdsStudioWalletGuard` page
-- Spend pacing indicator: "You'll run out in ~6 days at current pace"
+## A. Marketing tab full parity (mirrors Ads architecture)
 
-## 3. Marketing tab parity
-The sibling **Marketing** tab (campaigns, push, email, promo codes) is still on the older flat layout. Apply the same treatment:
-- Aggregate stat strip (sent, opened, clicked, conversions, revenue attributed)
-- Per-channel tiles (Push / Email / SMS / In-app) with status + last-sent
-- Unified campaign list with the same filter / search / sort / sparkline pattern
-- Reuse `useStoreAdsOverview` pattern → new `useStoreMarketingOverview` hook
+Apply the entire Ads pattern to the Marketing tab (Push / Email / SMS / In-app / Promo codes):
 
-## 4. Insights & recommendations panel
-A small AI-style recommendations strip below the stat strip:
-- "Your Meta CTR is 2.3× higher than Google — shift budget?"
-- "Campaign 'Spring Sale' has spent 80% with 3 days left"
-- "No active campaigns — your competitors run an average of 2.4"
-- Each card has a one-tap action (Boost budget / Extend / Create campaign)
-- Powered by simple client-side rules over the overview data (no backend)
+1. **`useStoreMarketingOverview(storeId)` hook** — single parallel fetch returning `{ stats, channels, campaigns, segments, templates }` with realtime on `marketing_campaigns`.
+2. **`MarketingStatStrip`** — Sent · Delivered · Opened · Clicked · Conversions · Revenue attributed (6 tiles, scrollable on mobile, 7-day deltas).
+3. **`MarketingChannelTile`** — Push / Email / SMS / In-app — each shows status (configured / needs sender ID / disabled), last-sent time, 7d volume sparkline, and quick "Send test" action.
+4. **`MarketingCampaignRow`** — same row pattern as Ads with channel icon stack, audience size, open/click rates, status pill, sparkline, and overflow menu.
+5. **Filters** — All · Draft · Scheduled · Sending · Sent · Failed · A/B + search + sort.
+6. **Sticky FAB** — "+ New Campaign" → opens new wizard.
 
-## 5. Creative library
-Most operators reuse images. Add a `Creatives` sub-tab inside Ads:
-- Grid of previously uploaded ad images with usage count
-- Upload / delete / rename
-- Wizard "Creative" step gets a "Pick from library" button alongside upload
-- Stored in existing `user-posts` bucket under `ads/{store_id}/`
+## B. Marketing campaign wizard (5-step)
 
-## 6. Audience presets manager
-The wizard has Local / Lookalike / Retarget / Custom but no way to save a custom audience. Add:
-- "Saved audiences" list in a small section under platforms grid
-- Create/edit audience: name, geo radius, age range, interests (chips), exclusions
-- Reusable across campaigns; appears as a chip in wizard step 2
+Replaces the existing campaign form:
 
-## 7. Schedule & dayparting
-Wizard step 4 currently has only date range. Add:
-- Dayparting grid (7×24 cells, click-drag to enable hours)
-- Timezone selector (defaults to store TZ)
-- "Always on" / "Custom schedule" toggle
-- Stored as `schedule_json` on the campaign row
+1. **Channel** — Push / Email / SMS / In-app / Multi-channel (sequential)
+2. **Audience** — Pick saved segment OR build inline (filters: tags, last-order date, total spend, location, language)
+3. **Content** — Channel-specific composer: subject + body for email (rich text), title + body + deep-link for push, 160-char SMS with cost estimator, in-app card builder. Live device preview on the right (iPhone frame on desktop).
+4. **Schedule** — Send now / Schedule once / Recurring (cron-like) / Triggered (event-based: cart abandon, first order, birthday, inactivity ≥ N days)
+5. **Review & Send** — Audience size, estimated cost (SMS), spam-score check (email), confirmation toggle.
 
-## 8. A/B test harness
-- New "Variants" toggle in wizard step 3 → splits creative into A/B
-- Campaign row shows variant winner badge once statistical significance is reached
-- Detail drawer adds Variants tab with side-by-side performance
+## C. Audience segments manager (shared by Ads + Marketing)
 
-## 9. Realtime polish
-- Toast when a campaign status flips (approved / rejected / paused by system)
-- Pulsing dot on the Ads tab badge while a campaign is in `pending_review`
-- Skeleton → content cross-fade (currently snaps)
+New `Segments` sub-section under both tabs (single source of truth):
 
-## 10. Empty-state and first-run polish
-- When zero platforms connected, the platform grid gets a subtle "Start with Meta" suggestion card (most common first connect)
-- When zero campaigns, the wizard auto-opens on first tab visit (one-time, dismissible)
-- Onboarding checklist step 4 ("Submit for review") shows a sample campaign preview if user is stuck
+- List of saved segments with member count and last-refreshed time
+- Builder: AND/OR groups of conditions over `profiles`, `orders`, `events`
+- Live count preview as user adds conditions
+- "Refresh now" button (re-runs the segment query)
+- Used as audience preset in both Ads wizard and Marketing wizard
+
+## D. Template library (shared)
+
+`Templates` sub-section: reusable creatives for Ads + Marketing.
+
+- Email templates (HTML + variables: `{{first_name}}`, `{{order_total}}`)
+- Push templates (title/body/deep-link)
+- SMS templates with character counter and cost
+- Ad creatives (already in plan #5 from previous round — unify here)
+- Each template tracks usage count and last-used campaign
+- Stored in new `marketing_templates` table
+
+## E. Promo code engine
+
+Promo codes are mentioned but not deeply built. Add:
+
+- Promo code list with code, type (% / flat / free shipping), redemptions, revenue, status
+- Bulk generator (e.g. 500 unique codes for a campaign)
+- Per-customer limits, min order value, expiry, product/category restrictions
+- Auto-attach to a Marketing campaign (push/email includes the code)
+- Redemption analytics chart on the detail drawer
+
+## F. Automations / triggered flows (the big one)
+
+A simple visual flow builder for "if X then send Y":
+
+- Trigger nodes: Cart abandoned (Nm), First order, No order in N days, Birthday, Loyalty tier change, Wishlist price drop
+- Action nodes: Send push / Send email / Send SMS / Apply promo / Add to segment / Wait N hours
+- Linear left-to-right canvas (no full graph editor — keep it simple)
+- Live counter: "37 customers in this flow right now"
+- Pause / resume / archive per automation
+- Stored in new `marketing_automations` table with `trigger_json` + `steps_json`
+
+## G. Cross-tab unified analytics
+
+A new `Performance` sub-tab visible from both Ads and Marketing:
+
+- Date range picker (7d / 30d / 90d / custom)
+- Revenue attribution: Ads vs Marketing vs Organic, stacked area chart
+- Funnel: Impression → Click → Add to cart → Purchase
+- Top campaigns table (cross-channel, sortable by ROAS / revenue / CTR)
+- Channel mix pie chart
+- Export to CSV button
+
+## H. Polish across both tabs
+
+- **Realtime status toasts** — campaign approved/rejected/sent
+- **Pulsing badge** on tab when something needs attention (pending review, low wallet, failed send)
+- **Skeleton → content cross-fade** (currently snaps)
+- **Empty-state suggestions** — "Try a Welcome push to new customers" with one-tap create
+- **Mobile FAB safe-area** respected throughout
+- **A11y** — wizard steps `aria-live`, segment builder keyboard nav, charts `role="img"` with alt summary
+
+---
+
+## Database additions (new tables)
+
+- `marketing_segments` — `id, store_id, name, conditions_jsonb, member_count, last_refreshed_at`
+- `marketing_templates` — `id, store_id, channel, name, subject, body, variables_jsonb, usage_count`
+- `marketing_automations` — `id, store_id, name, trigger_json, steps_json, status, enrolled_count`
+- `marketing_promo_codes` — `id, store_id, code, type, value, min_order_cents, max_redemptions, redemption_count, expires_at, campaign_id`
+- `marketing_campaign_events` — `id, campaign_id, user_id, event_type (sent/delivered/opened/clicked/converted), revenue_cents, created_at` (for attribution)
+
+All RLS-scoped to store owners + admins. No changes to existing tables.
+
+---
+
+## Files
+
+**Create — hooks**
+- `src/hooks/useStoreMarketingOverview.ts`
+- `src/hooks/useMarketingSegments.ts`
+- `src/hooks/useMarketingTemplates.ts`
+- `src/hooks/useMarketingAutomations.ts`
+- `src/hooks/useMarketingPromoCodes.ts`
+- `src/hooks/useUnifiedPerformance.ts`
+
+**Create — components (`src/components/admin/marketing/`)**
+- `MarketingStatStrip.tsx`
+- `MarketingChannelTile.tsx`
+- `MarketingCampaignRow.tsx`
+- `MarketingCampaignDetailDrawer.tsx`
+- `CreateMarketingCampaignWizard.tsx` (5-step)
+- `SegmentsManager.tsx` + `SegmentBuilder.tsx`
+- `TemplatesLibrary.tsx` + `TemplateEditor.tsx`
+- `PromoCodesManager.tsx` + `PromoCodeBuilder.tsx`
+- `AutomationsBuilder.tsx` + `AutomationCanvas.tsx` + `AutomationNode.tsx`
+- `UnifiedPerformancePanel.tsx`
+
+**Edit**
+- `src/components/admin/StoreMarketingManager.tsx` — full restructure, mirror StoreAdsManager
+- `src/components/admin/StoreAdsManager.tsx` — add Segments/Templates entry points + Performance link
+- `src/lib/marketing.ts` — replace stubs with real Supabase calls
+- `src/hooks/useMarketing.ts` — point to new tables, add segment/template/automation queries
+
+---
+
+## Build order
+
+1. Database migration (5 new tables + RLS + indexes)
+2. `useStoreMarketingOverview` + flesh out `src/lib/marketing.ts`
+3. `MarketingStatStrip` + channel tiles + campaign rows + filters/FAB → restructure `StoreMarketingManager`
+4. `CreateMarketingCampaignWizard` (5-step with live preview)
+5. `MarketingCampaignDetailDrawer` (mirrors Ads drawer)
+6. `SegmentsManager` + builder (shared, mounted in both tabs)
+7. `TemplatesLibrary` + editor (shared)
+8. `PromoCodesManager` + bulk generator
+9. `AutomationsBuilder` (canvas + nodes + enrollment counter)
+10. `UnifiedPerformancePanel` (cross-tab analytics with CSV export)
+11. Realtime toasts, pulsing badges, cross-fade skeletons, a11y sweep
 
 ---
 
 ## Recommendation
-If you only want one: **#1 Campaign detail drawer** — it unlocks the value of every other improvement (no point in better stats if you can't drill in). After that, **#2 Wallet surface** + **#4 Insights panel** give the biggest perceived "smart product" jump for the smallest build.
 
-Tell me which to build (any combination, or "all of them") and I'll switch to default mode and ship.
+Biggest perceived jump for least effort: **A + B + C** (Marketing parity + wizard + segments). That alone makes Marketing feel like a real product. **F (Automations)** is the "wow" feature — operators will remember this one. **G (Unified Performance)** is what closes deals with bigger merchants.
+
+Reply with which letters to build (e.g. "A B C", "all of them", "A B C F", or "everything except F").
 
