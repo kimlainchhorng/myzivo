@@ -2,14 +2,13 @@
  * AdsStudioDashboard — Creative performance charts, winner history, and budget pacing.
  * Combines: (B) Performance dashboard + (C) Budget caps & spend pacing per platform.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +18,12 @@ import {
   BarChart, Bar, Legend,
 } from "recharts";
 import { Trophy, TrendingUp, DollarSign, Gauge, Save, Loader2, AlertTriangle } from "lucide-react";
+import { PerformanceChartSkeleton, BreakdownTableSkeleton, LedgerListSkeleton } from "@/components/admin/ads/MarketingSkeletons";
+import MarketingEmptyState from "@/components/admin/ads/MarketingEmptyState";
+import { useIsMobilePreview } from "@/components/admin/ads/useResponsiveWidth";
+
+const usdFormatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+const numFormatter = new Intl.NumberFormat("en-US");
 
 interface Props { storeId: string }
 type Platform = "google" | "meta" | "tiktok" | "youtube" | "all";

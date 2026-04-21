@@ -16,6 +16,8 @@ import {
   Sparkles, Target, DollarSign, Wand2, Loader2, Check, Copy,
   Facebook, Instagram, Music2, Youtube, Search as GoogleIcon, Download, ExternalLink, Image as ImageIcon, Video,
 } from "lucide-react";
+import { WizardSkeleton } from "@/components/admin/ads/MarketingSkeletons";
+import MarketingEmptyState from "@/components/admin/ads/MarketingEmptyState";
 
 interface Props {
   storeId: string;
