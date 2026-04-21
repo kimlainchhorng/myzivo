@@ -416,7 +416,7 @@ export default function StoreAdsManager({ storeId }: Props) {
 
       {/* Connect dialog */}
       <Dialog open={!!connectPlatform} onOpenChange={(o) => !o && setConnectPlatform(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-[calc(100vw-1.5rem)] sm:w-full max-h-[90vh] overflow-y-auto">
           {connectPlatform && (() => {
             const p = PLATFORMS.find((x) => x.id === connectPlatform)!;
             const Icon = p.icon;
@@ -482,7 +482,7 @@ export default function StoreAdsManager({ storeId }: Props) {
 
       {/* Create / Edit Campaign dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg w-[calc(100vw-1.5rem)] sm:w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit Campaign" : "New Campaign"}</DialogTitle>
           </DialogHeader>
@@ -493,7 +493,7 @@ export default function StoreAdsManager({ storeId }: Props) {
             </div>
             <div>
               <Label className="text-xs">Platforms</Label>
-              <div className="grid grid-cols-5 gap-1.5 mt-1">
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 mt-1">
                 {PLATFORMS.map((p) => {
                   const Icon = p.icon;
                   const selected = form.platforms.includes(p.id);
@@ -502,7 +502,7 @@ export default function StoreAdsManager({ storeId }: Props) {
                       key={p.id}
                       type="button"
                       onClick={() => togglePlatform(p.id)}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition ${selected ? "border-primary bg-primary/5" : "border-border"}`}
+                      className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition active:scale-95 touch-manipulation ${selected ? "border-primary bg-primary/5" : "border-border"}`}
                     >
                       <Icon className={`w-4 h-4 ${p.color}`} />
                       <span className="text-[10px]">{p.label.split(" ")[0]}</span>
@@ -550,9 +550,9 @@ export default function StoreAdsManager({ storeId }: Props) {
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-            <Button onClick={() => saveCampaign.mutate()} disabled={!form.name || form.platforms.length === 0 || saveCampaign.isPending}>
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2 sm:gap-0">
+            <Button variant="outline" className="w-full sm:w-auto h-10" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button className="w-full sm:w-auto h-10" onClick={() => saveCampaign.mutate()} disabled={!form.name || form.platforms.length === 0 || saveCampaign.isPending}>
               {saveCampaign.isPending && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
               {editing ? "Save" : "Create draft"}
             </Button>
