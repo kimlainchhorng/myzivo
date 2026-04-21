@@ -130,14 +130,16 @@ export default function StoreAdsManager({ storeId }: Props) {
     onError: (e: any) => toast.error(e.message),
   });
 
-  // Real OAuth: Meta (FB + IG). Other platforms still fall back to manual entry.
+  // Real OAuth: Meta (FB + IG) and Google Ads. Other platforms fall back to manual entry / waitlist.
   const oauthMutation = useMutation({
     mutationFn: async (platform: Platform) => {
-      if (platform !== "meta" && platform !== "instagram") {
-        throw new Error(`${platform} OAuth not yet enabled. Use manual entry below.`);
-      }
       const returnUrl = `${window.location.origin}/connect/callback`;
-      const { data, error } = await supabase.functions.invoke("meta-oauth-start", {
+      let fnName: string;
+      if (platform === "meta" || platform === "instagram") fnName = "meta-oauth-start";
+      else if (platform === "google") fnName = "google-ads-oauth-start";
+      else throw new Error(`${platform} OAuth not yet enabled. Use manual entry below.`);
+
+      const { data, error } = await supabase.functions.invoke(fnName, {
         body: { store_id: storeId, platform, return_url: returnUrl },
       });
       if (error) throw error;
@@ -437,6 +439,18 @@ export default function StoreAdsManager({ storeId }: Props) {
                         ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         : <Facebook className="w-4 h-4 mr-2" />}
                       Continue with Facebook
+                    </Button>
+                  )}
+                  {p.id === "google" && (
+                    <Button
+                      className="w-full bg-[#4285F4] hover:bg-[#3367d6] text-white"
+                      onClick={() => oauthMutation.mutate(p.id)}
+                      disabled={oauthMutation.isPending}
+                    >
+                      {oauthMutation.isPending
+                        ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        : <Google className="w-4 h-4 mr-2" />}
+                      Continue with Google
                     </Button>
                   )}
                   <div className="p-3 rounded-lg bg-muted text-xs leading-relaxed">
