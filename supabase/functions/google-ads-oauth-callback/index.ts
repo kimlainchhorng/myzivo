@@ -80,7 +80,23 @@ Deno.serve(async (req) => {
     );
     if (upErr) throw upErr;
 
-    return back("connected=google");
+    // Mirror into legacy store_ad_accounts so existing UI pills show "connected"
+    await admin.from("store_ad_accounts").upsert(
+      {
+        store_id: stateRow.store_id,
+        platform: "google",
+        status: "connected",
+        access_token: tokens.access_token,
+        token_expires_at: expiresAt,
+        scopes: tokens.scope ?? null,
+        display_name: accountName,
+        connected_at: new Date().toISOString(),
+        connected_by: stateRow.user_id,
+      },
+      { onConflict: "store_id,platform" }
+    );
+
+    return back(`platform=google&status=ok&store_id=${stateRow.store_id}`);
   } catch (e) {
     return back(`error=${encodeURIComponent((e as Error).message)}`);
   }
