@@ -195,70 +195,69 @@ export default function AdsStudioDashboard({ storeId }: Props) {
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        {[
-          { label: "Spend", value: fmtUsd(totals.spend), icon: DollarSign },
-          { label: "Impressions", value: totals.impressions.toLocaleString(), icon: TrendingUp },
-          { label: "CTR", value: `${totals.ctr.toFixed(2)}%`, icon: Gauge },
-          { label: "CPC", value: fmtUsd(totals.cpc), icon: DollarSign },
-        ].map((k) => (
-          <Card key={k.label}>
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground">{k.label}</span>
-                <k.icon className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
-              <p className="text-lg font-bold mt-1">{k.value}</p>
-            </CardContent>
-          </Card>
-        ))}
+        <KpiCard label="Spend" value={fmtUsd(totals.spend)} Icon={DollarSign} />
+        <KpiCard label="Impressions" value={numFormatter.format(totals.impressions)} Icon={TrendingUp} />
+        <KpiCard label="CTR" value={`${totals.ctr.toFixed(2)}%`} Icon={Gauge} />
+        <KpiCard label="CPC" value={fmtUsd(totals.cpc)} Icon={DollarSign} />
       </div>
 
       {/* Trend chart */}
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-xs">Spend & clicks over time</CardTitle></CardHeader>
-        <CardContent>
-          {loading ? <Skeleton className="h-[200px] w-full" /> : trendData.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-8 text-center">No spend recorded yet.</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={trendData}>
-                <defs>
-                  <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 11 }} />
-                <Area type="monotone" dataKey="spend" stroke="hsl(var(--primary))" fill="url(#spendGrad)" name="Spend ($)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
+      {loading ? (
+        <PerformanceChartSkeleton />
+      ) : (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-xs">Spend & clicks over time</CardTitle></CardHeader>
+          <CardContent>
+            {trendData.length === 0 ? (
+              <MarketingEmptyState icon={TrendingUp} title="No spend recorded yet" body="Once your ads run, daily spend will chart here." />
+            ) : (
+              <div className="aspect-[4/3] sm:aspect-[16/8] lg:aspect-[16/5] w-full">
+                <ResponsiveContainer width="100%" height="100%" debounce={150}>
+                  <AreaChart data={trendData}>
+                    <defs>
+                      <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    {!isMobile && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />}
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" {...(isMobile ? { interval: "preserveStartEnd" as const, minTickGap: 24 } : {})} />
+                    <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" width={isMobile ? 32 : 40} />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 11 }} />
+                    <Area type="monotone" dataKey="spend" stroke="hsl(var(--primary))" fill="url(#spendGrad)" name="Spend ($)" isAnimationActive={!isMobile} animationDuration={isMobile ? 0 : 600} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Platform breakdown */}
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-xs">By platform</CardTitle></CardHeader>
-        <CardContent>
-          {loading ? <Skeleton className="h-[200px] w-full" /> : platformData.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-8 text-center">No platform data yet.</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={platformData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="platform" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 11 }} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="spend" fill="hsl(var(--primary))" name="Spend ($)" />
-                <Bar dataKey="clicks" fill="hsl(var(--accent-foreground) / 0.6)" name="Clicks" />
-                <Bar dataKey="conversions" fill="hsl(142 70% 45%)" name="Conversions" />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
+      {loading ? (
+        <BreakdownTableSkeleton />
+      ) : (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-xs">By platform</CardTitle></CardHeader>
+          <CardContent>
+            {platformData.length === 0 ? (
+              <MarketingEmptyState icon={Gauge} title="No platform data yet" body="Connect a platform and launch a campaign to see breakdowns." />
+            ) : (
+              <div className="aspect-[4/3] sm:aspect-[16/8] lg:aspect-[16/5] w-full">
+                <ResponsiveContainer width="100%" height="100%" debounce={150}>
+                  <BarChart data={platformData}>
+                    {!isMobile && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />}
+                    <XAxis dataKey="platform" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" width={isMobile ? 32 : 40} />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 11 }} />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="spend" fill="hsl(var(--primary))" name="Spend ($)" isAnimationActive={!isMobile} />
+                    <Bar dataKey="clicks" fill="hsl(var(--accent-foreground) / 0.6)" name="Clicks" isAnimationActive={!isMobile} />
+                    <Bar dataKey="conversions" fill="hsl(142 70% 45%)" name="Conversions" isAnimationActive={!isMobile} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
         </CardContent>
       </Card>
 
