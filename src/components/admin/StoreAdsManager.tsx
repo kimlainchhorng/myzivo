@@ -11,15 +11,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ResponsiveModal, ResponsiveModalFooter } from "@/components/ui/responsive-modal";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Facebook, Instagram, Search as Google, Music2 as TikTok, Twitter as X,
-  Plus, Trash2, Edit, Pause, Play, ExternalLink, Loader2,
-  TrendingUp, MousePointerClick, Eye, DollarSign, Megaphone, AlertCircle,
+  Plus, Trash2, Edit, Pause, Play, Loader2,
+  TrendingUp, MousePointerClick, Eye, DollarSign, Megaphone, AlertCircle, Plug,
 } from "lucide-react";
+import { CampaignListSkeleton, PlatformTilesSkeleton, OAuthConnectSkeleton } from "@/components/admin/ads/MarketingSkeletons";
+import MarketingEmptyState from "@/components/admin/ads/MarketingEmptyState";
 
 interface Props {
   storeId: string;
