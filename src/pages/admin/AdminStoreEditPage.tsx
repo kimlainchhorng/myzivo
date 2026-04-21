@@ -1891,22 +1891,22 @@ export default function AdminStoreEditPage() {
               )}
             </div>
             {!isRepositioning && (
-              <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">
+              <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-4 right-2 sm:right-4 flex items-end justify-between gap-3">
                 <div className="flex items-end gap-3 min-w-0">
                   <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "logo"); e.target.value = ""; }} />
                   <button
                     type="button"
                     onClick={() => logoInputRef.current?.click()}
                     disabled={uploadingLogo}
-                    className="relative h-16 w-16 rounded-xl bg-background border-2 border-background shadow-lg overflow-hidden flex items-center justify-center shrink-0 group cursor-pointer hover:opacity-90 transition-opacity"
+                    className="relative h-12 w-12 sm:h-16 sm:w-16 rounded-xl bg-background border-2 border-background shadow-lg overflow-hidden flex items-center justify-center shrink-0 group cursor-pointer hover:opacity-90 transition-opacity"
                   >
                     {form.logo_url ? (
                       <img src={form.logo_url} alt="Logo" className="h-full w-full object-cover" />
                     ) : (
-                      <Store className="h-8 w-8 text-muted-foreground/30" />
+                      <Store className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/30" />
                     )}
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl">
-                      {uploadingLogo ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
+                      {uploadingLogo ? <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-white animate-spin" /> : <Camera className="h-4 w-4 sm:h-5 sm:w-5 text-white" />}
                     </div>
                   </button>
                 </div>
