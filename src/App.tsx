@@ -196,6 +196,11 @@ const DriverEarningsPage = lazy(() => import("./pages/driver/DriverEarningsPage"
 const DriverPayoutsPage = lazy(() => import("./pages/driver/DriverPayoutsPage"));
 const AdminGoogleAdsPage = lazy(() => import("./pages/admin/AdminGoogleAdsPage"));
 const AdminMetaAdsPage = lazy(() => import("./pages/admin/AdminMetaAdsPage"));
+const AdminAdsAnalyticsPage = lazy(() => import("./pages/admin/AdminAdsAnalyticsPage"));
+const AdminWebhookStatusPage = lazy(() => import("./pages/admin/AdminWebhookStatusPage"));
+const AdminDriverVerificationPage = lazy(() => import("./pages/admin/AdminDriverVerificationPage"));
+const DriverOnboardingDocumentsPage = lazy(() => import("./pages/driver/DriverOnboardingDocumentsPage"));
+const SharedTripPage = lazy(() => import("./pages/public/SharedTripPage"));
 const DriverPerformancePage = lazy(() => import("./pages/driver/DriverPerformancePage"));
 const DriverMapPage = lazy(() => import("./pages/driver/DriverMapPage"));
 const DriverShopPage = lazy(() => import("./pages/driver/DriverShopPage"));
