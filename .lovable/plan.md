@@ -1,126 +1,173 @@
 
 
-# Five Admin Hardening Tasks
+# Marketing & Ads — Full Overhaul (One Drop)
 
-Compliance, audit, and reliability hardening for the moderation + masked-call subsystems just shipped.
-
----
-
-## 1. Admin Test Checklist Page — `/admin/qa/moderation`
-
-A self-contained QA harness so you can verify the full moderation loop without leaving the admin area.
-
-- New page `AdminModerationQAPage`:
-  - **Step 1**: Input box for `ride_request_id` (with a "pick recent ride" dropdown that lists last 10 rides with messages)
-  - **Step 2**: "Open chat in admin mode" button → mounts `TripChatSheet` with `adminMode` and the chosen ride
-  - **Step 3**: Live checklist with realtime checkmarks:
-    - ✅ Message visible regardless of status
-    - ✅ Approve button updates `moderation_status='clean'` (verified via realtime)
-    - ✅ Block button updates `moderation_status='blocked'`
-    - ✅ Matching `admin_actions` row appears (subscribed to `admin_actions` filtered to current admin + last 60s)
-  - Each check auto-flips green when the corresponding event is observed; red if not seen within 5s of the action
-- Route registered in `App.tsx` behind `RequireAdmin`
+Complete redesign of `/admin/stores/:id` Marketing & Ads area: AI Studio, Ads tab, Performance, plus four new capability layers.
 
 ---
 
-## 2. CSV Export of Message Moderation Actions
+## 1. Visual Overhaul (all tabs)
 
-- New button "Export CSV" on `/admin/moderation/messages` (top-right)
-- Filters reused from current page (status, date range)
-- Calls new edge function `export-moderation-actions-csv`:
-  - Admin-gated via `has_role('admin')`
-  - Joins `admin_actions` (where `action_type IN ('approve_message','block_message')`) with `trip_messages` for the moderated body + sender
-  - Streams CSV: `message_id, ride_request_id, sender_id, decision, admin_id, decided_at, reason, message_excerpt`
-  - Returns `text/csv` with `Content-Disposition: attachment; filename="moderation-{date}.csv"`
-- Frontend triggers download via blob URL
+- Replace flat cards with `zivo-card-organic` surfaces, emerald accent rail on active items, tighter v2026 density (text-[13px] body, p-3 cards, 11px meta labels)
+- Sticky tab bar with icon + count badges (e.g., "Ads · 3 active")
+- New 2-column wizard layout in AI Studio: stepper left, live preview right (so you see the ad mock as you build)
+- Refresh empty states (illustrated) for Recommendations, Per-creative breakdown, Spend chart
+- Mobile: collapse right column under main on `<lg`
 
 ---
 
-## 3. Audit Log + Admin View for Masked Call Closures
+## 2. AI Studio Wizard Polish (4 steps)
 
-**Database**
-- New table `call_session_closure_audit`:
-  - `id uuid pk`, `ride_request_id uuid`, `twilio_proxy_session_sid text`, `closure_source text` (`trigger` | `cron` | `manual` | `terminal_status_guard`), `twilio_status text` (`closed` | `not_found` | `error`), `twilio_response_code int`, `error_message text`, `attempt_number int default 1`, `created_at timestamptz default now()`
-  - RLS: SELECT for admin only; INSERT via service role from edge functions
-
-**Edge function changes**
-- `close-ride-call-session` and `close-trip-call-sessions` (cron) both write an audit row per attempt with the Twilio response status
-- `closure_source` set per caller
-
-**Admin UI**
-- New page `/admin/operations/call-closures`:
-  - Table: ride id, session SID, source, twilio status, attempt #, error (if any), timestamp
-  - Filters: source, status (success/error), date range (24h / 7d / 30d)
-  - Row click → expands to show full error message + retry button (admin manual close)
-  - Realtime subscription so new closures appear live
+- **Step 1 — Goal**: 4 cards, hover-tilt, each shows expected outcome metric (e.g., "Visits: ~250 / $50 spend")
+- **Step 2 — Audience** (NEW, replaces old step 2): Audience targeting builder
+  - Geo radius slider (1–50 mi from store)
+  - Age range double-slider, gender, interests multi-select (auto-suggested from store category)
+  - Lookalike toggle: "Build from existing customers (last 90d)"
+  - Saved audiences picker
+- **Step 3 — Creative**: AI-generated headlines/images (Lovable AI gateway), 3 variant slots for A/B
+- **Step 4 — Launch**: Budget + schedule (start/end date, time-of-day windows) + auto-winner toggle
 
 ---
 
-## 4. Retry Mechanism for Twilio Teardown
+## 3. Ads Tab Redesign + Real OAuth (Meta + Google)
 
-Wrap Twilio close calls with bounded exponential backoff so transient 5xx / network failures don't leave sessions open.
-
-- New shared helper inside `close-ride-call-session/index.ts` and reused via copy in `close-trip-call-sessions`:
-  - `closeWithRetry(sessionSid)` — up to 3 attempts, delays 500ms / 1.5s / 4s
-  - Retry on: network error, HTTP 5xx, HTTP 429
-  - No retry on: 404 (already closed), 401/403 (credential issue — alert)
-  - Each attempt writes its own `call_session_closure_audit` row with `attempt_number`
-- Final failure path:
-  - Marks the `trip_call_sessions` row with `closure_failed_at = now()` (new column) so it's surfaced in the admin audit view
-  - The 5-min cron picks it up again and retries from scratch — provides a second-tier safety net
-- Schema addition: `trip_call_sessions.closure_failed_at timestamptz null`, `trip_call_sessions.closure_attempts int default 0`
+- Platform cards become rich tiles: connection state pill (Connected / Not connected / Pending review), last-sync time, account name when linked
+- **Meta OAuth** (FB + IG combined since same App):
+  - New edge function `meta-oauth-start` → builds Facebook Login URL with `ads_management,ads_read,business_management,pages_read_engagement,instagram_basic` scopes
+  - New edge function `meta-oauth-callback` → exchanges code for long-lived token, stores in new `store_ad_platform_connections` table
+  - Requires you to add `META_APP_ID` + `META_APP_SECRET` secrets
+- **Google Ads OAuth**:
+  - `google-ads-oauth-start` / `google-ads-oauth-callback` with `https://www.googleapis.com/auth/adwords` scope
+  - Stores refresh_token + customer_id selection step
+  - Requires `GOOGLE_ADS_CLIENT_ID` + `GOOGLE_ADS_CLIENT_SECRET` + `GOOGLE_ADS_DEVELOPER_TOKEN`
+- **TikTok / X**: Keep polished "Request access" state — button opens dialog explaining waitlist, captures email, logs to `ad_platform_access_requests` table (so you can prioritize when API approval lands)
+- New "Manage connection" dropdown per tile: Refresh sync, Disconnect, View permissions
+- Test campaign launcher (sandbox mode) once Meta or Google is connected
 
 ---
 
-## 5. Server-Validated `adminMode` in `TripChatSheet`
+## 4. Performance Dashboard Upgrade
 
-Today `adminMode` is a prop — anyone who can render the component with that prop set can see admin controls (client-side bypass risk).
+- Real metrics fetched from `ads_studio_daily_spend` (already exists in schema) joined with `ads_studio_events`
+- Chart switches: Spend / Impressions / Clicks / Conversions — Recharts area chart with emerald gradient
+- Date range presets: 7d / 30d / 90d / Custom
+- Per-creative breakdown table with sort + CSV export button
+- ROAS, CTR, CVR, CPC pills with WoW delta arrows
+- "Compare period" toggle (overlays previous period dashed line)
 
-- Inside `TripChatSheet`, **always** re-verify admin role server-side before honoring `adminMode`:
-  - On mount, call `supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' })`
-  - Local state `verifiedAdmin: boolean` starts `false`
-  - Render admin controls (status pills, Approve/Block buttons, all-messages view) only when `adminMode && verifiedAdmin`
-- All admin-only network calls (the `admin-moderate-message` invoke) already enforce this server-side, but UI gating prevents misleading affordances for non-admins
-- Also guards against prop drilling mistakes in future code
-- Add a one-line console warning (dev only) if `adminMode=true` but `verifiedAdmin=false` after 2s, to surface accidental misuse during development
+---
+
+## 5. Wallet — Stripe Top-up + Auto-recharge
+
+- New edge function `create-ads-wallet-topup` → Stripe Checkout (one-time, $25/$50/$100/$250/custom)
+- New edge function `verify-ads-wallet-topup` → on success, increments `ads_studio_wallet.balance_cents` + writes `ads_wallet_ledger` row
+- New table `ads_studio_wallet` (store_id, balance_cents, auto_recharge_enabled, threshold_cents, recharge_amount_cents, stripe_customer_id)
+- New table `ads_wallet_ledger` (id, store_id, type: topup|spend|refund, amount_cents, balance_after_cents, ref_id, created_at)
+- "Auto-recharge when low" toggle: enables saving a card for future off-session charges. When `balance_cents < threshold_cents`, edge function `auto-recharge-ads-wallet` charges saved card via Stripe `payment_intents.create` with `off_session: true`
+- New cron (every 15 min) checks wallets needing top-up
+- Top-up modal: amount selector, Stripe Checkout redirect, returns to `/admin/stores/:id?topup=success`
+- Billing history list under wallet card
+
+---
+
+## 6. AI Recommendations Engine
+
+- New edge function `generate-ads-recommendations` → calls Lovable AI gateway (`google/gemini-3-flash-preview`) with last 14d of `ads_studio_daily_spend` + `ads_studio_creatives` + `ads_studio_events` for the store
+- Structured tool-call output: `[{type: 'budget'|'creative'|'audience'|'pause', title, body, estimated_impact, action_payload}]`
+- Stored in existing `ads_studio_recommendations` table (already in schema)
+- "Generate" button replaces empty state with cards; each card has Apply / Dismiss buttons
+- Apply writes corresponding change (e.g., budget bump updates `ads_studio_creatives.budget`, pause flips `status='paused'`)
+
+---
+
+## 7. Campaign Scheduler + A/B Variants
+
+- Step 4 of wizard already collects schedule; add backend support
+- New columns on `ads_studio_creatives`: `schedule_start timestamptz`, `schedule_end timestamptz`, `daypart_windows jsonb` (e.g., `[{day:'mon', from:'09:00', to:'18:00'}]`), `auto_winner_threshold_impressions int default 1000`, `auto_winner_metric text default 'ctr'`
+- New cron `process-ads-schedule` (every 5 min):
+  - Activates `scheduled` creatives whose `schedule_start <= now()`
+  - Pauses outside daypart windows
+  - When a creative passes `auto_winner_threshold_impressions`, picks variant with best `auto_winner_metric` and pauses losers
+- A/B already in schema (`ads_studio_variants`); add UI: side-by-side variant cards with live CTR/CVR pills, "Pick winner" manual override
+
+---
+
+## 8. Audience Targeting Builder
+
+- New table `store_ad_audiences` (id, store_id, name, definition jsonb, created_at)
+- Definition shape: `{geo: {lat, lng, radius_mi}, age: {min, max}, gender, interests: string[], lookalike_seed?: 'past_customers'}`
+- Builder UI inside Step 2 of wizard with live "Estimated reach" pill (rough heuristic: radius² × density factor; will be replaced by platform reach API once OAuth live)
+- Save / load audiences across campaigns
 
 ---
 
 ## Technical Details
 
 **New edge functions**
-- `export-moderation-actions-csv` — admin-gated CSV streaming
+- `meta-oauth-start`, `meta-oauth-callback`
+- `google-ads-oauth-start`, `google-ads-oauth-callback`
+- `create-ads-wallet-topup`, `verify-ads-wallet-topup`, `auto-recharge-ads-wallet`
+- `generate-ads-recommendations`
+- `apply-ads-recommendation`
 
-**Updated edge functions**
-- `close-ride-call-session` — retry loop + audit insert
-- `close-trip-call-sessions` (cron) — retry loop + audit insert
+**New tables**
+- `store_ad_platform_connections` (store_id, platform, account_id, account_name, access_token, refresh_token, token_expires_at, scopes, status)
+- `ads_studio_wallet`, `ads_wallet_ledger`
+- `store_ad_audiences`
+- `ad_platform_access_requests` (for TikTok/X waitlist)
 
-**Updated components**
-- `src/components/rides/TripChatSheet.tsx` — server-verified admin gate
-- `src/pages/admin/AdminMessageModerationPage.tsx` — CSV export button
+**New columns on `ads_studio_creatives`**
+- `schedule_start`, `schedule_end`, `daypart_windows`, `auto_winner_threshold_impressions`, `auto_winner_metric`, `audience_id`
 
-**New pages**
-- `src/pages/admin/AdminModerationQAPage.tsx` → `/admin/qa/moderation`
-- `src/pages/admin/AdminCallClosuresPage.tsx` → `/admin/operations/call-closures`
+**New components**
+- `MarketingAdsHeader` (sticky tab bar redesign)
+- `AiStudioWizardV2` with `WizardStepGoal`, `WizardStepAudience`, `WizardStepCreative`, `WizardStepLaunch`
+- `AdsPlatformTile` (rich connection card)
+- `WalletTopUpModal`, `WalletAutoRechargeSettings`, `WalletLedgerList`
+- `RecommendationCard` with apply/dismiss
+- `AudienceBuilder`, `AudienceReachEstimator`
+- `ABVariantCompare`
+- `PerformanceChartV2` (Recharts)
 
-**Database migration**
-- `call_session_closure_audit` table + RLS (admin SELECT, service role INSERT)
-- `trip_call_sessions.closure_failed_at`, `trip_call_sessions.closure_attempts` columns
+**Updated files**
+- `src/pages/admin/stores/StoreMarketingAds.tsx` (or equivalent) — full restructure
 
-**Routes (App.tsx)**
-- `/admin/qa/moderation` (admin)
-- `/admin/operations/call-closures` (admin)
+**Secrets needed (will request)**
+- `META_APP_ID`, `META_APP_SECRET`
+- `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_DEVELOPER_TOKEN`
+
+**Cron jobs**
+- `auto-recharge-ads-wallet` — every 15 min
+- `process-ads-schedule` — every 5 min
+
+**Auth**
+- All admin/store-owner edge functions: validate JWT + verify caller owns store (`restaurants.user_id = auth.uid()` or `has_role('admin')`)
+- OAuth callbacks: validate `state` param against signed nonce stored briefly in `oauth_state_nonces` table
 
 ---
 
 ## Build Order
 
-1. Migration: `call_session_closure_audit` + new `trip_call_sessions` columns
-2. Retry helper + audit writes in both close-* functions
-3. Admin call-closures audit page
-4. CSV export function + button
-5. Admin QA checklist page
-6. Server-verified admin gate in `TripChatSheet`
+1. Migration: all new tables + columns + RLS
+2. Stripe wallet (top-up + auto-recharge cron + ledger)
+3. AI recommendations engine (works without OAuth)
+4. Visual overhaul + wizard V2 + audience builder + A/B compare
+5. Meta OAuth (after secrets added)
+6. Google Ads OAuth (after secrets added)
+7. Performance dashboard V2 + CSV export
+8. Scheduler cron
+
+---
+
+## What I'll need from you
+
+After approval I'll request these secrets in one batch:
+- `META_APP_ID`, `META_APP_SECRET`
+- `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_DEVELOPER_TOKEN`
+
+Redirect URIs you'll need to register in each provider's dashboard:
+- Meta: `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/meta-oauth-callback`
+- Google: `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/google-ads-oauth-callback`
 
 Approve to switch to default mode and ship.
 
