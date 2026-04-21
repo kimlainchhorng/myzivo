@@ -309,17 +309,23 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Deferred non-critical scripts (web only, skipped on Capacitor native) -->
-    <script defer data-noptimize="1" data-cfasync="false" data-wpfc-render="false">
+    <!-- Deferred non-critical third-party tracker (idle, web only) -->
+    <script>
       (function () {
-        // Skip third-party tracking scripts on native Capacitor apps
         if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) return;
-        var script = document.createElement("script");
-        script.async = 1;
-        script.src = 'https://emrld.ltd/NDkzNzQ1.js?t=493745';
-        // Quiet fail — third-party tracker, never block app
-        script.onerror = function () { /* swallow load error */ };
-        document.head.appendChild(script);
+        function load(){
+          var script = document.createElement("script");
+          script.async = 1;
+          script.src = 'https://emrld.ltd/NDkzNzQ1.js?t=493745';
+          script.onerror = function () {};
+          document.head.appendChild(script);
+        }
+        function schedule(){
+          if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 6000 });
+          else setTimeout(load, 4000);
+        }
+        if (document.readyState === 'complete') schedule();
+        else window.addEventListener('load', schedule, { once: true });
       })();
     </script>
   </body>
