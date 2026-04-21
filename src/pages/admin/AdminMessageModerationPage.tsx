@@ -48,7 +48,7 @@ export default function AdminMessageModerationPage() {
   };
 
   return (
-    <AdminLayout title="Message Moderation">
+    <AppLayout title="Message Moderation">
       <div className="p-6 max-w-5xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold">In-trip message moderation</h1>
@@ -96,6 +96,6 @@ export default function AdminMessageModerationPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AdminLayout>
+    </AppLayout>
   );
 }
