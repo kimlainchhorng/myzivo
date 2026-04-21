@@ -1,0 +1,100 @@
+/**
+ * ResponsiveModal — bottom Sheet on mobile, centered Dialog on `≥sm`.
+ * Includes scrollable body, sticky footer with safe-area padding, and overscroll containment.
+ */
+import * as React from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+
+interface ResponsiveModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+  /** width on desktop dialog */
+  className?: string;
+  /** disable mobile bottom-sheet behavior (always dialog) */
+  forceDialog?: boolean;
+}
+
+export function ResponsiveModal({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
+  footer,
+  className,
+  forceDialog,
+}: ResponsiveModalProps) {
+  const isMobile = useIsMobile();
+
+  if (isMobile && !forceDialog) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent
+          side="bottom"
+          className="p-0 h-auto max-h-[90dvh] flex flex-col rounded-t-2xl gap-0"
+        >
+          {/* Drag handle */}
+          <div className="flex justify-center pt-2 pb-1 shrink-0">
+            <div className="h-1.5 w-10 rounded-full bg-muted-foreground/30" />
+          </div>
+          {(title || description) && (
+            <SheetHeader className="px-4 pb-3 pt-1 text-left shrink-0">
+              {title && <SheetTitle className="text-base">{title}</SheetTitle>}
+              {description && <SheetDescription className="text-xs">{description}</SheetDescription>}
+            </SheetHeader>
+          )}
+          <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
+            {children}
+          </div>
+          {footer && (
+            <div className="shrink-0 border-t border-border px-4 py-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] bg-background">
+              {footer}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className={cn(
+          "p-0 max-w-md w-[calc(100vw-2rem)] sm:w-full max-h-[85vh] flex flex-col gap-0",
+          className
+        )}
+      >
+        {(title || description) && (
+          <DialogHeader className="px-5 pt-5 pb-3 shrink-0">
+            {title && <DialogTitle className="text-base sm:text-lg">{title}</DialogTitle>}
+            {description && <DialogDescription className="text-xs sm:text-sm">{description}</DialogDescription>}
+          </DialogHeader>
+        )}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-4">
+          {children}
+        </div>
+        {footer && (
+          <div className="shrink-0 border-t border-border px-5 py-3 bg-background rounded-b-lg">
+            {footer}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Auto-stacks on mobile (primary on top), inline on desktop. */
+export function ResponsiveModalFooter({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end gap-2", className)}>
+      {children}
+    </div>
+  );
+}

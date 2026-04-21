@@ -27150,6 +27150,36 @@ export type Database = {
           },
         ]
       }
+      marketing_qa_runs: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          results: Json
+          store_id: string
+          viewport: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          results?: Json
+          store_id: string
+          viewport: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          results?: Json
+          store_id?: string
+          viewport?: string
+        }
+        Relationships: []
+      }
       marketplace_cart: {
         Row: {
           created_at: string | null
