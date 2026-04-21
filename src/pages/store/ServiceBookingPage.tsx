@@ -137,6 +137,10 @@ export default function ServiceBookingPage() {
       toast.error("Please fill in your name, email, and phone");
       return;
     }
+    if (!emailPattern.test(form.customer_email.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
     setSubmitting(true);
     const { data: inserted, error } = await supabase.from("service_bookings").insert({
       store_id: store.id,
