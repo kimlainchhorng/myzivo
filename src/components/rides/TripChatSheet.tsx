@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { sanitizeOutgoingMessage, assessChatMessageRisk } from "@/lib/security/chatContentSafety";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import InTripCallButton from "./InTripCallButton";
 
 interface Props {
   open: boolean;
@@ -102,8 +103,9 @@ export default function TripChatSheet({ open, onOpenChange, rideRequestId, count
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[80vh] p-0 flex flex-col">
-        <SheetHeader className="px-4 py-3 border-b border-border/30">
+        <SheetHeader className="px-4 py-3 border-b border-border/30 flex flex-row items-center justify-between gap-2 space-y-0">
           <SheetTitle className="text-sm">{counterpartName || (senderRole === "rider" ? "Driver" : "Rider")}</SheetTitle>
+          <InTripCallButton rideRequestId={rideRequestId} />
         </SheetHeader>
 
         <ScrollArea className="flex-1 px-4 py-3" ref={scrollRef as any}>
