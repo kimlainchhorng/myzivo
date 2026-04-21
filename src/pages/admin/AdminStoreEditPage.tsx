@@ -1858,18 +1858,18 @@ export default function AdminStoreEditPage() {
                 </div>
               </div>
             )}
-            <div className="absolute top-3 right-4 flex items-center gap-2">
+            <div className="absolute top-2 right-2 sm:top-3 sm:right-4 flex items-center gap-1.5 sm:gap-2">
               {isRepositioning ? (
                 <>
-                  <Button size="sm" variant="secondary" className="gap-1.5 bg-background/90 backdrop-blur-sm" onClick={async () => {
+                  <Button size="sm" variant="secondary" className="h-8 px-2.5 gap-1 bg-background/90 backdrop-blur-sm text-xs" onClick={async () => {
                     setIsRepositioning(false);
                     const { error } = await supabase.from("store_profiles").update({ banner_position: form.banner_position } as any).eq("id", storeId!);
                     if (error) toast.error(error.message);
                     else toast.success("Cover position saved");
                   }}>
-                    <Check className="h-3.5 w-3.5" /> Save Position
+                    <Check className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Save Position</span><span className="sm:hidden">Save</span>
                   </Button>
-                  <Button size="sm" variant="ghost" className="bg-background/90 backdrop-blur-sm" onClick={() => {
+                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 bg-background/90 backdrop-blur-sm" onClick={() => {
                     setIsRepositioning(false);
                     updateField("banner_position", dragStartPos);
                   }}>
@@ -1879,13 +1879,13 @@ export default function AdminStoreEditPage() {
               ) : (
                 <>
                   {form.banner_url && (
-                    <Button size="sm" variant="secondary" className="gap-1.5 bg-background/80 backdrop-blur-sm" onClick={() => { setIsRepositioning(true); setDragStartPos(form.banner_position); }}>
-                      <Move className="h-3.5 w-3.5" /> Reposition
+                    <Button size="sm" variant="secondary" className="h-8 px-2.5 gap-1 bg-background/80 backdrop-blur-sm text-xs" onClick={() => { setIsRepositioning(true); setDragStartPos(form.banner_position); }}>
+                      <Move className="h-3.5 w-3.5" /> <span className="hidden xs:inline">Reposition</span>
                     </Button>
                   )}
                   <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "cover"); e.target.value = ""; }} />
-                  <Button size="sm" variant="secondary" className="gap-1.5 bg-background/80 backdrop-blur-sm" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
-                    {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />} {t("admin.store.change_cover")}
+                  <Button size="sm" variant="secondary" className="h-8 px-2.5 gap-1 bg-background/80 backdrop-blur-sm text-xs" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+                    {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />} <span className="hidden xs:inline">{t("admin.store.change_cover")}</span>
                   </Button>
                 </>
               )}
