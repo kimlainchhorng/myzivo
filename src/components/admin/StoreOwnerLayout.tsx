@@ -2,18 +2,17 @@
  * Store Owner Layout — Simplified sidebar for store owners (non-admin).
  * Shows Profile, Products, Payment as sidebar navigation.
  */
-import { ReactNode } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LogOut, ChevronLeft, ChevronDown, Menu, Home, Store,
-  Package, CreditCard, MessageCircle, Users, Megaphone, ClipboardList, Settings,
-  Wallet, Calendar, Clock, Shield, CalendarCheck, GraduationCap, Star, FolderOpen, Radio,
+  Package, CreditCard, Users, Megaphone, ClipboardList, Settings,
+  Wallet, Calendar, Clock, Shield, CalendarCheck, GraduationCap, FolderOpen, Radio,
   FileText, ScanSearch, Wrench, ClipboardCheck, Car
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 import { Helmet } from "react-helmet-async";
 
 interface StoreOwnerLayoutProps {
@@ -33,8 +32,26 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navRef = useRef<HTMLElement | null>(null);
   const employeeIds = ["employees", "payroll", "employee-schedule", "time-clock", "attendance", "training", "documents", "employee-rules"];
   const [employeesOpen, setEmployeesOpen] = useState(employeeIds.includes(activeTab || ""));
+
+  useEffect(() => {
+    if (!sidebarOpen || typeof document === "undefined") return;
+
+    navRef.current?.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, [sidebarOpen]);
 
   const isAutoRepair = storeCategory === "auto-repair";
   const productsLabel = isAutoRepair ? "Services" : "Products";
@@ -64,7 +81,6 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     { id: "time-clock", label: "Time Clock", icon: Clock },
     { id: "attendance", label: "Attendance & Leave", icon: CalendarCheck },
     { id: "training", label: "Training & Onboarding", icon: GraduationCap },
-    
     { id: "documents", label: "Documents & Files", icon: FolderOpen },
     { id: "employee-rules", label: "Employee Rules", icon: Shield },
   ];
@@ -82,10 +98,9 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
         )}
 
         <aside className={cn(
-          "fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-[82vw] max-w-[300px] lg:w-64 bg-card border-r border-border flex flex-col transition-transform duration-300 shadow-xl lg:shadow-none",
+          "fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-[82vw] max-w-[300px] lg:w-64 bg-card border-r border-border flex flex-col overflow-hidden transition-transform duration-300 shadow-xl lg:shadow-none overscroll-contain",
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}>
-          {/* Store branding */}
           <div
             className="flex items-center justify-between px-5 border-b border-border shrink-0"
             style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)', paddingBottom: '12px' }}
@@ -110,8 +125,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
             </Button>
           </div>
 
-          {/* Nav */}
-          <nav className="flex-1 min-h-0 px-3 py-4 overflow-y-auto overscroll-contain">
+          <nav ref={navRef} className="flex-1 min-h-0 px-3 py-4 overflow-y-auto overscroll-contain touch-pan-y">
             <div className="space-y-1">
               {navItems.map((item) => {
                 const isActive = activeTab === item.id;
