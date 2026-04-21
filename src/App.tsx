@@ -196,6 +196,11 @@ const DriverEarningsPage = lazy(() => import("./pages/driver/DriverEarningsPage"
 const DriverPayoutsPage = lazy(() => import("./pages/driver/DriverPayoutsPage"));
 const AdminGoogleAdsPage = lazy(() => import("./pages/admin/AdminGoogleAdsPage"));
 const AdminMetaAdsPage = lazy(() => import("./pages/admin/AdminMetaAdsPage"));
+const AdminAdsAnalyticsPage = lazy(() => import("./pages/admin/AdminAdsAnalyticsPage"));
+const AdminWebhookStatusPage = lazy(() => import("./pages/admin/AdminWebhookStatusPage"));
+const AdminDriverVerificationPage = lazy(() => import("./pages/admin/AdminDriverVerificationPage"));
+const DriverOnboardingDocumentsPage = lazy(() => import("./pages/driver/DriverOnboardingDocumentsPage"));
+const SharedTripPage = lazy(() => import("./pages/public/SharedTripPage"));
 const DriverPerformancePage = lazy(() => import("./pages/driver/DriverPerformancePage"));
 const DriverMapPage = lazy(() => import("./pages/driver/DriverMapPage"));
 const DriverShopPage = lazy(() => import("./pages/driver/DriverShopPage"));
@@ -697,8 +702,13 @@ const App = () => (
                 <Route path="/driver/home" element={<DriverHomePage />} />
                 <Route path="/driver/earnings" element={<DriverEarningsPage />} />
                 <Route path="/driver/payouts" element={<ProtectedRoute><DriverPayoutsPage /></ProtectedRoute>} />
+                <Route path="/driver/onboarding/documents" element={<ProtectedRoute><DriverOnboardingDocumentsPage /></ProtectedRoute>} />
                 <Route path="/admin/ads/google" element={<ProtectedRoute><AdminGoogleAdsPage /></ProtectedRoute>} />
                 <Route path="/admin/ads/meta" element={<ProtectedRoute><AdminMetaAdsPage /></ProtectedRoute>} />
+                <Route path="/admin/ads/analytics" element={<ProtectedRoute><AdminAdsAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/admin/payments/webhook-status" element={<ProtectedRoute><AdminWebhookStatusPage /></ProtectedRoute>} />
+                <Route path="/admin/drivers/verification" element={<ProtectedRoute><AdminDriverVerificationPage /></ProtectedRoute>} />
+                <Route path="/track/:token" element={<SharedTripPage />} />
                 <Route path="/driver/performance" element={<DriverPerformancePage />} />
                 <Route path="/driver/map" element={<DriverMapPage />} />
                 <Route path="/package-delivery" element={<PreserveQueryRedirect to="/delivery" />} />

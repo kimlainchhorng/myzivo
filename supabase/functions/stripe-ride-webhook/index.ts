@@ -30,11 +30,31 @@ Deno.serve(async (req) => {
 
   const admin = createClient(supabaseUrl, serviceKey);
   const pi = event.data?.object;
-  const rideId = pi?.metadata?.ride_request_id;
+  const rideId = pi?.metadata?.ride_request_id ?? null;
+
+  // Idempotency: insert into webhook_events; skip if duplicate
+  const { error: insertErr } = await admin.from("webhook_events").insert({
+    event_id: event.id,
+    event_type: event.type,
+    source: "stripe",
+    ride_request_id: rideId,
+    status: pi?.status ?? null,
+    raw_payload: event as any,
+  } as any);
+
+  if (insertErr && (insertErr as any).code === "23505") {
+    // Duplicate event — already processed
+    console.log(`[stripe-ride-webhook] duplicate event ${event.id} skipped`);
+    return new Response(JSON.stringify({ received: true, duplicate: true }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
   try {
     if (!rideId) {
-      return new Response(JSON.stringify({ received: true, skipped: true }), { headers: { "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ received: true, skipped: true }), {
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     switch (event.type) {
