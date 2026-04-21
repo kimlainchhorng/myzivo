@@ -115,8 +115,25 @@ export default function ServiceBookingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!store || !date || !form.preferred_time || !form.service_name) {
-      toast.error("Please fill all required fields");
+    if (!store) {
+      toast.error("Store not loaded. Please refresh the page.");
+      return;
+    }
+    if (!form.service_name) {
+      toast.error("Please select a service", { description: "Scroll up to choose what you need." });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (!date) {
+      toast.error("Please pick a preferred date");
+      return;
+    }
+    if (!form.preferred_time) {
+      toast.error("Please pick a preferred time");
+      return;
+    }
+    if (!form.customer_name?.trim() || !form.customer_email?.trim() || !form.customer_phone?.trim()) {
+      toast.error("Please fill in your name, email, and phone");
       return;
     }
     setSubmitting(true);
