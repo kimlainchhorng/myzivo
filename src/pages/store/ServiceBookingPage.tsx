@@ -153,7 +153,8 @@ export default function ServiceBookingPage() {
     }).select("id").maybeSingle();
     setSubmitting(false);
     if (error) {
-      toast.error("Failed to submit booking. Please try again.");
+      console.error("Booking insert error:", error);
+      toast.error("Failed to submit booking", { description: error.message || "Please try again." });
       return;
     }
     toast.success("Booking submitted!");
