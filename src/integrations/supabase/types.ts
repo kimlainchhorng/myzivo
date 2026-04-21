@@ -951,6 +951,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ads_studio_budgets: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          daily_cap_cents: number
+          id: string
+          is_paused: boolean
+          monthly_cap_cents: number
+          pacing: string
+          paused_reason: string | null
+          platform: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          daily_cap_cents?: number
+          id?: string
+          is_paused?: boolean
+          monthly_cap_cents?: number
+          pacing?: string
+          paused_reason?: string | null
+          platform: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          daily_cap_cents?: number
+          id?: string
+          is_paused?: boolean
+          monthly_cap_cents?: number
+          pacing?: string
+          paused_reason?: string | null
+          platform?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ads_studio_creatives: {
         Row: {
           auto_winner_at: string | null
@@ -1059,6 +1101,42 @@ export type Database = {
           },
         ]
       }
+      ads_studio_daily_spend: {
+        Row: {
+          clicks: number
+          conversions: number
+          id: string
+          impressions: number
+          platform: string
+          spend_cents: number
+          spend_date: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          clicks?: number
+          conversions?: number
+          id?: string
+          impressions?: number
+          platform: string
+          spend_cents?: number
+          spend_date: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          clicks?: number
+          conversions?: number
+          id?: string
+          impressions?: number
+          platform?: string
+          spend_cents?: number
+          spend_date?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ads_studio_events: {
         Row: {
           created_at: string
@@ -1129,6 +1207,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "ads_studio_variants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_events_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "ads_studio_winner_history"
+            referencedColumns: ["variant_id"]
           },
         ]
       }
@@ -54507,6 +54592,38 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ads_studio_winner_history: {
+        Row: {
+          auto_winner_at: string | null
+          auto_winner_picked: boolean | null
+          creative_id: string | null
+          cta: string | null
+          goal: string | null
+          headline: string | null
+          image_url: string | null
+          is_winner: boolean | null
+          store_id: string | null
+          variant_created_at: string | null
+          variant_id: string | null
+          variant_label: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ads_studio_variants_creative_id_fkey"
+            columns: ["creative_id"]
+            isOneToOne: false
+            referencedRelation: "ads_studio_creative_stats"
+            referencedColumns: ["creative_id"]
+          },
+          {
+            foreignKeyName: "ads_studio_variants_creative_id_fkey"
+            columns: ["creative_id"]
+            isOneToOne: false
+            referencedRelation: "ads_studio_creatives"
             referencedColumns: ["id"]
           },
         ]
