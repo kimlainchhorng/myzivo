@@ -1917,21 +1917,21 @@ export default function AdminStoreEditPage() {
         </>)}
 
         {(isAdmin || activeTab === "profile") && (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="icon" onClick={() => navigate(isAdmin ? "/admin/stores" : "/")}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(isAdmin ? "/admin/stores" : "/")}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div>
-              <h2 className="text-xl font-bold text-foreground">{store.name}</h2>
-              <p className="text-sm text-muted-foreground">/{store.slug} · {store.market}</p>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground truncate">{store.name}</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">/{store.slug} · {store.market}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 scrollbar-hide">
             {/* Language Switcher */}
             <Popover open={isLangOpen} onOpenChange={setIsLangOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2 h-9">
+                <Button variant="outline" size="sm" className="gap-2 h-9 shrink-0">
                   {currentLangData?.flag_svg ? (
                     <img src={currentLangData.flag_svg} alt="" className="w-5 h-3.5 rounded-[2px] object-cover shadow-sm border border-foreground/10" />
                   ) : (
@@ -1982,10 +1982,10 @@ export default function AdminStoreEditPage() {
               </PopoverContent>
             </Popover>
 
-            <Button onClick={() => setChatOpen(true)} variant="outline" className="gap-2">
+            <Button onClick={() => setChatOpen(true)} variant="outline" size="sm" className="gap-2 h-9 shrink-0">
               <MessageCircle className="h-4 w-4" /> Live Chat
             </Button>
-            <Button onClick={() => navigate(`/grocery/shop/${store.slug}`)} variant="outline" className="gap-2">
+            <Button onClick={() => navigate(`/grocery/shop/${store.slug}`)} variant="outline" size="sm" className="gap-2 h-9 shrink-0">
               <Eye className="h-4 w-4" /> {t("admin.store.preview")}
             </Button>
           </div>
