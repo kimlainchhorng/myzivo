@@ -82,7 +82,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
         )}
 
         <aside className={cn(
-          "fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-card border-r border-border flex flex-col transition-transform duration-300",
+          "fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-[82vw] max-w-[300px] lg:w-64 bg-card border-r border-border flex flex-col transition-transform duration-300 shadow-xl lg:shadow-none",
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}>
           {/* Store branding */}
