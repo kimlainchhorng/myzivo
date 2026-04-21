@@ -33,7 +33,25 @@ interface TripMessage {
 
 export default function TripChatSheet({ open, onOpenChange, rideRequestId, counterpartName, senderRole, adminMode }: Props) {
   const { user, isAdmin } = useAuth();
-  const isAdminView = adminMode ?? isAdmin;
+  const requestedAdmin = adminMode ?? isAdmin;
+  const [verifiedAdmin, setVerifiedAdmin] = useState(false);
+  const isAdminView = requestedAdmin && verifiedAdmin;
+
+  // Server-verify admin role before honoring admin UI affordances
+  useEffect(() => {
+    let cancelled = false;
+    if (!requestedAdmin || !user) { setVerifiedAdmin(false); return; }
+    (async () => {
+      const { data, error } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" } as any);
+      if (!cancelled) setVerifiedAdmin(!error && data === true);
+    })();
+    const warn = setTimeout(() => {
+      if (!cancelled && requestedAdmin && !verifiedAdmin && import.meta.env.DEV) {
+        console.warn("[TripChatSheet] adminMode requested but user is not a verified admin — controls hidden.");
+      }
+    }, 2000);
+    return () => { cancelled = true; clearTimeout(warn); };
+  }, [requestedAdmin, user?.id]);
   const [messages, setMessages] = useState<TripMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
