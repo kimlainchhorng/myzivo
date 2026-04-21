@@ -118,7 +118,13 @@ export function ResponsiveModal({
 }
 
 /** Auto-stacks on mobile (primary on top), inline on desktop. */
-export function ResponsiveModalFooter({ children, className }: { children: React.ReactNode; className?: string }) {
+export function ResponsiveModalFooter({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end gap-2", className)}>
       {children}

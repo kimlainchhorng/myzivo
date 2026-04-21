@@ -139,7 +139,7 @@ export function BreakdownTableSkeleton() {
       ))}
     </div>
   );
-
+}
 
 export function AudienceBuilderSkeleton() {
   return (
