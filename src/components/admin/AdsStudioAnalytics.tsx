@@ -2,18 +2,21 @@
  * AdsStudioAnalytics — performance dashboard across all creatives for a store.
  * Pulls from ads_studio_creative_stats view (impressions, clicks, conversions, revenue, AI spend).
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, memo, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart3, MousePointerClick, Eye, Target, DollarSign, RefreshCw, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
-import { PerformanceChartSkeleton, BreakdownTableSkeleton } from "./ads/MarketingSkeletons";
+import { PerformanceChartSkeleton } from "./ads/MarketingSkeletons";
 import MarketingEmptyState from "./ads/MarketingEmptyState";
 import ResponsiveBreakdown, { BreakdownColumn } from "./ads/ResponsiveBreakdown";
 import { mkMeta } from "./ads/marketing-tokens";
 import { cn } from "@/lib/utils";
+
+const NUM_FMT = new Intl.NumberFormat("en-US");
+const CURRENCY_FMT = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
 interface Props { storeId: string }
 
@@ -51,22 +54,31 @@ export default function AdsStudioAnalytics({ storeId }: Props) {
 
   useEffect(() => { if (storeId) load(); }, [storeId]);
 
-  const totals = stats.reduce(
-    (acc, s) => ({
-      impressions: acc.impressions + (s.impressions || 0),
-      clicks: acc.clicks + (s.clicks || 0),
-      conversions: acc.conversions + (s.conversions || 0),
-      revenue_cents: acc.revenue_cents + (s.revenue_cents || 0),
-      spend_cents: acc.spend_cents + (s.spend_cents || 0),
-    }),
-    { impressions: 0, clicks: 0, conversions: 0, revenue_cents: 0, spend_cents: 0 },
+  const totals = useMemo(
+    () =>
+      stats.reduce(
+        (acc, s) => ({
+          impressions: acc.impressions + (s.impressions || 0),
+          clicks: acc.clicks + (s.clicks || 0),
+          conversions: acc.conversions + (s.conversions || 0),
+          revenue_cents: acc.revenue_cents + (s.revenue_cents || 0),
+          spend_cents: acc.spend_cents + (s.spend_cents || 0),
+        }),
+        { impressions: 0, clicks: 0, conversions: 0, revenue_cents: 0, spend_cents: 0 },
+      ),
+    [stats],
   );
 
-  const ctr = totals.impressions > 0 ? (totals.clicks / totals.impressions) * 100 : 0;
-  const cvr = totals.clicks > 0 ? (totals.conversions / totals.clicks) * 100 : 0;
-  const roas = totals.spend_cents > 0 ? totals.revenue_cents / totals.spend_cents : 0;
+  const { ctr, cvr, roas } = useMemo(
+    () => ({
+      ctr: totals.impressions > 0 ? (totals.clicks / totals.impressions) * 100 : 0,
+      cvr: totals.clicks > 0 ? (totals.conversions / totals.clicks) * 100 : 0,
+      roas: totals.spend_cents > 0 ? totals.revenue_cents / totals.spend_cents : 0,
+    }),
+    [totals],
+  );
 
-  const exportCsv = () => {
+  const exportCsv = useCallback(() => {
     const header = "goal,date,impressions,clicks,conversions,revenue,spend\n";
     const lines = stats
       .map((s) =>
@@ -88,19 +100,19 @@ export default function AdsStudioAnalytics({ storeId }: Props) {
     a.download = `ads-performance-${storeId}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  };
+  }, [stats, storeId]);
 
-  if (loading) return <PerformanceChartSkeleton />;
-
-  const columns: BreakdownColumn<CreativeStat>[] = [
+  const columns = useMemo<BreakdownColumn<CreativeStat>[]>(() => ([
     { key: "goal", label: "Goal", render: (s) => <Badge variant="outline" className="text-[10px]">{s.goal}</Badge> },
     { key: "date", label: "Date", render: (s) => new Date(s.created_at).toLocaleDateString(), desktopOnly: true },
-    { key: "impr", label: "Impr", isNumeric: true, render: (s) => s.impressions.toLocaleString() },
-    { key: "clicks", label: "Clicks", isNumeric: true, render: (s) => s.clicks.toLocaleString() },
-    { key: "conv", label: "Conv", isNumeric: true, render: (s) => s.conversions.toLocaleString() },
-    { key: "rev", label: "Revenue", isNumeric: true, render: (s) => <span className="text-primary font-medium">${(s.revenue_cents / 100).toFixed(2)}</span> },
-    { key: "spend", label: "Spend", isNumeric: true, render: (s) => <span className="text-muted-foreground">${(s.spend_cents / 100).toFixed(2)}</span> },
-  ];
+    { key: "impr", label: "Impr", isNumeric: true, render: (s) => NUM_FMT.format(s.impressions) },
+    { key: "clicks", label: "Clicks", isNumeric: true, render: (s) => NUM_FMT.format(s.clicks) },
+    { key: "conv", label: "Conv", isNumeric: true, render: (s) => NUM_FMT.format(s.conversions) },
+    { key: "rev", label: "Revenue", isNumeric: true, render: (s) => <span className="text-primary font-medium">{CURRENCY_FMT.format(s.revenue_cents / 100)}</span> },
+    { key: "spend", label: "Spend", isNumeric: true, render: (s) => <span className="text-muted-foreground">{CURRENCY_FMT.format(s.spend_cents / 100)}</span> },
+  ]), []);
+
+  if (loading) return <PerformanceChartSkeleton />;
 
   return (
     <div className="space-y-3">
@@ -117,10 +129,10 @@ export default function AdsStudioAnalytics({ storeId }: Props) {
 
       {/* Totals */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <StatCard icon={Eye} label="Impressions" value={totals.impressions.toLocaleString()} />
-        <StatCard icon={MousePointerClick} label="Clicks" value={totals.clicks.toLocaleString()} sub={`${ctr.toFixed(2)}% CTR`} />
-        <StatCard icon={Target} label="Conversions" value={totals.conversions.toLocaleString()} sub={`${cvr.toFixed(2)}% CVR`} />
-        <StatCard icon={DollarSign} label="Revenue" value={`$${(totals.revenue_cents / 100).toFixed(2)}`} sub={`${roas.toFixed(2)}x ROAS`} />
+        <StatCard icon={Eye} label="Impressions" value={NUM_FMT.format(totals.impressions)} />
+        <StatCard icon={MousePointerClick} label="Clicks" value={NUM_FMT.format(totals.clicks)} sub={`${ctr.toFixed(2)}% CTR`} />
+        <StatCard icon={Target} label="Conversions" value={NUM_FMT.format(totals.conversions)} sub={`${cvr.toFixed(2)}% CVR`} />
+        <StatCard icon={DollarSign} label="Revenue" value={CURRENCY_FMT.format(totals.revenue_cents / 100)} sub={`${roas.toFixed(2)}x ROAS`} />
       </div>
 
       <Card>
@@ -158,7 +170,7 @@ export default function AdsStudioAnalytics({ storeId }: Props) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, sub }: any) {
+const StatCard = memo(function StatCard({ icon: Icon, label, value, sub }: any) {
   return (
     <Card>
       <CardContent className="p-2.5 sm:p-3">
@@ -171,4 +183,4 @@ function StatCard({ icon: Icon, label, value, sub }: any) {
       </CardContent>
     </Card>
   );
-}
+});

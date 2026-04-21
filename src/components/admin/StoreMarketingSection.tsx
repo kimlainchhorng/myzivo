@@ -33,6 +33,8 @@ import AdsStudioWalletGuard from "./AdsStudioWalletGuard";
 import AdsStudioPublishQueue from "./AdsStudioPublishQueue";
 import AdsStudioDashboard from "./AdsStudioDashboard";
 import AdsStudioRecommendations from "./AdsStudioRecommendations";
+import { MarketingPreviewProvider } from "./ads/MarketingPreviewContext";
+import MarketingPreviewSwitcher, { MarketingPreviewFrame } from "./ads/MarketingPreviewSwitcher";
 
 interface Props {
   storeId: string;
@@ -298,8 +300,10 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName, s
   };
 
   return (
-    <div className="space-y-3 sm:space-y-4 lg:space-y-5">
-      {/* Sub-navigation tabs — scrollable pills on mobile, full grid on desktop */}
+    <MarketingPreviewProvider>
+      <MarketingPreviewFrame>
+        <div className="space-y-3 sm:space-y-4 lg:space-y-5">
+          {/* Sub-navigation tabs — scrollable pills on mobile, full grid on desktop */}
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
         <div className="-mx-3 sm:mx-0 overflow-x-auto scrollbar-none">
           <TabsList className="inline-flex sm:grid sm:w-full sm:grid-cols-6 h-11 sm:h-10 px-3 sm:px-1 gap-1 sm:gap-0 min-w-full">
@@ -1009,6 +1013,9 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName, s
           )}
         </DialogContent>
       </Dialog>
-    </div>
+        </div>
+      </MarketingPreviewFrame>
+      <MarketingPreviewSwitcher />
+    </MarketingPreviewProvider>
   );
 }

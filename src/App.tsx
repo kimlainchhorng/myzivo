@@ -54,6 +54,7 @@ const AdminRefundsPage = lazy(() => import("./pages/admin/AdminRefundsPage"));
 const AdminMessageModerationPage = lazy(() => import("./pages/admin/AdminMessageModerationPage"));
 const AdminCallClosuresPage = lazy(() => import("./pages/admin/AdminCallClosuresPage"));
 const AdminModerationQAPage = lazy(() => import("./pages/admin/AdminModerationQAPage"));
+const AdminMarketingResponsiveQA = lazy(() => import("./pages/admin/AdminMarketingResponsiveQA"));
 
 // App (mobile-first) pages
 const AppHome = lazy(() => lazyRetry(() => import("./pages/app/AppHome")));
@@ -720,6 +721,7 @@ const App = () => (
                 <Route path="/admin/moderation/messages" element={<ProtectedRoute><AdminMessageModerationPage /></ProtectedRoute>} />
                 <Route path="/admin/operations/call-closures" element={<ProtectedRoute><AdminCallClosuresPage /></ProtectedRoute>} />
                 <Route path="/admin/qa/moderation" element={<ProtectedRoute><AdminModerationQAPage /></ProtectedRoute>} />
+                <Route path="/admin/qa/marketing-responsive" element={<ProtectedRoute><AdminMarketingResponsiveQA /></ProtectedRoute>} />
                 <Route path="/track/:token" element={<SharedTripPage />} />
                 <Route path="/driver/performance" element={<DriverPerformancePage />} />
                 <Route path="/driver/map" element={<DriverMapPage />} />

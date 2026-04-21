@@ -3,7 +3,7 @@
  * Generic column config so it can render any per-creative or per-platform breakdown.
  */
 import * as React from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobilePreview } from "./useResponsiveWidth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
@@ -36,7 +36,7 @@ interface Props<T> {
   className?: string;
 }
 
-export default function ResponsiveBreakdown<T>({
+function ResponsiveBreakdownInner<T>({
   rows,
   columns,
   rowKey,
@@ -45,7 +45,7 @@ export default function ResponsiveBreakdown<T>({
   emptyState,
   className,
 }: Props<T>) {
-  const isMobile = useIsMobile();
+  const isMobile = useIsMobilePreview();
 
   if (rows.length === 0 && emptyState) return <>{emptyState}</>;
 
@@ -53,7 +53,7 @@ export default function ResponsiveBreakdown<T>({
     <div className={cn("space-y-2", className)}>
       {onExportCsv && (
         <div className="flex justify-end">
-          <Button size="sm" variant="outline" className="h-9 sm:h-8" onClick={onExportCsv}>
+          <Button size="sm" variant="outline" className="h-9 sm:h-8" onClick={onExportCsv} aria-label="Export breakdown as CSV">
             <Download className="h-3.5 w-3.5 sm:mr-1.5" />
             <span className="hidden sm:inline">Export CSV</span>
           </Button>
@@ -91,6 +91,7 @@ export default function ResponsiveBreakdown<T>({
                   <th
                     key={col.key}
                     className={cn(mkTableCell, mkTableHeader, "text-left", col.isNumeric && "text-right")}
+                    scope="col"
                   >
                     {col.label}
                   </th>
@@ -117,3 +118,6 @@ export default function ResponsiveBreakdown<T>({
     </div>
   );
 }
+
+const ResponsiveBreakdown = React.memo(ResponsiveBreakdownInner) as typeof ResponsiveBreakdownInner;
+export default ResponsiveBreakdown;
