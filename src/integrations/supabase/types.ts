@@ -953,6 +953,8 @@ export type Database = {
       }
       ads_studio_creatives: {
         Row: {
+          auto_winner_at: string | null
+          auto_winner_picked: boolean
           budget: Json | null
           campaign_id: string | null
           created_at: string
@@ -965,6 +967,7 @@ export type Database = {
           id: string
           image_urls: Json | null
           platforms: string[] | null
+          scheduled_at: string | null
           service_ids: string[] | null
           status: string
           store_id: string
@@ -973,6 +976,8 @@ export type Database = {
           video_scripts: Json | null
         }
         Insert: {
+          auto_winner_at?: string | null
+          auto_winner_picked?: boolean
           budget?: Json | null
           campaign_id?: string | null
           created_at?: string
@@ -985,6 +990,7 @@ export type Database = {
           id?: string
           image_urls?: Json | null
           platforms?: string[] | null
+          scheduled_at?: string | null
           service_ids?: string[] | null
           status?: string
           store_id: string
@@ -993,6 +999,8 @@ export type Database = {
           video_scripts?: Json | null
         }
         Update: {
+          auto_winner_at?: string | null
+          auto_winner_picked?: boolean
           budget?: Json | null
           campaign_id?: string | null
           created_at?: string
@@ -1005,6 +1013,7 @@ export type Database = {
           id?: string
           image_urls?: Json | null
           platforms?: string[] | null
+          scheduled_at?: string | null
           service_ids?: string[] | null
           status?: string
           store_id?: string
@@ -1198,6 +1207,75 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ads_studio_publish_jobs: {
+        Row: {
+          attempts: number
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          creative_id: string
+          error_message: string | null
+          id: string
+          platform: string
+          platform_campaign_id: string | null
+          platform_response: Json | null
+          scheduled_at: string | null
+          started_at: string | null
+          status: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          creative_id: string
+          error_message?: string | null
+          id?: string
+          platform: string
+          platform_campaign_id?: string | null
+          platform_response?: Json | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          creative_id?: string
+          error_message?: string | null
+          id?: string
+          platform?: string
+          platform_campaign_id?: string | null
+          platform_response?: Json | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ads_studio_publish_jobs_creative_id_fkey"
+            columns: ["creative_id"]
+            isOneToOne: false
+            referencedRelation: "ads_studio_creative_stats"
+            referencedColumns: ["creative_id"]
+          },
+          {
+            foreignKeyName: "ads_studio_publish_jobs_creative_id_fkey"
+            columns: ["creative_id"]
+            isOneToOne: false
+            referencedRelation: "ads_studio_creatives"
             referencedColumns: ["id"]
           },
         ]
