@@ -2,14 +2,13 @@
  * AdsStudioDashboard — Creative performance charts, winner history, and budget pacing.
  * Combines: (B) Performance dashboard + (C) Budget caps & spend pacing per platform.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +18,12 @@ import {
   BarChart, Bar, Legend,
 } from "recharts";
 import { Trophy, TrendingUp, DollarSign, Gauge, Save, Loader2, AlertTriangle } from "lucide-react";
+import { PerformanceChartSkeleton, BreakdownTableSkeleton, LedgerListSkeleton } from "@/components/admin/ads/MarketingSkeletons";
+import MarketingEmptyState from "@/components/admin/ads/MarketingEmptyState";
+import { useIsMobilePreview } from "@/components/admin/ads/useResponsiveWidth";
+
+const usdFormatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+const numFormatter = new Intl.NumberFormat("en-US");
 
 interface Props { storeId: string }
 type Platform = "google" | "meta" | "tiktok" | "youtube" | "all";
@@ -53,9 +58,24 @@ interface Winner {
 const PLATFORMS: Platform[] = ["all", "google", "meta", "tiktok", "youtube"];
 const PLATFORM_LABEL: Record<string, string> = { all: "All Platforms", google: "Google", meta: "Meta", tiktok: "TikTok", youtube: "YouTube" };
 
-const fmtUsd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+const fmtUsd = (cents: number) => usdFormatter.format(cents / 100);
+
+const KpiCard = memo(function KpiCard({ label, value, Icon }: { label: string; value: string; Icon: any }) {
+  return (
+    <Card>
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] text-muted-foreground">{label}</span>
+          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        </div>
+        <p className="text-lg font-bold mt-1">{value}</p>
+      </CardContent>
+    </Card>
+  );
+});
 
 export default function AdsStudioDashboard({ storeId }: Props) {
+  const isMobile = useIsMobilePreview();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [budgets, setBudgets] = useState<Record<string, Budget>>({});
@@ -175,72 +195,72 @@ export default function AdsStudioDashboard({ storeId }: Props) {
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        {[
-          { label: "Spend", value: fmtUsd(totals.spend), icon: DollarSign },
-          { label: "Impressions", value: totals.impressions.toLocaleString(), icon: TrendingUp },
-          { label: "CTR", value: `${totals.ctr.toFixed(2)}%`, icon: Gauge },
-          { label: "CPC", value: fmtUsd(totals.cpc), icon: DollarSign },
-        ].map((k) => (
-          <Card key={k.label}>
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground">{k.label}</span>
-                <k.icon className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
-              <p className="text-lg font-bold mt-1">{k.value}</p>
-            </CardContent>
-          </Card>
-        ))}
+        <KpiCard label="Spend" value={fmtUsd(totals.spend)} Icon={DollarSign} />
+        <KpiCard label="Impressions" value={numFormatter.format(totals.impressions)} Icon={TrendingUp} />
+        <KpiCard label="CTR" value={`${totals.ctr.toFixed(2)}%`} Icon={Gauge} />
+        <KpiCard label="CPC" value={fmtUsd(totals.cpc)} Icon={DollarSign} />
       </div>
 
       {/* Trend chart */}
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-xs">Spend & clicks over time</CardTitle></CardHeader>
-        <CardContent>
-          {loading ? <Skeleton className="h-[200px] w-full" /> : trendData.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-8 text-center">No spend recorded yet.</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={trendData}>
-                <defs>
-                  <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 11 }} />
-                <Area type="monotone" dataKey="spend" stroke="hsl(var(--primary))" fill="url(#spendGrad)" name="Spend ($)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
+      {loading ? (
+        <PerformanceChartSkeleton />
+      ) : (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-xs">Spend & clicks over time</CardTitle></CardHeader>
+          <CardContent>
+            {trendData.length === 0 ? (
+              <MarketingEmptyState icon={TrendingUp} title="No spend recorded yet" body="Once your ads run, daily spend will chart here." />
+            ) : (
+              <div className="aspect-[4/3] sm:aspect-[16/8] lg:aspect-[16/5] w-full">
+                <ResponsiveContainer width="100%" height="100%" debounce={150}>
+                  <AreaChart data={trendData}>
+                    <defs>
+                      <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    {!isMobile && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />}
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" {...(isMobile ? { interval: "preserveStartEnd" as const, minTickGap: 24 } : {})} />
+                    <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" width={isMobile ? 32 : 40} />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 11 }} />
+                    <Area type="monotone" dataKey="spend" stroke="hsl(var(--primary))" fill="url(#spendGrad)" name="Spend ($)" isAnimationActive={!isMobile} animationDuration={isMobile ? 0 : 600} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Platform breakdown */}
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-xs">By platform</CardTitle></CardHeader>
-        <CardContent>
-          {loading ? <Skeleton className="h-[200px] w-full" /> : platformData.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-8 text-center">No platform data yet.</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={platformData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="platform" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 11 }} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="spend" fill="hsl(var(--primary))" name="Spend ($)" />
-                <Bar dataKey="clicks" fill="hsl(var(--accent-foreground) / 0.6)" name="Clicks" />
-                <Bar dataKey="conversions" fill="hsl(142 70% 45%)" name="Conversions" />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
+      {loading ? (
+        <BreakdownTableSkeleton />
+      ) : (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-xs">By platform</CardTitle></CardHeader>
+          <CardContent>
+            {platformData.length === 0 ? (
+              <MarketingEmptyState icon={Gauge} title="No platform data yet" body="Connect a platform and launch a campaign to see breakdowns." />
+            ) : (
+              <div className="aspect-[4/3] sm:aspect-[16/8] lg:aspect-[16/5] w-full">
+                <ResponsiveContainer width="100%" height="100%" debounce={150}>
+                  <BarChart data={platformData}>
+                    {!isMobile && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />}
+                    <XAxis dataKey="platform" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" width={isMobile ? 32 : 40} />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 11 }} />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="spend" fill="hsl(var(--primary))" name="Spend ($)" isAnimationActive={!isMobile} />
+                    <Bar dataKey="clicks" fill="hsl(var(--accent-foreground) / 0.6)" name="Clicks" isAnimationActive={!isMobile} />
+                    <Bar dataKey="conversions" fill="hsl(142 70% 45%)" name="Conversions" isAnimationActive={!isMobile} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Budget caps & pacing per platform */}
       <Card>
@@ -316,8 +336,8 @@ export default function AdsStudioDashboard({ storeId }: Props) {
           <CardTitle className="text-xs flex items-center gap-1.5"><Trophy className="h-3.5 w-3.5 text-amber-500" /> Winner history</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? <Skeleton className="h-20 w-full" /> : winners.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-3 text-center">No winners picked yet. Schedule auto-winner from the Publish tab.</p>
+          {loading ? <LedgerListSkeleton /> : winners.length === 0 ? (
+            <MarketingEmptyState icon={Trophy} title="No winners yet" body="Schedule auto-winner from the Publish tab." />
           ) : (
             <div className="space-y-1.5">
               {winners.map((w) => (
