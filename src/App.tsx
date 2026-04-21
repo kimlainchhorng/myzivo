@@ -193,6 +193,9 @@ const AdminSecuritySentinelPage = lazy(() => import("./pages/admin/AdminSecurity
 const AdminAuthShieldPage = lazy(() => import("./pages/admin/AdminAuthShieldPage"));
 const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
 const DriverEarningsPage = lazy(() => import("./pages/driver/DriverEarningsPage"));
+const DriverPayoutsPage = lazy(() => import("./pages/driver/DriverPayoutsPage"));
+const AdminGoogleAdsPage = lazy(() => import("./pages/admin/AdminGoogleAdsPage"));
+const AdminMetaAdsPage = lazy(() => import("./pages/admin/AdminMetaAdsPage"));
 const DriverPerformancePage = lazy(() => import("./pages/driver/DriverPerformancePage"));
 const DriverMapPage = lazy(() => import("./pages/driver/DriverMapPage"));
 const DriverShopPage = lazy(() => import("./pages/driver/DriverShopPage"));
@@ -693,6 +696,9 @@ const App = () => (
                 <Route path="/driver/shop/:orderId" element={<DriverShopPage />} />
                 <Route path="/driver/home" element={<DriverHomePage />} />
                 <Route path="/driver/earnings" element={<DriverEarningsPage />} />
+                <Route path="/driver/payouts" element={<ProtectedRoute><DriverPayoutsPage /></ProtectedRoute>} />
+                <Route path="/admin/ads/google" element={<ProtectedRoute><AdminGoogleAdsPage /></ProtectedRoute>} />
+                <Route path="/admin/ads/meta" element={<ProtectedRoute><AdminMetaAdsPage /></ProtectedRoute>} />
                 <Route path="/driver/performance" element={<DriverPerformancePage />} />
                 <Route path="/driver/map" element={<DriverMapPage />} />
                 <Route path="/package-delivery" element={<PreserveQueryRedirect to="/delivery" />} />
