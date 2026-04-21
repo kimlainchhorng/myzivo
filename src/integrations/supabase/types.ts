@@ -49230,19 +49230,28 @@ export type Database = {
       trip_shares: {
         Row: {
           created_at: string | null
+          created_by: string | null
+          expires_at: string
           id: string
+          revoked: boolean
           ride_id: string
           share_token: string
         }
         Insert: {
           created_at?: string | null
+          created_by?: string | null
+          expires_at?: string
           id?: string
+          revoked?: boolean
           ride_id: string
           share_token: string
         }
         Update: {
           created_at?: string | null
+          created_by?: string | null
+          expires_at?: string
           id?: string
+          revoked?: boolean
           ride_id?: string
           share_token?: string
         }
@@ -52943,6 +52952,39 @@ export type Database = {
           source?: string | null
           status?: string
           timestamp?: string
+        }
+        Relationships: []
+      }
+      webhook_events: {
+        Row: {
+          event_id: string
+          event_type: string
+          id: string
+          raw_payload: Json | null
+          received_at: string
+          ride_request_id: string | null
+          source: string
+          status: string | null
+        }
+        Insert: {
+          event_id: string
+          event_type: string
+          id?: string
+          raw_payload?: Json | null
+          received_at?: string
+          ride_request_id?: string | null
+          source?: string
+          status?: string | null
+        }
+        Update: {
+          event_id?: string
+          event_type?: string
+          id?: string
+          raw_payload?: Json | null
+          received_at?: string
+          ride_request_id?: string | null
+          source?: string
+          status?: string | null
         }
         Relationships: []
       }
