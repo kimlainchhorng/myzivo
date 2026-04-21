@@ -3,9 +3,11 @@
  * Includes scrollable body, sticky footer with safe-area padding, and overscroll containment.
  */
 import * as React from "react";
+import { X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useFocusReturn } from "@/components/admin/ads/useFocusReturn";
 import { cn } from "@/lib/utils";
 
 interface ResponsiveModalProps {
@@ -32,18 +34,43 @@ export function ResponsiveModal({
   forceDialog,
 }: ResponsiveModalProps) {
   const isMobile = useIsMobile();
+  useFocusReturn(open);
+
+  const handleHandleKey = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onOpenChange(false);
+    }
+  };
 
   if (isMobile && !forceDialog) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="bottom"
+          aria-modal="true"
           className="p-0 h-auto max-h-[90dvh] flex flex-col rounded-t-2xl gap-0"
         >
-          {/* Drag handle */}
-          <div className="flex justify-center pt-2 pb-1 shrink-0">
+          {/* Drag handle — keyboard accessible */}
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Drag or press Enter to dismiss"
+            onClick={() => onOpenChange(false)}
+            onKeyDown={handleHandleKey}
+            className="flex justify-center pt-2 pb-1 shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-t-2xl"
+          >
             <div className="h-1.5 w-10 rounded-full bg-muted-foreground/30" />
           </div>
+          {/* Visible-on-focus close button (Sheet's built-in X is in top-right; this is an a11y backup) */}
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            aria-label="Close dialog"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:right-2 focus:z-10 focus:rounded-md focus:bg-background focus:p-1.5 focus:ring-2 focus:ring-ring"
+          >
+            <X className="h-4 w-4" />
+          </button>
           {(title || description) && (
             <SheetHeader className="px-4 pb-3 pt-1 text-left shrink-0">
               {title && <SheetTitle className="text-base">{title}</SheetTitle>}
