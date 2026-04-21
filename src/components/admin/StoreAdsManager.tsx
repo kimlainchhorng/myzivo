@@ -1,59 +1,56 @@
 /**
- * StoreAdsManager — Paid-ads dashboard for stores.
- * Phase 1: full CRUD + per-platform "Connect" stubs (no real API calls yet).
- * Each platform needs its own approved API access before campaigns actually launch externally.
+ * StoreAdsManager — Paid-ads dashboard for stores. Restructured with:
+ *  - AdsStatStrip (4-tile aggregate w/ 7-day deltas)
+ *  - Dense AdsPlatformTile grid + unified AdsConnectDialog
+ *  - AdsOnboardingChecklist
+ *  - Filterable, searchable, sortable campaigns list w/ AdsCampaignRow
+ *  - 4-step CreateCampaignWizard (Goal → Audience → Creative → Budget)
+ *  - Sticky FAB + realtime via useStoreAdsOverview
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { ResponsiveModal, ResponsiveModalFooter } from "@/components/ui/responsive-modal";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import {
   Facebook, Instagram, Search as Google, Music2 as TikTok, Twitter as X,
-  Plus, Trash2, Edit, Pause, Play, Loader2,
-  TrendingUp, MousePointerClick, Eye, DollarSign, Megaphone, AlertCircle, Plug,
+  Plus, Megaphone, AlertCircle, Plug, Search as SearchIcon,
 } from "lucide-react";
-import { CampaignListSkeleton, PlatformTilesSkeleton, OAuthConnectSkeleton } from "@/components/admin/ads/MarketingSkeletons";
+import {
+  AdsStatStripSkeleton,
+  OnboardingChecklistSkeleton,
+  CampaignRowSkeleton,
+  PlatformTilesSkeleton,
+  OAuthConnectSkeleton,
+} from "@/components/admin/ads/MarketingSkeletons";
 import MarketingEmptyState from "@/components/admin/ads/MarketingEmptyState";
+import AdsStatStrip from "@/components/admin/ads/AdsStatStrip";
+import AdsPlatformTile from "@/components/admin/ads/AdsPlatformTile";
+import AdsOnboardingChecklist from "@/components/admin/ads/AdsOnboardingChecklist";
+import AdsCampaignRow from "@/components/admin/ads/AdsCampaignRow";
+import AdsConnectDialog from "@/components/admin/ads/AdsConnectDialog";
+import CreateCampaignWizard, { type CampaignFormState } from "@/components/admin/ads/CreateCampaignWizard";
+import {
+  useStoreAdsOverview,
+  type AdCampaign,
+  type AdPlatform,
+} from "@/hooks/useStoreAdsOverview";
+import { cn } from "@/lib/utils";
 
 interface Props {
   storeId: string;
 }
 
-type Platform = "meta" | "instagram" | "google" | "tiktok" | "x";
-
-const PLATFORMS: {
-  id: Platform; label: string; icon: any; color: string; secretsHint: string;
-}[] = [
-  { id: "meta", label: "Facebook", icon: Facebook, color: "text-[#1877F2]", secretsHint: "Meta Business Manager + Marketing API access" },
-  { id: "instagram", label: "Instagram", icon: Instagram, color: "text-[#E4405F]", secretsHint: "Same Meta credentials + IG Business account" },
-  { id: "google", label: "Google Ads", icon: Google, color: "text-[#4285F4]", secretsHint: "MCC + approved Developer Token + OAuth" },
-  { id: "tiktok", label: "TikTok Ads", icon: TikTok, color: "text-foreground", secretsHint: "TikTok for Business + Marketing API token" },
-  { id: "x", label: "X (Twitter)", icon: X, color: "text-foreground", secretsHint: "X Ads API (paid tier) + OAuth tokens" },
+const PLATFORMS = [
+  { id: "meta" as AdPlatform, label: "Facebook", icon: Facebook, color: "text-[#1877F2]", oauth: true, brand: "bg-[#1877F2] hover:bg-[#1459bf]", help: "https://www.facebook.com/business/help/1492627900875762" },
+  { id: "instagram" as AdPlatform, label: "Instagram", icon: Instagram, color: "text-[#E4405F]", oauth: true, brand: "bg-[#E4405F] hover:bg-[#c1304a]", help: "https://www.facebook.com/business/help/898752960195806" },
+  { id: "google" as AdPlatform, label: "Google Ads", icon: Google, color: "text-[#4285F4]", oauth: true, brand: "bg-[#4285F4] hover:bg-[#3367d6]", help: "https://support.google.com/google-ads/answer/1704344" },
+  { id: "tiktok" as AdPlatform, label: "TikTok Ads", icon: TikTok, color: "text-foreground", oauth: false, brand: "", help: "https://ads.tiktok.com/help/article/find-your-ad-account-id" },
+  { id: "x" as AdPlatform, label: "X (Twitter)", icon: X, color: "text-foreground", oauth: false, brand: "", help: "https://business.x.com/en/help/account-setup/finding-your-ads-account-id.html" },
 ];
-
-interface AdAccount {
-  id: string; platform: Platform; status: string;
-  external_account_id: string | null; display_name: string | null;
-  connected_at: string | null;
-}
-
-interface AdCampaign {
-  id: string; name: string; objective: string; platforms: Platform[];
-  status: string; daily_budget_cents: number; total_budget_cents: number;
-  currency: string; start_date: string | null; end_date: string | null;
-  headline: string | null; body: string | null; cta: string | null;
-  destination_url: string | null; creative_url: string | null;
-  spend_cents: number; impressions: number; clicks: number; conversions: number;
-  created_at: string;
-}
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -64,48 +61,51 @@ const STATUS_COLORS: Record<string, string> = {
   rejected: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 
+type FilterStatus = "all" | "draft" | "pending_review" | "active" | "paused" | "ended";
+type SortKey = "newest" | "spend" | "performance";
+
+const STATUS_FILTERS: { id: FilterStatus; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "draft", label: "Draft" },
+  { id: "pending_review", label: "Pending" },
+  { id: "active", label: "Active" },
+  { id: "paused", label: "Paused" },
+  { id: "ended", label: "Ended" },
+];
+
+const EMPTY_FORM: CampaignFormState = {
+  name: "",
+  objective: "traffic",
+  platforms: [],
+  daily_budget: 10,
+  total_budget: 100,
+  currency: "USD",
+  start_date: "",
+  end_date: "",
+  headline: "",
+  body: "",
+  cta: "Learn More",
+  destination_url: "",
+};
+
 export default function StoreAdsManager({ storeId }: Props) {
-  const qc = useQueryClient();
+  const { accounts, campaigns, stats, checklist, isLoading, invalidate } =
+    useStoreAdsOverview(storeId);
+
   const [createOpen, setCreateOpen] = useState(false);
-  const [connectPlatform, setConnectPlatform] = useState<Platform | null>(null);
   const [editing, setEditing] = useState<AdCampaign | null>(null);
-  const [form, setForm] = useState({
-    name: "", objective: "traffic", platforms: [] as Platform[],
-    daily_budget: 10, total_budget: 100, currency: "USD",
-    start_date: "", end_date: "",
-    headline: "", body: "", cta: "Learn More", destination_url: "",
-  });
+  const [connectPlatform, setConnectPlatform] = useState<AdPlatform | null>(null);
+  const [filter, setFilter] = useState<FilterStatus>("all");
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<SortKey>("newest");
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
-  const { data: accounts = [], isLoading: accountsLoading } = useQuery({
-    queryKey: ["store-ad-accounts", storeId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("store_ad_accounts" as any)
-        .select("*")
-        .eq("store_id", storeId);
-      if (error) throw error;
-      return (data || []) as unknown as AdAccount[];
-    },
-  });
+  const accountByPlatform = (p: AdPlatform) => accounts.find((a) => a.platform === p);
 
-  const { data: campaigns = [], isLoading } = useQuery({
-    queryKey: ["store-ad-campaigns", storeId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("store_ad_campaigns" as any)
-        .select("*")
-        .eq("store_id", storeId)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data || []) as unknown as AdCampaign[];
-    },
-  });
-
-  const accountByPlatform = (p: Platform) =>
-    accounts.find((a) => a.platform === p);
+  // ===== Mutations =====
 
   const connectMutation = useMutation({
-    mutationFn: async ({ platform, externalId, displayName }: { platform: Platform; externalId: string; displayName: string }) => {
+    mutationFn: async ({ platform, externalId, displayName }: { platform: AdPlatform; externalId: string; displayName: string }) => {
       const existing = accountByPlatform(platform);
       const payload: any = {
         store_id: storeId,
@@ -125,16 +125,15 @@ export default function StoreAdsManager({ storeId }: Props) {
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["store-ad-accounts", storeId] });
+      invalidate();
       toast.success("Account saved.");
       setConnectPlatform(null);
     },
     onError: (e: any) => toast.error(e.message),
   });
 
-  // Real OAuth: Meta (FB + IG) and Google Ads. Other platforms fall back to manual entry / waitlist.
   const oauthMutation = useMutation({
-    mutationFn: async (platform: Platform) => {
+    mutationFn: async (platform: AdPlatform) => {
       const returnUrl = `${window.location.origin}/connect/callback`;
       let fnName: string;
       if (platform === "meta" || platform === "instagram") fnName = "meta-oauth-start";
@@ -156,14 +155,11 @@ export default function StoreAdsManager({ storeId }: Props) {
       const { error } = await supabase.from("store_ad_accounts" as any).delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["store-ad-accounts", storeId] });
-      toast.success("Disconnected");
-    },
+    onSuccess: () => { invalidate(); toast.success("Disconnected"); setConnectPlatform(null); },
   });
 
   const saveCampaign = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ form, asDraft }: { form: CampaignFormState; asDraft: boolean }) => {
       const payload: any = {
         store_id: storeId,
         name: form.name,
@@ -178,7 +174,7 @@ export default function StoreAdsManager({ storeId }: Props) {
         body: form.body || null,
         cta: form.cta || null,
         destination_url: form.destination_url || null,
-        status: "draft",
+        status: asDraft ? "draft" : "pending_review",
       };
       if (editing) {
         const { error } = await supabase.from("store_ad_campaigns" as any).update(payload).eq("id", editing.id);
@@ -189,9 +185,9 @@ export default function StoreAdsManager({ storeId }: Props) {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["store-ad-campaigns", storeId] });
-      toast.success(editing ? "Campaign updated" : "Campaign saved as draft");
+    onSuccess: (_, vars) => {
+      invalidate();
+      toast.success(editing ? "Campaign updated" : vars.asDraft ? "Saved as draft" : "Submitted for review");
       setCreateOpen(false);
       setEditing(null);
     },
@@ -203,29 +199,19 @@ export default function StoreAdsManager({ storeId }: Props) {
       const { error } = await supabase.from("store_ad_campaigns" as any).delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["store-ad-campaigns", storeId] });
-      toast.success("Campaign deleted");
-    },
+    onSuccess: () => { invalidate(); toast.success("Campaign deleted"); },
   });
 
   const launchCampaign = useMutation({
     mutationFn: async (c: AdCampaign) => {
-      // Verify each selected platform has a connected account
       const missing = c.platforms.filter((p) => !accountByPlatform(p) || accountByPlatform(p)?.status === "disconnected");
-      if (missing.length) {
-        throw new Error(`Connect these platforms first: ${missing.join(", ")}`);
-      }
-      // Mark as pending_review until real API integration runs
+      if (missing.length) throw new Error(`Connect these platforms first: ${missing.join(", ")}`);
       const { error } = await supabase.from("store_ad_campaigns" as any)
         .update({ status: "pending_review" })
         .eq("id", c.id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["store-ad-campaigns", storeId] });
-      toast.success("Campaign queued. Real API launch will activate once platform integration is enabled.");
-    },
+    onSuccess: () => { invalidate(); toast.success("Campaign queued for review."); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -234,106 +220,150 @@ export default function StoreAdsManager({ storeId }: Props) {
       const { error } = await supabase.from("store_ad_campaigns" as any).update({ status }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["store-ad-campaigns", storeId] }),
+    onSuccess: () => invalidate(),
   });
 
-  const openCreate = () => {
-    setEditing(null);
-    setForm({
-      name: "", objective: "traffic", platforms: [],
-      daily_budget: 10, total_budget: 100, currency: "USD",
-      start_date: "", end_date: "",
-      headline: "", body: "", cta: "Learn More", destination_url: "",
+  const duplicateCampaign = useMutation({
+    mutationFn: async (c: AdCampaign) => {
+      const payload: any = {
+        store_id: storeId,
+        name: `${c.name} (copy)`,
+        objective: c.objective,
+        platforms: c.platforms,
+        daily_budget_cents: c.daily_budget_cents,
+        total_budget_cents: c.total_budget_cents,
+        currency: c.currency,
+        headline: c.headline,
+        body: c.body,
+        cta: c.cta,
+        destination_url: c.destination_url,
+        status: "draft",
+        created_by: (await supabase.auth.getUser()).data.user?.id,
+      };
+      const { error } = await supabase.from("store_ad_campaigns" as any).insert(payload);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); toast.success("Campaign duplicated"); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  // ===== Handlers =====
+
+  const openCreate = () => { setEditing(null); setCreateOpen(true); };
+  const openEdit = (c: AdCampaign) => { setEditing(c); setCreateOpen(true); };
+
+  const initialForm: CampaignFormState = useMemo(() => {
+    if (!editing) return EMPTY_FORM;
+    return {
+      name: editing.name,
+      objective: editing.objective,
+      platforms: editing.platforms || [],
+      daily_budget: editing.daily_budget_cents / 100,
+      total_budget: editing.total_budget_cents / 100,
+      currency: editing.currency,
+      start_date: editing.start_date ? editing.start_date.slice(0, 16) : "",
+      end_date: editing.end_date ? editing.end_date.slice(0, 16) : "",
+      headline: editing.headline || "",
+      body: editing.body || "",
+      cta: editing.cta || "Learn More",
+      destination_url: editing.destination_url || "",
+    };
+  }, [editing]);
+
+  // ===== Derived: filtered/sorted campaigns =====
+
+  const filteredCampaigns = useMemo(() => {
+    let list = campaigns;
+    if (filter !== "all") list = list.filter((c) => c.status === filter);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((c) => c.name.toLowerCase().includes(q));
+    }
+    list = [...list].sort((a, b) => {
+      if (sort === "spend") return b.spend_cents - a.spend_cents;
+      if (sort === "performance") return b.clicks - a.clicks;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
-    setCreateOpen(true);
-  };
+    return list;
+  }, [campaigns, filter, search, sort]);
 
-  const openEdit = (c: AdCampaign) => {
-    setEditing(c);
-    setForm({
-      name: c.name,
-      objective: c.objective,
-      platforms: c.platforms || [],
-      daily_budget: c.daily_budget_cents / 100,
-      total_budget: c.total_budget_cents / 100,
-      currency: c.currency,
-      start_date: c.start_date ? c.start_date.slice(0, 16) : "",
-      end_date: c.end_date ? c.end_date.slice(0, 16) : "",
-      headline: c.headline || "",
-      body: c.body || "",
-      cta: c.cta || "Learn More",
-      destination_url: c.destination_url || "",
-    });
-    setCreateOpen(true);
-  };
+  const statusCounts = useMemo(() => {
+    const acc: Record<string, number> = { all: campaigns.length };
+    for (const c of campaigns) acc[c.status] = (acc[c.status] || 0) + 1;
+    return acc;
+  }, [campaigns]);
 
-  const togglePlatform = (p: Platform) => {
-    setForm((f) => ({
-      ...f,
-      platforms: f.platforms.includes(p) ? f.platforms.filter((x) => x !== p) : [...f.platforms, p],
-    }));
-  };
+  const connectDef = connectPlatform ? PLATFORMS.find((p) => p.id === connectPlatform)! : null;
+  const connectAcc = connectPlatform ? accountByPlatform(connectPlatform) : undefined;
 
-  // Aggregate metrics
-  const totals = campaigns.reduce(
-    (acc, c) => ({
-      spend: acc.spend + c.spend_cents,
-      impressions: acc.impressions + c.impressions,
-      clicks: acc.clicks + c.clicks,
-      conversions: acc.conversions + c.conversions,
-    }),
-    { spend: 0, impressions: 0, clicks: 0, conversions: 0 }
-  );
+  const scrollToPlatforms = () => {
+    document.getElementById("ads-platforms")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const scrollToCampaigns = () => {
+    document.getElementById("ads-campaigns")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
-    <div className="space-y-5">
-      {/* Heads-up banner */}
-      <Card className="border-amber-300/50 bg-amber-50/50 dark:bg-amber-950/20">
-        <CardContent className="p-4 flex gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div className="text-xs">
-            <p className="font-semibold text-amber-900 dark:text-amber-200 mb-1">Ad platform integration in progress</p>
-            <p className="text-amber-800 dark:text-amber-300/80 leading-relaxed">
-              You can build, save, and queue campaigns now. Real launches activate once each platform's API access is approved (Meta Marketing API, Google Ads Developer Token, TikTok Marketing API, X Ads API).
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-3 sm:space-y-4 pb-20 sm:pb-4">
+      {/* Stat strip */}
+      {isLoading ? <AdsStatStripSkeleton /> : <AdsStatStrip stats={stats} />}
+
+      {/* Slim integration chip */}
+      {!bannerDismissed && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] sm:text-xs">
+          <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+          <p className="flex-1 text-amber-900 dark:text-amber-300/90 leading-tight">
+            <span className="font-semibold">API approvals pending</span> — drafts allowed; live launches activate once each platform is approved.
+          </p>
+          <button
+            onClick={() => setBannerDismissed(true)}
+            className="text-amber-700 dark:text-amber-300/70 hover:text-amber-900 text-[10px] uppercase tracking-wider shrink-0"
+            aria-label="Dismiss banner"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Onboarding checklist */}
+      {isLoading ? (
+        <OnboardingChecklistSkeleton />
+      ) : (
+        <AdsOnboardingChecklist
+          state={checklist}
+          onConnectPlatform={scrollToPlatforms}
+          onAddBilling={() => toast.info("Open the Wallet section to add funds.")}
+          onCreateCampaign={openCreate}
+          onSubmitForReview={scrollToCampaigns}
+        />
+      )}
 
       {/* Platform connections */}
-      <Card>
-        <CardHeader className="pb-3">
+      <Card id="ads-platforms">
+        <CardHeader className="pb-2.5 px-3 pt-3">
           <CardTitle className="text-sm flex items-center gap-2">
             <Megaphone className="w-4 h-4 text-primary" /> Ad Platforms
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          {accountsLoading ? (
+        <CardContent className="px-3 pb-3">
+          {isLoading ? (
             <PlatformTilesSkeleton />
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5">
-              {PLATFORMS.map((p) => {
-                const acc = accountByPlatform(p.id);
-                const connected = acc && acc.status !== "disconnected";
-                const Icon = p.icon;
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => setConnectPlatform(p.id)}
-                    aria-label={`${connected ? "Manage" : "Connect"} ${p.label}`}
-                    className="flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border border-border hover:border-primary/40 hover:bg-accent/30 active:scale-[0.98] transition text-left min-h-[88px] touch-manipulation"
-                  >
-                    <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${p.color}`} />
-                    <div className="text-[11px] sm:text-xs font-medium text-center leading-tight">{p.label}</div>
-                    <Badge variant={connected ? "default" : "outline"} className="text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5">
-                      {connected ? acc?.status : "Connect"}
-                    </Badge>
-                  </button>
-                );
-              })}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+              {PLATFORMS.map((p) => (
+                <AdsPlatformTile
+                  key={p.id}
+                  platform={p.id}
+                  label={p.label}
+                  icon={p.icon}
+                  color={p.color}
+                  account={accountByPlatform(p.id)}
+                  onClick={() => setConnectPlatform(p.id)}
+                />
+              ))}
             </div>
           )}
-          {!accountsLoading && accounts.length === 0 && (
+          {!isLoading && accounts.length === 0 && (
             <div className="mt-3">
               <MarketingEmptyState
                 icon={Plug}
@@ -345,267 +375,175 @@ export default function StoreAdsManager({ storeId }: Props) {
         </CardContent>
       </Card>
 
-      {/* Aggregate stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-        {[
-          { label: "Total Spend", value: `$${(totals.spend / 100).toFixed(2)}`, icon: DollarSign },
-          { label: "Impressions", value: totals.impressions.toLocaleString(), icon: Eye },
-          { label: "Clicks", value: totals.clicks.toLocaleString(), icon: MousePointerClick },
-          { label: "Conversions", value: totals.conversions.toLocaleString(), icon: TrendingUp },
-        ].map((s) => {
-          const Icon = s.icon;
-          return (
-            <Card key={s.label}>
-              <CardContent className="p-3 sm:p-4">
-                <Icon className="w-4 h-4 text-primary mb-1.5 sm:mb-2" />
-                <p className="text-lg sm:text-2xl font-bold leading-tight">{s.value}</p>
-                <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">{s.label}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
       {/* Campaigns list */}
-      <Card>
-        <CardHeader className="flex-row items-center justify-between pb-3">
+      <Card id="ads-campaigns">
+        <CardHeader className="px-3 pt-3 pb-2.5 flex-row items-center justify-between gap-2">
           <CardTitle className="text-sm">Campaigns</CardTitle>
-          <Button size="sm" onClick={openCreate}>
+          <Button size="sm" className="h-8 hidden sm:inline-flex" onClick={openCreate}>
             <Plus className="w-3.5 h-3.5 mr-1" /> New Campaign
           </Button>
         </CardHeader>
-        <CardContent className="space-y-2">
-          {isLoading ? (
-            <CampaignListSkeleton />
-          ) : campaigns.length === 0 ? (
-            <MarketingEmptyState
-              icon={Megaphone}
-              title="No campaigns yet"
-              body="Launch your first paid campaign to start reaching new customers on Facebook, Instagram, Google, TikTok, and X."
-              action={
-                <Button size="sm" onClick={openCreate}>
-                  <Plus className="w-3.5 h-3.5 mr-1" /> New Campaign
-                </Button>
-              }
-            />
-          ) : (
-            campaigns.map((c) => (
-              <div key={c.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 rounded-lg border border-border hover:bg-accent/20 transition">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="font-semibold text-sm truncate">{c.name}</span>
-                    <Badge className={`text-[10px] h-5 ${STATUS_COLORS[c.status] || ""}`}>{c.status.replace("_", " ")}</Badge>
-                  </div>
-                  <div className="flex items-center gap-1 flex-wrap">
-                    {c.platforms?.map((p) => {
-                      const def = PLATFORMS.find((x) => x.id === p);
-                      const Icon = def?.icon || Megaphone;
-                      return <Icon key={p} className={`w-3 h-3 ${def?.color}`} />;
-                    })}
-                    <span className="text-[11px] text-muted-foreground ml-1">
-                      ${(c.daily_budget_cents / 100).toFixed(2)}/day · {c.impressions.toLocaleString()} impr · {c.clicks.toLocaleString()} clicks
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 self-end sm:self-auto shrink-0">
-                  {c.status === "draft" && (
-                    <Button size="sm" variant="outline" className="h-9 sm:h-8" aria-label={`Launch campaign ${c.name}`} onClick={() => launchCampaign.mutate(c)}>
-                      <Play className="w-3.5 h-3.5 mr-1" /> Launch
-                    </Button>
-                  )}
-                  {c.status === "active" && (
-                    <Button size="sm" variant="outline" className="h-9 w-9 sm:h-8 sm:w-8 p-0" aria-label={`Pause campaign ${c.name}`} onClick={() => toggleStatus.mutate({ id: c.id, status: "paused" })}>
-                      <Pause className="w-3.5 h-3.5" />
-                    </Button>
-                  )}
-                  {c.status === "paused" && (
-                    <Button size="sm" variant="outline" className="h-9 w-9 sm:h-8 sm:w-8 p-0" aria-label={`Resume campaign ${c.name}`} onClick={() => toggleStatus.mutate({ id: c.id, status: "active" })}>
-                      <Play className="w-3.5 h-3.5" />
-                    </Button>
-                  )}
-                  <Button size="sm" variant="ghost" className="h-9 w-9 sm:h-8 sm:w-8 p-0" aria-label={`Edit campaign ${c.name}`} onClick={() => openEdit(c)}>
-                    <Edit className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button size="sm" variant="ghost" className="h-9 w-9 sm:h-8 sm:w-8 p-0" aria-label={`Delete campaign ${c.name}`} onClick={() => deleteCampaign.mutate(c.id)}>
-                    <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                  </Button>
-                </div>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Connect modal */}
-      {connectPlatform && (() => {
-        const p = PLATFORMS.find((x) => x.id === connectPlatform)!;
-        const Icon = p.icon;
-        const acc = accountByPlatform(connectPlatform);
-        return (
-          <ResponsiveModal
-            open={!!connectPlatform}
-            onOpenChange={(o) => !o && setConnectPlatform(null)}
-            title={
-              <span className="flex items-center gap-2">
-                <Icon className={`w-5 h-5 ${p.color}`} /> Connect {p.label}
-              </span>
-            }
-          >
-            {oauthMutation.isPending ? (
-              <OAuthConnectSkeleton />
-            ) : (
-              <div className="space-y-3 text-sm">
-                {(p.id === "meta" || p.id === "instagram") && (
-                  <Button
-                    className="w-full bg-[#1877F2] hover:bg-[#1459bf] text-white"
-                    onClick={() => oauthMutation.mutate(p.id)}
-                    disabled={oauthMutation.isPending}
-                  >
-                    <Facebook className="w-4 h-4 mr-2" />
-                    Continue with Facebook
-                  </Button>
-                )}
-                {p.id === "google" && (
-                  <Button
-                    className="w-full bg-[#4285F4] hover:bg-[#3367d6] text-white"
-                    onClick={() => oauthMutation.mutate(p.id)}
-                    disabled={oauthMutation.isPending}
-                  >
-                    <Google className="w-4 h-4 mr-2" />
-                    Continue with Google
-                  </Button>
-                )}
-                <div className="p-3 rounded-lg bg-muted text-xs leading-relaxed">
-                  <p className="font-semibold mb-1">
-                    {(p.id === "meta" || p.id === "instagram")
-                      ? "Or paste an Ad Account ID manually:"
-                      : "Required:"}
-                  </p>
-                  <p className="text-muted-foreground">{p.secretsHint}</p>
-                </div>
-                <ConnectForm
-                  platform={p.id}
-                  initialId={acc?.external_account_id || ""}
-                  initialName={acc?.display_name || ""}
-                  onSubmit={(id, name) => connectMutation.mutate({ platform: p.id, externalId: id, displayName: name })}
-                  isPending={connectMutation.isPending}
-                />
-                {acc && (
-                  <Button variant="outline" className="w-full text-red-500" aria-label={`Disconnect ${p.label}`} onClick={() => disconnectMutation.mutate(acc.id)}>
-                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Disconnect
-                  </Button>
-                )}
-              </div>
-            )}
-          </ResponsiveModal>
-        );
-      })()}
-
-      {/* Create / Edit Campaign modal */}
-      <ResponsiveModal
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        title={editing ? "Edit Campaign" : "New Campaign"}
-        footer={
-          <ResponsiveModalFooter>
-            <Button variant="outline" className="w-full sm:w-auto h-10" onClick={() => setCreateOpen(false)}>Cancel</Button>
-            <Button className="w-full sm:w-auto h-10" onClick={() => saveCampaign.mutate()} disabled={!form.name || form.platforms.length === 0 || saveCampaign.isPending}>
-              {saveCampaign.isPending && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
-              {editing ? "Save" : "Create draft"}
-            </Button>
-          </ResponsiveModalFooter>
-        }
-      >
-        <div className="space-y-3">
-          <div>
-            <Label className="text-xs">Campaign name</Label>
-            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Summer promo - drive traffic" />
-          </div>
-          <div>
-            <Label className="text-xs">Platforms</Label>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 mt-1">
-              {PLATFORMS.map((p) => {
-                const Icon = p.icon;
-                const selected = form.platforms.includes(p.id);
+        <CardContent className="px-3 pb-3 space-y-2.5">
+          {/* Filters */}
+          <div className="space-y-2">
+            <div className="flex gap-1.5 overflow-x-auto -mx-1 px-1 pb-1 scrollbar-hide">
+              {STATUS_FILTERS.map((f) => {
+                const count = statusCounts[f.id] ?? 0;
+                const active = filter === f.id;
                 return (
                   <button
-                    key={p.id}
+                    key={f.id}
                     type="button"
-                    onClick={() => togglePlatform(p.id)}
-                    aria-label={`Toggle ${p.label}`}
-                    aria-pressed={selected}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition active:scale-95 touch-manipulation ${selected ? "border-primary bg-primary/5" : "border-border"}`}
+                    onClick={() => setFilter(f.id)}
+                    aria-pressed={active}
+                    className={cn(
+                      "flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border whitespace-nowrap transition shrink-0",
+                      active
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-card text-muted-foreground border-border hover:border-primary/40"
+                    )}
                   >
-                    <Icon className={`w-4 h-4 ${p.color}`} />
-                    <span className="text-[10px]">{p.label.split(" ")[0]}</span>
+                    {f.label}
+                    <Badge
+                      variant="secondary"
+                      className={cn(
+                        "h-4 px-1 text-[9px]",
+                        active && "bg-primary-foreground/20 text-primary-foreground"
+                      )}
+                    >
+                      {count}
+                    </Badge>
                   </button>
                 );
               })}
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs">Daily budget ($)</Label>
-              <Input type="number" min={1} value={form.daily_budget} onChange={(e) => setForm({ ...form, daily_budget: parseFloat(e.target.value) || 0 })} />
-            </div>
-            <div>
-              <Label className="text-xs">Total budget ($)</Label>
-              <Input type="number" min={0} value={form.total_budget} onChange={(e) => setForm({ ...form, total_budget: parseFloat(e.target.value) || 0 })} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs">Start</Label>
-              <Input type="datetime-local" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
-            </div>
-            <div>
-              <Label className="text-xs">End</Label>
-              <Input type="datetime-local" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
-            </div>
-          </div>
-          <div>
-            <Label className="text-xs">Headline</Label>
-            <Input value={form.headline} onChange={(e) => setForm({ ...form, headline: e.target.value })} maxLength={60} placeholder="Free delivery this weekend" />
-          </div>
-          <div>
-            <Label className="text-xs">Body</Label>
-            <Textarea value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} maxLength={200} rows={2} placeholder="Order now and save 25% on your first order" />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs">CTA</Label>
-              <Input value={form.cta} onChange={(e) => setForm({ ...form, cta: e.target.value })} placeholder="Order Now" />
-            </div>
-            <div>
-              <Label className="text-xs">Destination URL</Label>
-              <Input value={form.destination_url} onChange={(e) => setForm({ ...form, destination_url: e.target.value })} placeholder="https://hizivo.com/store/..." />
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search campaigns..."
+                  className="h-8 pl-7 text-xs"
+                />
+              </div>
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortKey)}
+                className="h-8 px-2 text-xs rounded-md border border-input bg-background"
+                aria-label="Sort campaigns"
+              >
+                <option value="newest">Newest</option>
+                <option value="spend">Spend</option>
+                <option value="performance">Performance</option>
+              </select>
             </div>
           </div>
-        </div>
-      </ResponsiveModal>
-    </div>
-  );
-}
 
-function ConnectForm({
-  platform, initialId, initialName, onSubmit, isPending,
-}: { platform: Platform; initialId: string; initialName: string; onSubmit: (id: string, name: string) => void; isPending: boolean }) {
-  const [id, setId] = useState(initialId);
-  const [name, setName] = useState(initialName);
-  return (
-    <>
-      <div>
-        <Label className="text-xs">Ad account ID</Label>
-        <Input value={id} onChange={(e) => setId(e.target.value)} placeholder="act_1234567890" />
-      </div>
-      <div>
-        <Label className="text-xs">Display name (optional)</Label>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="My Business Ads" />
-      </div>
-      <Button className="w-full" onClick={() => onSubmit(id.trim(), name.trim())} disabled={!id.trim() || isPending}>
-        {isPending && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
-        Save connection
-      </Button>
-    </>
+          {/* List */}
+          {isLoading ? (
+            <div className="space-y-2">
+              <CampaignRowSkeleton />
+              <CampaignRowSkeleton />
+            </div>
+          ) : filteredCampaigns.length === 0 ? (
+            campaigns.length === 0 ? (
+              <MarketingEmptyState
+                icon={Megaphone}
+                title="No campaigns yet"
+                body="Launch your first paid campaign to reach new customers across Facebook, Instagram, Google, TikTok, and X."
+                action={
+                  <Button size="sm" onClick={openCreate}>
+                    <Plus className="w-3.5 h-3.5 mr-1" /> New Campaign
+                  </Button>
+                }
+              />
+            ) : (
+              <MarketingEmptyState
+                variant="campaigns"
+                action={
+                  <Button size="sm" variant="outline" onClick={() => { setFilter("all"); setSearch(""); }}>
+                    Clear filters
+                  </Button>
+                }
+              />
+            )
+          ) : (
+            <div className="space-y-2">
+              {filteredCampaigns.map((c) => (
+                <AdsCampaignRow
+                  key={c.id}
+                  campaign={c}
+                  platforms={PLATFORMS}
+                  statusColors={STATUS_COLORS}
+                  onEdit={openEdit}
+                  onDelete={(c) => deleteCampaign.mutate(c.id)}
+                  onPause={(c) => toggleStatus.mutate({ id: c.id, status: "paused" })}
+                  onResume={(c) => toggleStatus.mutate({ id: c.id, status: "active" })}
+                  onLaunch={(c) => launchCampaign.mutate(c)}
+                  onDuplicate={(c) => duplicateCampaign.mutate(c)}
+                  onClick={openEdit}
+                />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Mobile FAB */}
+      <button
+        type="button"
+        onClick={openCreate}
+        aria-label="New campaign"
+        className="sm:hidden fixed right-4 z-40 flex items-center gap-1.5 h-12 px-4 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 active:scale-95 transition"
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}
+      >
+        <Plus className="w-4 h-4" />
+        <span className="text-sm font-semibold">New</span>
+      </button>
+
+      {/* Connect dialog */}
+      {connectDef && (
+        oauthMutation.isPending ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+            <div className="w-full max-w-md p-4">
+              <OAuthConnectSkeleton />
+            </div>
+          </div>
+        ) : (
+          <AdsConnectDialog
+            open={!!connectPlatform}
+            onClose={() => setConnectPlatform(null)}
+            platform={connectDef.id}
+            label={connectDef.label}
+            icon={connectDef.icon}
+            color={connectDef.color}
+            account={connectAcc}
+            supportsOAuth={connectDef.oauth}
+            oauthBrandClass={connectDef.brand}
+            helpUrl={connectDef.help}
+            onOAuth={() => oauthMutation.mutate(connectDef.id)}
+            onSaveManual={(externalId, displayName) =>
+              connectMutation.mutate({ platform: connectDef.id, externalId, displayName })
+            }
+            onDisconnect={(id) => disconnectMutation.mutate(id)}
+            oauthPending={oauthMutation.isPending}
+            savePending={connectMutation.isPending}
+          />
+        )
+      )}
+
+      {/* Create / Edit campaign wizard */}
+      <CreateCampaignWizard
+        open={createOpen}
+        onClose={() => { setCreateOpen(false); setEditing(null); }}
+        initial={initialForm}
+        isEditing={!!editing}
+        platforms={PLATFORMS}
+        accounts={accounts}
+        onSave={(form, asDraft) => saveCampaign.mutate({ form, asDraft })}
+        saving={saveCampaign.isPending}
+      />
+    </div>
   );
 }

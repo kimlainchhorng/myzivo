@@ -232,6 +232,69 @@ export function CampaignDetailsSkeleton() {
   );
 }
 
+export function AdsStatStripSkeleton() {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-2.5">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Card key={i}>
+          <CardContent className="p-2.5 sm:p-3 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-3.5 w-3.5 rounded" />
+              <Skeleton className="h-4 w-10 rounded-full" />
+            </div>
+            <Skeleton className="h-6 w-20" />
+            <Skeleton className="h-2.5 w-16" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+export function OnboardingChecklistSkeleton() {
+  return (
+    <Card>
+      <CardContent className="p-3 space-y-2">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-8 w-8 rounded-full" />
+          <div className="flex-1 space-y-1.5">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-2.5 w-24" />
+          </div>
+          <Skeleton className="h-4 w-4" />
+        </div>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-12 w-full rounded-lg" />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function CampaignRowSkeleton() {
+  return (
+    <div className="flex flex-col gap-2 p-3 rounded-xl border border-border">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 space-y-1.5">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-14 rounded-full" />
+          </div>
+          <Skeleton className="h-3 w-24" />
+        </div>
+        <Skeleton className="h-7 w-7 rounded" />
+      </div>
+      <div className="flex items-end justify-between gap-3">
+        <div className="flex-1 space-y-1.5">
+          <Skeleton className="h-3 w-48" />
+          <Skeleton className="h-1.5 w-full rounded-full" />
+        </div>
+        <Skeleton className="h-8 w-16" />
+      </div>
+    </div>
+  );
+}
+
 export function LedgerListSkeleton() {
   const isMobile = useIsMobile();
   return (
