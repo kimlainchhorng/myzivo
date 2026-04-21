@@ -48,6 +48,8 @@ const ConnectCallback = lazy(() => import("./pages/ConnectCallback"));
 const PairPage = lazy(() => lazyRetry(() => import("./pages/PairPage")));
 
 const Index = lazy(() => lazyRetry(() => import("./pages/Index")));
+const AdminDriverModerationPage = lazy(() => import("./pages/admin/AdminDriverModerationPage"));
+const AdminTripHeatmapPage = lazy(() => import("./pages/admin/AdminTripHeatmapPage"));
 
 // App (mobile-first) pages
 const AppHome = lazy(() => lazyRetry(() => import("./pages/app/AppHome")));
