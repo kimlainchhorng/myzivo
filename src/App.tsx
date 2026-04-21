@@ -708,6 +708,8 @@ const App = () => (
                 <Route path="/admin/ads/analytics" element={<ProtectedRoute><AdminAdsAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/admin/payments/webhook-status" element={<ProtectedRoute><AdminWebhookStatusPage /></ProtectedRoute>} />
                 <Route path="/admin/drivers/verification" element={<ProtectedRoute><AdminDriverVerificationPage /></ProtectedRoute>} />
+                <Route path="/admin/drivers/moderation" element={<ProtectedRoute><AdminDriverModerationPage /></ProtectedRoute>} />
+                <Route path="/admin/operations/heatmap" element={<ProtectedRoute><AdminTripHeatmapPage /></ProtectedRoute>} />
                 <Route path="/track/:token" element={<SharedTripPage />} />
                 <Route path="/driver/performance" element={<DriverPerformancePage />} />
                 <Route path="/driver/map" element={<DriverMapPage />} />
