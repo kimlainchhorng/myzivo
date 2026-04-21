@@ -111,7 +111,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           </div>
 
           {/* Nav */}
-          <nav className="flex-1 px-3 py-4 overflow-y-auto">
+          <nav className="flex-1 min-h-0 px-3 py-4 overflow-y-auto overscroll-contain">
             <div className="space-y-1">
               {navItems.map((item) => {
                 const isActive = activeTab === item.id;
