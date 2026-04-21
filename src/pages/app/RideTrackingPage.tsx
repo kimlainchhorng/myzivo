@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerLocationBroadcast } from "@/hooks/useCustomerLocationBroadcast";
 import { useRideNotifications } from "@/hooks/useRideNotifications";
+import TripChatFab from "@/components/rides/TripChatFab";
 
 export default function RideTrackingPage() {
   const { tripId } = useParams();
@@ -129,6 +130,9 @@ export default function RideTrackingPage() {
           onCancel={() => toast.info("Safety center opened")}
         />
       </div>
+      {isRideActive && tripId && (
+        <TripChatFab rideRequestId={tripId} senderRole="rider" counterpartName={tripData?.driver?.full_name} />
+      )}
     </AppLayout>
   );
 }

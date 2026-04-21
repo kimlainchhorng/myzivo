@@ -58,12 +58,34 @@ Deno.serve(async (req) => {
     }
 
     switch (event.type) {
-      case "payment_intent.succeeded":
+      case "payment_intent.succeeded": {
+        const capturedCents = pi.amount_received ?? pi.amount;
         await admin.from("ride_requests").update({
           payment_status: "captured",
-          captured_amount_cents: pi.amount_received ?? pi.amount,
+          captured_amount_cents: capturedCents,
         } as any).eq("id", rideId);
+
+        // Append charge ledger entry (best-effort)
+        try {
+          const { data: ride } = await admin.from("ride_requests").select("user_id").eq("id", rideId).maybeSingle();
+          if (ride?.user_id) {
+            await admin.from("financial_ledger").insert({
+              user_id: ride.user_id,
+              ride_request_id: rideId,
+              entry_type: "charge",
+              amount_cents: capturedCents,
+              currency: pi.currency ?? "usd",
+              stripe_reference: pi.id,
+              description: `Ride charge ${rideId.slice(0, 8)}`,
+            } as any);
+          }
+        } catch (e) { console.warn("[stripe-ride-webhook] ledger failed", e); }
+
+        // Generate receipt non-blocking
+        admin.functions.invoke("generate-trip-receipt", { body: { ride_request_id: rideId } })
+          .catch((e) => console.warn("[stripe-ride-webhook] receipt invoke failed", e));
         break;
+      }
       case "payment_intent.payment_failed":
         await admin.from("ride_requests").update({ payment_status: "failed" } as any).eq("id", rideId);
         break;
