@@ -33,6 +33,8 @@ import AdsStudioWalletGuard from "./AdsStudioWalletGuard";
 import AdsStudioPublishQueue from "./AdsStudioPublishQueue";
 import AdsStudioDashboard from "./AdsStudioDashboard";
 import AdsStudioRecommendations from "./AdsStudioRecommendations";
+import { MarketingPreviewProvider } from "./ads/MarketingPreviewContext";
+import MarketingPreviewSwitcher, { MarketingPreviewFrame } from "./ads/MarketingPreviewSwitcher";
 
 interface Props {
   storeId: string;
