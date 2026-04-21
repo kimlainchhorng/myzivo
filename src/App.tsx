@@ -50,6 +50,8 @@ const PairPage = lazy(() => lazyRetry(() => import("./pages/PairPage")));
 const Index = lazy(() => lazyRetry(() => import("./pages/Index")));
 const AdminDriverModerationPage = lazy(() => import("./pages/admin/AdminDriverModerationPage"));
 const AdminTripHeatmapPage = lazy(() => import("./pages/admin/AdminTripHeatmapPage"));
+const AdminRefundsPage = lazy(() => import("./pages/admin/AdminRefundsPage"));
+const AdminMessageModerationPage = lazy(() => import("./pages/admin/AdminMessageModerationPage"));
 
 // App (mobile-first) pages
 const AppHome = lazy(() => lazyRetry(() => import("./pages/app/AppHome")));
@@ -712,6 +714,8 @@ const App = () => (
                 <Route path="/admin/drivers/verification" element={<ProtectedRoute><AdminDriverVerificationPage /></ProtectedRoute>} />
                 <Route path="/admin/drivers/moderation" element={<ProtectedRoute><AdminDriverModerationPage /></ProtectedRoute>} />
                 <Route path="/admin/operations/heatmap" element={<ProtectedRoute><AdminTripHeatmapPage /></ProtectedRoute>} />
+                <Route path="/admin/payments/refunds" element={<ProtectedRoute><AdminRefundsPage /></ProtectedRoute>} />
+                <Route path="/admin/moderation/messages" element={<ProtectedRoute><AdminMessageModerationPage /></ProtectedRoute>} />
                 <Route path="/track/:token" element={<SharedTripPage />} />
                 <Route path="/driver/performance" element={<DriverPerformancePage />} />
                 <Route path="/driver/map" element={<DriverMapPage />} />
