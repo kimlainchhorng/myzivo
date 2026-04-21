@@ -41,8 +41,8 @@ export default function MarketingEmptyState({ icon, title, body, action, classNa
       <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full bg-primary/5 mb-3 sm:mb-4">
         <Icon className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-primary/60" />
       </div>
-      <h3 className={cn(mkHeading, "mb-1.5")}>{title}</h3>
-      {body && <p className={cn(mkBody, "text-muted-foreground max-w-xs sm:max-w-sm")}>{body}</p>}
+      <h3 className={cn(mkHeading, "mb-1.5")}>{finalTitle}</h3>
+      {finalBody && <p className={cn(mkBody, "text-muted-foreground max-w-xs sm:max-w-sm")}>{finalBody}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );
