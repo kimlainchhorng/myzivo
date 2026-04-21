@@ -951,6 +951,177 @@ export type Database = {
         }
         Relationships: []
       }
+      ads_studio_creatives: {
+        Row: {
+          budget: Json | null
+          campaign_id: string | null
+          created_at: string
+          created_by: string | null
+          ctas: Json | null
+          descriptions: Json | null
+          goal: string
+          hashtags: Json | null
+          headlines: Json | null
+          id: string
+          image_urls: Json | null
+          platforms: string[] | null
+          service_ids: string[] | null
+          status: string
+          store_id: string
+          targeting: Json | null
+          updated_at: string
+          video_scripts: Json | null
+        }
+        Insert: {
+          budget?: Json | null
+          campaign_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          ctas?: Json | null
+          descriptions?: Json | null
+          goal?: string
+          hashtags?: Json | null
+          headlines?: Json | null
+          id?: string
+          image_urls?: Json | null
+          platforms?: string[] | null
+          service_ids?: string[] | null
+          status?: string
+          store_id: string
+          targeting?: Json | null
+          updated_at?: string
+          video_scripts?: Json | null
+        }
+        Update: {
+          budget?: Json | null
+          campaign_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          ctas?: Json | null
+          descriptions?: Json | null
+          goal?: string
+          hashtags?: Json | null
+          headlines?: Json | null
+          id?: string
+          image_urls?: Json | null
+          platforms?: string[] | null
+          service_ids?: string[] | null
+          status?: string
+          store_id?: string
+          targeting?: Json | null
+          updated_at?: string
+          video_scripts?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ads_studio_creatives_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "store_ad_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_creatives_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_creatives_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_creatives_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_creatives_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ads_studio_generations: {
+        Row: {
+          cost_cents: number
+          created_at: string
+          created_by: string | null
+          creative_id: string | null
+          generation_type: string
+          id: string
+          meta: Json | null
+          model: string | null
+          store_id: string
+        }
+        Insert: {
+          cost_cents?: number
+          created_at?: string
+          created_by?: string | null
+          creative_id?: string | null
+          generation_type: string
+          id?: string
+          meta?: Json | null
+          model?: string | null
+          store_id: string
+        }
+        Update: {
+          cost_cents?: number
+          created_at?: string
+          created_by?: string | null
+          creative_id?: string | null
+          generation_type?: string
+          id?: string
+          meta?: Json | null
+          model?: string | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ads_studio_generations_creative_id_fkey"
+            columns: ["creative_id"]
+            isOneToOne: false
+            referencedRelation: "ads_studio_creatives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_generations_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_generations_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_generations_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_generations_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_click_logs: {
         Row: {
           created_at: string
@@ -57174,6 +57345,10 @@ export type Database = {
         Returns: boolean
       }
       is_store_featured: { Args: { p_store_id: string }; Returns: boolean }
+      is_store_owner: {
+        Args: { _store_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_vehicle_owner: { Args: { p_vehicle_id: string }; Returns: boolean }
       is_verified_car_owner: { Args: { user_uuid: string }; Returns: boolean }
       is_verified_renter: { Args: { user_uuid: string }; Returns: boolean }
