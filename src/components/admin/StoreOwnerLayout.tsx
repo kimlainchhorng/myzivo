@@ -40,14 +40,37 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   const resetSidebarScroll = () => {
     if (asideRef.current) asideRef.current.scrollTop = 0;
     if (navRef.current) navRef.current.scrollTop = 0;
+    // Walk all scrollable descendants and reset
+    if (asideRef.current) {
+      const all = asideRef.current.querySelectorAll<HTMLElement>("*");
+      all.forEach((el) => {
+        if (el.scrollHeight > el.clientHeight) el.scrollTop = 0;
+      });
+    }
   };
 
   const closeSidebar = () => setSidebarOpen(false);
-  const openSidebar = () => setSidebarOpen(true);
+  const openSidebar = () => {
+    // Collapse Employees group on open unless an employee tab is active
+    if (!employeeIds.includes(activeTab || "")) {
+      setEmployeesOpen(false);
+    }
+    setSidebarOpen(true);
+  };
 
-  // Reset scroll only when opening (not on every re-render)
+  // Reset scroll synchronously + across two animation frames to defeat layout race
   useLayoutEffect(() => {
-    if (sidebarOpen) resetSidebarScroll();
+    if (!sidebarOpen) return;
+    resetSidebarScroll();
+    const r1 = requestAnimationFrame(() => {
+      resetSidebarScroll();
+      const r2 = requestAnimationFrame(() => resetSidebarScroll());
+      (resetSidebarScroll as any)._r2 = r2;
+    });
+    return () => {
+      cancelAnimationFrame(r1);
+      if ((resetSidebarScroll as any)._r2) cancelAnimationFrame((resetSidebarScroll as any)._r2);
+    };
   }, [sidebarOpen]);
 
   // Lock background scroll while drawer is open — preserve scroll position
@@ -126,6 +149,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           onTransitionEnd={(e) => {
             if (sidebarOpen && e.target === asideRef.current && e.propertyName === "transform") {
               resetSidebarScroll();
+              requestAnimationFrame(() => resetSidebarScroll());
             }
           }}
           className={cn(
