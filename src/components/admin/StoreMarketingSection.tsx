@@ -31,6 +31,7 @@ import AdsStudioWizard from "./AdsStudioWizard";
 import AdsStudioAnalytics from "./AdsStudioAnalytics";
 import AdsStudioWalletGuard from "./AdsStudioWalletGuard";
 import AdsStudioPublishQueue from "./AdsStudioPublishQueue";
+import AdsStudioDashboard from "./AdsStudioDashboard";
 
 interface Props {
   storeId: string;
@@ -521,6 +522,7 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName, s
             </div>
             <div className="space-y-4">
               <AdsStudioWalletGuard storeId={storeId} />
+              <AdsStudioDashboard storeId={storeId} />
               <AdsStudioPublishQueue storeId={storeId} />
             </div>
           </div>
