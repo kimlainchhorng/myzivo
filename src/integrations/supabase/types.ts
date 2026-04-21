@@ -389,6 +389,51 @@ export type Database = {
           },
         ]
       }
+      ad_campaigns: {
+        Row: {
+          conversions: number
+          created_at: string
+          created_by: string | null
+          daily_budget_cents: number
+          external_id: string | null
+          id: string
+          metadata: Json | null
+          name: string
+          platform: string
+          status: string
+          total_spend_cents: number
+          updated_at: string
+        }
+        Insert: {
+          conversions?: number
+          created_at?: string
+          created_by?: string | null
+          daily_budget_cents?: number
+          external_id?: string | null
+          id?: string
+          metadata?: Json | null
+          name: string
+          platform: string
+          status?: string
+          total_spend_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          conversions?: number
+          created_at?: string
+          created_by?: string | null
+          daily_budget_cents?: number
+          external_id?: string | null
+          id?: string
+          metadata?: Json | null
+          name?: string
+          platform?: string
+          status?: string
+          total_spend_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ad_clicks: {
         Row: {
           ad_id: string
@@ -10663,6 +10708,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      conversion_events: {
+        Row: {
+          currency: string | null
+          event_name: string
+          external_id: string | null
+          id: string
+          payload: Json | null
+          response: Json | null
+          sent_at: string
+          source: string
+          status: string | null
+          user_id: string | null
+          value_cents: number | null
+        }
+        Insert: {
+          currency?: string | null
+          event_name: string
+          external_id?: string | null
+          id?: string
+          payload?: Json | null
+          response?: Json | null
+          sent_at?: string
+          source: string
+          status?: string | null
+          user_id?: string | null
+          value_cents?: number | null
+        }
+        Update: {
+          currency?: string | null
+          event_name?: string
+          external_id?: string | null
+          id?: string
+          payload?: Json | null
+          response?: Json | null
+          sent_at?: string
+          source?: string
+          status?: string | null
+          user_id?: string | null
+          value_cents?: number | null
+        }
+        Relationships: []
       }
       corp_expenses: {
         Row: {
@@ -39806,6 +39893,7 @@ export type Database = {
           admin_override_reason: string | null
           admin_price_override: number | null
           assigned_driver_id: string | null
+          captured_amount_cents: number | null
           car_seat_type: string | null
           commission_amount: number | null
           created_at: string
@@ -39820,6 +39908,8 @@ export type Database = {
           duration_minutes: number | null
           estimated_fare_max: number | null
           estimated_fare_min: number | null
+          eta_minutes: number | null
+          eta_updated_at: string | null
           id: string
           notes: string | null
           payment_amount: number | null
@@ -39849,6 +39939,7 @@ export type Database = {
           status: string
           stripe_checkout_session_id: string | null
           stripe_payment_intent_id: string | null
+          surcharge_amount_cents: number | null
           updated_at: string
           user_id: string | null
           zone_code: string | null
@@ -39858,6 +39949,7 @@ export type Database = {
           admin_override_reason?: string | null
           admin_price_override?: number | null
           assigned_driver_id?: string | null
+          captured_amount_cents?: number | null
           car_seat_type?: string | null
           commission_amount?: number | null
           created_at?: string
@@ -39872,6 +39964,8 @@ export type Database = {
           duration_minutes?: number | null
           estimated_fare_max?: number | null
           estimated_fare_min?: number | null
+          eta_minutes?: number | null
+          eta_updated_at?: string | null
           id?: string
           notes?: string | null
           payment_amount?: number | null
@@ -39901,6 +39995,7 @@ export type Database = {
           status?: string
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
+          surcharge_amount_cents?: number | null
           updated_at?: string
           user_id?: string | null
           zone_code?: string | null
@@ -39910,6 +40005,7 @@ export type Database = {
           admin_override_reason?: string | null
           admin_price_override?: number | null
           assigned_driver_id?: string | null
+          captured_amount_cents?: number | null
           car_seat_type?: string | null
           commission_amount?: number | null
           created_at?: string
@@ -39924,6 +40020,8 @@ export type Database = {
           duration_minutes?: number | null
           estimated_fare_max?: number | null
           estimated_fare_min?: number | null
+          eta_minutes?: number | null
+          eta_updated_at?: string | null
           id?: string
           notes?: string | null
           payment_amount?: number | null
@@ -39953,6 +40051,7 @@ export type Database = {
           status?: string
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
+          surcharge_amount_cents?: number | null
           updated_at?: string
           user_id?: string | null
           zone_code?: string | null
