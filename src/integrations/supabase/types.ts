@@ -590,6 +590,65 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_platform_access_requests: {
+        Row: {
+          contact_email: string
+          created_at: string
+          id: string
+          notes: string | null
+          platform: string
+          status: string
+          store_id: string
+        }
+        Insert: {
+          contact_email: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          platform: string
+          status?: string
+          store_id: string
+        }
+        Update: {
+          contact_email?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          platform?: string
+          status?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_platform_access_requests_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_platform_access_requests_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_platform_access_requests_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_platform_access_requests_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_2fa_credentials: {
         Row: {
           created_at: string
@@ -1088,13 +1147,17 @@ export type Database = {
       }
       ads_studio_creatives: {
         Row: {
+          audience_id: string | null
           auto_winner_at: string | null
+          auto_winner_metric: string | null
           auto_winner_picked: boolean
+          auto_winner_threshold_impressions: number | null
           budget: Json | null
           campaign_id: string | null
           created_at: string
           created_by: string | null
           ctas: Json | null
+          daypart_windows: Json | null
           descriptions: Json | null
           goal: string
           hashtags: Json | null
@@ -1102,6 +1165,8 @@ export type Database = {
           id: string
           image_urls: Json | null
           platforms: string[] | null
+          schedule_end: string | null
+          schedule_start: string | null
           scheduled_at: string | null
           service_ids: string[] | null
           status: string
@@ -1111,13 +1176,17 @@ export type Database = {
           video_scripts: Json | null
         }
         Insert: {
+          audience_id?: string | null
           auto_winner_at?: string | null
+          auto_winner_metric?: string | null
           auto_winner_picked?: boolean
+          auto_winner_threshold_impressions?: number | null
           budget?: Json | null
           campaign_id?: string | null
           created_at?: string
           created_by?: string | null
           ctas?: Json | null
+          daypart_windows?: Json | null
           descriptions?: Json | null
           goal?: string
           hashtags?: Json | null
@@ -1125,6 +1194,8 @@ export type Database = {
           id?: string
           image_urls?: Json | null
           platforms?: string[] | null
+          schedule_end?: string | null
+          schedule_start?: string | null
           scheduled_at?: string | null
           service_ids?: string[] | null
           status?: string
@@ -1134,13 +1205,17 @@ export type Database = {
           video_scripts?: Json | null
         }
         Update: {
+          audience_id?: string | null
           auto_winner_at?: string | null
+          auto_winner_metric?: string | null
           auto_winner_picked?: boolean
+          auto_winner_threshold_impressions?: number | null
           budget?: Json | null
           campaign_id?: string | null
           created_at?: string
           created_by?: string | null
           ctas?: Json | null
+          daypart_windows?: Json | null
           descriptions?: Json | null
           goal?: string
           hashtags?: Json | null
@@ -1148,6 +1223,8 @@ export type Database = {
           id?: string
           image_urls?: Json | null
           platforms?: string[] | null
+          schedule_end?: string | null
+          schedule_start?: string | null
           scheduled_at?: string | null
           service_ids?: string[] | null
           status?: string
@@ -1157,6 +1234,13 @@ export type Database = {
           video_scripts?: Json | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ads_studio_creatives_audience_id_fkey"
+            columns: ["audience_id"]
+            isOneToOne: false
+            referencedRelation: "store_ad_audiences"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ads_studio_creatives_campaign_id_fkey"
             columns: ["campaign_id"]
@@ -1550,6 +1634,151 @@ export type Database = {
             columns: ["creative_id"]
             isOneToOne: false
             referencedRelation: "ads_studio_creatives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ads_studio_wallet: {
+        Row: {
+          auto_recharge_enabled: boolean
+          balance_cents: number
+          created_at: string
+          id: string
+          last_recharge_at: string | null
+          last_recharge_error: string | null
+          last_recharge_failed_at: string | null
+          recharge_amount_cents: number
+          store_id: string
+          stripe_customer_id: string | null
+          stripe_payment_method_id: string | null
+          threshold_cents: number
+          updated_at: string
+        }
+        Insert: {
+          auto_recharge_enabled?: boolean
+          balance_cents?: number
+          created_at?: string
+          id?: string
+          last_recharge_at?: string | null
+          last_recharge_error?: string | null
+          last_recharge_failed_at?: string | null
+          recharge_amount_cents?: number
+          store_id: string
+          stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
+          threshold_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_recharge_enabled?: boolean
+          balance_cents?: number
+          created_at?: string
+          id?: string
+          last_recharge_at?: string | null
+          last_recharge_error?: string | null
+          last_recharge_failed_at?: string | null
+          recharge_amount_cents?: number
+          store_id?: string
+          stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
+          threshold_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ads_studio_wallet_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_wallet_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_wallet_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_wallet_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ads_wallet_ledger: {
+        Row: {
+          amount_cents: number
+          balance_after_cents: number
+          created_at: string
+          description: string | null
+          entry_type: string
+          id: string
+          metadata: Json | null
+          ref_id: string | null
+          ref_type: string | null
+          store_id: string
+        }
+        Insert: {
+          amount_cents: number
+          balance_after_cents: number
+          created_at?: string
+          description?: string | null
+          entry_type: string
+          id?: string
+          metadata?: Json | null
+          ref_id?: string | null
+          ref_type?: string | null
+          store_id: string
+        }
+        Update: {
+          amount_cents?: number
+          balance_after_cents?: number
+          created_at?: string
+          description?: string | null
+          entry_type?: string
+          id?: string
+          metadata?: Json | null
+          ref_id?: string | null
+          ref_type?: string | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ads_wallet_ledger_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_wallet_ledger_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_wallet_ledger_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_wallet_ledger_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -29451,6 +29680,36 @@ export type Database = {
         }
         Relationships: []
       }
+      oauth_state_nonces: {
+        Row: {
+          created_at: string
+          expires_at: string
+          platform: string
+          return_url: string | null
+          state: string
+          store_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          platform: string
+          return_url?: string | null
+          state: string
+          store_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          platform?: string
+          return_url?: string | null
+          state?: string
+          store_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       oauth_states: {
         Row: {
           created_at: string
@@ -44309,6 +44568,68 @@ export type Database = {
           },
         ]
       }
+      store_ad_audiences: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          definition: Json
+          estimated_reach: number | null
+          id: string
+          name: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          definition?: Json
+          estimated_reach?: number | null
+          id?: string
+          name: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          definition?: Json
+          estimated_reach?: number | null
+          id?: string
+          name?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_ad_audiences_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_audiences_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_audiences_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_audiences_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_ad_campaigns: {
         Row: {
           body: string | null
@@ -44499,6 +44820,86 @@ export type Database = {
           },
           {
             foreignKeyName: "store_ad_pages_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_ad_platform_connections: {
+        Row: {
+          access_token: string | null
+          account_id: string | null
+          account_name: string | null
+          created_at: string
+          id: string
+          last_synced_at: string | null
+          metadata: Json | null
+          platform: string
+          refresh_token: string | null
+          scopes: string[] | null
+          status: string
+          store_id: string
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          account_id?: string | null
+          account_name?: string | null
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          metadata?: Json | null
+          platform: string
+          refresh_token?: string | null
+          scopes?: string[] | null
+          status?: string
+          store_id: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          account_id?: string | null
+          account_name?: string | null
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          metadata?: Json | null
+          platform?: string
+          refresh_token?: string | null
+          scopes?: string[] | null
+          status?: string
+          store_id?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_ad_platform_connections_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_platform_connections_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_platform_connections_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_ad_platform_connections_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
@@ -58491,6 +58892,10 @@ export type Database = {
           message: string
           success: boolean
         }[]
+      }
+      user_owns_store: {
+        Args: { _store_id: string; _user_id: string }
+        Returns: boolean
       }
       user_phone_matches: { Args: { phone_to_check: string }; Returns: boolean }
       validate_merchant_coupon: {
