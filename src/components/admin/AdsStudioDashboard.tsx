@@ -257,6 +257,7 @@ export default function AdsStudioDashboard({ storeId }: Props) {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+            )}
           </CardContent>
         </Card>
       )}
