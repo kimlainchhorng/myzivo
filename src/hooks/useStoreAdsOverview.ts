@@ -65,6 +65,23 @@ export interface ChecklistState {
   done: boolean;
 }
 
+export interface WalletInfo {
+  balance_cents: number;
+  auto_recharge_enabled: boolean;
+  threshold_cents: number;
+  recharge_amount_cents: number;
+  has_payment_method: boolean;
+}
+
+export interface WalletLedgerEntry {
+  id: string;
+  amount_cents: number;
+  balance_after_cents: number;
+  entry_type: string;
+  description: string | null;
+  created_at: string;
+}
+
 const QK = (storeId: string) => ["store-ads-overview", storeId] as const;
 
 function emptyDelta(): AdsStatDelta {
@@ -153,7 +170,7 @@ export function useStoreAdsOverview(storeId: string) {
     enabled: !!storeId,
     staleTime: 1000 * 60 * 2,
     queryFn: async () => {
-      const [accountsRes, campaignsRes, walletRes] = await Promise.all([
+      const [accountsRes, campaignsRes, walletRes, ledgerRes] = await Promise.all([
         supabase
           .from("store_ad_accounts" as any)
           .select("*")
@@ -165,22 +182,35 @@ export function useStoreAdsOverview(storeId: string) {
           .order("created_at", { ascending: false }),
         supabase
           .from("ads_studio_wallet" as any)
-          .select("balance_cents")
+          .select("balance_cents, auto_recharge_enabled, threshold_cents, recharge_amount_cents, stripe_payment_method_id")
           .eq("store_id", storeId)
           .maybeSingle(),
+        supabase
+          .from("ads_wallet_ledger" as any)
+          .select("id, amount_cents, balance_after_cents, entry_type, description, created_at")
+          .eq("store_id", storeId)
+          .order("created_at", { ascending: false })
+          .limit(5),
       ]);
 
       if (accountsRes.error) throw accountsRes.error;
       if (campaignsRes.error) throw campaignsRes.error;
-      // wallet error is non-fatal
+      // wallet/ledger errors are non-fatal
 
       const accounts = ((accountsRes.data || []) as unknown) as AdAccount[];
       const campaigns = ((campaignsRes.data || []) as unknown) as AdCampaign[];
-      const walletBalance =
-        (walletRes.data as any)?.balance_cents ?? 0;
-      const hasBilling = walletBalance > 0;
+      const w: any = walletRes.data ?? null;
+      const wallet: WalletInfo = {
+        balance_cents: w?.balance_cents ?? 0,
+        auto_recharge_enabled: w?.auto_recharge_enabled ?? false,
+        threshold_cents: w?.threshold_cents ?? 1000,
+        recharge_amount_cents: w?.recharge_amount_cents ?? 5000,
+        has_payment_method: !!w?.stripe_payment_method_id,
+      };
+      const ledger = ((ledgerRes.data || []) as unknown) as WalletLedgerEntry[];
+      const hasBilling = wallet.balance_cents > 0;
 
-      return { accounts, campaigns, hasBilling };
+      return { accounts, campaigns, wallet, ledger, hasBilling };
     },
   });
 
@@ -222,6 +252,14 @@ export function useStoreAdsOverview(storeId: string) {
   const accounts = query.data?.accounts ?? [];
   const campaigns = query.data?.campaigns ?? [];
   const hasBilling = query.data?.hasBilling ?? false;
+  const wallet: WalletInfo = query.data?.wallet ?? {
+    balance_cents: 0,
+    auto_recharge_enabled: false,
+    threshold_cents: 1000,
+    recharge_amount_cents: 5000,
+    has_payment_method: false,
+  };
+  const ledger: WalletLedgerEntry[] = query.data?.ledger ?? [];
 
   const stats = useMemo(() => buildStats(campaigns), [campaigns]);
   const checklist = useMemo(
@@ -237,6 +275,8 @@ export function useStoreAdsOverview(storeId: string) {
     campaigns,
     stats,
     checklist,
+    wallet,
+    ledger,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     error: query.error,

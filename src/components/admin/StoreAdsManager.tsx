@@ -33,6 +33,9 @@ import AdsOnboardingChecklist from "@/components/admin/ads/AdsOnboardingChecklis
 import AdsCampaignRow from "@/components/admin/ads/AdsCampaignRow";
 import AdsConnectDialog from "@/components/admin/ads/AdsConnectDialog";
 import CreateCampaignWizard, { type CampaignFormState } from "@/components/admin/ads/CreateCampaignWizard";
+import AdsWalletCard from "@/components/admin/ads/AdsWalletCard";
+import AdsInsightsPanel from "@/components/admin/ads/AdsInsightsPanel";
+import AdsCampaignDetailDrawer from "@/components/admin/ads/AdsCampaignDetailDrawer";
 import {
   useStoreAdsOverview,
   type AdCampaign,
@@ -89,11 +92,12 @@ const EMPTY_FORM: CampaignFormState = {
 };
 
 export default function StoreAdsManager({ storeId }: Props) {
-  const { accounts, campaigns, stats, checklist, isLoading, invalidate } =
+  const { accounts, campaigns, stats, checklist, wallet, ledger, isLoading, invalidate } =
     useStoreAdsOverview(storeId);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<AdCampaign | null>(null);
+  const [detailCampaign, setDetailCampaign] = useState<AdCampaign | null>(null);
   const [connectPlatform, setConnectPlatform] = useState<AdPlatform | null>(null);
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [search, setSearch] = useState("");
@@ -101,6 +105,11 @@ export default function StoreAdsManager({ storeId }: Props) {
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   const accountByPlatform = (p: AdPlatform) => accounts.find((a) => a.platform === p);
+
+  const goToWallet = () => {
+    document.getElementById("ads-wallet")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    toast.info("Configure top-ups and auto-reload below.");
+  };
 
   // ===== Mutations =====
 
@@ -308,6 +317,20 @@ export default function StoreAdsManager({ storeId }: Props) {
       {/* Stat strip */}
       {isLoading ? <AdsStatStripSkeleton /> : <AdsStatStrip stats={stats} />}
 
+      {/* Smart suggestions */}
+      {!isLoading && (
+        <AdsInsightsPanel
+          campaigns={campaigns}
+          accounts={accounts}
+          stats={stats}
+          wallet={wallet}
+          onCreateCampaign={openCreate}
+          onAddFunds={goToWallet}
+          onConnectPlatform={scrollToPlatforms}
+          onOpenCampaign={(c) => setDetailCampaign(c)}
+        />
+      )}
+
       {/* Slim integration chip */}
       {!bannerDismissed && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] sm:text-xs">
@@ -325,6 +348,20 @@ export default function StoreAdsManager({ storeId }: Props) {
         </div>
       )}
 
+      {/* Wallet & billing */}
+      {!isLoading && (
+        <div id="ads-wallet">
+          <AdsWalletCard
+            wallet={wallet}
+            ledger={ledger}
+            stats={stats}
+            onAddFunds={() => toast.info("Opening wallet top-up… (link to AdsStudioWalletGuard)")}
+            onViewAll={() => toast.info("Opening full wallet ledger…")}
+            onToggleAutoReload={() => toast.info("Configure auto-reload in the wallet settings.")}
+          />
+        </div>
+      )}
+
       {/* Onboarding checklist */}
       {isLoading ? (
         <OnboardingChecklistSkeleton />
@@ -332,7 +369,7 @@ export default function StoreAdsManager({ storeId }: Props) {
         <AdsOnboardingChecklist
           state={checklist}
           onConnectPlatform={scrollToPlatforms}
-          onAddBilling={() => toast.info("Open the Wallet section to add funds.")}
+          onAddBilling={goToWallet}
           onCreateCampaign={openCreate}
           onSubmitForReview={scrollToCampaigns}
         />
@@ -482,7 +519,7 @@ export default function StoreAdsManager({ storeId }: Props) {
                   onResume={(c) => toggleStatus.mutate({ id: c.id, status: "active" })}
                   onLaunch={(c) => launchCampaign.mutate(c)}
                   onDuplicate={(c) => duplicateCampaign.mutate(c)}
-                  onClick={openEdit}
+                  onClick={(c) => setDetailCampaign(c)}
                 />
               ))}
             </div>
@@ -543,6 +580,20 @@ export default function StoreAdsManager({ storeId }: Props) {
         accounts={accounts}
         onSave={(form, asDraft) => saveCampaign.mutate({ form, asDraft })}
         saving={saveCampaign.isPending}
+      />
+
+      {/* Campaign detail drawer */}
+      <AdsCampaignDetailDrawer
+        open={!!detailCampaign}
+        onClose={() => setDetailCampaign(null)}
+        campaign={detailCampaign}
+        platforms={PLATFORMS}
+        statusColors={STATUS_COLORS}
+        onEdit={openEdit}
+        onDuplicate={(c) => duplicateCampaign.mutate(c)}
+        onDelete={(c) => deleteCampaign.mutate(c.id)}
+        onPause={(c) => toggleStatus.mutate({ id: c.id, status: "paused" })}
+        onResume={(c) => toggleStatus.mutate({ id: c.id, status: "active" })}
       />
     </div>
   );
