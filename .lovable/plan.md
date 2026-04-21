@@ -1,154 +1,149 @@
 
 
-# Marketing & Ads — Responsive Polish Pass
+# Marketing & Ads — Responsive Polish v2
 
-Make every surface in `/admin/stores/:id` Marketing & Ads area look great on mobile (375px), tablet (768–1024px), and desktop (≥1280px).
-
----
-
-## Scope
-
-Apply consistent responsive behavior across the four tabs and all related modals/components shipped in the previous overhaul:
-
-1. `StoreMarketingAds` page shell + tab bar
-2. `AdsStudioWalletGuard` (wallet card, top-up modal, ledger, auto-recharge)
-3. `StoreAdsManager` (platform connection tiles)
-4. AI Studio wizard (4 steps + live preview)
-5. Performance dashboard (charts + breakdown table)
-6. Recommendations cards
-7. A/B variant compare
-8. Audience builder
-9. Admin QA + Call-Closures pages (carryover from previous drop)
+Five focused upgrades to make every Marketing & Ads surface feel native on desktop, iPad, and mobile.
 
 ---
 
-## Responsive Rules
+## 1. Skeletons + Empty States (per breakpoint)
 
-**Breakpoints used**
-- Mobile: `<640px` (sm)
-- Tablet: `640–1023px` (md)
-- Desktop: `≥1024px` (lg+)
+New file `src/components/admin/ads/MarketingSkeletons.tsx` exports:
+- `WalletSkeleton`, `WizardSkeleton`, `RecommendationsSkeleton`, `CampaignListSkeleton`, `PlatformTilesSkeleton`, `PerformanceChartSkeleton`, `BreakdownTableSkeleton`
+- Each renders bone shapes that mirror the real component's layout at the active breakpoint (uses `useIsMobile`)
 
-**Page shell**
-- Container: `px-3 sm:px-4 lg:px-6`, `max-w-[1400px] mx-auto`
-- Vertical rhythm: `space-y-3 sm:space-y-4 lg:space-y-6`
-- Sticky tab bar: horizontal scroll on mobile (`overflow-x-auto snap-x`), pill tabs with icon-only on `<sm`, icon+label on `≥sm`, count badges always visible
+New file `src/components/admin/ads/MarketingEmptyState.tsx`:
+- Reusable component: `<MarketingEmptyState icon title body action />`
+- Compact on mobile (`p-4`, `h-32` icon area), spacious on desktop (`p-8`, `h-48`)
+- Wired into: Recommendations (no recs), Campaigns (no campaigns), Performance (no spend yet), Wizard (before first generate)
 
-**Tab bar**
-- Mobile: `h-11`, icon `16px`, label hidden, badge dot top-right
-- Tablet+: `h-12`, icon `18px`, label visible, badge as pill with count
+Wire skeletons into the existing `useQuery` `isLoading` branches across:
+- `AdsStudioWalletGuard`, `AdsStudioRecommendations`, `StoreAdsManager`, `AdsStudioDashboard`, `AdsStudioAnalytics`
 
-**Wallet card (`AdsStudioWalletGuard`)**
-- Balance hero: stacks on mobile (balance → actions), 2-col on tablet, 3-col on desktop (balance | quick top-up | auto-recharge status)
-- Top-up modal: full-screen sheet on mobile (`Sheet side="bottom"`), centered dialog on `≥md`
-- Amount preset grid: `grid-cols-2 sm:grid-cols-4` (was fixed 4-col → cramped on mobile)
-- Ledger list: card layout on mobile (avoid horizontal scroll), table on `≥md`
+---
 
-**Platform tiles (`StoreAdsManager`)**
-- Grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`
-- Tile padding: `p-3 sm:p-4`
-- Connect button: full-width on mobile, inline on `≥sm`
-- Status pill + last-sync timestamp wrap cleanly under account name on narrow widths
-- "Manage connection" dropdown: bottom sheet on mobile, popover on desktop
+## 2. Mobile-First Modal Refactor
 
-**AI Studio wizard**
-- Layout: single column on `<lg` (stepper as horizontal progress at top, preview below form), 2-col split on `≥lg` (stepper+form left 60%, live preview right 40% — sticky)
-- Step indicator: horizontal pills with line connector on mobile, vertical timeline on desktop
-- Goal cards (Step 1): `grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4`
-- Audience builder (Step 2):
-  - Geo radius slider: full-width, larger thumb (`h-6 w-6`) for touch
-  - Age range double-slider: stacks above gender + interests on mobile
-  - Interests multi-select: chip wrap, `gap-1.5`, `text-[12px] sm:text-[13px]`
-  - Live "Estimated reach" pill sticks to bottom of form on mobile
-- Creative variants (Step 3): horizontal swipe carousel on mobile (`snap-x`), 3-col grid on `≥md`
-- Launch (Step 4): budget input + schedule pickers stack on mobile, side-by-side on `≥md`
-- Footer nav (Back / Next): sticky bottom bar on mobile (safe-area aware), inline on desktop
+New shared helper `src/components/ui/responsive-modal.tsx`:
+- Single `<ResponsiveModal>` API that renders `<Sheet side="bottom">` on `<sm` and `<Dialog>` on `≥sm`
+- Built-in: drag handle on mobile, sticky footer with safe-area padding, scrollable body, `max-h-[90dvh]`
+- `<ResponsiveModalFooter>` auto-stacks on mobile (cancel below, primary above), inline on desktop
 
-**Live preview panel**
-- Mobile: collapsible accordion above wizard, defaults closed to save space
-- Tablet: full-width strip above form, collapsible
-- Desktop: sticky right column, always visible
+Refactor these to use it:
+- Wallet top-up modal (`AdsStudioWalletGuard`)
+- Wallet ledger details modal (new — currently inline; promote to a dedicated modal showing full ledger row with Stripe ref + receipt link)
+- OAuth connect dialog (`StoreAdsManager` Connect platform dialog)
+- Create / Edit Campaign dialog (`StoreAdsManager`)
 
-**Performance dashboard**
-- KPI pills (ROAS / CTR / CVR / CPC): `grid-cols-2 sm:grid-cols-4`, smaller font on mobile (`text-lg sm:text-2xl`)
-- Date range presets: horizontal scroll on mobile, inline on desktop
-- Recharts: responsive container with `aspect-[16/10] sm:aspect-[16/7] lg:aspect-[16/5]`
-- Per-creative breakdown:
-  - Mobile: card list (creative name + 3 KPIs stacked)
-  - Tablet+: data table with sticky header, horizontal scroll on tablet
-  - CSV export button: icon-only on mobile, label on `≥sm`
+Behavior improvements:
+- Body uses `overscroll-contain` so iOS doesn't bounce the page underneath
+- Primary action button always visible (sticky footer, never scrolls off)
+- Close affordance: drag handle + X on mobile, ESC + X on desktop
 
-**Recommendations cards**
-- Stack: `grid-cols-1 md:grid-cols-2 xl:grid-cols-3`
-- Apply / Dismiss buttons: full-width split row on mobile, inline-end on desktop
-- Estimated impact pill wraps under title on narrow widths
+---
 
-**A/B variant compare**
-- Mobile: vertical stack with "vs" divider, swipe between variants
-- Tablet+: side-by-side (`grid-cols-2`) with synced metric rows
+## 3. Performance Chart + Breakdown Mobile Optimization
 
-**Modals & sheets — global rule**
-- Any `Dialog` on mobile (`<sm`) becomes a bottom `Sheet` (full-width, max-height 90vh, drag handle, safe-area padding)
-- Use existing `useIsMobile` hook to swap component
-- Confirm/cancel actions stick to bottom with `pb-[env(safe-area-inset-bottom)]`
+`AdsStudioAnalytics` and `AdsStudioDashboard`:
+- KPI strip: `grid-cols-2 sm:grid-cols-4`, smaller numerals on mobile (`text-lg sm:text-2xl`)
+- Recharts wrapper: `aspect-[4/3] sm:aspect-[16/8] lg:aspect-[16/5]`, hide grid lines on `<sm`, larger touch tooltip
+- Date range presets: horizontal-scroll pill row on mobile
 
-**Admin QA + Call-Closures pages**
-- Filter bar: collapses into a "Filters" button + drawer on mobile, inline row on desktop
-- Tables → card list on `<md`
-- Realtime checklist (QA page): single column on mobile, 2-col on desktop
+Spend breakdown table:
+- New `src/components/admin/ads/ResponsiveBreakdown.tsx`
+- `<md`: stacked card list — each row is a card with creative name + 3 KPI rows + action menu
+- `≥md`: data table with sticky header, horizontal scroll wrapper for narrow tablet widths
+- CSV export: icon-only on mobile, "Export CSV" label on `≥sm`
+- Sort indicators: tap-friendly chevrons on mobile
 
-**Touch targets**
-- Minimum `h-10` (40px) for buttons on mobile
-- Switches and sliders use `min-w-[44px] min-h-[44px]` hit areas
-- Tab pills `h-11` on mobile
+---
 
-**Typography scale**
-- Headings: `text-lg sm:text-xl lg:text-2xl`
-- Body: `text-[13px] sm:text-sm`
-- Meta/labels: `text-[11px] sm:text-xs`
+## 4. Responsive Typography + Spacing System
 
-**Safe areas (mobile web + Capacitor)**
-- Sticky bottom bars use `pb-[max(env(safe-area-inset-bottom),0.75rem)]`
-- Sticky top tab bar uses `pt-[env(safe-area-inset-top)]` only on standalone PWA
+New file `src/components/admin/ads/marketing-tokens.ts` exports utility class strings used everywhere:
+- `mkHeading` = `"text-base sm:text-lg lg:text-xl font-semibold tracking-tight"`
+- `mkSubheading` = `"text-sm sm:text-[15px] font-medium"`
+- `mkBody` = `"text-[13px] sm:text-sm leading-relaxed"`
+- `mkMeta` = `"text-[11px] sm:text-xs text-muted-foreground"`
+- `mkCardPad` = `"p-3 sm:p-4 lg:p-5"`
+- `mkSection` = `"space-y-3 sm:space-y-4 lg:space-y-5"`
+- `mkRow` = `"py-2.5 sm:py-3"`
+
+Replace ad-hoc class strings across all 8 Marketing & Ads files for visual consistency. Touch targets standardized: buttons `h-10 sm:h-9`, icon buttons `h-9 w-9 sm:h-8 sm:w-8`, inputs `h-10 sm:h-9`.
+
+Tables:
+- Cell padding: `px-2.5 py-2 sm:px-3 sm:py-2.5`
+- Header text: `text-[11px] uppercase tracking-wide`
+- Number cells: `tabular-nums`
+
+---
+
+## 5. Responsive QA Checklist + Live Preview Page
+
+New admin route `/admin/qa/marketing-responsive` (added to `App.tsx`, admin-guarded).
+
+Page layout (`src/pages/admin/AdminMarketingResponsiveQA.tsx`):
+- **Left rail (desktop) / top bar (mobile)**: viewport switcher chips — Mobile 375, iPad 820, Desktop 1440 — plus "Test all" button
+- **Main area**: an `<iframe>` of `/admin/stores/:id?tab=studio` sized to the chosen viewport, centered with device frame
+- **Below preview**: interactive checklist auto-grouped by component, each item has a Pass/Fail/Skip toggle
+  - Tab bar scrolls without overflow
+  - Wallet card shows balance + actions without horizontal scroll
+  - Top-up modal opens as bottom sheet on mobile, dialog on desktop
+  - Wizard stepper labels visible
+  - Goal cards stack 1-col mobile, 2-col tablet+
+  - Targeting form readable at 375px
+  - Generated images grid 2/2/3 cols
+  - Recommendations buttons reachable with thumb
+  - Platform tiles 2/3/5 col grid
+  - Campaign rows: actions wrap below title on mobile
+  - Connect dialog: full-width buttons mobile
+  - Performance KPIs stack 2-col mobile
+  - Breakdown table → cards on mobile
+  - Empty states render at all breakpoints
+  - Skeletons match real layouts
+- **Store picker** at top: dropdown to pick which store to QA against
+- **Save run**: stores results into a new `marketing_qa_runs` table (id, admin_id, store_id, viewport, results jsonb, created_at) so you can compare runs over time
+- **Export report**: downloads CSV of last run
+
+Link added under Admin sidebar: "Marketing QA".
 
 ---
 
 ## Technical Details
 
-**Updated components**
-- `src/pages/admin/stores/StoreMarketingAds.tsx` — shell + tab bar responsive
-- `src/components/admin/AdsStudioWalletGuard.tsx` — hero + modal + ledger
-- `src/components/admin/StoreAdsManager.tsx` — tile grid + manage menu
-- `src/components/admin/ads/AiStudioWizard.tsx` (and step subcomponents) — 2-col → stack
-- `src/components/admin/ads/PerformanceChart.tsx` — aspect ratios
-- `src/components/admin/ads/PerCreativeBreakdown.tsx` — table → card on mobile
-- `src/components/admin/ads/RecommendationCard.tsx`
-- `src/components/admin/ads/ABVariantCompare.tsx`
-- `src/components/admin/ads/AudienceBuilder.tsx`
-- `src/pages/admin/AdminModerationQAPage.tsx`
-- `src/pages/admin/AdminCallClosuresPage.tsx`
+**New files**
+- `src/components/ui/responsive-modal.tsx`
+- `src/components/admin/ads/MarketingSkeletons.tsx`
+- `src/components/admin/ads/MarketingEmptyState.tsx`
+- `src/components/admin/ads/ResponsiveBreakdown.tsx`
+- `src/components/admin/ads/marketing-tokens.ts`
+- `src/pages/admin/AdminMarketingResponsiveQA.tsx`
 
-**New shared helpers**
-- `src/components/ui/responsive-dialog.tsx` — wraps `Dialog` on desktop / `Sheet` on mobile via `useIsMobile`, single API
-- `src/components/admin/ads/ResponsiveDataTable.tsx` — renders table on `≥md`, card list on `<md` from same column config
+**Edited files**
+- `src/components/admin/StoreMarketingSection.tsx` (skeletons in tab content, token usage)
+- `src/components/admin/AdsStudioWalletGuard.tsx` (ResponsiveModal, ledger modal, skeleton, tokens)
+- `src/components/admin/AdsStudioWizard.tsx` (skeleton, empty state, tokens)
+- `src/components/admin/AdsStudioRecommendations.tsx` (skeleton, empty state, tokens)
+- `src/components/admin/AdsStudioDashboard.tsx` (KPI grid, chart aspect, ResponsiveBreakdown)
+- `src/components/admin/AdsStudioAnalytics.tsx` (chart aspect, tokens)
+- `src/components/admin/StoreAdsManager.tsx` (ResponsiveModal for Connect + Create dialogs, skeletons, tokens)
+- `src/App.tsx` (route)
 
-**No backend changes** — pure UI/responsive pass.
+**Backend**
+- One migration: `marketing_qa_runs` table + RLS (admins only)
 
-**No new routes, no new tables, no new edge functions.**
+**No new edge functions, no new secrets.**
 
 ---
 
 ## Build Order
 
-1. `responsive-dialog` + `ResponsiveDataTable` shared helpers
-2. Page shell + sticky responsive tab bar
-3. Wallet card + top-up sheet + ledger
-4. Platform tiles grid + manage menu
-5. AI Studio wizard layout (stepper, preview, footer nav)
-6. Wizard steps (goal, audience, creative, launch)
-7. Performance dashboard (KPIs, chart, breakdown)
-8. Recommendations + A/B compare
-9. Admin QA + Call-Closures pages
+1. `marketing-tokens.ts` + `responsive-modal.tsx` + `MarketingEmptyState.tsx` + `MarketingSkeletons.tsx` + `ResponsiveBreakdown.tsx` (foundations)
+2. Apply tokens + skeletons + empty states across all 8 Marketing & Ads files
+3. Refactor 4 modals to ResponsiveModal
+4. Performance chart + breakdown mobile pass
+5. Migration: `marketing_qa_runs`
+6. QA page + route + sidebar link
 
 Approve to switch to default mode and ship.
 
