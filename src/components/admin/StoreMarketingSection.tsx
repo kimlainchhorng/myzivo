@@ -511,9 +511,17 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName, s
           )}
         </TabsContent>
 
-        {/* ═══ ADS ═══ */}
+        {/* ═══ AI STUDIO ═══ */}
         <TabsContent value="studio" className="space-y-4 mt-4">
-          <AdsStudioWizard storeId={storeId} storeName={storeName} storeSlug={storeSlug} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 space-y-4">
+              <AdsStudioWizard storeId={storeId} storeName={storeName} storeSlug={storeSlug} />
+              <AdsStudioAnalytics storeId={storeId} />
+            </div>
+            <div className="space-y-4">
+              <AdsStudioWalletGuard storeId={storeId} />
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="ads" className="space-y-4 mt-4">
