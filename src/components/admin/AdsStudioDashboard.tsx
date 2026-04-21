@@ -58,9 +58,24 @@ interface Winner {
 const PLATFORMS: Platform[] = ["all", "google", "meta", "tiktok", "youtube"];
 const PLATFORM_LABEL: Record<string, string> = { all: "All Platforms", google: "Google", meta: "Meta", tiktok: "TikTok", youtube: "YouTube" };
 
-const fmtUsd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+const fmtUsd = (cents: number) => usdFormatter.format(cents / 100);
+
+const KpiCard = memo(function KpiCard({ label, value, Icon }: { label: string; value: string; Icon: any }) {
+  return (
+    <Card>
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] text-muted-foreground">{label}</span>
+          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        </div>
+        <p className="text-lg font-bold mt-1">{value}</p>
+      </CardContent>
+    </Card>
+  );
+});
 
 export default function AdsStudioDashboard({ storeId }: Props) {
+  const isMobile = useIsMobilePreview();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [budgets, setBudgets] = useState<Record<string, Budget>>({});
