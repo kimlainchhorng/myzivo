@@ -1,150 +1,154 @@
 
 
-# Five Operational Workstreams
+# Five Workstreams: Calls, Chat, Receipts, Refunds, Admin Queue
 
-Building admin oversight, in-trip safety, and post-trip financial controls.
-
----
-
-## 1. Admin Trip Density & Cancellation Heatmap
-
-New route `/admin/operations/heatmap` — Google Maps overlay visualizing operational hotspots.
-
-- Edge function `admin-trip-heatmap` — aggregates `ride_requests` by H3-style geohash buckets (lat/lng rounded to 3 decimals ≈ 110m grid), grouped by `created_at` window
-- Returns two layers: `completed_trips` (intensity = count) and `cancellations` (intensity = count, separate color)
-- Filters: 7d / 30d toggle, time-of-day slider, vehicle class
-- Map renders Google Maps `HeatmapLayer` with two overlays (emerald for trips, red for cancellations)
-- Side panel: top 10 cancellation hotspots with cancel rate %, top 10 demand hotspots with avg fare
-- CSV export of bucket data
+Closing out the operational suite from the previous plan. All five tasks build on tables already created (`trip_messages`, `trip_call_sessions`, `receipts`, `ride_refund_requests`, `financial_ledger`).
 
 ---
 
-## 2. In-Trip Chat + Masked Calling + Moderation
+## 1. Masked Calling — `create-masked-call-session` + In-Trip Call Button
 
-Extends existing `unified-chat-hub` pattern, scoped to active rides.
+Twilio Proxy API for number masking. Both parties dial a Twilio number that bridges to the real participant.
 
-**Chat**
-- New table `trip_messages` (ride_request_id, sender_id, sender_role [rider/driver], body, moderation_status, created_at)
-- RLS: only rider + assigned driver of that ride can read/write; auto-archive 24h after `completed`
-- Realtime subscription on `trip_messages` filtered by ride id
-- New component `TripChatSheet` rendered in `RideTrackingPage` (rider) and driver job screen
-- Reuses existing `chatContentSafety.ts` for outgoing sanitization + URL risk scoring
+- Edge function `create-masked-call-session`:
+  - Validates caller is rider or assigned driver via `is_trip_participant()`
+  - Reuses existing active session if `expires_at > now()` and not closed
+  - Otherwise creates Twilio Proxy Session, adds rider + driver as Participants with their real numbers
+  - Returns proxy number for the caller, stores SID + masked numbers in `trip_call_sessions`
+- Edge function `close-trip-call-sessions` (cron, every 5 min): finds rides where `status in ('completed','cancelled')` AND session `expires_at < now() - interval '5 min'`, calls Twilio to close the session, marks row `closed`
+- New component `InTripCallButton` (Phone icon, emerald pill):
+  - Tap → invokes `create-masked-call-session` → opens `tel:{proxyNumber}` via Capacitor `App.openUrl` (native) or `window.location.href` (web)
+  - Shows toast "Calling driver via ZIVO" — explains masking
+- Mounted in `RideTrackingPage` (rider-side) next to existing actions, and in driver job/active-trip screen
+- Auto-expire fallback: `expires_at = trip_completion + 30 min` set at session create time
 
-**Masked calling (Twilio Programmable Voice proxy)**
-- New table `trip_call_sessions` (ride_request_id, twilio_proxy_session_sid, rider_proxy_number, driver_proxy_number, expires_at)
-- Edge function `create-masked-call-session` — uses Twilio Proxy API to allocate a session with rider+driver as participants; both see Twilio number, real numbers stay hidden
-- Tap-to-call button in `TripChatSheet` → calls function → `tel:` link with proxy number
-- Auto-expire session 30 min after trip completion
-
-**Moderation**
-- Edge function `moderate-trip-message` — lightweight keyword + URL safety check + Lovable AI Gateway (`google/gemini-2.5-flash`) classification for harassment/scam/PII
-- Messages flagged as `pending_review` are visible to sender but hidden from recipient until cleared; `blocked` messages return error to sender
-- New admin queue at `/admin/moderation/messages` to review flagged content
+**Secrets needed**: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PROXY_SERVICE_SID` — will request after approval
 
 ---
 
-## 3. Driver Rating & Abuse Review + Temporary Flagging
+## 2. TripChatSheet + Moderation Pipeline
 
-New route `/admin/drivers/moderation`.
+Realtime in-trip chat scoped per-ride.
 
-- New table `driver_flags` (driver_id, reason, flagged_by, flagged_until, active, related_report_id)
-- New table `abuse_reports` (reporter_id, reported_user_id, ride_request_id, category [unsafe_driving/harassment/no_show/other], description, status [open/reviewing/resolved/dismissed], resolution_notes)
-- Page lists in three tabs:
-  1. **Low ratings** — joins `ride_requests.driver_rating <= 2` with driver profile, last 30d, sortable by frequency
-  2. **Abuse reports** — open queue with report details + ride context
-  3. **Active flags** — currently flagged drivers with countdown to auto-unflag
-- Action buttons: Dismiss, Warn (sends notification via existing push engine), Flag 24h / 7d / 30d / Permanent
-- Update `dispatch-ride` to filter out drivers with active rows in `driver_flags` where `flagged_until > now()`
-- Audit log entry to `admin_actions` table for every moderation decision
-
----
-
-## 4. PDF Receipts (Rides + Orders)
-
-Server-side generation, emailed automatically + downloadable from history.
-
-- New edge function `generate-trip-receipt` — uses `pdf-lib` (Deno-compatible) to render branded ZIVO PDF with:
-  - Header: ZIVO logo, "Receipt", trip ID, date
-  - Trip details: pickup → dropoff, distance, duration, vehicle, driver name + photo
-  - Line items: base fare, distance, time, surcharge (3.5% KH card), discounts, ZIVO+ benefits
-  - Payment breakdown: subtotal, taxes, total, payment method (Visa •••• 4242)
-  - Footer: support contact, legal disclaimer
-- Stores PDF in private storage bucket `trip-receipts` (path: `{user_id}/{ride_id}.pdf`)
-- Triggered by:
-  - `stripe-ride-webhook` on `payment_intent.succeeded` (manual capture)
-  - Order completion event (existing order flow)
-- Sends email via existing Lovable Email infrastructure (`send-transactional-email`) with PDF attachment, subject "Your ZIVO ride receipt — {date}"
-- Frontend: download button in ride/order history calls signed URL endpoint
-- Reuses existing `BookingReceiptCard` styling for visual consistency
-- New table `receipts` (id, type [ride/order], reference_id, user_id, pdf_path, email_sent_at, total_cents)
+- Component `TripChatSheet` (bottom sheet, glassmorphic per `media-panel-v2026-refined`):
+  - Header: counterparty name + avatar + masked-call button
+  - Message list: bubbles with status pills (sent / pending review / blocked)
+  - Composer: 500-char limit, runs `sanitizeOutgoingMessage` + `assessChatMessageRisk` before send
+  - Realtime subscription on `trip_messages` filtered by `ride_request_id`
+  - Auto-scroll to bottom on new message
+- Send flow:
+  - Insert into `trip_messages` with `moderation_status = 'pending'`
+  - Edge function `moderate-trip-message` invoked async — uses Lovable AI Gateway (`google/gemini-2.5-flash`) classifying as `clean | needs_review | blocked`
+  - Updates row to `clean` (visible) / `pending_review` (sender only) / `blocked` (sender error toast)
+- RLS: SELECT requires `is_trip_participant()` AND (`moderation_status = 'clean'` OR sender is self) — enforces hide-from-recipient for pending/blocked
+- Admin moderation queue at `/admin/moderation/messages`:
+  - Lists `moderation_status in ('pending_review','blocked')` with ride context, sender role, full body
+  - Actions: Approve (→ clean), Confirm block, Warn sender (push notification)
+- Mounted in `RideTrackingPage` (rider) + driver active-trip screen via floating chat FAB
 
 ---
 
-## 5. Refund Request Flow + Ledger
+## 3. PDF Receipts: `generate-trip-receipt` + Download Button
 
-Rider-initiated, admin-reviewed, Stripe-executed, ledger-tracked.
+- Edge function `generate-trip-receipt`:
+  - Input: `ride_request_id`
+  - Loads ride, driver profile, payment intent details, surcharge breakdown
+  - Renders PDF with `pdf-lib` (Deno-compatible) — ZIVO emerald header, line items, totals, payment method, partner disclosure footer
+  - Uploads to `trip-receipts` bucket at `{user_id}/{ride_id}.pdf`
+  - Inserts `receipts` row with `pdf_path`, `total_cents`, `email_sent_at`
+  - Sends email via existing `send-transactional-email` with PDF attachment
+- Wire into `stripe-ride-webhook` on `payment_intent.succeeded` — invoke `generate-trip-receipt` non-blocking after status update + ledger entry
+- Idempotency: check `receipts` table by `reference_id` before regenerating
+- Edge function `get-receipt-signed-url`: validates owner via JWT, returns 60-min signed URL for `trip-receipts/{user_id}/{ride_id}.pdf`
+- Download button in ride history (`RideHistoryItem` / `BookingReceiptCard`):
+  - "Download receipt" with Download icon
+  - Calls `get-receipt-signed-url` → opens URL in new tab (web) or via Capacitor Browser (native)
+  - Hidden if no `receipts` row exists for that ride
 
-**Tables**
-- `refund_requests` (id, ride_request_id OR order_id, requester_id, reason_category [overcharge/no_service/safety/other], description, requested_amount_cents, status [pending/approved/partial/denied/processed], decided_by, decided_at, stripe_refund_id)
-- `financial_ledger` (id, user_id, ride_request_id, entry_type [charge/refund/payout/fee/surcharge], amount_cents, currency, balance_after_cents, stripe_reference, created_at) — append-only audit trail
+---
 
-**Flow**
-- Rider tab in ride history: "Request refund" → form with category + reason + amount (capped at trip total)
-- Edge function `submit-refund-request` — validates trip is `completed`, within 30 days, no existing pending request; inserts row + notifies admin
-- Admin queue at `/admin/payments/refunds` — shows request, ride context, payment intent, rider history
-- Approve/partial/deny actions:
-  - Approved → edge function `process-refund` calls Stripe `refunds.create` against the PaymentIntent, writes refund ledger entry, emails rider, updates `ride_requests.payment_status = 'refunded'` (or `partial_refund`)
-  - Denied → emails rider with reason
-- Auto-ledger entries:
-  - On `payment_intent.succeeded` (charge entry)
-  - On refund (refund entry)
-  - On driver payout (payout entry)
-  - On platform fee (fee entry)
-- Rider-facing "Transactions" view at `/account/transactions` reads from `financial_ledger`
+## 4. Refund Flow — `submit-refund-request` + `process-refund` + Ledger
+
+**Edge functions**
+
+- `submit-refund-request` (rider-invoked):
+  - Validates: ride is `completed`, completion within 30 days, no existing `pending` request for this ride, rider is the requester
+  - Inserts `ride_refund_requests` row with `status='pending'`, `requested_amount_cents` capped at trip total
+  - Notifies admins via existing push engine
+- `process-refund` (admin-invoked):
+  - Input: `request_id`, `decision` (approve / partial / deny), `approved_amount_cents`, `notes`
+  - Validates admin role via `has_role()`
+  - On approve/partial: calls Stripe `refunds.create` against `payment_intent_id`, stores `stripe_refund_id`
+  - Inserts `financial_ledger` row (`entry_type='refund'`, negative amount, `stripe_reference`)
+  - Updates `ride_requests.payment_status` to `refunded` or `partial_refund`
+  - Updates `ride_refund_requests.status` to `processed` or `denied`, sets `decided_by`, `decided_at`
+  - Emails rider with outcome via `send-transactional-email`
+- Auto-ledger entries already wired into `stripe-ride-webhook` (charge entry) and `driver-payout` (payout entry) — extend if missing
+
+**Frontend (rider side)**
+- "Request refund" button in completed-ride detail view
+- Modal: category dropdown (overcharge / no_service / safety / other), description textarea (500 chars), amount input (capped, defaults to full)
+- Calls `submit-refund-request`, shows status badge in ride history once submitted
+
+---
+
+## 5. Admin Refunds Page — `/admin/payments/refunds`
+
+- Tabs: Pending / Approved / Denied / All
+- Table columns: requested_at, rider, ride summary (pickup→dropoff), amount, reason, status
+- Row click → side drawer with full context:
+  - Ride details + map preview
+  - Original payment intent (amount captured, surcharge, payment method last4)
+  - Rider history: total trips, prior refunds count
+  - Decision panel: Approve full / Approve partial (amount input) / Deny + notes textarea
+- Submit → invokes `process-refund` → optimistic UI update → toast with Stripe refund ID on success
+- Filters: date range (7d/30d/90d/all), category, min amount
+- CSV export of decisions for accounting
 
 ---
 
 ## Technical Details
 
-**New tables**
-- `trip_messages`, `trip_call_sessions` (RLS: trip participants only)
-- `driver_flags`, `abuse_reports` (RLS: admin write, driver reads own flags)
-- `receipts` (RLS: owner read, service role write)
-- `refund_requests` (RLS: requester + admin)
-- `financial_ledger` (RLS: owner read, service role write only — append-only)
-
-**New storage bucket**
-- `trip-receipts` (private, signed URLs only)
-
 **New edge functions**
-- `admin-trip-heatmap`, `create-masked-call-session`, `moderate-trip-message`
-- `generate-trip-receipt`, `submit-refund-request`, `process-refund`
+- `create-masked-call-session`, `close-trip-call-sessions` (cron)
+- `moderate-trip-message`
+- `generate-trip-receipt`, `get-receipt-signed-url`
+- `submit-refund-request`, `process-refund`
 
 **Updated edge functions**
-- `dispatch-ride` — exclude flagged drivers
-- `stripe-ride-webhook` — trigger receipt generation + ledger entries
+- `stripe-ride-webhook` — invoke `generate-trip-receipt` after successful capture
+
+**New components**
+- `InTripCallButton`, `TripChatSheet`, `TripChatFab`
+- `RequestRefundDialog`, `RefundStatusPill`
+- `ReceiptDownloadButton`
+
+**New pages**
+- `/admin/moderation/messages` (`AdminMessageModerationPage`)
+- `/admin/payments/refunds` (`AdminRefundsPage`)
+
+**Cron**
+- `close-trip-call-sessions` every 5 minutes via existing `pg_cron` setup
 
 **Secrets needed**
-- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PROXY_SERVICE_SID` (for masked calling — will request after approval)
-- Lovable AI Gateway already available for moderation
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PROXY_SERVICE_SID` (Twilio Proxy product)
+- Lovable AI Gateway already available
+- `STRIPE_SECRET_KEY` already set
+- Email infrastructure already wired
 
-**Pages**
-- `/admin/operations/heatmap`
-- `/admin/moderation/messages`
-- `/admin/drivers/moderation`
-- `/admin/payments/refunds`
-- `/account/transactions`
-- Refund request modal in ride history
+**RLS additions**
+- `trip_messages`: SELECT policy filters non-clean messages from non-senders
+- `trip_call_sessions`: SELECT/INSERT via `is_trip_participant()`
 
 ---
 
 ## Build Order
 
-1. Driver moderation + flagging (immediate safety value, blocks bad actors from dispatch)
-2. PDF receipts + ledger foundation (compliance + financial baseline)
-3. Refund flow (depends on ledger)
-4. In-trip chat + moderation (Twilio masked calling needs secrets)
-5. Admin heatmap (read-only analytics, lowest risk)
+1. Refund edge functions + admin page (closes financial loop)
+2. PDF receipt generation + webhook wiring + download button
+3. TripChatSheet + moderation pipeline + admin queue
+4. Masked calling (Twilio secrets requested at this step)
+5. Cron for session cleanup
 
-Approve to switch to default mode and ship. Twilio secrets requested when workstream 4 begins.
+Approve to switch to default mode and ship. Twilio secrets requested when workstream 4 starts.
 
