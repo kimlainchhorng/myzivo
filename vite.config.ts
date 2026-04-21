@@ -17,6 +17,11 @@ export default defineConfig(({ mode }) => ({
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util", "@ffmpeg/core"],
   },
   build: {
+    target: "es2020",
+    minify: "esbuild",
+    cssMinify: "esbuild",
+    reportCompressedSize: false,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -44,6 +49,10 @@ export default defineConfig(({ mode }) => ({
     },
     cssCodeSplit: true,
     sourcemap: 'hidden',
+  },
+  esbuild: {
+    drop: mode === "production" ? ["console", "debugger"] : [],
+    legalComments: "none",
   },
   plugins: [
     react(),
