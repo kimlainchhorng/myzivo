@@ -92,11 +92,12 @@ const EMPTY_FORM: CampaignFormState = {
 };
 
 export default function StoreAdsManager({ storeId }: Props) {
-  const { accounts, campaigns, stats, checklist, isLoading, invalidate } =
+  const { accounts, campaigns, stats, checklist, wallet, ledger, isLoading, invalidate } =
     useStoreAdsOverview(storeId);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<AdCampaign | null>(null);
+  const [detailCampaign, setDetailCampaign] = useState<AdCampaign | null>(null);
   const [connectPlatform, setConnectPlatform] = useState<AdPlatform | null>(null);
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [search, setSearch] = useState("");
@@ -104,6 +105,11 @@ export default function StoreAdsManager({ storeId }: Props) {
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   const accountByPlatform = (p: AdPlatform) => accounts.find((a) => a.platform === p);
+
+  const goToWallet = () => {
+    document.getElementById("ads-wallet")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    toast.info("Configure top-ups and auto-reload below.");
+  };
 
   // ===== Mutations =====
 
