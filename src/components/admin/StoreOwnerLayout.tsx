@@ -160,7 +160,11 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
             </Button>
           </div>
 
-          <nav ref={navRef} className="flex-1 min-h-0 px-3 py-4 overflow-y-auto overscroll-contain touch-pan-y">
+          <nav
+            ref={navRef}
+            className="flex-1 min-h-0 px-3 py-4 overflow-y-scroll scroll-momentum overscroll-contain touch-pan-y"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
             <div className="space-y-1">
               {navItems.map((item) => {
                 const isActive = activeTab === item.id;
