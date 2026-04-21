@@ -51,6 +51,12 @@ Deno.serve(async (req) => {
     const { data: ride } = await admin.from("ride_requests").select("id, user_id, assigned_driver_id, status").eq("id", ride_request_id).maybeSingle();
     if (!ride) return new Response(JSON.stringify({ error: "ride not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
+    // Defense in depth: refuse new call sessions for rides in terminal states
+    const TERMINAL = ["completed", "cancelled", "canceled", "no_show", "expired"];
+    if (ride.status && TERMINAL.includes(ride.status)) {
+      return new Response(JSON.stringify({ error: "ride is no longer active" }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const isRider = ride.user_id === user.id;
     const callerRole = isRider ? "rider" : "driver";
 
