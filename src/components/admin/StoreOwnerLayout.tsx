@@ -32,14 +32,36 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const asideRef = useRef<HTMLElement | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
   const employeeIds = ["employees", "payroll", "employee-schedule", "time-clock", "attendance", "training", "documents", "employee-rules"];
   const [employeesOpen, setEmployeesOpen] = useState(employeeIds.includes(activeTab || ""));
 
+  const resetSidebarScroll = () => {
+    if (asideRef.current) {
+      asideRef.current.scrollTop = 0;
+    }
+    if (navRef.current) {
+      navRef.current.scrollTop = 0;
+    }
+  };
+
+  const closeSidebar = () => setSidebarOpen(false);
+  const openSidebar = () => {
+    resetSidebarScroll();
+    setSidebarOpen(true);
+  };
+
   useEffect(() => {
     if (!sidebarOpen || typeof document === "undefined") return;
 
-    navRef.current?.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    resetSidebarScroll();
+
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      resetSidebarScroll();
+      raf2 = requestAnimationFrame(resetSidebarScroll);
+    });
 
     const previousBodyOverflow = document.body.style.overflow;
     const previousHtmlOverflow = document.documentElement.style.overflow;
@@ -48,6 +70,8 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     document.documentElement.style.overflow = "hidden";
 
     return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
       document.body.style.overflow = previousBodyOverflow;
       document.documentElement.style.overflow = previousHtmlOverflow;
     };
@@ -94,13 +118,19 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
 
       <div className="min-h-screen bg-background flex">
         {sidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+          <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={closeSidebar} />
         )}
 
-        <aside className={cn(
-          "fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-[82vw] max-w-[300px] lg:w-64 bg-card border-r border-border flex flex-col overflow-hidden transition-transform duration-300 shadow-xl lg:shadow-none overscroll-contain",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        )}>
+        <aside
+          ref={asideRef}
+          onTransitionEnd={() => {
+            if (sidebarOpen) resetSidebarScroll();
+          }}
+          className={cn(
+            "fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-[82vw] max-w-[300px] lg:w-64 bg-card border-r border-border flex flex-col overflow-hidden transition-transform duration-300 shadow-xl lg:shadow-none overscroll-contain",
+            sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          )}
+        >
           <div
             className="flex items-center justify-between px-5 border-b border-border shrink-0"
             style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)', paddingBottom: '12px' }}
@@ -120,7 +150,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
                 )}
               </div>
             </div>
-            <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10 shrink-0 -mr-2 touch-manipulation" onClick={() => setSidebarOpen(false)}>
+            <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10 shrink-0 -mr-2 touch-manipulation" onClick={closeSidebar}>
               <ChevronLeft className="w-5 h-5" />
             </Button>
           </div>
@@ -132,7 +162,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
                 return (
                   <button
                     key={item.id}
-                    onClick={() => { onTabChange?.(item.id); setSidebarOpen(false); }}
+                    onClick={() => { onTabChange?.(item.id); closeSidebar(); }}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
                       isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -149,7 +179,6 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
               <div className="border-t border-border" />
             </div>
 
-            {/* Collapsible Employees group */}
             <div className="space-y-1">
               <button
                 onClick={() => setEmployeesOpen((v) => !v)}
@@ -173,7 +202,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
                     return (
                       <button
                         key={item.id}
-                        onClick={() => { onTabChange?.(item.id); setSidebarOpen(false); }}
+                        onClick={() => { onTabChange?.(item.id); closeSidebar(); }}
                         className={cn(
                           "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all",
                           isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -189,19 +218,17 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
             </div>
           </nav>
 
-          {/* User info (above actions so it's never clipped by browser chrome) */}
           <div className="border-t border-border px-4 py-2.5 shrink-0">
             <p className="text-xs font-medium text-foreground truncate">{user?.email}</p>
             <p className="text-[10px] text-muted-foreground">Store Owner</p>
           </div>
 
-          {/* Footer actions */}
           <div
             className="border-t border-border p-3 space-y-1 shrink-0"
             style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
           >
             <button
-              onClick={() => { onTabChange?.("settings"); setSidebarOpen(false); }}
+              onClick={() => { onTabChange?.("settings"); closeSidebar(); }}
               className={cn(
                 "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all",
                 activeTab === "settings" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -227,11 +254,10 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           </div>
         </aside>
 
-        {/* Main content */}
         <div className="flex-1 flex flex-col min-w-0">
           <header className="safe-area-top min-h-16 bg-card border-b border-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+              <Button variant="ghost" size="icon" className="lg:hidden" onClick={openSidebar}>
                 <Menu className="w-5 h-5" />
               </Button>
               <h1 className="text-lg font-bold text-foreground">{title}</h1>
