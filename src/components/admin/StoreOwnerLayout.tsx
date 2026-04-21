@@ -175,8 +175,17 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
             </div>
           </nav>
 
-          {/* Footer */}
-          <div className="border-t border-border p-3 space-y-1">
+          {/* User info (above actions so it's never clipped by browser chrome) */}
+          <div className="border-t border-border px-4 py-2.5 shrink-0">
+            <p className="text-xs font-medium text-foreground truncate">{user?.email}</p>
+            <p className="text-[10px] text-muted-foreground">Store Owner</p>
+          </div>
+
+          {/* Footer actions */}
+          <div
+            className="border-t border-border p-3 space-y-1 shrink-0"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
+          >
             <button
               onClick={() => { onTabChange?.("settings"); setSidebarOpen(false); }}
               className={cn(
@@ -196,20 +205,11 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
             </button>
             <button
               onClick={() => signOut()}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-500 hover:bg-red-500/10 transition-all"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-destructive hover:bg-destructive/10 transition-all"
             >
               <LogOut className="w-4.5 h-4.5" />
               Sign Out
             </button>
-          </div>
-
-          {/* User info */}
-          <div
-            className="border-t border-border px-4 py-3 shrink-0"
-            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
-          >
-            <p className="text-xs font-medium text-foreground truncate">{user?.email}</p>
-            <p className="text-[10px] text-muted-foreground">Store Owner</p>
           </div>
         </aside>
 
