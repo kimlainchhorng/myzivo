@@ -81,7 +81,12 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
         },
       });
       if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
+      const d: any = data;
+      if (d?.error === "insufficient_balance") {
+        toast.error(d.message || "Top up your Ads wallet to continue.");
+        return;
+      }
+      if (d?.error) throw new Error(d.error);
 
       // Persist creative
       const { data: creative, error: insErr } = await supabase
@@ -91,12 +96,12 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
           goal,
           targeting: { city, radius_km: radius, age_min: ageMin, age_max: ageMax },
           budget: { daily: dailyBudget, currency: "USD" },
-          headlines: data.copy?.headlines ?? {},
-          descriptions: data.copy?.descriptions ?? {},
-          ctas: data.copy?.ctas ?? [],
-          hashtags: data.copy?.hashtags ?? [],
-          image_urls: data.images ?? [],
-          video_scripts: data.video_scripts ?? null,
+          headlines: d.copy?.headlines ?? {},
+          descriptions: d.copy?.descriptions ?? {},
+          ctas: d.copy?.ctas ?? [],
+          hashtags: d.copy?.hashtags ?? [],
+          image_urls: d.images ?? [],
+          video_scripts: d.video_scripts ?? null,
           platforms,
           status: "ready",
         })
@@ -104,9 +109,31 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
         .maybeSingle();
       if (insErr) console.warn(insErr);
 
-      setResult({ ...data, creative_id: creative?.id });
+      // Auto-create A/B variants from the first 3 headlines + images
+      if (creative?.id) {
+        const allHeadlines: string[] = [
+          ...(d.copy?.headlines?.meta || []),
+          ...(d.copy?.headlines?.google || []),
+          ...(d.copy?.headlines?.tiktok || []),
+        ];
+        const variants = allHeadlines.slice(0, 3).map((h: string, i: number) => ({
+          creative_id: creative.id,
+          store_id: storeId,
+          variant_label: String.fromCharCode(65 + i), // A, B, C
+          headline: h,
+          description: d.copy?.descriptions?.short?.[i] || d.copy?.descriptions?.short?.[0] || null,
+          image_url: d.images?.[i % Math.max(1, d.images?.length || 1)]?.url || null,
+          cta: d.copy?.ctas?.[i % Math.max(1, d.copy?.ctas?.length || 1)] || null,
+          is_active: true,
+        }));
+        if (variants.length > 0) {
+          await supabase.from("ads_studio_variants" as any).insert(variants);
+        }
+      }
+
+      setResult({ ...d, creative_id: creative?.id });
       setStep(4);
-      toast.success(`Generated! Cost: $${(data.cost_cents / 100).toFixed(2)}`);
+      toast.success(`Generated! Cost: $${(d.cost_cents / 100).toFixed(2)} · Balance: $${((d.balance_after_cents ?? 0) / 100).toFixed(2)}`);
     } catch (e: any) {
       toast.error(e?.message || "Generation failed");
     } finally { setLoading(false); }
