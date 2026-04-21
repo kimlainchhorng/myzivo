@@ -39,8 +39,12 @@ serve(async (req) => {
 
     const store = (c as any).restaurants;
     const finalUrl = destination_url || `https://hizivo.com/store/${store.slug || store.id}`;
-    const utm = (src: string) =>
-      `${finalUrl}${finalUrl.includes("?") ? "&" : "?"}utm_source=${src}&utm_medium=cpc&utm_campaign=zivo_ads_studio&utm_content=${creative_id}`;
+    const trackBase = `${SUPABASE_URL}/functions/v1/ads-studio-track?c=${creative_id}&t=click`;
+    const utm = (src: string) => {
+      const u = `${finalUrl}${finalUrl.includes("?") ? "&" : "?"}utm_source=${src}&utm_medium=cpc&utm_campaign=zivo_ads_studio&utm_content=${creative_id}&zv_ad=${creative_id}&zv_src=${src}`;
+      return u;
+    };
+    const pixel = (src: string) => `${trackBase}&src=${src}`;
 
     // --- Google Ads RSA CSV ---
     const gHeadlines: string[] = (c.headlines as any)?.google || (c.headlines as any)?.meta || [];
@@ -105,6 +109,12 @@ serve(async (req) => {
       ok: true,
       destination_url: finalUrl,
       bundles: { google_csv: googleCsv, meta: metaBundle, tiktok: tiktokBundle, youtube: youtubeBundle },
+      tracking_pixels: {
+        google: pixel("google"),
+        meta: pixel("meta"),
+        tiktok: pixel("tiktok"),
+        youtube: pixel("youtube"),
+      },
       launch_urls: {
         google: "https://ads.google.com/aw/campaigns/new",
         meta: "https://business.facebook.com/adsmanager/manage/campaigns",

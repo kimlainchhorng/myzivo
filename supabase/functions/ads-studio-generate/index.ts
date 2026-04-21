@@ -70,6 +70,29 @@ serve(async (req) => {
       .maybeSingle();
     if (!store || store.owner_id !== user.id) return jsonResp({ error: "forbidden" }, 403);
 
+    // ------- Wallet guard -------
+    const imageCountReq = Math.min(Math.max(body.generate.images ?? 0, 0), 4);
+    const estCost =
+      (body.generate.copy !== false ? PRICE_CENTS.copy : 0) +
+      imageCountReq * PRICE_CENTS.image +
+      (body.generate.video_scripts ? PRICE_CENTS.video_script : 0);
+
+    const { data: wallet } = await admin
+      .from("restaurant_wallets")
+      .select("balance_cents, auto_recharge_enabled, auto_recharge_threshold_cents, auto_recharge_amount_cents")
+      .eq("restaurant_id", body.store_id)
+      .maybeSingle();
+    const balance = wallet?.balance_cents ?? 0;
+    if (balance < estCost) {
+      return jsonResp({
+        error: "insufficient_balance",
+        message: `Wallet balance $${(balance / 100).toFixed(2)} below required $${(estCost / 100).toFixed(2)}.`,
+        balance_cents: balance,
+        required_cents: estCost,
+        auto_recharge: wallet?.auto_recharge_enabled ?? false,
+      }, 402);
+    }
+
     const platforms = body.platforms?.length ? body.platforms : ["google", "meta", "tiktok"];
 
     // ---------- 1) AI COPY ----------
@@ -229,9 +252,18 @@ Return:
       }
     }
 
+    // Deduct actual cost from wallet
+    if (totalCost > 0) {
+      await admin
+        .from("restaurant_wallets")
+        .update({ balance_cents: balance - totalCost, updated_at: new Date().toISOString() })
+        .eq("restaurant_id", body.store_id);
+    }
+
     return jsonResp({
       ok: true,
       cost_cents: totalCost,
+      balance_after_cents: Math.max(0, balance - totalCost),
       copy: copyResult,
       images: imageUrls,
       video_scripts: videoScripts,

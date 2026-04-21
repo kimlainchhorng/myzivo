@@ -1050,6 +1050,79 @@ export type Database = {
           },
         ]
       }
+      ads_studio_events: {
+        Row: {
+          created_at: string
+          creative_id: string | null
+          event_type: string
+          id: string
+          ip_hash: string | null
+          revenue_cents: number | null
+          store_id: string
+          user_agent: string | null
+          user_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          creative_id?: string | null
+          event_type: string
+          id?: string
+          ip_hash?: string | null
+          revenue_cents?: number | null
+          store_id: string
+          user_agent?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          creative_id?: string | null
+          event_type?: string
+          id?: string
+          ip_hash?: string | null
+          revenue_cents?: number | null
+          store_id?: string
+          user_agent?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ads_studio_events_creative_id_fkey"
+            columns: ["creative_id"]
+            isOneToOne: false
+            referencedRelation: "ads_studio_creative_stats"
+            referencedColumns: ["creative_id"]
+          },
+          {
+            foreignKeyName: "ads_studio_events_creative_id_fkey"
+            columns: ["creative_id"]
+            isOneToOne: false
+            referencedRelation: "ads_studio_creatives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_events_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "ads_studio_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ads_studio_generations: {
         Row: {
           cost_cents: number
@@ -1089,6 +1162,13 @@ export type Database = {
             foreignKeyName: "ads_studio_generations_creative_id_fkey"
             columns: ["creative_id"]
             isOneToOne: false
+            referencedRelation: "ads_studio_creative_stats"
+            referencedColumns: ["creative_id"]
+          },
+          {
+            foreignKeyName: "ads_studio_generations_creative_id_fkey"
+            columns: ["creative_id"]
+            isOneToOne: false
             referencedRelation: "ads_studio_creatives"
             referencedColumns: ["id"]
           },
@@ -1118,6 +1198,63 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ads_studio_variants: {
+        Row: {
+          created_at: string
+          creative_id: string
+          cta: string | null
+          description: string | null
+          headline: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          is_winner: boolean | null
+          store_id: string
+          variant_label: string
+        }
+        Insert: {
+          created_at?: string
+          creative_id: string
+          cta?: string | null
+          description?: string | null
+          headline?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_winner?: boolean | null
+          store_id: string
+          variant_label: string
+        }
+        Update: {
+          created_at?: string
+          creative_id?: string
+          cta?: string | null
+          description?: string | null
+          headline?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_winner?: boolean | null
+          store_id?: string
+          variant_label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ads_studio_variants_creative_id_fkey"
+            columns: ["creative_id"]
+            isOneToOne: false
+            referencedRelation: "ads_studio_creative_stats"
+            referencedColumns: ["creative_id"]
+          },
+          {
+            foreignKeyName: "ads_studio_variants_creative_id_fkey"
+            columns: ["creative_id"]
+            isOneToOne: false
+            referencedRelation: "ads_studio_creatives"
             referencedColumns: ["id"]
           },
         ]
@@ -38414,6 +38551,9 @@ export type Database = {
       }
       restaurant_wallets: {
         Row: {
+          auto_recharge_amount_cents: number | null
+          auto_recharge_enabled: boolean | null
+          auto_recharge_threshold_cents: number | null
           balance_cents: number
           created_at: string
           id: string
@@ -38424,6 +38564,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          auto_recharge_amount_cents?: number | null
+          auto_recharge_enabled?: boolean | null
+          auto_recharge_threshold_cents?: number | null
           balance_cents?: number
           created_at?: string
           id?: string
@@ -38434,6 +38577,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          auto_recharge_amount_cents?: number | null
+          auto_recharge_enabled?: boolean | null
+          auto_recharge_threshold_cents?: number | null
           balance_cents?: number
           created_at?: string
           id?: string
@@ -54242,6 +54388,50 @@ export type Database = {
           status?: Database["public"]["Enums"]["job_status"] | null
         }
         Relationships: []
+      }
+      ads_studio_creative_stats: {
+        Row: {
+          clicks: number | null
+          conversions: number | null
+          created_at: string | null
+          creative_id: string | null
+          goal: string | null
+          impressions: number | null
+          revenue_cents: number | null
+          spend_cents: number | null
+          status: string | null
+          store_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ads_studio_creatives_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_creatives_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_creatives_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_studio_creatives_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       call_sessions_safe: {
         Row: {
