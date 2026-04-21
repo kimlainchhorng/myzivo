@@ -702,8 +702,13 @@ const App = () => (
                 <Route path="/driver/home" element={<DriverHomePage />} />
                 <Route path="/driver/earnings" element={<DriverEarningsPage />} />
                 <Route path="/driver/payouts" element={<ProtectedRoute><DriverPayoutsPage /></ProtectedRoute>} />
+                <Route path="/driver/onboarding/documents" element={<ProtectedRoute><DriverOnboardingDocumentsPage /></ProtectedRoute>} />
                 <Route path="/admin/ads/google" element={<ProtectedRoute><AdminGoogleAdsPage /></ProtectedRoute>} />
                 <Route path="/admin/ads/meta" element={<ProtectedRoute><AdminMetaAdsPage /></ProtectedRoute>} />
+                <Route path="/admin/ads/analytics" element={<ProtectedRoute><AdminAdsAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/admin/payments/webhook-status" element={<ProtectedRoute><AdminWebhookStatusPage /></ProtectedRoute>} />
+                <Route path="/admin/drivers/verification" element={<ProtectedRoute><AdminDriverVerificationPage /></ProtectedRoute>} />
+                <Route path="/track/:token" element={<SharedTripPage />} />
                 <Route path="/driver/performance" element={<DriverPerformancePage />} />
                 <Route path="/driver/map" element={<DriverMapPage />} />
                 <Route path="/package-delivery" element={<PreserveQueryRedirect to="/delivery" />} />
