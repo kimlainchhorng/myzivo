@@ -306,7 +306,7 @@ export default function StoreAdsManager({ storeId }: Props) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5">
             {PLATFORMS.map((p) => {
               const acc = accountByPlatform(p.id);
               const connected = acc && acc.status !== "disconnected";
@@ -315,11 +315,11 @@ export default function StoreAdsManager({ storeId }: Props) {
                 <button
                   key={p.id}
                   onClick={() => setConnectPlatform(p.id)}
-                  className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:border-primary/40 hover:bg-accent/30 transition text-left"
+                  className="flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border border-border hover:border-primary/40 hover:bg-accent/30 active:scale-[0.98] transition text-left min-h-[88px] touch-manipulation"
                 >
-                  <Icon className={`w-6 h-6 ${p.color}`} />
-                  <div className="text-xs font-medium text-center">{p.label}</div>
-                  <Badge variant={connected ? "default" : "outline"} className="text-[10px] h-5">
+                  <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${p.color}`} />
+                  <div className="text-[11px] sm:text-xs font-medium text-center leading-tight">{p.label}</div>
+                  <Badge variant={connected ? "default" : "outline"} className="text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5">
                     {connected ? acc?.status : "Connect"}
                   </Badge>
                 </button>
@@ -330,7 +330,7 @@ export default function StoreAdsManager({ storeId }: Props) {
       </Card>
 
       {/* Aggregate stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         {[
           { label: "Total Spend", value: `$${(totals.spend / 100).toFixed(2)}`, icon: DollarSign },
           { label: "Impressions", value: totals.impressions.toLocaleString(), icon: Eye },
@@ -340,10 +340,10 @@ export default function StoreAdsManager({ storeId }: Props) {
           const Icon = s.icon;
           return (
             <Card key={s.label}>
-              <CardContent className="p-4">
-                <Icon className="w-4 h-4 text-primary mb-2" />
-                <p className="text-2xl font-bold">{s.value}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{s.label}</p>
+              <CardContent className="p-3 sm:p-4">
+                <Icon className="w-4 h-4 text-primary mb-1.5 sm:mb-2" />
+                <p className="text-lg sm:text-2xl font-bold leading-tight">{s.value}</p>
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">{s.label}</p>
               </CardContent>
             </Card>
           );
@@ -368,7 +368,7 @@ export default function StoreAdsManager({ storeId }: Props) {
             </div>
           ) : (
             campaigns.map((c) => (
-              <div key={c.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border hover:bg-accent/20 transition">
+              <div key={c.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 rounded-lg border border-border hover:bg-accent/20 transition">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="font-semibold text-sm truncate">{c.name}</span>
@@ -385,26 +385,26 @@ export default function StoreAdsManager({ storeId }: Props) {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 self-end sm:self-auto shrink-0">
                   {c.status === "draft" && (
-                    <Button size="sm" variant="outline" onClick={() => launchCampaign.mutate(c)}>
+                    <Button size="sm" variant="outline" className="h-9 sm:h-8" onClick={() => launchCampaign.mutate(c)}>
                       <Play className="w-3.5 h-3.5 mr-1" /> Launch
                     </Button>
                   )}
                   {c.status === "active" && (
-                    <Button size="sm" variant="outline" onClick={() => toggleStatus.mutate({ id: c.id, status: "paused" })}>
+                    <Button size="sm" variant="outline" className="h-9 w-9 sm:h-8 sm:w-8 p-0" onClick={() => toggleStatus.mutate({ id: c.id, status: "paused" })}>
                       <Pause className="w-3.5 h-3.5" />
                     </Button>
                   )}
                   {c.status === "paused" && (
-                    <Button size="sm" variant="outline" onClick={() => toggleStatus.mutate({ id: c.id, status: "active" })}>
+                    <Button size="sm" variant="outline" className="h-9 w-9 sm:h-8 sm:w-8 p-0" onClick={() => toggleStatus.mutate({ id: c.id, status: "active" })}>
                       <Play className="w-3.5 h-3.5" />
                     </Button>
                   )}
-                  <Button size="sm" variant="ghost" onClick={() => openEdit(c)}>
+                  <Button size="sm" variant="ghost" className="h-9 w-9 sm:h-8 sm:w-8 p-0" onClick={() => openEdit(c)}>
                     <Edit className="w-3.5 h-3.5" />
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => deleteCampaign.mutate(c.id)}>
+                  <Button size="sm" variant="ghost" className="h-9 w-9 sm:h-8 sm:w-8 p-0" onClick={() => deleteCampaign.mutate(c.id)}>
                     <Trash2 className="w-3.5 h-3.5 text-red-500" />
                   </Button>
                 </div>
@@ -416,7 +416,7 @@ export default function StoreAdsManager({ storeId }: Props) {
 
       {/* Connect dialog */}
       <Dialog open={!!connectPlatform} onOpenChange={(o) => !o && setConnectPlatform(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-[calc(100vw-1.5rem)] sm:w-full max-h-[90vh] overflow-y-auto">
           {connectPlatform && (() => {
             const p = PLATFORMS.find((x) => x.id === connectPlatform)!;
             const Icon = p.icon;
@@ -482,7 +482,7 @@ export default function StoreAdsManager({ storeId }: Props) {
 
       {/* Create / Edit Campaign dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg w-[calc(100vw-1.5rem)] sm:w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit Campaign" : "New Campaign"}</DialogTitle>
           </DialogHeader>
@@ -493,7 +493,7 @@ export default function StoreAdsManager({ storeId }: Props) {
             </div>
             <div>
               <Label className="text-xs">Platforms</Label>
-              <div className="grid grid-cols-5 gap-1.5 mt-1">
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 mt-1">
                 {PLATFORMS.map((p) => {
                   const Icon = p.icon;
                   const selected = form.platforms.includes(p.id);
@@ -502,7 +502,7 @@ export default function StoreAdsManager({ storeId }: Props) {
                       key={p.id}
                       type="button"
                       onClick={() => togglePlatform(p.id)}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition ${selected ? "border-primary bg-primary/5" : "border-border"}`}
+                      className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition active:scale-95 touch-manipulation ${selected ? "border-primary bg-primary/5" : "border-border"}`}
                     >
                       <Icon className={`w-4 h-4 ${p.color}`} />
                       <span className="text-[10px]">{p.label.split(" ")[0]}</span>
@@ -550,9 +550,9 @@ export default function StoreAdsManager({ storeId }: Props) {
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-            <Button onClick={() => saveCampaign.mutate()} disabled={!form.name || form.platforms.length === 0 || saveCampaign.isPending}>
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2 sm:gap-0">
+            <Button variant="outline" className="w-full sm:w-auto h-10" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button className="w-full sm:w-auto h-10" onClick={() => saveCampaign.mutate()} disabled={!form.name || form.platforms.length === 0 || saveCampaign.isPending}>
               {saveCampaign.isPending && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
               {editing ? "Save" : "Create draft"}
             </Button>

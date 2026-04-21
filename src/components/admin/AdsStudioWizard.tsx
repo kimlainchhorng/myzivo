@@ -166,27 +166,35 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
   const copy = (text: string) => { navigator.clipboard.writeText(text); toast.success("Copied"); };
 
   return (
-    <div className="space-y-4">
-      {/* Stepper */}
-      <div className="flex items-center gap-2">
-        {[1, 2, 3, 4].map((n) => (
-          <div key={n} className="flex-1 flex items-center gap-2">
-            <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-              step >= n ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-            }`}>{step > n ? <Check className="h-4 w-4" /> : n}</div>
-            {n < 4 && <div className={`h-0.5 flex-1 ${step > n ? "bg-primary" : "bg-muted"}`} />}
+    <div className="space-y-3 sm:space-y-4">
+      {/* Stepper with labels */}
+      <div className="flex items-center gap-1 sm:gap-2">
+        {[
+          { n: 1, label: "Goal" },
+          { n: 2, label: "Offer" },
+          { n: 3, label: "Targeting" },
+          { n: 4, label: "Results" },
+        ].map((s, i, arr) => (
+          <div key={s.n} className="flex-1 flex items-center gap-1 sm:gap-2 min-w-0">
+            <div className="flex flex-col items-center gap-1 shrink-0">
+              <div className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-[11px] sm:text-xs font-semibold transition ${
+                step >= s.n ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+              }`}>{step > s.n ? <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : s.n}</div>
+              <span className={`text-[9px] sm:text-[10px] font-medium hidden xs:block ${step >= s.n ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
+            </div>
+            {i < arr.length - 1 && <div className={`h-0.5 flex-1 -mt-3 sm:-mt-4 ${step > s.n ? "bg-primary" : "bg-muted"}`} />}
           </div>
         ))}
       </div>
 
       {/* Step 1: Goal */}
       {step === 1 && (
-        <Card><CardContent className="p-4 space-y-3">
-          <div className="flex items-center gap-2"><Target className="h-4 w-4 text-primary" /><h3 className="font-semibold">Pick your goal</h3></div>
-          <div className="grid grid-cols-2 gap-2">
+        <Card><CardContent className="p-3 sm:p-4 space-y-3">
+          <div className="flex items-center gap-2"><Target className="h-4 w-4 text-primary" /><h3 className="font-semibold text-sm sm:text-base">Pick your goal</h3></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {GOALS.map((g) => (
               <button key={g.id} onClick={() => setGoal(g.id)}
-                className={`text-left p-3 rounded-xl border-2 transition ${
+                className={`text-left p-3 rounded-xl border-2 transition active:scale-[0.98] touch-manipulation min-h-[64px] ${
                   goal === g.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                 }`}>
                 <p className="font-semibold text-sm">{g.label}</p>
@@ -194,7 +202,7 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
               </button>
             ))}
           </div>
-          <Button className="w-full" onClick={() => setStep(2)}>Continue</Button>
+          <Button className="w-full h-11 sm:h-10" onClick={() => setStep(2)}>Continue</Button>
         </CardContent></Card>
       )}
 
@@ -208,17 +216,17 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
             maxLength={500}
           />
           <p className="text-[11px] text-muted-foreground">{offer.length}/500 — Be specific. AI uses this to write headlines & generate images.</p>
-          <div className="flex gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => setStep(1)}>Back</Button>
-            <Button className="flex-1" onClick={() => setStep(3)} disabled={!offer.trim()}>Continue</Button>
+          <div className="flex flex-col-reverse sm:flex-row gap-2">
+            <Button variant="outline" className="flex-1 h-11 sm:h-10" onClick={() => setStep(1)}>Back</Button>
+            <Button className="flex-1 h-11 sm:h-10" onClick={() => setStep(3)} disabled={!offer.trim()}>Continue</Button>
           </div>
         </CardContent></Card>
       )}
 
       {/* Step 3: Targeting + Budget + Platforms */}
       {step === 3 && (
-        <Card><CardContent className="p-4 space-y-4">
-          <div className="flex items-center gap-2"><DollarSign className="h-4 w-4 text-primary" /><h3 className="font-semibold">Targeting & budget</h3></div>
+        <Card><CardContent className="p-3 sm:p-4 space-y-4">
+          <div className="flex items-center gap-2"><DollarSign className="h-4 w-4 text-primary" /><h3 className="font-semibold text-sm sm:text-base">Targeting & budget</h3></div>
 
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -257,12 +265,12 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
 
           <div>
             <Label className="text-xs mb-2 block">Platforms</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {(Object.keys(PLATFORM_META) as Platform[]).map((p) => {
                 const M = PLATFORM_META[p]; const Icon = M.icon; const on = platforms.includes(p);
                 return (
                   <button key={p} onClick={() => togglePlatform(p)}
-                    className={`flex items-center gap-2 p-2.5 rounded-lg border-2 text-sm ${
+                    className={`flex items-center gap-2 p-2.5 rounded-lg border-2 text-sm active:scale-[0.98] touch-manipulation min-h-[44px] ${
                       on ? "border-primary bg-primary/5" : "border-border"
                     }`}>
                     <Icon className={`h-4 w-4 ${M.color}`} />
@@ -274,9 +282,9 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm min-h-[44px] cursor-pointer">
             <input type="checkbox" checked={genVideo} onChange={(e) => setGenVideo(e.target.checked)} className="h-4 w-4" />
-            Also generate TikTok + YouTube Shorts video scripts
+            <span>Also generate TikTok + YouTube Shorts video scripts</span>
           </label>
 
           <div className="rounded-lg bg-muted/50 p-3 flex items-center justify-between">
@@ -284,9 +292,9 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
             <span className="text-base font-bold text-primary">${(estCost / 100).toFixed(2)}</span>
           </div>
 
-          <div className="flex gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => setStep(2)} disabled={loading}>Back</Button>
-            <Button className="flex-1" onClick={handleGenerate} disabled={loading || !platforms.length}>
+          <div className="flex flex-col-reverse sm:flex-row gap-2">
+            <Button variant="outline" className="flex-1 h-11 sm:h-10" onClick={() => setStep(2)} disabled={loading}>Back</Button>
+            <Button className="flex-1 h-11 sm:h-10" onClick={handleGenerate} disabled={loading || !platforms.length}>
               {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating…</> : <><Wand2 className="h-4 w-4 mr-2" /> Generate AI ads</>}
             </Button>
           </div>
@@ -334,14 +342,14 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
 
           {/* Images */}
           {result.images?.length > 0 && (
-            <Card><CardContent className="p-4 space-y-2">
+            <Card><CardContent className="p-3 sm:p-4 space-y-2">
               <h4 className="font-semibold text-sm flex items-center gap-2"><ImageIcon className="h-4 w-4 text-primary" /> Generated images</h4>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {result.images.map((img: any, i: number) => (
                   <div key={i} className="relative group">
-                    <img src={img.url} alt="ad" className="w-full rounded-lg border" />
-                    <Badge className="absolute top-2 left-2">{img.aspect}</Badge>
-                    <a href={img.url} download className="absolute top-2 right-2 bg-background/90 rounded p-1.5 opacity-0 group-hover:opacity-100 transition">
+                    <img src={img.url} alt="ad" className="w-full rounded-lg border" loading="lazy" />
+                    <Badge className="absolute top-2 left-2 text-[10px]">{img.aspect}</Badge>
+                    <a href={img.url} download className="absolute top-2 right-2 bg-background/90 rounded p-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition">
                       <Download className="h-3.5 w-3.5" />
                     </a>
                   </div>
@@ -374,10 +382,10 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
           )}
 
           {/* Export */}
-          <Card><CardContent className="p-4 space-y-2">
+          <Card><CardContent className="p-3 sm:p-4 space-y-2">
             <h4 className="font-semibold text-sm">Launch on platforms</h4>
             <p className="text-[11px] text-muted-foreground">Download the ready-to-import bundle, then open the ad manager.</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {(Object.keys(PLATFORM_META) as Platform[]).map((p) => {
                 const M = PLATFORM_META[p]; const Icon = M.icon;
                 const launch = exports?.launch_urls?.[p];
@@ -385,13 +393,13 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
                   <div key={p} className="border rounded-lg p-2.5 space-y-2">
                     <div className="flex items-center gap-2"><Icon className={`h-4 w-4 ${M.color}`} /><span className="text-sm font-medium">{M.label}</span></div>
                     <div className="flex gap-1.5">
-                      <Button size="sm" variant="outline" className="flex-1" onClick={() => handleExport(p)} disabled={exporting === p}>
+                      <Button size="sm" variant="outline" className="flex-1 h-9" onClick={() => handleExport(p)} disabled={exporting === p}>
                         {exporting === p ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1" />}
                         Export
                       </Button>
                       {launch && (
                         <a href={launch} target="_blank" rel="noopener noreferrer">
-                          <Button size="sm" variant="ghost"><ExternalLink className="h-3.5 w-3.5" /></Button>
+                          <Button size="sm" variant="ghost" className="h-9 w-9 p-0"><ExternalLink className="h-3.5 w-3.5" /></Button>
                         </a>
                       )}
                     </div>
@@ -399,7 +407,7 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
                 );
               })}
             </div>
-            <Button variant="outline" className="w-full mt-2" onClick={() => { setStep(1); setResult(null); setExports(null); setOffer(""); }}>
+            <Button variant="outline" className="w-full mt-2 h-11 sm:h-10" onClick={() => { setStep(1); setResult(null); setExports(null); setOffer(""); }}>
               Create another ad
             </Button>
           </CardContent></Card>

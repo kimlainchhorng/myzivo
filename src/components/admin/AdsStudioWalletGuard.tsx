@@ -222,17 +222,17 @@ export default function AdsStudioWalletGuard({ storeId }: Props) {
       </CardContent>
 
       <Dialog open={topupOpen} onOpenChange={setTopupOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm w-[calc(100vw-1.5rem)] sm:w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Top up Ads wallet</DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">Top up Ads wallet</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {TOPUP_PRESETS.map((v) => (
                 <button
                   key={v}
                   onClick={() => setTopupAmount(v)}
-                  className={`h-10 rounded-lg border text-sm font-semibold transition ${
+                  className={`h-11 sm:h-10 rounded-lg border text-sm font-semibold transition active:scale-95 touch-manipulation ${
                     topupAmount === v ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/40"
                   }`}
                 >
@@ -242,18 +242,18 @@ export default function AdsStudioWalletGuard({ storeId }: Props) {
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Custom amount ($)</Label>
-              <Input type="number" min={5} step={5} value={topupAmount}
-                onChange={(e) => setTopupAmount(+e.target.value || 0)} className="h-9" />
+              <Input type="number" inputMode="decimal" min={5} step={5} value={topupAmount}
+                onChange={(e) => setTopupAmount(+e.target.value || 0)} className="h-10 sm:h-9" />
             </div>
             {enabled && !hasCard && (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
                 Your card will be securely saved with Stripe so we can auto-recharge later.
               </p>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTopupOpen(false)}>Cancel</Button>
-            <Button onClick={startTopup} disabled={topupBusy || topupAmount < 5}>
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2 sm:gap-0">
+            <Button variant="outline" className="w-full sm:w-auto h-10" onClick={() => setTopupOpen(false)}>Cancel</Button>
+            <Button className="w-full sm:w-auto h-10" onClick={startTopup} disabled={topupBusy || topupAmount < 5}>
               {topupBusy ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
               Pay ${topupAmount.toFixed(2)}
             </Button>
