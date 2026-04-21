@@ -279,18 +279,27 @@ export default function AdminMarketingResponsiveQA() {
           </div>
           <div>
             <label className={cn(mkMeta, "block mb-1")}>Viewport</label>
-            <ToggleGroup type="single" value={viewport} onValueChange={(v) => v && setViewport(v as any)}>
+            <div className="inline-flex items-center gap-1 rounded-md border border-border p-1">
               {VIEWPORTS.map((v) => {
                 const Icon = v.icon;
+                const active = viewport === v.id;
                 return (
-                  <ToggleGroupItem key={v.id} value={v.id} aria-label={`${v.label} ${v.width}px`} className="h-9 px-3 gap-1.5 text-xs">
+                  <Button
+                    key={v.id}
+                    size="sm"
+                    variant={active ? "default" : "ghost"}
+                    onClick={() => setViewport(v.id)}
+                    aria-pressed={active}
+                    aria-label={`${v.label} ${v.width}px`}
+                    className="h-8 px-2.5 gap-1.5 text-xs"
+                  >
                     <Icon className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">{v.label}</span>
                     <span className="text-muted-foreground">{v.width}</span>
-                  </ToggleGroupItem>
+                  </Button>
                 );
               })}
-            </ToggleGroup>
+            </div>
           </div>
         </CardContent>
       </Card>
