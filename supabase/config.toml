@@ -1,6 +1,10 @@
 project_id = "slirphzzwcogdbkeicff"
 
 [functions]
+  [functions.stripe-ride-webhook]
+    verify_jwt = false
+  [functions.dispatch-escalate]
+    verify_jwt = false
   [functions.ads-studio-generate]
     verify_jwt = false
   [functions.ads-studio-export]
