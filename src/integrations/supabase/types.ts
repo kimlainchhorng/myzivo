@@ -133,6 +133,51 @@ export type Database = {
         }
         Relationships: []
       }
+      abuse_reports: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          reported_driver_id: string | null
+          reported_user_id: string | null
+          reporter_id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          ride_request_id: string | null
+          status: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          reported_driver_id?: string | null
+          reported_user_id?: string | null
+          reporter_id: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          ride_request_id?: string | null
+          status?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          reported_driver_id?: string | null
+          reported_user_id?: string | null
+          reporter_id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          ride_request_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       account_activity_log: {
         Row: {
           action_type: string
@@ -14658,6 +14703,39 @@ export type Database = {
           },
         ]
       }
+      driver_flags: {
+        Row: {
+          active: boolean
+          created_at: string
+          driver_id: string
+          flagged_by: string | null
+          flagged_until: string | null
+          id: string
+          reason: string
+          related_report_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          driver_id: string
+          flagged_by?: string | null
+          flagged_until?: string | null
+          id?: string
+          reason: string
+          related_report_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          driver_id?: string
+          flagged_by?: string | null
+          flagged_until?: string | null
+          id?: string
+          reason?: string
+          related_report_id?: string | null
+        }
+        Relationships: []
+      }
       driver_hiring_targets: {
         Row: {
           city: string | null
@@ -19246,6 +19324,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      financial_ledger: {
+        Row: {
+          amount_cents: number
+          balance_after_cents: number | null
+          created_at: string
+          currency: string
+          description: string | null
+          entry_type: string
+          id: string
+          order_id: string | null
+          ride_request_id: string | null
+          stripe_reference: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          balance_after_cents?: number | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          entry_type: string
+          id?: string
+          order_id?: string | null
+          ride_request_id?: string | null
+          stripe_reference?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          balance_after_cents?: number | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          entry_type?: string
+          id?: string
+          order_id?: string | null
+          ride_request_id?: string | null
+          stripe_reference?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       financial_snapshots: {
         Row: {
@@ -36518,6 +36638,42 @@ export type Database = {
         }
         Relationships: []
       }
+      receipts: {
+        Row: {
+          created_at: string
+          currency: string
+          email_sent_at: string | null
+          id: string
+          pdf_path: string
+          reference_id: string
+          total_cents: number
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          email_sent_at?: string | null
+          id?: string
+          pdf_path: string
+          reference_id: string
+          total_cents?: number
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          email_sent_at?: string | null
+          id?: string
+          pdf_path?: string
+          reference_id?: string
+          total_cents?: number
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       recipe_ingredients: {
         Row: {
           id: string
@@ -39884,6 +40040,54 @@ export type Database = {
           tolls_fee?: number | null
           user_id?: string | null
           zone_name?: string | null
+        }
+        Relationships: []
+      }
+      ride_refund_requests: {
+        Row: {
+          approved_amount_cents: number | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_notes: string | null
+          description: string | null
+          id: string
+          reason_category: string
+          requested_amount_cents: number
+          requester_id: string
+          ride_request_id: string
+          status: string
+          stripe_refund_id: string | null
+        }
+        Insert: {
+          approved_amount_cents?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_notes?: string | null
+          description?: string | null
+          id?: string
+          reason_category: string
+          requested_amount_cents: number
+          requester_id: string
+          ride_request_id: string
+          status?: string
+          stripe_refund_id?: string | null
+        }
+        Update: {
+          approved_amount_cents?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_notes?: string | null
+          description?: string | null
+          id?: string
+          reason_category?: string
+          requested_amount_cents?: number
+          requester_id?: string
+          ride_request_id?: string
+          status?: string
+          stripe_refund_id?: string | null
         }
         Relationships: []
       }
@@ -48890,6 +49094,36 @@ export type Database = {
         }
         Relationships: []
       }
+      trip_call_sessions: {
+        Row: {
+          created_at: string
+          driver_proxy_number: string | null
+          expires_at: string
+          id: string
+          ride_request_id: string
+          rider_proxy_number: string | null
+          twilio_proxy_session_sid: string | null
+        }
+        Insert: {
+          created_at?: string
+          driver_proxy_number?: string | null
+          expires_at: string
+          id?: string
+          ride_request_id: string
+          rider_proxy_number?: string | null
+          twilio_proxy_session_sid?: string | null
+        }
+        Update: {
+          created_at?: string
+          driver_proxy_number?: string | null
+          expires_at?: string
+          id?: string
+          ride_request_id?: string
+          rider_proxy_number?: string | null
+          twilio_proxy_session_sid?: string | null
+        }
+        Relationships: []
+      }
       trip_items: {
         Row: {
           booking_reference: string | null
@@ -49071,29 +49305,44 @@ export type Database = {
       }
       trip_messages: {
         Row: {
+          body: string | null
           content: string
           created_at: string
           id: string
           is_read: boolean | null
+          moderation_reason: string | null
+          moderation_status: string
+          ride_request_id: string | null
           sender_id: string
+          sender_role: string | null
           sender_type: string
           trip_id: string
         }
         Insert: {
+          body?: string | null
           content: string
           created_at?: string
           id?: string
           is_read?: boolean | null
+          moderation_reason?: string | null
+          moderation_status?: string
+          ride_request_id?: string | null
           sender_id: string
+          sender_role?: string | null
           sender_type: string
           trip_id: string
         }
         Update: {
+          body?: string | null
           content?: string
           created_at?: string
           id?: string
           is_read?: boolean | null
+          moderation_reason?: string | null
+          moderation_status?: string
+          ride_request_id?: string | null
           sender_id?: string
+          sender_role?: string | null
           sender_type?: string
           trip_id?: string
         }
@@ -57927,6 +58176,10 @@ export type Database = {
       is_store_featured: { Args: { p_store_id: string }; Returns: boolean }
       is_store_owner: {
         Args: { _store_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_trip_participant: {
+        Args: { _ride_id: string; _user_id: string }
         Returns: boolean
       }
       is_vehicle_owner: { Args: { p_vehicle_id: string }; Returns: boolean }

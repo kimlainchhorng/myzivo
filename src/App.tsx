@@ -48,6 +48,8 @@ const ConnectCallback = lazy(() => import("./pages/ConnectCallback"));
 const PairPage = lazy(() => lazyRetry(() => import("./pages/PairPage")));
 
 const Index = lazy(() => lazyRetry(() => import("./pages/Index")));
+const AdminDriverModerationPage = lazy(() => import("./pages/admin/AdminDriverModerationPage"));
+const AdminTripHeatmapPage = lazy(() => import("./pages/admin/AdminTripHeatmapPage"));
 
 // App (mobile-first) pages
 const AppHome = lazy(() => lazyRetry(() => import("./pages/app/AppHome")));
@@ -708,6 +710,8 @@ const App = () => (
                 <Route path="/admin/ads/analytics" element={<ProtectedRoute><AdminAdsAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/admin/payments/webhook-status" element={<ProtectedRoute><AdminWebhookStatusPage /></ProtectedRoute>} />
                 <Route path="/admin/drivers/verification" element={<ProtectedRoute><AdminDriverVerificationPage /></ProtectedRoute>} />
+                <Route path="/admin/drivers/moderation" element={<ProtectedRoute><AdminDriverModerationPage /></ProtectedRoute>} />
+                <Route path="/admin/operations/heatmap" element={<ProtectedRoute><AdminTripHeatmapPage /></ProtectedRoute>} />
                 <Route path="/track/:token" element={<SharedTripPage />} />
                 <Route path="/driver/performance" element={<DriverPerformancePage />} />
                 <Route path="/driver/map" element={<DriverMapPage />} />
