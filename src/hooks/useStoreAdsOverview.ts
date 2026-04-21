@@ -65,6 +65,23 @@ export interface ChecklistState {
   done: boolean;
 }
 
+export interface WalletInfo {
+  balance_cents: number;
+  auto_recharge_enabled: boolean;
+  threshold_cents: number;
+  recharge_amount_cents: number;
+  has_payment_method: boolean;
+}
+
+export interface WalletLedgerEntry {
+  id: string;
+  amount_cents: number;
+  balance_after_cents: number;
+  entry_type: string;
+  description: string | null;
+  created_at: string;
+}
+
 const QK = (storeId: string) => ["store-ads-overview", storeId] as const;
 
 function emptyDelta(): AdsStatDelta {
