@@ -1816,7 +1816,7 @@ export default function AdminStoreEditPage() {
         <Card className="overflow-hidden">
           <div
             ref={coverContainerRef}
-            className={cn("relative h-52 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10", isRepositioning && "cursor-grab active:cursor-grabbing")}
+            className={cn("relative h-36 sm:h-52 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10", isRepositioning && "cursor-grab active:cursor-grabbing")}
             onMouseDown={isRepositioning ? (e) => { e.preventDefault(); setDragStartY(e.clientY); setDragStartPos(form.banner_position); } : undefined}
             onMouseMove={isRepositioning && dragStartY !== null ? (e) => {
               const containerH = coverContainerRef.current?.clientHeight || 208;
@@ -1858,18 +1858,18 @@ export default function AdminStoreEditPage() {
                 </div>
               </div>
             )}
-            <div className="absolute top-3 right-4 flex items-center gap-2">
+            <div className="absolute top-2 right-2 sm:top-3 sm:right-4 flex items-center gap-1.5 sm:gap-2">
               {isRepositioning ? (
                 <>
-                  <Button size="sm" variant="secondary" className="gap-1.5 bg-background/90 backdrop-blur-sm" onClick={async () => {
+                  <Button size="sm" variant="secondary" className="h-8 px-2.5 gap-1 bg-background/90 backdrop-blur-sm text-xs" onClick={async () => {
                     setIsRepositioning(false);
                     const { error } = await supabase.from("store_profiles").update({ banner_position: form.banner_position } as any).eq("id", storeId!);
                     if (error) toast.error(error.message);
                     else toast.success("Cover position saved");
                   }}>
-                    <Check className="h-3.5 w-3.5" /> Save Position
+                    <Check className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Save Position</span><span className="sm:hidden">Save</span>
                   </Button>
-                  <Button size="sm" variant="ghost" className="bg-background/90 backdrop-blur-sm" onClick={() => {
+                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 bg-background/90 backdrop-blur-sm" onClick={() => {
                     setIsRepositioning(false);
                     updateField("banner_position", dragStartPos);
                   }}>
@@ -1879,34 +1879,34 @@ export default function AdminStoreEditPage() {
               ) : (
                 <>
                   {form.banner_url && (
-                    <Button size="sm" variant="secondary" className="gap-1.5 bg-background/80 backdrop-blur-sm" onClick={() => { setIsRepositioning(true); setDragStartPos(form.banner_position); }}>
-                      <Move className="h-3.5 w-3.5" /> Reposition
+                    <Button size="sm" variant="secondary" className="h-8 px-2.5 gap-1 bg-background/80 backdrop-blur-sm text-xs" onClick={() => { setIsRepositioning(true); setDragStartPos(form.banner_position); }}>
+                      <Move className="h-3.5 w-3.5" /> <span className="hidden xs:inline">Reposition</span>
                     </Button>
                   )}
                   <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "cover"); e.target.value = ""; }} />
-                  <Button size="sm" variant="secondary" className="gap-1.5 bg-background/80 backdrop-blur-sm" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
-                    {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />} {t("admin.store.change_cover")}
+                  <Button size="sm" variant="secondary" className="h-8 px-2.5 gap-1 bg-background/80 backdrop-blur-sm text-xs" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+                    {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />} <span className="hidden xs:inline">{t("admin.store.change_cover")}</span>
                   </Button>
                 </>
               )}
             </div>
             {!isRepositioning && (
-              <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">
+              <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-4 right-2 sm:right-4 flex items-end justify-between gap-3">
                 <div className="flex items-end gap-3 min-w-0">
                   <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f, "logo"); e.target.value = ""; }} />
                   <button
                     type="button"
                     onClick={() => logoInputRef.current?.click()}
                     disabled={uploadingLogo}
-                    className="relative h-16 w-16 rounded-xl bg-background border-2 border-background shadow-lg overflow-hidden flex items-center justify-center shrink-0 group cursor-pointer hover:opacity-90 transition-opacity"
+                    className="relative h-12 w-12 sm:h-16 sm:w-16 rounded-xl bg-background border-2 border-background shadow-lg overflow-hidden flex items-center justify-center shrink-0 group cursor-pointer hover:opacity-90 transition-opacity"
                   >
                     {form.logo_url ? (
                       <img src={form.logo_url} alt="Logo" className="h-full w-full object-cover" />
                     ) : (
-                      <Store className="h-8 w-8 text-muted-foreground/30" />
+                      <Store className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/30" />
                     )}
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl">
-                      {uploadingLogo ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
+                      {uploadingLogo ? <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-white animate-spin" /> : <Camera className="h-4 w-4 sm:h-5 sm:w-5 text-white" />}
                     </div>
                   </button>
                 </div>
@@ -1917,21 +1917,21 @@ export default function AdminStoreEditPage() {
         </>)}
 
         {(isAdmin || activeTab === "profile") && (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="icon" onClick={() => navigate(isAdmin ? "/admin/stores" : "/")}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(isAdmin ? "/admin/stores" : "/")}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div>
-              <h2 className="text-xl font-bold text-foreground">{store.name}</h2>
-              <p className="text-sm text-muted-foreground">/{store.slug} · {store.market}</p>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground truncate">{store.name}</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">/{store.slug} · {store.market}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 scrollbar-hide">
             {/* Language Switcher */}
             <Popover open={isLangOpen} onOpenChange={setIsLangOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2 h-9">
+                <Button variant="outline" size="sm" className="gap-2 h-9 shrink-0">
                   {currentLangData?.flag_svg ? (
                     <img src={currentLangData.flag_svg} alt="" className="w-5 h-3.5 rounded-[2px] object-cover shadow-sm border border-foreground/10" />
                   ) : (
@@ -1982,10 +1982,10 @@ export default function AdminStoreEditPage() {
               </PopoverContent>
             </Popover>
 
-            <Button onClick={() => setChatOpen(true)} variant="outline" className="gap-2">
+            <Button onClick={() => setChatOpen(true)} variant="outline" size="sm" className="gap-2 h-9 shrink-0">
               <MessageCircle className="h-4 w-4" /> Live Chat
             </Button>
-            <Button onClick={() => navigate(`/grocery/shop/${store.slug}`)} variant="outline" className="gap-2">
+            <Button onClick={() => navigate(`/grocery/shop/${store.slug}`)} variant="outline" size="sm" className="gap-2 h-9 shrink-0">
               <Eye className="h-4 w-4" /> {t("admin.store.preview")}
             </Button>
           </div>
