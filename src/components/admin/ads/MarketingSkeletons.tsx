@@ -139,4 +139,112 @@ export function BreakdownTableSkeleton() {
       ))}
     </div>
   );
+
+
+export function AudienceBuilderSkeleton() {
+  return (
+    <Card>
+      <CardContent className="p-3 sm:p-4 space-y-3">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-2 w-full rounded-full" />
+        <div className="grid grid-cols-2 gap-2">
+          <Skeleton className="h-9 rounded-md" />
+          <Skeleton className="h-9 rounded-md" />
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-6 w-16 rounded-full" />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function ABVariantCompareSkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+      {[1, 2].map((i) => (
+        <Card key={i}>
+          <CardContent className="p-3 sm:p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-5 w-12 rounded-full" />
+            </div>
+            <Skeleton className="aspect-video w-full rounded-lg" />
+            {Array.from({ length: 3 }).map((_, j) => (
+              <div key={j} className="flex justify-between">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-3 w-12" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+export function OAuthConnectSkeleton() {
+  return (
+    <Card>
+      <CardContent className="p-3 sm:p-4 space-y-3">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <div className="space-y-1.5 flex-1">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-48" />
+          </div>
+        </div>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <Skeleton className="h-3.5 w-3.5 rounded" />
+            <Skeleton className="h-3 flex-1" />
+          </div>
+        ))}
+        <Skeleton className="h-10 w-full" />
+      </CardContent>
+    </Card>
+  );
+}
+
+export function CampaignDetailsSkeleton() {
+  const isMobile = useIsMobile();
+  return (
+    <Card>
+      <CardContent className="p-3 sm:p-4 space-y-3">
+        <div className="space-y-1.5">
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-3 w-32" />
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-14 rounded-lg" />
+          ))}
+        </div>
+        <div className="space-y-2">
+          {Array.from({ length: isMobile ? 3 : 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full rounded-md" />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function LedgerListSkeleton() {
+  const isMobile = useIsMobile();
+  return (
+    <div className="space-y-1.5">
+      {Array.from({ length: isMobile ? 4 : 6 }).map((_, i) => (
+        <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border/40">
+          <div className="space-y-1">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-2.5 w-16" />
+          </div>
+          <Skeleton className="h-4 w-16" />
+        </div>
+      ))}
+    </div>
+  );
 }
