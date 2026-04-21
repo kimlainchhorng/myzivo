@@ -1,100 +1,115 @@
 
 
-# ZIVO MVP: Payments, Dispatch, and Ads Launch
+# Five Follow-Up Workstreams
 
-Four parallel workstreams to get the MVP revenue + growth loop live. Google Ads credentials are already configured; the rest needs build work.
-
----
-
-## 1. Stripe Rider Payments + Driver Payouts
-
-**Rider charge flow**
-- New edge function `create-ride-payment` — creates a Stripe PaymentIntent (manual capture) when a ride is requested, using saved payment method or Checkout for first-time riders
-- New edge function `capture-ride-payment` — captures the held amount on trip completion; computes 3.5% card surcharge (KH market) per existing memory
-- Update `ride_requests` with `stripe_payment_intent_id`, `payment_status`, `captured_amount`, `surcharge_amount`
-- Webhook handler `stripe-ride-webhook` for `payment_intent.succeeded` / `.payment_failed` / `.canceled`
-
-**Driver payouts (Stripe Connect Express)**
-- New table `driver_stripe_accounts` (driver_id, stripe_account_id, onboarded, payouts_enabled, charges_enabled)
-- Edge function `driver-connect-onboard` — creates Connect Express account + returns onboarding link
-- Edge function `driver-connect-status` — refreshes account capabilities
-- Edge function `driver-payout` — transfers driver's share (fare − 2% platform fee per existing monetization memory) to their Connect account on trip completion
-- Driver app screen: "Payouts" tab showing balance, pending transfers, "Complete onboarding" CTA
+Building on the MVP foundation just shipped. All five tasks are independent and can ship in one batch.
 
 ---
 
-## 2. Real-Time Dispatch + Live ETA
+## 1. Admin Ads Analytics Page
 
-Builds on existing `dispatch-and-matching-engine` (15s escalation, 25km radius).
+New route `/admin/ads/analytics` — unified view across Google + Meta.
 
-- New edge function `dispatch-ride` — on ride request: query `drivers` within radius (PostGIS `ST_DWithin`), rank by distance + rating, insert `job_offers` rows
-- New edge function `dispatch-escalate` (cron every 15s via pg_cron) — expires unanswered offers, widens radius, re-dispatches
-- Driver-side: existing offer accept/decline flow → on accept, set `assigned_driver_id` and broadcast via Realtime
-- Live ETA: extend `useCustomerLocationBroadcast` pattern with reverse channel — driver broadcasts GPS, edge function `compute-eta` calls Google Distance Matrix every 20s, writes `eta_minutes` to `ride_requests`
-- Rider UI: `RideTrackingPage` already subscribes to `ride_requests` updates — add ETA pill to `DriverEnRouteTracker`
-
----
-
-## 3. Google Ads Campaign + Conversion Verification
-
-All credentials present (`GOOGLE_ADS_DEVELOPER_TOKEN`, `CLIENT_ID`, `CLIENT_SECRET`, `REFRESH_TOKEN`).
-
-- Edge function `google-ads-create-campaign` — uses Google Ads REST API to create:
-  - Campaign: "ZIVO MVP Launch — Search"
-  - Budget: user-specified daily cap
-  - Ad group with keywords (rides, food delivery, Cambodia variants)
-  - Responsive Search Ad with ZIVO copy + landing URL `https://hizivo.com`
-- Edge function `google-ads-conversion` — server-side conversion upload via Google Ads API for `Purchase`, `SignUp`, `RideBooked` events
-- Wire into existing `metaConversion.ts` pattern → new `googleAdsConversion.ts` service called from same hook points (`trackPurchase`, `trackInitiateCheckout`)
-- Admin page `/admin/ads/google` — campaign status, spend, conversions, test-fire conversion button to verify in Google Ads "Diagnostics"
+- Reads from `ad_campaigns` (spend, impressions, clicks) and `conversion_events` (revenue, event types) tables already created
+- Joins `conversion_events` to `ride_requests` via `external_id` to attribute revenue to actual dispatched trips
+- Top KPI row: Total Spend, Total Revenue, ROAS, Conversions, Cost-per-Trip
+- Per-platform breakdown cards (Google vs Meta) with the same metrics
+- Table of recent conversion events (event_name, source, value, ride link, sent_at)
+- Date range filter (7d / 30d / 90d), CSV export button
+- Pattern mirrors existing `AdsStudioAnalytics.tsx` for consistency
 
 ---
 
-## 4. Meta Ads Integration
+## 2. Driver Onboarding — Document Upload & Verification Checklist
 
-Meta Conversions API already wired (`meta-conversion-handler` + `metaConversion.ts`). Missing: ad account access token + campaign launch.
+New page in driver app: `/driver/onboarding/documents`.
 
-- Add secret `META_ACCESS_TOKEN` (long-lived system user token from Meta Business)
-- Add secret `META_AD_ACCOUNT_ID` and `META_PAGE_ID`
-- Edge function `meta-ads-create-campaign` — Marketing API v21 calls to create Campaign → AdSet → AdCreative → Ad with ZIVO branding
-- Update existing `ads-studio-publish/index.ts` Meta stub to call real Marketing API
-- Admin page `/admin/ads/meta` mirroring Google admin UI
+- New table `driver_documents` (driver_id, doc_type, file_url, status [pending/approved/rejected], reviewed_by, rejection_reason, uploaded_at)
+- Required document types: Driver's License (front + back), Vehicle Registration, Insurance, Profile Photo, Vehicle Photo
+- Storage bucket `driver-documents` (private, RLS: driver writes own, admin reads all)
+- Checklist UI with status pills (Not uploaded / Pending review / Approved / Rejected with reason)
+- Upload uses existing direct-to-Storage pattern (>4MB) per memory
+- Block "Go Online" toggle in driver app until all docs are `approved` — gate via `useDriverVerification` hook
+- Admin review queue at `/admin/drivers/verification` — approve/reject with reason
+
+---
+
+## 3. Share Trip Status (Live Pickup/ETA Link)
+
+Public read-only tracking page anyone with a token can view.
+
+- New table `trip_shares` (id, ride_request_id, share_token [unique], created_by, expires_at, revoked)
+- Edge function `create-trip-share` — generates token, returns `https://hizivo.com/track/{token}`
+- New public route `/track/:token` — shows driver name, vehicle, live ETA, map with driver marker, trip status
+- Subscribes to `ride_requests` Realtime channel filtered by ride id resolved from token (server-side via edge function `get-shared-trip`)
+- Auto-expires when ride status is `completed` or `cancelled`, or after 4 hours
+- "Share my trip" button in `RideTrackingPage` → bottom sheet with copy link, native share (Web Share API + Capacitor Share), SMS/WhatsApp deep links
+
+---
+
+## 4. pg_cron Job for dispatch-escalate
+
+pg_cron minimum interval is 1 second but practically scheduled per-minute via cron syntax. To run every 15s, schedule four staggered jobs.
+
+- Enable `pg_cron` and `pg_net` extensions (if not already)
+- Insert four cron entries: at `0`, `15`, `30`, `45` seconds of every minute, each calling `dispatch-escalate` via `net.http_post` with the project URL + anon key
+- Uses the insert tool (not migration) because URL + key are project-specific per the scheduling guidance
+
+---
+
+## 5. Stripe Webhook Verification & Status Sync
+
+`stripe-ride-webhook` function already exists. Needs registration + verification.
+
+- Confirm `STRIPE_WEBHOOK_SECRET` is wired (already added)
+- Endpoint URL: `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/stripe-ride-webhook`
+- Required events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.canceled`, `payment_intent.amount_capturable_updated` (already handled in code)
+- Add new admin diagnostics page `/admin/payments/webhook-status` showing last 50 webhook deliveries, ride payment status distribution, mismatch alerts (rides with PaymentIntent but no webhook update >5min old)
+- New table `webhook_events` (event_id unique, event_type, ride_request_id, status, raw_payload, received_at) — populated by webhook for audit + idempotency
+- Update `stripe-ride-webhook` to write to `webhook_events` and skip duplicates by `event_id`
+
+User must register the webhook URL in Stripe Dashboard → Developers → Webhooks → Add endpoint, selecting the four events above. Plan includes a one-screen "Setup Stripe Webhook" admin guide page with the URL pre-formatted to copy.
 
 ---
 
 ## Technical Details
 
 **New tables**
-- `driver_stripe_accounts` (RLS: driver sees own row, admin sees all)
-- `ad_campaigns` (platform, external_id, name, status, daily_budget, spend, conversions) — unified across Google/Meta
-- `conversion_events` (event_name, source, value, external_id, sent_at, response) — audit log
+- `driver_documents` (RLS: driver own + admin all)
+- `trip_shares` (RLS: creator own + public select via token-resolving edge function only)
+- `webhook_events` (RLS: admin only; service role inserts)
 
-**Edge functions added**
-- `create-ride-payment`, `capture-ride-payment`, `stripe-ride-webhook`
-- `driver-connect-onboard`, `driver-connect-status`, `driver-payout`
-- `dispatch-ride`, `dispatch-escalate`, `compute-eta`
-- `google-ads-create-campaign`, `google-ads-conversion`
-- `meta-ads-create-campaign`
+**New storage bucket**
+- `driver-documents` (private)
 
-**Secrets needed (will request after approval)**
-- `STRIPE_SECRET_KEY` (live) — confirm present
-- `STRIPE_WEBHOOK_SECRET` — for ride webhook
-- `META_ACCESS_TOKEN`, `META_AD_ACCOUNT_ID`, `META_PAGE_ID`
-- `GOOGLE_ADS_CUSTOMER_ID` (10-digit, unhyphenated)
+**New edge functions**
+- `create-trip-share`, `get-shared-trip`
+
+**Updated edge functions**
+- `stripe-ride-webhook` — add idempotent `webhook_events` insert
+
+**New routes**
+- `/admin/ads/analytics`
+- `/admin/drivers/verification`
+- `/admin/payments/webhook-status`
+- `/driver/onboarding/documents`
+- `/track/:token` (public)
 
 **Cron**
-- `dispatch-escalate` every 15s (pg_cron + pg_net)
-- `compute-eta` every 20s while ride active
+- 4× pg_cron entries staggered 0/15/30/45s for `dispatch-escalate`
+
+**Hooks**
+- `useDriverVerification` — gates `Go Online` based on `driver_documents` approval
 
 ---
 
 ## Build Order
 
-1. Stripe rider payments (unblocks revenue)
-2. Driver Connect onboarding + payouts
-3. Dispatch + ETA (parallel-safe with #1)
-4. Google Ads campaign + conversion verify
-5. Meta Ads campaign launch
+1. Webhook idempotency table + admin status page (closes the payments loop first)
+2. pg_cron schedule (unblocks autonomous dispatch)
+3. Driver document upload + admin verification queue
+4. Share trip status (rider-facing)
+5. Admin ads analytics page
 
-Approve to switch to default mode and begin with workstream 1. I'll request the missing secrets at the moment each workstream needs them.
+Approve to switch to default mode and ship.
 
