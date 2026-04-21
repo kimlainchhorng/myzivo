@@ -186,18 +186,46 @@ export default function ServiceBookingPage() {
     const directionsUrl = store.address ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(store.address)}` : "";
     const shareText = `I just booked ${form.service_name} at ${store.name} on ZIVO! Confirmation: ${confirmation.ref}`;
 
-    const handleShare = async () => {
-      if (navigator.share) {
-        try { await navigator.share({ title: "ZIVO Booking", text: shareText, url: window.location.origin + `/store/${slug}` }); } catch {}
-      } else {
-        await navigator.clipboard.writeText(shareText);
-        toast.success("Copied to clipboard!");
+    const copyToClipboard = async (text: string): Promise<boolean> => {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch {}
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok;
+      } catch {
+        return false;
       }
     };
 
+    const handleShare = async () => {
+      const shareUrl = `${getPublicOrigin()}/store/${slug}`;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "ZIVO Booking", text: shareText, url: shareUrl });
+          return;
+        } catch (err: any) {
+          if (err?.name === "AbortError") return; // user cancelled
+        }
+      }
+      const ok = await copyToClipboard(`${shareText} ${shareUrl}`);
+      toast[ok ? "success" : "error"](ok ? "Copied to clipboard!" : "Couldn't copy — please copy manually");
+    };
+
     const copyRef = async () => {
-      await navigator.clipboard.writeText(confirmation.ref);
-      toast.success("Confirmation # copied!");
+      const ok = await copyToClipboard(confirmation.ref);
+      toast[ok ? "success" : "error"](ok ? "Confirmation # copied!" : "Couldn't copy");
     };
 
     const bookAnother = () => {
