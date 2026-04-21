@@ -426,7 +426,7 @@ export default function ServiceBookingPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-5 md:space-y-6">
+      <form noValidate onSubmit={handleSubmit} className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-5 md:space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6 items-start">
         {/* Service Selection */}
         <Card>
