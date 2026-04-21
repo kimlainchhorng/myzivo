@@ -109,6 +109,12 @@ serve(async (req) => {
       ok: true,
       destination_url: finalUrl,
       bundles: { google_csv: googleCsv, meta: metaBundle, tiktok: tiktokBundle, youtube: youtubeBundle },
+      tracking_pixels: {
+        google: pixel("google"),
+        meta: pixel("meta"),
+        tiktok: pixel("tiktok"),
+        youtube: pixel("youtube"),
+      },
       launch_urls: {
         google: "https://ads.google.com/aw/campaigns/new",
         meta: "https://business.facebook.com/adsmanager/manage/campaigns",
