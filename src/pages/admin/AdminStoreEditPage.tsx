@@ -1816,7 +1816,7 @@ export default function AdminStoreEditPage() {
         <Card className="overflow-hidden">
           <div
             ref={coverContainerRef}
-            className={cn("relative h-52 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10", isRepositioning && "cursor-grab active:cursor-grabbing")}
+            className={cn("relative h-36 sm:h-52 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10", isRepositioning && "cursor-grab active:cursor-grabbing")}
             onMouseDown={isRepositioning ? (e) => { e.preventDefault(); setDragStartY(e.clientY); setDragStartPos(form.banner_position); } : undefined}
             onMouseMove={isRepositioning && dragStartY !== null ? (e) => {
               const containerH = coverContainerRef.current?.clientHeight || 208;
