@@ -33,6 +33,9 @@ import AdsOnboardingChecklist from "@/components/admin/ads/AdsOnboardingChecklis
 import AdsCampaignRow from "@/components/admin/ads/AdsCampaignRow";
 import AdsConnectDialog from "@/components/admin/ads/AdsConnectDialog";
 import CreateCampaignWizard, { type CampaignFormState } from "@/components/admin/ads/CreateCampaignWizard";
+import AdsWalletCard from "@/components/admin/ads/AdsWalletCard";
+import AdsInsightsPanel from "@/components/admin/ads/AdsInsightsPanel";
+import AdsCampaignDetailDrawer from "@/components/admin/ads/AdsCampaignDetailDrawer";
 import {
   useStoreAdsOverview,
   type AdCampaign,
