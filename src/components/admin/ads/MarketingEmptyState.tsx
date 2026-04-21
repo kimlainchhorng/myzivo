@@ -2,19 +2,34 @@
  * MarketingEmptyState — shared empty-state UI for Marketing & Ads surfaces.
  * Compact on mobile, spacious on desktop.
  */
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, Megaphone } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { mkBody, mkHeading, mkMeta } from "./marketing-tokens";
+import { mkBody, mkHeading } from "./marketing-tokens";
+
+type Variant = "campaigns" | "default";
 
 interface Props {
-  icon: LucideIcon;
-  title: string;
+  icon?: LucideIcon;
+  title?: string;
   body?: string;
   action?: React.ReactNode;
   className?: string;
+  variant?: Variant;
 }
 
-export default function MarketingEmptyState({ icon: Icon, title, body, action, className }: Props) {
+const VARIANT_PRESETS: Record<Exclude<Variant, "default">, { icon: LucideIcon; title: string; body: string }> = {
+  campaigns: {
+    icon: Megaphone,
+    title: "No campaigns match",
+    body: "Try a different filter, or create a new campaign to fill this view.",
+  },
+};
+
+export default function MarketingEmptyState({ icon, title, body, action, className, variant = "default" }: Props) {
+  const preset = variant !== "default" ? VARIANT_PRESETS[variant] : null;
+  const Icon = icon ?? preset?.icon ?? Megaphone;
+  const finalTitle = title ?? preset?.title ?? "Nothing here";
+  const finalBody = body ?? preset?.body;
   return (
     <div
       className={cn(
