@@ -76,7 +76,7 @@ export default function StoreAdsManager({ storeId }: Props) {
     headline: "", body: "", cta: "Learn More", destination_url: "",
   });
 
-  const { data: accounts = [] } = useQuery({
+  const { data: accounts = [], isLoading: accountsLoading } = useQuery({
     queryKey: ["store-ad-accounts", storeId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -308,26 +308,40 @@ export default function StoreAdsManager({ storeId }: Props) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5">
-            {PLATFORMS.map((p) => {
-              const acc = accountByPlatform(p.id);
-              const connected = acc && acc.status !== "disconnected";
-              const Icon = p.icon;
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => setConnectPlatform(p.id)}
-                  className="flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border border-border hover:border-primary/40 hover:bg-accent/30 active:scale-[0.98] transition text-left min-h-[88px] touch-manipulation"
-                >
-                  <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${p.color}`} />
-                  <div className="text-[11px] sm:text-xs font-medium text-center leading-tight">{p.label}</div>
-                  <Badge variant={connected ? "default" : "outline"} className="text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5">
-                    {connected ? acc?.status : "Connect"}
-                  </Badge>
-                </button>
-              );
-            })}
-          </div>
+          {accountsLoading ? (
+            <PlatformTilesSkeleton />
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5">
+              {PLATFORMS.map((p) => {
+                const acc = accountByPlatform(p.id);
+                const connected = acc && acc.status !== "disconnected";
+                const Icon = p.icon;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setConnectPlatform(p.id)}
+                    aria-label={`${connected ? "Manage" : "Connect"} ${p.label}`}
+                    className="flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 rounded-xl border border-border hover:border-primary/40 hover:bg-accent/30 active:scale-[0.98] transition text-left min-h-[88px] touch-manipulation"
+                  >
+                    <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${p.color}`} />
+                    <div className="text-[11px] sm:text-xs font-medium text-center leading-tight">{p.label}</div>
+                    <Badge variant={connected ? "default" : "outline"} className="text-[9px] sm:text-[10px] h-4 sm:h-5 px-1.5">
+                      {connected ? acc?.status : "Connect"}
+                    </Badge>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {!accountsLoading && accounts.length === 0 && (
+            <div className="mt-3">
+              <MarketingEmptyState
+                icon={Plug}
+                title="No platforms connected"
+                body="Connect Meta, Google, TikTok or X to start running ads."
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -362,12 +376,18 @@ export default function StoreAdsManager({ storeId }: Props) {
         </CardHeader>
         <CardContent className="space-y-2">
           {isLoading ? (
-            <Loader2 className="w-5 h-5 animate-spin mx-auto my-6 text-muted-foreground" />
+            <CampaignListSkeleton />
           ) : campaigns.length === 0 ? (
-            <div className="text-center py-8 text-sm text-muted-foreground">
-              <Megaphone className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              No campaigns yet. Create your first ad to reach customers on Facebook, Instagram, Google, TikTok, and X.
-            </div>
+            <MarketingEmptyState
+              icon={Megaphone}
+              title="No campaigns yet"
+              body="Launch your first paid campaign to start reaching new customers on Facebook, Instagram, Google, TikTok, and X."
+              action={
+                <Button size="sm" onClick={openCreate}>
+                  <Plus className="w-3.5 h-3.5 mr-1" /> New Campaign
+                </Button>
+              }
+            />
           ) : (
             campaigns.map((c) => (
               <div key={c.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 rounded-lg border border-border hover:bg-accent/20 transition">
@@ -389,24 +409,24 @@ export default function StoreAdsManager({ storeId }: Props) {
                 </div>
                 <div className="flex items-center gap-1 self-end sm:self-auto shrink-0">
                   {c.status === "draft" && (
-                    <Button size="sm" variant="outline" className="h-9 sm:h-8" onClick={() => launchCampaign.mutate(c)}>
+                    <Button size="sm" variant="outline" className="h-9 sm:h-8" aria-label={`Launch campaign ${c.name}`} onClick={() => launchCampaign.mutate(c)}>
                       <Play className="w-3.5 h-3.5 mr-1" /> Launch
                     </Button>
                   )}
                   {c.status === "active" && (
-                    <Button size="sm" variant="outline" className="h-9 w-9 sm:h-8 sm:w-8 p-0" onClick={() => toggleStatus.mutate({ id: c.id, status: "paused" })}>
+                    <Button size="sm" variant="outline" className="h-9 w-9 sm:h-8 sm:w-8 p-0" aria-label={`Pause campaign ${c.name}`} onClick={() => toggleStatus.mutate({ id: c.id, status: "paused" })}>
                       <Pause className="w-3.5 h-3.5" />
                     </Button>
                   )}
                   {c.status === "paused" && (
-                    <Button size="sm" variant="outline" className="h-9 w-9 sm:h-8 sm:w-8 p-0" onClick={() => toggleStatus.mutate({ id: c.id, status: "active" })}>
+                    <Button size="sm" variant="outline" className="h-9 w-9 sm:h-8 sm:w-8 p-0" aria-label={`Resume campaign ${c.name}`} onClick={() => toggleStatus.mutate({ id: c.id, status: "active" })}>
                       <Play className="w-3.5 h-3.5" />
                     </Button>
                   )}
-                  <Button size="sm" variant="ghost" className="h-9 w-9 sm:h-8 sm:w-8 p-0" onClick={() => openEdit(c)}>
+                  <Button size="sm" variant="ghost" className="h-9 w-9 sm:h-8 sm:w-8 p-0" aria-label={`Edit campaign ${c.name}`} onClick={() => openEdit(c)}>
                     <Edit className="w-3.5 h-3.5" />
                   </Button>
-                  <Button size="sm" variant="ghost" className="h-9 w-9 sm:h-8 sm:w-8 p-0" onClick={() => deleteCampaign.mutate(c.id)}>
+                  <Button size="sm" variant="ghost" className="h-9 w-9 sm:h-8 sm:w-8 p-0" aria-label={`Delete campaign ${c.name}`} onClick={() => deleteCampaign.mutate(c.id)}>
                     <Trash2 className="w-3.5 h-3.5 text-red-500" />
                   </Button>
                 </div>
