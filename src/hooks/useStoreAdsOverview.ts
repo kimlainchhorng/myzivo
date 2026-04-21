@@ -252,6 +252,14 @@ export function useStoreAdsOverview(storeId: string) {
   const accounts = query.data?.accounts ?? [];
   const campaigns = query.data?.campaigns ?? [];
   const hasBilling = query.data?.hasBilling ?? false;
+  const wallet: WalletInfo = query.data?.wallet ?? {
+    balance_cents: 0,
+    auto_recharge_enabled: false,
+    threshold_cents: 1000,
+    recharge_amount_cents: 5000,
+    has_payment_method: false,
+  };
+  const ledger: WalletLedgerEntry[] = query.data?.ledger ?? [];
 
   const stats = useMemo(() => buildStats(campaigns), [campaigns]);
   const checklist = useMemo(
@@ -267,6 +275,8 @@ export function useStoreAdsOverview(storeId: string) {
     campaigns,
     stats,
     checklist,
+    wallet,
+    ledger,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     error: query.error,
