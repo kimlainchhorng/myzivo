@@ -58,11 +58,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://slirphzzwcogdbkeicff.supabase.co" crossorigin />
     
-    <!-- Non-blocking font loading (moved from CSS @import to eliminate render-blocking) -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" media="print" onload="this.media='all'" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Inconsolata:wght@400;700&family=Battambang:wght@300;400;700;900&family=Noto+Sans+Khmer:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+    <!-- Non-blocking font loading — trimmed to essentials (Inter only, 3 weights) for fastest LCP. Other families lazy-loaded by routes that need them. -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" media="print" onload="this.media='all'" />
     <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Inconsolata:wght@400;700&family=Battambang:wght@300;400;700;900&family=Noto+Sans+Khmer:wght@300;400;500;600;700&display=swap" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" />
     </noscript>
     
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
