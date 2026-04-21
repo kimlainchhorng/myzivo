@@ -38,47 +38,42 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   const [employeesOpen, setEmployeesOpen] = useState(employeeIds.includes(activeTab || ""));
 
   const resetSidebarScroll = () => {
-    if (asideRef.current) {
-      asideRef.current.scrollTop = 0;
-    }
-    if (navRef.current) {
-      navRef.current.scrollTop = 0;
-    }
+    if (asideRef.current) asideRef.current.scrollTop = 0;
+    if (navRef.current) navRef.current.scrollTop = 0;
   };
 
   const closeSidebar = () => setSidebarOpen(false);
-  const openSidebar = () => {
-    resetSidebarScroll();
-    setSidebarOpen(true);
-  };
+  const openSidebar = () => setSidebarOpen(true);
 
-  // Reset scroll synchronously on open (before paint) to avoid mobile Safari restoring it
+  // Reset scroll only when opening (not on every re-render)
   useLayoutEffect(() => {
     if (sidebarOpen) resetSidebarScroll();
   }, [sidebarOpen]);
 
+  // Lock background scroll while drawer is open — preserve scroll position
   useEffect(() => {
     if (!sidebarOpen || typeof document === "undefined") return;
 
-    resetSidebarScroll();
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const prev = {
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    };
 
-    let raf2 = 0;
-    const raf1 = requestAnimationFrame(() => {
-      resetSidebarScroll();
-      raf2 = requestAnimationFrame(resetSidebarScroll);
-    });
-
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
 
     return () => {
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
-      document.body.style.overflow = previousBodyOverflow;
-      document.documentElement.style.overflow = previousHtmlOverflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      body.style.overflow = prev.overflow;
+      window.scrollTo(0, scrollY);
     };
   }, [sidebarOpen]);
 
