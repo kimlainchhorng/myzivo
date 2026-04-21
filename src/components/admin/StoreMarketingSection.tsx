@@ -28,6 +28,8 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import StoreAdsManager from "./StoreAdsManager";
 import AdsStudioWizard from "./AdsStudioWizard";
+import AdsStudioAnalytics from "./AdsStudioAnalytics";
+import AdsStudioWalletGuard from "./AdsStudioWalletGuard";
 
 interface Props {
   storeId: string;
