@@ -1,6 +1,10 @@
 project_id = "slirphzzwcogdbkeicff"
 
 [functions]
+  [functions.ads-studio-generate]
+    verify_jwt = false
+  [functions.ads-studio-export]
+    verify_jwt = false
   [functions.aba-payway-checkout]
     verify_jwt = false
   [functions.account-summary]
