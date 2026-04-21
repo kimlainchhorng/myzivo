@@ -257,9 +257,9 @@ export default function AdsStudioDashboard({ storeId }: Props) {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Budget caps & pacing per platform */}
       <Card>
