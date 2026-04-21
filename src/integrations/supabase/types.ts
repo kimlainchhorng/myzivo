@@ -960,6 +960,7 @@ export type Database = {
           is_paused: boolean
           monthly_cap_cents: number
           pacing: string
+          pause_notified_at: string | null
           paused_reason: string | null
           platform: string
           store_id: string
@@ -973,6 +974,7 @@ export type Database = {
           is_paused?: boolean
           monthly_cap_cents?: number
           pacing?: string
+          pause_notified_at?: string | null
           paused_reason?: string | null
           platform: string
           store_id: string
@@ -986,6 +988,7 @@ export type Database = {
           is_paused?: boolean
           monthly_cap_cents?: number
           pacing?: string
+          pause_notified_at?: string | null
           paused_reason?: string | null
           platform?: string
           store_id?: string
@@ -1364,6 +1367,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ads_studio_recommendations: {
+        Row: {
+          body: string
+          created_at: string
+          estimated_impact: string | null
+          id: string
+          recommendation_type: string
+          responded_at: string | null
+          source_metrics: Json | null
+          status: string
+          store_id: string
+          title: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          estimated_impact?: string | null
+          id?: string
+          recommendation_type: string
+          responded_at?: string | null
+          source_metrics?: Json | null
+          status?: string
+          store_id: string
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          estimated_impact?: string | null
+          id?: string
+          recommendation_type?: string
+          responded_at?: string | null
+          source_metrics?: Json | null
+          status?: string
+          store_id?: string
+          title?: string
+        }
+        Relationships: []
       }
       ads_studio_variants: {
         Row: {
@@ -20509,6 +20551,10 @@ export type Database = {
           address_type: string | null
           admin_override_reason: string | null
           admin_price_override: number | null
+          ads_click_id: string | null
+          ads_creative_id: string | null
+          ads_platform: string | null
+          ads_variant_id: string | null
           almost_ready_at: string | null
           assigned_at: string | null
           at_risk_reason: string | null
@@ -20683,6 +20729,10 @@ export type Database = {
           address_type?: string | null
           admin_override_reason?: string | null
           admin_price_override?: number | null
+          ads_click_id?: string | null
+          ads_creative_id?: string | null
+          ads_platform?: string | null
+          ads_variant_id?: string | null
           almost_ready_at?: string | null
           assigned_at?: string | null
           at_risk_reason?: string | null
@@ -20857,6 +20907,10 @@ export type Database = {
           address_type?: string | null
           admin_override_reason?: string | null
           admin_price_override?: number | null
+          ads_click_id?: string | null
+          ads_creative_id?: string | null
+          ads_platform?: string | null
+          ads_variant_id?: string | null
           almost_ready_at?: string | null
           assigned_at?: string | null
           at_risk_reason?: string | null
