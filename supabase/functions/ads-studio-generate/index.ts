@@ -252,9 +252,18 @@ Return:
       }
     }
 
+    // Deduct actual cost from wallet
+    if (totalCost > 0) {
+      await admin
+        .from("restaurant_wallets")
+        .update({ balance_cents: balance - totalCost, updated_at: new Date().toISOString() })
+        .eq("restaurant_id", body.store_id);
+    }
+
     return jsonResp({
       ok: true,
       cost_cents: totalCost,
+      balance_after_cents: Math.max(0, balance - totalCost),
       copy: copyResult,
       images: imageUrls,
       video_scripts: videoScripts,
