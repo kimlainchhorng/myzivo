@@ -112,6 +112,7 @@ export default function ServiceBookingPage() {
   }, [slug]);
 
   const update = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }));
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
