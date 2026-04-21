@@ -6696,6 +6696,42 @@ export type Database = {
           },
         ]
       }
+      call_session_closure_audit: {
+        Row: {
+          attempt_number: number
+          closure_source: string
+          created_at: string
+          error_message: string | null
+          id: string
+          ride_request_id: string | null
+          twilio_proxy_session_sid: string | null
+          twilio_response_code: number | null
+          twilio_status: string
+        }
+        Insert: {
+          attempt_number?: number
+          closure_source: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          ride_request_id?: string | null
+          twilio_proxy_session_sid?: string | null
+          twilio_response_code?: number | null
+          twilio_status: string
+        }
+        Update: {
+          attempt_number?: number
+          closure_source?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          ride_request_id?: string | null
+          twilio_proxy_session_sid?: string | null
+          twilio_response_code?: number | null
+          twilio_status?: string
+        }
+        Relationships: []
+      }
       call_sessions: {
         Row: {
           created_at: string
@@ -49096,6 +49132,8 @@ export type Database = {
       }
       trip_call_sessions: {
         Row: {
+          closure_attempts: number
+          closure_failed_at: string | null
           created_at: string
           driver_proxy_number: string | null
           expires_at: string
@@ -49105,6 +49143,8 @@ export type Database = {
           twilio_proxy_session_sid: string | null
         }
         Insert: {
+          closure_attempts?: number
+          closure_failed_at?: string | null
           created_at?: string
           driver_proxy_number?: string | null
           expires_at: string
@@ -49114,6 +49154,8 @@ export type Database = {
           twilio_proxy_session_sid?: string | null
         }
         Update: {
+          closure_attempts?: number
+          closure_failed_at?: string | null
           created_at?: string
           driver_proxy_number?: string | null
           expires_at?: string

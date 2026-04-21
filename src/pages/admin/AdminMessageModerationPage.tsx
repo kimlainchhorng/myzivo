@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Loader2, ShieldCheck, ShieldAlert, Download } from "lucide-react";
+import { SUPABASE_URL } from "@/integrations/supabase/client";
 
 interface FlaggedMessage {
   id: string;
@@ -47,12 +48,39 @@ export default function AdminMessageModerationPage() {
     setItems((prev) => prev.filter((m) => m.id !== id));
   };
 
+  const [exporting, setExporting] = useState(false);
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) { toast.error("Not signed in"); return; }
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/export-moderation-actions-csv`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) { toast.error("Export failed"); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `moderation-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("CSV downloaded");
+    } finally { setExporting(false); }
+  };
+
   return (
     <AppLayout title="Message Moderation">
       <div className="p-6 max-w-5xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">In-trip message moderation</h1>
-          <p className="text-sm text-muted-foreground">Messages flagged by automated moderation are hidden from the recipient until reviewed.</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">In-trip message moderation</h1>
+            <p className="text-sm text-muted-foreground">Messages flagged by automated moderation are hidden from the recipient until reviewed.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={exportCsv} disabled={exporting} className="gap-1.5 shrink-0">
+            <Download className="w-3.5 h-3.5" /> {exporting ? "Exporting…" : "Export CSV"}
+          </Button>
         </div>
 
         <Tabs value={tab} onValueChange={setTab}>
