@@ -1,134 +1,79 @@
 
 
-# Marketing & Ads — Flow, Density & Data Upgrade
+# Next-up: Marketing & Ads — recommended follow-ups
 
-The Ads tab today shows: an "integration in progress" banner, a 2-column platform grid with bare "Connect" pills, then an empty campaigns area below. From the screenshot at 428×703 the layout is sparse, the platform tiles are tall and information-poor, and there's no sense of *what the operator should do next*. This pass turns it into a guided, data-rich workspace.
+The Ads tab now has a stat strip, dense platform tiles, onboarding checklist, campaign rows with sparklines, unified connect dialog, and a 4-step wizard. Here are the highest-leverage things still missing — pick any combination.
 
----
+## 1. Campaign detail drawer (highest impact)
+Tapping a campaign row currently does nothing useful. Add a `ResponsiveModal` drawer that shows:
+- Full creative preview (headline / body / CTA / image at 1:1, 9:16, 1.91:1 toggle)
+- KPI grid: Spend, Impressions, Clicks, CTR, CPC, Conversions, CPA, ROAS
+- 14-day line chart (clicks + spend dual-axis) using existing Recharts
+- Delivery breakdown by platform (mini bar chart)
+- Audit log: status changes, edits, who/when
+- Actions: Pause/Resume, Edit (re-opens wizard pre-filled), Duplicate, Archive, Delete
 
-## What changes (Ads tab, mobile-first, scales to desktop)
+## 2. Wallet & billing surface
+The checklist has a "billing" step but there's no in-tab wallet view. Add:
+- Compact wallet card above the checklist: balance, pending charges, low-balance warning, "Add funds" CTA
+- Auto-reload toggle (recharge $X when balance < $Y)
+- Last 5 transactions inline, "View all" → existing `AdsStudioWalletGuard` page
+- Spend pacing indicator: "You'll run out in ~6 days at current pace"
 
-### 1. Hero: "Ads at a glance" stat strip
-Replace the standalone yellow integration banner with a compact 4-tile stat strip at the top:
+## 3. Marketing tab parity
+The sibling **Marketing** tab (campaigns, push, email, promo codes) is still on the older flat layout. Apply the same treatment:
+- Aggregate stat strip (sent, opened, clicked, conversions, revenue attributed)
+- Per-channel tiles (Push / Email / SMS / In-app) with status + last-sent
+- Unified campaign list with the same filter / search / sort / sparkline pattern
+- Reuse `useStoreAdsOverview` pattern → new `useStoreMarketingOverview` hook
 
-```
-┌──────────┬──────────┬──────────┬──────────┐
-│  Spend   │ Impress. │  Clicks  │ Conv.    │
-│  $0.00   │   0      │    0     │    0     │
-│  7d ▲ 0% │  7d ▲ 0% │  7d ▲ 0% │  7d ▲ 0% │
-└──────────┴──────────┴──────────┴──────────┘
-```
-- Pulls aggregate `spend_cents / impressions / clicks / conversions` from `store_ad_campaigns` for this store.
-- 7-day delta vs prior 7 days, color-coded (emerald up / muted flat / red down).
-- 2×2 on mobile, 4×1 on iPad+, with skeletons during load.
-- The integration banner moves below as a slim 1-line dismissible chip ("API approvals pending — drafts allowed").
+## 4. Insights & recommendations panel
+A small AI-style recommendations strip below the stat strip:
+- "Your Meta CTR is 2.3× higher than Google — shift budget?"
+- "Campaign 'Spring Sale' has spent 80% with 3 days left"
+- "No active campaigns — your competitors run an average of 2.4"
+- Each card has a one-tap action (Boost budget / Extend / Create campaign)
+- Powered by simple client-side rules over the overview data (no backend)
 
-### 2. Platform tiles: denser, status-aware, action-clear
-Today each tile is a tall card with a centered icon and a small "Connect" pill — wastes height and tells the operator nothing.
+## 5. Creative library
+Most operators reuse images. Add a `Creatives` sub-tab inside Ads:
+- Grid of previously uploaded ad images with usage count
+- Upload / delete / rename
+- Wizard "Creative" step gets a "Pick from library" button alongside upload
+- Stored in existing `user-posts` bucket under `ads/{store_id}/`
 
-New tile (compact, ~96px tall, 2-col mobile, 3-col iPad, 5-col desktop):
-- Brand icon + name on one row
-- Status dot + label (`Connected · ad acct ****1234` / `Pending review` / `Not connected`)
-- Right-aligned action: **Connect** (OAuth where supported) / **Manage** / **Reconnect**
-- Tiles for Meta/IG/Google show a tiny "Last sync 2h ago" line when connected
-- Disconnected tiles are slightly muted; connected tiles get an emerald left border
+## 6. Audience presets manager
+The wizard has Local / Lookalike / Retarget / Custom but no way to save a custom audience. Add:
+- "Saved audiences" list in a small section under platforms grid
+- Create/edit audience: name, geo radius, age range, interests (chips), exclusions
+- Reusable across campaigns; appears as a chip in wizard step 2
 
-### 3. Onboarding checklist (collapsible, top of campaigns area)
-A dismissible "Get your first ad live" 4-step checklist that auto-checks as the operator progresses:
-1. Connect at least one ad platform
-2. Add billing / wallet balance (links to existing AdsStudioWalletGuard)
-3. Create your first campaign draft
-4. Submit for review
+## 7. Schedule & dayparting
+Wizard step 4 currently has only date range. Add:
+- Dayparting grid (7×24 cells, click-drag to enable hours)
+- Timezone selector (defaults to store TZ)
+- "Always on" / "Custom schedule" toggle
+- Stored as `schedule_json` on the campaign row
 
-Each step shows ✓ / current / locked state, and tapping the active step jumps to the right action. Auto-hidden once all 4 are done; restorable via "Show setup guide" link.
+## 8. A/B test harness
+- New "Variants" toggle in wizard step 3 → splits creative into A/B
+- Campaign row shows variant winner badge once statistical significance is reached
+- Detail drawer adds Variants tab with side-by-side performance
 
-### 4. Campaigns list: real list with filters, not a void
-Add above the (currently empty) campaigns area:
-- Segmented filter: **All · Draft · Pending · Active · Paused · Ended** (counts in pills)
-- Search input (campaign name)
-- Sort: Newest / Spend / Performance
-- Sticky "+ New Campaign" button on mobile (FAB style, bottom-right above tab bar)
+## 9. Realtime polish
+- Toast when a campaign status flips (approved / rejected / paused by system)
+- Pulsing dot on the Ads tab badge while a campaign is in `pending_review`
+- Skeleton → content cross-fade (currently snaps)
 
-Campaign rows (mobile card / desktop table):
-- Name + objective tag + platform icon stack
-- Status pill (existing colors)
-- Mini sparkline: last-7-day clicks
-- Budget bar: spend vs total budget with % consumed
-- Quick actions: Pause/Resume, Edit, Duplicate, Delete (overflow menu)
-- Tap row → details drawer (ResponsiveModal) with full metrics + creative preview
-
-Empty filter state uses `MarketingEmptyState` with a relevant illustration + primary CTA.
-
-### 5. Create Campaign: stepped flow (replaces single long form)
-Convert the existing single-form ResponsiveModal into a 4-step wizard inside the same modal:
-
-1. **Goal** — Objective grid (Traffic / Conversions / Awareness / Leads / App installs) with icons + 1-line rationale
-2. **Audience & Platforms** — Multi-select platform chips (only enabled if connected; disabled ones show "Connect first" link); audience preset (Local / Lookalike / Retarget / Custom)
-3. **Creative** — Headline, body (char counters: 40 / 125), CTA dropdown, destination URL with live validation, optional image upload preview at 1:1 / 9:16 / 1.91:1
-4. **Budget & Schedule** — Daily / total budget sliders + USD input, date range, estimated reach pill ("~2.4k–6.8k people / day")
-
-Sticky footer: **Back / Next / Save Draft**. Final step button: **Submit for review**. Progress bar + step labels at top. All existing fields preserved; data shape unchanged.
-
-### 6. Connect dialog: unified OAuth + manual fallback
-Today the manual-entry dialog and OAuth start are two separate paths. Unify into one ResponsiveModal per platform:
-- Header: brand icon + "Connect Facebook"
-- Primary CTA: "Continue with Facebook" (calls `meta-oauth-start`) — green button
-- Divider: "or enter manually"
-- Manual fields: External Ad Account ID, Display Name (saved as `pending` until reviewed)
-- Help link: "Where do I find my ad account ID?" → opens platform docs in new tab
-- Status footer if already connected: "Connected as XYZ · Disconnect"
-
-### 7. Density & sizing pass (matches v2026 high-density standard)
-- Heading sizes: tab-page H1 → `text-lg md:text-xl` (was `text-xl`)
-- Card padding: `p-3 md:p-4` everywhere in Ads section
-- Icon pills: 32×32 mobile, 36×36 desktop
-- Stat tile numbers: `text-xl md:text-2xl font-semibold`, labels `text-[11px]`
-- Platform tile collapses to 2-line layout on mobile (icon+name row, status+action row)
-- Removes wasted vertical whitespace between stat strip → platforms → checklist → campaigns
-
-### 8. Data flow + reliability
-- Add a single `useStoreAdsOverview(storeId)` hook that returns `{ stats, accounts, campaigns, checklistState }` with one parallelized fetch + React Query caching (2-min stale)
-- Realtime subscription on `store_ad_campaigns` for this store so status changes (e.g. when a campaign is approved) update the list without refresh
-- All mutations call `qc.invalidateQueries(["store-ads-overview", storeId])` once instead of three separate keys
-- Skeletons (`MarketingSkeletons`) wired into stat strip, platform tiles, checklist, and campaign list — already partially present, finish wiring
-
-### 9. Accessibility & native polish
-- Stat tiles get `role="group" aria-label="<metric> last 7 days"`
-- Platform tiles use `<button>` with `aria-pressed` for connected state
-- Wizard steps announce via `aria-live="polite"`
-- Campaign overflow menu uses existing `DropdownMenu` (focus-trapped)
-- Sticky FAB respects `safe-area-bottom`
+## 10. Empty-state and first-run polish
+- When zero platforms connected, the platform grid gets a subtle "Start with Meta" suggestion card (most common first connect)
+- When zero campaigns, the wizard auto-opens on first tab visit (one-time, dismissible)
+- Onboarding checklist step 4 ("Submit for review") shows a sample campaign preview if user is stuck
 
 ---
 
-## Files
+## Recommendation
+If you only want one: **#1 Campaign detail drawer** — it unlocks the value of every other improvement (no point in better stats if you can't drill in). After that, **#2 Wallet surface** + **#4 Insights panel** give the biggest perceived "smart product" jump for the smallest build.
 
-**Edit**
-- `src/components/admin/StoreAdsManager.tsx` — restructure into: stat strip → platform grid → checklist → campaigns list; integrate new hook + realtime; FAB
-- `src/components/admin/ads/MarketingSkeletons.tsx` — add `AdsStatStripSkeleton`, `OnboardingChecklistSkeleton`, `CampaignRowSkeleton`
-- `src/components/admin/ads/MarketingEmptyState.tsx` — add `variant="campaigns"` preset
-
-**Create**
-- `src/components/admin/ads/AdsStatStrip.tsx` — 4-tile stat strip with 7-day deltas
-- `src/components/admin/ads/AdsPlatformTile.tsx` — single dense, status-aware platform tile
-- `src/components/admin/ads/AdsOnboardingChecklist.tsx` — collapsible 4-step guide
-- `src/components/admin/ads/AdsCampaignRow.tsx` — card/row with sparkline + budget bar
-- `src/components/admin/ads/AdsConnectDialog.tsx` — unified OAuth + manual fallback
-- `src/components/admin/ads/CreateCampaignWizard.tsx` — 4-step wizard inside ResponsiveModal
-- `src/hooks/useStoreAdsOverview.ts` — single source of truth for the Ads tab
-
-**No backend changes, no new tables, no new dependencies.** Sparkline uses existing Recharts; all reads/writes hit the existing `store_ad_accounts` and `store_ad_campaigns` tables already used by `StoreAdsManager`.
-
----
-
-## Build order
-
-1. `useStoreAdsOverview` hook (parallel queries + realtime channel)
-2. `AdsStatStrip` + skeleton + wire into StoreAdsManager
-3. `AdsPlatformTile` (replaces inline grid) + density pass
-4. `AdsOnboardingChecklist` + auto-derived state from overview hook
-5. `AdsCampaignRow` + filters/search/sort + sticky FAB + empty state
-6. `AdsConnectDialog` (unified) — replaces existing connect modal
-7. `CreateCampaignWizard` — replaces single-form modal
-8. Final density/spacing sweep + a11y attributes + skeleton wiring QA
+Tell me which to build (any combination, or "all of them") and I'll switch to default mode and ship.
 
