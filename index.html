@@ -10,41 +10,47 @@
     <meta http-equiv="Permissions-Policy" content="camera=(self), microphone=(), geolocation=(self)" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://maps.googleapis.com https://emrld.ltd https://js.hcaptcha.com https://bolt.new https://connect.facebook.net https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co https://*.stripe.com https://maps.googleapis.com https://maps.gstatic.com https://*.google.com https://*.googleusercontent.com https://assets.duffel.com https://pics.avs.io https://ui-avatars.com https://www.facebook.com https://www.google-analytics.com; media-src 'self' blob: data: https://*.supabase.co; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://maps.googleapis.com https://api.duffel.com https://emrld.ltd https://sentry.avs.io https://tpo.li https://tp.media https://www.travelpayouts.com https://connect.facebook.net https://www.facebook.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; frame-src https://js.stripe.com https://hooks.stripe.com https://newassets.hcaptcha.com; worker-src 'self' blob:;" />
 
-    <!-- Meta Pixel Code (deferred to after page load) -->
-    <script>
-    window.addEventListener('load', function() {
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '2304266847061310');
-      fbq('track', 'PageView');
-    });
-    </script>
-    <!-- End Meta Pixel Code -->
+    <!-- Critical CSS — reserve viewport to prevent layout shift (CLS) -->
+    <style>
+      html,body{margin:0;padding:0;background:#0D0D0F;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;-webkit-font-smoothing:antialiased}
+      #root{min-height:100vh;min-height:100dvh;contain:layout style}
+      img,video{max-width:100%;height:auto}
+    </style>
 
-    <!-- Google tag (gtag.js) — deferred to after page load -->
+    <!-- Analytics — idle-loaded after first paint to protect LCP/TBT -->
     <script>
-    window.addEventListener('load', function() {
-      var s = document.createElement('script');
-      s.async = true;
-      s.src = 'https://www.googletagmanager.com/gtag/js?id=G-VVH8W5PW3E';
-      document.head.appendChild(s);
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      window.gtag = gtag;
-      gtag('js', new Date());
-      gtag('config', 'G-VVH8W5PW3E');
-      gtag('config', 'AW-18077605056');
-      // Google Ads — Page View conversion event
-      gtag('event', 'manual_event_PAGE_VIEW', {
-        send_to: 'AW-18077605056'
-      });
-    });
+    (function(){
+      var loaded=false;
+      function loadAnalytics(){
+        if(loaded)return; loaded=true;
+        // Skip on native
+        if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())return;
+        // Meta Pixel
+        !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init','2304266847061310');fbq('track','PageView');
+        // gtag
+        var s=document.createElement('script');s.async=true;
+        s.src='https://www.googletagmanager.com/gtag/js?id=G-VVH8W5PW3E';
+        document.head.appendChild(s);
+        window.dataLayer=window.dataLayer||[];
+        function gtag(){dataLayer.push(arguments);} window.gtag=gtag;
+        gtag('js',new Date());
+        gtag('config','G-VVH8W5PW3E',{send_page_view:true});
+        gtag('config','AW-18077605056');
+      }
+      // Wait for idle time AFTER load to keep LCP/TBT clean
+      function schedule(){
+        if('requestIdleCallback' in window){
+          requestIdleCallback(loadAnalytics,{timeout:4000});
+        } else {
+          setTimeout(loadAnalytics,2500);
+        }
+      }
+      if(document.readyState==='complete'){schedule();}
+      else{window.addEventListener('load',schedule,{once:true});}
+    })();
     </script>
     
     <!-- Preconnect to critical origins for faster resource loading -->
@@ -303,17 +309,23 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Deferred non-critical scripts (web only, skipped on Capacitor native) -->
-    <script defer data-noptimize="1" data-cfasync="false" data-wpfc-render="false">
+    <!-- Deferred non-critical third-party tracker (idle, web only) -->
+    <script>
       (function () {
-        // Skip third-party tracking scripts on native Capacitor apps
         if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) return;
-        var script = document.createElement("script");
-        script.async = 1;
-        script.src = 'https://emrld.ltd/NDkzNzQ1.js?t=493745';
-        // Quiet fail — third-party tracker, never block app
-        script.onerror = function () { /* swallow load error */ };
-        document.head.appendChild(script);
+        function load(){
+          var script = document.createElement("script");
+          script.async = 1;
+          script.src = 'https://emrld.ltd/NDkzNzQ1.js?t=493745';
+          script.onerror = function () {};
+          document.head.appendChild(script);
+        }
+        function schedule(){
+          if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 6000 });
+          else setTimeout(load, 4000);
+        }
+        if (document.readyState === 'complete') schedule();
+        else window.addEventListener('load', schedule, { once: true });
       })();
     </script>
   </body>
