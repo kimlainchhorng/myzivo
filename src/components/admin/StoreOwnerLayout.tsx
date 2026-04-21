@@ -138,167 +138,38 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       </Helmet>
 
       <div className="min-h-screen bg-background flex">
-        {sidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={closeSidebar} />
+        {/* Mobile drawer + backdrop, portaled to body so fixed coords are anchored to viewport (not a scrolled/transformed ancestor) */}
+        {typeof document !== "undefined" && createPortal(
+          <>
+            <div
+              className={cn(
+                "fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-300",
+                sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              )}
+              onClick={closeSidebar}
+              aria-hidden={!sidebarOpen}
+            />
+            <aside
+              ref={asideRef}
+              onTransitionEnd={(e) => {
+                if (sidebarOpen && e.propertyName === "transform") resetSidebarScroll();
+              }}
+              className={cn(
+                "fixed inset-y-0 left-0 z-50 w-[84vw] max-w-[310px] bg-card border-r border-border flex flex-col overflow-hidden rounded-r-2xl shadow-2xl overscroll-contain lg:hidden",
+                "transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                sidebarOpen ? "translate-x-0" : "-translate-x-full"
+              )}
+              aria-hidden={!sidebarOpen}
+            >
+              {renderSidebarContent({ isMobile: true })}
+            </aside>
+          </>,
+          document.body
         )}
 
-        <aside
-          ref={asideRef}
-          onTransitionEnd={(e) => {
-            if (sidebarOpen && e.target === asideRef.current && e.propertyName === "transform") {
-              resetSidebarScroll();
-              requestAnimationFrame(() => resetSidebarScroll());
-            }
-          }}
-          className={cn(
-            "fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-[84vw] max-w-[310px] lg:w-64 bg-card border-r border-border flex flex-col overflow-hidden lg:rounded-none rounded-r-2xl shadow-2xl lg:shadow-none overscroll-contain",
-            "transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
-            sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-          )}
-        >
-          {/* Header — gradient brand strip */}
-          <div
-            className="relative flex items-center justify-between px-4 border-b border-border shrink-0 bg-gradient-to-br from-primary/8 via-card to-card"
-            style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)', paddingBottom: '14px' }}
-          >
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              {storeLogoUrl ? (
-                <img src={storeLogoUrl} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 ring-1 ring-border shadow-sm" />
-              ) : (
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 ring-1 ring-primary/20">
-                  <Store className="w-5 h-5 text-primary" />
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <span className="text-[15px] font-bold text-foreground truncate block leading-tight">{storeName || "My Store"}</span>
-                {storeId && (
-                  <span className="text-[10px] text-muted-foreground font-mono tracking-wider">CBD{storeId.replace(/-/g, '').slice(0, 8).toUpperCase()}</span>
-                )}
-              </div>
-            </div>
-            <Button variant="ghost" size="icon" className="lg:hidden h-9 w-9 shrink-0 -mr-1 rounded-full hover:bg-muted touch-manipulation" onClick={closeSidebar}>
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-          </div>
-
-          {/* Nav */}
-          <nav
-            ref={navRef}
-            className="flex-1 min-h-0 px-2.5 py-3 overflow-y-scroll scroll-momentum overscroll-contain touch-pan-y"
-            style={{ WebkitOverflowScrolling: "touch" }}
-          >
-            <p className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Manage</p>
-            <div className="space-y-0.5">
-              {navItems.map((item) => {
-                const isActive = activeTab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => { onTabChange?.(item.id); closeSidebar(); }}
-                    className={cn(
-                      "relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-colors duration-150 active:scale-[0.99]",
-                      isActive
-                        ? "bg-primary/12 text-primary"
-                        : "text-foreground/75 hover:bg-muted hover:text-foreground"
-                    )}
-                  >
-                    {isActive && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-primary" />
-                    )}
-                    <item.icon className={cn("w-[18px] h-[18px] shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
-                    <span className="truncate">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="my-3 mx-3 border-t border-border/60" />
-
-            <p className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Team</p>
-            <div className="space-y-0.5">
-              <button
-                onClick={() => setEmployeesOpen((v) => !v)}
-                className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-colors",
-                  employeeItems.some((i) => i.id === activeTab)
-                    ? "bg-primary/12 text-primary"
-                    : "text-foreground/75 hover:bg-muted hover:text-foreground"
-                )}
-                aria-expanded={employeesOpen}
-              >
-                <Users className="w-[18px] h-[18px] shrink-0" />
-                <span className="flex-1 text-left">Employees</span>
-                <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", employeesOpen && "rotate-180")} />
-              </button>
-
-              {employeesOpen && (
-                <div className="ml-4 pl-3 border-l border-border/60 space-y-0.5 py-1">
-                  {employeeItems.map((item) => {
-                    const isActive = activeTab === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => { onTabChange?.(item.id); closeSidebar(); }}
-                        className={cn(
-                          "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors",
-                          isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                        )}
-                      >
-                        <item.icon className="w-4 h-4 shrink-0" />
-                        <span className="truncate">{item.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </nav>
-
-          {/* User card */}
-          <div className="border-t border-border px-3 py-2.5 shrink-0 bg-muted/30">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                <span className="text-xs font-bold text-primary">
-                  {(user?.email || "?").charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-semibold text-foreground truncate leading-tight">{user?.email}</p>
-                <p className="text-[10px] text-muted-foreground">Store Owner</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer actions */}
-          <div
-            className="border-t border-border p-2 space-y-0.5 shrink-0"
-            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)' }}
-          >
-            <button
-              onClick={() => { onTabChange?.("settings"); closeSidebar(); }}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] transition-colors",
-                activeTab === "settings" ? "bg-primary/12 text-primary font-semibold" : "text-foreground/75 hover:bg-muted hover:text-foreground"
-              )}
-            >
-              <Settings className="w-[18px] h-[18px]" />
-              Settings
-            </button>
-            <button
-              onClick={() => navigate("/")}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] text-foreground/75 hover:bg-muted hover:text-foreground transition-colors"
-            >
-              <Home className="w-[18px] h-[18px]" />
-              Back to App
-            </button>
-            <button
-              onClick={() => signOut()}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] text-destructive hover:bg-destructive/10 transition-colors"
-            >
-              <LogOut className="w-[18px] h-[18px]" />
-              Sign Out
-            </button>
-          </div>
+        {/* Desktop sticky sidebar — stays in normal flow */}
+        <aside className="hidden lg:flex sticky top-0 left-0 z-30 h-[100dvh] w-64 bg-card border-r border-border flex-col overflow-hidden">
+          {renderSidebarContent({ isMobile: false })}
         </aside>
 
         <div className="flex-1 flex flex-col min-w-0">
@@ -318,4 +189,156 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       </div>
     </>
   );
+
+  function renderSidebarContent({ isMobile }: { isMobile: boolean }) {
+    return (
+      <>
+        {/* Header — gradient brand strip */}
+        <div
+          className="relative flex items-center justify-between px-4 border-b border-border shrink-0 bg-gradient-to-br from-primary/8 via-card to-card"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)', paddingBottom: '14px' }}
+        >
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            {storeLogoUrl ? (
+              <img src={storeLogoUrl} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 ring-1 ring-border shadow-sm" />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 ring-1 ring-primary/20">
+                <Store className="w-5 h-5 text-primary" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <span className="text-[15px] font-bold text-foreground truncate block leading-tight">{storeName || "My Store"}</span>
+              {storeId && (
+                <span className="text-[10px] text-muted-foreground font-mono tracking-wider">CBD{storeId.replace(/-/g, '').slice(0, 8).toUpperCase()}</span>
+              )}
+            </div>
+          </div>
+          {isMobile && (
+            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 -mr-1 rounded-full hover:bg-muted touch-manipulation" onClick={closeSidebar}>
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+          )}
+        </div>
+
+        {/* Nav */}
+        <nav
+          ref={isMobile ? navRef : undefined}
+          className="flex-1 min-h-0 px-2.5 py-3 overflow-y-scroll scroll-momentum overscroll-contain touch-pan-y"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          <p className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Manage</p>
+          <div className="space-y-0.5">
+            {navItems.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => { onTabChange?.(item.id); closeSidebar(); }}
+                  className={cn(
+                    "relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-colors duration-150 active:scale-[0.99]",
+                    isActive
+                      ? "bg-primary/12 text-primary"
+                      : "text-foreground/75 hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-primary" />
+                  )}
+                  <item.icon className={cn("w-[18px] h-[18px] shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="my-3 mx-3 border-t border-border/60" />
+
+          <p className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Team</p>
+          <div className="space-y-0.5">
+            <button
+              onClick={() => setEmployeesOpen((v) => !v)}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-colors",
+                employeeItems.some((i) => i.id === activeTab)
+                  ? "bg-primary/12 text-primary"
+                  : "text-foreground/75 hover:bg-muted hover:text-foreground"
+              )}
+              aria-expanded={employeesOpen}
+            >
+              <Users className="w-[18px] h-[18px] shrink-0" />
+              <span className="flex-1 text-left">Employees</span>
+              <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", employeesOpen && "rotate-180")} />
+            </button>
+
+            {employeesOpen && (
+              <div className="ml-4 pl-3 border-l border-border/60 space-y-0.5 py-1">
+                {employeeItems.map((item) => {
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => { onTabChange?.(item.id); closeSidebar(); }}
+                      className={cn(
+                        "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors",
+                        isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      <item.icon className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </nav>
+
+        {/* User card */}
+        <div className="border-t border-border px-3 py-2.5 shrink-0 bg-muted/30">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <span className="text-xs font-bold text-primary">
+                {(user?.email || "?").charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] font-semibold text-foreground truncate leading-tight">{user?.email}</p>
+              <p className="text-[10px] text-muted-foreground">Store Owner</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer actions */}
+        <div
+          className="border-t border-border p-2 space-y-0.5 shrink-0"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)' }}
+        >
+          <button
+            onClick={() => { onTabChange?.("settings"); closeSidebar(); }}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] transition-colors",
+              activeTab === "settings" ? "bg-primary/12 text-primary font-semibold" : "text-foreground/75 hover:bg-muted hover:text-foreground"
+            )}
+          >
+            <Settings className="w-[18px] h-[18px]" />
+            Settings
+          </button>
+          <button
+            onClick={() => navigate("/")}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] text-foreground/75 hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <Home className="w-[18px] h-[18px]" />
+            Back to App
+          </button>
+          <button
+            onClick={() => signOut()}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            <LogOut className="w-[18px] h-[18px]" />
+            Sign Out
+          </button>
+        </div>
+      </>
+    );
+  }
 }
