@@ -59,52 +59,43 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     setSidebarOpen(true);
   };
 
-  // Reset scroll synchronously + across multiple frames + timer fallback to defeat mobile layout race
-  useLayoutEffect(() => {
+  // Reset scroll on open (single call — drawer is portaled to body, no layout race)
+  useEffect(() => {
     if (!sidebarOpen) return;
     resetSidebarScroll();
-    const r1 = requestAnimationFrame(() => {
-      resetSidebarScroll();
-      const r2 = requestAnimationFrame(() => resetSidebarScroll());
-      (resetSidebarScroll as any)._r2 = r2;
-    });
-    const t1 = window.setTimeout(resetSidebarScroll, 50);
-    const t2 = window.setTimeout(resetSidebarScroll, 200);
-    const t3 = window.setTimeout(resetSidebarScroll, 350); // after 300ms transition completes
-    return () => {
-      cancelAnimationFrame(r1);
-      if ((resetSidebarScroll as any)._r2) cancelAnimationFrame((resetSidebarScroll as any)._r2);
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
+    const r = requestAnimationFrame(resetSidebarScroll);
+    return () => cancelAnimationFrame(r);
   }, [sidebarOpen]);
 
-  // Lock background scroll while drawer is open — preserve scroll position
+  // Lock background scroll via overflow:hidden (does NOT shift viewport — fixed children render at true viewport top)
   useEffect(() => {
     if (!sidebarOpen || typeof document === "undefined") return;
 
-    const scrollY = window.scrollY;
+    const html = document.documentElement;
     const body = document.body;
     const prev = {
-      position: body.style.position,
-      top: body.style.top,
-      width: body.style.width,
-      overflow: body.style.overflow,
+      htmlOverflow: html.style.overflow,
+      bodyOverflow: body.style.overflow,
+      bodyTouchAction: body.style.touchAction,
     };
 
-    body.style.position = "fixed";
-    body.style.top = `-${scrollY}px`;
-    body.style.width = "100%";
+    html.style.overflow = "hidden";
     body.style.overflow = "hidden";
+    body.style.touchAction = "none";
 
     return () => {
-      body.style.position = prev.position;
-      body.style.top = prev.top;
-      body.style.width = prev.width;
-      body.style.overflow = prev.overflow;
-      window.scrollTo(0, scrollY);
+      html.style.overflow = prev.htmlOverflow;
+      body.style.overflow = prev.bodyOverflow;
+      body.style.touchAction = prev.bodyTouchAction;
     };
+  }, [sidebarOpen]);
+
+  // ESC to close
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeSidebar(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [sidebarOpen]);
 
   const isAutoRepair = storeCategory === "auto-repair";
