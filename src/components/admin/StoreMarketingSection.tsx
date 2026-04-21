@@ -298,17 +298,31 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName, s
   };
 
   return (
-    <div className="space-y-5">
-      {/* Sub-navigation tabs */}
+    <div className="space-y-3 sm:space-y-4 lg:space-y-5">
+      {/* Sub-navigation tabs — scrollable pills on mobile, full grid on desktop */}
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-        <TabsList className="w-full grid grid-cols-6 h-10">
-          <TabsTrigger value="overview" className="text-xs gap-1.5"><BarChart3 className="w-3.5 h-3.5" /> Overview</TabsTrigger>
-          <TabsTrigger value="promotions" className="text-xs gap-1.5"><Tag className="w-3.5 h-3.5" /> Promos</TabsTrigger>
-          <TabsTrigger value="studio" className="text-xs gap-1.5"><Sparkles className="w-3.5 h-3.5" /> AI Studio</TabsTrigger>
-          <TabsTrigger value="ads" className="text-xs gap-1.5"><Rocket className="w-3.5 h-3.5" /> Ads</TabsTrigger>
-          <TabsTrigger value="posts" className="text-xs gap-1.5"><ImageIcon className="w-3.5 h-3.5" /> Posts</TabsTrigger>
-          <TabsTrigger value="share" className="text-xs gap-1.5"><Share2 className="w-3.5 h-3.5" /> Share</TabsTrigger>
-        </TabsList>
+        <div className="-mx-3 sm:mx-0 overflow-x-auto scrollbar-none">
+          <TabsList className="inline-flex sm:grid sm:w-full sm:grid-cols-6 h-11 sm:h-10 px-3 sm:px-1 gap-1 sm:gap-0 min-w-full">
+            <TabsTrigger value="overview" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2.5 sm:px-3 whitespace-nowrap shrink-0">
+              <BarChart3 className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span className="hidden xs:inline sm:inline">Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="promotions" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2.5 sm:px-3 whitespace-nowrap shrink-0">
+              <Tag className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span>Promos</span>
+            </TabsTrigger>
+            <TabsTrigger value="studio" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2.5 sm:px-3 whitespace-nowrap shrink-0">
+              <Sparkles className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span>AI Studio</span>
+            </TabsTrigger>
+            <TabsTrigger value="ads" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2.5 sm:px-3 whitespace-nowrap shrink-0">
+              <Rocket className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span>Ads</span>
+            </TabsTrigger>
+            <TabsTrigger value="posts" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2.5 sm:px-3 whitespace-nowrap shrink-0">
+              <ImageIcon className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span>Posts</span>
+            </TabsTrigger>
+            <TabsTrigger value="share" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2.5 sm:px-3 whitespace-nowrap shrink-0">
+              <Share2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span>Share</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* ═══ OVERVIEW ═══ */}
         <TabsContent value="overview" className="space-y-4 mt-4">
@@ -515,14 +529,20 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName, s
         </TabsContent>
 
         {/* ═══ AI STUDIO ═══ */}
-        <TabsContent value="studio" className="space-y-4 mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2 space-y-4">
+        <TabsContent value="studio" className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+            {/* Wallet shows first on mobile/tablet so balance is visible without scrolling */}
+            <div className="lg:hidden">
+              <AdsStudioWalletGuard storeId={storeId} />
+            </div>
+            <div className="lg:col-span-2 space-y-3 sm:space-y-4 min-w-0">
               <AdsStudioWizard storeId={storeId} storeName={storeName} storeSlug={storeSlug} />
               <AdsStudioAnalytics storeId={storeId} />
             </div>
-            <div className="space-y-4">
-              <AdsStudioWalletGuard storeId={storeId} />
+            <div className="space-y-3 sm:space-y-4 min-w-0">
+              <div className="hidden lg:block">
+                <AdsStudioWalletGuard storeId={storeId} />
+              </div>
               <AdsStudioRecommendations storeId={storeId} />
               <AdsStudioDashboard storeId={storeId} />
               <AdsStudioPublishQueue storeId={storeId} />
