@@ -52,6 +52,11 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     setSidebarOpen(true);
   };
 
+  // Reset scroll synchronously on open (before paint) to avoid mobile Safari restoring it
+  useLayoutEffect(() => {
+    if (sidebarOpen) resetSidebarScroll();
+  }, [sidebarOpen]);
+
   useEffect(() => {
     if (!sidebarOpen || typeof document === "undefined") return;
 
