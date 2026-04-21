@@ -1,115 +1,150 @@
 
 
-# Five Follow-Up Workstreams
+# Five Operational Workstreams
 
-Building on the MVP foundation just shipped. All five tasks are independent and can ship in one batch.
-
----
-
-## 1. Admin Ads Analytics Page
-
-New route `/admin/ads/analytics` — unified view across Google + Meta.
-
-- Reads from `ad_campaigns` (spend, impressions, clicks) and `conversion_events` (revenue, event types) tables already created
-- Joins `conversion_events` to `ride_requests` via `external_id` to attribute revenue to actual dispatched trips
-- Top KPI row: Total Spend, Total Revenue, ROAS, Conversions, Cost-per-Trip
-- Per-platform breakdown cards (Google vs Meta) with the same metrics
-- Table of recent conversion events (event_name, source, value, ride link, sent_at)
-- Date range filter (7d / 30d / 90d), CSV export button
-- Pattern mirrors existing `AdsStudioAnalytics.tsx` for consistency
+Building admin oversight, in-trip safety, and post-trip financial controls.
 
 ---
 
-## 2. Driver Onboarding — Document Upload & Verification Checklist
+## 1. Admin Trip Density & Cancellation Heatmap
 
-New page in driver app: `/driver/onboarding/documents`.
+New route `/admin/operations/heatmap` — Google Maps overlay visualizing operational hotspots.
 
-- New table `driver_documents` (driver_id, doc_type, file_url, status [pending/approved/rejected], reviewed_by, rejection_reason, uploaded_at)
-- Required document types: Driver's License (front + back), Vehicle Registration, Insurance, Profile Photo, Vehicle Photo
-- Storage bucket `driver-documents` (private, RLS: driver writes own, admin reads all)
-- Checklist UI with status pills (Not uploaded / Pending review / Approved / Rejected with reason)
-- Upload uses existing direct-to-Storage pattern (>4MB) per memory
-- Block "Go Online" toggle in driver app until all docs are `approved` — gate via `useDriverVerification` hook
-- Admin review queue at `/admin/drivers/verification` — approve/reject with reason
-
----
-
-## 3. Share Trip Status (Live Pickup/ETA Link)
-
-Public read-only tracking page anyone with a token can view.
-
-- New table `trip_shares` (id, ride_request_id, share_token [unique], created_by, expires_at, revoked)
-- Edge function `create-trip-share` — generates token, returns `https://hizivo.com/track/{token}`
-- New public route `/track/:token` — shows driver name, vehicle, live ETA, map with driver marker, trip status
-- Subscribes to `ride_requests` Realtime channel filtered by ride id resolved from token (server-side via edge function `get-shared-trip`)
-- Auto-expires when ride status is `completed` or `cancelled`, or after 4 hours
-- "Share my trip" button in `RideTrackingPage` → bottom sheet with copy link, native share (Web Share API + Capacitor Share), SMS/WhatsApp deep links
+- Edge function `admin-trip-heatmap` — aggregates `ride_requests` by H3-style geohash buckets (lat/lng rounded to 3 decimals ≈ 110m grid), grouped by `created_at` window
+- Returns two layers: `completed_trips` (intensity = count) and `cancellations` (intensity = count, separate color)
+- Filters: 7d / 30d toggle, time-of-day slider, vehicle class
+- Map renders Google Maps `HeatmapLayer` with two overlays (emerald for trips, red for cancellations)
+- Side panel: top 10 cancellation hotspots with cancel rate %, top 10 demand hotspots with avg fare
+- CSV export of bucket data
 
 ---
 
-## 4. pg_cron Job for dispatch-escalate
+## 2. In-Trip Chat + Masked Calling + Moderation
 
-pg_cron minimum interval is 1 second but practically scheduled per-minute via cron syntax. To run every 15s, schedule four staggered jobs.
+Extends existing `unified-chat-hub` pattern, scoped to active rides.
 
-- Enable `pg_cron` and `pg_net` extensions (if not already)
-- Insert four cron entries: at `0`, `15`, `30`, `45` seconds of every minute, each calling `dispatch-escalate` via `net.http_post` with the project URL + anon key
-- Uses the insert tool (not migration) because URL + key are project-specific per the scheduling guidance
+**Chat**
+- New table `trip_messages` (ride_request_id, sender_id, sender_role [rider/driver], body, moderation_status, created_at)
+- RLS: only rider + assigned driver of that ride can read/write; auto-archive 24h after `completed`
+- Realtime subscription on `trip_messages` filtered by ride id
+- New component `TripChatSheet` rendered in `RideTrackingPage` (rider) and driver job screen
+- Reuses existing `chatContentSafety.ts` for outgoing sanitization + URL risk scoring
+
+**Masked calling (Twilio Programmable Voice proxy)**
+- New table `trip_call_sessions` (ride_request_id, twilio_proxy_session_sid, rider_proxy_number, driver_proxy_number, expires_at)
+- Edge function `create-masked-call-session` — uses Twilio Proxy API to allocate a session with rider+driver as participants; both see Twilio number, real numbers stay hidden
+- Tap-to-call button in `TripChatSheet` → calls function → `tel:` link with proxy number
+- Auto-expire session 30 min after trip completion
+
+**Moderation**
+- Edge function `moderate-trip-message` — lightweight keyword + URL safety check + Lovable AI Gateway (`google/gemini-2.5-flash`) classification for harassment/scam/PII
+- Messages flagged as `pending_review` are visible to sender but hidden from recipient until cleared; `blocked` messages return error to sender
+- New admin queue at `/admin/moderation/messages` to review flagged content
 
 ---
 
-## 5. Stripe Webhook Verification & Status Sync
+## 3. Driver Rating & Abuse Review + Temporary Flagging
 
-`stripe-ride-webhook` function already exists. Needs registration + verification.
+New route `/admin/drivers/moderation`.
 
-- Confirm `STRIPE_WEBHOOK_SECRET` is wired (already added)
-- Endpoint URL: `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/stripe-ride-webhook`
-- Required events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.canceled`, `payment_intent.amount_capturable_updated` (already handled in code)
-- Add new admin diagnostics page `/admin/payments/webhook-status` showing last 50 webhook deliveries, ride payment status distribution, mismatch alerts (rides with PaymentIntent but no webhook update >5min old)
-- New table `webhook_events` (event_id unique, event_type, ride_request_id, status, raw_payload, received_at) — populated by webhook for audit + idempotency
-- Update `stripe-ride-webhook` to write to `webhook_events` and skip duplicates by `event_id`
+- New table `driver_flags` (driver_id, reason, flagged_by, flagged_until, active, related_report_id)
+- New table `abuse_reports` (reporter_id, reported_user_id, ride_request_id, category [unsafe_driving/harassment/no_show/other], description, status [open/reviewing/resolved/dismissed], resolution_notes)
+- Page lists in three tabs:
+  1. **Low ratings** — joins `ride_requests.driver_rating <= 2` with driver profile, last 30d, sortable by frequency
+  2. **Abuse reports** — open queue with report details + ride context
+  3. **Active flags** — currently flagged drivers with countdown to auto-unflag
+- Action buttons: Dismiss, Warn (sends notification via existing push engine), Flag 24h / 7d / 30d / Permanent
+- Update `dispatch-ride` to filter out drivers with active rows in `driver_flags` where `flagged_until > now()`
+- Audit log entry to `admin_actions` table for every moderation decision
 
-User must register the webhook URL in Stripe Dashboard → Developers → Webhooks → Add endpoint, selecting the four events above. Plan includes a one-screen "Setup Stripe Webhook" admin guide page with the URL pre-formatted to copy.
+---
+
+## 4. PDF Receipts (Rides + Orders)
+
+Server-side generation, emailed automatically + downloadable from history.
+
+- New edge function `generate-trip-receipt` — uses `pdf-lib` (Deno-compatible) to render branded ZIVO PDF with:
+  - Header: ZIVO logo, "Receipt", trip ID, date
+  - Trip details: pickup → dropoff, distance, duration, vehicle, driver name + photo
+  - Line items: base fare, distance, time, surcharge (3.5% KH card), discounts, ZIVO+ benefits
+  - Payment breakdown: subtotal, taxes, total, payment method (Visa •••• 4242)
+  - Footer: support contact, legal disclaimer
+- Stores PDF in private storage bucket `trip-receipts` (path: `{user_id}/{ride_id}.pdf`)
+- Triggered by:
+  - `stripe-ride-webhook` on `payment_intent.succeeded` (manual capture)
+  - Order completion event (existing order flow)
+- Sends email via existing Lovable Email infrastructure (`send-transactional-email`) with PDF attachment, subject "Your ZIVO ride receipt — {date}"
+- Frontend: download button in ride/order history calls signed URL endpoint
+- Reuses existing `BookingReceiptCard` styling for visual consistency
+- New table `receipts` (id, type [ride/order], reference_id, user_id, pdf_path, email_sent_at, total_cents)
+
+---
+
+## 5. Refund Request Flow + Ledger
+
+Rider-initiated, admin-reviewed, Stripe-executed, ledger-tracked.
+
+**Tables**
+- `refund_requests` (id, ride_request_id OR order_id, requester_id, reason_category [overcharge/no_service/safety/other], description, requested_amount_cents, status [pending/approved/partial/denied/processed], decided_by, decided_at, stripe_refund_id)
+- `financial_ledger` (id, user_id, ride_request_id, entry_type [charge/refund/payout/fee/surcharge], amount_cents, currency, balance_after_cents, stripe_reference, created_at) — append-only audit trail
+
+**Flow**
+- Rider tab in ride history: "Request refund" → form with category + reason + amount (capped at trip total)
+- Edge function `submit-refund-request` — validates trip is `completed`, within 30 days, no existing pending request; inserts row + notifies admin
+- Admin queue at `/admin/payments/refunds` — shows request, ride context, payment intent, rider history
+- Approve/partial/deny actions:
+  - Approved → edge function `process-refund` calls Stripe `refunds.create` against the PaymentIntent, writes refund ledger entry, emails rider, updates `ride_requests.payment_status = 'refunded'` (or `partial_refund`)
+  - Denied → emails rider with reason
+- Auto-ledger entries:
+  - On `payment_intent.succeeded` (charge entry)
+  - On refund (refund entry)
+  - On driver payout (payout entry)
+  - On platform fee (fee entry)
+- Rider-facing "Transactions" view at `/account/transactions` reads from `financial_ledger`
 
 ---
 
 ## Technical Details
 
 **New tables**
-- `driver_documents` (RLS: driver own + admin all)
-- `trip_shares` (RLS: creator own + public select via token-resolving edge function only)
-- `webhook_events` (RLS: admin only; service role inserts)
+- `trip_messages`, `trip_call_sessions` (RLS: trip participants only)
+- `driver_flags`, `abuse_reports` (RLS: admin write, driver reads own flags)
+- `receipts` (RLS: owner read, service role write)
+- `refund_requests` (RLS: requester + admin)
+- `financial_ledger` (RLS: owner read, service role write only — append-only)
 
 **New storage bucket**
-- `driver-documents` (private)
+- `trip-receipts` (private, signed URLs only)
 
 **New edge functions**
-- `create-trip-share`, `get-shared-trip`
+- `admin-trip-heatmap`, `create-masked-call-session`, `moderate-trip-message`
+- `generate-trip-receipt`, `submit-refund-request`, `process-refund`
 
 **Updated edge functions**
-- `stripe-ride-webhook` — add idempotent `webhook_events` insert
+- `dispatch-ride` — exclude flagged drivers
+- `stripe-ride-webhook` — trigger receipt generation + ledger entries
 
-**New routes**
-- `/admin/ads/analytics`
-- `/admin/drivers/verification`
-- `/admin/payments/webhook-status`
-- `/driver/onboarding/documents`
-- `/track/:token` (public)
+**Secrets needed**
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PROXY_SERVICE_SID` (for masked calling — will request after approval)
+- Lovable AI Gateway already available for moderation
 
-**Cron**
-- 4× pg_cron entries staggered 0/15/30/45s for `dispatch-escalate`
-
-**Hooks**
-- `useDriverVerification` — gates `Go Online` based on `driver_documents` approval
+**Pages**
+- `/admin/operations/heatmap`
+- `/admin/moderation/messages`
+- `/admin/drivers/moderation`
+- `/admin/payments/refunds`
+- `/account/transactions`
+- Refund request modal in ride history
 
 ---
 
 ## Build Order
 
-1. Webhook idempotency table + admin status page (closes the payments loop first)
-2. pg_cron schedule (unblocks autonomous dispatch)
-3. Driver document upload + admin verification queue
-4. Share trip status (rider-facing)
-5. Admin ads analytics page
+1. Driver moderation + flagging (immediate safety value, blocks bad actors from dispatch)
+2. PDF receipts + ledger foundation (compliance + financial baseline)
+3. Refund flow (depends on ledger)
+4. In-trip chat + moderation (Twilio masked calling needs secrets)
+5. Admin heatmap (read-only analytics, lowest risk)
 
-Approve to switch to default mode and ship.
+Approve to switch to default mode and ship. Twilio secrets requested when workstream 4 begins.
 
