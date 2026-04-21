@@ -6,10 +6,14 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart3, MousePointerClick, Eye, Target, DollarSign, RefreshCw, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
+import { PerformanceChartSkeleton, BreakdownTableSkeleton } from "./ads/MarketingSkeletons";
+import MarketingEmptyState from "./ads/MarketingEmptyState";
+import ResponsiveBreakdown, { BreakdownColumn } from "./ads/ResponsiveBreakdown";
+import { mkMeta } from "./ads/marketing-tokens";
+import { cn } from "@/lib/utils";
 
 interface Props { storeId: string }
 
@@ -62,61 +66,91 @@ export default function AdsStudioAnalytics({ storeId }: Props) {
   const cvr = totals.clicks > 0 ? (totals.conversions / totals.clicks) * 100 : 0;
   const roas = totals.spend_cents > 0 ? totals.revenue_cents / totals.spend_cents : 0;
 
+  const exportCsv = () => {
+    const header = "goal,date,impressions,clicks,conversions,revenue,spend\n";
+    const lines = stats
+      .map((s) =>
+        [
+          s.goal,
+          new Date(s.created_at).toISOString().slice(0, 10),
+          s.impressions,
+          s.clicks,
+          s.conversions,
+          (s.revenue_cents / 100).toFixed(2),
+          (s.spend_cents / 100).toFixed(2),
+        ].join(",")
+      )
+      .join("\n");
+    const blob = new Blob([header + lines], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ads-performance-${storeId}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  if (loading) return <PerformanceChartSkeleton />;
+
+  const columns: BreakdownColumn<CreativeStat>[] = [
+    { key: "goal", label: "Goal", render: (s) => <Badge variant="outline" className="text-[10px]">{s.goal}</Badge> },
+    { key: "date", label: "Date", render: (s) => new Date(s.created_at).toLocaleDateString(), desktopOnly: true },
+    { key: "impr", label: "Impr", isNumeric: true, render: (s) => s.impressions.toLocaleString() },
+    { key: "clicks", label: "Clicks", isNumeric: true, render: (s) => s.clicks.toLocaleString() },
+    { key: "conv", label: "Conv", isNumeric: true, render: (s) => s.conversions.toLocaleString() },
+    { key: "rev", label: "Revenue", isNumeric: true, render: (s) => <span className="text-primary font-medium">${(s.revenue_cents / 100).toFixed(2)}</span> },
+    { key: "spend", label: "Spend", isNumeric: true, render: (s) => <span className="text-muted-foreground">${(s.spend_cents / 100).toFixed(2)}</span> },
+  ];
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-primary" />
-          <h3 className="font-semibold text-sm">Performance</h3>
+          <h3 className="font-semibold text-sm sm:text-base">Performance</h3>
         </div>
-        <Button size="sm" variant="ghost" onClick={load} disabled={loading}>
-          <RefreshCw className={`h-3.5 w-3.5 mr-1 ${loading ? "animate-spin" : ""}`} /> Refresh
+        <Button size="sm" variant="ghost" className="h-9 sm:h-8" onClick={load} disabled={loading}>
+          <RefreshCw className={cn("h-3.5 w-3.5 sm:mr-1", loading && "animate-spin")} />
+          <span className="hidden sm:inline">Refresh</span>
         </Button>
       </div>
 
       {/* Totals */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        <StatCard icon={Eye} label="Impressions" value={totals.impressions.toLocaleString()} loading={loading} />
-        <StatCard icon={MousePointerClick} label="Clicks" value={totals.clicks.toLocaleString()} sub={`${ctr.toFixed(2)}% CTR`} loading={loading} />
-        <StatCard icon={Target} label="Conversions" value={totals.conversions.toLocaleString()} sub={`${cvr.toFixed(2)}% CVR`} loading={loading} />
-        <StatCard icon={DollarSign} label="Revenue" value={`$${(totals.revenue_cents / 100).toFixed(2)}`} sub={`${roas.toFixed(2)}x ROAS`} loading={loading} />
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <StatCard icon={Eye} label="Impressions" value={totals.impressions.toLocaleString()} />
+        <StatCard icon={MousePointerClick} label="Clicks" value={totals.clicks.toLocaleString()} sub={`${ctr.toFixed(2)}% CTR`} />
+        <StatCard icon={Target} label="Conversions" value={totals.conversions.toLocaleString()} sub={`${cvr.toFixed(2)}% CVR`} />
+        <StatCard icon={DollarSign} label="Revenue" value={`$${(totals.revenue_cents / 100).toFixed(2)}`} sub={`${roas.toFixed(2)}x ROAS`} />
       </div>
 
       <Card>
-        <CardContent className="p-3">
+        <CardContent className="p-3 sm:p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="h-3.5 w-3.5 text-primary" />
-            <p className="text-xs font-semibold">Per-creative breakdown</p>
-            <Badge variant="secondary" className="ml-auto text-[10px]">AI spend: ${(totals.spend_cents / 100).toFixed(2)}</Badge>
+            <p className="text-xs sm:text-sm font-semibold">Per-creative breakdown</p>
+            <Badge variant="secondary" className="ml-auto text-[10px]">
+              AI spend: ${(totals.spend_cents / 100).toFixed(2)}
+            </Badge>
           </div>
-          {loading ? (
-            <div className="space-y-1.5">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-8 w-full" />)}</div>
-          ) : stats.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-4 text-center">No campaigns yet. Generate one in the AI Studio tab.</p>
+          {stats.length === 0 ? (
+            <MarketingEmptyState
+              icon={BarChart3}
+              title="No campaigns yet"
+              body="Generate one in the AI Studio tab to start collecting performance data."
+            />
           ) : (
-            <div className="space-y-1">
-              {stats.map((s) => (
-                <div key={s.creative_id} className="grid grid-cols-12 gap-2 items-center text-[11px] py-1.5 border-b border-border/40 last:border-0">
-                  <div className="col-span-3 truncate">
-                    <Badge variant="outline" className="text-[10px] mr-1">{s.goal}</Badge>
-                    <span className="text-muted-foreground">{new Date(s.created_at).toLocaleDateString()}</span>
-                  </div>
-                  <div className="col-span-2 text-right">{s.impressions.toLocaleString()}</div>
-                  <div className="col-span-2 text-right">{s.clicks.toLocaleString()}</div>
-                  <div className="col-span-2 text-right">{s.conversions.toLocaleString()}</div>
-                  <div className="col-span-2 text-right text-primary font-medium">${(s.revenue_cents / 100).toFixed(2)}</div>
-                  <div className="col-span-1 text-right text-muted-foreground">${(s.spend_cents / 100).toFixed(2)}</div>
+            <ResponsiveBreakdown
+              rows={stats}
+              columns={columns}
+              rowKey={(s) => s.creative_id}
+              onExportCsv={exportCsv}
+              mobileTitle={(s) => (
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-[10px]">{s.goal}</Badge>
+                  <span className={mkMeta}>{new Date(s.created_at).toLocaleDateString()}</span>
                 </div>
-              ))}
-              <div className="grid grid-cols-12 gap-2 items-center text-[10px] text-muted-foreground pt-1">
-                <div className="col-span-3">Goal · Date</div>
-                <div className="col-span-2 text-right">Impr</div>
-                <div className="col-span-2 text-right">Clicks</div>
-                <div className="col-span-2 text-right">Conv</div>
-                <div className="col-span-2 text-right">Revenue</div>
-                <div className="col-span-1 text-right">Spend</div>
-              </div>
-            </div>
+              )}
+            />
           )}
         </CardContent>
       </Card>
@@ -124,20 +158,16 @@ export default function AdsStudioAnalytics({ storeId }: Props) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, sub, loading }: any) {
+function StatCard({ icon: Icon, label, value, sub }: any) {
   return (
     <Card>
-      <CardContent className="p-3">
+      <CardContent className="p-2.5 sm:p-3">
         <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
           <Icon className="h-3 w-3" />
-          <span className="text-[10px] uppercase tracking-wide">{label}</span>
+          <span className="text-[10px] uppercase tracking-wide truncate">{label}</span>
         </div>
-        {loading ? <Skeleton className="h-5 w-16" /> : (
-          <>
-            <p className="text-base font-bold">{value}</p>
-            {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}
-          </>
-        )}
+        <p className="text-lg sm:text-xl font-bold tabular-nums">{value}</p>
+        {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}
       </CardContent>
     </Card>
   );
