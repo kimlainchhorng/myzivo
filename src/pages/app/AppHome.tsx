@@ -344,7 +344,7 @@ const AppHome = () => {
       {/* 3D Ambient orbs — contained within scrollable area only */}
 
       {/* Scrollable content */}
-      <div className="pb-24 scroll-momentum relative z-10">
+      <div className="scroll-momentum relative z-10" style={{ paddingBottom: 'calc(56px + env(safe-area-inset-bottom, 0px) + 24px)' }}>
         {/* 3D Ambient orbs inside scroll container */}
         <div className="orb-3d-1 top-[-5%] right-[-10%] opacity-40 z-0 pointer-events-none" />
         <div className="orb-3d-2 top-[40%] left-[-15%] opacity-25 z-0 pointer-events-none" />
