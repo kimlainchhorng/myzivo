@@ -436,151 +436,153 @@ export default function StoreAdsManager({ storeId }: Props) {
         </CardContent>
       </Card>
 
-      {/* Connect dialog */}
-      <Dialog open={!!connectPlatform} onOpenChange={(o) => !o && setConnectPlatform(null)}>
-        <DialogContent className="max-w-md w-[calc(100vw-1.5rem)] sm:w-full max-h-[90vh] overflow-y-auto">
-          {connectPlatform && (() => {
-            const p = PLATFORMS.find((x) => x.id === connectPlatform)!;
-            const Icon = p.icon;
-            const acc = accountByPlatform(connectPlatform);
-            return (
-              <>
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Icon className={`w-5 h-5 ${p.color}`} /> Connect {p.label}
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 text-sm">
-                  {(p.id === "meta" || p.id === "instagram") && (
-                    <Button
-                      className="w-full bg-[#1877F2] hover:bg-[#1459bf] text-white"
-                      onClick={() => oauthMutation.mutate(p.id)}
-                      disabled={oauthMutation.isPending}
-                    >
-                      {oauthMutation.isPending
-                        ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        : <Facebook className="w-4 h-4 mr-2" />}
-                      Continue with Facebook
-                    </Button>
-                  )}
-                  {p.id === "google" && (
-                    <Button
-                      className="w-full bg-[#4285F4] hover:bg-[#3367d6] text-white"
-                      onClick={() => oauthMutation.mutate(p.id)}
-                      disabled={oauthMutation.isPending}
-                    >
-                      {oauthMutation.isPending
-                        ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        : <Google className="w-4 h-4 mr-2" />}
-                      Continue with Google
-                    </Button>
-                  )}
-                  <div className="p-3 rounded-lg bg-muted text-xs leading-relaxed">
-                    <p className="font-semibold mb-1">
-                      {(p.id === "meta" || p.id === "instagram")
-                        ? "Or paste an Ad Account ID manually:"
-                        : "Required:"}
-                    </p>
-                    <p className="text-muted-foreground">{p.secretsHint}</p>
-                  </div>
-                  <ConnectForm
-                    platform={p.id}
-                    initialId={acc?.external_account_id || ""}
-                    initialName={acc?.display_name || ""}
-                    onSubmit={(id, name) => connectMutation.mutate({ platform: p.id, externalId: id, displayName: name })}
-                    isPending={connectMutation.isPending}
-                  />
-                  {acc && (
-                    <Button variant="outline" className="w-full text-red-500" onClick={() => disconnectMutation.mutate(acc.id)}>
-                      <Trash2 className="w-3.5 h-3.5 mr-1" /> Disconnect
-                    </Button>
-                  )}
+      {/* Connect modal */}
+      {connectPlatform && (() => {
+        const p = PLATFORMS.find((x) => x.id === connectPlatform)!;
+        const Icon = p.icon;
+        const acc = accountByPlatform(connectPlatform);
+        return (
+          <ResponsiveModal
+            open={!!connectPlatform}
+            onOpenChange={(o) => !o && setConnectPlatform(null)}
+            title={
+              <span className="flex items-center gap-2">
+                <Icon className={`w-5 h-5 ${p.color}`} /> Connect {p.label}
+              </span>
+            }
+          >
+            {oauthMutation.isPending ? (
+              <OAuthConnectSkeleton />
+            ) : (
+              <div className="space-y-3 text-sm">
+                {(p.id === "meta" || p.id === "instagram") && (
+                  <Button
+                    className="w-full bg-[#1877F2] hover:bg-[#1459bf] text-white"
+                    onClick={() => oauthMutation.mutate(p.id)}
+                    disabled={oauthMutation.isPending}
+                  >
+                    <Facebook className="w-4 h-4 mr-2" />
+                    Continue with Facebook
+                  </Button>
+                )}
+                {p.id === "google" && (
+                  <Button
+                    className="w-full bg-[#4285F4] hover:bg-[#3367d6] text-white"
+                    onClick={() => oauthMutation.mutate(p.id)}
+                    disabled={oauthMutation.isPending}
+                  >
+                    <Google className="w-4 h-4 mr-2" />
+                    Continue with Google
+                  </Button>
+                )}
+                <div className="p-3 rounded-lg bg-muted text-xs leading-relaxed">
+                  <p className="font-semibold mb-1">
+                    {(p.id === "meta" || p.id === "instagram")
+                      ? "Or paste an Ad Account ID manually:"
+                      : "Required:"}
+                  </p>
+                  <p className="text-muted-foreground">{p.secretsHint}</p>
                 </div>
-              </>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
+                <ConnectForm
+                  platform={p.id}
+                  initialId={acc?.external_account_id || ""}
+                  initialName={acc?.display_name || ""}
+                  onSubmit={(id, name) => connectMutation.mutate({ platform: p.id, externalId: id, displayName: name })}
+                  isPending={connectMutation.isPending}
+                />
+                {acc && (
+                  <Button variant="outline" className="w-full text-red-500" aria-label={`Disconnect ${p.label}`} onClick={() => disconnectMutation.mutate(acc.id)}>
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Disconnect
+                  </Button>
+                )}
+              </div>
+            )}
+          </ResponsiveModal>
+        );
+      })()}
 
-      {/* Create / Edit Campaign dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-lg w-[calc(100vw-1.5rem)] sm:w-full max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editing ? "Edit Campaign" : "New Campaign"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Campaign name</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Summer promo - drive traffic" />
-            </div>
-            <div>
-              <Label className="text-xs">Platforms</Label>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 mt-1">
-                {PLATFORMS.map((p) => {
-                  const Icon = p.icon;
-                  const selected = form.platforms.includes(p.id);
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => togglePlatform(p.id)}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition active:scale-95 touch-manipulation ${selected ? "border-primary bg-primary/5" : "border-border"}`}
-                    >
-                      <Icon className={`w-4 h-4 ${p.color}`} />
-                      <span className="text-[10px]">{p.label.split(" ")[0]}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label className="text-xs">Daily budget ($)</Label>
-                <Input type="number" min={1} value={form.daily_budget} onChange={(e) => setForm({ ...form, daily_budget: parseFloat(e.target.value) || 0 })} />
-              </div>
-              <div>
-                <Label className="text-xs">Total budget ($)</Label>
-                <Input type="number" min={0} value={form.total_budget} onChange={(e) => setForm({ ...form, total_budget: parseFloat(e.target.value) || 0 })} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label className="text-xs">Start</Label>
-                <Input type="datetime-local" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
-              </div>
-              <div>
-                <Label className="text-xs">End</Label>
-                <Input type="datetime-local" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
-              </div>
-            </div>
-            <div>
-              <Label className="text-xs">Headline</Label>
-              <Input value={form.headline} onChange={(e) => setForm({ ...form, headline: e.target.value })} maxLength={60} placeholder="Free delivery this weekend" />
-            </div>
-            <div>
-              <Label className="text-xs">Body</Label>
-              <Textarea value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} maxLength={200} rows={2} placeholder="Order now and save 25% on your first order" />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label className="text-xs">CTA</Label>
-                <Input value={form.cta} onChange={(e) => setForm({ ...form, cta: e.target.value })} placeholder="Order Now" />
-              </div>
-              <div>
-                <Label className="text-xs">Destination URL</Label>
-                <Input value={form.destination_url} onChange={(e) => setForm({ ...form, destination_url: e.target.value })} placeholder="https://hizivo.com/store/..." />
-              </div>
-            </div>
-          </div>
-          <DialogFooter className="flex-col-reverse sm:flex-row gap-2 sm:gap-0">
+      {/* Create / Edit Campaign modal */}
+      <ResponsiveModal
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        title={editing ? "Edit Campaign" : "New Campaign"}
+        footer={
+          <ResponsiveModalFooter>
             <Button variant="outline" className="w-full sm:w-auto h-10" onClick={() => setCreateOpen(false)}>Cancel</Button>
             <Button className="w-full sm:w-auto h-10" onClick={() => saveCampaign.mutate()} disabled={!form.name || form.platforms.length === 0 || saveCampaign.isPending}>
               {saveCampaign.isPending && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
               {editing ? "Save" : "Create draft"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveModalFooter>
+        }
+      >
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs">Campaign name</Label>
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Summer promo - drive traffic" />
+          </div>
+          <div>
+            <Label className="text-xs">Platforms</Label>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 mt-1">
+              {PLATFORMS.map((p) => {
+                const Icon = p.icon;
+                const selected = form.platforms.includes(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => togglePlatform(p.id)}
+                    aria-label={`Toggle ${p.label}`}
+                    aria-pressed={selected}
+                    className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition active:scale-95 touch-manipulation ${selected ? "border-primary bg-primary/5" : "border-border"}`}
+                  >
+                    <Icon className={`w-4 h-4 ${p.color}`} />
+                    <span className="text-[10px]">{p.label.split(" ")[0]}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs">Daily budget ($)</Label>
+              <Input type="number" min={1} value={form.daily_budget} onChange={(e) => setForm({ ...form, daily_budget: parseFloat(e.target.value) || 0 })} />
+            </div>
+            <div>
+              <Label className="text-xs">Total budget ($)</Label>
+              <Input type="number" min={0} value={form.total_budget} onChange={(e) => setForm({ ...form, total_budget: parseFloat(e.target.value) || 0 })} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs">Start</Label>
+              <Input type="datetime-local" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+            </div>
+            <div>
+              <Label className="text-xs">End</Label>
+              <Input type="datetime-local" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs">Headline</Label>
+            <Input value={form.headline} onChange={(e) => setForm({ ...form, headline: e.target.value })} maxLength={60} placeholder="Free delivery this weekend" />
+          </div>
+          <div>
+            <Label className="text-xs">Body</Label>
+            <Textarea value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} maxLength={200} rows={2} placeholder="Order now and save 25% on your first order" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs">CTA</Label>
+              <Input value={form.cta} onChange={(e) => setForm({ ...form, cta: e.target.value })} placeholder="Order Now" />
+            </div>
+            <div>
+              <Label className="text-xs">Destination URL</Label>
+              <Input value={form.destination_url} onChange={(e) => setForm({ ...form, destination_url: e.target.value })} placeholder="https://hizivo.com/store/..." />
+            </div>
+          </div>
+        </div>
+      </ResponsiveModal>
     </div>
   );
 }
