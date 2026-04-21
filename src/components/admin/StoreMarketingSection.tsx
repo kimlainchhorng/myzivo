@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import StoreAdsManager from "./StoreAdsManager";
+import AdsStudioWizard from "./AdsStudioWizard";
 
 interface Props {
   storeId: string;
@@ -295,9 +296,10 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName, s
     <div className="space-y-5">
       {/* Sub-navigation tabs */}
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-        <TabsList className="w-full grid grid-cols-5 h-10">
+        <TabsList className="w-full grid grid-cols-6 h-10">
           <TabsTrigger value="overview" className="text-xs gap-1.5"><BarChart3 className="w-3.5 h-3.5" /> Overview</TabsTrigger>
           <TabsTrigger value="promotions" className="text-xs gap-1.5"><Tag className="w-3.5 h-3.5" /> Promos</TabsTrigger>
+          <TabsTrigger value="studio" className="text-xs gap-1.5"><Sparkles className="w-3.5 h-3.5" /> AI Studio</TabsTrigger>
           <TabsTrigger value="ads" className="text-xs gap-1.5"><Rocket className="w-3.5 h-3.5" /> Ads</TabsTrigger>
           <TabsTrigger value="posts" className="text-xs gap-1.5"><ImageIcon className="w-3.5 h-3.5" /> Posts</TabsTrigger>
           <TabsTrigger value="share" className="text-xs gap-1.5"><Share2 className="w-3.5 h-3.5" /> Share</TabsTrigger>
@@ -508,6 +510,10 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName, s
         </TabsContent>
 
         {/* ═══ ADS ═══ */}
+        <TabsContent value="studio" className="space-y-4 mt-4">
+          <AdsStudioWizard storeId={storeId} storeName={storeName} storeSlug={storeSlug} />
+        </TabsContent>
+
         <TabsContent value="ads" className="space-y-4 mt-4">
           <StoreAdsManager storeId={storeId} />
         </TabsContent>
