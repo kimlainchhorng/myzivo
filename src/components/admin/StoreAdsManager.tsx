@@ -581,6 +581,20 @@ export default function StoreAdsManager({ storeId }: Props) {
         onSave={(form, asDraft) => saveCampaign.mutate({ form, asDraft })}
         saving={saveCampaign.isPending}
       />
+
+      {/* Campaign detail drawer */}
+      <AdsCampaignDetailDrawer
+        open={!!detailCampaign}
+        onClose={() => setDetailCampaign(null)}
+        campaign={detailCampaign}
+        platforms={PLATFORMS}
+        statusColors={STATUS_COLORS}
+        onEdit={openEdit}
+        onDuplicate={(c) => duplicateCampaign.mutate(c)}
+        onDelete={(c) => deleteCampaign.mutate(c.id)}
+        onPause={(c) => toggleStatus.mutate({ id: c.id, status: "paused" })}
+        onResume={(c) => toggleStatus.mutate({ id: c.id, status: "active" })}
+      />
     </div>
   );
 }
