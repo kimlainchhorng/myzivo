@@ -7,6 +7,10 @@ project_id = "slirphzzwcogdbkeicff"
     verify_jwt = false
   [functions.ads-studio-track]
     verify_jwt = false
+  [functions.ads-studio-auto-winner]
+    verify_jwt = false
+  [functions.ads-studio-publish]
+    verify_jwt = false
   [functions.aba-payway-checkout]
     verify_jwt = false
   [functions.account-summary]
