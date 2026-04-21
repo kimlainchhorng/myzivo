@@ -149,6 +149,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           onTransitionEnd={(e) => {
             if (sidebarOpen && e.target === asideRef.current && e.propertyName === "transform") {
               resetSidebarScroll();
+              requestAnimationFrame(() => resetSidebarScroll());
             }
           }}
           className={cn(
