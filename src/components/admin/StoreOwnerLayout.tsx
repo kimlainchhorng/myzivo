@@ -4,7 +4,7 @@
  */
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LogOut, ChevronLeft, ChevronDown, Menu, Home, Store,
@@ -15,6 +15,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Helmet } from "react-helmet-async";
+import { useFocusTrap } from "./useFocusTrap";
+import { useFocusReturn } from "./ads/useFocusReturn";
 
 interface StoreOwnerLayoutProps {
   children: ReactNode;
@@ -32,42 +34,36 @@ interface StoreOwnerLayoutProps {
 export default function StoreOwnerLayout({ children, title, storeId, storeName, storeLogoUrl, storeCategory, activeTab, onTabChange, productCount, orderCount }: StoreOwnerLayoutProps) {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const asideRef = useRef<HTMLElement | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
+  const scrollMemoryRef = useRef<Record<string, number>>({});
   const employeeIds = ["employees", "payroll", "employee-schedule", "time-clock", "attendance", "training", "documents", "employee-rules"];
   const [employeesOpen, setEmployeesOpen] = useState(employeeIds.includes(activeTab || ""));
 
-  const resetSidebarScroll = () => {
-    if (asideRef.current) asideRef.current.scrollTop = 0;
-    if (navRef.current) navRef.current.scrollTop = 0;
-    // Walk all scrollable descendants and reset
-    if (asideRef.current) {
-      const all = asideRef.current.querySelectorAll<HTMLElement>("*");
-      all.forEach((el) => {
-        if (el.scrollHeight > el.clientHeight) el.scrollTop = 0;
-      });
-    }
-  };
+  const tabKey = activeTab || "_default";
 
   const closeSidebar = () => setSidebarOpen(false);
   const openSidebar = () => {
-    // Collapse Employees group on open unless an employee tab is active
     if (!employeeIds.includes(activeTab || "")) {
       setEmployeesOpen(false);
     }
     setSidebarOpen(true);
   };
 
-  // Reset scroll on open (single call — drawer is portaled to body, no layout race)
+  // Restore per-tab scroll position when sidebar opens
   useEffect(() => {
     if (!sidebarOpen) return;
-    resetSidebarScroll();
-    const r = requestAnimationFrame(resetSidebarScroll);
+    const r = requestAnimationFrame(() => {
+      if (navRef.current) {
+        navRef.current.scrollTop = scrollMemoryRef.current[tabKey] ?? 0;
+      }
+    });
     return () => cancelAnimationFrame(r);
-  }, [sidebarOpen]);
+  }, [sidebarOpen, tabKey]);
 
-  // Lock background scroll via overflow:hidden (does NOT shift viewport — fixed children render at true viewport top)
+  // Lock background scroll via overflow:hidden
   useEffect(() => {
     if (!sidebarOpen || typeof document === "undefined") return;
 
@@ -97,6 +93,26 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [sidebarOpen]);
+
+  // Auto-close on tab change (external/programmatic)
+  useEffect(() => {
+    if (sidebarOpen) closeSidebar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  // Auto-close on route change
+  useEffect(() => {
+    if (sidebarOpen) closeSidebar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  // Focus trap + focus return for the mobile drawer
+  useFocusTrap(asideRef, sidebarOpen);
+  useFocusReturn(sidebarOpen);
+
+  const handleNavScroll = (e: React.UIEvent<HTMLElement>) => {
+    scrollMemoryRef.current[tabKey] = e.currentTarget.scrollTop;
+  };
 
   const isAutoRepair = storeCategory === "auto-repair";
   const productsLabel = isAutoRepair ? "Services" : "Products";
@@ -138,7 +154,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       </Helmet>
 
       <div className="min-h-screen bg-background flex">
-        {/* Mobile drawer + backdrop, portaled to body so fixed coords are anchored to viewport (not a scrolled/transformed ancestor) */}
+        {/* Mobile drawer + backdrop, portaled to body */}
         {typeof document !== "undefined" && createPortal(
           <>
             <div
@@ -148,18 +164,21 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
               )}
               onClick={closeSidebar}
               aria-hidden={!sidebarOpen}
+              role="presentation"
             />
             <aside
+              id="store-owner-sidebar"
               ref={asideRef}
-              onTransitionEnd={(e) => {
-                if (sidebarOpen && e.propertyName === "transform") resetSidebarScroll();
-              }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Store navigation"
+              aria-hidden={!sidebarOpen}
+              tabIndex={-1}
               className={cn(
                 "fixed inset-y-0 left-0 z-50 w-[84vw] max-w-[310px] bg-card border-r border-border flex flex-col overflow-hidden rounded-r-2xl shadow-2xl overscroll-contain lg:hidden",
                 "transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
                 sidebarOpen ? "translate-x-0" : "-translate-x-full"
               )}
-              aria-hidden={!sidebarOpen}
             >
               {renderSidebarContent({ isMobile: true })}
             </aside>
@@ -167,7 +186,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           document.body
         )}
 
-        {/* Desktop sticky sidebar — stays in normal flow */}
+        {/* Desktop sticky sidebar */}
         <aside className="hidden lg:flex sticky top-0 left-0 z-30 h-[100dvh] w-64 bg-card border-r border-border flex-col overflow-hidden">
           {renderSidebarContent({ isMobile: false })}
         </aside>
@@ -175,7 +194,15 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
         <div className="flex-1 flex flex-col min-w-0">
           <header className="safe-area-top min-h-16 bg-card border-b border-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="lg:hidden" onClick={openSidebar}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden"
+                onClick={openSidebar}
+                aria-controls="store-owner-sidebar"
+                aria-expanded={sidebarOpen}
+                aria-label="Open navigation"
+              >
                 <Menu className="w-5 h-5" />
               </Button>
               <h1 className="text-lg font-bold text-foreground">{title}</h1>
@@ -214,7 +241,13 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
             </div>
           </div>
           {isMobile && (
-            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 -mr-1 rounded-full hover:bg-muted touch-manipulation" onClick={closeSidebar}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 shrink-0 -mr-1 rounded-full hover:bg-muted touch-manipulation"
+              onClick={closeSidebar}
+              aria-label="Close navigation"
+            >
               <ChevronLeft className="w-5 h-5" />
             </Button>
           )}
@@ -223,11 +256,13 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
         {/* Nav */}
         <nav
           ref={isMobile ? navRef : undefined}
+          onScroll={isMobile ? handleNavScroll : undefined}
+          aria-label="Store sections"
           className="flex-1 min-h-0 px-2.5 py-3 overflow-y-scroll scroll-momentum overscroll-contain touch-pan-y"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          <p className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Manage</p>
-          <div className="space-y-0.5">
+          <p id="sidebar-group-manage" className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Manage</p>
+          <div className="space-y-0.5" role="group" aria-labelledby="sidebar-group-manage">
             {navItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
@@ -253,8 +288,8 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
 
           <div className="my-3 mx-3 border-t border-border/60" />
 
-          <p className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Team</p>
-          <div className="space-y-0.5">
+          <p id="sidebar-group-team" className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Team</p>
+          <div className="space-y-0.5" role="group" aria-labelledby="sidebar-group-team">
             <button
               onClick={() => setEmployeesOpen((v) => !v)}
               className={cn(
