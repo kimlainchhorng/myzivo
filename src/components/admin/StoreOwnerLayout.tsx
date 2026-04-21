@@ -58,7 +58,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     setSidebarOpen(true);
   };
 
-  // Reset scroll synchronously + across two animation frames to defeat layout race
+  // Reset scroll synchronously + across multiple frames + timer fallback to defeat mobile layout race
   useLayoutEffect(() => {
     if (!sidebarOpen) return;
     resetSidebarScroll();
@@ -67,9 +67,15 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       const r2 = requestAnimationFrame(() => resetSidebarScroll());
       (resetSidebarScroll as any)._r2 = r2;
     });
+    const t1 = window.setTimeout(resetSidebarScroll, 50);
+    const t2 = window.setTimeout(resetSidebarScroll, 200);
+    const t3 = window.setTimeout(resetSidebarScroll, 350); // after 300ms transition completes
     return () => {
       cancelAnimationFrame(r1);
       if ((resetSidebarScroll as any)._r2) cancelAnimationFrame((resetSidebarScroll as any)._r2);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
     };
   }, [sidebarOpen]);
 
