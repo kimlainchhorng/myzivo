@@ -317,6 +317,20 @@ export default function StoreAdsManager({ storeId }: Props) {
       {/* Stat strip */}
       {isLoading ? <AdsStatStripSkeleton /> : <AdsStatStrip stats={stats} />}
 
+      {/* Smart suggestions */}
+      {!isLoading && (
+        <AdsInsightsPanel
+          campaigns={campaigns}
+          accounts={accounts}
+          stats={stats}
+          wallet={wallet}
+          onCreateCampaign={openCreate}
+          onAddFunds={goToWallet}
+          onConnectPlatform={scrollToPlatforms}
+          onOpenCampaign={(c) => setDetailCampaign(c)}
+        />
+      )}
+
       {/* Slim integration chip */}
       {!bannerDismissed && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] sm:text-xs">
@@ -334,6 +348,20 @@ export default function StoreAdsManager({ storeId }: Props) {
         </div>
       )}
 
+      {/* Wallet & billing */}
+      {!isLoading && (
+        <div id="ads-wallet">
+          <AdsWalletCard
+            wallet={wallet}
+            ledger={ledger}
+            stats={stats}
+            onAddFunds={() => toast.info("Opening wallet top-up… (link to AdsStudioWalletGuard)")}
+            onViewAll={() => toast.info("Opening full wallet ledger…")}
+            onToggleAutoReload={() => toast.info("Configure auto-reload in the wallet settings.")}
+          />
+        </div>
+      )}
+
       {/* Onboarding checklist */}
       {isLoading ? (
         <OnboardingChecklistSkeleton />
@@ -341,7 +369,7 @@ export default function StoreAdsManager({ storeId }: Props) {
         <AdsOnboardingChecklist
           state={checklist}
           onConnectPlatform={scrollToPlatforms}
-          onAddBilling={() => toast.info("Open the Wallet section to add funds.")}
+          onAddBilling={goToWallet}
           onCreateCampaign={openCreate}
           onSubmitForReview={scrollToCampaigns}
         />
