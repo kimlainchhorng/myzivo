@@ -141,8 +141,9 @@ export default function ServiceBookingPage() {
       toast.error("Please enter a valid email address");
       return;
     }
+    const bookingRef = `BK-${Date.now().toString(36).toUpperCase()}`;
     setSubmitting(true);
-    const { data: inserted, error } = await supabase.from("service_bookings").insert({
+    const { error } = await supabase.from("service_bookings").insert({
       store_id: store.id,
       product_id: form.product_id || null,
       service_name: form.service_name,
@@ -155,7 +156,7 @@ export default function ServiceBookingPage() {
       preferred_date: format(date, "yyyy-MM-dd"),
       preferred_time: form.preferred_time,
       notes: form.notes || null,
-    }).select("id").maybeSingle();
+    });
     setSubmitting(false);
     if (error) {
       console.error("Booking insert error:", error);
@@ -163,8 +164,7 @@ export default function ServiceBookingPage() {
       return;
     }
     toast.success("Booking submitted!");
-    const ref = inserted?.id ? `BK-${String(inserted.id).slice(0, 8).toUpperCase()}` : `BK-${Date.now().toString(36).toUpperCase()}`;
-    setConfirmation({ ref });
+    setConfirmation({ ref: bookingRef });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
