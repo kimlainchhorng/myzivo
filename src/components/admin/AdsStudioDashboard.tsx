@@ -336,8 +336,8 @@ export default function AdsStudioDashboard({ storeId }: Props) {
           <CardTitle className="text-xs flex items-center gap-1.5"><Trophy className="h-3.5 w-3.5 text-amber-500" /> Winner history</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? <Skeleton className="h-20 w-full" /> : winners.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-3 text-center">No winners picked yet. Schedule auto-winner from the Publish tab.</p>
+          {loading ? <LedgerListSkeleton /> : winners.length === 0 ? (
+            <MarketingEmptyState icon={Trophy} title="No winners yet" body="Schedule auto-winner from the Publish tab." />
           ) : (
             <div className="space-y-1.5">
               {winners.map((w) => (

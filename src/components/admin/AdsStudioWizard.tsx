@@ -303,6 +303,18 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
         </CardContent></Card>
       )}
 
+      {/* Step 4: Pre-generation placeholder */}
+      {step === 4 && !result && !loading && (
+        <MarketingEmptyState
+          icon={Sparkles}
+          title="Ready to generate"
+          body="Pick a goal, audience, and budget — then tap Generate to see AI-crafted ad variants."
+        />
+      )}
+
+      {/* Step 4: Loading transition */}
+      {step === 4 && !result && loading && <WizardSkeleton />}
+
       {/* Step 4: Results */}
       {step === 4 && result && (
         <div className="space-y-3">
