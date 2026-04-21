@@ -123,8 +123,10 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
 
         <aside
           ref={asideRef}
-          onTransitionEnd={() => {
-            if (sidebarOpen) resetSidebarScroll();
+          onTransitionEnd={(e) => {
+            if (sidebarOpen && e.target === asideRef.current && e.propertyName === "transform") {
+              resetSidebarScroll();
+            }
           }}
           className={cn(
             "fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-[84vw] max-w-[310px] lg:w-64 bg-card border-r border-border flex flex-col overflow-hidden lg:rounded-none rounded-r-2xl shadow-2xl lg:shadow-none overscroll-contain",
