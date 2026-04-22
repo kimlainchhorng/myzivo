@@ -1260,7 +1260,9 @@ export default function AdminStoreEditPage() {
       }
 
       const ext = uploadFile.name.split(".").pop() || "jpg";
-      const path = `posts/${storeId}/${Date.now()}-${mediaItemId}.${ext}`;
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) throw new Error("Not signed in");
+      const path = `${authUser.id}/${storeId}/${Date.now()}-${mediaItemId}.${ext}`;
       console.log("[PostMedia] uploading to storage path:", path);
       const { error: upErr, data: uploadData } = await supabase.storage.from("store-posts").upload(path, uploadFile, {
         upsert: true,
