@@ -25,6 +25,7 @@ const ffmpegWasmUrl = `${FFMPEG_CDN_BASE}/ffmpeg-core.wasm`;
 import { supabase } from "@/integrations/supabase/client";
 import { uploadStoreAsset, verifyStoreProfileUrl, verifyStoreProfileGallery } from "@/pages/admin/utils/uploadStoreAsset";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
+import { getStoreStatus } from "@/utils/storeStatus";
 import AdminLayout from "@/components/admin/AdminLayout";
 import StoreOwnerLayout from "@/components/admin/StoreOwnerLayout";
 import { Button } from "@/components/ui/button";
