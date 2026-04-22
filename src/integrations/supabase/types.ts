@@ -27048,12 +27048,14 @@ export type Database = {
       }
       marketing_automations: {
         Row: {
+          completed_at: string | null
           completed_count: number
           created_at: string
           created_by: string | null
           description: string | null
           enrolled_count: number
           id: string
+          last_tick_at: string | null
           name: string
           status: string
           steps_json: Json
@@ -27062,12 +27064,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          completed_at?: string | null
           completed_count?: number
           created_at?: string
           created_by?: string | null
           description?: string | null
           enrolled_count?: number
           id?: string
+          last_tick_at?: string | null
           name: string
           status?: string
           steps_json?: Json
@@ -27076,12 +27080,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          completed_at?: string | null
           completed_count?: number
           created_at?: string
           created_by?: string | null
           description?: string | null
           enrolled_count?: number
           id?: string
+          last_tick_at?: string | null
           name?: string
           status?: string
           steps_json?: Json
@@ -27185,6 +27191,7 @@ export type Database = {
           promo_code_id: string | null
           push_enabled: boolean | null
           recurrence_interval: string | null
+          sent_at: string | null
           sms_enabled: boolean | null
           sms_message: string | null
           start_date: string | null
@@ -27218,6 +27225,7 @@ export type Database = {
           promo_code_id?: string | null
           push_enabled?: boolean | null
           recurrence_interval?: string | null
+          sent_at?: string | null
           sms_enabled?: boolean | null
           sms_message?: string | null
           start_date?: string | null
@@ -27251,6 +27259,7 @@ export type Database = {
           promo_code_id?: string | null
           push_enabled?: boolean | null
           recurrence_interval?: string | null
+          sent_at?: string | null
           sms_enabled?: boolean | null
           sms_message?: string | null
           start_date?: string | null
