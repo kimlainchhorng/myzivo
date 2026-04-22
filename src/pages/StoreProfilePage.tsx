@@ -813,12 +813,6 @@ export default function StoreProfilePage() {
 
           <LodgingAmenitiesPanel storeId={store!.id} />
 
-          <LodgingStaySelector
-            checkIn={stay.checkIn} checkOut={stay.checkOut}
-            adults={stay.adults} children={stay.children}
-            onChange={updateStay}
-          />
-
           {loadingRooms ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
