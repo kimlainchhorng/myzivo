@@ -807,6 +807,19 @@ export function LodgingBookingDrawer({
               </div>
             )}
 
+            {/* Quick actions */}
+            <div className="grid grid-cols-3 gap-2">
+              <Button variant="outline" size="sm" className="gap-1.5 h-9" onClick={copyRef}>
+                <Copy className="h-3.5 w-3.5" /> Copy ref
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1.5 h-9" onClick={shareBooking}>
+                <Share2 className="h-3.5 w-3.5" /> Share
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1.5 h-9" onClick={openChatWithHost}>
+                <MessageCircle className="h-3.5 w-3.5" /> Chat
+              </Button>
+            </div>
+
             <div className="space-y-2">
               <IcsPreviewPanel
                 defaults={{
