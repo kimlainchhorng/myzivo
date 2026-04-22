@@ -1594,19 +1594,24 @@ export default function AdminStoreEditPage() {
       toast.error("Maximum 8 images allowed");
       return;
     }
+    const prevUrls = currentImages;
+    const prevPrimary = productForm.image_url;
     setUploadingProductImage(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${storeId}/products/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
-      if (upErr) throw upErr;
-      const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
-      const newUrls = [...currentImages, urlData.publicUrl];
+      const { publicUrl } = await uploadStoreAsset({
+        storeId: storeId!,
+        file,
+        surface: "room",
+      });
+      const newUrls = [...currentImages, publicUrl];
       updateProductField("image_urls", newUrls);
       updateProductField("image_url", newUrls[0]); // keep first as primary
       toast.success("Image uploaded");
     } catch (e: any) {
-      toast.error(`Room image upload failed: ${e.message || "unknown error"}`);
+      // Revert preview to last working state
+      updateProductField("image_urls", prevUrls);
+      updateProductField("image_url", prevPrimary);
+      toast.error(e?.message || "Room image upload failed");
     } finally {
       setUploadingProductImage(false);
     }
