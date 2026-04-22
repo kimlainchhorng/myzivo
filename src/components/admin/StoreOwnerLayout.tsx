@@ -11,7 +11,8 @@ import {
   Package, CreditCard, Users, Megaphone, ClipboardList, Settings,
   Wallet, Calendar, Clock, Shield, CalendarCheck, GraduationCap, FolderOpen, Radio,
   FileText, ScanSearch, Wrench, ClipboardCheck, Car,
-  FileSignature, Hammer, HardHat, BellRing, CircleDot, ShieldAlert, Truck, BarChart3
+  FileSignature, Hammer, HardHat, BellRing, CircleDot, ShieldAlert, Truck, BarChart3,
+  BedDouble, CalendarRange, CalendarDays, KeyRound, Sparkles, Hotel
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -116,14 +117,15 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   };
 
   const isAutoRepair = storeCategory === "auto-repair";
-  const productsLabel = isAutoRepair ? "Services" : "Products";
-  const paymentLabel = isAutoRepair ? "Bookings" : "Payment";
+  const isLodging = ["hotel", "resort", "guesthouse"].includes(storeCategory || "");
+  const productsLabel = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
+  const paymentLabel = isAutoRepair ? "Bookings" : isLodging ? "Reservations" : "Payment";
 
   const navItems = [
     { id: "profile", label: "Profile", icon: Store },
     { id: "orders", label: `Orders${orderCount ? ` (${orderCount})` : ""}`, icon: ClipboardList },
-    { id: "products", label: `${productsLabel}${productCount != null ? ` (${productCount})` : ""}`, icon: Package },
-    { id: "payment", label: paymentLabel, icon: isAutoRepair ? Calendar : CreditCard },
+    { id: "products", label: `${productsLabel}${productCount != null ? ` (${productCount})` : ""}`, icon: isLodging ? BedDouble : Package },
+    { id: "payment", label: paymentLabel, icon: isAutoRepair ? Calendar : isLodging ? CalendarRange : CreditCard },
     ...(isAutoRepair ? [
       { id: "ar-invoices", label: "Invoices", icon: FileText },
       { id: "ar-autocheck", label: "Auto Check", icon: ScanSearch },
@@ -139,6 +141,17 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       { id: "ar-warranty", label: "Warranty & Comebacks", icon: ShieldAlert },
       { id: "ar-fleet", label: "Fleet Accounts", icon: Truck },
       { id: "ar-reports", label: "Reports", icon: BarChart3 },
+    ] : []),
+    ...(isLodging ? [
+      { id: "_lodging_ops_label", label: "HOTEL OPS", icon: BedDouble, divider: true },
+      { id: "lodge-rooms", label: "Rooms & Rates", icon: BedDouble },
+      { id: "lodge-reservations", label: "Reservations", icon: CalendarRange },
+      { id: "lodge-calendar", label: "Calendar & Availability", icon: CalendarDays },
+      { id: "lodge-guests", label: "Guests", icon: Users },
+      { id: "lodge-frontdesk", label: "Front Desk", icon: KeyRound },
+      { id: "lodge-housekeeping", label: "Housekeeping", icon: Sparkles },
+      { id: "lodge-amenities", label: "Amenities & Policies", icon: Hotel },
+      { id: "lodge-reports", label: "Reports", icon: BarChart3 },
     ] : []),
     { id: "customers", label: "Customers", icon: Users },
     { id: "marketing", label: "Marketing & Ads", icon: Megaphone },

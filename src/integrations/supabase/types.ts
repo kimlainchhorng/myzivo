@@ -26725,6 +26725,330 @@ export type Database = {
         }
         Relationships: []
       }
+      lodge_amenities: {
+        Row: {
+          amenities: Json | null
+          id: string
+          policies: Json | null
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          amenities?: Json | null
+          id?: string
+          policies?: Json | null
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          amenities?: Json | null
+          id?: string
+          policies?: Json | null
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lodge_guests: {
+        Row: {
+          country: string | null
+          created_at: string
+          email: string | null
+          id: string
+          id_number: string | null
+          last_visit: string | null
+          lifetime_spend_cents: number | null
+          name: string
+          notes: string | null
+          phone: string | null
+          store_id: string
+          total_stays: number | null
+          vip: boolean | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          id_number?: string | null
+          last_visit?: string | null
+          lifetime_spend_cents?: number | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          store_id: string
+          total_stays?: number | null
+          vip?: boolean | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          id_number?: string | null
+          last_visit?: string | null
+          lifetime_spend_cents?: number | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          store_id?: string
+          total_stays?: number | null
+          vip?: boolean | null
+        }
+        Relationships: []
+      }
+      lodge_housekeeping: {
+        Row: {
+          assignee_id: string | null
+          id: string
+          last_cleaned_at: string | null
+          notes: string | null
+          room_id: string
+          room_number: string | null
+          status: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          id?: string
+          last_cleaned_at?: string | null
+          notes?: string | null
+          room_id: string
+          room_number?: string | null
+          status?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          id?: string
+          last_cleaned_at?: string | null
+          notes?: string | null
+          room_id?: string
+          room_number?: string | null
+          status?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lodge_reservation_charges: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          label: string
+          reservation_id: string
+          store_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id?: string
+          label: string
+          reservation_id: string
+          store_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          label?: string
+          reservation_id?: string
+          store_id?: string
+        }
+        Relationships: []
+      }
+      lodge_reservations: {
+        Row: {
+          adults: number | null
+          check_in: string
+          check_out: string
+          children: number | null
+          created_at: string
+          extras_cents: number | null
+          guest_country: string | null
+          guest_email: string | null
+          guest_id: string | null
+          guest_name: string | null
+          guest_phone: string | null
+          id: string
+          id_photo_url: string | null
+          nights: number | null
+          notes: string | null
+          number: string
+          paid_cents: number | null
+          payment_status: string | null
+          rate_cents: number | null
+          room_id: string | null
+          room_number: string | null
+          signature_url: string | null
+          source: string | null
+          status: string
+          store_id: string
+          tax_cents: number | null
+          total_cents: number | null
+          updated_at: string
+        }
+        Insert: {
+          adults?: number | null
+          check_in: string
+          check_out: string
+          children?: number | null
+          created_at?: string
+          extras_cents?: number | null
+          guest_country?: string | null
+          guest_email?: string | null
+          guest_id?: string | null
+          guest_name?: string | null
+          guest_phone?: string | null
+          id?: string
+          id_photo_url?: string | null
+          nights?: number | null
+          notes?: string | null
+          number: string
+          paid_cents?: number | null
+          payment_status?: string | null
+          rate_cents?: number | null
+          room_id?: string | null
+          room_number?: string | null
+          signature_url?: string | null
+          source?: string | null
+          status?: string
+          store_id: string
+          tax_cents?: number | null
+          total_cents?: number | null
+          updated_at?: string
+        }
+        Update: {
+          adults?: number | null
+          check_in?: string
+          check_out?: string
+          children?: number | null
+          created_at?: string
+          extras_cents?: number | null
+          guest_country?: string | null
+          guest_email?: string | null
+          guest_id?: string | null
+          guest_name?: string | null
+          guest_phone?: string | null
+          id?: string
+          id_photo_url?: string | null
+          nights?: number | null
+          notes?: string | null
+          number?: string
+          paid_cents?: number | null
+          payment_status?: string | null
+          rate_cents?: number | null
+          room_id?: string | null
+          room_number?: string | null
+          signature_url?: string | null
+          source?: string | null
+          status?: string
+          store_id?: string
+          tax_cents?: number | null
+          total_cents?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lodge_room_blocks: {
+        Row: {
+          block_date: string
+          created_at: string
+          id: string
+          rate_override_cents: number | null
+          reason: string | null
+          room_id: string
+          store_id: string
+        }
+        Insert: {
+          block_date: string
+          created_at?: string
+          id?: string
+          rate_override_cents?: number | null
+          reason?: string | null
+          room_id: string
+          store_id: string
+        }
+        Update: {
+          block_date?: string
+          created_at?: string
+          id?: string
+          rate_override_cents?: number | null
+          reason?: string | null
+          room_id?: string
+          store_id?: string
+        }
+        Relationships: []
+      }
+      lodge_rooms: {
+        Row: {
+          amenities: string[] | null
+          base_rate_cents: number | null
+          beds: string | null
+          breakfast_included: boolean | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          max_guests: number | null
+          monthly_discount_pct: number | null
+          name: string
+          photos: Json | null
+          room_type: string | null
+          size_sqm: number | null
+          sort_order: number | null
+          store_id: string
+          units_total: number | null
+          updated_at: string
+          weekend_rate_cents: number | null
+          weekly_discount_pct: number | null
+        }
+        Insert: {
+          amenities?: string[] | null
+          base_rate_cents?: number | null
+          beds?: string | null
+          breakfast_included?: boolean | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          max_guests?: number | null
+          monthly_discount_pct?: number | null
+          name: string
+          photos?: Json | null
+          room_type?: string | null
+          size_sqm?: number | null
+          sort_order?: number | null
+          store_id: string
+          units_total?: number | null
+          updated_at?: string
+          weekend_rate_cents?: number | null
+          weekly_discount_pct?: number | null
+        }
+        Update: {
+          amenities?: string[] | null
+          base_rate_cents?: number | null
+          beds?: string | null
+          breakfast_included?: boolean | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          max_guests?: number | null
+          monthly_discount_pct?: number | null
+          name?: string
+          photos?: Json | null
+          room_type?: string | null
+          size_sqm?: number | null
+          sort_order?: number | null
+          store_id?: string
+          units_total?: number | null
+          updated_at?: string
+          weekend_rate_cents?: number | null
+          weekly_discount_pct?: number | null
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           created_at: string
@@ -59562,6 +59886,7 @@ export type Database = {
       is_driver: { Args: { p_user_id?: string }; Returns: boolean }
       is_following: { Args: { target_user_id: string }; Returns: boolean }
       is_hotel_owner: { Args: { _hotel_id: string }; Returns: boolean }
+      is_lodge_store_owner: { Args: { _store_id: string }; Returns: boolean }
       is_rental_car_owner: { Args: { _car_id: string }; Returns: boolean }
       is_restaurant_member: {
         Args: { _restaurant_id: string; _uid: string }
