@@ -1,91 +1,57 @@
 
 
-# Store Profile — Phone verification, resilient analytics & smarter unlock UX
+## Speed Optimization Plan — Web & Mobile App
 
-Five focused refinements on top of the gating + analytics work.
+The app is slow because of heavy upfront work on first paint: too many providers wrapping every route, an external Travelpayouts (`emrld.ltd`) script loading early, the home page rendering 15+ lazy sections (each with its own Suspense + IntersectionObserver) immediately, and large vendor chunks. Here's what I'll fix.
 
-## 1. "Verify phone" step for store owners
+### What you'll notice
+- Home page becomes interactive 1–2 seconds faster
+- Smoother scrolling on the mobile feed/home
+- Lower data usage (fewer scripts on first load)
+- Faster route changes (better prefetch + smaller chunks)
 
-In `LodgingPropertyProfileSection` → Contact card (and the equivalent food-store profile editor):
+### Changes
 
-- Phone input gains a sibling **"Verify phone"** button when `contact.phone` is set but `contact.phone_verified_at` is null.
-- Click → opens a small inline OTP sheet using the existing Twilio Verify flow (`send-otp-sms` + `verify-otp` edge functions, already used by `CountryPhoneInput` for user signup).
-- On success: write `phone_verified_at = now()` to `lodge_property_profile.contact` (jsonb merge) and show an emerald "Verified" pill next to the phone.
-- Customer side (`StoreProfilePage`): `callable = hasBooking && !!contact.phone` (verification not strictly required to display, but the verified pill is shown to customers as a trust signal in the new policy panel).
+**1. Defer the Travelpayouts script (`emrld.ltd`)**
+Currently loaded near page start — it shows up in your session replay before the hero finishes painting. Move it behind `requestIdleCallback` with a 3-second timeout and skip it on Capacitor native + on non-flight pages. Saves ~150–300 ms on LCP.
 
-No new edge functions — reuses existing OTP infra. Migration: none (data lives inside existing `contact` jsonb).
+**2. Trim above-the-fold work on the desktop home (`Index.tsx`)**
+The desktop home renders `LiveTripTracker`, `TrendingNearYou`, `AISmartDeals`, `DesktopHotDeals`, `PriceAlertsWidget` PLUS 12 below-fold sections — all with their own Suspense wrappers. I'll:
+- Keep only `HeroSection`, `HeroSearchCard`, `ServicesShowcase`, `StatsSection` eager
+- Wrap the rest behind `LazySection` with `rootMargin: "200px"` so they load just-in-time, not eagerly
+- Remove duplicated padding wrappers that trigger extra layout passes
 
-## 2. Session-scoped unlock flag (replaces module Set)
+**3. Mobile home (`AppHome` / `DriverHomePage`)**
+Add `content-visibility: auto` to off-screen card sections so the browser skips rendering work until they scroll near. Big win on low-end Android.
 
-Today `store_contact_unlocked` uses a module-scope `Set<string>` which resets on HMR / route remount and double-fires.
+**4. Bundle splitting (`vite.config.ts`)**
+- Split `vendor-radix` (currently one fat chunk with 8 packages) into 2 chunks: dialogs/popovers vs. the rest
+- Add `lucide-react` to its own chunk so icons cache separately and don't re-download on every deploy
+- Add `vendor-query` for `@tanstack/react-query`
 
-Replace with `sessionStorage`:
+**5. Route prefetch tuning (`RoutePrefetcher.tsx`)**
+- Remove the auto-prefetch of `/flights /hotels /cars` after 2 s on homepage (it competes for bandwidth with hero images). Keep prefetch only on hover/focus of nav links.
+- Add prefetch for `/feed` (the desktop redirect target) on auth resolve.
 
-```ts
-const key = `zivo:unlock_fired:${storeId}`;
-if (!sessionStorage.getItem(key)) {
-  track('store_contact_unlocked', {...});
-  sessionStorage.setItem(key, '1');
-}
-```
+**6. React Query defaults**
+Set `staleTime: 60_000` and `refetchOnWindowFocus: false` globally — currently every focus triggers refetches across all hooks, causing the "feels slow" jank when switching tabs.
 
-- Survives HMR and component remounts within the tab session.
-- Naturally resets when the tab closes (matches "once per browser session" intent).
-- Wrapped in `try/catch` for Safari private mode.
+**7. Image optimization**
+- Add `loading="lazy"` and `decoding="async"` to all home-section `<img>` tags missing them
+- Add `fetchpriority="high"` to the single hero LCP image only
 
-## 3. Analytics offline fallback + flush-on-online
+**8. Drop unused providers on auth-only routes**
+`CurrencyProvider`, `CustomerCityProvider`, `BrandProvider`, `ZivoPlusProvider`, `RemoteConfigProvider` all run on every route including `/login`. I'll keep them at the root but make their initial fetches `enabled: !!user` so unauthenticated users don't wait on profile/brand/remote-config queries.
 
-Extend `src/lib/analytics.ts`:
+### Files I'll edit
+- `index.html` — defer emrld.ltd, fix script ordering
+- `src/pages/Index.tsx` — wrap power sections in LazySection
+- `src/pages/driver/DriverHomePage.tsx` + `src/pages/app/AppHome.tsx` — content-visibility
+- `vite.config.ts` — chunk splits
+- `src/components/shared/RoutePrefetcher.tsx` — remove eager prefetch
+- `src/App.tsx` — query client defaults, gated provider fetches
+- 4–6 home section components — image attributes
 
-- On insert failure (catch + `.then(_, onErr)`), push the event to `localStorage` under key `zivo:analytics_queue` (capped at 200 events; oldest dropped).
-- Add a one-time `flushQueue()` helper invoked:
-  - On module load (covers reload after offline).
-  - On `window.addEventListener('online', …)`.
-  - On every successful insert (lazy drain — try up to 25 queued at a time).
-- Each queued event keeps its original `created_at`, plus `flushed_at` set on retry success.
-- Never throws; queue ops are wrapped in `try/catch`.
-
-## 4. Tooltip reasoning on the locked CTA
-
-`StoreProfilePage`'s "Complete a booking to unlock chat" button gains a `Tooltip`:
-
-- Default copy: "Live Chat & Call Store unlock after a confirmed booking at this store."
-- When `useHasStoreBooking` returns `source` from a *different* store (we already know the user has SOME bookings in app state): copy adapts → "Your other bookings don't qualify — you need a confirmed reservation **here**."
-- For lodge stores: "Confirmed reservation required (lodge_reservation)."
-- For food stores: "Completed order required (food_order)."
-
-The store type is derived from `store.kind` (`lodge` vs `food`) which is already on the loaded store object. Uses existing `@/components/ui/tooltip`.
-
-## 5. Unique `event_id` on contact actions
-
-- Add `event_id: crypto.randomUUID()` to every `track()` call automatically — extend `analytics.ts` so all events get a stable id (used downstream for dedupe in BigQuery / SQL views).
-- `store_contact_action` specifically: also include a `click_nonce` generated per render of the buttons, so a double-click within the same render shares a nonce (analytics dedupes on `nonce`), but a deliberate second click after re-render gets a new one.
-
-```ts
-track('store_contact_action', {
-  store_id,
-  channel: 'call',
-  click_nonce: nonceRef.current,
-});
-```
-
-`nonceRef` is reset whenever `hasBooking` flips or the store id changes.
-
-## File map
-
-**Modified**
-- `src/lib/analytics.ts` — add `event_id`, localStorage queue, `flushQueue`, `online` listener.
-- `src/hooks/useHasStoreBooking.ts` — already returns `source`; no change unless we also surface a `hasAnyBooking` flag (added: lightweight extra query without `store_id` filter, cached 5 min, used only for tooltip copy).
-- `src/pages/StoreProfilePage.tsx` — sessionStorage unlock guard, tooltip on locked CTA, `click_nonce` on contact actions, "Verified" pill in policy panel.
-- `src/components/admin/store/lodging/property-profile/ContactCard.tsx` — "Verify phone" button + inline OTP sheet, writes `phone_verified_at`.
-- `src/hooks/lodging/useLodgePropertyProfile.ts` — extend `contact` jsonb type with optional `phone_verified_at: string | null`.
-
-**No migration. No new edge functions. No new dependencies.**
-
-## Notes
-
-- All UI keeps v2026 high-density tokens (`text-[11px]`, `rounded-xl`, emerald semantic, Lucide-only).
-- Analytics queue is bounded (200 events) and silently drops oldest — no risk of localStorage bloat.
-- OTP reuse means store owners verify with the same SMS infra used elsewhere; rate limits already enforced (5 SMS/day per number).
-- `event_id` is generated client-side; if the analytics table doesn't have an `event_id` column yet, the helper writes it inside the `properties` jsonb instead — zero schema change required.
+### Out of scope
+No visual/layout changes. No removed features. No backend changes.
 
