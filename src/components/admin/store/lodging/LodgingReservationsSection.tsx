@@ -1,12 +1,14 @@
 /**
  * Lodging — Reservations list with status filter & quick actions.
+ * Tapping a row opens the full reservation details page.
  */
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle } from "lucide-react";
+import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle, ChevronRight } from "lucide-react";
 import { useLodgeReservations, type ReservationStatus } from "@/hooks/lodging/useLodgeReservations";
 import { toast } from "sonner";
 
@@ -20,6 +22,7 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "dest
 };
 
 export default function LodgingReservationsSection({ storeId }: { storeId: string }) {
+  const navigate = useNavigate();
   const [status, setStatus] = useState<ReservationStatus | "all">("all");
   const [q, setQ] = useState("");
   const { data: reservations = [], isLoading, setStatus: setResStatus } = useLodgeReservations(storeId, status);
@@ -66,23 +69,32 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
           <div className="space-y-2">
             {filtered.map(r => (
               <div key={r.id} className="p-3 rounded-lg border bg-card">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-sm">{r.guest_name || "Guest"}</span>
-                      <Badge variant={STATUS_VARIANT[r.status] || "outline"} className="text-[10px]">{STATUS_LABEL[r.status]}</Badge>
-                      <span className="text-[10px] text-muted-foreground font-mono">{r.number}</span>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/admin/stores/${storeId}/lodging/reservations/${r.id}`)}
+                  className="w-full text-left"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-sm">{r.guest_name || "Guest"}</span>
+                        <Badge variant={STATUS_VARIANT[r.status] || "outline"} className="text-[10px]">{STATUS_LABEL[r.status]}</Badge>
+                        <span className="text-[10px] text-muted-foreground font-mono">{r.number}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {r.check_in} → {r.check_out} · {r.nights} night{r.nights !== 1 ? "s" : ""} · {r.adults}A{r.children ? `/${r.children}C` : ""}
+                      </p>
+                      {r.guest_phone && <p className="text-[11px] text-muted-foreground mt-0.5">{r.guest_phone}</p>}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {r.check_in} → {r.check_out} · {r.nights} night{r.nights !== 1 ? "s" : ""} · {r.adults}A{r.children ? `/${r.children}C` : ""}
-                    </p>
-                    {r.guest_phone && <p className="text-[11px] text-muted-foreground mt-0.5">{r.guest_phone}</p>}
+                    <div className="text-right shrink-0 flex items-center gap-1">
+                      <div>
+                        <p className="font-bold text-sm">${(r.total_cents / 100).toFixed(2)}</p>
+                        <p className="text-[10px] text-muted-foreground capitalize">{r.payment_status}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-bold text-sm">${(r.total_cents / 100).toFixed(2)}</p>
-                    <p className="text-[10px] text-muted-foreground capitalize">{r.payment_status}</p>
-                  </div>
-                </div>
+                </button>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {r.status === "hold" && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "confirmed", "Confirmed")}><CheckCircle2 className="h-3 w-3" /> Confirm</Button>}
                   {(r.status === "confirmed" || r.status === "hold") && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "checked_in", "Checked in")}><LogIn className="h-3 w-3" /> Check-In</Button>}
