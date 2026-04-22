@@ -19,16 +19,35 @@ export type StoreCategory =
   | "fashion"
   | "restaurant"
   | "drink"
+  | "cafe"
+  | "bakery"
   | "mall"
   | "supermarket"
+  | "convenience"
+  | "hotel"
+  | "resort"
+  | "guesthouse"
   | "car-rental"
   | "car-dealership"
   | "auto-repair"
   | "tire-shop"
   | "auto-parts"
+  | "gas-station"
   | "salon"
+  | "spa"
+  | "gym"
+  | "laundry"
   | "electronics"
   | "pharmacy"
+  | "hardware"
+  | "florist"
+  | "bookstore"
+  | "jewelry"
+  | "pet-shop"
+  | "toys"
+  | "furniture"
+  | "home-decor"
+  | "sporting-goods"
   | "other";
 
 export const STORE_CATEGORY_OPTIONS: { value: StoreCategory; label: string }[] = [
@@ -37,16 +56,35 @@ export const STORE_CATEGORY_OPTIONS: { value: StoreCategory; label: string }[] =
   { value: "fashion", label: "Fashion Market" },
   { value: "restaurant", label: "Restaurant" },
   { value: "drink", label: "Drink" },
+  { value: "cafe", label: "Coffee Shop / Café" },
+  { value: "bakery", label: "Bakery" },
   { value: "mall", label: "Mall" },
   { value: "supermarket", label: "Supermarket" },
+  { value: "convenience", label: "Convenience Store" },
+  { value: "hotel", label: "Hotel" },
+  { value: "resort", label: "Resort" },
+  { value: "guesthouse", label: "Guesthouse / B&B" },
   { value: "car-rental", label: "Rental Car" },
   { value: "car-dealership", label: "Car Dealership" },
   { value: "auto-repair", label: "Auto Repair" },
   { value: "tire-shop", label: "Tire Shop" },
   { value: "auto-parts", label: "Auto Parts" },
-  { value: "salon", label: "Salon" },
+  { value: "gas-station", label: "Gas Station" },
+  { value: "salon", label: "Salon / Barber" },
+  { value: "spa", label: "Spa & Massage" },
+  { value: "gym", label: "Gym & Fitness" },
+  { value: "laundry", label: "Laundry & Dry Clean" },
   { value: "electronics", label: "Electronics" },
   { value: "pharmacy", label: "Pharmacy" },
+  { value: "hardware", label: "Hardware Store" },
+  { value: "florist", label: "Florist" },
+  { value: "bookstore", label: "Bookstore" },
+  { value: "jewelry", label: "Jewelry" },
+  { value: "pet-shop", label: "Pet Shop" },
+  { value: "toys", label: "Toy Store" },
+  { value: "furniture", label: "Furniture" },
+  { value: "home-decor", label: "Home Decor" },
+  { value: "sporting-goods", label: "Sporting Goods" },
   { value: "other", label: "Other" },
 ];
 
