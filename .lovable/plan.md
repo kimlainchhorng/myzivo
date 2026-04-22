@@ -1,95 +1,62 @@
 
 
-# Property Profile — Booking.com-grade overhaul + completeness meter
+# Store Profile — Unlock gating polish, analytics & richer matching
 
-The RLS save bug is already fixed at the database layer (verified in `pg_policy`). What's missing is a polished, dense, client-friendly editor for Property Profile to match the new Amenities section. This plan also adds fields the form is missing today (check-in/out, deposits, pet policy, child policy, cancellation policy, contact, etc.) so the store profile is truly Booking-grade.
+Five focused refinements to the Call Store / Live Chat gating added in the last round.
 
-## 1. Friendlier section header + completeness meter
+## 1. Analytics events on unlock
 
-Top of `LodgingPropertyProfileSection.tsx`:
+When `hasBooking` flips from `undefined → true` for a given store, fire two events via the existing analytics helper (`@/lib/analytics` — already used elsewhere for `track('reel_view', …)`):
 
-- Sticky header strip with:
-  - Title "Property Profile" + sub-line "Make your storefront irresistible. Updates publish instantly."
-  - **Completeness meter** — circular progress (0–100%) computed from 12 weighted fields (hero badges 10, included 10, languages 8, facilities 12, meals 6, house rules 12, accessibility 8, sustainability 6, nearby 10, check-in/out 8, contact 6, policies 4). Shows pill: `78% complete · 3 sections to finish`.
-  - Live save indicator: `Saved · 2m ago` / `Unsaved changes` / `Saving…`.
-- Replaces the raw bottom-only Save button with a **sticky footer save bar** (mirrors the Amenities pattern) that appears only when `dirty` is true.
+- `store_contact_unlocked` — `{ store_id, store_type: 'lodge'|'food', source: 'lodge_reservation'|'food_order' }`
+- `store_contact_action` — fired on actual click: `{ store_id, channel: 'call'|'chat' }`
 
-## 2. Reorganized sections (collapsible accordion + search)
+Implementation: extend `useHasStoreBooking` to return `{ hasBooking, source }` (which table matched), and add a `useEffect` in `StoreProfilePage` that fires `store_contact_unlocked` once per session per store (guarded by a `Set` in module scope so re-renders don't double-fire).
 
-Current page is a long scroll of 9 cards with no grouping. Rework into 4 collapsible groups, each opens by default if incomplete:
+## 2. Hide Call Store when there is no phone number
 
-1. **Storefront essentials** — Hero badges · Included highlights · Languages
-2. **Facilities & dining** — Property facilities · Meal plans
-3. **Stay rules & policies** — Check-in/out windows · House rules · Cancellation policy · Pet policy · Child policy
-4. **Trust & location** — Accessibility · Sustainability · Nearby · Contact
+Today both buttons render together. Update `StoreProfilePage`:
 
-Sticky search bar above the accordion filters chips/labels across all groups (matches Amenities UX).
+- `const callable = hasBooking && !!(store?.phone || store?.contact?.phone)`
+- `const chattable = hasBooking` (unchanged)
+- Render Call Store only when `callable`; Live Chat only when `chattable`. If `hasBooking` is true but no phone exists, show a tiny muted helper line under Live Chat: "This store hasn't shared a phone number."
 
-## 3. Expanded data model (NEW fields)
+## 3. Skeleton loading states
 
-Add to `lodge_property_profile` (migration):
+While `useHasStoreBooking` is `isLoading`, render `<Skeleton className="h-9 w-28 rounded-xl" />` placeholders in place of the two buttons (using the existing `@/components/ui/skeleton`). Prevents the buttons from "popping in" after the booking check resolves.
 
-- `check_in_from text` (e.g. "15:00"), `check_in_until text`, `check_out_from text`, `check_out_until text`
-- `cancellation_policy text` (free text; one of templated presets via UI)
-- `cancellation_window_hours int` (e.g. 48)
-- `pet_policy jsonb` — `{ allowed: bool, fee_cents: int, max_weight_kg: int, notes: text }`
-- `child_policy jsonb` — `{ allowed: bool, min_age: int, cot_available: bool, extra_bed_fee_cents: int, notes: text }`
-- `contact jsonb` — `{ phone, email, whatsapp, website, emergency_phone }`
-- `payment_methods text[]` — `["card","cash","aba","bank_transfer"]`
-- `currencies_accepted text[]` — `["USD","KHR","THB"]`
-- `deposit_required boolean default false` + `deposit_percent int` (0–100)
+## 4. Richer hasBooking matching
 
-Extend `LodgePropertyProfile` TS interface and `EMPTY` defaults in `useLodgePropertyProfile.ts`.
+Extend `useHasStoreBooking` to widen the match surface so legitimate guests aren't locked out by email-case or alias mismatches:
 
-## 4. UI upgrades per section
+- **Lodge**: match on ANY of:
+  - `guest_user_id = auth.uid()` (new, primary)
+  - `guest_email ILIKE auth_email`
+  - `guest_email ILIKE any (profile.alt_emails)` if the `profiles` row exposes alternate emails (best-effort; skip silently if column missing)
+- **Food**: keep `user_id = auth.uid()`, plus add `customer_email ILIKE auth_email` fallback for guest-checkout orders.
+- All four sub-queries run in parallel via `Promise.allSettled` so one failing branch (e.g. column doesn't exist on a fork) doesn't break the whole check. Return the first matching `source` for analytics.
 
-- **Hero badges**: cap at 3 visible on the storefront with live preview pill ("Visible: Beachfront · Free cancellation · Eco-stay").
-- **Included highlights**: drag-to-reorder (uses native HTML5 drag, no new deps), max 6 enforced with a counter chip `4/6`.
-- **House rules**: time pickers (native `type="time"`) for quiet hours start/end; switches grouped into a 2-col grid; `Security deposit` shows the converted KHR amount (`1 USD = 4,062.5 KHR`) inline.
-- **Check-in/out**: 4 time pickers in a 2x2 grid + "Same as standard (15:00 / 11:00)" quick-fill button.
-- **Cancellation policy**: 4 preset cards (Flexible / Moderate / Strict / Non-refundable) → click selects + auto-fills the window; advanced text override below.
-- **Pet & Child policies**: each a compact row with allowed switch → reveals extra fields only when allowed.
-- **Nearby**: distance row gains a small icon picker (walk/drive/boat) shown as Lucide chips instead of `<select>`; reorderable; auto-validates label is non-empty before save.
-- **Contact**: 5 inputs (phone, email, whatsapp, website, emergency phone) with inline validation; phone uses `CountryPhoneInput` component already in the codebase.
-- **Payment methods & currencies**: chip groups.
+Schema note: `lodge_reservations.guest_user_id` already exists in this project — verified via the existing reservation create flow. No migration needed.
 
-## 5. Validation, autosave hint, error UX
+## 5. "Complete your booking to unlock chat" CTA
 
-- Inline field-level validation (red ring + helper text) for: invalid email, malformed time, negative deposit, child min-age out of range.
-- On save:
-  - Friendly toast already in place — keep RLS-specific error message for safety.
-  - On success, header pill flashes "Saved" with a check icon for 2s.
-- Block save while validation errors exist; the sticky bar shows `2 fields need fixing` instead of disabling silently.
-- Detect `dirty` via deep-equal vs server snapshot; warn on tab close (`beforeunload`) when dirty.
+When `!isLoading && !hasBooking`:
 
-## 6. Guest-side reflection
-
-- `LodgingHighlightsStrip.tsx` extended to surface check-in/out times and cancellation policy summary.
-- New `LodgingPolicyPanel.tsx` rendered on `StoreProfilePage` between rooms and amenities — clean Booking-style grid: Check-in window · Check-out window · Cancellation · Pets · Children · Payment methods · Languages.
+- Replace the current grey notice with a single emerald outline button: `<Button variant="outline" onClick={() => navigate('/account/bookings')}>Complete a booking to unlock chat</Button>`
+- Below it, a tiny muted line: "Already booked? Make sure you used the same account email." with a `<Link to="/account/bookings">View my bookings</Link>` for direct deep-link.
+- Route confirmed: `/account/bookings` is the canonical bookings list (used by `useBookingHistory`).
 
 ## File map
 
-**Created**
-- `src/components/admin/store/lodging/PropertyCompletenessMeter.tsx`
-- `src/components/admin/store/lodging/property-profile/CheckInOutCard.tsx`
-- `src/components/admin/store/lodging/property-profile/CancellationPolicyCard.tsx`
-- `src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx`
-- `src/components/admin/store/lodging/property-profile/ContactCard.tsx`
-- `src/components/lodging/LodgingPolicyPanel.tsx` — guest-side policy summary.
-
 **Modified**
-- `src/components/admin/store/lodging/LodgingPropertyProfileSection.tsx` — full rewrite (accordion, search, sticky save, completeness meter, validation).
-- `src/hooks/lodging/useLodgePropertyProfile.ts` — extended interface, EMPTY defaults, dirty/diff helper.
-- `src/components/lodging/LodgingHighlightsStrip.tsx` — show check-in/out.
-- `src/pages/StoreProfilePage.tsx` — render `<LodgingPolicyPanel/>`.
+- `src/hooks/useHasStoreBooking.ts` — return `{ hasBooking, source, isLoading }`; add `guest_user_id` + `customer_email` fallbacks via `Promise.allSettled`.
+- `src/pages/StoreProfilePage.tsx` — skeletons, phone-aware Call Store gate, analytics fire, replacement CTA.
 
-**Migration**
-- Add the 11 new columns/fields to `lodge_property_profile` with safe defaults; backfill `check_in_from='15:00'`, `check_out_until='11:00'` for existing rows.
+**No new files, no migration, no new dependencies.**
 
 ## Notes
 
-- RLS save bug already resolved (verified) — saves to `lodge_property_profile` succeed end-to-end now.
-- All UI keeps v2026 high-density tokens (`text-[11px]`, `rounded-xl`, semantic colors, Lucide-only icons).
-- No new npm dependencies; native HTML5 drag-and-drop for reordering.
-- Guest-side `LodgingPolicyPanel` reads new fields if present, hides cleanly when empty.
+- v2026 high-density tokens preserved (`text-[11px]`, `rounded-xl`, emerald semantic).
+- Analytics fires once per (session, store) — avoids inflated counts on re-mount.
+- `Promise.allSettled` keeps the hook resilient to schema drift across forks/environments.
 
