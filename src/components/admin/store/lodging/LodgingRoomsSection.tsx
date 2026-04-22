@@ -252,8 +252,45 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                     {ROOM_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
-                <div><Label>Beds</Label><Input value={editing.beds || ""} onChange={e => setEditing({ ...editing, beds: e.target.value })} placeholder="1 King" /></div>
+                <div>
+                  <Label>View</Label>
+                  <select value={editing.view || ""} onChange={e => setEditing({ ...editing, view: e.target.value || null })}
+                    className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                    {VIEW_OPTIONS.map(v => <option key={v} value={v}>{v || "— none —"}</option>)}
+                  </select>
+                </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Floor</Label><Input value={editing.floor || ""} onChange={e => setEditing({ ...editing, floor: e.target.value || null })} placeholder="2nd floor" /></div>
+                <div><Label>Wing / Building</Label><Input value={editing.wing || ""} onChange={e => setEditing({ ...editing, wing: e.target.value || null })} placeholder="Garden wing" /></div>
+              </div>
+
+              {/* Bed config builder */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label>Bed configuration</Label>
+                  {(editing.bed_config && editing.bed_config.length > 0) && (
+                    <span className="text-[10px] text-muted-foreground">
+                      {bedConfigSummary(editing.bed_config)} · sleeps ~{bedConfigSleeps(editing.bed_config)}
+                    </span>
+                  )}
+                </div>
+                <BedConfigBuilder
+                  value={editing.bed_config || []}
+                  onChange={(next) => {
+                    const summary = bedConfigSummary(next);
+                    const sleeps = bedConfigSleeps(next);
+                    setEditing({
+                      ...editing,
+                      bed_config: next,
+                      beds: summary || editing.beds,
+                      max_guests: sleeps > 0 ? Math.max(editing.max_guests || 1, sleeps) : editing.max_guests,
+                    });
+                  }}
+                />
+              </div>
+
               <div className="grid grid-cols-3 gap-3">
                 <div><Label>Max guests</Label><Input type="number" inputMode="numeric" value={editing.max_guests ?? ""} onChange={e => setEditing({ ...editing, max_guests: e.target.value === "" ? null : parseInt(e.target.value) })} /></div>
                 <div><Label>Size m²</Label><Input type="number" inputMode="decimal" value={editing.size_sqm ?? ""} onChange={e => setEditing({ ...editing, size_sqm: e.target.value === "" ? null : parseFloat(e.target.value) })} /></div>
@@ -266,6 +303,76 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Weekly discount %</Label><Input type="number" inputMode="decimal" value={editing.weekly_discount_pct ?? ""} onChange={e => setEditing({ ...editing, weekly_discount_pct: e.target.value === "" ? null : parseFloat(e.target.value) })} /></div>
                 <div><Label>Monthly discount %</Label><Input type="number" inputMode="decimal" value={editing.monthly_discount_pct ?? ""} onChange={e => setEditing({ ...editing, monthly_discount_pct: e.target.value === "" ? null : parseFloat(e.target.value) })} /></div>
+              </div>
+
+              {/* Tax & fee breakdown */}
+              <div className="rounded-lg border border-dashed border-border p-3 space-y-2 bg-muted/10">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Taxes & fees (shown to guest at checkout)</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <FeeInput label="City tax / guest / night (USD)" value={editing.fees?.city_tax_cents}
+                    onChange={(v) => setEditing({ ...editing, fees: { ...(editing.fees as RoomFees || {}), city_tax_cents: v } })} />
+                  <FeeInput label="Resort fee / night (USD)" value={editing.fees?.resort_fee_cents}
+                    onChange={(v) => setEditing({ ...editing, fees: { ...(editing.fees as RoomFees || {}), resort_fee_cents: v } })} />
+                  <FeeInput label="Cleaning fee / stay (USD)" value={editing.fees?.cleaning_fee_cents}
+                    onChange={(v) => setEditing({ ...editing, fees: { ...(editing.fees as RoomFees || {}), cleaning_fee_cents: v } })} />
+                  <PctInput label="Service charge %" value={editing.fees?.service_charge_pct}
+                    onChange={(v) => setEditing({ ...editing, fees: { ...(editing.fees as RoomFees || {}), service_charge_pct: v } })} />
+                  <PctInput label="VAT %" value={editing.fees?.vat_pct}
+                    onChange={(v) => setEditing({ ...editing, fees: { ...(editing.fees as RoomFees || {}), vat_pct: v } })} />
+                </div>
+              </div>
+
+              {/* Children & extra-guest policy */}
+              <div className="rounded-lg border border-dashed border-border p-3 space-y-2 bg-muted/10">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Children & extra guests</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs">Child max age</Label>
+                    <Input type="number" inputMode="numeric" value={editing.child_policy?.child_max_age ?? ""}
+                      onChange={e => setEditing({ ...editing, child_policy: { ...(editing.child_policy as ChildPolicy || {}), child_max_age: e.target.value === "" ? undefined : parseInt(e.target.value) } })} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Free under age</Label>
+                    <Input type="number" inputMode="numeric" value={editing.child_policy?.free_age ?? ""}
+                      onChange={e => setEditing({ ...editing, child_policy: { ...(editing.child_policy as ChildPolicy || {}), free_age: e.target.value === "" ? undefined : parseInt(e.target.value) } })} />
+                  </div>
+                  <FeeInput label="Extra adult / night (USD)" value={editing.child_policy?.extra_adult_fee_cents}
+                    onChange={(v) => setEditing({ ...editing, child_policy: { ...(editing.child_policy as ChildPolicy || {}), extra_adult_fee_cents: v } })} />
+                  <FeeInput label="Extra child / night (USD)" value={editing.child_policy?.extra_child_fee_cents}
+                    onChange={(v) => setEditing({ ...editing, child_policy: { ...(editing.child_policy as ChildPolicy || {}), extra_child_fee_cents: v } })} />
+                </div>
+              </div>
+
+              {/* Min / max stay rules */}
+              <div className="rounded-lg border border-dashed border-border p-3 space-y-2 bg-muted/10">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Stay rules</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><Label className="text-xs">Min nights</Label><Input type="number" inputMode="numeric" min={1} value={editing.min_stay ?? 1}
+                    onChange={e => setEditing({ ...editing, min_stay: Math.max(1, parseInt(e.target.value) || 1) })} /></div>
+                  <div><Label className="text-xs">Max nights</Label><Input type="number" inputMode="numeric" value={editing.max_stay ?? ""}
+                    onChange={e => setEditing({ ...editing, max_stay: e.target.value === "" ? null : parseInt(e.target.value) })} placeholder="No limit" /></div>
+                </div>
+                <div>
+                  <Label className="text-xs">No arrivals on</Label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {WEEKDAYS.map((wd, i) => {
+                      const on = (editing.no_arrival_weekdays || []).includes(i);
+                      return (
+                        <button
+                          key={wd}
+                          type="button"
+                          onClick={() => {
+                            const cur = editing.no_arrival_weekdays || [];
+                            setEditing({ ...editing, no_arrival_weekdays: on ? cur.filter(x => x !== i) : [...cur, i] });
+                          }}
+                          className={`px-2.5 py-1 rounded-full text-xs border transition ${on ? "bg-destructive/10 text-destructive border-destructive/40" : "bg-background border-border text-muted-foreground hover:border-primary/40"}`}
+                        >
+                          {wd}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
