@@ -154,8 +154,67 @@ export default function StoreAdsManager({ storeId }: Props) {
       });
       if (error) throw error;
       if (!data?.authorize_url) throw new Error("No authorize URL returned");
-      window.location.href = data.authorize_url;
+
+      // Open OAuth in popup and poll for the resulting account row
+      const popup = window.open(
+        data.authorize_url,
+        "ads-oauth",
+        "width=600,height=700,menubar=no,toolbar=no"
+      );
+      if (!popup) {
+        // Popup blocked — fallback to redirect
+        window.location.href = data.authorize_url;
+        return;
+      }
+
+      const start = Date.now();
+      const platformsToMatch = platform === "instagram" ? ["meta", "instagram"] : [platform];
+      return new Promise<void>((resolve, reject) => {
+        const timer = setInterval(async () => {
+          if (popup.closed) {
+            clearInterval(timer);
+            invalidate();
+            resolve();
+            return;
+          }
+          if (Date.now() - start > 120_000) {
+            clearInterval(timer);
+            try { popup.close(); } catch { /* noop */ }
+            reject(new Error("OAuth timeout — try again"));
+            return;
+          }
+          const { data: rows } = await supabase
+            .from("store_ad_accounts" as any)
+            .select("id, platform, status, display_name")
+            .eq("store_id", storeId)
+            .in("platform", platformsToMatch)
+            .eq("status", "connected")
+            .order("connected_at", { ascending: false })
+            .limit(1);
+          if (rows && rows.length) {
+            clearInterval(timer);
+            try { popup.close(); } catch { /* noop */ }
+            const acc: any = rows[0];
+            toast.success(`Connected as ${acc.display_name || acc.platform}`);
+            invalidate();
+            setConnectPlatform(null);
+            resolve();
+          }
+        }, 2000);
+      });
     },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const archiveCampaign = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("store_ad_campaigns" as any)
+        .update({ status: "archived", archived_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); toast.success("Campaign archived"); },
     onError: (e: any) => toast.error(e.message),
   });
 
