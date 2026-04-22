@@ -2682,27 +2682,54 @@ export default function AdminStoreEditPage() {
                         const updated = { ...schedule, [day]: { ...schedule[day], [field]: value } };
                         updateField("hours", JSON.stringify(updated));
                       };
-                      return DAYS.map((day, idx) => (
-                        <div key={day} className={`flex items-center gap-2 px-3 py-2 ${idx > 0 ? "border-t border-border" : ""} ${schedule[day]?.closed ? "bg-muted/50" : ""}`}>
-                          <span className="w-10 text-xs font-medium flex-shrink-0">{DAY_LABELS[day]}</span>
-                          <Switch checked={!schedule[day]?.closed} onCheckedChange={(open) => updateDay(day, "closed", !open)} className="scale-75" />
-                          {schedule[day]?.closed ? (
-                            <span className="text-xs text-muted-foreground italic">Closed</span>
-                          ) : (
-                            <div className="flex items-center gap-1 flex-1">
-                              <select value={schedule[day]?.open || "8:00 AM"} onChange={e => updateDay(day, "open", e.target.value)}
-                                className="flex h-8 rounded-md border border-input bg-background px-1.5 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                                {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                              </select>
-                              <span className="text-xs text-muted-foreground">to</span>
-                              <select value={schedule[day]?.close || "5:00 PM"} onChange={e => updateDay(day, "close", e.target.value)}
-                                className="flex h-8 rounded-md border border-input bg-background px-1.5 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                                {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                              </select>
-                            </div>
-                          )}
-                        </div>
-                      ));
+                      const setAll24h = () => {
+                        const updated = Object.fromEntries(DAYS.map(d => [d, { open: "12:00 AM", close: "11:59 PM", closed: false, is24h: true }]));
+                        updateField("hours", JSON.stringify({ ...((() => { try { return JSON.parse(form.hours) || {}; } catch { return {}; } })()), ...updated }));
+                      };
+                      return (
+                        <>
+                          <div className="flex items-center justify-between gap-2 px-3 py-2 bg-muted/30 border-b border-border">
+                            <span className="text-xs text-muted-foreground">Quick set</span>
+                            <Button type="button" size="sm" variant="outline" className="h-7 text-[11px]" onClick={setAll24h}>
+                              <Clock className="w-3 h-3 mr-1" /> Open 24/7
+                            </Button>
+                          </div>
+                          {DAYS.map((day, idx) => {
+                            const is24h = (schedule[day] as any)?.is24h;
+                            return (
+                              <div key={day} className={`flex items-center gap-2 px-3 py-2 border-t border-border ${schedule[day]?.closed ? "bg-muted/50" : ""}`}>
+                                <span className="w-10 text-xs font-medium flex-shrink-0">{DAY_LABELS[day]}</span>
+                                <Switch checked={!schedule[day]?.closed} onCheckedChange={(open) => updateDay(day, "closed", !open)} className="scale-75" />
+                                {schedule[day]?.closed ? (
+                                  <span className="text-xs text-muted-foreground italic">Closed</span>
+                                ) : is24h ? (
+                                  <div className="flex items-center gap-2 flex-1">
+                                    <span className="text-xs font-medium text-emerald-600">Open 24 hours</span>
+                                    <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-[10px] ml-auto" onClick={() => updateDay(day, "is24h", false)}>
+                                      Set hours
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1 flex-1">
+                                    <select value={schedule[day]?.open || "8:00 AM"} onChange={e => updateDay(day, "open", e.target.value)}
+                                      className="flex h-8 rounded-md border border-input bg-background px-1.5 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                    <span className="text-xs text-muted-foreground">to</span>
+                                    <select value={schedule[day]?.close || "5:00 PM"} onChange={e => updateDay(day, "close", e.target.value)}
+                                      className="flex h-8 rounded-md border border-input bg-background px-1.5 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                    <Button type="button" size="sm" variant="ghost" className="h-6 px-1.5 text-[10px]" onClick={() => updateDay(day, "is24h", true)}>
+                                      24h
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </>
+                      );
                     })()}
                   </div>
                   {/* Live status preview — verifies hours parse correctly */}
