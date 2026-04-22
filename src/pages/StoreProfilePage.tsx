@@ -700,6 +700,8 @@ export default function StoreProfilePage() {
 
           {propertyProfile && <LodgingHighlightsStrip profile={propertyProfile} />}
 
+          <LodgingAmenitiesPanel storeId={store!.id} />
+
           <LodgingStaySelector
             checkIn={stay.checkIn} checkOut={stay.checkOut}
             adults={stay.adults} children={stay.children}
