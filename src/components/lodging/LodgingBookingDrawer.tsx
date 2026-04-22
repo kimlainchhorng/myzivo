@@ -365,6 +365,7 @@ export function LodgingBookingDrawer({
       setAgreeRules(false); setAgreeCancel(false); setPayMethod("pay_at_property");
       setGuestTouched({}); setPolicyScrolled(false); setPolicyOverflows(false);
       setViewedRulesSource(false); setViewedCancelSource(false);
+      setRulesViewedAt(null); setCancelViewedAt(null);
     }
     onClose();
   };
@@ -648,12 +649,12 @@ export function LodgingBookingDrawer({
               </div>
             </div>
 
-            {/* Conflict banner (live re-check) */}
+            {/* Conflict reason panel (live re-check) */}
             {conflictDetected && (
-              <div className="flex items-start gap-2 p-3 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 text-xs font-medium">
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                <p>These dates are no longer available — please pick new dates.</p>
-              </div>
+              <ConflictReasonPanel
+                conflicts={conflictRows}
+                onPickNewDates={() => setStep("stay")}
+              />
             )}
 
             {/* Consent */}
@@ -668,8 +669,23 @@ export function LodgingBookingDrawer({
                   />
                   <span>I have read and agree to the <strong>house rules</strong> and check-in policy.</span>
                 </label>
-                <PolicySourceSheet type="house_rules" houseRules={houseRules as any} onOpened={() => setViewedRulesSource(true)} />
-                {!viewedRulesSource && <p className="text-[10px] text-amber-600 mt-0.5">Tap <strong>View source</strong> to enable this checkbox</p>}
+                <PolicySourceSheet
+                  type="house_rules"
+                  houseRules={houseRules as any}
+                  onOpened={() => {
+                    if (!viewedRulesSource) {
+                      setViewedRulesSource(true);
+                      setRulesViewedAt(new Date().toISOString());
+                    }
+                  }}
+                />
+                {viewedRulesSource ? (
+                  <p className="text-[10px] text-emerald-600 mt-0.5 inline-flex items-center gap-0.5">
+                    <ShieldCheck className="h-2.5 w-2.5" /> Verified · source viewed
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-amber-600 mt-0.5">Tap <strong>View source</strong> to enable this checkbox</p>
+                )}
               </div>
 
               <div>
@@ -684,8 +700,23 @@ export function LodgingBookingDrawer({
                     I accept the <strong>{cancellationLabel(cancellationPolicy)}</strong> cancellation policy and authorise {storeName} to contact me about this reservation.
                   </span>
                 </label>
-                <PolicySourceSheet type="cancellation" cancellationKey={cancellationPolicy} onOpened={() => setViewedCancelSource(true)} />
-                {!viewedCancelSource && <p className="text-[10px] text-amber-600 mt-0.5">Tap <strong>View source</strong> to enable this checkbox</p>}
+                <PolicySourceSheet
+                  type="cancellation"
+                  cancellationKey={cancellationPolicy}
+                  onOpened={() => {
+                    if (!viewedCancelSource) {
+                      setViewedCancelSource(true);
+                      setCancelViewedAt(new Date().toISOString());
+                    }
+                  }}
+                />
+                {viewedCancelSource ? (
+                  <p className="text-[10px] text-emerald-600 mt-0.5 inline-flex items-center gap-0.5">
+                    <ShieldCheck className="h-2.5 w-2.5" /> Verified · source viewed
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-amber-600 mt-0.5">Tap <strong>View source</strong> to enable this checkbox</p>
+                )}
               </div>
             </div>
 
@@ -732,12 +763,13 @@ export function LodgingBookingDrawer({
               </div>
             </div>
 
-            {/* Payment badge (live via realtime) */}
+            {/* Payment badge (live via realtime) — supports retry on failed */}
             {liveReservation?.payment_status && liveReservation.payment_status !== "unpaid" && (
               <div className="flex justify-center">
                 <LodgingPaymentBadge
                   status={liveReservation.payment_status}
                   amountCents={liveReservation.deposit_cents || liveReservation.total_cents}
+                  onRetry={handleRetryPayment}
                 />
               </div>
             )}
