@@ -65,6 +65,12 @@ export function LodgingBookingDrawer({
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const { availabilityMap, disabledDates } = useRoomAvailability(open ? roomId : undefined);
+  const rangeIssue = useMemo(
+    () => hasUnavailableNight(availabilityMap, checkIn, checkOut),
+    [availabilityMap, checkIn, checkOut]
+  );
+
   const breakdown = useMemo(() => {
     const ci = new Date(checkIn);
     const co = new Date(checkOut);
@@ -145,11 +151,15 @@ export function LodgingBookingDrawer({
             </Button>
           )}
           {step !== "guest" ? (
-            <Button onClick={() => (step === "stay" && !hasAddons ? setStep("guest") : goNext())} className="gap-1">
+            <Button
+              onClick={() => (step === "stay" && !hasAddons ? setStep("guest") : goNext())}
+              className="gap-1"
+              disabled={rangeIssue.invalid}
+            >
               Continue <ChevronRight className="h-4 w-4" />
             </Button>
           ) : (
-            <Button onClick={submit} disabled={submitting} className="gap-1 font-bold">
+            <Button onClick={submit} disabled={submitting || rangeIssue.invalid} className="gap-1 font-bold">
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
               Request · {fmtMoney(breakdown.total)}
             </Button>
@@ -158,11 +168,21 @@ export function LodgingBookingDrawer({
       }
     >
       <div className="space-y-4 pt-2">
+        {rangeIssue.invalid && (
+          <div className="flex items-start gap-2 p-3 rounded-xl bg-destructive/10 text-destructive border border-destructive/20">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            <p className="text-xs font-medium">
+              One or more nights are no longer available ({rangeIssue.firstReason === "sold_out" ? "sold out" : "restricted"}). Please pick new dates.
+            </p>
+          </div>
+        )}
         {step === "stay" && (
           <>
             <LodgingStaySelector
               checkIn={checkIn} checkOut={checkOut} adults={adults} children={children}
               onChange={(v) => { setCheckIn(v.checkIn); setCheckOut(v.checkOut); setAdults(v.adults); setChildren(v.children); }}
+              disabledDates={disabledDates}
+              availabilityMap={availabilityMap}
             />
             <PriceSummary breakdown={breakdown} fmt={fmtMoney} />
           </>
