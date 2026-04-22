@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle, ChevronRight } from "lucide-react";
+import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle, ChevronRight, ShieldCheck } from "lucide-react";
 import { useLodgeReservations, type ReservationStatus } from "@/hooks/lodging/useLodgeReservations";
+import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
 import { toast } from "sonner";
 
 const STATUSES: (ReservationStatus | "all")[] = ["all", "hold", "confirmed", "checked_in", "checked_out", "cancelled", "no_show"];
@@ -85,6 +86,14 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
                         {r.check_in} → {r.check_out} · {r.nights} night{r.nights !== 1 ? "s" : ""} · {r.adults}A{r.children ? `/${r.children}C` : ""}
                       </p>
                       {r.guest_phone && <p className="text-[11px] text-muted-foreground mt-0.5">{r.guest_phone}</p>}
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <LodgingPaymentBadge status={(r as any).payment_status} amountCents={(r as any).deposit_cents || r.total_cents} />
+                        {(r as any).policy_consent && (
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-600">
+                            <ShieldCheck className="h-2.5 w-2.5" /> Policies acknowledged
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="text-right shrink-0 flex items-center gap-1">
                       <div>

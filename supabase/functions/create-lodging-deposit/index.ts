@@ -1,7 +1,8 @@
 /**
  * create-lodging-deposit
- * Creates a Stripe Checkout Session to either authorise (hold) or charge a lodging deposit.
- * Writes Stripe IDs back to the lodge_reservations row using the service role.
+ * Creates (or reuses) a Stripe Checkout Session to authorise / charge a lodging deposit.
+ * Safe to re-invoke: returns the existing open session URL when present, refuses to mint a
+ * new session when payment is already authorised / captured / refund-pending.
  */
 import { createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
@@ -13,6 +14,8 @@ interface Body {
   deposit_cents: number;
   mode?: "deposit" | "full";
 }
+
+const TERMINAL_PAYMENT_STATES = new Set(["authorized", "captured", "paid", "refund_pending", "refunded"]);
 
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req);
@@ -50,10 +53,10 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceKey);
 
-    // Load reservation for description
+    // Load reservation
     const { data: reservation, error: resErr } = await admin
       .from("lodge_reservations")
-      .select("id, number, guest_name, guest_email, room_id, check_in, check_out, total_cents, payment_status, stripe_session_id")
+      .select("id, number, guest_name, guest_email, room_id, check_in, check_out, total_cents, payment_status, stripe_session_id, stripe_payment_intent_id")
       .eq("id", body.reservation_id)
       .maybeSingle();
     if (resErr) throw resErr;
@@ -65,6 +68,38 @@ Deno.serve(async (req) => {
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+
+    // Guard: refuse to re-mint a session if payment is already in a terminal/successful state.
+    const currentStatus = (reservation as any).payment_status as string | null;
+    if (currentStatus && TERMINAL_PAYMENT_STATES.has(currentStatus)) {
+      return new Response(JSON.stringify({
+        already_paid: true,
+        status: currentStatus,
+        message: `Payment is already ${currentStatus.replace("_", " ")} — no new charge needed.`,
+      }), {
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    // Try to reuse the existing open Checkout Session.
+    const existingSessionId = (reservation as any).stripe_session_id as string | null;
+    if (existingSessionId) {
+      try {
+        const existing = await stripe.checkout.sessions.retrieve(existingSessionId);
+        if (existing.status === "open" && existing.url) {
+          return new Response(JSON.stringify({
+            url: existing.url,
+            session_id: existing.id,
+            reused: true,
+          }), {
+            headers: { ...cors, "Content-Type": "application/json" },
+          });
+        }
+        // expired / complete-with-failed-PI → fall through to create a fresh session
+      } catch (_) {
+        // session not found upstream → fall through and mint a new one
+      }
+    }
 
     let customerId: string | undefined;
     const email = user?.email || (reservation as any).guest_email || undefined;

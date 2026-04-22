@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   ArrowLeft, BedDouble, CalendarRange, User, Phone, Mail, Globe,
-  CheckCircle2, LogIn, LogOut, XCircle, AlertCircle, History, Loader2,
+  CheckCircle2, LogIn, LogOut, XCircle, AlertCircle, History, Loader2, Download, RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,12 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLodgeReservationAudit } from "@/hooks/lodging/useLodgeReservationAudit";
+import { useReservationLive } from "@/hooks/lodging/useReservationLive";
+import { ReservationStatusTimeline } from "@/components/lodging/ReservationStatusTimeline";
+import { ReservationStatusHistory } from "@/components/lodging/ReservationStatusHistory";
+import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
+import { PolicyAcknowledgementCard } from "@/components/lodging/PolicyAcknowledgementCard";
+import { downloadAuditCsv } from "@/lib/lodging/auditCsv";
 import type { ReservationStatus } from "@/hooks/lodging/useLodgeReservations";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -43,6 +49,8 @@ export default function AdminLodgingReservationDetailPage() {
   const [note, setNote] = useState("");
   const [reason, setReason] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  useReservationLive(reservationId);
 
   const NOTE_TEMPLATES: Record<string, string[]> = {
     confirmed: ["Confirmed by admin", "Payment received", "Phone-verified"],
@@ -199,6 +207,13 @@ export default function AdminLodgingReservationDetailPage() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-4 space-y-4">
+        {/* Status timeline (live) */}
+        <Card>
+          <CardContent className="pt-4">
+            <ReservationStatusTimeline status={reservation.status as any} />
+          </CardContent>
+        </Card>
+
         {/* Stay */}
         <Card>
           <CardHeader className="pb-3">
@@ -259,8 +274,47 @@ export default function AdminLodgingReservationDetailPage() {
               <Row label="Balance due" value={fmt(balanceDue)} bold className={balanceDue > 0 ? "text-destructive" : "text-primary"} />
             </div>
             <p className="text-[11px] text-muted-foreground pt-1 capitalize">Payment: {reservation.payment_status}</p>
+            <div className="pt-2">
+              <LodgingPaymentBadge
+                status={reservation.payment_status}
+                amountCents={reservation.deposit_cents || reservation.total_cents}
+                onRetry={async () => {
+                  if (retrying) return;
+                  setRetrying(true);
+                  try {
+                    const { data, error } = await supabase.functions.invoke("create-lodging-deposit", {
+                      body: {
+                        reservation_id: reservation.id,
+                        store_id: reservation.store_id,
+                        deposit_cents: reservation.deposit_cents || reservation.total_cents,
+                        mode: reservation.deposit_cents ? "deposit" : "full",
+                      },
+                    });
+                    if (error) throw error;
+                    if ((data as any)?.already_paid) {
+                      toast.info((data as any).message || "Already paid");
+                    } else if ((data as any)?.url) {
+                      window.open((data as any).url, "_blank");
+                      toast.success("Opening Stripe checkout…");
+                    }
+                  } catch (e: any) {
+                    toast.error(e.message || "Retry failed");
+                  } finally {
+                    setRetrying(false);
+                  }
+                }}
+              />
+            </div>
           </CardContent>
         </Card>
+
+        {/* Policy acknowledgement */}
+        {reservation.policy_consent && (
+          <PolicyAcknowledgementCard
+            consent={reservation.policy_consent as any}
+            versionStamp={reservation.policy_consent_version}
+          />
+        )}
 
         {/* Status workflow */}
         <Card>
@@ -346,28 +400,20 @@ export default function AdminLodgingReservationDetailPage() {
 
         {/* Audit log */}
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><History className="h-4 w-4" /> Audit log</CardTitle></CardHeader>
+          <CardHeader className="pb-3 flex-row items-center justify-between gap-2">
+            <CardTitle className="text-sm flex items-center gap-2"><History className="h-4 w-4" /> Audit log</CardTitle>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1 text-xs"
+              disabled={!(audit.data || []).length}
+              onClick={() => downloadAuditCsv(reservation.number || reservation.id, (audit.data || []) as any)}
+            >
+              <Download className="h-3 w-3" /> CSV
+            </Button>
+          </CardHeader>
           <CardContent>
-            {audit.isLoading ? (
-              <p className="text-xs text-muted-foreground">Loading…</p>
-            ) : (audit.data || []).length === 0 ? (
-              <p className="text-xs text-muted-foreground">No status changes yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {(audit.data || []).map((a) => (
-                  <div key={a.id} className="p-2.5 rounded-lg border border-border bg-card text-xs">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-semibold">
-                        {a.from_status ? `${STATUS_LABEL[a.from_status] || a.from_status} → ` : ""}
-                        {STATUS_LABEL[a.to_status] || a.to_status}
-                      </p>
-                      <span className="text-[10px] text-muted-foreground">{format(new Date(a.created_at), "MMM d, HH:mm")}</span>
-                    </div>
-                    {a.note && <p className="text-muted-foreground mt-1 whitespace-pre-wrap">{a.note}</p>}
-                  </div>
-                ))}
-              </div>
-            )}
+            <ReservationStatusHistory reservationId={reservation.id} />
           </CardContent>
         </Card>
       </div>

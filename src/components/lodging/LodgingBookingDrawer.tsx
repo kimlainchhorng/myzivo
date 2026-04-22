@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Loader2, ChevronLeft, ChevronRight, CheckCircle2, Minus, Plus, AlertTriangle,
   Wallet, CreditCard, Building2, Copy, CalendarPlus, MessageCircle, ShieldCheck,
-  ArrowDown,
+  ArrowDown, Share2, BookOpen, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -378,6 +378,35 @@ export function LodgingBookingDrawer({
     toast.success("Reference copied");
   };
 
+  const shareBooking = async () => {
+    if (!reservationId) return;
+    const url = `${window.location.origin}/trip/${reservationId}`;
+    const title = `Booking ${reference} · ${storeName}`;
+    try {
+      if ((navigator as any).share) {
+        await (navigator as any).share({ title, text: title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Booking link copied");
+      }
+    } catch (_) { /* user cancelled */ }
+  };
+
+  const openChatWithHost = async () => {
+    try {
+      const { data: store } = await supabase
+        .from("restaurants" as any)
+        .select("owner_id")
+        .eq("id", storeId)
+        .maybeSingle();
+      const ownerId = (store as any)?.owner_id;
+      if (!ownerId) { toast.error("Host chat unavailable"); return; }
+      window.location.href = `/chat?with=${ownerId}`;
+    } catch {
+      toast.error("Could not open chat");
+    }
+  };
+
   return (
     <ResponsiveModal
       open={open}
@@ -391,25 +420,33 @@ export function LodgingBookingDrawer({
           </ResponsiveModalFooter>
         ) : (
           <ResponsiveModalFooter>
-            {step !== "stay" && (
-              <Button variant="outline" onClick={goBack} className="gap-1">
-                <ChevronLeft className="h-4 w-4" /> Back
-              </Button>
-            )}
-            {step !== "review" ? (
-              <Button
-                onClick={goNext}
-                className="gap-1"
-                disabled={blocked || (step === "guest" && !guestValid)}
-              >
-                Continue <ChevronRight className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button onClick={submit} disabled={submitting || blocked || !reviewValid} className="gap-1 font-bold">
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                Confirm · {fmtMoney(breakdown.total)}
-              </Button>
-            )}
+            <div className="flex items-center justify-between gap-2 w-full">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-[11px] font-semibold text-foreground">
+                {breakdown.nights}n · {adults + children}g · {fmtMoney(breakdown.total)}
+              </span>
+              <div className="flex items-center gap-2">
+                {step !== "stay" && (
+                  <Button variant="outline" onClick={goBack} className="gap-1" size="sm">
+                    <ChevronLeft className="h-4 w-4" /> Back
+                  </Button>
+                )}
+                {step !== "review" ? (
+                  <Button
+                    onClick={goNext}
+                    className="gap-1"
+                    size="sm"
+                    disabled={blocked || (step === "guest" && !guestValid)}
+                  >
+                    Continue <ChevronRight className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button onClick={submit} disabled={submitting || blocked || !reviewValid} className="gap-1 font-bold" size="sm">
+                    {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                    Confirm · {fmtMoney(breakdown.total)}
+                  </Button>
+                )}
+              </div>
+            </div>
           </ResponsiveModalFooter>
         )
       }
@@ -657,8 +694,46 @@ export function LodgingBookingDrawer({
               />
             )}
 
-            {/* Consent */}
+            {/* Consent — compact verified chips */}
             <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-[11px] font-semibold text-muted-foreground mr-1">Verify before agreeing:</p>
+                <div className="inline-flex items-center gap-1.5">
+                  <PolicySourceSheet
+                    type="house_rules"
+                    houseRules={houseRules as any}
+                    onOpened={() => {
+                      if (!viewedRulesSource) {
+                        setViewedRulesSource(true);
+                        setRulesViewedAt(new Date().toISOString());
+                      }
+                    }}
+                  />
+                  {viewedRulesSource && (
+                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-600">
+                      <ShieldCheck className="h-3 w-3" /> Verified
+                    </span>
+                  )}
+                </div>
+                <div className="inline-flex items-center gap-1.5">
+                  <PolicySourceSheet
+                    type="cancellation"
+                    cancellationKey={cancellationPolicy}
+                    onOpened={() => {
+                      if (!viewedCancelSource) {
+                        setViewedCancelSource(true);
+                        setCancelViewedAt(new Date().toISOString());
+                      }
+                    }}
+                  />
+                  {viewedCancelSource && (
+                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-600">
+                      <ShieldCheck className="h-3 w-3" /> Verified
+                    </span>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <label className={cn("flex items-start gap-2 text-xs cursor-pointer", ((policyOverflows && !policyScrolled) || !viewedRulesSource) && "opacity-50 pointer-events-none")}>
                   <Checkbox
@@ -669,23 +744,6 @@ export function LodgingBookingDrawer({
                   />
                   <span>I have read and agree to the <strong>house rules</strong> and check-in policy.</span>
                 </label>
-                <PolicySourceSheet
-                  type="house_rules"
-                  houseRules={houseRules as any}
-                  onOpened={() => {
-                    if (!viewedRulesSource) {
-                      setViewedRulesSource(true);
-                      setRulesViewedAt(new Date().toISOString());
-                    }
-                  }}
-                />
-                {viewedRulesSource ? (
-                  <p className="text-[10px] text-emerald-600 mt-0.5 inline-flex items-center gap-0.5">
-                    <ShieldCheck className="h-2.5 w-2.5" /> Verified · source viewed
-                  </p>
-                ) : (
-                  <p className="text-[10px] text-amber-600 mt-0.5">Tap <strong>View source</strong> to enable this checkbox</p>
-                )}
               </div>
 
               <div>
@@ -700,23 +758,6 @@ export function LodgingBookingDrawer({
                     I accept the <strong>{cancellationLabel(cancellationPolicy)}</strong> cancellation policy and authorise {storeName} to contact me about this reservation.
                   </span>
                 </label>
-                <PolicySourceSheet
-                  type="cancellation"
-                  cancellationKey={cancellationPolicy}
-                  onOpened={() => {
-                    if (!viewedCancelSource) {
-                      setViewedCancelSource(true);
-                      setCancelViewedAt(new Date().toISOString());
-                    }
-                  }}
-                />
-                {viewedCancelSource ? (
-                  <p className="text-[10px] text-emerald-600 mt-0.5 inline-flex items-center gap-0.5">
-                    <ShieldCheck className="h-2.5 w-2.5" /> Verified · source viewed
-                  </p>
-                ) : (
-                  <p className="text-[10px] text-amber-600 mt-0.5">Tap <strong>View source</strong> to enable this checkbox</p>
-                )}
               </div>
             </div>
 
@@ -773,6 +814,19 @@ export function LodgingBookingDrawer({
                 />
               </div>
             )}
+
+            {/* Quick actions */}
+            <div className="grid grid-cols-3 gap-2">
+              <Button variant="outline" size="sm" className="gap-1.5 h-9" onClick={copyRef}>
+                <Copy className="h-3.5 w-3.5" /> Copy ref
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1.5 h-9" onClick={shareBooking}>
+                <Share2 className="h-3.5 w-3.5" /> Share
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1.5 h-9" onClick={openChatWithHost}>
+                <MessageCircle className="h-3.5 w-3.5" /> Chat
+              </Button>
+            </div>
 
             <div className="space-y-2">
               <IcsPreviewPanel
