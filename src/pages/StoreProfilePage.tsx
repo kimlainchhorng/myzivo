@@ -4,7 +4,7 @@
  */
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck, BedDouble } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useStoreProfile, useStoreProducts, useStoreProductCategories, type StoreProductItem } from "@/hooks/useStoreProfile";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import StoreHeroCarousel from "@/components/grocery/StoreHeroCarousel";
 import { toast } from "sonner";
 import { useI18n } from "@/hooks/useI18n";
@@ -21,6 +21,10 @@ import storeCallBg from "@/assets/store-call-bg.jpg";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import { isAllowedSocialUrl } from "@/lib/urlSafety";
 import { getStoreStatus } from "@/utils/storeStatus";
+import { useLodgeRooms, type LodgeRoom } from "@/hooks/lodging/useLodgeRooms";
+import { LodgingRoomCard } from "@/components/lodging/LodgingRoomCard";
+import { LodgingStaySelector } from "@/components/lodging/LodgingStaySelector";
+import { LodgingBookingDrawer } from "@/components/lodging/LodgingBookingDrawer";
 
 /**
  * Extract the correct language part from dual-format text like "Khmer/English".
@@ -65,7 +69,7 @@ function BokehDot({ delay, size, x, y, color }: { delay: number; size: number; x
 
 export default function StoreProfilePage() {
   const { slug } = useParams<{ slug: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const cart = useGroceryCart();
   const [showCart, setShowCart] = useState(false);
@@ -79,6 +83,29 @@ export default function StoreProfilePage() {
   const { data: store, isLoading: loadingStore } = useStoreProfile(slug || "");
   const { data: products = [], isLoading: loadingProducts } = useStoreProducts(store?.id, selectedCategory);
   const { data: categories = [] } = useStoreProductCategories(store?.id);
+
+  // Lodging support
+  const isLodging = !!store && ["hotel", "resort", "guesthouse"].includes(store.category);
+  const { data: allRooms = [], isLoading: loadingRooms } = useLodgeRooms(isLodging ? store!.id : "");
+  const rooms = useMemo(() => (allRooms || []).filter(r => r.is_active), [allRooms]);
+
+  const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const tomorrowISO = useMemo(() => new Date(Date.now() + 86400000).toISOString().slice(0, 10), []);
+  const stay = {
+    checkIn: searchParams.get("ci") || todayISO,
+    checkOut: searchParams.get("co") || tomorrowISO,
+    adults: parseInt(searchParams.get("ad") || "2"),
+    children: parseInt(searchParams.get("ch") || "0"),
+  };
+  const updateStay = (next: { checkIn: string; checkOut: string; adults: number; children: number }) => {
+    const sp = new URLSearchParams(searchParams);
+    sp.set("ci", next.checkIn);
+    sp.set("co", next.checkOut);
+    sp.set("ad", String(next.adults));
+    sp.set("ch", String(next.children));
+    setSearchParams(sp, { replace: true });
+  };
+  const [bookingRoom, setBookingRoom] = useState<LodgeRoom | null>(null);
 
   const handleAddToCart = (product: StoreProductItem, sizeVariant?: { size: string; price_khr: number; price_usd: number }) => {
     const displayName = localizedName(product.name, currentLanguage);
@@ -654,6 +681,57 @@ export default function StoreProfilePage() {
         </div>
       )}
 
+      {/* ── Lodging: Rooms & Rates ── */}
+      {isLodging ? (
+        <div className="px-4 pt-5 pb-40 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <BedDouble className="h-4 w-4 text-primary" />
+              <h2 className="text-sm font-bold text-foreground">Rooms & Rates</h2>
+            </div>
+            <span className="text-[10px] text-muted-foreground font-medium">
+              {rooms.length} {rooms.length === 1 ? "room" : "rooms"}
+            </span>
+          </div>
+
+          <LodgingStaySelector
+            checkIn={stay.checkIn} checkOut={stay.checkOut}
+            adults={stay.adults} children={stay.children}
+            onChange={updateStay}
+          />
+
+          {loadingRooms ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : rooms.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <BedDouble className="h-12 w-12 text-muted-foreground/20" />
+              <p className="text-sm text-muted-foreground">No rooms listed yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {rooms.map((r) => (
+                <LodgingRoomCard
+                  key={r.id}
+                  name={r.name}
+                  type={r.room_type}
+                  beds={r.beds}
+                  maxGuests={r.max_guests}
+                  baseRateCents={r.base_rate_cents}
+                  amenities={r.amenities || []}
+                  breakfastIncluded={r.breakfast_included}
+                  imageUrl={(r.photos && r.photos[0]) as string | undefined}
+                  description={r.description}
+                  addonsCount={(r.addons || []).length}
+                  onReserve={() => setBookingRoom(r)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+      <>
       {/* ── Section Header ── */}
       <div className="flex items-center justify-between px-4 pt-5 pb-1">
         <div className="flex items-center gap-1.5">
@@ -1024,6 +1102,8 @@ export default function StoreProfilePage() {
         )}
       </div>
       )}
+      </>
+      )}
 
       {/* ── Floating Cart Bar - Premium 3D ── */}
       <AnimatePresence>
@@ -1083,6 +1163,26 @@ export default function StoreProfilePage() {
           storeLogo={store.logo_url}
           open={chatOpen}
           onClose={() => setChatOpen(false)}
+        />
+      )}
+      {bookingRoom && store && (
+        <LodgingBookingDrawer
+          open={!!bookingRoom}
+          onClose={() => setBookingRoom(null)}
+          storeId={store.id}
+          storeName={store.name}
+          roomId={bookingRoom.id}
+          roomName={bookingRoom.name}
+          baseRateCents={bookingRoom.base_rate_cents}
+          weekendRateCents={bookingRoom.weekend_rate_cents}
+          weeklyDiscountPct={bookingRoom.weekly_discount_pct}
+          monthlyDiscountPct={bookingRoom.monthly_discount_pct}
+          cancellationPolicy={bookingRoom.cancellation_policy}
+          addons={bookingRoom.addons || []}
+          checkIn={stay.checkIn}
+          checkOut={stay.checkOut}
+          adults={stay.adults}
+          children={stay.children}
         />
       )}
       <ZivoMobileNav />

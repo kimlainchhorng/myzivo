@@ -2,7 +2,7 @@
  * LodgingRoomCard - public-facing room card on store profile.
  */
 import { motion } from "framer-motion";
-import { Users, BedDouble, Coffee } from "lucide-react";
+import { Users, BedDouble, Coffee, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -15,11 +15,14 @@ interface Props {
   amenities?: string[];
   breakfastIncluded?: boolean;
   imageUrl?: string;
+  description?: string | null;
+  addonsCount?: number;
   onReserve: () => void;
 }
 
 export function LodgingRoomCard({
-  name, type, beds, maxGuests, baseRateCents, amenities = [], breakfastIncluded, imageUrl, onReserve,
+  name, type, beds, maxGuests, baseRateCents, amenities = [], breakfastIncluded, imageUrl,
+  description, addonsCount = 0, onReserve,
 }: Props) {
   return (
     <motion.div
@@ -42,10 +45,16 @@ export function LodgingRoomCard({
       </div>
       <div className="p-4 space-y-2">
         <p className="font-bold text-base leading-tight">{name}</p>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        {description && (
+          <p className="text-xs text-muted-foreground line-clamp-2">{description}</p>
+        )}
+        <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
           {beds && <span className="flex items-center gap-1"><BedDouble className="h-3 w-3" /> {beds}</span>}
           <span className="flex items-center gap-1"><Users className="h-3 w-3" /> Sleeps {maxGuests}</span>
           {breakfastIncluded && <span className="flex items-center gap-1"><Coffee className="h-3 w-3" /> Breakfast</span>}
+          {addonsCount > 0 && (
+            <span className="flex items-center gap-1 text-primary"><Plus className="h-3 w-3" /> {addonsCount} add-on{addonsCount > 1 ? "s" : ""}</span>
+          )}
         </div>
         {amenities.length > 0 && (
           <div className="flex flex-wrap gap-1">
