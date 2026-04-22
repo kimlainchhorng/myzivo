@@ -244,7 +244,18 @@ export function LodgingBookingDrawer({
   );
 }
 
-function PriceSummary({ breakdown, fmt }: { breakdown: ReturnType<typeof useBreakdown>; fmt: (c: number) => string }) {
+type Breakdown = {
+  nights: number;
+  roomTotal: number;
+  discountPct: number;
+  discountCents: number;
+  roomAfter: number;
+  addonsTotal: number;
+  addonsSnapshot: { name: string; price_cents: number; per: string; qty: number; subtotal_cents: number }[];
+  total: number;
+};
+
+function PriceSummary({ breakdown, fmt }: { breakdown: Breakdown; fmt: (c: number) => string }) {
   return (
     <div className="p-3 rounded-xl bg-muted/40 text-xs space-y-1">
       <div className="flex justify-between">
@@ -252,7 +263,7 @@ function PriceSummary({ breakdown, fmt }: { breakdown: ReturnType<typeof useBrea
         <span className="font-semibold">{fmt(breakdown.roomTotal)}</span>
       </div>
       {breakdown.discountCents > 0 && (
-        <div className="flex justify-between text-emerald-600">
+        <div className="flex justify-between text-primary">
           <span>Discount ({breakdown.discountPct}%)</span>
           <span>−{fmt(breakdown.discountCents)}</span>
         </div>
@@ -271,15 +282,3 @@ function PriceSummary({ breakdown, fmt }: { breakdown: ReturnType<typeof useBrea
   );
 }
 
-// type helper for PriceSummary
-type Breakdown = {
-  nights: number;
-  roomTotal: number;
-  discountPct: number;
-  discountCents: number;
-  roomAfter: number;
-  addonsTotal: number;
-  addonsSnapshot: { name: string; price_cents: number; per: string; qty: number; subtotal_cents: number }[];
-  total: number;
-};
-function useBreakdown(): Breakdown { return null as unknown as Breakdown; }
