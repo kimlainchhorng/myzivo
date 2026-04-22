@@ -30,15 +30,20 @@ export default defineConfig(({ mode }) => ({
           "vendor-motion": ["framer-motion"],
           "vendor-stripe": ["@stripe/stripe-js", "@stripe/react-stripe-js"],
           "vendor-supabase": ["@supabase/supabase-js"],
-          "vendor-radix": [
+          "vendor-query": ["@tanstack/react-query"],
+          "vendor-icons": ["lucide-react"],
+          // Split Radix into 2 groups: heavy overlays vs. lighter primitives
+          "vendor-radix-overlays": [
             "@radix-ui/react-dialog",
             "@radix-ui/react-popover",
             "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-toast",
+          ],
+          "vendor-radix-core": [
             "@radix-ui/react-tabs",
             "@radix-ui/react-select",
             "@radix-ui/react-accordion",
             "@radix-ui/react-tooltip",
-            "@radix-ui/react-toast",
           ],
           "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
           "vendor-maps": ["@react-google-maps/api"],
