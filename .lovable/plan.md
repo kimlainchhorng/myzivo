@@ -1,94 +1,142 @@
 
 
-# Hotels & Resort — Wiring report exports, payment liveness, idempotency & monitoring
+# Hotels & Resort — Audit trail, CI, webhook log & retry hardening
 
-Five upgrades that finish the diagnostics + Stripe-safety story.
+Five upgrades that close the loop on observability and Stripe-safety.
 
-## 1. CSV export of the wiring-check report
+## 1. Audit trail of remediation actions
 
-In `AdminLodgingWiringCheckPage.tsx`:
+Every click on a wiring-check fix button is now persisted and surfaced in the history panel.
 
-- New `Export CSV` button in the page header (next to `Re-run`).
-- Util `src/lib/admin/wiringReportCsv.ts` builds CSV with columns:
-  `run_at_iso, group, check_id, name, pass, severity, message, fix_sql`
-  Header row + UTF-8 BOM so Excel opens it cleanly. `fix_sql` is wrapped in quotes with `"` escaped.
-- File name: `lodging-wiring-report-{YYYYMMDD-HHmm}.csv`, downloaded via Blob + `URL.createObjectURL`.
-- Also persist the latest report snapshot to a new table `lodging_wiring_report_runs (id, ran_at, summary jsonb, pass_count int, fail_count int, ran_by uuid)` on every run, so monitoring (item 5) has history to diff against.
+**Migration**
+- New table `lodging_wiring_remediation_actions`:
+  - `id uuid pk`, `created_at timestamptz default now()`
+  - `admin_id uuid not null` (defaults to `auth.uid()`)
+  - `run_id uuid` (nullable, references `lodging_wiring_report_runs.id` — the run the admin was viewing)
+  - `check_id text not null`
+  - `check_name text`
+  - `action_type text not null` — one of `copy_fix_sql`, `copy_failing_query`, `open_sql_editor`, `mark_resolved`
+  - `editor_url text` (nullable — only for `open_sql_editor`)
+  - `metadata jsonb default '{}'::jsonb`
+- RLS: insert allowed for any authenticated admin (`has_role(auth.uid(),'admin')`); select for admins only.
+- Index `idx_lwra_run_id` and `idx_lwra_created_at desc`.
 
-## 2. Loading + last-event marker on `LodgingPaymentBadge`
+**Page** (`AdminLodgingWiringCheckPage.tsx`)
+- New helper `logRemediation(action, check, extra?)` calls a tiny insert via the supabase client.
+- Wire into the four action buttons on each failing card (Copy fix, Copy diagnostic, Open in editor, Mark resolved).
+- History panel gets a third tab `Actions` listing the last 50 actions with admin email, action chip, check name, and a link to the run row that was active.
 
-Two new visual states:
+## 2. CI workflow + PR summary comment
 
-- **Processing**: while a Stripe webhook is mid-flight (detected when `payment_status` is one of the transitional values `pending`, `processing`, OR when `stripe_last_event_at` is within the last 8 s). Renders a spinning `Loader2` chip "Processing Stripe update…" in muted tone.
-- **Last event timestamp**: small `Clock` micro-caption under the badge: `"Updated {timeAgo} · {event_type}"` (e.g. "Updated 12s ago · payment_intent.succeeded"). Hidden if no events yet.
+Add a GitHub Actions workflow at `.github/workflows/wiring-check.yml`:
 
-Schema additions (migration):
-- `lodge_reservations.stripe_last_event_at timestamptz`
-- `lodge_reservations.stripe_last_event_type text`
+- Triggers on `pull_request` (paths: `supabase/**`, `src/lib/admin/**`, `src/pages/admin/AdminLodgingWiringCheckPage.tsx`, `scripts/wiring-check.ts`).
+- Steps:
+  1. `setup-deno@v1`
+  2. Run `deno run --allow-net --allow-env scripts/wiring-check.ts` — env-injects `SUPABASE_URL` (literal hardcoded ref) + `SUPABASE_ANON_KEY` (from secrets).
+  3. The script is upgraded to also write the report JSON + CSV to `./wiring-report.json` + `./wiring-report.csv` when `CI=true`.
+  4. `actions/upload-artifact@v4` uploads the CSV (named `wiring-report-${{ github.sha }}`).
+  5. A final step uses `actions/github-script@v7` to read the JSON and post a sticky PR comment via `octokit.issues.createComment` with:
+     - PASS/FAIL summary line
+     - Bullet list of failing check names + first 80 chars of message
+     - Hint pointing to the artifact for the full CSV
+- Workflow exits non-zero on any failing check, blocking merge by default (admin can override).
 
-`stripe-lodging-webhook` writes both on every handled event (in addition to the existing payment_status update).
+The script picks up `CI` and `GITHUB_OUTPUT` to emit `pass=N` / `fail=N` outputs for downstream steps.
 
-The badge already subscribes via `useReservationLive`, so the spinner clears the moment the webhook commits.
+## 3. Stripe webhook event log
 
-## 3. Wiring-check failures show failing SQL + "Open in editor"
+Persist every processed Stripe event so wiring-check failures can deep-link to the underlying webhook trail.
 
-Enhance the existing `lodging_wiring_report()` RPC and the page UI:
+**Migration**
+- New table `lodging_stripe_webhook_events`:
+  - `id uuid pk`
+  - `stripe_event_id text not null unique` — Stripe's `evt_…` id; uniqueness gives idempotent inserts
+  - `event_type text not null`
+  - `event_created_at timestamptz` (Stripe's `created`)
+  - `received_at timestamptz default now()`
+  - `reservation_id uuid` (nullable; back-resolved from PI → `lodge_reservations`)
+  - `stripe_payment_intent_id text`
+  - `stripe_session_id text`
+  - `processing_status text not null default 'received'` — `received | applied | skipped | error`
+  - `error_message text`
+  - `payload jsonb` — pruned event object (no PII beyond what Stripe already returns; capped to ~16KB by stripping `metadata` we don't need)
+- Indexes on `event_type`, `reservation_id`, `received_at desc`.
+- RLS: select only for admins; inserts only via service role (edge function).
 
-- RPC already returns `fix` (remediation SQL). Add two more JSON fields per check:
-  - `failing_query` — the exact diagnostic SQL that produced the failing result (e.g. `SELECT relrowsecurity FROM pg_class WHERE oid = 'public.lodge_reservations'::regclass`).
-  - `editor_url` — built server-side as `https://supabase.com/dashboard/project/slirphzzwcogdbkeicff/sql/new?content={url-encoded SQL}`.
-- In `AdminLodgingWiringCheckPage.tsx` each failing card now shows:
-  - A `<details>` "Show failing query" → mono `<pre>` with copy button.
-  - A primary `Open in SQL editor` button (opens `editor_url` in new tab) preloaded with the **fix** SQL (not the diagnostic) so the admin can run it immediately.
-  - Existing copy-fix button stays.
+**Edge function** (`stripe-lodging-webhook/index.ts`)
+- After signature verify, immediately `INSERT … ON CONFLICT (stripe_event_id) DO NOTHING`. If the row was a duplicate, return `200 { received: true, dedup: true }` without re-applying side effects (idempotency at the function layer too, on top of Stripe's redelivery semantics).
+- After the existing switch handler runs, update the row to `processing_status = 'applied'` (or `skipped` for unhandled types, or `error` + message on throw).
 
-## 4. Stronger idempotency on deposit retry
+**Admin page** (`/admin/lodging/webhook-events` — new `AdminLodgingWebhookEventsPage.tsx`)
+- Table of the last 200 events: time, type chip, reservation id (link), PI, status chip, error tooltip.
+- Filters: by `event_type`, `processing_status`, free-text reservation id.
+- Linked from the wiring-check page header ("View webhook log →").
+- Each wiring-check failure card whose group is `webhook` or whose `check_id` references PI fields gets a small `View related webhook events` button that opens the page pre-filtered by that check's anchor (e.g. all events for reservations missing a PI).
 
-Lock down `create-lodging-deposit` against race-condition double-charges:
+## 4. Retry-flow hardening (UI + API)
 
-- **DB**: add `lodge_reservations.payment_lock_token text` + `payment_lock_expires_at timestamptz`. Function uses an **advisory lock** keyed by `hashtext('lodge_dep_' || reservation_id)` for the duration of the call (Postgres `pg_try_advisory_xact_lock`). If lock fails → return `423 Locked` with `{ retry_after: 2 }`.
-- **Idempotency-Key**: pass `Idempotency-Key: lodge_dep_{reservation_id}_{attempt_hash}` on every `stripe.checkout.sessions.create` and `stripe.paymentIntents.update` call. `attempt_hash` = sha256 of `(reservation_id, deposit_cents, mode, current_payment_status)` — same inputs → same key → Stripe returns the same Session even on duplicate POSTs.
-- **Re-check after acquire**: re-read `payment_status` inside the lock and re-apply the existing `TERMINAL_PAYMENT_STATES` guard, so a webhook that arrives between the client click and the function entry can't be overridden.
-- **Client**: the badge's retry handler already disables itself while in flight; add a 5 s cool-down + dedupe via a `retryInFlightRef` ref so rapid taps don't spawn parallel calls.
+Lock down the deposit retry path so duplicate intent is impossible and the user always sees why a retry is paused.
 
-## 5. Automated wiring-report monitoring + alerts
+**API** (`create-lodging-deposit/index.ts`)
+- Already uses `pg_try_advisory_xact_lock` from the previous round. Now:
+  - Additionally maintain a row-level lock via `lodge_reservations.payment_lock_token` (random hex) + `payment_lock_expires_at = now() + interval '60 seconds'`. Set inside the same transaction. Refuse the request when an unexpired token already exists belonging to another caller.
+  - When refused, return `423 Locked` with body `{ error: "retry_in_progress", retry_after_seconds, locked_since, lock_owner_hint: 'self'|'other' }` so the UI can choose its message.
+  - Add a `dedup_key` derived from `(reservation_id, stripe_payment_intent_id || 'none', client_attempt_id)`; persist in a tiny `lodging_deposit_retry_attempts (id, dedup_key unique, reservation_id, started_at, completed_at, result text)` and `INSERT … ON CONFLICT DO NOTHING`. If conflict, return `200 { reused: true }` plus the cached `checkout_url` from the original Session.
+- Stripe `Idempotency-Key` already passed; widen it to also include `client_attempt_id` so retries from a different tab share keys with the same tab but not across tabs (intentional — different tabs = different attempts but still merged by row lock).
 
-A scheduled run that diffs against the last snapshot and notifies on any change.
+**Migration**
+- `lodging_deposit_retry_attempts` table + RLS (admins read; insert via service role).
+- Index `idx_ldra_reservation_started` for the 5-minute lookback used by the retry handler.
 
-- **Edge function** `lodging-wiring-monitor`:
-  - Calls `lodging_wiring_report()` via service role.
-  - Inserts a new `lodging_wiring_report_runs` row.
-  - Loads the previous run; computes a per-check diff (`pass→fail`, `fail→pass`, `still_failing` after N runs).
-  - On any **new failure** or **regression** (was-pass, now-fail), sends an alert through the existing `send-admin-alert` channel (Telegram + email) with the check name, message, and a link to `/admin/lodging/wiring-check`.
-  - "Recovered" alerts when fail→pass.
-- **pg_cron**: schedule every 15 min via the `pg_cron` + `pg_net` pattern (existing project uses these per the schedule-jobs guide).
-- **CI hook**: a one-shot GitHub-style script `scripts/wiring-check.ts` that hits the same edge function and exits non-zero on any failure — documented in the page footer ("Use in CI: `deno run scripts/wiring-check.ts`"). Optional, no GH Actions file added (project doesn't appear to manage one).
-- **History panel** at the bottom of `AdminLodgingWiringCheckPage`: last 10 runs as a sparkline + table (`ran_at`, `pass`, `fail`, delta vs prior).
+**UI** (`LodgingPaymentBadge.tsx` + retry handler hook)
+- Detect `423` and surface a clear inline `Alert`:
+  - Title: "Retry already in progress"
+  - Body: "Another retry started {N}s ago. We'll re-enable this button automatically." (uses `retry_after_seconds`).
+  - Auto re-enable when the cooldown elapses; the existing `useReservationLive` subscription clears it the moment the webhook flips `payment_status` to a terminal state.
+- Add a `data-testid="lodge-retry-locked"` for E2E coverage.
+- Already has the 5 s client-side cool-down + `retryInFlightRef`; keep both.
+
+## 5. Schema version on CSV + run snapshots
+
+Make the report shape evolvable.
+
+- Bump constant `WIRING_REPORT_SCHEMA_VERSION = 2` in `src/lib/admin/wiringReportCsv.ts`.
+- CSV export:
+  - Adds a leading metadata row before the header (Excel-friendly): `# schema_version=2\r\n# generated_at={iso}\r\n` (lines beginning with `#` are visually grouped at the top; users who care about strict CSV can `tail -n +3`).
+  - New column `schema_version` appended to every data row so strict CSV consumers don't need to parse the comment lines.
+- `lodging-wiring-monitor` edge function:
+  - When inserting into `lodging_wiring_report_runs`, set `schema_version = 2` (new column).
+- **Migration**: add `schema_version int not null default 1` to `lodging_wiring_report_runs`; backfill existing rows to 1; future runs land at 2. Update the diff logic to ignore runs with mismatched schema versions (to avoid spurious "regression" alerts after a format change).
+- History panel surfaces the schema version in the run table as a tiny mono chip.
 
 ## File map
 
 **Created**
-- `src/lib/admin/wiringReportCsv.ts` — CSV builder + download.
-- `supabase/functions/lodging-wiring-monitor/index.ts` — scheduled diff + alert.
-- `scripts/wiring-check.ts` — optional CI runner.
+- `.github/workflows/wiring-check.yml` — PR check + comment + artifact.
+- `src/pages/admin/AdminLodgingWebhookEventsPage.tsx` — webhook log viewer.
 
 **Modified**
-- `src/pages/admin/AdminLodgingWiringCheckPage.tsx` — Export CSV button, failing-SQL `<details>`, Open-in-editor button, history panel.
-- `src/components/lodging/LodgingPaymentBadge.tsx` — processing spinner state, last-event caption.
-- `supabase/functions/stripe-lodging-webhook/index.ts` — write `stripe_last_event_at` + `stripe_last_event_type` on every event.
-- `supabase/functions/create-lodging-deposit/index.ts` — advisory lock, Idempotency-Key headers, in-lock re-check, 423 on contention.
+- `scripts/wiring-check.ts` — write `wiring-report.json` + CSV, emit GH outputs.
+- `src/lib/admin/wiringReportCsv.ts` — schema version, comment header, extra column.
+- `src/pages/admin/AdminLodgingWiringCheckPage.tsx` — `logRemediation` calls, Actions tab in history, "View webhook log" link, webhook-events deep links on failing cards.
+- `src/components/lodging/LodgingPaymentBadge.tsx` — handle 423, inline alert with countdown.
+- `src/App.tsx` — register `/admin/lodging/webhook-events` route (lazy).
+- `supabase/functions/stripe-lodging-webhook/index.ts` — insert into `lodging_stripe_webhook_events`, dedup by `stripe_event_id`, update processing status.
+- `supabase/functions/create-lodging-deposit/index.ts` — row-lock token, `dedup_key` reuse, 423 with payload.
+- `supabase/functions/lodging-wiring-monitor/index.ts` — set `schema_version` on runs, ignore cross-version diffs.
 
 **Migration**
-- Add `stripe_last_event_at timestamptz`, `stripe_last_event_type text`, `payment_lock_token text`, `payment_lock_expires_at timestamptz` to `lodge_reservations`.
-- Create table `lodging_wiring_report_runs` with RLS (admin-only via existing `has_role(uid,'admin')`).
-- Update `lodging_wiring_report()` RPC to include `failing_query` + `editor_url` per check.
-- Schedule `lodging-wiring-monitor` via `pg_cron` every 15 min (separate insert query — not in the migration, since it embeds the project ref + anon key per the scheduling guide).
+- `lodging_wiring_remediation_actions` + RLS + indexes.
+- `lodging_stripe_webhook_events` + RLS + indexes.
+- `lodging_deposit_retry_attempts` + RLS + indexes.
+- `lodge_reservations.payment_lock_token`, `payment_lock_expires_at` already exist (added previous round); migration only fills gaps.
+- Add `schema_version int default 1` to `lodging_wiring_report_runs`.
 
-## Technical notes
+## Notes
 
-- Stripe SDK already supports `{ idempotencyKey }` as a per-request option on `sessions.create` / `paymentIntents.*` — no SDK upgrade needed.
-- Advisory locks are transaction-scoped (`pg_try_advisory_xact_lock`) — they auto-release on function exit, so no orphaned locks even if the function crashes.
-- `lodging_wiring_report_runs` only retains the last 200 runs (a `BEFORE INSERT` trigger trims the tail) to keep storage bounded.
-- All UI follows v2026 high-density tokens (Lucide only, `text-[11px]`, `rounded-xl`).
-- No new npm dependencies.
+- No new npm or Deno dependencies.
+- All UI follows v2026 high-density tokens (Lucide only, `text-[11px]`, `rounded-xl`, semantic tokens — no raw colors).
+- `lodging_stripe_webhook_events` is auto-pruned to last 30 days via a daily `pg_cron` job (will be scheduled in a follow-up SQL — not in the migration since it embeds anon key per the scheduling guide).
+- The PR comment uses the default `GITHUB_TOKEN` so no secret setup is required beyond `SUPABASE_ANON_KEY`.
 
