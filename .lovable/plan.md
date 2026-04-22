@@ -1,69 +1,91 @@
 
 
-# Hotels & Resort — Booking confirmation polish (5 upgrades)
+# Hotels & Resort — 5 Booking-record & post-booking refinements
 
-## 1. Live availability re-check before Confirm
+## 1. Audit which policy sources the guest viewed
 
-In `LodgingBookingDrawer.tsx` Step 4 (Review):
+Persist a verifiable trail of consent on each reservation.
 
-- Add a `useAvailabilityCheck` effect that re-runs `hasUnavailableNight(availabilityMap, checkIn, checkOut)` whenever the user lands on `review`, plus a fresh `lodge_reservations` query for any **active overlap** on the same `room_id` (status in `hold/confirmed/checked_in`, where `check_in < selectedCheckOut` and `check_out > selectedCheckIn`).
-- Surface a red banner `"These dates are no longer available — please pick new dates"` when conflict detected.
-- The Confirm button gets a new gating condition: `disabled = … || conflictDetected`. The `submit()` function also re-checks immediately before insert as a race-condition guard, and aborts with a toast if the check fails.
+- **DB**: extend `lodge_reservations` with two jsonb columns:
+  - `policy_consent jsonb` → `{ rules: { viewed_at, viewed_section: "house_rules" }, cancellation: { viewed_at, viewed_section: "cancellation_policy", policy_key } }`
+  - `policy_consent_version text` (snapshot of `lodge_property_profile.updated_at` ISO at consent time, so we can prove which version of the rules they saw).
+- **Drawer (`LodgingBookingDrawer.tsx`)**: existing `viewedRulesSource` / `viewedCancelSource` flags now also record timestamp + section key on first open. On submit, the insert includes `policy_consent` and `policy_consent_version`.
+- **Review panel**: each consent row shows a small green `ShieldCheck` "Verified · viewed {time ago}" marker once the source has been opened, replacing the "Tap View source to enable" hint.
+- **Trip detail**: render a compact "Policies acknowledged" card (`PolicyAcknowledgementCard.tsx`) listing the two viewed sections with timestamps and the version stamp — visible to both guest and host.
 
-## 2. Auto-updating timeline + actor attribution on `TripDetailPage`
+## 2. CSV export of timeline + audit history
 
-- **Migration**: add `actor_user_id uuid`, `actor_role text` (`guest | host | admin | system`), `note text` to existing `lodge_reservation_audit` table. Add a trigger `trg_lodge_reservation_status_audit` on `lodge_reservations` that fires on status change and inserts an audit row using `auth.uid()` and a lookup of the user's role vs the store owner.
-- **`TripDetailPage.tsx`**: render `ReservationStatusTimeline` for any lodging trip (already created), then below it render a new `ReservationStatusHistory` component that lists audit rows reverse-chronologically: `{icon} {From → To} · {time ago} · by {actor name} ({actor_role})`. Cancelled / no-show rows highlight in destructive tone.
-- A Supabase **Realtime** subscription on `lodge_reservations` (filter `id=eq.{id}`) and on `lodge_reservation_audit` (filter `reservation_id=eq.{id}`) refreshes the timeline live, so a host cancelling from the admin updates the guest's view without reload.
+In `TripDetailPage.tsx` lodging panel, add a `Download CSV` button beside the existing timeline.
 
-## 3. Stripe payment-status badge on the success screen + trips list
+- New util `src/lib/lodging/auditCsv.ts` builds a CSV string from `lodge_reservation_audit` rows: `timestamp,from_status,to_status,actor_role,actor_name,note`.
+- File name: `reservation-{reference}-history.csv`, downloaded via Blob + `URL.createObjectURL`.
+- Visible to guest (own reservation) and host (store owner) — RLS already restricts the audit query.
+- Header row + ISO-8601 timestamps + UTF-8 BOM so Excel opens it cleanly.
 
-- New `LodgingPaymentBadge.tsx` that maps `lodge_reservations.payment_status` (`unpaid | pending | authorized | paid | captured | refunded | failed`) to a chip:
-  - `authorized` → green "Deposit authorized · ${amount}"
-  - `paid` / `captured` → emerald "Payment captured · ${amount}"
-  - `pending` → amber "Awaiting Stripe confirmation"
-  - `failed` → destructive "Payment failed — retry"
-- **Webhook**: new edge function `stripe-lodging-webhook` listens for `payment_intent.amount_capturable_updated` (→ `authorized`), `payment_intent.succeeded` (→ `captured`), `payment_intent.payment_failed` (→ `failed`), and `charge.refunded` (→ `refunded`), updating `lodge_reservations` matched by `stripe_payment_intent_id`.
-- Badge rendered: in the booking-drawer success panel beside the reference, in `MyTripsPage` lodging cards, and on `TripDetailPage`. Realtime subscription keeps it live.
+## 3. Refund / refund-in-progress / retry states
 
-## 4. .ics preview + edit panel
+Extend the Stripe lifecycle UI.
 
-- New `IcsPreviewPanel.tsx` shown in the success screen *before* download:
-  - Editable inputs: **Check-in time** (HH:MM), **Check-out time** (HH:MM), **Address** (textarea, prefilled from `propertyProfile.address` / store address), **Timezone** (read-only chip with link "use property tz: Asia/Phnom_Penh").
-  - Live preview block showing the two events as they'll appear on the calendar (`Check-in: Sat 3 May · 3:00 PM @ {address}` etc).
-  - Buttons: `Download .ics` (calls existing `buildBookingIcs` with edited values) and `Reset to property defaults`.
-- Replaces the current single "Add to calendar" button — that button now opens the panel inline.
+- **Webhook (`stripe-lodging-webhook`)**: handle three more events:
+  - `charge.refund.updated` with `status === "pending"` → set `payment_status = "refund_pending"`.
+  - `charge.refunded` (already handled) → `refunded`.
+  - `payment_intent.payment_failed` (already handled) → `failed`, plus store `last_payment_error` text on the reservation.
+- **Migration**: add `last_payment_error text` column.
+- **`LodgingPaymentBadge.tsx`**: add two new states:
+  - `refund_pending` → amber `RotateCcw` chip "Refund in progress".
+  - `refunded` → muted `Undo2` chip "Deposit refunded · ${amount}".
+- **Retry action**: when `payment_status === "failed"`, badge becomes a button that re-invokes `create-lodging-deposit` with the existing `reservation_id`, opening a fresh Checkout session (the edge function will reuse / replace `stripe_session_id`). Shown on success screen, `MyTripsPage`, and `TripDetailPage`.
 
-## 5. "View source" deep link on each consent checkbox
+## 4. Specific availability-conflict reason
 
-- Add a small `<button type="button">View source</button>` link beside each of the two consent checkboxes in Step 4.
-- Tapping opens a lightweight inline `Sheet` / accordion (`PolicySourceSheet.tsx`) that:
-  - For the **House rules** checkbox: renders the exact `house_rules` JSON from `lodge_property_profile` formatted as a labeled list (Quiet hours, Parties, Smoking, Min age, ID at check-in, Security deposit), with each field highlighted; scroll lands on the first non-empty rule.
-  - For the **Cancellation** checkbox: renders the policy key (`flexible | moderate | strict | non_refundable`), the long-form `cancellationDescription()`, and the rate type that triggered it.
-- Each opens a fresh interaction; the consent checkbox itself stays gated by the existing scroll-to-bottom rule plus a new flag `viewedRulesSource` / `viewedCancelSource` that flips true once the sheet has been opened. Hint chip: "Tap **View source** to enable this checkbox".
+Replace the generic "dates no longer available" banner with a precise, evidence-backed message.
+
+- Update `useRoomConflictCheck.ts` to return the actual conflicting rows (`id, reference, status, check_in, check_out, guest_first_name`) instead of a boolean — limit 5, ordered by `check_in`.
+- New `ConflictReasonPanel.tsx` rendered in Step 4 review when conflicts exist:
+  - Title: "Room is booked for these dates".
+  - For each conflict: chip showing `#{reference} · {status}` (status colour-coded) and the overlapping date range (`May 3 → May 5`).
+  - For privacy, guest name shown only to the host preview (not consumer) — consumer just sees the reference + status.
+  - Action button: `Pick new dates` → jumps drawer back to Step 1.
+- `submit()` race-guard re-uses the same shape and surfaces the same panel as a toast description if it triggers.
+
+## 5. Lock check-in/out edits inside the cutoff window
+
+Prevent last-minute calendar tweaks that would mismatch the host's prep.
+
+- **Property profile**: add `ics_lock_hours int default 24` to `lodge_property_profile.house_rules` (existing jsonb — no migration needed) and a numeric input in the admin property profile editor labeled "Lock calendar edits within (hours)".
+- **`IcsPreviewPanel.tsx`**:
+  - Compute `hoursUntilCheckIn = differenceInHours(checkInDateTime, now)` using property tz.
+  - When `hoursUntilCheckIn <= ics_lock_hours`, the time inputs and address textarea become **read-only**, the Reset button is hidden, and an amber alert appears at the top:
+    `"Check-in is in {n} hours. Calendar details are locked to match the host's prep window. Download will use the property defaults."`
+  - The download still works — it just uses the locked-in defaults.
+  - When unlocked, a small caption shows the lock window: `"Edits lock {ics_lock_hours}h before check-in"` so the guest knows in advance.
 
 ## File map
 
 **Created**
-- `src/components/lodging/ReservationStatusHistory.tsx` — audit-row list with realtime + actor names.
-- `src/components/lodging/LodgingPaymentBadge.tsx` — Stripe payment-status chip.
-- `src/components/lodging/IcsPreviewPanel.tsx` — editable .ics confirmation panel.
-- `src/components/lodging/PolicySourceSheet.tsx` — "View source" sheet.
-- `src/hooks/lodging/useReservationLive.ts` — realtime hook for reservation + audit rows.
-- `src/hooks/lodging/useRoomConflictCheck.ts` — fresh DB conflict query for the selected dates.
-- `supabase/functions/stripe-lodging-webhook/index.ts` — Stripe webhook → payment_status updates.
-- `supabase/migrations/<ts>_lodge_audit_actor.sql` — adds actor cols + status-change trigger.
+- `src/components/lodging/PolicyAcknowledgementCard.tsx`
+- `src/components/lodging/ConflictReasonPanel.tsx`
+- `src/lib/lodging/auditCsv.ts`
 
 **Modified**
-- `src/components/lodging/LodgingBookingDrawer.tsx` — conflict re-check, payment badge, IcsPreviewPanel replacing button, PolicySourceSheet, viewed-source gating.
-- `src/pages/trips/TripDetailPage.tsx` — render timeline + history + payment badge for lodging trips, subscribe to realtime.
-- `src/pages/app/MyTripsPage.tsx` — payment badge alongside the existing status pill.
+- `src/components/lodging/LodgingBookingDrawer.tsx` — record `policy_consent`, render verified markers, conflict reason panel, retry on failed.
+- `src/components/lodging/LodgingPaymentBadge.tsx` — new `refund_pending` / `refunded` / `failed+retry` states.
+- `src/components/lodging/IcsPreviewPanel.tsx` — lock-window logic + amber alert + caption.
+- `src/hooks/lodging/useRoomConflictCheck.ts` — return conflict row details (not just bool).
+- `src/pages/trips/TripDetailPage.tsx` — CSV export button + PolicyAcknowledgementCard.
+- `src/pages/app/MyTripsPage.tsx` — failed-state retry badge wiring.
+- `supabase/functions/stripe-lodging-webhook/index.ts` — handle `charge.refund.updated`, store `last_payment_error`.
+- `supabase/functions/create-lodging-deposit/index.ts` — allow re-invocation on `failed` to mint a fresh session.
+- Admin property-profile editor — `ics_lock_hours` input.
+
+**Migration**
+- Add `policy_consent jsonb`, `policy_consent_version text`, `last_payment_error text` to `lodge_reservations`.
 
 ## Technical notes
 
-- New webhook needs `STRIPE_WEBHOOK_SECRET` — will prompt the user via the secrets tool before deploy.
-- Realtime: enable replication on `lodge_reservations` and `lodge_reservation_audit` (added in migration with `alter publication supabase_realtime add table …`).
-- Trigger uses `SECURITY DEFINER` and resolves actor role: `admin` if `has_role(uid,'admin')`, `host` if `is_lodge_store_owner(store_id)`, else `guest`. NULL `auth.uid()` (edge-function service role updates) → `system`.
-- All UI follows v2026 high-density tokens (`text-[11px]`, `rounded-xl`, Lucide icons only).
-- No new npm dependencies.
+- No new dependencies (date-fns + existing Stripe SDK cover everything).
+- RLS unchanged — guest sees own reservation; host sees rows for their store; audit rows already follow the same pattern.
+- CSV uses native Blob (no library); BOM prefix for Excel compat.
+- All UI follows v2026 high-density tokens (`text-[11px]`, `rounded-xl`, Lucide icons only — no emojis).
+- Realtime already wired in step 2 of the previous round, so refund/retry badge state propagates without extra subscriptions.
 
