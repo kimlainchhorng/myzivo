@@ -27,6 +27,7 @@ import { LodgingRoomCard } from "@/components/lodging/LodgingRoomCard";
 import { LodgingStaySelector } from "@/components/lodging/LodgingStaySelector";
 import { LodgingBookingDrawer } from "@/components/lodging/LodgingBookingDrawer";
 import { LodgingHighlightsStrip } from "@/components/lodging/LodgingHighlightsStrip";
+import { LodgingAmenitiesPanel } from "@/components/lodging/LodgingAmenitiesPanel";
 
 /**
  * Extract the correct language part from dual-format text like "Khmer/English".

@@ -75,7 +75,12 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
       await upsert.mutateAsync(form);
       toast.success("Property profile saved");
     } catch (e: any) {
-      toast.error(e.message || "Save failed");
+      const msg = String(e?.message || "");
+      if (msg.includes("row-level security") || msg.includes("permission") || msg.includes("violates")) {
+        toast.error("You must be the store owner to edit this property");
+      } else {
+        toast.error(msg || "Save failed");
+      }
     }
   };
 
