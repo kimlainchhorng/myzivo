@@ -185,7 +185,6 @@ export const PARTNER_SUBID_PARAMS: Record<string, string> = {
   radicalstorage: 'subid',
   airhelp: 'subid',
   compensair: 'subid',
-  klook: 'subid',
   ektatraveling: 'subid',
   // Default
   default: 'subid',

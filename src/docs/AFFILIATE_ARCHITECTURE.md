@@ -25,7 +25,7 @@ User searches → Compares options → Clicks "View Deal" → Redirected to part
 | Flights    | `zivo_flights`    | Searadar         | Flight search & booking |
 | Hotels     | `zivo_hotels`     | Booking.com      | Hotel search & booking  |
 | Car Rental | `zivo_cars`       | Rentalcars.com   | Car rental comparison   |
-| Activities | `zivo_activities` | Klook            | Tours & attractions     |
+| Activities | `zivo_activities` | Tiqets           | Tours & attractions     |
 
 ⚠️ **SubIDs must never be changed without Business Operations approval.** They are tracked by affiliate networks for revenue attribution.
 

@@ -70,17 +70,6 @@ interface ExtrasPartner {
 
 const EXTRAS_PARTNERS: ExtrasPartner[] = [
   {
-    id: 'klook',
-    name: 'Klook',
-    category: 'Activities & Tours',
-    description: 'Book tours and attractions worldwide',
-    icon: Ticket,
-    thumbnail: extrasActivities,
-    trackingUrl: 'https://klook.tpo.li/ToVcOax7',
-    gradient: 'from-emerald-500/10 to-teal-500/10',
-    borderHover: 'hover:border-emerald-500/50',
-  },
-  {
     id: 'tiqets',
     name: 'Tiqets',
     category: 'Museums & Attractions',

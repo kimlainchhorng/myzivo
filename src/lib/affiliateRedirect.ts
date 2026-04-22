@@ -151,14 +151,14 @@ export function redirectToActivityPartner(
   // Track the click
   trackAffiliateClick({
     flightId: `activity-${params.destination}-${Date.now()}`,
-    airline: 'Klook',
+    airline: 'Tiqets',
     airlineCode: 'ACT',
     origin: 'ZIVO',
     destination: params.destination,
     price: 0,
     passengers: 1,
     cabinClass: 'standard',
-    affiliatePartner: 'klook',
+    affiliatePartner: 'tiqets',
     referralUrl: url,
     source: options.source,
     ctaType: options.ctaType,
