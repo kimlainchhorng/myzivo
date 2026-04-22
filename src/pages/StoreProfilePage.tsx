@@ -659,14 +659,25 @@ export default function StoreProfilePage() {
 
           {!loadingBooking && !hasBooking && (
             <div className="mt-2.5 flex flex-col gap-1.5">
-              <Button
-                variant="outline"
-                onClick={() => navigate("/account/bookings")}
-                className="w-full h-10 rounded-xl gap-2 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 text-[12px] font-semibold"
-              >
-                <Lock className="h-3.5 w-3.5" />
-                Complete a booking to unlock chat
-              </Button>
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate("/account/bookings")}
+                      className="w-full h-10 rounded-xl gap-2 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 text-[12px] font-semibold"
+                    >
+                      <Lock className="h-3.5 w-3.5" />
+                      Complete a booking to unlock chat
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[260px] text-[11px] leading-snug">
+                    {isLodging
+                      ? "Confirmed reservation required at this property to unlock Live Chat & Call Store (lodge_reservation)."
+                      : "Completed order required at this store to unlock Live Chat & Call Store (food_order)."}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <p className="text-[10px] leading-snug text-white/55 px-1">
                 Already booked? Make sure you used the same account email.{" "}
                 <Link to="/account/bookings" className="underline text-emerald-300 hover:text-emerald-200">
