@@ -20,6 +20,10 @@ import {
   useDeleteTripItem, ItemType, TripItem,
 } from "@/hooks/useTripItineraries";
 import { format } from "date-fns";
+import { ReservationStatusTimeline, type LodgeStatus } from "@/components/lodging/ReservationStatusTimeline";
+import { ReservationStatusHistory } from "@/components/lodging/ReservationStatusHistory";
+import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
+import { useReservationLive } from "@/hooks/lodging/useReservationLive";
 
 const itemIcons: Record<ItemType, typeof Plane> = {
   flight: Plane,
@@ -195,6 +199,11 @@ export default function TripDetailPage() {
         </div>
 
         <Separator className="mb-6" />
+
+        {/* Lodging reservation timeline (auto-rendered if trip has linked lodge_reservation_id in metadata) */}
+        {(trip as any).lodge_reservation_id && (
+          <LodgingTimelineBlock reservationId={(trip as any).lodge_reservation_id} />
+        )}
 
         {/* Add item button */}
         <div className="flex items-center justify-between mb-4">
