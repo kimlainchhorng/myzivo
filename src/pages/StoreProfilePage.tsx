@@ -22,9 +22,11 @@ import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import { isAllowedSocialUrl } from "@/lib/urlSafety";
 import { getStoreStatus } from "@/utils/storeStatus";
 import { useLodgeRooms, type LodgeRoom } from "@/hooks/lodging/useLodgeRooms";
+import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { LodgingRoomCard } from "@/components/lodging/LodgingRoomCard";
 import { LodgingStaySelector } from "@/components/lodging/LodgingStaySelector";
 import { LodgingBookingDrawer } from "@/components/lodging/LodgingBookingDrawer";
+import { LodgingHighlightsStrip } from "@/components/lodging/LodgingHighlightsStrip";
 
 /**
  * Extract the correct language part from dual-format text like "Khmer/English".
@@ -87,6 +89,7 @@ export default function StoreProfilePage() {
   // Lodging support
   const isLodging = !!store && ["hotel", "resort", "guesthouse"].includes(store.category);
   const { data: allRooms = [], isLoading: loadingRooms } = useLodgeRooms(isLodging ? store!.id : "");
+  const { data: propertyProfile } = useLodgePropertyProfile(isLodging ? store!.id : "");
   const rooms = useMemo(() => (allRooms || []).filter(r => r.is_active), [allRooms]);
 
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
@@ -694,6 +697,8 @@ export default function StoreProfilePage() {
             </span>
           </div>
 
+          {propertyProfile && <LodgingHighlightsStrip profile={propertyProfile} />}
+
           <LodgingStaySelector
             checkIn={stay.checkIn} checkOut={stay.checkOut}
             adults={stay.adults} children={stay.children}
@@ -1176,6 +1181,7 @@ export default function StoreProfilePage() {
           onClose={() => setBookingRoom(null)}
           storeId={store.id}
           storeName={store.name}
+          storePhone={(store as any).phone}
           roomId={bookingRoom.id}
           roomName={bookingRoom.name}
           baseRateCents={bookingRoom.base_rate_cents}
