@@ -6,7 +6,6 @@ import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck, BedDouble, Lock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect } from "react";
 import { track } from "@/lib/analytics";
 
 // Module-scope guard so we only fire `store_contact_unlocked` once per
@@ -19,7 +18,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useStoreProfile, useStoreProducts, useStoreProductCategories, type StoreProductItem } from "@/hooks/useStoreProfile";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import StoreHeroCarousel from "@/components/grocery/StoreHeroCarousel";
 import { toast } from "sonner";
 import { useI18n } from "@/hooks/useI18n";
