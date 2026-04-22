@@ -1,55 +1,81 @@
 
 
-# Fix Add Product dialog: inputs remounting on every keystroke
+# Hotels & Resorts: complete the Booking flow + room photo uploads
 
-## Root cause (from session replay)
+## What's broken / missing today
 
-The replay shows each typed character lands in a **different DOM element id** on the next keystroke (155476 → 156165 → 156854 → 157543). That means the input fields are being **unmounted and remounted on every keystroke** — not just re-rendered. The previous `dvh` + `onOpenAutoFocus` fix only addressed mobile keyboard viewport jumps; it did not address remounts, which is why the user still sees the dialog "jump up" while typing.
+1. **Public store profile** for hotels/resorts/guesthouses shows "No products available yet" (image 1). `StoreProfilePage.tsx` only branches on `auto-repair`; lodging falls through to the empty product grid. The `LodgingRoomCard` and `LodgingBookingDrawer` components exist but are never rendered anywhere.
+2. **Admin "Add Room" dialog** (image 2 / `LodgingRoomsSection.tsx`) has no photo upload — `photos: []` is hardcoded. Owners can't show what the room actually looks like.
+3. **Add-ons** (extra services like breakfast, airport transfer, late checkout) don't exist on rooms or in the booking drawer.
+4. **Booking drawer** is a hand-rolled fixed overlay (z-60), no date picker (`checkIn/checkOut` come in as strings from a parent that doesn't exist on the public profile), no add-on selection, no per-night breakdown beyond a flat total.
 
-The remount is triggered by parent re-renders of `AdminStoreEditPage` (5,000+ line component) that change subtree identity around the dialog. Likely contributors:
+## What we'll build
 
-1. The auto-draft `useEffect` (lines 564–571) writes to `localStorage` on every `productForm` change, which combined with React Query refetches and the surrounding `<Tabs>`/list re-renders causes the entire dialog JSX subtree to be re-evaluated in a way that loses input identity.
-2. The dialog (`lines 3504–4490`, ~1,000 lines of JSX) is inlined inside the page render. Any sibling state change (product list refetch, image upload progress, tag dropdown updates) re-runs this huge JSX block.
-3. A few inputs use `defaultValue` + `key={\`...-${productDialog}\`}` (line 4032), but the `productDialog` boolean only flips on open/close — that key is fine. The remount affects controlled `value={productForm.X}` inputs too, so the cause is parent-level, not key-level.
+### 1. Admin — richer "Add / Edit Room" dialog (`LodgingRoomsSection.tsx`)
 
-## Fix
+- **Photos uploader** (up to 8 per room): drag/drop + tap to pick, thumbnail grid with remove + drag-reorder, first photo = cover. Reuses the existing `store-assets` bucket under path `lodging/{storeId}/rooms/{roomId|new}/{uuid}.{ext}`. Same pattern as `AdminStoresPage` logo/banner upload, with the existing `uploadStoreAsset` helper.
+- **Description textarea** (new column `description text`) — short marketing copy shown on the public card detail.
+- **Cancellation policy** select: `flexible` / `moderate` / `strict` / `non_refundable` (new column `cancellation_policy text`).
+- **Check-in / check-out time** inputs (store-level fallback already exists; per-room override optional — new columns `check_in_time time`, `check_out_time time` nullable).
+- **Add-ons editor**: rows of `{ name, price_cents, per: "stay" | "night" | "guest" }`. Stored in new JSONB column `addons jsonb default '[]'`. Examples: "Breakfast +$8/night", "Airport pickup +$25/stay".
+- Keep the existing null-safe number inputs from the prior fix.
 
-### 1. Extract the dialog into a memoized child component
+### 2. Database migration
 
-Create `src/pages/admin/components/ProductFormDialog.tsx`:
+New columns on `lodge_rooms`:
+- `description text`
+- `cancellation_policy text default 'flexible'`
+- `check_in_time time`, `check_out_time time`
+- `addons jsonb not null default '[]'::jsonb`
 
-- Accepts props: `open`, `onOpenChange`, `productForm`, `setProductForm`, `editingProduct`, `form` (store form, for category/khr_rate/name), `savedCategories/Brands` + setters, `customBydModels`, image upload handlers, `onSave`, `onSaveAndAddAnother`, `t` (translation).
-- Wrapped in `React.memo` so it only re-renders when its own props change.
-- Internally holds the entire JSX currently at lines 3503–4490.
+(Photos already supported via existing `photos jsonb` column — we just start writing to it.)
 
-Result: refetches and unrelated state changes in the parent no longer rebuild the dialog's input tree, so React preserves input identity and focus across keystrokes.
+New column on `lodge_reservations`:
+- `addons jsonb not null default '[]'::jsonb` (snapshot of selected add-ons + computed price per booking)
 
-### 2. Stop the draft effect from firing on every keystroke
+### 3. Public store profile — render rooms for lodging stores (`StoreProfilePage.tsx`)
 
-In `AdminStoreEditPage.tsx` lines 564–571, debounce the `localStorage.setItem` to ~400 ms (using a `setTimeout` cleared on next change). The draft is a "don't lose work" safety net; saving on every character is unnecessary work and one of the things triggering parent re-renders mid-typing.
+Add an `isLodging` branch (parallel to the existing `auto-repair` branch) at line ~673:
 
-### 3. Stabilize callback identities passed to the dialog
+- Fetch rooms via `useLodgeRooms(store.id)` filtered to `is_active = true`.
+- Replace the "All Products" header with **"Rooms & Rates"** + room count.
+- Render a vertical stack of `LodgingRoomCard` (already exists) — pass first photo as `imageUrl`.
+- Above the list, a **stay selector bar** (sticky-ish): Check-in date, Check-out date, Adults, Children. Defaults: today / +1 day / 2 / 0. Persist in URL params so deep-links work.
+- Empty state: "No rooms listed yet" with bed icon (not the package icon).
 
-In the parent, wrap `updateProductField`, `uploadProductImage`, `removeProductImage`, `saveProduct`, and `setProductDialog` consumers in `useCallback` so the memoized child doesn't re-render needlessly.
+### 4. Booking flow upgrade (`LodgingBookingDrawer.tsx` → migrated to `ResponsiveModal`)
 
-### 4. Remove the now-unnecessary remount key
+- **Step 1 — Stay**: date range picker (uses existing `Calendar` from shadcn), guest counters (adults/children), room/units count if multiple.
+- **Step 2 — Add-ons**: list of room's `addons` with checkboxes + qty (for per-guest items). Live total updates.
+- **Step 3 — Guest info**: name, phone, email, country, special requests (current form, kept). Phone uses `CountryPhoneInput` per project standard.
+- **Price breakdown**: rate × nights, weekend rate auto-applied for Fri/Sat nights, weekly/monthly discount auto-applied, add-ons line, **Total** in bold. Sub-line: "Pay at the property unless arranged with host" (preserve current MoR-style disclaimer).
+- On submit → insert `lodge_reservations` with `addons` snapshot + `status: 'hold'` (current behavior preserved).
+- Use `ResponsiveModal` (bottom sheet on mobile, dialog on desktop) so it matches the rest of the v2026 UI and respects safe-area + keyboard.
 
-Line 4032: `key={\`price-${editingProduct?.id || "new"}-${productDialog}\`}` — once the parent stops remounting, this key (which was a band-aid) can be removed; the input should switch to controlled `value` to stay in sync with KHR auto-conversion.
+### 5. Reuse where possible
 
-## Verification
-
-- Manual: open Add Product dialog on mobile (390×844), type a long name like "Premium Cambodia Mango Juice 500ml" — no scroll jump, focus never lost, no character drop.
-- Replay check: after fix, every keystroke for a single field should land on the **same** element id, not a new one each time.
-- Desktop: same behavior, no regression to image upload or KHR/USD price sync.
+- `ResponsiveModal` for the booking sheet.
+- `uploadStoreAsset` helper for room photo uploads.
+- `useLodgeRooms` already supports the new fields once the migration runs (it does `select *`).
+- `LodgingRoomCard` stays as-is (already accepts `imageUrl`, `amenities`, `breakfastIncluded`).
 
 ## Files
 
-- **Create**: `src/pages/admin/components/ProductFormDialog.tsx` (extracted dialog, `React.memo`)
-- **Edit**: `src/pages/admin/AdminStoreEditPage.tsx` — replace inline dialog JSX with `<ProductFormDialog ... />`, debounce draft effect, wrap handlers in `useCallback`, drop the price input's `key`
+**Edit**
+- `src/components/admin/store/lodging/LodgingRoomsSection.tsx` — add photos uploader, description, cancellation policy, check-in/out times, add-ons editor.
+- `src/hooks/lodging/useLodgeRooms.ts` — extend `LodgeRoom` interface with the new fields.
+- `src/components/lodging/LodgingBookingDrawer.tsx` — convert to `ResponsiveModal`, add date picker, add-ons step, weekend/discount math, snapshot add-ons on insert.
+- `src/components/lodging/LodgingRoomCard.tsx` — show description preview + "X add-ons available" hint when present.
+- `src/pages/StoreProfilePage.tsx` — render lodging rooms branch with stay selector + booking drawer wiring.
+
+**Create**
+- `src/components/lodging/LodgingStaySelector.tsx` — date range + guests bar used on store profile.
+- `src/components/lodging/LodgingRoomPhotoUploader.tsx` — thumbnail grid + add/remove/reorder.
+- Supabase migration: add columns above to `lodge_rooms` and `lodge_reservations`.
 
 ## Out of scope
 
-- Refactoring the rest of the 5,000-line page
-- Changing the product schema or KHR/USD conversion logic
-- The unrelated "Missing Description for DialogContent" a11y warning in the console (separate issue)
+- Real-time availability calendar blocking on the public side (already exists in admin via `LodgingCalendarSection`; integrating with the booking drawer to grey out sold-out dates is a follow-up).
+- Card payments / Stripe for hotels (current model is "request booking, pay at property").
+- Multi-room cart (one room per booking request for now).
 
