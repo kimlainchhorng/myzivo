@@ -721,7 +721,8 @@ export default function StoreProfilePage() {
                   baseRateCents={r.base_rate_cents}
                   amenities={r.amenities || []}
                   breakfastIncluded={r.breakfast_included}
-                  imageUrl={(r.photos && r.photos[0]) as string | undefined}
+                  photos={(r.photos as string[]) || []}
+                  coverIndex={r.cover_photo_index ?? 0}
                   description={r.description}
                   addonsCount={(r.addons || []).length}
                   onReserve={() => setBookingRoom(r)}

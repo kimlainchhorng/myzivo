@@ -13,9 +13,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ResponsiveModal, ResponsiveModalFooter } from "@/components/ui/responsive-modal";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { LodgingStaySelector } from "@/components/lodging/LodgingStaySelector";
+import { useRoomAvailability, hasUnavailableNight } from "@/hooks/lodging/useRoomAvailability";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { LodgeAddon } from "@/hooks/lodging/useLodgeRooms";
+import { AlertTriangle } from "lucide-react";
 
 interface Props {
   open: boolean;
