@@ -222,8 +222,9 @@ export default function GroceryDeliveryBar({ onAddressChange }: GroceryDeliveryB
           {selectedAddress ? (
             <div className="flex items-center gap-1.5">
               {(() => {
-                const Icon = LABEL_ICONS[selectedAddress.label];
-                return <Icon className={`h-3 w-3 ${LABEL_COLORS[selectedAddress.label]}`} />;
+                const Icon = LABEL_ICONS[selectedAddress.label] ?? MapPin;
+                const color = LABEL_COLORS[selectedAddress.label] ?? "text-muted-foreground";
+                return <Icon className={`h-3 w-3 ${color}`} />;
               })()}
               <p className="text-[12px] font-bold text-foreground truncate">
                 {selectedAddress.label}
