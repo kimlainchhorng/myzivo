@@ -112,17 +112,17 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                 <div><Label>Beds</Label><Input value={editing.beds || ""} onChange={e => setEditing({ ...editing, beds: e.target.value })} placeholder="1 King" /></div>
               </div>
               <div className="grid grid-cols-3 gap-3">
-                <div><Label>Max guests</Label><Input type="number" value={editing.max_guests || 2} onChange={e => setEditing({ ...editing, max_guests: parseInt(e.target.value) || 1 })} /></div>
-                <div><Label>Size m²</Label><Input type="number" value={editing.size_sqm || ""} onChange={e => setEditing({ ...editing, size_sqm: parseFloat(e.target.value) || 0 })} /></div>
-                <div><Label>Units</Label><Input type="number" value={editing.units_total || 1} onChange={e => setEditing({ ...editing, units_total: parseInt(e.target.value) || 1 })} /></div>
+                <div><Label>Max guests</Label><Input type="number" inputMode="numeric" value={editing.max_guests ?? ""} onChange={e => setEditing({ ...editing, max_guests: e.target.value === "" ? null : parseInt(e.target.value) })} /></div>
+                <div><Label>Size m²</Label><Input type="number" inputMode="decimal" value={editing.size_sqm ?? ""} onChange={e => setEditing({ ...editing, size_sqm: e.target.value === "" ? null : parseFloat(e.target.value) })} /></div>
+                <div><Label>Units</Label><Input type="number" inputMode="numeric" value={editing.units_total ?? ""} onChange={e => setEditing({ ...editing, units_total: e.target.value === "" ? null : parseInt(e.target.value) })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Base rate (USD)</Label><Input type="number" step="0.01" value={(editing.base_rate_cents || 0) / 100} onChange={e => setEditing({ ...editing, base_rate_cents: Math.round(parseFloat(e.target.value || "0") * 100) })} /></div>
-                <div><Label>Weekend rate (USD)</Label><Input type="number" step="0.01" value={(editing.weekend_rate_cents || 0) / 100} onChange={e => setEditing({ ...editing, weekend_rate_cents: Math.round(parseFloat(e.target.value || "0") * 100) })} /></div>
+                <div><Label>Base rate (USD)</Label><Input type="number" step="0.01" inputMode="decimal" value={editing.base_rate_cents == null ? "" : editing.base_rate_cents / 100} onChange={e => setEditing({ ...editing, base_rate_cents: e.target.value === "" ? null : Math.round(parseFloat(e.target.value) * 100) })} /></div>
+                <div><Label>Weekend rate (USD)</Label><Input type="number" step="0.01" inputMode="decimal" value={editing.weekend_rate_cents == null ? "" : editing.weekend_rate_cents / 100} onChange={e => setEditing({ ...editing, weekend_rate_cents: e.target.value === "" ? null : Math.round(parseFloat(e.target.value) * 100) })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Weekly discount %</Label><Input type="number" value={editing.weekly_discount_pct || 0} onChange={e => setEditing({ ...editing, weekly_discount_pct: parseFloat(e.target.value) || 0 })} /></div>
-                <div><Label>Monthly discount %</Label><Input type="number" value={editing.monthly_discount_pct || 0} onChange={e => setEditing({ ...editing, monthly_discount_pct: parseFloat(e.target.value) || 0 })} /></div>
+                <div><Label>Weekly discount %</Label><Input type="number" inputMode="decimal" value={editing.weekly_discount_pct ?? ""} onChange={e => setEditing({ ...editing, weekly_discount_pct: e.target.value === "" ? null : parseFloat(e.target.value) })} /></div>
+                <div><Label>Monthly discount %</Label><Input type="number" inputMode="decimal" value={editing.monthly_discount_pct ?? ""} onChange={e => setEditing({ ...editing, monthly_discount_pct: e.target.value === "" ? null : parseFloat(e.target.value) })} /></div>
               </div>
               <div className="flex items-center gap-3">
                 <Switch checked={!!editing.breakfast_included} onCheckedChange={v => setEditing({ ...editing, breakfast_included: v })} />
