@@ -326,28 +326,7 @@ export function LodgingBookingDrawer({
     onClose();
   };
 
-  // Rich .ics generator with timezone, address, contact, and timed events
-  const downloadIcs = () => {
-    if (!reference) return;
-    const ics = buildBookingIcs({
-      reference,
-      storeName,
-      roomName,
-      storeAddress: (propertyProfile as any)?.address || null,
-      storePhone: storePhone || null,
-      storeUrl: typeof window !== "undefined" ? window.location.href : null,
-      guestName: name,
-      guestEmail: email || null,
-      checkIn,
-      checkOut,
-      checkInTime: (propertyProfile as any)?.check_in_from || "15:00",
-      checkOutTime: (propertyProfile as any)?.check_out_until || "11:00",
-      timezone: (propertyProfile as any)?.timezone || undefined,
-      totalText: fmtMoney(breakdown.total),
-      cancellationText: cancellationDescription(cancellationPolicy),
-    });
-    downloadIcsFile(reference, ics);
-  };
+  // .ics generation now lives inside IcsPreviewPanel — see success step below.
 
   const copyRef = () => {
     if (!reference) return;
