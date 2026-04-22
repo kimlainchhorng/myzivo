@@ -93,6 +93,7 @@ export default function StoreProfilePage() {
   const isLodging = !!store && ["hotel", "resort", "guesthouse"].includes(store.category);
   const { data: allRooms = [], isLoading: loadingRooms } = useLodgeRooms(isLodging ? store!.id : "");
   const { data: propertyProfile } = useLodgePropertyProfile(isLodging ? store!.id : "");
+  const { data: hasBooking = false } = useHasStoreBooking(store?.id);
   const rooms = useMemo(() => (allRooms || []).filter(r => r.is_active), [allRooms]);
 
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
