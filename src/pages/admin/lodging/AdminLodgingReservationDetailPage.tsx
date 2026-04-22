@@ -267,10 +267,45 @@ export default function AdminLodgingReservationDetailPage() {
           <CardHeader className="pb-3"><CardTitle className="text-sm">Update status</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {pendingStatus ? (
-              <div className="space-y-2 p-3 rounded-lg border border-border bg-muted/20">
+              <div className="space-y-2.5 p-3 rounded-lg border border-border bg-muted/20">
                 <p className="text-sm font-semibold">
                   {STATUS_LABEL[reservation.status]} → {STATUS_LABEL[pendingStatus]}
                 </p>
+
+                {reasonRequired && (
+                  <div>
+                    <Label className="text-xs">Reason (required)</Label>
+                    <select
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      className="mt-1 w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
+                    >
+                      <option value="">Select a reason…</option>
+                      {(REASON_OPTIONS[pendingStatus] || []).map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {(NOTE_TEMPLATES[pendingStatus] || []).length > 0 && (
+                  <div>
+                    <Label className="text-xs mb-1 block">Quick templates</Label>
+                    <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-0.5 px-0.5 scrollbar-none">
+                      {NOTE_TEMPLATES[pendingStatus].map((tpl) => (
+                        <button
+                          key={tpl}
+                          type="button"
+                          onClick={() => appendTemplate(tpl)}
+                          className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium border border-border bg-background hover:bg-muted hover:border-primary/40 transition whitespace-nowrap"
+                        >
+                          + {tpl}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <Label className="text-xs">Audit note (required)</Label>
                   <Textarea
@@ -282,8 +317,12 @@ export default function AdminLodgingReservationDetailPage() {
                   />
                 </div>
                 <div className="flex gap-2 justify-end">
-                  <Button variant="outline" size="sm" onClick={() => { setPendingStatus(null); setNote(""); }} disabled={saving}>Cancel</Button>
-                  <Button size="sm" onClick={submitTransition} disabled={saving || !note.trim()}>
+                  <Button variant="outline" size="sm" onClick={() => { setPendingStatus(null); setNote(""); setReason(""); }} disabled={saving}>Cancel</Button>
+                  <Button
+                    size="sm"
+                    onClick={submitTransition}
+                    disabled={saving || !note.trim() || (reasonRequired && !reason)}
+                  >
                     {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
                     Save
                   </Button>
@@ -296,7 +335,7 @@ export default function AdminLodgingReservationDetailPage() {
                 {transitions.map((t) => (
                   <Button key={t.to} size="sm" variant={t.variant === "destructive" ? "outline" : "outline"}
                     className={`gap-1 h-8 text-xs ${t.variant === "destructive" ? "text-destructive" : ""}`}
-                    onClick={() => { setPendingStatus(t.to); setNote(""); }}>
+                    onClick={() => { setPendingStatus(t.to); setNote(""); setReason(""); }}>
                     <t.icon className="h-3.5 w-3.5" /> {t.label}
                   </Button>
                 ))}
