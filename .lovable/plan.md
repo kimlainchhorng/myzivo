@@ -1,22 +1,54 @@
 
 
-# Fix duplicate "Reservations" sidebar entry for hotels
+# Fix store-posts upload RLS failure (Post Picture / Post Video dialog)
 
-The sidebar shows **two "Reservations" rows** because the existing "Payment" tab is being renamed to "Reservations" for lodging (in `StoreOwnerLayout.tsx` line 122) AND a separate `lodge-reservations` HOTEL OPS item also exists. Clicking the top one opens the Payment Method screen, which is confusing.
+All uploads in the **Post Picture** dialog fail with *"new row violates row-level security policy"* because the storage path doesn't match the bucket's RLS policy.
 
-## Fix
+## Root cause
 
-`src/components/admin/StoreOwnerLayout.tsx`
-- Stop renaming the `payment` tab for lodging. Keep it labeled **"Payment & Payouts"** so it remains clearly the money settings screen (Stripe / ABA PayWay / payout config).
-- Change line 122: `const paymentLabel = isAutoRepair ? "Bookings" : "Payment & Payouts";` (drop the lodging branch).
+`store-posts` bucket policy (migration `20260402153243`) requires the first folder of the object path to equal the uploader's `auth.uid()`:
 
-`src/pages/admin/AdminStoreEditPage.tsx`
-- Mirror the same in `paymentLabelTitle` (line 1837): drop the `isLodging ? "Reservations"` branch so the page header reads **"Payment & Payouts"** when the Payment tab is active.
+```sql
+WITH CHECK (
+  bucket_id = 'store-posts'
+  AND (auth.uid())::text = (storage.foldername(name))[1]
+)
+```
 
-## Result
+But `uploadPostMedia` in `src/pages/admin/AdminStoreEditPage.tsx` (line 1263) builds:
 
-- Top sidebar **MANAGE → Payment & Payouts** = money settings (Stripe, ABA, payout config).
-- HOTEL OPS → **Reservations** = the actual booking list (LodgingReservationsSection).
+```ts
+const path = `posts/${storeId}/${Date.now()}-${mediaItemId}.${ext}`;
+```
 
-No DB changes, no new files. Two one-line edits.
+First folder = `"posts"` → fails the policy → every upload tile shows "Upload failed".
+
+## Fix — single edit
+
+`src/pages/admin/AdminStoreEditPage.tsx` (`uploadPostMedia`, ~line 1263):
+
+Change the upload path to put the user's UID first, keeping `storeId` and the original posts/ namespace inside it for organization:
+
+```ts
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) throw new Error("Not signed in");
+const path = `${user.id}/${storeId}/${Date.now()}-${mediaItemId}.${ext}`;
+```
+
+This satisfies `(storage.foldername(name))[1] === auth.uid()` so the INSERT policy passes. Public read policy is unaffected (it only checks `bucket_id`). The DELETE policy uses the same `auth.uid()` first-folder rule, so deletes by the same owner continue to work.
+
+`getPublicUrl(path)` immediately after still returns a valid URL — no DB schema change, no migration, no other code paths affected.
+
+## Verification
+
+After the change, dragging photos into the **Post Picture** dialog uploads cleanly, the green "Ready" badge appears, and **New Post** becomes enabled. Existing posts (which use the old `posts/<storeId>/...` paths) keep rendering because the public SELECT policy doesn't care about folder structure.
+
+## Files
+
+- **Edited**: `src/pages/admin/AdminStoreEditPage.tsx` — 2 lines inside `uploadPostMedia` (fetch user, change path).
+
+## Out of scope
+
+- Backfilling old uploaded files (none failed historically — old policy was looser).
+- Touching `store-logos` / gallery upload paths (different bucket, different working policy).
 
