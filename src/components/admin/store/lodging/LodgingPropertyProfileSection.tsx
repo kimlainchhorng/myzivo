@@ -192,7 +192,7 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
             <Card>
               <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> Hero badges <span className="text-[10px] font-normal text-muted-foreground">· top 3 visible</span></CardTitle></CardHeader>
               <CardContent className="pt-0">
-                <ChipGroup options={HERO_BADGES.filter(matches)} selected={form.hero_badges || []} onToggle={v => toggleIn("hero_badges", v)} />
+                <ChipGroup options={HERO_BADGES.filter(matches)} selected={form.hero_badges || []} onToggle={v => toggleIn("hero_badges", v)} withIcons />
                 {(form.hero_badges || []).length > 0 && (
                   <p className="text-[10px] text-muted-foreground mt-2">Visible on storefront: <b>{(form.hero_badges || []).slice(0, 3).join(" · ")}</b></p>
                 )}
