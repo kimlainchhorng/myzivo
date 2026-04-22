@@ -1,69 +1,58 @@
 
 
-# Lodging polish: lock dates after add-ons, audit templates, live cover preview, richer legend, cancellation reasons
+# Lodging: prominent photo upload + room details view
 
-Five focused refinements on the booking drawer, room editor, and admin reservation detail.
+Two things to fix based on your screenshots:
 
-## 1. Lock date pickers after leaving the Stay step (`LodgingBookingDrawer.tsx`)
+1. **IMG_2072 (Edit Room)** — empty cover preview is just decorative; users don't realize the small "Add" tile below is the upload. Make the cover preview itself the primary upload target.
+2. **IMG_2074 (Public Villa card)** — no photo, no description visible, no way to "see all information about room" before reserving. Need a tap-to-expand details view.
 
-Once the user advances past Step 1 ("Your stay") into Add-ons or Guest Info, dates and guests must not change — otherwise the price/add-on totals they're reviewing become stale.
+## 1. Cover preview becomes the upload hero (`LodgingRoomsSection.tsx` + `LodgingRoomPhotoUploader.tsx`)
 
-- Pass a new `locked` prop into `LodgingStaySelector` (true when `step !== "stay"`).
-- When locked: render the stay bar in a read-only state — popovers disabled, buttons get `pointer-events-none opacity-70`, a small `Lock` icon + "Go back to change dates" hint appears below.
-- Re-validate on every breakdown recompute: if `hasUnavailableNight` flips to `invalid` while the user is on Add-ons/Guest steps (e.g. a cached availability refresh), surface the existing red `AlertTriangle` banner with a new line: **"Tap Back to pick new dates."** Continue/Submit are already disabled via `rangeIssue.invalid`.
+Replace the static 96px cover preview banner with an **interactive hero uploader**:
 
-## 2. Quick-select audit note templates (`AdminLodgingReservationDetailPage.tsx`)
+- 160px tall (taller than today's 96px) so it reads as a real action.
+- When no photos: dashed border, large `ImagePlus` icon + "Tap to upload cover photo · up to 8 images" — clicking opens the file picker directly.
+- When photos exist: shows the cover image full-bleed with a subtle gradient overlay + corner badge "Tap to change cover" (opens a small picker showing all uploaded photos as a grid where you tap one to set as cover).
+- Existing thumbnail uploader below stays for managing the full set, but is renamed "All photos" with a smaller header so the hero is clearly the primary entry point.
 
-Inside the pending-transition panel (above the Textarea):
+This makes the upload flow obvious on first open and removes the "why is the preview empty?" confusion.
 
-- Render a horizontally-scrollable row of `Badge`-style chips from a context-aware template list keyed by `pendingStatus`:
-  - **confirmed** → "Confirmed by admin", "Payment received", "Phone-verified"
-  - **checked_in** → "Guest arrived on time", "Early check-in approved", "ID verified at desk"
-  - **checked_out** → "Standard check-out", "Late check-out (fee applied)", "Damages noted"
-  - **cancelled** → "Customer cancellation request", "Reschedule requested", "Overbooking"
-  - **no_show** → "Customer no-show", "Unreachable by phone", "Late arrival cut-off"
-- Tapping a chip appends (with `\n` separator if note already has text) into `note`. Chips are additive so admins can stack a template + free text.
+## 2. Room details modal — "See full details" before booking (`LodgingRoomCard.tsx` + new `LodgingRoomDetailsModal.tsx`)
 
-## 3. Required cancellation/no-show reason field
+Make the entire public room card tappable (except the Reserve button) → opens a `ResponsiveModal` with the complete room information:
 
-When `pendingStatus` is `cancelled` or `no_show`, the inline transition form gains a required **Reason** select above the audit note:
+- **Photo gallery** at top: swipeable carousel of all photos (cover first), pagination dots, fallback bed icon if none.
+- **Header**: name, type badge, bed config, sleeps N, size m².
+- **Description** (full, not truncated).
+- **Amenities**: complete grid with icons (not just first 4 + count).
+- **Add-ons preview**: list of available extras with prices (e.g. "Breakfast +$8/night") so guests know what's offered before booking.
+- **Policies**: cancellation policy in plain English, check-in/out times, breakfast inclusion.
+- **Sticky footer**: price + "Reserve" button (mirrors card so guests can book from inside the modal).
 
-- Cancelled options: `guest_request`, `payment_failed`, `overbooking`, `property_unavailable`, `policy_violation`, `other`
-- No-show options: `no_arrival`, `unreachable`, `late_beyond_cutoff`, `other`
-- Save is disabled until both `reason` and `note` are filled.
-- On submit, the reason is prepended into the audit note string as `[Reason: <label>] <note>` so it's visible in the existing audit log without a schema change. (Append-only log preserved.)
-- Toast message confirms: `"Cancelled — reason: Guest request"`.
+On the card itself, add a small **"View details"** affordance (chevron + text) next to the price so the tappability is discoverable.
 
-## 4. Live cover-image preview in the room editor header (`LodgingRoomsSection.tsx` dialog)
+## 3. Public card — better empty/no-photo state (`LodgingRoomCard.tsx`)
 
-Add a small preview strip at the top of the Edit/Add Room dialog, above the photo uploader:
+When a room has no photos uploaded yet, instead of a bare bed icon:
 
-- 96px tall banner showing `photos[cover_photo_index]` with object-cover. Empty state: dashed placeholder with `BedDouble` icon + "Cover preview".
-- Live: the existing `onCoverChange` handler already updates `editing.cover_photo_index`, so the preview re-renders instantly when a star is tapped.
-- Below the preview, small caption: "Cover photo · shown on room cards & booking pages".
-- Reuses current state — no extra effects.
-
-## 5. Per-date legend + tooltip text under the booking date pickers (`LodgingStaySelector.tsx` + drawer)
-
-The current legend is minimal ("Unavailable / Selected"). Make it richer **only when used inside the booking drawer** (room-scoped availability):
-
-- Add a `showReasonLegend?: boolean` prop on `LodgingStaySelector`. Drawer passes `true`; the public store-profile selector keeps the simple legend.
-- When true, render a compact two-line legend strip below the date row:
-  - Line 1 (swatches): `■ Sold out` (muted-foreground/40), `■ Restricted` (destructive/30), `■ Selected` (primary), `■ Today` (accent ring).
-  - Line 2 (helper text): "Hover or long-press a date to see why it's unavailable."
-- Tooltips: extend the existing `DayContent` aria/title to differentiate — `"Sold out · already booked"` vs `"Restricted · blocked by host"` (already wired through `availabilityMap.reason`, just refine the text).
+- Soft gradient background (`from-muted to-muted/50`) with the bed icon centered + caption "Photo coming soon" so the card doesn't look broken.
+- Keep the existing photo rendering when photos are present.
 
 ## Files
 
 **Edit**
-- `src/components/lodging/LodgingBookingDrawer.tsx` — pass `locked` + `showReasonLegend` to the selector; tweak invalid-range banner copy.
-- `src/components/lodging/LodgingStaySelector.tsx` — `locked` (read-only mode), `showReasonLegend` (richer legend + clearer tooltips).
-- `src/pages/admin/lodging/AdminLodgingReservationDetailPage.tsx` — template chips, required Reason select for cancel/no-show, prepend reason into audit note.
-- `src/components/admin/store/lodging/LodgingRoomsSection.tsx` — live cover preview banner inside the room dialog.
+- `src/components/lodging/LodgingRoomPhotoUploader.tsx` — split into "Cover hero" (large tap area, opens picker or change-cover sheet) + "All photos" thumbnail grid; expose `renderCoverHero` prop so the room dialog can mount only the hero up top.
+- `src/components/admin/store/lodging/LodgingRoomsSection.tsx` — replace the inline 96px preview block with the new hero uploader; tighten "All photos" section copy.
+- `src/components/lodging/LodgingRoomCard.tsx` — add tappable wrapper opening details modal, "View details" affordance, improved empty-photo state.
+- `src/pages/StoreProfilePage.tsx` — pass full room object to card (already does most of this), wire details modal state.
+
+**Create**
+- `src/components/lodging/LodgingRoomDetailsModal.tsx` — `ResponsiveModal` with photo carousel, full description, amenities grid, add-ons list, policies, sticky Reserve footer.
 
 ## Out of scope
 
-- Persisting cancellation reason as a structured column on `lodge_reservations` (kept inline in audit note for now; can be promoted to a dedicated `cancellation_reason text` column later if needed for analytics).
-- Editing already-saved audit notes (still append-only).
-- Allowing the public selector to surface room-specific reasons (it spans many rooms).
+- Editing photos from the public details modal (admin-only).
+- Lightbox/full-screen photo zoom (carousel inside modal is enough for v1).
+- Per-photo captions/alt text in the uploader.
 
