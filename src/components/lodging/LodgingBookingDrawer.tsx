@@ -664,6 +664,12 @@ export function LodgingBookingDrawer({
               </div>
             </div>
 
+            {/* Status timeline */}
+            <div className="p-3 rounded-xl border border-border bg-card">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Booking status</p>
+              <ReservationStatusTimeline status={reservationStatus} />
+            </div>
+
             <div className="p-3 rounded-xl bg-muted/40 text-xs space-y-1">
               <div className="flex justify-between"><span className="text-muted-foreground">Room</span><span className="font-semibold">{roomName}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Check-in</span><span>{checkIn}</span></div>
