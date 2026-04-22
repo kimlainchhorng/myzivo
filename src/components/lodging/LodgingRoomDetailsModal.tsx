@@ -144,7 +144,7 @@ export function LodgingRoomDetailsModal({
               <CarouselContent>
                 {orderedPhotos.map((src, i) => (
                   <CarouselItem key={`${src}-${i}`}>
-                    <div className="aspect-[16/10] rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50 relative">
+                    <div className="aspect-[4/5] sm:aspect-[3/4] max-h-[70vh] rounded-xl overflow-hidden bg-muted/60 relative flex items-center justify-center">
                       {!loaded[i] && !errored[i] && (
                         <Skeleton className="absolute inset-0 rounded-xl" />
                       )}
@@ -160,7 +160,7 @@ export function LodgingRoomDetailsModal({
                           loading="lazy"
                           onLoad={() => setLoaded(p => ({ ...p, [i]: true }))}
                           onError={() => setErrored(p => ({ ...p, [i]: true }))}
-                          className={`h-full w-full object-cover transition-opacity duration-300 ${loaded[i] ? "opacity-100" : "opacity-0"}`}
+                          className={`max-h-full max-w-full w-auto h-auto object-contain transition-opacity duration-300 ${loaded[i] ? "opacity-100" : "opacity-0"}`}
                         />
                       )}
                     </div>
@@ -169,7 +169,7 @@ export function LodgingRoomDetailsModal({
               </CarouselContent>
             </Carousel>
           ) : (
-            <div className="aspect-[16/10] rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50 flex flex-col items-center justify-center gap-2">
+            <div className="aspect-[4/5] sm:aspect-[3/4] max-h-[70vh] rounded-xl overflow-hidden bg-muted/60 flex flex-col items-center justify-center gap-2">
               <BedDouble className="h-10 w-10 text-muted-foreground/40" />
               <span className="text-xs text-muted-foreground">Photo coming soon</span>
             </div>
