@@ -40,8 +40,6 @@ const ALLOWED_PARTNER_DOMAINS: string[] = [
   // Duffel
   'duffel.com',
   'links.duffel.com',
-  // Kiwi
-  'kiwi.com',
   // Skyscanner
   'skyscanner.com',
   'skyscanner.net',
