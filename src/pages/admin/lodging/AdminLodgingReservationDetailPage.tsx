@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   ArrowLeft, BedDouble, CalendarRange, User, Phone, Mail, Globe,
-  CheckCircle2, LogIn, LogOut, XCircle, AlertCircle, History, Loader2,
+  CheckCircle2, LogIn, LogOut, XCircle, AlertCircle, History, Loader2, Download, RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,12 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLodgeReservationAudit } from "@/hooks/lodging/useLodgeReservationAudit";
+import { useReservationLive } from "@/hooks/lodging/useReservationLive";
+import { ReservationStatusTimeline } from "@/components/lodging/ReservationStatusTimeline";
+import { ReservationStatusHistory } from "@/components/lodging/ReservationStatusHistory";
+import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
+import { PolicyAcknowledgementCard } from "@/components/lodging/PolicyAcknowledgementCard";
+import { downloadAuditCsv } from "@/lib/lodging/auditCsv";
 import type { ReservationStatus } from "@/hooks/lodging/useLodgeReservations";
 
 const STATUS_LABEL: Record<string, string> = {
