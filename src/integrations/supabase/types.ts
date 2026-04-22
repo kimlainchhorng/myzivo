@@ -26896,6 +26896,47 @@ export type Database = {
         }
         Relationships: []
       }
+      lodge_reservation_audit: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          from_status: string | null
+          id: string
+          note: string | null
+          reservation_id: string
+          store_id: string
+          to_status: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          reservation_id: string
+          store_id: string
+          to_status: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          reservation_id?: string
+          store_id?: string
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_reservation_audit_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "lodge_reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lodge_reservation_charges: {
         Row: {
           amount_cents: number
@@ -27059,6 +27100,7 @@ export type Database = {
           cancellation_policy: string
           check_in_time: string | null
           check_out_time: string | null
+          cover_photo_index: number
           created_at: string
           description: string | null
           id: string
@@ -27085,6 +27127,7 @@ export type Database = {
           cancellation_policy?: string
           check_in_time?: string | null
           check_out_time?: string | null
+          cover_photo_index?: number
           created_at?: string
           description?: string | null
           id?: string
@@ -27111,6 +27154,7 @@ export type Database = {
           cancellation_policy?: string
           check_in_time?: string | null
           check_out_time?: string | null
+          cover_photo_index?: number
           created_at?: string
           description?: string | null
           id?: string
