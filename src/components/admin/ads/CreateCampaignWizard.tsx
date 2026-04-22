@@ -430,6 +430,26 @@ export default function CreateCampaignWizard({
               ~{fmt(reachLow)}–{fmt(reachHigh)} people / day
             </p>
           </div>
+          {walletBlocks && (
+            <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-start gap-2">
+              <div className="text-[11px] flex-1">
+                <p className="font-semibold text-amber-700 dark:text-amber-400">Wallet balance too low</p>
+                <p className="text-amber-700/80 dark:text-amber-400/80 mt-0.5">
+                  Balance is ${(walletBalanceCents / 100).toFixed(2)}. Add at least ${(form.daily_budget).toFixed(2)} to submit.
+                </p>
+              </div>
+              {onAddFunds && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-[11px] shrink-0"
+                  onClick={() => { onClose(); onAddFunds(); }}
+                >
+                  Add funds
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </ResponsiveModal>
