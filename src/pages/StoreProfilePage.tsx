@@ -2,9 +2,15 @@
  * StoreProfilePage - Ultra-premium 3D/4D Spatial UI store profile
  * Immersive glassmorphic design with depth, perspective, holographic cards
  */
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck, BedDouble } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck, BedDouble, Lock } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { track } from "@/lib/analytics";
+
+// Module-scope guard so we only fire `store_contact_unlocked` once per
+// (session, store) — re-renders won't double-count.
+const _unlockedFired = new Set<string>();
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -12,7 +18,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useStoreProfile, useStoreProducts, useStoreProductCategories, type StoreProductItem } from "@/hooks/useStoreProfile";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import StoreHeroCarousel from "@/components/grocery/StoreHeroCarousel";
 import { toast } from "sonner";
 import { useI18n } from "@/hooks/useI18n";
@@ -93,7 +99,27 @@ export default function StoreProfilePage() {
   const isLodging = !!store && ["hotel", "resort", "guesthouse"].includes(store.category);
   const { data: allRooms = [], isLoading: loadingRooms } = useLodgeRooms(isLodging ? store!.id : "");
   const { data: propertyProfile } = useLodgePropertyProfile(isLodging ? store!.id : "");
-  const { data: hasBooking = false } = useHasStoreBooking(store?.id);
+  const { data: bookingCheck, isLoading: loadingBooking } = useHasStoreBooking(store?.id);
+  const hasBooking = !!bookingCheck?.hasBooking;
+  const bookingSource = bookingCheck?.source ?? null;
+  const phoneNumber = (store as any)?.phone || (store as any)?.contact?.phone || "";
+  const callable = hasBooking && !!phoneNumber;
+  const chattable = hasBooking;
+
+  // Fire `store_contact_unlocked` once per (session, store)
+  useEffect(() => {
+    if (!store?.id || !hasBooking) return;
+    if (_unlockedFired.has(store.id)) return;
+    _unlockedFired.add(store.id);
+    const storeType: "lodge" | "food" =
+      bookingSource === "lodge_reservation" ? "lodge" : "food";
+    track("store_contact_unlocked", {
+      store_id: store.id,
+      store_type: storeType,
+      source: bookingSource,
+    });
+  }, [store?.id, hasBooking, bookingSource]);
+
   const rooms = useMemo(() => (allRooms || []).filter(r => r.is_active), [allRooms]);
 
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
@@ -372,11 +398,18 @@ export default function StoreProfilePage() {
                 </div>
               </motion.button>
             )}
-            {store.phone && hasBooking && (
+            {loadingBooking && (
+              <>
+                <Skeleton className="h-14 rounded-xl" />
+                <Skeleton className="h-14 rounded-xl" />
+              </>
+            )}
+            {!loadingBooking && callable && (
               <motion.a
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
                 href={`tel:${store.phone.startsWith("+") ? store.phone.replace(/\s+/g, "") : `+855${store.phone.replace(/\s+/g, "")}`}`}
+                onClick={() => track("store_contact_action", { store_id: store.id, channel: "call" })}
                 className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
                 style={{
                   transformStyle: "preserve-3d",
@@ -414,11 +447,14 @@ export default function StoreProfilePage() {
             )}
 
             {/* Live Chat button — customers with a booking only */}
-            {hasBooking && (
+            {!loadingBooking && chattable && (
             <motion.button
               whileTap={{ scale: 0.94, rotateX: 2 }}
               whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
-              onClick={() => setChatOpen(true)}
+              onClick={() => {
+                track("store_contact_action", { store_id: store.id, channel: "chat" });
+                setChatOpen(true);
+              }}
               className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
               style={{
                 transformStyle: "preserve-3d",
@@ -602,13 +638,29 @@ export default function StoreProfilePage() {
             )}
           </div>
 
-          {!hasBooking && (
-            <div className="mt-2.5 flex items-start gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
-              <MessageCircle className="h-3.5 w-3.5 text-white/60 mt-0.5 shrink-0" />
-              <p className="text-[11px] leading-snug text-white/70">
-                Call Store & Live Chat unlock once you complete a booking with this store while signed in to your ZIVO account.
+          {!loadingBooking && !hasBooking && (
+            <div className="mt-2.5 flex flex-col gap-1.5">
+              <Button
+                variant="outline"
+                onClick={() => navigate("/account/bookings")}
+                className="w-full h-10 rounded-xl gap-2 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 text-[12px] font-semibold"
+              >
+                <Lock className="h-3.5 w-3.5" />
+                Complete a booking to unlock chat
+              </Button>
+              <p className="text-[10px] leading-snug text-white/55 px-1">
+                Already booked? Make sure you used the same account email.{" "}
+                <Link to="/account/bookings" className="underline text-emerald-300 hover:text-emerald-200">
+                  View my bookings
+                </Link>
               </p>
             </div>
+          )}
+
+          {!loadingBooking && hasBooking && !phoneNumber && (
+            <p className="mt-2 text-[10px] text-white/55 px-1">
+              This store hasn't shared a phone number — chat is the fastest way to reach them.
+            </p>
           )}
 
           {/* Book Now button for auto-repair stores */}
