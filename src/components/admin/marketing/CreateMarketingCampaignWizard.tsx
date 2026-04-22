@@ -1,5 +1,6 @@
 /**
  * CreateMarketingCampaignWizard — 5-step wizard with live device preview.
+ * Persists to marketing_campaigns; "Send now" calls send-marketing-campaign edge fn.
  */
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,8 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Bell, Mail, MessageSquare, Smartphone, Layers, ChevronRight, ChevronLeft, Check, Send, Users, Calendar, FileText, AlertCircle } from "lucide-react";
+import { Bell, Mail, MessageSquare, Smartphone, Layers, ChevronRight, ChevronLeft, Check, Send, Users, Calendar, FileText, AlertCircle, Save } from "lucide-react";
 import { useMarketingSegments } from "@/hooks/useMarketingSegments";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -71,15 +74,76 @@ export default function CreateMarketingCampaignWizard({ open, onClose, storeId, 
     return true;
   };
 
-  const handleSubmit = async () => {
-    if (!confirmed) { toast.error("Confirm before sending"); return; }
+  const handleSubmit = async (asDraft = false) => {
+    if (!asDraft && !confirmed) { toast.error("Confirm before sending"); return; }
     setSubmitting(true);
     try {
-      // Stub create: real persistence wired in later phase. For now just notify.
-      await new Promise((r) => setTimeout(r, 600));
-      toast.success(scheduleMode === "now" ? "Campaign sent" : "Campaign scheduled");
+      const userRes = await supabase.auth.getUser();
+      const userId = userRes.data.user?.id ?? null;
+
+      const channelToFlags = (c: Channel) => ({
+        push_enabled: c === "push" || c === "inapp" || c === "multi",
+        email_enabled: c === "email" || c === "multi",
+        sms_enabled: c === "sms" || c === "multi",
+      });
+
+      let status: string;
+      if (asDraft) status = "draft";
+      else if (scheduleMode === "now") status = "sending";
+      else if (scheduleMode === "triggered") status = "active";
+      else status = "scheduled";
+
+      const payload: any = {
+        name: name || `Campaign ${new Date().toLocaleString()}`,
+        campaign_type: scheduleMode === "triggered" ? "triggered" : "broadcast",
+        target_restaurant_id: storeId,
+        target_segment_id: segmentId && segmentId !== "all" ? segmentId : null,
+        title: subject || null,
+        notification_title: subject || null,
+        notification_body: body || null,
+        message: body || null,
+        sms_message: channel === "sms" || channel === "multi" ? body : null,
+        ...channelToFlags(channel),
+        status,
+        is_recurring: scheduleMode === "recurring",
+        recurrence_interval: scheduleMode === "recurring" ? "weekly" : null,
+        trigger_type: scheduleMode === "triggered" ? trigger : null,
+        trigger_config: scheduleMode === "triggered" ? { trigger } : null,
+        start_date: sendDate || null,
+        next_run_at: sendDate || null,
+        created_by: userId,
+      };
+
+      const { data: inserted, error } = await supabase
+        .from("marketing_campaigns")
+        .insert(payload)
+        .select()
+        .single();
+      if (error) throw error;
+
+      // Fire send-marketing-campaign edge fn (best-effort) when sending now
+      if (status === "sending" && inserted) {
+        supabase.functions
+          .invoke("send-marketing-campaign", { body: { campaign_id: inserted.id } })
+          .catch(() => {/* non-fatal: campaign queued for cron */});
+      }
+
+      qc.invalidateQueries({ queryKey: ["store-marketing-overview", storeId] });
+      qc.invalidateQueries({ queryKey: ["marketing-campaigns", storeId] });
+
+      toast.success(
+        asDraft
+          ? "Saved as draft"
+          : status === "sending"
+          ? "Campaign sending"
+          : status === "scheduled"
+          ? "Campaign scheduled"
+          : "Automation activated"
+      );
       onCreated?.();
       close();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to save campaign");
     } finally {
       setSubmitting(false);
     }
