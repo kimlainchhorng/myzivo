@@ -299,17 +299,69 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                 <div className="flex items-center justify-between">
                   <Label>Add-ons (optional extras)</Label>
                   <Button type="button" size="sm" variant="outline" onClick={addAddon} className="h-7 gap-1">
-                    <Plus className="h-3 w-3" /> Add
+                    <Plus className="h-3 w-3" /> Custom
                   </Button>
                 </div>
+
+                {/* Quick-add presets — grouped by category */}
+                <div className="rounded-lg border border-dashed border-border p-2.5 bg-muted/10 space-y-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Quick add — tap to include
+                  </p>
+                  {Array.from(new Set(ADDON_PRESETS.map(p => p.category))).map(cat => {
+                    const items = ADDON_PRESETS.filter(p => p.category === cat);
+                    return (
+                      <div key={cat} className="space-y-1">
+                        <p className="text-[10px] text-muted-foreground/80">{cat}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {items.map(preset => {
+                            const already = (editing.addons || []).some(a => a.name === preset.name);
+                            return (
+                              <button
+                                key={preset.name}
+                                type="button"
+                                disabled={already}
+                                onClick={() => setEditing({
+                                  ...editing,
+                                  addons: [...(editing.addons || []), {
+                                    name: preset.name,
+                                    price_cents: preset.price_cents,
+                                    per: preset.per,
+                                    category: preset.category,
+                                    icon: preset.icon,
+                                  }]
+                                })}
+                                className={`px-2 py-1 rounded-full text-[11px] border transition flex items-center gap-1 ${
+                                  already
+                                    ? "bg-primary/10 border-primary/30 text-primary cursor-not-allowed opacity-60"
+                                    : "bg-background border-border hover:border-primary/40 hover:bg-primary/5"
+                                }`}
+                              >
+                                <span>{preset.icon}</span>
+                                <span>{preset.name}</span>
+                                {preset.price_cents > 0 && (
+                                  <span className="text-muted-foreground">
+                                    ${(preset.price_cents / 100).toFixed(0)}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
                 {(editing.addons || []).length === 0 ? (
-                  <p className="text-xs text-muted-foreground">e.g. Breakfast +$8/night, Airport pickup +$25/stay</p>
+                  <p className="text-xs text-muted-foreground">e.g. Breakfast +$8/guest/night, Airport pickup +$25/stay</p>
                 ) : (
                   <div className="space-y-2">
                     {(editing.addons || []).map((a, i) => (
                       <div key={i} className="grid grid-cols-12 gap-1.5 items-center p-2 rounded-lg border border-border bg-muted/20">
+                        {a.icon && <span className="col-span-1 text-center text-base">{a.icon}</span>}
                         <Input
-                          className="col-span-5 h-8 text-xs"
+                          className={`${a.icon ? 'col-span-4' : 'col-span-5'} h-8 text-xs`}
                           placeholder="Breakfast"
                           value={a.name}
                           onChange={e => updateAddon(i, { name: e.target.value })}
@@ -329,6 +381,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                           <option value="stay">/ stay</option>
                           <option value="night">/ night</option>
                           <option value="guest">/ guest</option>
+                          <option value="person_night">/ guest/night</option>
                         </select>
                         <Button type="button" size="icon" variant="ghost" className="col-span-1 h-8 w-8" onClick={() => removeAddon(i)}>
                           <Trash2 className="h-3.5 w-3.5 text-destructive" />
