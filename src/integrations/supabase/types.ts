@@ -27307,7 +27307,9 @@ export type Database = {
       }
       lodging_deposit_retry_attempts: {
         Row: {
+          admin_id: string | null
           checkout_url: string | null
+          client_attempt_id: string | null
           completed_at: string | null
           dedup_key: string
           id: string
@@ -27317,7 +27319,9 @@ export type Database = {
           stripe_session_id: string | null
         }
         Insert: {
+          admin_id?: string | null
           checkout_url?: string | null
+          client_attempt_id?: string | null
           completed_at?: string | null
           dedup_key: string
           id?: string
@@ -27327,7 +27331,9 @@ export type Database = {
           stripe_session_id?: string | null
         }
         Update: {
+          admin_id?: string | null
           checkout_url?: string | null
+          client_attempt_id?: string | null
           completed_at?: string | null
           dedup_key?: string
           id?: string
