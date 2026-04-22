@@ -657,8 +657,46 @@ export function LodgingBookingDrawer({
               />
             )}
 
-            {/* Consent */}
+            {/* Consent — compact verified chips */}
             <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-[11px] font-semibold text-muted-foreground mr-1">Verify before agreeing:</p>
+                <div className="inline-flex items-center gap-1.5">
+                  <PolicySourceSheet
+                    type="house_rules"
+                    houseRules={houseRules as any}
+                    onOpened={() => {
+                      if (!viewedRulesSource) {
+                        setViewedRulesSource(true);
+                        setRulesViewedAt(new Date().toISOString());
+                      }
+                    }}
+                  />
+                  {viewedRulesSource && (
+                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-600">
+                      <ShieldCheck className="h-3 w-3" /> Verified
+                    </span>
+                  )}
+                </div>
+                <div className="inline-flex items-center gap-1.5">
+                  <PolicySourceSheet
+                    type="cancellation"
+                    cancellationKey={cancellationPolicy}
+                    onOpened={() => {
+                      if (!viewedCancelSource) {
+                        setViewedCancelSource(true);
+                        setCancelViewedAt(new Date().toISOString());
+                      }
+                    }}
+                  />
+                  {viewedCancelSource && (
+                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-600">
+                      <ShieldCheck className="h-3 w-3" /> Verified
+                    </span>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <label className={cn("flex items-start gap-2 text-xs cursor-pointer", ((policyOverflows && !policyScrolled) || !viewedRulesSource) && "opacity-50 pointer-events-none")}>
                   <Checkbox
@@ -669,23 +707,6 @@ export function LodgingBookingDrawer({
                   />
                   <span>I have read and agree to the <strong>house rules</strong> and check-in policy.</span>
                 </label>
-                <PolicySourceSheet
-                  type="house_rules"
-                  houseRules={houseRules as any}
-                  onOpened={() => {
-                    if (!viewedRulesSource) {
-                      setViewedRulesSource(true);
-                      setRulesViewedAt(new Date().toISOString());
-                    }
-                  }}
-                />
-                {viewedRulesSource ? (
-                  <p className="text-[10px] text-emerald-600 mt-0.5 inline-flex items-center gap-0.5">
-                    <ShieldCheck className="h-2.5 w-2.5" /> Verified · source viewed
-                  </p>
-                ) : (
-                  <p className="text-[10px] text-amber-600 mt-0.5">Tap <strong>View source</strong> to enable this checkbox</p>
-                )}
               </div>
 
               <div>
@@ -700,23 +721,6 @@ export function LodgingBookingDrawer({
                     I accept the <strong>{cancellationLabel(cancellationPolicy)}</strong> cancellation policy and authorise {storeName} to contact me about this reservation.
                   </span>
                 </label>
-                <PolicySourceSheet
-                  type="cancellation"
-                  cancellationKey={cancellationPolicy}
-                  onOpened={() => {
-                    if (!viewedCancelSource) {
-                      setViewedCancelSource(true);
-                      setCancelViewedAt(new Date().toISOString());
-                    }
-                  }}
-                />
-                {viewedCancelSource ? (
-                  <p className="text-[10px] text-emerald-600 mt-0.5 inline-flex items-center gap-0.5">
-                    <ShieldCheck className="h-2.5 w-2.5" /> Verified · source viewed
-                  </p>
-                ) : (
-                  <p className="text-[10px] text-amber-600 mt-0.5">Tap <strong>View source</strong> to enable this checkbox</p>
-                )}
               </div>
             </div>
 
