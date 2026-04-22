@@ -1,132 +1,94 @@
 
 
-# Wire HOTEL OPS tabs + add 24h toggle + lodging profile + new Maintenance Work Orders section
+# Maintenance filters + Out-of-Service ticket prompt + 24h hours polish
 
-Three things in one pass: (1) wire all 8 hotel sections so clicking them actually shows content, (2) add the "Open 24 hours" toggle to Operating Hours, (3) flip `StoreProfilePage` into lodging mode, plus (4) add a new **Maintenance** section to HOTEL OPS for hotel-side repair tickets.
-
----
-
-## 1. Register HOTEL OPS tabs in `AdminStoreEditPage.tsx`
-
-**Imports** — add the 8 lodging section components + new Maintenance one.
-
-**Title map** — extend `autoRepairTitles` pattern with a `lodgingTitles` map and merge into `storeOwnerTitle`:
-```
-lodge-rooms → Rooms & Rates
-lodge-reservations → Reservations
-lodge-calendar → Calendar & Availability
-lodge-guests → Guests
-lodge-frontdesk → Front Desk
-lodge-housekeeping → Housekeeping
-lodge-maintenance → Maintenance
-lodge-amenities → Amenities & Policies
-lodge-reports → Reports & Analytics
-```
-
-**Tab content blocks** — add after the `auto-repair` block:
-```tsx
-{["hotel","resort","guesthouse"].includes(form.category) && (
-  <>
-    <TabsContent value="lodge-rooms"><LodgingRoomsSection storeId={storeId!} /></TabsContent>
-    <TabsContent value="lodge-reservations"><LodgingReservationsSection storeId={storeId!} /></TabsContent>
-    <TabsContent value="lodge-calendar"><LodgingCalendarSection storeId={storeId!} /></TabsContent>
-    <TabsContent value="lodge-guests"><LodgingGuestsSection storeId={storeId!} /></TabsContent>
-    <TabsContent value="lodge-frontdesk"><LodgingFrontDeskSection storeId={storeId!} /></TabsContent>
-    <TabsContent value="lodge-housekeeping"><LodgingHousekeepingSection storeId={storeId!} /></TabsContent>
-    <TabsContent value="lodge-maintenance"><LodgingMaintenanceSection storeId={storeId!} /></TabsContent>
-    <TabsContent value="lodge-amenities"><LodgingAmenitiesSection storeId={storeId!} /></TabsContent>
-    <TabsContent value="lodge-reports"><LodgingReportsSection storeId={storeId!} /></TabsContent>
-  </>
-)}
-```
-
-**Products tab gating** — guard the Add-Product dialog so lodging shows the Room form (re-use existing fields: name, description, base price, photos) with relabeled buttons ("Add Room" / "Edit Room") — already partially handled by `productsLabel`; finalize by treating `isLodging` like `auto-repair` to skip car-dealership-specific blocks.
+Three focused improvements to the lodging stack.
 
 ---
 
-## 2. New **Maintenance** section (the "work work" item)
+## 1. Maintenance board — search & filters
 
-Hotel-side repair tickets distinct from housekeeping cleaning.
+`src/components/admin/store/lodging/LodgingMaintenanceSection.tsx`
 
-**Sidebar** — insert after Housekeeping in `StoreOwnerLayout.tsx`:
-```ts
-{ id: "lodge-maintenance", label: "Maintenance", icon: Wrench }
-```
+Add a sticky filter bar above the ticket list:
 
-**DB migration** — one table:
-```sql
-create table lodge_maintenance (
-  id uuid primary key default gen_random_uuid(),
-  store_id uuid not null,
-  room_id uuid, room_number text,
-  title text not null,                 -- "AC not cooling", "Leaking faucet"
-  category text default 'general',     -- plumbing/electrical/hvac/furniture/general
-  priority text default 'normal',      -- low/normal/high/urgent
-  status text not null default 'open', -- open/in_progress/blocked/done
-  assignee_id uuid, assignee_name text,
-  reported_by text, notes text,
-  photos jsonb default '[]'::jsonb,
-  cost_cents int default 0,
-  reported_at timestamptz default now(),
-  resolved_at timestamptz,
-  updated_at timestamptz default now()
-);
-```
-RLS: store owners + admins read/write own rows. `idx_lodge_maintenance_store (store_id, status)`. `updated_at` trigger.
+- **Search input** (left, flex-1) — matches `title`, `notes`, `room_number`, `assignee_name` (case-insensitive substring).
+- **Room** select — populated from `useLodgeRooms(storeId)` + an "All rooms" option.
+- **Assignee** select — distinct `assignee_name` values from current tickets + "All" + "Unassigned".
+- **Category** select — `general / plumbing / electrical / hvac / furniture / appliance / other` + "All".
+- **Priority** select — `urgent / high / normal / low` + "All".
+- **Date range** — two compact date inputs (`from`, `to`) filtering on `reported_at`.
+- **Sort** select — Newest / Oldest / Priority (urgent→low) / Status (open→done).
+- **Reset** ghost button — clears all filters.
 
-**Hook** — `src/hooks/lodging/useLodgeMaintenance.ts` with list/upsert/delete/setStatus.
+State: one `filters` object held in `useState`. Filtering is fully client-side over the existing query result (small dataset, no extra fetches). Result count badge: "Showing X of Y".
 
-**Component** — `src/components/admin/store/lodging/LodgingMaintenanceSection.tsx`:
-- Top KPI strip: Open / In Progress / Done this week / Avg time-to-resolve.
-- Filter chips by status + priority.
-- "New Ticket" dialog (title, room dropdown, category, priority, notes, photos).
-- List rows with priority badge color, room#, age, status dropdown, assignee select (from `employees`), "Mark Done" button (sets `resolved_at = now()`).
-- Auto-suggest creating a ticket when housekeeping flips a room to `out_of_service` (small "Open ticket?" prompt).
+Existing status chip strip (Open / In Progress / Blocked / Done) stays — it AND-combines with the new filters.
+
+Persist filters in `sessionStorage` keyed by `lodge-maint-filters:${storeId}` so navigating away and back keeps context.
 
 ---
 
-## 3. "Open 24 hours" toggle in Operating Hours
+## 2. "Open ticket?" prompt from Housekeeping
 
-`AdminStoresPage.tsx` — extend each day row in the Operating Hours grid:
-- Add a small `24h` toggle (switch + label) to the right of the open/close selects.
-- When on: store `{ open:"12:00 AM", close:"11:30 PM", closed:false, is24h:true }` and hide the time selects, render "Open 24 hours" text instead.
-- `parseSchedule` already preserves unknown keys via JSON.
+`src/components/admin/store/lodging/LodgingHousekeepingSection.tsx`
 
-`StoreProfilePage.tsx` hours renderer — when `day.is24h` is true, show **"Open 24 hours"** badge instead of the time range.
+When `change(id, "out_of_service")` succeeds:
+
+1. Fire the existing `toast.success` as today.
+2. Immediately open a new lightweight `<AlertDialog>` (shadcn) titled **"Open a maintenance ticket?"** with body: *"Room {room_number} was marked Out of Service. Create a maintenance ticket so the issue is tracked and assigned."*
+3. Buttons: **"Not now"** (cancel) and **"Create ticket"** (primary).
+4. On confirm, call `useLodgeMaintenance(storeId).upsert.mutateAsync({ store_id, room_id, room_number, title: \`Room ${room_number} — Out of service\`, category: "general", priority: "high", status: "open", notes: "Auto-created from housekeeping" })`.
+5. On success, toast "Ticket created" with an action button **"View"** that calls `navigate(\`?tab=lodge-maintenance\`)` (uses existing `useSearchParams`-driven tab routing in `AdminStoreEditPage`).
+
+State: `const [pendingOOS, setPendingOOS] = useState<{ id: string; roomId: string|null; roomNumber: string|null } | null>(null)` set inside the `change` handler before opening the dialog.
+
+No DB schema changes — uses existing `lodge_maintenance` table and `useLodgeMaintenance` hook.
 
 ---
 
-## 4. Lodging branch in `StoreProfilePage.tsx`
+## 3. Operating Hours — disable close inputs + consistent 24h rendering
 
-- `const isLodging = ["hotel","resort","guesthouse"].includes(store.category)`.
-- Hide the `30m delivery` badge when `isLodging` (extend the existing `!= "auto-repair"` guard).
-- Section header for lodging: **"Rooms & Suites"** (label) / "rooms" (count noun).
-- Above the rooms grid, mount `<LodgingAvailabilityWidget storeId={store.id}/>` (already built) — passes selected dates + guests down to the rooms list which renders `<LodgingRoomCard>` cards (already built) with a "Reserve" button opening `<LodgingBookingDrawer>` (already built).
-- Floating cart label: "View Booking" when `isLodging` (extend the existing auto-repair branch).
-- Skip the grocery cart logic entirely when `isLodging` (gate the `cart.*` add-to-cart code paths).
+**Admin form** (`src/pages/admin/AdminStoresPage.tsx` — Operating Hours grid)
+
+For each day row:
+- When `day.is24h === true`:
+  - Add `disabled` to both Open and Close `<select>` / time inputs.
+  - Add `opacity-50 cursor-not-allowed` classes.
+  - Replace the time inputs visually with a single muted label **"Open 24 hours"** (keep the underlying values stored as `12:00 AM` → `11:30 PM` so legacy renderers still work).
+- When `day.closed === true`: keep existing disabled/closed treatment AND force the 24h toggle off (mutually exclusive — toggling Closed clears `is24h`, toggling 24h clears `closed`).
+- Add a small helper text under the grid: *"Toggle 24h for always-open days. Toggle Closed to mark a day off."*
+
+**Public profile** (`src/pages/StoreProfilePage.tsx` — hours renderer)
+
+- Centralize the per-day label in one helper `formatDayHours(day)`:
+  - `day.closed` → "Closed"
+  - `day.is24h` → **"Open 24 hours"**
+  - else → `${open} – ${close}`
+- Use the helper in both the collapsed "today" pill and the expanded weekly list so wording is identical everywhere.
+- When **all 7 days** are `is24h`, the collapsed pill shows just **"Open 24 hours"** (no day name) for a cleaner header.
 
 ---
 
 ## Files
 
-**New**
-- `src/hooks/lodging/useLodgeMaintenance.ts`
-- `src/components/admin/store/lodging/LodgingMaintenanceSection.tsx`
-- Migration: `<ts>_lodge_maintenance.sql`
+**Edited only — no new files, no migration**
 
-**Edited**
-- `src/pages/admin/AdminStoreEditPage.tsx` — imports, `lodgingTitles` map, 9 `<TabsContent>` blocks, lodging-aware product dialog labels.
-- `src/components/admin/StoreOwnerLayout.tsx` — add Maintenance nav item between Housekeeping and Amenities.
-- `src/pages/admin/AdminStoresPage.tsx` — `24h` toggle per day in Operating Hours.
-- `src/pages/StoreProfilePage.tsx` — `isLodging` branch (hide delivery, swap copy, mount Availability + Booking, "Open 24 hours" hours rendering).
+- `src/components/admin/store/lodging/LodgingMaintenanceSection.tsx` — filter bar, sort, sessionStorage persistence.
+- `src/components/admin/store/lodging/LodgingHousekeepingSection.tsx` — AlertDialog + auto-create ticket flow.
+- `src/pages/admin/AdminStoresPage.tsx` — disable inputs when `is24h`, mutual exclusion with `closed`, helper text.
+- `src/pages/StoreProfilePage.tsx` — `formatDayHours` helper + all-24h collapsed pill.
 
 ## Build order
 
-1. Migration (`lodge_maintenance` + RLS + index + trigger).
-2. `useLodgeMaintenance.ts` hook.
-3. `LodgingMaintenanceSection.tsx` component.
-4. Wire all 9 lodging `<TabsContent>` blocks + titles in `AdminStoreEditPage.tsx`.
-5. Add Maintenance entry in `StoreOwnerLayout.tsx` sidebar.
-6. "Open 24 hours" toggle + renderer.
-7. `StoreProfilePage` lodging branch.
+1. Maintenance filter bar + sort + sessionStorage.
+2. Housekeeping → Maintenance auto-prompt (AlertDialog + upsert + toast action).
+3. Operating Hours admin: disable inputs + mutual exclusion with Closed.
+4. Public profile `formatDayHours` helper + all-24h pill polish.
+
+## Out of scope
+
+- Saved filter presets ("My open urgent tickets") — single ad-hoc filter set only.
+- Server-side filtering / pagination — dataset is small per store.
+- Per-day custom 24h close time other than `11:30 PM` placeholder.
 
