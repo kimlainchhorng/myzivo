@@ -409,6 +409,25 @@ export default function AdminLodgingWiringCheckPage() {
                         </div>
                       )}
                     </div>
+                    {!c.pass && isWebhookCheck(c) && (
+                      <div className="mt-2 flex items-center gap-1 flex-wrap">
+                        <span className="text-[10px] text-muted-foreground">Recent related events:</span>
+                        {(c.related_event_ids && c.related_event_ids.length > 0) ? (
+                          c.related_event_ids.slice(0, 3).map((eid, idx) => (
+                            <Link
+                              key={eid}
+                              to={`/admin/lodging/webhook-events?event_id=${encodeURIComponent(eid)}`}
+                              className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border border-border bg-background hover:bg-accent font-mono"
+                            >
+                              <Webhook className="h-2.5 w-2.5" />
+                              {c.related_event_types?.[idx] || "event"} · {eid.slice(0, 10)}…
+                            </Link>
+                          ))
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground italic">No related events found.</span>
+                        )}
+                      </div>
+                    )}
                     {!c.pass && c.fix && (
                       <pre className="mt-2 text-[10px] bg-muted/50 rounded-lg p-2 overflow-x-auto text-muted-foreground whitespace-pre-wrap break-all">
                         {c.fix}
