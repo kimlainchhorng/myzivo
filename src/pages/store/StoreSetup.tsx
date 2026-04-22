@@ -499,8 +499,12 @@ export default function StoreSetup() {
                         <div className="space-y-1.5">
                           <Label className="text-white/60 text-[13px]">Category</Label>
                           <select value={storeCategory} onChange={e => setStoreCategory(e.target.value)} className="flex h-11 w-full rounded-xl border border-white/[0.12] bg-white/[0.07] px-3 py-2 text-[13px] text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30">
-                            {STORE_CATEGORY_OPTIONS.map(opt => (
-                              <option key={opt.value} value={opt.value} className="bg-[#0d2137] text-white">{opt.label}</option>
+                            {Array.from(new Set(STORE_CATEGORY_OPTIONS.map(o => o.group || "Other"))).map(group => (
+                              <optgroup key={group} label={group} className="bg-[#0d2137] text-white">
+                                {STORE_CATEGORY_OPTIONS.filter(o => (o.group || "Other") === group).map(opt => (
+                                  <option key={opt.value} value={opt.value} className="bg-[#0d2137] text-white">{opt.label}</option>
+                                ))}
+                              </optgroup>
                             ))}
                           </select>
                         </div>
