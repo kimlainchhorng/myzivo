@@ -697,6 +697,8 @@ export default function StoreProfilePage() {
             </span>
           </div>
 
+          {propertyProfile && <LodgingHighlightsStrip profile={propertyProfile} />}
+
           <LodgingStaySelector
             checkIn={stay.checkIn} checkOut={stay.checkOut}
             adults={stay.adults} children={stay.children}
@@ -1179,6 +1181,7 @@ export default function StoreProfilePage() {
           onClose={() => setBookingRoom(null)}
           storeId={store.id}
           storeName={store.name}
+          storePhone={(store as any).phone}
           roomId={bookingRoom.id}
           roomName={bookingRoom.name}
           baseRateCents={bookingRoom.base_rate_cents}
