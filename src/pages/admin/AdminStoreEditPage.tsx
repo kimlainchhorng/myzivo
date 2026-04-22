@@ -2003,7 +2003,16 @@ export default function AdminStoreEditPage() {
             </Button>
             <div className="min-w-0 flex-1">
               <h2 className="text-lg sm:text-xl font-bold text-foreground truncate">{store.name}</h2>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">/{store.slug} · {store.market}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                /{store.slug} · {store.market} ·{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate(`/admin/stores/${storeId}/upload-check`)}
+                  className="underline hover:text-foreground"
+                >
+                  Run upload check
+                </button>
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 scrollbar-hide">
