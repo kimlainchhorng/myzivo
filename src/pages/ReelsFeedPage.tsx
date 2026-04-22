@@ -79,6 +79,7 @@ const CommentsSheet = lazy(() => import("@/components/social/CommentsSheet"));
 const FeedStoryRing = lazy(() => import("@/components/social/FeedStoryRing"));
 const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
 const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
+const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 
@@ -1481,12 +1482,14 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         {/* Caption */}
         {item.caption && (
           <div onClick={() => setShowCaption(!showCaption)}>
-            <p className={cn(
+            <div className={cn(
               "text-white text-[13px] leading-snug drop-shadow-lg",
               !showCaption && "line-clamp-2"
             )}>
-              {item.caption}
-            </p>
+              <Suspense fallback={<span>{item.caption}</span>}>
+                <SafeCaption text={item.caption} />
+              </Suspense>
+            </div>
             {item.caption.length > 80 && !showCaption && (
               <span className="text-white/60 text-xs">more</span>
             )}
@@ -2104,7 +2107,11 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           {/* Sharer's own caption (not the original post's caption) */}
           {item.caption && item.caption !== item.shared_from_caption && (
             <div className="px-3 pb-2">
-              <p className="text-[13px] text-foreground">{item.caption}</p>
+              <div className="text-[13px] text-foreground">
+                <Suspense fallback={<span>{item.caption}</span>}>
+                  <SafeCaption text={item.caption} />
+                </Suspense>
+              </div>
             </div>
           )}
 
@@ -2159,7 +2166,11 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
             {/* Original post caption */}
             {item.shared_from_caption && (
               <div className="px-3 pb-2">
-                <p className="text-[13px] text-foreground">{item.shared_from_caption}</p>
+                <div className="text-[13px] text-foreground">
+                  <Suspense fallback={<span>{item.shared_from_caption}</span>}>
+                    <SafeCaption text={item.shared_from_caption} />
+                  </Suspense>
+                </div>
               </div>
             )}
 
@@ -2290,7 +2301,11 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           {/* Caption before media for normal posts */}
           {item.caption && (
             <div className="px-3 pb-2">
-              <p className="text-[13px] text-foreground">{item.caption}</p>
+              <div className="text-[13px] text-foreground">
+                <Suspense fallback={<span>{item.caption}</span>}>
+                  <SafeCaption text={item.caption} />
+                </Suspense>
+              </div>
             </div>
           )}
 
