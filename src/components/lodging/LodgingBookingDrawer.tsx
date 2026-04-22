@@ -306,33 +306,35 @@ export function LodgingBookingDrawer({
   const handleClose = () => {
     // Reset for next open
     if (step === "success") {
-      setStep("stay"); setSelected({}); setReference(null);
+      setStep("stay"); setSelected({}); setReference(null); setReservationId(null);
       setName(""); setPhone(""); setEmail(""); setCountry(""); setEta(""); setNotes("");
       setAgreeRules(false); setAgreeCancel(false); setPayMethod("pay_at_property");
+      setGuestTouched({}); setPolicyScrolled(false); setPolicyOverflows(false);
     }
     onClose();
   };
 
-  // Calendar (.ics) generator
+  // Rich .ics generator with timezone, address, contact, and timed events
   const downloadIcs = () => {
-    const dt = (s: string) => s.replace(/-/g, "");
-    const ics = [
-      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//ZIVO//Lodging//EN",
-      "BEGIN:VEVENT",
-      `UID:${reference}@zivo`,
-      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").split(".")[0]}Z`,
-      `DTSTART;VALUE=DATE:${dt(checkIn)}`,
-      `DTEND;VALUE=DATE:${dt(checkOut)}`,
-      `SUMMARY:Stay at ${storeName} – ${roomName}`,
-      `DESCRIPTION:Booking ${reference}\\nGuest: ${name}\\nTotal: ${fmtMoney(breakdown.total)}`,
-      `LOCATION:${storeName}`,
-      "END:VEVENT", "END:VCALENDAR",
-    ].join("\r\n");
-    const blob = new Blob([ics], { type: "text/calendar" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `${reference}.ics`; a.click();
-    URL.revokeObjectURL(url);
+    if (!reference) return;
+    const ics = buildBookingIcs({
+      reference,
+      storeName,
+      roomName,
+      storeAddress: (propertyProfile as any)?.address || null,
+      storePhone: storePhone || null,
+      storeUrl: typeof window !== "undefined" ? window.location.href : null,
+      guestName: name,
+      guestEmail: email || null,
+      checkIn,
+      checkOut,
+      checkInTime: (propertyProfile as any)?.check_in_from || "15:00",
+      checkOutTime: (propertyProfile as any)?.check_out_until || "11:00",
+      timezone: (propertyProfile as any)?.timezone || undefined,
+      totalText: fmtMoney(breakdown.total),
+      cancellationText: cancellationDescription(cancellationPolicy),
+    });
+    downloadIcsFile(reference, ics);
   };
 
   const copyRef = () => {
