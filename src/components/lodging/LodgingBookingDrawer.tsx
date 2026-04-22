@@ -171,9 +171,10 @@ export function LodgingBookingDrawer({
         {rangeIssue.invalid && (
           <div className="flex items-start gap-2 p-3 rounded-xl bg-destructive/10 text-destructive border border-destructive/20">
             <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-            <p className="text-xs font-medium">
-              One or more nights are no longer available ({rangeIssue.firstReason === "sold_out" ? "sold out" : "restricted"}). Please pick new dates.
-            </p>
+            <div className="text-xs font-medium space-y-0.5">
+              <p>One or more nights are no longer available ({rangeIssue.firstReason === "sold_out" ? "sold out" : "restricted"}).</p>
+              {step !== "stay" && <p className="font-semibold">Tap Back to pick new dates.</p>}
+            </div>
           </div>
         )}
         {step === "stay" && (
@@ -183,9 +184,20 @@ export function LodgingBookingDrawer({
               onChange={(v) => { setCheckIn(v.checkIn); setCheckOut(v.checkOut); setAdults(v.adults); setChildren(v.children); }}
               disabledDates={disabledDates}
               availabilityMap={availabilityMap}
+              showReasonLegend
             />
             <PriceSummary breakdown={breakdown} fmt={fmtMoney} />
           </>
+        )}
+
+        {step !== "stay" && (
+          <LodgingStaySelector
+            checkIn={checkIn} checkOut={checkOut} adults={adults} children={children}
+            onChange={() => {}}
+            availabilityMap={availabilityMap}
+            disabledDates={disabledDates}
+            locked
+          />
         )}
 
         {step === "addons" && (

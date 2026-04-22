@@ -2,10 +2,12 @@
  * LodgingStaySelector — sticky bar with check-in/out + guest counters.
  * State persists to URL params (ci, co, ad, ch).
  * Optionally accepts disabledDates + availabilityMap to grey out unavailable nights.
+ * `locked` puts it in read-only mode (used after the user advances past Stay step).
+ * `showReasonLegend` renders a richer per-reason legend (used in booking drawer).
  */
 import { useState } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Users, Minus, Plus } from "lucide-react";
+import { CalendarIcon, Users, Minus, Plus, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -22,6 +24,10 @@ interface Props {
   disabledDates?: Date[];
   /** Optional: per-day availability for tooltip / aria-label reasoning. */
   availabilityMap?: Map<string, DayAvailability>;
+  /** Read-only mode: disables popovers + counters. */
+  locked?: boolean;
+  /** Render richer legend with per-reason swatches. */
+  showReasonLegend?: boolean;
 }
 
 const toISO = (d: Date) => format(d, "yyyy-MM-dd");
@@ -30,6 +36,7 @@ const today0 = () => new Date(new Date().setHours(0, 0, 0, 0));
 export function LodgingStaySelector({
   checkIn, checkOut, adults, children, onChange,
   disabledDates = [], availabilityMap,
+  locked = false, showReasonLegend = false,
 }: Props) {
   const [openGuests, setOpenGuests] = useState(false);
   const ciDate = checkIn ? new Date(checkIn) : new Date();
@@ -46,16 +53,21 @@ export function LodgingStaySelector({
   const dayLabel = (d: Date) => {
     const hit = availabilityMap?.get(format(d, "yyyy-MM-dd"));
     if (!hit?.unavailable) return undefined;
-    return hit.reason === "sold_out" ? "Sold out" : "Not available";
+    return hit.reason === "sold_out" ? "Sold out · already booked" : "Restricted · blocked by host";
   };
+
+  const lockedClass = locked ? "pointer-events-none opacity-70" : "";
 
   return (
     <div className="space-y-1.5">
-      <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-sm shadow-sm p-2 grid grid-cols-3 gap-1.5">
+      <div className={cn(
+        "rounded-2xl border border-border bg-card/80 backdrop-blur-sm shadow-sm p-2 grid grid-cols-3 gap-1.5",
+        lockedClass,
+      )}>
         {/* Check-in */}
         <Popover>
-          <PopoverTrigger asChild>
-            <button className="flex flex-col items-start p-2 rounded-lg hover:bg-muted/50 transition text-left">
+          <PopoverTrigger asChild disabled={locked}>
+            <button className="flex flex-col items-start p-2 rounded-lg hover:bg-muted/50 transition text-left" disabled={locked}>
               <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Check-in</span>
               <span className="text-xs font-semibold text-foreground flex items-center gap-1 mt-0.5">
                 <CalendarIcon className="h-3 w-3" />
@@ -92,8 +104,8 @@ export function LodgingStaySelector({
 
         {/* Check-out */}
         <Popover>
-          <PopoverTrigger asChild>
-            <button className="flex flex-col items-start p-2 rounded-lg hover:bg-muted/50 transition text-left border-l border-border/50">
+          <PopoverTrigger asChild disabled={locked}>
+            <button className="flex flex-col items-start p-2 rounded-lg hover:bg-muted/50 transition text-left border-l border-border/50" disabled={locked}>
               <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Check-out</span>
               <span className="text-xs font-semibold text-foreground flex items-center gap-1 mt-0.5">
                 <CalendarIcon className="h-3 w-3" />
@@ -126,9 +138,9 @@ export function LodgingStaySelector({
         </Popover>
 
         {/* Guests */}
-        <Popover open={openGuests} onOpenChange={setOpenGuests}>
-          <PopoverTrigger asChild>
-            <button className="flex flex-col items-start p-2 rounded-lg hover:bg-muted/50 transition text-left border-l border-border/50">
+        <Popover open={openGuests} onOpenChange={(v) => !locked && setOpenGuests(v)}>
+          <PopoverTrigger asChild disabled={locked}>
+            <button className="flex flex-col items-start p-2 rounded-lg hover:bg-muted/50 transition text-left border-l border-border/50" disabled={locked}>
               <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Guests</span>
               <span className="text-xs font-semibold text-foreground flex items-center gap-1 mt-0.5">
                 <Users className="h-3 w-3" />
@@ -147,10 +159,28 @@ export function LodgingStaySelector({
         </Popover>
       </div>
 
-      {availabilityMap && availabilityMap.size > 0 && (
+      {locked && (
+        <p className="flex items-center gap-1 text-[10px] text-muted-foreground px-1">
+          <Lock className="h-2.5 w-2.5" /> Go back to change dates or guests
+        </p>
+      )}
+
+      {!locked && availabilityMap && availabilityMap.size > 0 && !showReasonLegend && (
         <div className="flex items-center justify-end gap-2 text-[10px] text-muted-foreground px-1">
           <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-muted-foreground/40" /> Unavailable</span>
           <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-primary" /> Selected</span>
+        </div>
+      )}
+
+      {!locked && showReasonLegend && availabilityMap && availabilityMap.size > 0 && (
+        <div className="px-1 space-y-0.5">
+          <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-muted-foreground/40" /> Sold out</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-destructive/30" /> Restricted</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-primary" /> Selected</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm ring-1 ring-accent" /> Today</span>
+          </div>
+          <p className="text-[9.5px] text-muted-foreground/80">Hover or long-press a date to see why it's unavailable.</p>
         </div>
       )}
     </div>

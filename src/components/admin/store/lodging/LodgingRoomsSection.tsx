@@ -127,6 +127,28 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
           <DialogHeader><DialogTitle>{editing?.id ? "Edit Room" : "Add Room"}</DialogTitle></DialogHeader>
           {editing && (
             <div className="space-y-4">
+              {/* Live cover preview */}
+              <div>
+                <div className="h-24 w-full rounded-lg overflow-hidden border border-border bg-muted/30 flex items-center justify-center">
+                  {(() => {
+                    const photos = (editing.photos as string[]) || [];
+                    const ci = editing.cover_photo_index ?? 0;
+                    const cover = photos[ci] ?? photos[0];
+                    return cover ? (
+                      <img src={cover} alt="Cover preview" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 text-muted-foreground/50">
+                        <BedDouble className="h-7 w-7" />
+                        <span className="text-[10px] font-medium">Cover preview</span>
+                      </div>
+                    );
+                  })()}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Cover photo · shown on room cards & booking pages
+                </p>
+              </div>
+
               {/* Photos */}
               <div>
                 <Label className="mb-1.5 block">Photos</Label>
