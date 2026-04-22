@@ -35,6 +35,15 @@ import AdsStudioDashboard from "./AdsStudioDashboard";
 import AdsStudioRecommendations from "./AdsStudioRecommendations";
 import { MarketingPreviewProvider } from "./ads/MarketingPreviewContext";
 import MarketingPreviewSwitcher, { MarketingPreviewFrame } from "./ads/MarketingPreviewSwitcher";
+import SegmentsManager from "./marketing/SegmentsManager";
+import TemplatesLibrary from "./marketing/TemplatesLibrary";
+import AutomationsBuilder from "./marketing/AutomationsBuilder";
+import UnifiedPerformancePanel from "./marketing/UnifiedPerformancePanel";
+import PromoCodesManager from "./marketing/PromoCodesManager";
+import MarketingStatStrip from "./marketing/MarketingStatStrip";
+import MarketingChannelTile from "./marketing/MarketingChannelTile";
+import CreateMarketingCampaignWizard from "./marketing/CreateMarketingCampaignWizard";
+import { useStoreMarketingOverview } from "@/hooks/useStoreMarketingOverview";
 
 interface Props {
   storeId: string;
@@ -306,9 +315,9 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName, s
           {/* Sub-navigation tabs — scrollable pills on mobile, full grid on desktop */}
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
         <div className="-mx-3 sm:mx-0 overflow-x-auto scrollbar-none">
-          <TabsList className="inline-flex sm:grid sm:w-full sm:grid-cols-6 h-11 sm:h-10 px-3 sm:px-1 gap-1 sm:gap-0 min-w-full">
+          <TabsList className="inline-flex sm:inline-flex h-11 sm:h-10 px-3 sm:px-1 gap-1 sm:gap-0 min-w-full">
             <TabsTrigger value="overview" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2.5 sm:px-3 whitespace-nowrap shrink-0">
-              <BarChart3 className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span className="hidden xs:inline sm:inline">Overview</span>
+              <BarChart3 className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span>Overview</span>
             </TabsTrigger>
             <TabsTrigger value="promotions" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2.5 sm:px-3 whitespace-nowrap shrink-0">
               <Tag className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span>Promos</span>
@@ -318,6 +327,18 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName, s
             </TabsTrigger>
             <TabsTrigger value="ads" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2.5 sm:px-3 whitespace-nowrap shrink-0">
               <Rocket className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span>Ads</span>
+            </TabsTrigger>
+            <TabsTrigger value="audience" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2.5 sm:px-3 whitespace-nowrap shrink-0">
+              <Users className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span>Audience</span>
+            </TabsTrigger>
+            <TabsTrigger value="templates" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2.5 sm:px-3 whitespace-nowrap shrink-0">
+              <MessageSquare className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span>Templates</span>
+            </TabsTrigger>
+            <TabsTrigger value="automations" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2.5 sm:px-3 whitespace-nowrap shrink-0">
+              <Zap className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span>Flows</span>
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2.5 sm:px-3 whitespace-nowrap shrink-0">
+              <TrendingUp className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span>Performance</span>
             </TabsTrigger>
             <TabsTrigger value="posts" className="text-[11px] sm:text-xs gap-1 sm:gap-1.5 px-2.5 sm:px-3 whitespace-nowrap shrink-0">
               <ImageIcon className="w-4 h-4 sm:w-3.5 sm:h-3.5" /> <span>Posts</span>
@@ -556,6 +577,22 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName, s
 
         <TabsContent value="ads" className="space-y-4 mt-4">
           <StoreAdsManager storeId={storeId} />
+        </TabsContent>
+
+        <TabsContent value="audience" className="space-y-4 mt-4">
+          <SegmentsManager storeId={storeId} />
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-4 mt-4">
+          <TemplatesLibrary storeId={storeId} />
+        </TabsContent>
+
+        <TabsContent value="automations" className="space-y-4 mt-4">
+          <AutomationsBuilder storeId={storeId} />
+        </TabsContent>
+
+        <TabsContent value="performance" className="space-y-4 mt-4">
+          <UnifiedPerformancePanel storeId={storeId} />
         </TabsContent>
 
         {/* ═══ POSTS ═══ */}
