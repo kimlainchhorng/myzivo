@@ -1,5 +1,5 @@
 /**
- * PromoCodesManager — List + create + bulk generate.
+ * PromoCodesManager — List + create + bulk generate. Click row → redemptions drawer.
  */
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Tag, Plus, Trash2, Copy, Wand2 } from "lucide-react";
 import { useMarketingPromoCodes, useDeletePromoCode, type PromoCode } from "@/hooks/useMarketingPromoCodes";
 import PromoCodeBuilder from "./PromoCodeBuilder";
+import PromoRedemptionsDrawer from "./PromoRedemptionsDrawer";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 
@@ -18,6 +19,7 @@ export default function PromoCodesManager({ storeId }: { storeId: string }) {
   const [creating, setCreating] = useState(false);
   const [bulk, setBulk] = useState(false);
   const [search, setSearch] = useState("");
+  const [drawerPromo, setDrawerPromo] = useState<PromoCode | null>(null);
 
   const filtered = codes.filter((c) => c.code.toLowerCase().includes(search.toLowerCase()));
 
@@ -56,7 +58,7 @@ export default function PromoCodesManager({ storeId }: { storeId: string }) {
       ) : (
         <div className="space-y-2">
           {filtered.map((c) => (
-            <Card key={c.id} className="p-3">
+            <Card key={c.id} className="p-3 cursor-pointer hover:border-primary/30 transition" onClick={() => setDrawerPromo(c)}>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
                   <Tag className="w-4 h-4" />
@@ -72,10 +74,10 @@ export default function PromoCodesManager({ storeId }: { storeId: string }) {
                     {c.expires_at && <span>· expires {format(parseISO(c.expires_at), "MMM d")}</span>}
                   </div>
                 </div>
-                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { navigator.clipboard.writeText(c.code); toast.success("Copied"); }}>
+                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(c.code); toast.success("Copied"); }}>
                   <Copy className="w-3.5 h-3.5" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => del.mutate(c.id)}>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={(e) => { e.stopPropagation(); del.mutate(c.id); }}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </div>
@@ -86,6 +88,7 @@ export default function PromoCodesManager({ storeId }: { storeId: string }) {
 
       <PromoCodeBuilder open={creating} bulk={false} onClose={() => setCreating(false)} storeId={storeId} />
       <PromoCodeBuilder open={bulk} bulk={true} onClose={() => setBulk(false)} storeId={storeId} />
+      <PromoRedemptionsDrawer open={!!drawerPromo} onClose={() => setDrawerPromo(null)} promo={drawerPromo} />
     </div>
   );
 }
