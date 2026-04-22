@@ -1,36 +1,83 @@
 
 
-## What's happening
+# Hotels & Resort — Final booking-flow polish
 
-Your screenshot shows the **Rooms & Rates** section in its empty state — "No rooms yet" with an "Add First Room" button. This is **not a bug**. It simply means this property (`store_id: 7322b460…65fab`) has **zero rows in the `lodge_rooms` table**.
+Five focused upgrades to the lodging booking drawer, reservation history, and post-booking experience.
 
-The Hotels & Resort upgrade we just shipped (bed builder, fees, child policy, property profile, multi-step booking) added new fields and a new admin tab — but it does **not** auto-create any rooms. You still need to add rooms manually for each property.
+## 1. Real house-rules & cancellation text + scroll-to-confirm
 
-## How to fix (no code change needed)
+In `LodgingBookingDrawer.tsx` Step 4 (Review):
 
-1. Tap the green **+ Add Room** button (or "Add First Room").
-2. Fill in at least: **Name** (e.g. "Deluxe Sea View"), **Base rate**, **Max guests**, **Units total**.
-3. Use the new **Bed configuration builder** to add beds (drives "Sleeps X" automatically).
-4. Optionally fill: View / Floor / Wing, Child policy, Tax & fee breakdown, Add-ons (30+ presets ready).
-5. Save → the room appears in the list and becomes bookable on the public store page.
+- Pull `house_rules` (quiet hours, party policy, smoking, min age, ID-at-checkin, security deposit) and `cancellationPolicy` text **directly from `lodge_property_profile`** via a new `useLodgePropertyProfile(storeId)` call inside the drawer.
+- Render a scrollable policy panel (`max-h-44 overflow-y-auto`) listing each rule as a bullet, plus the cancellation policy formatted in plain English (`flexible` → "Free cancellation up to 24h before check-in", `moderate`, `strict`, `non_refundable`).
+- Track scroll-to-bottom with an `onScroll` handler; the two consent checkboxes stay **disabled** until the user has scrolled to the end (or the panel fits on screen with no overflow). A small hint reads "Scroll to read all rules" until cleared.
+- The Confirm button stays disabled until both checkboxes are ticked.
 
-## If you expected rooms to already exist
+## 2. Required guest validation
 
-Possible reasons the list is empty:
+- Add `zod` schema for guest step: `name` (≥2 chars trimmed), `phone` (E.164 via existing `normalizePhoneE164`, ≥7 digits), `email` (valid format, **required** — was optional).
+- Per-field inline error messages shown on blur.
+- `Continue` from Guest step and final `Confirm` are both disabled until `schema.safeParse` passes.
+- Country dropdown stays optional; ETA / notes stay optional.
 
-- **New property** — never had rooms added.
-- **Wrong store** — rooms may exist under a different `store_id`. The current URL is `/admin/stores/7322b460-2c23-4d3d-bdc5-55a31cc65fab`.
-- **RLS blocking read** — only the store owner / admin can see rows; if you're viewing as a different account, the query returns empty silently.
-- **Save failed earlier** — if a previous "Add Room" attempt errored (e.g. missing required field), nothing was inserted.
+## 3. Booking status timeline
 
-## Optional next step (if you want me to investigate)
+New `ReservationStatusTimeline.tsx` component rendering a horizontal stepper:
 
-If you believe rooms *should* exist for this store, approve and I will:
+```text
+[●] Hold ──── [○] Confirmed ──── [○] Checked-in ──── [○] Checked-out
+                                       ╲
+                                        [✕] Cancelled / No-show (if applicable)
+```
 
-1. Query `lodge_rooms` for `store_id = 7322b460-2c23-4d3d-bdc5-55a31cc65fab` to confirm row count.
-2. Check the `stores` table to confirm ownership and `category = 'lodging'`.
-3. Review the `upsert` mutation in `useLodgeRooms.ts` for any silent-failure paths after the recent schema migration (new jsonb columns).
-4. Add a toast on save success/failure inside `LodgingRoomsSection.tsx` so future Add Room attempts surface errors instead of failing silently.
+- Steps highlight based on `reservation.status` (hold/confirmed/checked_in/checked_out/cancelled/no_show).
+- Shown on the **success screen** of the booking drawer (after submit) and in **`TripDetailPage.tsx`** / **`MyTripsPage.tsx`** for any lodging-type trip item.
+- Adds a `useLodgeReservation(reservationId)` lookup so the public trip page can display the live status timeline pulled from `lodge_reservations`.
 
-Otherwise, just tap **+ Add Room** and the empty state will clear as soon as the first room is saved.
+## 4. Richer .ics calendar
+
+Replace the all-day `VALUE=DATE` event in `downloadIcs()` with two timed events using the property timezone:
+
+- Event 1 — **Check-in**: `DTSTART` = check-in date + property `check_in_from` time, `DTEND` = +1h. `LOCATION` = full `store.address`. `DESCRIPTION` includes reference, total, room, contact phone, and "Cancellation: …".
+- Event 2 — **Check-out**: same pattern with `check_out_until`.
+- Use `DTSTART;TZID=<property tz>` and embed a minimal `VTIMEZONE` block. Property timezone falls back to `Asia/Phnom_Penh` (existing project default) when unset on the store.
+- Both events get `ORGANIZER:CN=<storeName>:mailto:noreply@hizivo.com`, `URL:` link back to the store page, and an `ATTENDEE` line for the guest email.
+
+## 5. Stripe deposit / hold integration
+
+For the **"Card on arrival"** payment method, replace today's pure-record flow with an actual Stripe charge so the host can secure or capture a deposit.
+
+- New edge function **`create-lodging-deposit`** (`supabase/functions/create-lodging-deposit/index.ts`):
+  - Auth via Supabase JWT + Stripe SDK (`STRIPE_SECRET_KEY` already present, see `supabase/functions/create-grocery-checkout/index.ts` for the pattern).
+  - Input: `{ reservation_id, store_id, deposit_cents, mode: "deposit" | "full" }`.
+  - Creates a Stripe Checkout Session in `mode: "payment"` with `payment_intent_data.capture_method = "manual"` for **hold** (auth only) or `automatic` for **full charge**.
+  - Stores `stripe_session_id` + `stripe_payment_intent_id` back on `lodge_reservations` and bumps `payment_status` to `authorized` or `paid`.
+  - Success URL → drawer success step with `?paid=1`; cancel URL → review step.
+- Drawer (`LodgingBookingDrawer.tsx`):
+  - When `payMethod === "card_on_arrival"`, after the `lodge_reservations` insert succeeds, call `supabase.functions.invoke("create-lodging-deposit", { body: { reservation_id, deposit_cents: securityDeposit || 0, mode: securityDeposit > 0 ? "deposit" : "full" } })` and `window.open(url, "_blank")`.
+  - "Pay at property" and "Bank transfer" keep current behaviour (no Stripe call).
+- DB: migration adds `stripe_session_id text`, `stripe_payment_intent_id text`, and a `payment_status` value of `authorized` to `lodge_reservations`.
+
+## File map
+
+**Created**
+- `src/components/lodging/ReservationStatusTimeline.tsx`
+- `src/lib/lodging/ics.ts` (timezone-aware .ics builder)
+- `src/lib/lodging/cancellationCopy.ts` (policy → human text)
+- `src/lib/lodging/guestSchema.ts` (zod)
+- `supabase/functions/create-lodging-deposit/index.ts`
+- `supabase/migrations/<ts>_lodge_reservations_stripe.sql`
+
+**Modified**
+- `src/components/lodging/LodgingBookingDrawer.tsx` — pulls property profile, scroll-gated consent, zod guest validation, Stripe invoke for card-on-arrival, status timeline on success, new `.ics` builder.
+- `src/hooks/lodging/useLodgePropertyProfile.ts` — add `cancellation_policy_text` field if missing in HouseRules typing.
+- `src/pages/trips/TripDetailPage.tsx` — render `ReservationStatusTimeline` for lodging items.
+- `src/pages/app/MyTripsPage.tsx` — show small status pill (driven by same component compact mode) per lodging trip card.
+
+## Technical notes
+
+- No new npm dependencies — `zod` and `@stripe/stripe-js` are already installed; the edge function uses the same `Stripe` import pattern as existing functions.
+- RLS: insert/update `lodge_reservations` already permitted for owner + guest's own row. The edge function uses the service role to write Stripe IDs back.
+- `.ics` file remains client-generated (no server email yet); a follow-up could mail it via the existing transactional email scaffold.
+- All UI follows v2026 high-density tokens (`text-[11px]`, `rounded-xl`, Lucide icons only) per project memory.
 
