@@ -56,6 +56,9 @@ interface Props {
   accounts: AdAccount[];
   onSave: (form: CampaignFormState, asDraft: boolean) => void;
   saving: boolean;
+  walletBalanceCents?: number;
+  onConnectPlatform?: (p: AdPlatform) => void;
+  onAddFunds?: () => void;
 }
 
 const OBJECTIVES: { id: string; label: string; rationale: string; icon: LucideIcon }[] = [
@@ -89,6 +92,9 @@ export default function CreateCampaignWizard({
   accounts,
   onSave,
   saving,
+  walletBalanceCents = 0,
+  onConnectPlatform,
+  onAddFunds,
 }: Props) {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<CampaignFormState>(initial);
@@ -112,6 +118,14 @@ export default function CreateCampaignWizard({
       platforms: f.platforms.includes(p) ? f.platforms.filter((x) => x !== p) : [...f.platforms, p],
     }));
   };
+
+  const dailyBudgetCents = Math.round(form.daily_budget * 100);
+  const walletBlocks = walletBalanceCents > 0 || isEditing
+    ? walletBalanceCents < dailyBudgetCents && !isEditing
+    : false;
+  // Only block submit (not draft) when wallet < daily budget AND user has any balance set up.
+  // If wallet is 0 (never funded) we still allow submit and let backend enforce.
+  const submitDisabled = saving || walletBlocks;
 
   const stepValid = (): boolean => {
     if (step === 0) return !!form.objective;
@@ -169,7 +183,8 @@ export default function CreateCampaignWizard({
               <Button
                 className="w-full sm:w-auto h-10"
                 onClick={() => onSave(form, false)}
-                disabled={!stepValid() || saving}
+                disabled={!stepValid() || submitDisabled}
+                title={walletBlocks ? "Wallet balance below daily budget — add funds to submit" : undefined}
               >
                 {saving && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
                 Submit for review
@@ -257,28 +272,29 @@ export default function CreateCampaignWizard({
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => connected && togglePlatform(p.id)}
-                    disabled={!connected}
+                    onClick={() => connected ? togglePlatform(p.id) : onConnectPlatform?.(p.id)}
                     aria-pressed={selected}
-                    title={connected ? p.label : `Connect ${p.label} first`}
+                    title={connected ? p.label : `Connect ${p.label}`}
                     className={cn(
-                      "flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition active:scale-95 touch-manipulation",
+                      "flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition active:scale-95 touch-manipulation relative",
                       selected ? "border-primary bg-primary/5" : "border-border",
-                      !connected && "opacity-40 cursor-not-allowed"
+                      !connected && "opacity-60"
                     )}
                   >
                     <Icon className={cn("w-4 h-4", p.color)} />
                     <span className="text-[10px]">{p.label.split(" ")[0]}</span>
+                    {!connected && (
+                      <span className="absolute -top-1 -right-1 text-[8px] bg-amber-500 text-white rounded-full px-1 leading-tight">+</span>
+                    )}
                   </button>
                 );
               })}
             </div>
-            {form.platforms.some((p) => !connectedPlatforms.has(p)) === false &&
-              platforms.some((p) => !connectedPlatforms.has(p.id)) && (
-                <p className="text-[10px] text-muted-foreground mt-1.5">
-                  Disabled platforms need to be connected first.
-                </p>
-              )}
+            {platforms.some((p) => !connectedPlatforms.has(p.id)) && (
+              <p className="text-[10px] text-muted-foreground mt-1.5">
+                Tap a dimmed platform to connect it.
+              </p>
+            )}
           </div>
           <div>
             <Label className="text-xs">Audience preset</Label>
@@ -414,6 +430,26 @@ export default function CreateCampaignWizard({
               ~{fmt(reachLow)}–{fmt(reachHigh)} people / day
             </p>
           </div>
+          {walletBlocks && (
+            <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-start gap-2">
+              <div className="text-[11px] flex-1">
+                <p className="font-semibold text-amber-700 dark:text-amber-400">Wallet balance too low</p>
+                <p className="text-amber-700/80 dark:text-amber-400/80 mt-0.5">
+                  Balance is ${(walletBalanceCents / 100).toFixed(2)}. Add at least ${(form.daily_budget).toFixed(2)} to submit.
+                </p>
+              </div>
+              {onAddFunds && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-[11px] shrink-0"
+                  onClick={() => { onClose(); onAddFunds(); }}
+                >
+                  Add funds
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </ResponsiveModal>

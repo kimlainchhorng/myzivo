@@ -7,7 +7,7 @@
  *  - 4-step CreateCampaignWizard (Goal → Audience → Creative → Budget)
  *  - Sticky FAB + realtime via useStoreAdsOverview
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -255,6 +255,22 @@ export default function StoreAdsManager({ storeId }: Props) {
     onSuccess: () => { invalidate(); toast.success("Campaign duplicated"); },
     onError: (e: any) => toast.error(e.message),
   });
+
+  // ===== Realtime status-change toast =====
+  const lastStatusRef = useRef<Record<string, string>>({});
+  useEffect(() => {
+    const map = lastStatusRef.current;
+    for (const c of campaigns) {
+      const prev = map[c.id];
+      if (prev && prev !== c.status) {
+        if (c.status === "active") toast.success(`"${c.name}" is now live`);
+        else if (c.status === "rejected") toast.error(`"${c.name}" was rejected`);
+        else if (c.status === "paused" && prev === "active") toast.info(`"${c.name}" paused`);
+        else if (c.status === "ended") toast.info(`"${c.name}" ended`);
+      }
+      map[c.id] = c.status;
+    }
+  }, [campaigns]);
 
   // ===== Handlers =====
 
@@ -580,6 +596,9 @@ export default function StoreAdsManager({ storeId }: Props) {
         accounts={accounts}
         onSave={(form, asDraft) => saveCampaign.mutate({ form, asDraft })}
         saving={saveCampaign.isPending}
+        walletBalanceCents={wallet.balance_cents}
+        onConnectPlatform={(p) => { setCreateOpen(false); setConnectPlatform(p); }}
+        onAddFunds={goToWallet}
       />
 
       {/* Campaign detail drawer */}
