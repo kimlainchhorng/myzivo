@@ -1,6 +1,7 @@
 /**
  * Lodging — Rooms & Rates section.
- * CRUD for room types: name, type, beds, max guests, rates (USD), amenities, units.
+ * CRUD for room types: name, type, beds, max guests, rates (USD), amenities, units,
+ * photos, description, cancellation policy, check-in/out times, add-ons.
  */
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,12 +12,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BedDouble, Plus, Trash2, Pencil } from "lucide-react";
+import { BedDouble, Plus, Trash2, Pencil, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
-import { useLodgeRooms, type LodgeRoom } from "@/hooks/lodging/useLodgeRooms";
+import { useLodgeRooms, type LodgeRoom, type LodgeAddon } from "@/hooks/lodging/useLodgeRooms";
+import { LodgingRoomPhotoUploader } from "@/components/lodging/LodgingRoomPhotoUploader";
 
 const ROOM_TYPES = ["Standard", "Deluxe", "Suite", "Villa", "Family", "Dormitory"];
 const AMENITY_OPTIONS = ["AC", "Wi-Fi", "TV", "Mini-bar", "Safe", "Balcony", "Bathtub", "Pool view", "Sea view", "City view"];
+const CANCEL_POLICIES: { value: string; label: string }[] = [
+  { value: "flexible", label: "Flexible — full refund up to 24h before" },
+  { value: "moderate", label: "Moderate — full refund up to 5 days before" },
+  { value: "strict", label: "Strict — 50% refund up to 7 days before" },
+  { value: "non_refundable", label: "Non-refundable" },
+];
 
 export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
   const { data: rooms = [], isLoading, upsert, remove } = useLodgeRooms(storeId);
@@ -28,10 +36,11 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
     units_total: 1, base_rate_cents: 5000, weekend_rate_cents: 6000,
     weekly_discount_pct: 0, monthly_discount_pct: 0,
     breakfast_included: false, amenities: [], photos: [], sort_order: 0, is_active: true,
+    description: "", cancellation_policy: "flexible", addons: [],
   });
 
   const openNew = () => { setEditing(blank()); setOpen(true); };
-  const openEdit = (r: LodgeRoom) => { setEditing(r); setOpen(true); };
+  const openEdit = (r: LodgeRoom) => { setEditing({ ...r, addons: r.addons || [], photos: r.photos || [] }); setOpen(true); };
 
   const save = async () => {
     if (!editing?.name) { toast.error("Name required"); return; }
@@ -46,6 +55,14 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
     const cur = editing?.amenities || [];
     setEditing({ ...editing, amenities: cur.includes(a) ? cur.filter(x => x !== a) : [...cur, a] });
   };
+
+  const updateAddon = (idx: number, patch: Partial<LodgeAddon>) => {
+    const next = [...(editing?.addons || [])];
+    next[idx] = { ...next[idx], ...patch };
+    setEditing({ ...editing, addons: next });
+  };
+  const addAddon = () => setEditing({ ...editing, addons: [...(editing?.addons || []), { name: "", price_cents: 500, per: "stay" }] });
+  const removeAddon = (idx: number) => setEditing({ ...editing, addons: (editing?.addons || []).filter((_, i) => i !== idx) });
 
   return (
     <Card>
@@ -64,33 +81,41 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
           </div>
         ) : (
           <div className="space-y-3">
-            {rooms.map((r) => (
-              <div key={r.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <BedDouble className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-sm">{r.name}</p>
-                    {r.room_type && <Badge variant="secondary" className="text-[10px]">{r.room_type}</Badge>}
-                    {!r.is_active && <Badge variant="outline" className="text-[10px]">Inactive</Badge>}
+            {rooms.map((r) => {
+              const cover = (r.photos && r.photos[0]) as string | undefined;
+              return (
+                <div key={r.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
+                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                    {cover
+                      ? <img src={cover} alt={r.name} className="h-full w-full object-cover" />
+                      : <BedDouble className="h-6 w-6 text-primary" />}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {r.beds || "—"} · Sleeps {r.max_guests} · {r.units_total} unit{r.units_total > 1 ? "s" : ""}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-sm">{r.name}</p>
+                      {r.room_type && <Badge variant="secondary" className="text-[10px]">{r.room_type}</Badge>}
+                      {!r.is_active && <Badge variant="outline" className="text-[10px]">Inactive</Badge>}
+                      {(r.photos?.length || 0) > 0 && (
+                        <Badge variant="outline" className="text-[10px] gap-1"><ImageIcon className="h-2.5 w-2.5" />{r.photos.length}</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {r.beds || "—"} · Sleeps {r.max_guests} · {r.units_total} unit{r.units_total > 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-bold text-sm">${(r.base_rate_cents / 100).toFixed(2)}</p>
+                    <p className="text-[10px] text-muted-foreground">per night</p>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => { if (confirm("Delete room?")) remove.mutate(r.id); }}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="font-bold text-sm">${(r.base_rate_cents / 100).toFixed(2)}</p>
-                  <p className="text-[10px] text-muted-foreground">per night</p>
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" onClick={() => { if (confirm("Delete room?")) remove.mutate(r.id); }}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>
@@ -99,8 +124,29 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editing?.id ? "Edit Room" : "Add Room"}</DialogTitle></DialogHeader>
           {editing && (
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Photos */}
+              <div>
+                <Label className="mb-1.5 block">Photos</Label>
+                <LodgingRoomPhotoUploader
+                  storeId={storeId}
+                  photos={(editing.photos as string[]) || []}
+                  onChange={(next) => setEditing({ ...editing, photos: next })}
+                />
+              </div>
+
               <div><Label>Name</Label><Input value={editing.name || ""} onChange={e => setEditing({ ...editing, name: e.target.value })} placeholder="Deluxe Sea View" /></div>
+
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  rows={3}
+                  value={editing.description || ""}
+                  onChange={e => setEditing({ ...editing, description: e.target.value })}
+                  placeholder="A spacious room with ocean views, king bed, and private balcony…"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Type</Label>
@@ -124,6 +170,23 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                 <div><Label>Weekly discount %</Label><Input type="number" inputMode="decimal" value={editing.weekly_discount_pct ?? ""} onChange={e => setEditing({ ...editing, weekly_discount_pct: e.target.value === "" ? null : parseFloat(e.target.value) })} /></div>
                 <div><Label>Monthly discount %</Label><Input type="number" inputMode="decimal" value={editing.monthly_discount_pct ?? ""} onChange={e => setEditing({ ...editing, monthly_discount_pct: e.target.value === "" ? null : parseFloat(e.target.value) })} /></div>
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Check-in time</Label><Input type="time" value={editing.check_in_time || ""} onChange={e => setEditing({ ...editing, check_in_time: e.target.value || null })} /></div>
+                <div><Label>Check-out time</Label><Input type="time" value={editing.check_out_time || ""} onChange={e => setEditing({ ...editing, check_out_time: e.target.value || null })} /></div>
+              </div>
+
+              <div>
+                <Label>Cancellation policy</Label>
+                <select
+                  value={editing.cancellation_policy || "flexible"}
+                  onChange={e => setEditing({ ...editing, cancellation_policy: e.target.value })}
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  {CANCEL_POLICIES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                </select>
+              </div>
+
               <div className="flex items-center gap-3">
                 <Switch checked={!!editing.breakfast_included} onCheckedChange={v => setEditing({ ...editing, breakfast_included: v })} />
                 <Label>Breakfast included</Label>
@@ -140,6 +203,52 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                   })}
                 </div>
               </div>
+
+              {/* Add-ons editor */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Add-ons (optional extras)</Label>
+                  <Button type="button" size="sm" variant="outline" onClick={addAddon} className="h-7 gap-1">
+                    <Plus className="h-3 w-3" /> Add
+                  </Button>
+                </div>
+                {(editing.addons || []).length === 0 ? (
+                  <p className="text-xs text-muted-foreground">e.g. Breakfast +$8/night, Airport pickup +$25/stay</p>
+                ) : (
+                  <div className="space-y-2">
+                    {(editing.addons || []).map((a, i) => (
+                      <div key={i} className="grid grid-cols-12 gap-1.5 items-center p-2 rounded-lg border border-border bg-muted/20">
+                        <Input
+                          className="col-span-5 h-8 text-xs"
+                          placeholder="Breakfast"
+                          value={a.name}
+                          onChange={e => updateAddon(i, { name: e.target.value })}
+                        />
+                        <Input
+                          className="col-span-3 h-8 text-xs"
+                          type="number" step="0.01" inputMode="decimal"
+                          placeholder="8.00"
+                          value={a.price_cents == null ? "" : a.price_cents / 100}
+                          onChange={e => updateAddon(i, { price_cents: e.target.value === "" ? 0 : Math.round(parseFloat(e.target.value) * 100) })}
+                        />
+                        <select
+                          className="col-span-3 h-8 rounded-md border border-input bg-background px-2 text-xs"
+                          value={a.per}
+                          onChange={e => updateAddon(i, { per: e.target.value as LodgeAddon["per"] })}
+                        >
+                          <option value="stay">/ stay</option>
+                          <option value="night">/ night</option>
+                          <option value="guest">/ guest</option>
+                        </select>
+                        <Button type="button" size="icon" variant="ghost" className="col-span-1 h-8 w-8" onClick={() => removeAddon(i)}>
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="flex items-center gap-3">
                 <Switch checked={editing.is_active !== false} onCheckedChange={v => setEditing({ ...editing, is_active: v })} />
                 <Label>Active (visible on profile)</Label>
