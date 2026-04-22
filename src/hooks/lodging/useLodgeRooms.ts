@@ -19,11 +19,22 @@ export interface LodgeRoom {
   monthly_discount_pct: number;
   breakfast_included: boolean;
   amenities: string[];
-  photos: any[];
+  photos: string[];
   sort_order: number;
   is_active: boolean;
+  description?: string | null;
+  cancellation_policy?: string | null;
+  check_in_time?: string | null;
+  check_out_time?: string | null;
+  addons?: LodgeAddon[];
   created_at: string;
   updated_at: string;
+}
+
+export interface LodgeAddon {
+  name: string;
+  price_cents: number;
+  per: "stay" | "night" | "guest";
 }
 
 export function useLodgeRooms(storeId: string) {
