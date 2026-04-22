@@ -7,7 +7,7 @@
  * countdown alert (data-testid="lodge-retry-locked") and auto-re-enables when the
  * cooldown elapses.
  */
-import { ShieldCheck, CheckCircle2, Clock, XCircle, RotateCcw, Undo2, Loader2, Lock } from "lucide-react";
+import { ShieldCheck, CheckCircle2, Clock, XCircle, RotateCcw, Undo2, Loader2, Lock, User, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +28,10 @@ interface RetryResult {
   locked?: boolean;
   retry_after_seconds?: number;
   error?: string;
+  lock_attempt_id?: string | null;
+  lock_started_at?: string | null;
+  lock_owner_hint?: "self" | "other" | null;
+  lock_admin_hint?: string | null;
 }
 
 interface Props {
