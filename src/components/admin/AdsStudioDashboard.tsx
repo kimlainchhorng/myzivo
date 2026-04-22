@@ -18,6 +18,17 @@ import {
   BarChart, Bar, Legend,
 } from "recharts";
 import { Trophy, TrendingUp, DollarSign, Gauge, Save, Loader2, AlertTriangle } from "lucide-react";
+
+const ResponsiveContainerCompat = ResponsiveContainer as any;
+const AreaChartCompat = AreaChart as any;
+const AreaCompat = Area as any;
+const XAxisCompat = XAxis as any;
+const YAxisCompat = YAxis as any;
+const TooltipCompat = Tooltip as any;
+const CartesianGridCompat = CartesianGrid as any;
+const BarChartCompat = BarChart as any;
+const BarCompat = Bar as any;
+const LegendCompat = Legend as any;
 import { PerformanceChartSkeleton, BreakdownTableSkeleton, LedgerListSkeleton } from "@/components/admin/ads/MarketingSkeletons";
 import MarketingEmptyState from "@/components/admin/ads/MarketingEmptyState";
 import { useIsMobilePreview } from "@/components/admin/ads/useResponsiveWidth";

@@ -3,6 +3,8 @@ import { usePageViewTracker } from "@/hooks/usePageViewTracker";
 import { useGeoDetect } from "@/hooks/useGeoDetect";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
+
+const HelmetProviderCompat = HelmetProvider as any;
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -547,7 +549,7 @@ function RouteAwareGlobalUI() {
 
 const App = () => (
   <ErrorBoundary>
-    <HelmetProvider>
+    <HelmetProviderCompat>
       <ThemeProvider attribute="class" defaultTheme="system" storageKey="hizovo-theme">
         <QueryClientProvider client={queryClient}>
           <BrandProvider>
@@ -1029,7 +1031,7 @@ const App = () => (
   </BrandProvider>
   </QueryClientProvider>
   </ThemeProvider>
-  </HelmetProvider>
+  </HelmetProviderCompat>
   </ErrorBoundary>
 );
 
