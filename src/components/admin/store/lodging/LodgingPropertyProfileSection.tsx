@@ -237,8 +237,35 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
           </AccordionTrigger>
           <AccordionContent className="px-3 pb-3 space-y-3">
             <Card>
-              <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Hotel className="h-3.5 w-3.5" /> Property-wide facilities</CardTitle></CardHeader>
-              <CardContent className="pt-0"><ChipGroup options={FACILITIES.filter(matches)} selected={form.facilities || []} onToggle={v => toggleIn("facilities", v)} /></CardContent>
+              <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Hotel className="h-3.5 w-3.5" /> Property-wide facilities <span className="text-[10px] font-normal text-muted-foreground">· {(form.facilities || []).length} selected</span></CardTitle></CardHeader>
+              <CardContent className="pt-0 space-y-3">
+                {FACILITY_GROUPS.map(group => {
+                  const items = group.items.filter(matches);
+                  if (items.length === 0) return null;
+                  const selectedInGroup = items.filter(i => (form.facilities || []).includes(i)).length;
+                  return (
+                    <div key={group.label}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{group.label} <span className="text-muted-foreground/60 normal-case">· {selectedInGroup}/{items.length}</span></p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const allSelected = items.every(i => (form.facilities || []).includes(i));
+                            const next = allSelected
+                              ? (form.facilities || []).filter(f => !items.includes(f))
+                              : Array.from(new Set([...(form.facilities || []), ...items]));
+                            setForm({ ...form, facilities: next });
+                          }}
+                          className="text-[10px] text-primary hover:underline font-medium"
+                        >
+                          {items.every(i => (form.facilities || []).includes(i)) ? "Clear" : "Select all"}
+                        </button>
+                      </div>
+                      <ChipGroup options={items} selected={form.facilities || []} onToggle={v => toggleIn("facilities", v)} withIcons />
+                    </div>
+                  );
+                })}
+              </CardContent>
             </Card>
             <Card>
               <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Utensils className="h-3.5 w-3.5" /> Meal plans</CardTitle></CardHeader>
