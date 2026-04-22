@@ -456,6 +456,21 @@ export function LodgingBookingDrawer({
       }
     >
       <div className="space-y-4 pt-2">
+        {/* Step progress dots */}
+        {step !== "success" && (
+          <div className="flex items-center gap-1.5 px-1">
+            {Array.from({ length: totalSteps }).map((_, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "h-1 rounded-full flex-1 transition-all duration-300",
+                  i < visibleStepIndex ? "bg-emerald-500" : i === visibleStepIndex ? "bg-emerald-600" : "bg-muted"
+                )}
+              />
+            ))}
+          </div>
+        )}
+
         {step !== "success" && (rangeIssue.invalid || stayIssue.invalid) && (
           <div className="flex items-start gap-2 p-3 rounded-xl bg-destructive/10 text-destructive border border-destructive/20">
             <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
@@ -602,18 +617,23 @@ export function LodgingBookingDrawer({
         {step === "review" && (
           <>
             {/* Booking summary */}
-            <div className="p-3 rounded-xl border border-border bg-card space-y-1.5 text-xs">
-              <p className="font-bold text-sm">{roomName}</p>
-              <p className="text-muted-foreground">{storeName}</p>
-              <div className="flex justify-between"><span className="text-muted-foreground">Dates</span><span>{checkIn} → {checkOut} · {breakdown.nights}n</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Guests</span><span>{adults} adult{adults > 1 ? "s" : ""}{children > 0 ? `, ${children} child${children > 1 ? "ren" : ""}` : ""}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Guest</span><span>{name}</span></div>
-              {eta && <div className="flex justify-between"><span className="text-muted-foreground">Arrival ETA</span><span>{eta}</span></div>}
+            <div className="p-4 rounded-2xl border border-border bg-gradient-to-br from-card to-muted/20 space-y-2 text-xs shadow-sm">
+              <div className="flex items-start justify-between gap-3 pb-2 border-b border-border/50">
+                <div className="min-w-0">
+                  <p className="font-bold text-base text-foreground">{roomName}</p>
+                  <p className="text-muted-foreground truncate">{storeName}</p>
+                </div>
+                <span className="shrink-0 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider">Hold</span>
+              </div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Dates</span><span className="font-medium">{checkIn} → {checkOut} · {breakdown.nights}n</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Guests</span><span className="font-medium">{adults} adult{adults > 1 ? "s" : ""}{children > 0 ? `, ${children} child${children > 1 ? "ren" : ""}` : ""}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Guest</span><span className="font-medium truncate ml-2">{name}</span></div>
+              {eta && <div className="flex justify-between"><span className="text-muted-foreground">Arrival ETA</span><span className="font-medium">{eta}</span></div>}
             </div>
 
             {/* Payment method */}
             <div className="space-y-2">
-              <Label>Payment method</Label>
+              <Label className="text-sm font-bold">Payment method</Label>
               {PAY_METHODS.map(m => {
                 const Icon = m.icon;
                 const active = payMethod === m.id;
@@ -621,19 +641,28 @@ export function LodgingBookingDrawer({
                   <button
                     key={m.id} type="button" onClick={() => setPayMethod(m.id)}
                     className={cn(
-                      "w-full flex items-start gap-3 p-3 rounded-xl border text-left transition-colors",
-                      active ? "border-primary bg-primary/5" : "border-border bg-card hover:bg-muted/40"
+                      "w-full flex items-start gap-3 p-3.5 rounded-2xl border-2 text-left transition-all",
+                      active
+                        ? "border-emerald-500 bg-gradient-to-br from-emerald-50 to-emerald-100/40 shadow-md shadow-emerald-500/10 dark:from-emerald-950/40 dark:to-emerald-900/20"
+                        : "border-border bg-card hover:bg-muted/40 hover:border-border/80"
                     )}
                   >
-                    <Icon className={cn("h-5 w-5 mt-0.5 shrink-0", active ? "text-primary" : "text-muted-foreground")} />
+                    <div className={cn(
+                      "h-9 w-9 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                      active ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-muted text-muted-foreground"
+                    )}>
+                      <Icon className="h-4.5 w-4.5" />
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold">{m.label}</p>
-                      <p className="text-[11px] text-muted-foreground">{m.sub}</p>
+                      <p className={cn("text-sm font-bold", active && "text-emerald-700 dark:text-emerald-300")}>{m.label}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{m.sub}</p>
                     </div>
                     <div className={cn(
-                      "h-4 w-4 rounded-full border-2 mt-1 shrink-0",
-                      active ? "border-primary bg-primary" : "border-muted-foreground/30"
-                    )} />
+                      "h-5 w-5 rounded-full border-2 mt-1 shrink-0 flex items-center justify-center transition-all",
+                      active ? "border-emerald-500 bg-emerald-500" : "border-muted-foreground/30"
+                    )}>
+                      {active && <CheckCircle2 className="h-3 w-3 text-white" strokeWidth={3} />}
+                    </div>
                   </button>
                 );
               })}
@@ -774,37 +803,40 @@ export function LodgingBookingDrawer({
         {step === "success" && reference && (
           <div className="space-y-4 py-2">
             <div className="flex flex-col items-center text-center gap-2">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <CheckCircle2 className="h-9 w-9 text-primary" />
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-emerald-500/20 blur-xl" />
+                <div className="relative h-20 w-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                  <CheckCircle2 className="h-11 w-11 text-white" strokeWidth={2.5} />
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">Your booking request was sent to</p>
+              <p className="text-sm text-muted-foreground mt-1">Your booking request was sent to</p>
               <p className="font-bold text-lg">{storeName}</p>
             </div>
 
-            <div className="p-3 rounded-xl border border-border bg-card text-center">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Reference</p>
-              <div className="flex items-center justify-center gap-2 mt-1">
-                <p className="font-extrabold text-xl tracking-wider">{reference}</p>
-                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={copyRef}>
-                  <Copy className="h-3.5 w-3.5" />
+            <div className="p-4 rounded-2xl border-2 border-dashed border-emerald-500/30 bg-gradient-to-br from-emerald-50/50 to-card dark:from-emerald-950/20 text-center">
+              <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-bold">Reference</p>
+              <div className="flex items-center justify-center gap-2 mt-1.5">
+                <p className="font-extrabold text-2xl tracking-wider text-foreground">{reference}</p>
+                <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={copyRef}>
+                  <Copy className="h-4 w-4" />
                 </Button>
               </div>
             </div>
 
             {/* Status timeline */}
-            <div className="p-3 rounded-xl border border-border bg-card">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Booking status</p>
+            <div className="p-3 rounded-2xl border border-border bg-card">
+              <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-bold mb-2">Booking status</p>
               <ReservationStatusTimeline status={reservationStatus} />
             </div>
 
-            <div className="p-3 rounded-xl bg-muted/40 text-xs space-y-1">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-muted/40 to-muted/20 border border-border/50 text-xs space-y-1.5">
               <div className="flex justify-between"><span className="text-muted-foreground">Room</span><span className="font-semibold">{roomName}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Check-in</span><span>{checkIn}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Check-out</span><span>{checkOut}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Guests</span><span>{adults + children}</span></div>
-              <div className="flex justify-between border-t border-border/50 pt-1.5 mt-1.5">
-                <span className="font-bold">Total</span>
-                <span className="font-bold text-primary">{fmtMoney(breakdown.total)}</span>
+              <div className="flex justify-between"><span className="text-muted-foreground">Check-in</span><span className="font-medium">{checkIn}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Check-out</span><span className="font-medium">{checkOut}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Guests</span><span className="font-medium">{adults + children}</span></div>
+              <div className="flex justify-between border-t border-border/50 pt-2 mt-1.5">
+                <span className="font-bold text-sm">Total</span>
+                <span className="font-extrabold text-base text-emerald-600 dark:text-emerald-400">{fmtMoney(breakdown.total)}</span>
               </div>
             </div>
 
@@ -904,53 +936,53 @@ function buildBreakdownType() {
 
 function PriceSummary({ breakdown, fmt }: { breakdown: Breakdown; fmt: (c: number) => string }) {
   return (
-    <div className="p-3 rounded-xl bg-muted/40 text-xs space-y-1">
+    <div className="p-3.5 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/20 border border-border/60 text-xs space-y-1 shadow-sm">
       <div className="flex justify-between">
         <span className="text-muted-foreground">Room · {breakdown.nights} night{breakdown.nights > 1 ? "s" : ""}</span>
-        <span className="font-semibold">{fmt(breakdown.roomTotal - breakdown.weekendUplift)}</span>
+        <span className="font-semibold tabular-nums">{fmt(breakdown.roomTotal - breakdown.weekendUplift)}</span>
       </div>
       {breakdown.weekendUplift > 0 && (
         <div className="flex justify-between">
           <span className="text-muted-foreground">Weekend uplift</span>
-          <span>{fmt(breakdown.weekendUplift)}</span>
+          <span className="tabular-nums">{fmt(breakdown.weekendUplift)}</span>
         </div>
       )}
       {breakdown.discountCents > 0 && (
-        <div className="flex justify-between text-primary">
+        <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
           <span>Discount ({breakdown.discountPct}%)</span>
-          <span>−{fmt(breakdown.discountCents)}</span>
+          <span className="tabular-nums">−{fmt(breakdown.discountCents)}</span>
         </div>
       )}
       {breakdown.addonsSnapshot.map((a, i) => (
         <div key={i} className="flex justify-between">
-          <span className="text-muted-foreground">{a.icon ? `${a.icon} ` : ""}{a.name} ({a.per === "stay" ? "stay" : `${a.qty}× ${a.per === "person_night" ? "guest/night" : a.per}`})</span>
-          <span>{fmt(a.subtotal_cents)}</span>
+          <span className="text-muted-foreground truncate pr-2">{a.icon ? `${a.icon} ` : ""}{a.name} ({a.per === "stay" ? "stay" : `${a.qty}× ${a.per === "person_night" ? "guest/night" : a.per}`})</span>
+          <span className="tabular-nums shrink-0">{fmt(a.subtotal_cents)}</span>
         </div>
       ))}
       {breakdown.extraAdultFee > 0 && (
-        <div className="flex justify-between"><span className="text-muted-foreground">Extra adult fee</span><span>{fmt(breakdown.extraAdultFee)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Extra adult fee</span><span className="tabular-nums">{fmt(breakdown.extraAdultFee)}</span></div>
       )}
       {breakdown.extraChildFee > 0 && (
-        <div className="flex justify-between"><span className="text-muted-foreground">Extra child fee</span><span>{fmt(breakdown.extraChildFee)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Extra child fee</span><span className="tabular-nums">{fmt(breakdown.extraChildFee)}</span></div>
       )}
       {breakdown.cleaningFee > 0 && (
-        <div className="flex justify-between"><span className="text-muted-foreground">Cleaning fee</span><span>{fmt(breakdown.cleaningFee)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Cleaning fee</span><span className="tabular-nums">{fmt(breakdown.cleaningFee)}</span></div>
       )}
       {breakdown.resortFee > 0 && (
-        <div className="flex justify-between"><span className="text-muted-foreground">Resort fee</span><span>{fmt(breakdown.resortFee)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Resort fee</span><span className="tabular-nums">{fmt(breakdown.resortFee)}</span></div>
       )}
       {breakdown.cityTax > 0 && (
-        <div className="flex justify-between"><span className="text-muted-foreground">City tax</span><span>{fmt(breakdown.cityTax)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">City tax</span><span className="tabular-nums">{fmt(breakdown.cityTax)}</span></div>
       )}
       {breakdown.serviceCharge > 0 && (
-        <div className="flex justify-between"><span className="text-muted-foreground">Service charge</span><span>{fmt(breakdown.serviceCharge)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Service charge</span><span className="tabular-nums">{fmt(breakdown.serviceCharge)}</span></div>
       )}
       {breakdown.vat > 0 && (
-        <div className="flex justify-between"><span className="text-muted-foreground">VAT</span><span>{fmt(breakdown.vat)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">VAT</span><span className="tabular-nums">{fmt(breakdown.vat)}</span></div>
       )}
-      <div className="flex justify-between border-t border-border/50 pt-1.5 mt-1.5">
-        <span className="font-bold">Grand total</span>
-        <span className="font-bold text-primary">{fmt(breakdown.total)}</span>
+      <div className="flex justify-between border-t-2 border-dashed border-border/70 pt-2 mt-2">
+        <span className="font-bold text-sm">Grand total</span>
+        <span className="font-extrabold text-base text-emerald-600 dark:text-emerald-400 tabular-nums">{fmt(breakdown.total)}</span>
       </div>
     </div>
   );
