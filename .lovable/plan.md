@@ -1,91 +1,77 @@
 
 
-# Hotels & Resort — 5 Booking-record & post-booking refinements
+# Hotels & Resort — Connect, polish & harden the full booking workflow
 
-## 1. Audit which policy sources the guest viewed
+A focused round to wire the host-side admin to all the new guest-side intelligence, tighten UX, and audit the data flow end-to-end.
 
-Persist a verifiable trail of consent on each reservation.
+## 1. Bring the host admin up to parity with the guest experience
 
-- **DB**: extend `lodge_reservations` with two jsonb columns:
-  - `policy_consent jsonb` → `{ rules: { viewed_at, viewed_section: "house_rules" }, cancellation: { viewed_at, viewed_section: "cancellation_policy", policy_key } }`
-  - `policy_consent_version text` (snapshot of `lodge_property_profile.updated_at` ISO at consent time, so we can prove which version of the rules they saw).
-- **Drawer (`LodgingBookingDrawer.tsx`)**: existing `viewedRulesSource` / `viewedCancelSource` flags now also record timestamp + section key on first open. On submit, the insert includes `policy_consent` and `policy_consent_version`.
-- **Review panel**: each consent row shows a small green `ShieldCheck` "Verified · viewed {time ago}" marker once the source has been opened, replacing the "Tap View source to enable" hint.
-- **Trip detail**: render a compact "Policies acknowledged" card (`PolicyAcknowledgementCard.tsx`) listing the two viewed sections with timestamps and the version stamp — visible to both guest and host.
+The guest-side success screen and `TripDetailPage` already render the new `ReservationStatusTimeline`, `ReservationStatusHistory`, `LodgingPaymentBadge`, `PolicyAcknowledgementCard`, retry button, and CSV export. The host's `AdminLodgingReservationDetailPage` and `LodgingReservationsSection` still show the old plain badges only. Connect them:
 
-## 2. CSV export of timeline + audit history
+- **`AdminLodgingReservationDetailPage`**:
+  - Add `ReservationStatusTimeline` at the top of the page body.
+  - Replace the hand-rolled "Audit log" card with `ReservationStatusHistory` (gets actor name + role automatically) + a `Download CSV` button using `auditCsv.ts`.
+  - Add a `LodgingPaymentBadge` next to the price block, with `onRetry` wired to `create-lodging-deposit` so hosts can re-mint a Stripe link if the guest's first attempt failed.
+  - Add `PolicyAcknowledgementCard` reading `policy_consent` + `policy_consent_version` from the row — hosts get legal proof at a glance.
+  - Use `useReservationLive(reservationId)` so status, payment_status, and audit rows refresh in real time as the guest pays / cancels.
+- **`LodgingReservationsSection` list**: render a compact `LodgingPaymentBadge` and a `ShieldCheck` "Policies acknowledged" pip on each row when `policy_consent` exists, so hosts can scan refund-pending and verified rows quickly.
 
-In `TripDetailPage.tsx` lodging panel, add a `Download CSV` button beside the existing timeline.
+## 2. Booking drawer — clearer, faster, fewer dead ends
 
-- New util `src/lib/lodging/auditCsv.ts` builds a CSV string from `lodge_reservation_audit` rows: `timestamp,from_status,to_status,actor_role,actor_name,note`.
-- File name: `reservation-{reference}-history.csv`, downloaded via Blob + `URL.createObjectURL`.
-- Visible to guest (own reservation) and host (store owner) — RLS already restricts the audit query.
-- Header row + ISO-8601 timestamps + UTF-8 BOM so Excel opens it cleanly.
+Polish based on the screenshots:
 
-## 3. Refund / refund-in-progress / retry states
+- **Step 3 (Guest info)**: when the user lands on it via "back" (image 220), the dates summary is missing — render the locked `LodgingStaySelector` at the top of every step (stay/addons/guest/review), matching review's pattern. Adds the "Go back to change dates or guests" affordance everywhere.
+- **Step 4 consent block** (image 223): collapse the two long "Tap **View source** to enable this checkbox" hints into one compact row with a single emerald `View house rules · View cancellation` chip pair. Once a chip is tapped (opens `PolicySourceSheet`), it flips to `ShieldCheck Verified`. Removes the duplicate hint clutter.
+- **Step 4 marketplace footer** ("ZIVO is a marketplace…"): move it inside the policy scroll area so it doesn't compete with the Confirm button.
+- **Success step**: add three quick actions in a row above the .ics panel — `Copy ref`, `Share booking` (uses `navigator.share` with deep link `/trip/{id}`), and `Open chat with host` (deep links to `/chat?with={ownerId}`). Keep the existing `Contact host` (tel:) below.
+- **Sticky total bar**: at the bottom of every step, show a thin pill `{nights}n · {guests} · {total}` so the user always sees the running price (currently only visible in the price summary cards).
 
-Extend the Stripe lifecycle UI.
+## 3. Sync `lodge_reservations.nights` and computed values via DB trigger
 
-- **Webhook (`stripe-lodging-webhook`)**: handle three more events:
-  - `charge.refund.updated` with `status === "pending"` → set `payment_status = "refund_pending"`.
-  - `charge.refunded` (already handled) → `refunded`.
-  - `payment_intent.payment_failed` (already handled) → `failed`, plus store `last_payment_error` text on the reservation.
-- **Migration**: add `last_payment_error text` column.
-- **`LodgingPaymentBadge.tsx`**: add two new states:
-  - `refund_pending` → amber `RotateCcw` chip "Refund in progress".
-  - `refunded` → muted `Undo2` chip "Deposit refunded · ${amount}".
-- **Retry action**: when `payment_status === "failed"`, badge becomes a button that re-invokes `create-lodging-deposit` with the existing `reservation_id`, opening a fresh Checkout session (the edge function will reuse / replace `stripe_session_id`). Shown on success screen, `MyTripsPage`, and `TripDetailPage`.
+The drawer currently writes `total_cents`, `addons`, `fee_breakdown`, etc., but **does not write `nights`** — it relies on the row already having a default. The host detail page reads `reservation.nights` and shows `0` if the trigger isn't there.
 
-## 4. Specific availability-conflict reason
+- Add a Postgres trigger `tg_lodge_reservation_set_nights` on `lodge_reservations` (`BEFORE INSERT OR UPDATE OF check_in, check_out`) that sets `nights = (check_out - check_in)`. Idempotent.
+- Backfill existing rows: `UPDATE lodge_reservations SET nights = (check_out - check_in) WHERE nights IS NULL OR nights = 0`.
+- Also ensure `extras_cents`, `tax_cents`, `paid_cents` default to 0 (verify in migration; add `DEFAULT 0 NOT NULL` if missing) so the admin price card never shows `NaN`.
 
-Replace the generic "dates no longer available" banner with a precise, evidence-backed message.
+## 4. Payment-status retry & link-expiry hardening on `create-lodging-deposit`
 
-- Update `useRoomConflictCheck.ts` to return the actual conflicting rows (`id, reference, status, check_in, check_out, guest_first_name`) instead of a boolean — limit 5, ordered by `check_in`.
-- New `ConflictReasonPanel.tsx` rendered in Step 4 review when conflicts exist:
-  - Title: "Room is booked for these dates".
-  - For each conflict: chip showing `#{reference} · {status}` (status colour-coded) and the overlapping date range (`May 3 → May 5`).
-  - For privacy, guest name shown only to the host preview (not consumer) — consumer just sees the reference + status.
-  - Action button: `Pick new dates` → jumps drawer back to Step 1.
-- `submit()` race-guard re-uses the same shape and surfaces the same panel as a toast description if it triggers.
+The retry button currently calls the function blindly. Make the function safe to re-invoke:
 
-## 5. Lock check-in/out edits inside the cutoff window
+- If the reservation already has a `stripe_session_id` AND the existing Checkout Session is still `open` (check via `stripe.checkout.sessions.retrieve`), return the same `url` instead of minting a new one — prevents duplicate authorizations.
+- If the session is `expired` or `complete` with a failed PI, create a fresh session and overwrite `stripe_session_id` + `stripe_payment_intent_id`.
+- Refuse to mint a session when `payment_status` is already `authorized`, `captured`, or `refund_pending` — return a structured `{ already_paid: true, status }` payload that the badge surfaces as a toast ("Already authorized — no charge needed").
+- Include `reservation_id` in `metadata` of both the Session and the PaymentIntent so the webhook never has to fall back to email matching.
 
-Prevent last-minute calendar tweaks that would mismatch the host's prep.
+## 5. End-to-end connection sanity audit
 
-- **Property profile**: add `ics_lock_hours int default 24` to `lodge_property_profile.house_rules` (existing jsonb — no migration needed) and a numeric input in the admin property profile editor labeled "Lock calendar edits within (hours)".
-- **`IcsPreviewPanel.tsx`**:
-  - Compute `hoursUntilCheckIn = differenceInHours(checkInDateTime, now)` using property tz.
-  - When `hoursUntilCheckIn <= ics_lock_hours`, the time inputs and address textarea become **read-only**, the Reset button is hidden, and an amber alert appears at the top:
-    `"Check-in is in {n} hours. Calendar details are locked to match the host's prep window. Download will use the property defaults."`
-  - The download still works — it just uses the locked-in defaults.
-  - When unlocked, a small caption shows the lock window: `"Edits lock {ics_lock_hours}h before check-in"` so the guest knows in advance.
+A short verification pass — no new features, just confirming data flows wired correctly. Output a one-page "Lodging wiring report" in chat after the migration runs:
+
+- **RLS**: `lodge_reservations` SELECT/INSERT/UPDATE policies cover `(guest = auth.uid()) OR (store owner)` — confirm via the security linter and adjust if the new `policy_consent`, `last_payment_error`, `stripe_*` columns need to remain readable to both parties.
+- **Realtime**: confirm `lodge_reservations` and `lodge_reservation_audit` are in `supabase_realtime` publication (already added previously, but double-check after any schema change).
+- **Edge functions**: `verify_jwt = false` only on `stripe-lodging-webhook`; everything else stays JWT-protected. Run `supabase--linter` and fix anything it flags.
+- **Foreign keys**: `lodge_reservations.room_id` → `lodge_rooms.id ON DELETE SET NULL` (so deleting a room doesn't wipe history); `lodge_reservation_audit.reservation_id` → `lodge_reservations.id ON DELETE CASCADE`. Add if missing.
+- **Indexes**: add `CREATE INDEX IF NOT EXISTS` on `(store_id, status, check_in)` and on `(stripe_payment_intent_id)` to keep the host list and webhook lookups O(log n) as data grows.
 
 ## File map
 
-**Created**
-- `src/components/lodging/PolicyAcknowledgementCard.tsx`
-- `src/components/lodging/ConflictReasonPanel.tsx`
-- `src/lib/lodging/auditCsv.ts`
-
 **Modified**
-- `src/components/lodging/LodgingBookingDrawer.tsx` — record `policy_consent`, render verified markers, conflict reason panel, retry on failed.
-- `src/components/lodging/LodgingPaymentBadge.tsx` — new `refund_pending` / `refunded` / `failed+retry` states.
-- `src/components/lodging/IcsPreviewPanel.tsx` — lock-window logic + amber alert + caption.
-- `src/hooks/lodging/useRoomConflictCheck.ts` — return conflict row details (not just bool).
-- `src/pages/trips/TripDetailPage.tsx` — CSV export button + PolicyAcknowledgementCard.
-- `src/pages/app/MyTripsPage.tsx` — failed-state retry badge wiring.
-- `supabase/functions/stripe-lodging-webhook/index.ts` — handle `charge.refund.updated`, store `last_payment_error`.
-- `supabase/functions/create-lodging-deposit/index.ts` — allow re-invocation on `failed` to mint a fresh session.
-- Admin property-profile editor — `ics_lock_hours` input.
+- `src/pages/admin/lodging/AdminLodgingReservationDetailPage.tsx` — timeline + history + payment badge + retry + ack card + live subscription + CSV button.
+- `src/components/admin/store/lodging/LodgingReservationsSection.tsx` — payment badge + acknowledged pip per row.
+- `src/components/lodging/LodgingBookingDrawer.tsx` — locked stay header on every step, compact consent chips, sticky total pill, success quick-actions row.
+- `supabase/functions/create-lodging-deposit/index.ts` — session reuse, metadata, already-paid guard.
 
 **Migration**
-- Add `policy_consent jsonb`, `policy_consent_version text`, `last_payment_error text` to `lodge_reservations`.
+- Trigger `tg_lodge_reservation_set_nights` + backfill.
+- Defaults / NOT NULL on `extras_cents`, `tax_cents`, `paid_cents` if missing.
+- FK `room_id` → `lodge_rooms.id ON DELETE SET NULL`; FK on audit → cascade.
+- New indexes on `(store_id, status, check_in)` and `(stripe_payment_intent_id)`.
+
+**No new files**, no new dependencies. All UI follows v2026 high-density tokens (Lucide icons only, no emojis except on success header which already uses 🎉 — leave as-is).
 
 ## Technical notes
 
-- No new dependencies (date-fns + existing Stripe SDK cover everything).
-- RLS unchanged — guest sees own reservation; host sees rows for their store; audit rows already follow the same pattern.
-- CSV uses native Blob (no library); BOM prefix for Excel compat.
-- All UI follows v2026 high-density tokens (`text-[11px]`, `rounded-xl`, Lucide icons only — no emojis).
-- Realtime already wired in step 2 of the previous round, so refund/retry badge state propagates without extra subscriptions.
+- The retry hardening relies on Stripe SDK `sessions.retrieve` + `paymentIntents.retrieve` — both already imported via the shared `_shared/stripe.ts` shim.
+- `useReservationLive` is reused on the admin page — same channel name keys by reservation id, so both guest and host sit on the same realtime topic.
+- After the migration, run the security linter; if it flags any of the new columns, lock them down with a follow-up policy and report it in the wiring report.
 
