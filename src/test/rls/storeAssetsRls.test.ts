@@ -159,4 +159,26 @@ describeAdmin("store-assets RLS — admin", () => {
     expect(error).toBeNull();
     cleanup.push(path);
   });
+
+  it("Admin can update (overwrite) an object in another store's folder", async () => {
+    const target = A.storeId || B.storeId || "admin-test";
+    const path = `${target}/admin-update-${Date.now()}.png`;
+    const upRes = await admin.storage.from(BUCKET).upload(path, tinyPng(), { upsert: true });
+    expect(upRes.error).toBeNull();
+    cleanup.push(path);
+
+    const { error: updErr } = await admin.storage.from(BUCKET).update(path, tinyPng());
+    expect(updErr).toBeNull();
+  });
+
+  it("Admin can delete an object in another store's folder", async () => {
+    const target = A.storeId || B.storeId || "admin-test";
+    const path = `${target}/admin-delete-${Date.now()}.png`;
+    const upRes = await admin.storage.from(BUCKET).upload(path, tinyPng(), { upsert: true });
+    expect(upRes.error).toBeNull();
+
+    const { error: delErr, data: delData } = await admin.storage.from(BUCKET).remove([path]);
+    expect(delErr).toBeNull();
+    expect(delData && delData.length > 0).toBe(true);
+  });
 });
