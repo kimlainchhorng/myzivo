@@ -1834,7 +1834,7 @@ export default function AdminStoreEditPage() {
     "lodge-reports": "Reports & Analytics",
   };
   const productsLabelTitle = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
-  const paymentLabelTitle = form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : isLodging ? "Reservations" : t("admin.store.payment");
+  const paymentLabelTitle = form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : isLodging ? "Payment & Payouts" : t("admin.store.payment");
   const storeOwnerTitle = autoRepairTitles[activeTab] || lodgingTitles[activeTab] || employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? productsLabelTitle : activeTab === "payment" ? paymentLabelTitle : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "livestream" ? "Live Stream" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
   const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
     <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} storeCategory={form.category} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
