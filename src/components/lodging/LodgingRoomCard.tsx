@@ -8,6 +8,7 @@ import { Users, BedDouble, Coffee, Plus, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LodgingRoomDetailsModal } from "@/components/lodging/LodgingRoomDetailsModal";
+import { getAmenityIcon } from "@/components/lodging/amenityIcons";
 import type { LodgeAddon } from "@/hooks/lodging/useLodgeRooms";
 
 interface Props {
@@ -87,9 +88,15 @@ export function LodgingRoomCard({
             </div>
             {amenities.length > 0 && (
               <div className="flex flex-wrap gap-1">
-                {amenities.slice(0, 4).map(a => (
-                  <span key={a} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{a}</span>
-                ))}
+                {amenities.slice(0, 4).map(a => {
+                  const Icon = getAmenityIcon(a);
+                  return (
+                    <span key={a} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground inline-flex items-center gap-1">
+                      <Icon className="h-2.5 w-2.5" />
+                      {a}
+                    </span>
+                  );
+                })}
                 {amenities.length > 4 && <span className="text-[10px] text-muted-foreground">+{amenities.length - 4}</span>}
               </div>
             )}
