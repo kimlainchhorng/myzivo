@@ -417,6 +417,16 @@ export default function AdminStoreEditPage() {
   const [chatOpen, setChatOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
 
+  // Allow nested sections (e.g., housekeeping -> maintenance) to request a tab change
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { tab?: string } | undefined;
+      if (detail?.tab) setActiveTab(detail.tab);
+    };
+    window.addEventListener("lodge-set-tab", handler as EventListener);
+    return () => window.removeEventListener("lodge-set-tab", handler as EventListener);
+  }, []);
+
   const { data: store, isLoading } = useQuery({
     queryKey: ["admin-store", storeId],
     queryFn: async () => {

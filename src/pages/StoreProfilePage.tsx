@@ -255,33 +255,33 @@ export default function StoreProfilePage() {
                   {store.rating || "4.5"}
                 </span>
                 {store.hours && (() => {
-                  // Parse hours JSON and show today's hours
+                  // Parse hours JSON and show today's hours (or "Open 24 hours" if all 7 days are 24h)
                   try {
                     const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
                     const today = days[new Date().getDay()];
                     const parsed = typeof store.hours === "string" ? JSON.parse(store.hours) : store.hours;
-                    const todayHours = parsed?.[today];
-                    if (todayHours?.closed) {
-                      return (
-                        <span className="flex items-center gap-0.5 text-xs text-red-500">
-                          <Clock className="h-3 w-3" /> Closed Today
-                        </span>
-                      );
-                    }
-                    if (todayHours?.is24h) {
+                    const formatDayHours = (d: any) => {
+                      if (!d) return null;
+                      if (d.closed) return { text: "Closed Today", cls: "text-red-500", bold: false };
+                      if (d.is24h) return { text: "Open 24 hours", cls: "text-primary", bold: true };
+                      if (d.open && d.close) return { text: `${d.open} – ${d.close}`, cls: "text-muted-foreground", bold: false };
+                      return null;
+                    };
+                    const allDays24h = days.every(k => parsed?.[k]?.is24h);
+                    if (allDays24h) {
                       return (
                         <span className="flex items-center gap-0.5 text-xs text-primary font-semibold">
                           <Clock className="h-3 w-3" /> Open 24 hours
                         </span>
                       );
                     }
-                    if (todayHours?.open && todayHours?.close) {
-                      return (
-                        <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" /> {todayHours.open} – {todayHours.close}
-                        </span>
-                      );
-                    }
+                    const label = formatDayHours(parsed?.[today]);
+                    if (!label) return null;
+                    return (
+                      <span className={`flex items-center gap-0.5 text-xs ${label.cls} ${label.bold ? "font-semibold" : ""}`}>
+                        <Clock className="h-3 w-3" /> {label.text}
+                      </span>
+                    );
                   } catch {}
                   return null;
                 })()}
