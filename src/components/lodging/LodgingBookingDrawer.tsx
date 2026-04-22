@@ -95,6 +95,15 @@ export function LodgingBookingDrawer({
   const [agreeCancel, setAgreeCancel] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [reference, setReference] = useState<string | null>(null);
+  const [reservationId, setReservationId] = useState<string | null>(null);
+  const [reservationStatus] = useState<"hold" | "confirmed" | "checked_in" | "checked_out" | "cancelled" | "no_show">("hold");
+  const [guestTouched, setGuestTouched] = useState<Record<string, boolean>>({});
+  const [policyScrolled, setPolicyScrolled] = useState(false);
+  const [policyOverflows, setPolicyOverflows] = useState(false);
+  const policyRef = useRef<HTMLDivElement | null>(null);
+
+  const { data: propertyProfile } = useLodgePropertyProfile(storeId);
+  const houseRules = (propertyProfile?.house_rules || {}) as Record<string, any>;
 
   const { availabilityMap, disabledDates } = useRoomAvailability(open ? roomId : undefined);
   const rangeIssue = useMemo(
