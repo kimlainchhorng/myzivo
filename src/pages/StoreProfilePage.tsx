@@ -638,13 +638,29 @@ export default function StoreProfilePage() {
             )}
           </div>
 
-          {!hasBooking && (
-            <div className="mt-2.5 flex items-start gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
-              <MessageCircle className="h-3.5 w-3.5 text-white/60 mt-0.5 shrink-0" />
-              <p className="text-[11px] leading-snug text-white/70">
-                Call Store & Live Chat unlock once you complete a booking with this store while signed in to your ZIVO account.
+          {!loadingBooking && !hasBooking && (
+            <div className="mt-2.5 flex flex-col gap-1.5">
+              <Button
+                variant="outline"
+                onClick={() => navigate("/account/bookings")}
+                className="w-full h-10 rounded-xl gap-2 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 text-[12px] font-semibold"
+              >
+                <Lock className="h-3.5 w-3.5" />
+                Complete a booking to unlock chat
+              </Button>
+              <p className="text-[10px] leading-snug text-white/55 px-1">
+                Already booked? Make sure you used the same account email.{" "}
+                <Link to="/account/bookings" className="underline text-emerald-300 hover:text-emerald-200">
+                  View my bookings
+                </Link>
               </p>
             </div>
+          )}
+
+          {!loadingBooking && hasBooking && !phoneNumber && (
+            <p className="mt-2 text-[10px] text-white/55 px-1">
+              This store hasn't shared a phone number — chat is the fastest way to reach them.
+            </p>
           )}
 
           {/* Book Now button for auto-repair stores */}
