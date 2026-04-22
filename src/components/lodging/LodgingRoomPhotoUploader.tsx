@@ -1,9 +1,13 @@
 /**
- * LodgingRoomPhotoUploader — thumbnail grid for room photos with cover selector.
+ * LodgingRoomPhotoUploader — interactive cover hero + thumbnail grid for room photos.
  * Up to 8 photos. Tap ★ to set the cover photo (defaults to the first).
+ *
+ * The cover hero is a large 160px tap-target that:
+ *   - opens the file picker directly when no photos exist
+ *   - opens an inline grid picker to change the cover when photos exist
  */
 import { useRef, useState } from "react";
-import { ImagePlus, X, ArrowLeft, ArrowRight, Loader2, Star } from "lucide-react";
+import { ImagePlus, X, ArrowLeft, ArrowRight, Loader2, Star, Pencil, BedDouble } from "lucide-react";
 import { uploadStoreAsset } from "@/pages/admin/utils/uploadStoreAsset";
 import { toast } from "sonner";
 
@@ -14,17 +18,26 @@ interface Props {
   coverIndex?: number;
   onCoverChange?: (index: number) => void;
   max?: number;
+  /** When true, render only the cover hero (use a separate instance for the grid). */
+  heroOnly?: boolean;
+  /** When true, render only the photo grid (no hero). */
+  gridOnly?: boolean;
 }
 
 export function LodgingRoomPhotoUploader({
   storeId, photos, onChange,
   coverIndex = 0, onCoverChange,
   max = 8,
+  heroOnly = false,
+  gridOnly = false,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const heroInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [coverPickerOpen, setCoverPickerOpen] = useState(false);
 
   const safeCover = Math.min(Math.max(coverIndex, 0), Math.max(0, photos.length - 1));
+  const coverUrl = photos[safeCover] ?? photos[0];
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || !files.length) return;
@@ -50,6 +63,7 @@ export function LodgingRoomPhotoUploader({
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
+      if (heroInputRef.current) heroInputRef.current.value = "";
     }
   };
 
@@ -57,7 +71,6 @@ export function LodgingRoomPhotoUploader({
     const next = photos.filter((_, i) => i !== idx);
     onChange(next);
     if (onCoverChange) {
-      // shift cover down if a photo before it was removed
       if (idx < safeCover) onCoverChange(safeCover - 1);
       else if (idx === safeCover) onCoverChange(0);
     }
@@ -79,7 +92,95 @@ export function LodgingRoomPhotoUploader({
     if (onCoverChange) onCoverChange(idx);
   };
 
-  return (
+  /* ─────────────── Cover hero ─────────────── */
+  const renderHero = () => (
+    <div className="space-y-1.5">
+      {photos.length === 0 ? (
+        <button
+          type="button"
+          onClick={() => heroInputRef.current?.click()}
+          disabled={uploading}
+          className="relative w-full h-40 rounded-xl border-2 border-dashed border-border bg-muted/20 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition disabled:opacity-50"
+        >
+          {uploading ? (
+            <Loader2 className="h-8 w-8 animate-spin" />
+          ) : (
+            <>
+              <ImagePlus className="h-8 w-8" />
+              <div className="text-center px-3">
+                <p className="text-sm font-semibold">Tap to upload cover photo</p>
+                <p className="text-[11px] opacity-70 mt-0.5">Up to {max} images · JPG, PNG</p>
+              </div>
+            </>
+          )}
+        </button>
+      ) : (
+        <div className="relative w-full h-40 rounded-xl overflow-hidden border border-border bg-muted/30 group">
+          <img src={coverUrl} alt="Cover" className="h-full w-full object-cover" />
+          {/* Top gradient for legibility */}
+          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />
+          {/* Cover badge */}
+          <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold shadow">
+            <Star className="h-2.5 w-2.5 fill-current" /> Cover
+          </div>
+          {/* Change cover button */}
+          <button
+            type="button"
+            onClick={() => setCoverPickerOpen(v => !v)}
+            className="absolute top-2 right-2 flex items-center gap-1 px-2.5 py-1 rounded-full bg-background/90 backdrop-blur-sm text-foreground text-[11px] font-semibold shadow hover:bg-background transition"
+          >
+            <Pencil className="h-3 w-3" /> {coverPickerOpen ? "Done" : "Change cover"}
+          </button>
+          {uploading && (
+            <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Inline cover picker grid */}
+      {coverPickerOpen && photos.length > 1 && (
+        <div className="rounded-lg border border-border bg-muted/20 p-2">
+          <p className="text-[10px] font-semibold text-muted-foreground mb-1.5 px-0.5">Tap a photo to set as cover</p>
+          <div className="grid grid-cols-4 gap-1.5">
+            {photos.map((url, i) => {
+              const isCover = i === safeCover;
+              return (
+                <button
+                  key={url + i}
+                  type="button"
+                  onClick={() => { setCover(i); setCoverPickerOpen(false); }}
+                  className={`relative aspect-square rounded-md overflow-hidden border-2 transition ${
+                    isCover ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <img src={url} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
+                  {isCover && (
+                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                      <Star className="h-4 w-4 text-primary-foreground fill-primary drop-shadow" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <input
+        ref={heroInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => handleFiles(e.target.files)}
+      />
+    </div>
+  );
+
+  /* ─────────────── Photo grid ─────────────── */
+  const renderGrid = () => (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
@@ -100,7 +201,6 @@ export function LodgingRoomPhotoUploader({
                 </div>
               )}
 
-              {/* Set-as-cover star (hidden when already cover) */}
               {!isCover && onCoverChange && (
                 <button
                   type="button"
@@ -154,6 +254,16 @@ export function LodgingRoomPhotoUploader({
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
       />
+    </div>
+  );
+
+  if (heroOnly) return renderHero();
+  if (gridOnly) return renderGrid();
+
+  return (
+    <div className="space-y-3">
+      {renderHero()}
+      {renderGrid()}
     </div>
   );
 }
