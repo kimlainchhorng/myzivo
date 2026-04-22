@@ -22,17 +22,6 @@ import { PerformanceChartSkeleton, BreakdownTableSkeleton, LedgerListSkeleton } 
 import MarketingEmptyState from "@/components/admin/ads/MarketingEmptyState";
 import { useIsMobilePreview } from "@/components/admin/ads/useResponsiveWidth";
 
-const ResponsiveContainerCompat = ResponsiveContainer as any;
-const AreaChartCompat = AreaChart as any;
-const AreaCompat = Area as any;
-const XAxisCompat = XAxis as any;
-const YAxisCompat = YAxis as any;
-const TooltipCompat = Tooltip as any;
-const CartesianGridCompat = CartesianGrid as any;
-const BarChartCompat = BarChart as any;
-const BarCompat = Bar as any;
-const LegendCompat = Legend as any;
-
 const usdFormatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 const numFormatter = new Intl.NumberFormat("en-US");
 
@@ -223,21 +212,21 @@ export default function AdsStudioDashboard({ storeId }: Props) {
               <MarketingEmptyState icon={TrendingUp} title="No spend recorded yet" body="Once your ads run, daily spend will chart here." />
             ) : (
               <div className="aspect-[4/3] sm:aspect-[16/8] lg:aspect-[16/5] w-full">
-                <ResponsiveContainerCompat width="100%" height="100%" debounce={150}>
-                  <AreaChartCompat data={trendData}>
+                <ResponsiveContainer width="100%" height="100%" debounce={150}>
+                  <AreaChart data={trendData}>
                     <defs>
                       <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
                         <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    {!isMobile && <CartesianGridCompat strokeDasharray="3 3" stroke="hsl(var(--border))" />}
-                    <XAxisCompat dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" {...(isMobile ? { interval: "preserveStartEnd" as const, minTickGap: 24 } : {})} />
-                    <YAxisCompat tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" width={isMobile ? 32 : 40} />
-                    <TooltipCompat contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 11 }} />
-                    <AreaCompat type="monotone" dataKey="spend" stroke="hsl(var(--primary))" fill="url(#spendGrad)" name="Spend ($)" isAnimationActive={!isMobile} animationDuration={isMobile ? 0 : 600} />
-                  </AreaChartCompat>
-                </ResponsiveContainerCompat>
+                    {!isMobile && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />}
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" {...(isMobile ? { interval: "preserveStartEnd" as const, minTickGap: 24 } : {})} />
+                    <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" width={isMobile ? 32 : 40} />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 11 }} />
+                    <Area type="monotone" dataKey="spend" stroke="hsl(var(--primary))" fill="url(#spendGrad)" name="Spend ($)" isAnimationActive={!isMobile} animationDuration={isMobile ? 0 : 600} />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             )}
           </CardContent>
@@ -255,18 +244,18 @@ export default function AdsStudioDashboard({ storeId }: Props) {
               <MarketingEmptyState icon={Gauge} title="No platform data yet" body="Connect a platform and launch a campaign to see breakdowns." />
             ) : (
               <div className="aspect-[4/3] sm:aspect-[16/8] lg:aspect-[16/5] w-full">
-                <ResponsiveContainerCompat width="100%" height="100%" debounce={150}>
-                  <BarChartCompat data={platformData}>
-                    {!isMobile && <CartesianGridCompat strokeDasharray="3 3" stroke="hsl(var(--border))" />}
-                    <XAxisCompat dataKey="platform" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                    <YAxisCompat tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" width={isMobile ? 32 : 40} />
-                    <TooltipCompat contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 11 }} />
-                    <LegendCompat wrapperStyle={{ fontSize: 11 }} />
-                    <BarCompat dataKey="spend" fill="hsl(var(--primary))" name="Spend ($)" isAnimationActive={!isMobile} />
-                    <BarCompat dataKey="clicks" fill="hsl(var(--accent-foreground) / 0.6)" name="Clicks" isAnimationActive={!isMobile} />
-                    <BarCompat dataKey="conversions" fill="hsl(142 70% 45%)" name="Conversions" isAnimationActive={!isMobile} />
-                  </BarChartCompat>
-                </ResponsiveContainerCompat>
+                <ResponsiveContainer width="100%" height="100%" debounce={150}>
+                  <BarChart data={platformData}>
+                    {!isMobile && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />}
+                    <XAxis dataKey="platform" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" width={isMobile ? 32 : 40} />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 11 }} />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="spend" fill="hsl(var(--primary))" name="Spend ($)" isAnimationActive={!isMobile} />
+                    <Bar dataKey="clicks" fill="hsl(var(--accent-foreground) / 0.6)" name="Clicks" isAnimationActive={!isMobile} />
+                    <Bar dataKey="conversions" fill="hsl(142 70% 45%)" name="Conversions" isAnimationActive={!isMobile} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             )}
           </CardContent>
