@@ -2,7 +2,7 @@
  * LodgingPolicyPanel - guest-side Booking-style policies grid.
  * Renders only sections that have data; hidden if profile is empty.
  */
-import { Clock, CalendarX, Dog, Baby, CreditCard, Languages, Phone } from "lucide-react";
+import { Clock, CalendarX, Dog, Baby, CreditCard, Languages, Phone, ShieldCheck } from "lucide-react";
 import type { LodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 
 interface Props {
@@ -72,7 +72,19 @@ export function LodgingPolicyPanel({ profile }: Props) {
         )}
         {hasContact && (
           <PolicyRow icon={Phone} title="Contact">
-            {profile.contact.phone}
+            {profile.contact.phone && (
+              <span className="inline-flex items-center gap-1 flex-wrap">
+                {profile.contact.phone}
+                {profile.contact.phone_verified_at && (
+                  <span
+                    className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-1.5 py-0 text-[9px] font-semibold"
+                    title="Phone number verified by store owner via SMS"
+                  >
+                    <ShieldCheck className="h-2.5 w-2.5" /> Verified
+                  </span>
+                )}
+              </span>
+            )}
             {profile.contact.email && <><br />{profile.contact.email}</>}
           </PolicyRow>
         )}

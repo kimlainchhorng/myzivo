@@ -7,10 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck, BedDouble, Lock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { track } from "@/lib/analytics";
-
-// Module-scope guard so we only fire `store_contact_unlocked` once per
-// (session, store) — re-renders won't double-count.
-const _unlockedFired = new Set<string>();
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -106,11 +103,25 @@ export default function StoreProfilePage() {
   const callable = hasBooking && !!phoneNumber;
   const chattable = hasBooking;
 
-  // Fire `store_contact_unlocked` once per (session, store)
+  // Per-render click nonce so double-clicks within one render share an id
+  // (deduped downstream); a deliberate later click after re-render gets a new one.
+  const clickNonceRef = useRef<string>(`${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+  useEffect(() => {
+    clickNonceRef.current = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }, [store?.id, hasBooking]);
+
+  // Fire `store_contact_unlocked` once per (browser session, store).
+  // Uses sessionStorage so HMR / route remounts don't double-fire,
+  // and naturally resets when the tab closes.
   useEffect(() => {
     if (!store?.id || !hasBooking) return;
-    if (_unlockedFired.has(store.id)) return;
-    _unlockedFired.add(store.id);
+    const key = `zivo:unlock_fired:${store.id}`;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+    } catch {
+      /* Safari private mode — fall through and fire anyway */
+    }
     const storeType: "lodge" | "food" =
       bookingSource === "lodge_reservation" ? "lodge" : "food";
     track("store_contact_unlocked", {
@@ -409,7 +420,11 @@ export default function StoreProfilePage() {
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
                 href={`tel:${store.phone.startsWith("+") ? store.phone.replace(/\s+/g, "") : `+855${store.phone.replace(/\s+/g, "")}`}`}
-                onClick={() => track("store_contact_action", { store_id: store.id, channel: "call" })}
+                onClick={() => track("store_contact_action", {
+                  store_id: store.id,
+                  channel: "call",
+                  click_nonce: clickNonceRef.current,
+                })}
                 className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
                 style={{
                   transformStyle: "preserve-3d",
@@ -452,7 +467,11 @@ export default function StoreProfilePage() {
               whileTap={{ scale: 0.94, rotateX: 2 }}
               whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
               onClick={() => {
-                track("store_contact_action", { store_id: store.id, channel: "chat" });
+                track("store_contact_action", {
+                  store_id: store.id,
+                  channel: "chat",
+                  click_nonce: clickNonceRef.current,
+                });
                 setChatOpen(true);
               }}
               className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
@@ -640,14 +659,25 @@ export default function StoreProfilePage() {
 
           {!loadingBooking && !hasBooking && (
             <div className="mt-2.5 flex flex-col gap-1.5">
-              <Button
-                variant="outline"
-                onClick={() => navigate("/account/bookings")}
-                className="w-full h-10 rounded-xl gap-2 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 text-[12px] font-semibold"
-              >
-                <Lock className="h-3.5 w-3.5" />
-                Complete a booking to unlock chat
-              </Button>
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate("/account/bookings")}
+                      className="w-full h-10 rounded-xl gap-2 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 text-[12px] font-semibold"
+                    >
+                      <Lock className="h-3.5 w-3.5" />
+                      Complete a booking to unlock chat
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[260px] text-[11px] leading-snug">
+                    {isLodging
+                      ? "Confirmed reservation required at this property to unlock Live Chat & Call Store (lodge_reservation)."
+                      : "Completed order required at this store to unlock Live Chat & Call Store (food_order)."}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <p className="text-[10px] leading-snug text-white/55 px-1">
                 Already booked? Make sure you used the same account email.{" "}
                 <Link to="/account/bookings" className="underline text-emerald-300 hover:text-emerald-200">

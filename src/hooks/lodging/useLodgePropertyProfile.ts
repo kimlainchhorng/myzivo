@@ -44,6 +44,8 @@ export interface ContactInfo {
   whatsapp?: string;
   website?: string;
   emergency_phone?: string;
+  /** ISO timestamp set after successful Twilio Verify of `phone`. */
+  phone_verified_at?: string | null;
 }
 
 export interface LodgePropertyProfile {
