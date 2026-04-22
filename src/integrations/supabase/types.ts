@@ -27046,6 +27046,42 @@ export type Database = {
           },
         ]
       }
+      marketing_automation_tick_log: {
+        Row: {
+          automations_processed: number
+          completed: number
+          duration_ms: number
+          enrollments_created: number
+          error_message: string | null
+          id: string
+          ok: boolean
+          ran_at: string
+          steps_advanced: number
+        }
+        Insert: {
+          automations_processed?: number
+          completed?: number
+          duration_ms?: number
+          enrollments_created?: number
+          error_message?: string | null
+          id?: string
+          ok?: boolean
+          ran_at?: string
+          steps_advanced?: number
+        }
+        Update: {
+          automations_processed?: number
+          completed?: number
+          duration_ms?: number
+          enrollments_created?: number
+          error_message?: string | null
+          id?: string
+          ok?: boolean
+          ran_at?: string
+          steps_advanced?: number
+        }
+        Relationships: []
+      }
       marketing_automations: {
         Row: {
           completed_at: string | null
@@ -27348,6 +27384,7 @@ export type Database = {
         Row: {
           discount_cents: number
           id: string
+          idempotency_key: string | null
           order_id: string | null
           promo_code_id: string
           redeemed_at: string
@@ -27356,6 +27393,7 @@ export type Database = {
         Insert: {
           discount_cents?: number
           id?: string
+          idempotency_key?: string | null
           order_id?: string | null
           promo_code_id: string
           redeemed_at?: string
@@ -27364,6 +27402,7 @@ export type Database = {
         Update: {
           discount_cents?: number
           id?: string
+          idempotency_key?: string | null
           order_id?: string | null
           promo_code_id?: string
           redeemed_at?: string
@@ -45429,6 +45468,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      store_notification_channels: {
+        Row: {
+          channel: string
+          config: Json
+          created_at: string
+          id: string
+          status: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          channel: string
+          config?: Json
+          created_at?: string
+          id?: string
+          status?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          config?: Json
+          created_at?: string
+          id?: string
+          status?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       store_orders: {
         Row: {
