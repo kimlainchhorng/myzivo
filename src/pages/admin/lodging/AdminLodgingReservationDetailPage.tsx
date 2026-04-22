@@ -207,6 +207,13 @@ export default function AdminLodgingReservationDetailPage() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-4 space-y-4">
+        {/* Status timeline (live) */}
+        <Card>
+          <CardContent className="pt-4">
+            <ReservationStatusTimeline status={reservation.status as any} />
+          </CardContent>
+        </Card>
+
         {/* Stay */}
         <Card>
           <CardHeader className="pb-3">
