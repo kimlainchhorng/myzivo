@@ -320,8 +320,8 @@ export default function AdsCampaignDetailDrawer({
                   dot={false}
                   name="Spend ($)"
                 />
-              </LineChart>
-            </ResponsiveContainer>
+              </LineChartCompat>
+            </ResponsiveContainerCompat>
           </div>
         </div>
 
