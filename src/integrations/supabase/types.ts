@@ -26935,7 +26935,18 @@ export type Database = {
       lodge_property_profile: {
         Row: {
           accessibility: string[]
+          cancellation_policy: string | null
+          cancellation_window_hours: number | null
+          check_in_from: string | null
+          check_in_until: string | null
+          check_out_from: string | null
+          check_out_until: string | null
+          child_policy: Json
+          contact: Json
           created_at: string
+          currencies_accepted: string[]
+          deposit_percent: number | null
+          deposit_required: boolean
           facilities: string[]
           hero_badges: string[]
           house_rules: Json
@@ -26944,13 +26955,26 @@ export type Database = {
           languages: string[]
           meal_plans: string[]
           nearby: Json
+          payment_methods: string[]
+          pet_policy: Json
           store_id: string
           sustainability: string[]
           updated_at: string
         }
         Insert: {
           accessibility?: string[]
+          cancellation_policy?: string | null
+          cancellation_window_hours?: number | null
+          check_in_from?: string | null
+          check_in_until?: string | null
+          check_out_from?: string | null
+          check_out_until?: string | null
+          child_policy?: Json
+          contact?: Json
           created_at?: string
+          currencies_accepted?: string[]
+          deposit_percent?: number | null
+          deposit_required?: boolean
           facilities?: string[]
           hero_badges?: string[]
           house_rules?: Json
@@ -26959,13 +26983,26 @@ export type Database = {
           languages?: string[]
           meal_plans?: string[]
           nearby?: Json
+          payment_methods?: string[]
+          pet_policy?: Json
           store_id: string
           sustainability?: string[]
           updated_at?: string
         }
         Update: {
           accessibility?: string[]
+          cancellation_policy?: string | null
+          cancellation_window_hours?: number | null
+          check_in_from?: string | null
+          check_in_until?: string | null
+          check_out_from?: string | null
+          check_out_until?: string | null
+          child_policy?: Json
+          contact?: Json
           created_at?: string
+          currencies_accepted?: string[]
+          deposit_percent?: number | null
+          deposit_required?: boolean
           facilities?: string[]
           hero_badges?: string[]
           house_rules?: Json
@@ -26974,6 +27011,8 @@ export type Database = {
           languages?: string[]
           meal_plans?: string[]
           nearby?: Json
+          payment_methods?: string[]
+          pet_policy?: Json
           store_id?: string
           sustainability?: string[]
           updated_at?: string

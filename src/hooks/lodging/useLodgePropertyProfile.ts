@@ -6,7 +6,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface HouseRules {
-  quiet_hours?: string; // "22:00 - 07:00"
+  quiet_hours?: string;
+  quiet_from?: string;
+  quiet_to?: string;
   parties_allowed?: boolean;
   smoking_zones?: string;
   min_age?: number;
@@ -15,10 +17,33 @@ export interface HouseRules {
 }
 
 export interface NearbyDistance {
-  label: string; // "Beach", "Airport"
+  label: string;
   minutes?: number;
   km?: number;
   mode?: "walk" | "drive" | "boat";
+}
+
+export interface PetPolicy {
+  allowed?: boolean;
+  fee_cents?: number;
+  max_weight_kg?: number;
+  notes?: string;
+}
+
+export interface ChildPolicy {
+  allowed?: boolean;
+  min_age?: number;
+  cot_available?: boolean;
+  extra_bed_fee_cents?: number;
+  notes?: string;
+}
+
+export interface ContactInfo {
+  phone?: string;
+  email?: string;
+  whatsapp?: string;
+  website?: string;
+  emergency_phone?: string;
 }
 
 export interface LodgePropertyProfile {
@@ -33,6 +58,20 @@ export interface LodgePropertyProfile {
   hero_badges: string[];
   included_highlights: string[];
   nearby: NearbyDistance[];
+  // New Booking-grade fields
+  check_in_from?: string;
+  check_in_until?: string;
+  check_out_from?: string;
+  check_out_until?: string;
+  cancellation_policy?: string;
+  cancellation_window_hours?: number;
+  pet_policy: PetPolicy;
+  child_policy: ChildPolicy;
+  contact: ContactInfo;
+  payment_methods: string[];
+  currencies_accepted: string[];
+  deposit_required: boolean;
+  deposit_percent?: number;
   created_at: string;
   updated_at: string;
 }
@@ -47,6 +86,19 @@ const EMPTY: Omit<LodgePropertyProfile, "id" | "created_at" | "updated_at" | "st
   hero_badges: [],
   included_highlights: [],
   nearby: [],
+  check_in_from: "15:00",
+  check_in_until: "23:00",
+  check_out_from: "07:00",
+  check_out_until: "11:00",
+  cancellation_policy: "",
+  cancellation_window_hours: undefined,
+  pet_policy: {},
+  child_policy: {},
+  contact: {},
+  payment_methods: [],
+  currencies_accepted: [],
+  deposit_required: false,
+  deposit_percent: undefined,
 };
 
 export function useLodgePropertyProfile(storeId: string) {

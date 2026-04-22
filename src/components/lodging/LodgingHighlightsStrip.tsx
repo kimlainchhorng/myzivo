@@ -7,7 +7,7 @@
 import {
   Sparkles, Languages, Utensils, Accessibility, Leaf, MapPin,
   Coffee, Wifi, Waves, Dumbbell, Car, ParkingCircle, ShieldCheck,
-  Wine, Baby, Building2, Plane,
+  Wine, Baby, Building2, Plane, Clock, CalendarX,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { LodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
@@ -77,6 +77,27 @@ export function LodgingHighlightsStrip({ profile }: Props) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Check-in/out + Cancellation summary */}
+      {(profile.check_in_from || profile.check_out_until || profile.cancellation_policy) && (
+        <div className="flex flex-wrap gap-1.5 text-[10px]">
+          {profile.check_in_from && (
+            <Badge variant="outline" className="gap-1 border-border">
+              <Clock className="h-2.5 w-2.5" /> Check-in {profile.check_in_from}{profile.check_in_until ? `–${profile.check_in_until}` : ""}
+            </Badge>
+          )}
+          {profile.check_out_until && (
+            <Badge variant="outline" className="gap-1 border-border">
+              <Clock className="h-2.5 w-2.5" /> Check-out by {profile.check_out_until}
+            </Badge>
+          )}
+          {profile.cancellation_policy && (
+            <Badge variant="outline" className="gap-1 border-border">
+              <CalendarX className="h-2.5 w-2.5" /> {profile.cancellation_window_hours ? `Free cancel ${profile.cancellation_window_hours}h` : "Cancellation policy"}
+            </Badge>
+          )}
         </div>
       )}
 
