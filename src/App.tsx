@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const HelmetProviderCompat = HelmetProvider as any;
 import { BrowserRouter, Routes, Route, useLocation, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -547,7 +549,7 @@ function RouteAwareGlobalUI() {
 
 const App = () => (
   <ErrorBoundary>
-    <HelmetProvider>
+    <HelmetProviderCompat>
       <ThemeProvider attribute="class" defaultTheme="system" storageKey="hizovo-theme">
         <QueryClientProvider client={queryClient}>
           <BrandProvider>
@@ -1029,7 +1031,7 @@ const App = () => (
   </BrandProvider>
   </QueryClientProvider>
   </ThemeProvider>
-  </HelmetProvider>
+  </HelmetProviderCompat>
   </ErrorBoundary>
 );
 

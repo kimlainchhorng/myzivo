@@ -20,6 +20,8 @@ import { Helmet } from "react-helmet-async";
 import { useFocusTrap } from "./useFocusTrap";
 import { useFocusReturn } from "./ads/useFocusReturn";
 
+const HelmetCompat = Helmet as any;
+
 interface StoreOwnerLayoutProps {
   children: ReactNode;
   title: string;
@@ -173,10 +175,10 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
 
   return (
     <>
-      <Helmet>
+      <HelmetCompat>
         <title>{title} — {storeName || "ZIVO Store"}</title>
         <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
+      </HelmetCompat>
 
       <div className="min-h-screen bg-background flex">
         {/* Mobile drawer + backdrop, portaled to body */}

@@ -5,6 +5,7 @@
  * Admin Layout - Responsive sidebar layout for admin dashboard
  */
 import { ReactNode, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserAccess } from "@/hooks/useUserAccess";
@@ -33,12 +34,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Helmet } from "react-helmet-async";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+
+const HelmetCompat = Helmet as any;
 
 type NavItem = { label: string; icon: any; path: string };
 type NavGroup = { label: string; icon: any; children: NavItem[] };
@@ -117,10 +119,10 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
 
   return (
     <>
-      <Helmet>
+      <HelmetCompat>
         <title>{title} — {resolvedBrandLabel}</title>
         <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
+      </HelmetCompat>
 
       <div className="min-h-screen bg-background flex">
         {sidebarOpen && (
