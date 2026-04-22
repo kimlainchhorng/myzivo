@@ -67,6 +67,7 @@ import AutoRepairWarrantySection from "@/components/admin/store/autorepair/AutoR
 import AutoRepairFleetSection from "@/components/admin/store/autorepair/AutoRepairFleetSection";
 import AutoRepairReportsSection from "@/components/admin/store/autorepair/AutoRepairReportsSection";
 import LodgingRoomsSection from "@/components/admin/store/lodging/LodgingRoomsSection";
+import LodgingPropertyProfileSection from "@/components/admin/store/lodging/LodgingPropertyProfileSection";
 import LodgingReservationsSection from "@/components/admin/store/lodging/LodgingReservationsSection";
 import LodgingCalendarSection from "@/components/admin/store/lodging/LodgingCalendarSection";
 import LodgingGuestsSection from "@/components/admin/store/lodging/LodgingGuestsSection";
@@ -1858,6 +1859,7 @@ export default function AdminStoreEditPage() {
     "lodge-housekeeping": "Housekeeping",
     "lodge-maintenance": "Maintenance & Work Orders",
     "lodge-amenities": "Amenities & Policies",
+    "lodge-property": "Property Profile",
     "lodge-reports": "Reports & Analytics",
   };
   const productsLabelTitle = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
@@ -3518,6 +3520,7 @@ export default function AdminStoreEditPage() {
               <TabsContent value="lodge-housekeeping"><LodgingHousekeepingSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-maintenance"><LodgingMaintenanceSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-amenities"><LodgingAmenitiesSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-property"><LodgingPropertyProfileSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-reports"><LodgingReportsSection storeId={storeId!} /></TabsContent>
             </>
           )}
