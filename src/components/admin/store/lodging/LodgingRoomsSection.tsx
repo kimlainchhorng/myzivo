@@ -36,7 +36,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
     units_total: 1, base_rate_cents: 5000, weekend_rate_cents: 6000,
     weekly_discount_pct: 0, monthly_discount_pct: 0,
     breakfast_included: false, amenities: [], photos: [], sort_order: 0, is_active: true,
-    description: "", cancellation_policy: "flexible", addons: [],
+    description: "", cancellation_policy: "flexible", addons: [], cover_photo_index: 0,
   });
 
   const openNew = () => { setEditing(blank()); setOpen(true); };
@@ -82,7 +82,9 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
         ) : (
           <div className="space-y-3">
             {rooms.map((r) => {
-              const cover = (r.photos && r.photos[0]) as string | undefined;
+              const photos = (r.photos || []) as string[];
+              const ci = r.cover_photo_index ?? 0;
+              const cover = photos[ci] ?? photos[0];
               return (
                 <div key={r.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
@@ -131,7 +133,13 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                 <LodgingRoomPhotoUploader
                   storeId={storeId}
                   photos={(editing.photos as string[]) || []}
-                  onChange={(next) => setEditing({ ...editing, photos: next })}
+                  onChange={(next) => {
+                    const cur = editing.cover_photo_index ?? 0;
+                    const safe = Math.min(Math.max(cur, 0), Math.max(0, next.length - 1));
+                    setEditing({ ...editing, photos: next, cover_photo_index: safe });
+                  }}
+                  coverIndex={editing.cover_photo_index ?? 0}
+                  onCoverChange={(idx) => setEditing({ ...editing, cover_photo_index: idx })}
                 />
               </div>
 
