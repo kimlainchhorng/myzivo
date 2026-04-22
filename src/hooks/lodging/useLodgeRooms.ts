@@ -35,7 +35,9 @@ export interface LodgeRoom {
 export interface LodgeAddon {
   name: string;
   price_cents: number;
-  per: "stay" | "night" | "guest";
+  per: "stay" | "night" | "guest" | "person_night";
+  category?: string;
+  icon?: string;
 }
 
 export function useLodgeRooms(storeId: string) {

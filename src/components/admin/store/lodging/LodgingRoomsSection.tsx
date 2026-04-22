@@ -17,8 +17,68 @@ import { toast } from "sonner";
 import { useLodgeRooms, type LodgeRoom, type LodgeAddon } from "@/hooks/lodging/useLodgeRooms";
 import { LodgingRoomPhotoUploader } from "@/components/lodging/LodgingRoomPhotoUploader";
 
-const ROOM_TYPES = ["Standard", "Deluxe", "Suite", "Villa", "Family", "Dormitory"];
-const AMENITY_OPTIONS = ["AC", "Wi-Fi", "TV", "Mini-bar", "Safe", "Balcony", "Bathtub", "Pool view", "Sea view", "City view"];
+const ROOM_TYPES = ["Standard", "Deluxe", "Suite", "Villa", "Family", "Bungalow", "Cottage", "Dormitory", "Apartment", "Studio", "Penthouse"];
+const AMENITY_OPTIONS = [
+  // Comfort
+  "AC", "Heating", "Wi-Fi", "TV", "Smart TV", "Netflix",
+  // Bath
+  "Bathtub", "Hot shower", "Hairdryer", "Toiletries", "Bathrobe", "Slippers",
+  // Kitchen / dining
+  "Mini-bar", "Mini-fridge", "Coffee maker", "Kettle", "Kitchenette", "Microwave",
+  // Workspace / family
+  "Workspace", "Iron", "Crib available", "Family-friendly",
+  // Outdoor / view
+  "Balcony", "Terrace", "Garden view", "Pool view", "Sea view", "Mountain view", "City view",
+  // Premium
+  "Safe", "Jacuzzi", "Private pool", "Beach access", "Fireplace",
+  // Services
+  "Daily housekeeping", "Room service", "24h reception",
+  // Accessibility & policy
+  "Wheelchair accessible", "Pet-friendly", "Smoking allowed", "Non-smoking", "EV charger", "Free parking"
+];
+
+// Curated quick-add presets — one tap to add common hotel/resort extras
+const ADDON_PRESETS: { name: string; price_cents: number; per: "stay" | "night" | "guest" | "person_night"; category: string; icon: string }[] = [
+  // Food & drink
+  { name: "Breakfast", price_cents: 800, per: "person_night", category: "Food & drink", icon: "🥐" },
+  { name: "Half board (breakfast + dinner)", price_cents: 2500, per: "person_night", category: "Food & drink", icon: "🍽️" },
+  { name: "Full board (3 meals)", price_cents: 4000, per: "person_night", category: "Food & drink", icon: "🍴" },
+  { name: "Welcome drink", price_cents: 500, per: "guest", category: "Food & drink", icon: "🍹" },
+  { name: "Bottle of wine", price_cents: 2500, per: "stay", category: "Food & drink", icon: "🍷" },
+  { name: "Mini-bar package", price_cents: 1500, per: "stay", category: "Food & drink", icon: "🥤" },
+  // Transport
+  { name: "Airport pickup", price_cents: 2500, per: "stay", category: "Transport", icon: "🚐" },
+  { name: "Airport drop-off", price_cents: 2500, per: "stay", category: "Transport", icon: "🚖" },
+  { name: "Round-trip airport transfer", price_cents: 4500, per: "stay", category: "Transport", icon: "🚗" },
+  { name: "Scooter rental", price_cents: 1000, per: "night", category: "Transport", icon: "🛵" },
+  { name: "Car rental", price_cents: 4500, per: "night", category: "Transport", icon: "🚙" },
+  { name: "Bicycle rental", price_cents: 500, per: "night", category: "Transport", icon: "🚲" },
+  // Stay flexibility
+  { name: "Early check-in", price_cents: 1500, per: "stay", category: "Stay", icon: "⏰" },
+  { name: "Late check-out", price_cents: 1500, per: "stay", category: "Stay", icon: "🕒" },
+  { name: "Extra bed", price_cents: 1500, per: "night", category: "Stay", icon: "🛏️" },
+  { name: "Baby crib", price_cents: 0, per: "stay", category: "Stay", icon: "👶" },
+  { name: "Extra guest", price_cents: 1500, per: "person_night", category: "Stay", icon: "👤" },
+  { name: "Pet fee", price_cents: 1000, per: "night", category: "Stay", icon: "🐾" },
+  // Wellness & experiences
+  { name: "Spa massage (60 min)", price_cents: 4500, per: "guest", category: "Wellness", icon: "💆" },
+  { name: "Couples massage", price_cents: 8000, per: "stay", category: "Wellness", icon: "💑" },
+  { name: "Yoga session", price_cents: 1500, per: "guest", category: "Wellness", icon: "🧘" },
+  { name: "Snorkeling tour", price_cents: 3500, per: "guest", category: "Experiences", icon: "🤿" },
+  { name: "Island hopping tour", price_cents: 5000, per: "guest", category: "Experiences", icon: "🏝️" },
+  { name: "Sunset cruise", price_cents: 6500, per: "guest", category: "Experiences", icon: "⛵" },
+  { name: "Private chef dinner", price_cents: 7500, per: "stay", category: "Experiences", icon: "👨‍🍳" },
+  // Romance & celebration
+  { name: "Honeymoon package", price_cents: 5000, per: "stay", category: "Celebration", icon: "💐" },
+  { name: "Birthday cake", price_cents: 1500, per: "stay", category: "Celebration", icon: "🎂" },
+  { name: "Flower bouquet", price_cents: 2000, per: "stay", category: "Celebration", icon: "🌹" },
+  { name: "Champagne on arrival", price_cents: 3500, per: "stay", category: "Celebration", icon: "🍾" },
+  // Practical services
+  { name: "Daily housekeeping", price_cents: 800, per: "night", category: "Services", icon: "🧹" },
+  { name: "Laundry service", price_cents: 1200, per: "stay", category: "Services", icon: "🧺" },
+  { name: "Parking", price_cents: 500, per: "night", category: "Services", icon: "🅿️" },
+  { name: "Beach towel rental", price_cents: 200, per: "guest", category: "Services", icon: "🏖️" },
+];
 const CANCEL_POLICIES: { value: string; label: string }[] = [
   { value: "flexible", label: "Flexible — full refund up to 24h before" },
   { value: "moderate", label: "Moderate — full refund up to 5 days before" },
