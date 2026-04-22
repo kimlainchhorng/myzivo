@@ -27002,6 +27002,50 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_automation_enrollments: {
+        Row: {
+          automation_id: string
+          completed_at: string | null
+          current_step: number
+          enrolled_at: string
+          id: string
+          last_error: string | null
+          next_run_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          automation_id: string
+          completed_at?: string | null
+          current_step?: number
+          enrolled_at?: string
+          id?: string
+          last_error?: string | null
+          next_run_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          automation_id?: string
+          completed_at?: string | null
+          current_step?: number
+          enrolled_at?: string
+          id?: string
+          last_error?: string | null
+          next_run_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_automation_enrollments_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_automations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_automations: {
         Row: {
           completed_count: number
@@ -27291,6 +27335,41 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_promo_redemptions: {
+        Row: {
+          discount_cents: number
+          id: string
+          order_id: string | null
+          promo_code_id: string
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          discount_cents?: number
+          id?: string
+          order_id?: string | null
+          promo_code_id: string
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          discount_cents?: number
+          id?: string
+          order_id?: string | null
+          promo_code_id?: string
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_promo_redemptions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_qa_runs: {
         Row: {
           admin_id: string
@@ -27327,36 +27406,48 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          external_audience_ids: Json
           id: string
           last_refreshed_at: string | null
           member_count: number
           name: string
           store_id: string
+          synced_to_google: boolean
+          synced_to_meta: boolean
           updated_at: string
+          usage_count: number
         }
         Insert: {
           conditions_jsonb?: Json
           created_at?: string
           created_by?: string | null
           description?: string | null
+          external_audience_ids?: Json
           id?: string
           last_refreshed_at?: string | null
           member_count?: number
           name: string
           store_id: string
+          synced_to_google?: boolean
+          synced_to_meta?: boolean
           updated_at?: string
+          usage_count?: number
         }
         Update: {
           conditions_jsonb?: Json
           created_at?: string
           created_by?: string | null
           description?: string | null
+          external_audience_ids?: Json
           id?: string
           last_refreshed_at?: string | null
           member_count?: number
           name?: string
           store_id?: string
+          synced_to_google?: boolean
+          synced_to_meta?: boolean
           updated_at?: string
+          usage_count?: number
         }
         Relationships: []
       }
@@ -27408,6 +27499,33 @@ export type Database = {
           updated_at?: string
           usage_count?: number
           variables_jsonb?: Json
+        }
+        Relationships: []
+      }
+      marketing_test_sends: {
+        Row: {
+          channel: string
+          id: string
+          payload_jsonb: Json
+          sent_at: string
+          sent_by: string
+          store_id: string
+        }
+        Insert: {
+          channel: string
+          id?: string
+          payload_jsonb?: Json
+          sent_at?: string
+          sent_by: string
+          store_id: string
+        }
+        Update: {
+          channel?: string
+          id?: string
+          payload_jsonb?: Json
+          sent_at?: string
+          sent_by?: string
+          store_id?: string
         }
         Relationships: []
       }
@@ -44893,6 +45011,7 @@ export type Database = {
       }
       store_ad_campaigns: {
         Row: {
+          archived_at: string | null
           body: string | null
           clicks: number
           conversions: number
@@ -44903,6 +45022,7 @@ export type Database = {
           currency: string
           daily_budget_cents: number
           destination_url: string | null
+          draft_step: number
           end_date: string | null
           external_ids: Json
           headline: string | null
@@ -44921,6 +45041,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           body?: string | null
           clicks?: number
           conversions?: number
@@ -44931,6 +45052,7 @@ export type Database = {
           currency?: string
           daily_budget_cents?: number
           destination_url?: string | null
+          draft_step?: number
           end_date?: string | null
           external_ids?: Json
           headline?: string | null
@@ -44949,6 +45071,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           body?: string | null
           clicks?: number
           conversions?: number
@@ -44959,6 +45082,7 @@ export type Database = {
           currency?: string
           daily_budget_cents?: number
           destination_url?: string | null
+          draft_step?: number
           end_date?: string | null
           external_ids?: Json
           headline?: string | null
