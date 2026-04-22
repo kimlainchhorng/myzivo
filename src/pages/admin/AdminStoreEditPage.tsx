@@ -559,15 +559,17 @@ export default function AdminStoreEditPage() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState(emptyProduct);
 
-  // Auto-draft: persist product form to localStorage
+  // Auto-draft: persist product form to localStorage (debounced to avoid
+  // re-running on every keystroke, which can contribute to render churn).
   const draftKey = `zivo_product_draft_${storeId}`;
   useEffect(() => {
     if (!productDialog || editingProduct) return;
-    // Only save draft for new products with some data entered
     const hasData = productForm.name || productForm.price > 0 || productForm.price_khr > 0 || (productForm.image_urls || []).length > 0 || productForm.category || productForm.brand;
-    if (hasData) {
+    if (!hasData) return;
+    const handle = setTimeout(() => {
       try { localStorage.setItem(draftKey, JSON.stringify(productForm)); } catch {}
-    }
+    }, 400);
+    return () => clearTimeout(handle);
   }, [productForm, productDialog, editingProduct, draftKey]);
 
   const clearProductDraft = () => { try { localStorage.removeItem(draftKey); } catch {} };
@@ -1861,36 +1863,55 @@ export default function AdminStoreEditPage() {
   const productsLabelTitle = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
   const paymentLabelTitle = form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : isLodging ? "Payment & Payouts" : t("admin.store.payment");
   const storeOwnerTitle = autoRepairTitles[activeTab] || lodgingTitles[activeTab] || employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? productsLabelTitle : activeTab === "payment" ? paymentLabelTitle : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "livestream" ? "Live Stream" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
-  const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
-    <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} storeCategory={form.category} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
+  // IMPORTANT: Do NOT define a component inside render — it creates a new component
+  // type on every render, which forces React to unmount + remount the entire subtree
+  // (including the Add Product dialog inputs) on every keystroke. Use a render helper instead.
+  const renderLayout = useCallback(
+    (title: string, children: React.ReactNode) => {
+      if (isAdmin) {
+        return <AdminLayout title={title}>{children}</AdminLayout>;
+      }
+      return (
+        <StoreOwnerLayout
+          title={storeOwnerTitle}
+          storeId={storeId}
+          storeName={store?.name}
+          storeLogoUrl={store?.logo_url}
+          storeCategory={form.category}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          productCount={products?.length}
+        >
+          {children}
+        </StoreOwnerLayout>
+      );
+    },
+    [isAdmin, storeOwnerTitle, storeId, store?.name, store?.logo_url, form.category, activeTab, products?.length],
   );
 
   if (isLoading) {
-    return (
-      <Layout title="Edit Store">
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </Layout>
-    );
+    return renderLayout("Edit Store", (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    ));
   }
 
   if (!store) {
-    return (
-      <Layout title="Store Not Found">
-        <div className="text-center py-20 space-y-4">
-          <p className="text-muted-foreground">Store not found</p>
-          <Button onClick={() => navigate(isAdmin ? "/admin/stores" : "/")} variant="outline">
-            {isAdmin ? "Back to Stores" : "Back to Home"}
-          </Button>
-        </div>
-      </Layout>
-    );
+    return renderLayout("Store Not Found", (
+      <div className="text-center py-20 space-y-4">
+        <p className="text-muted-foreground">Store not found</p>
+        <Button onClick={() => navigate(isAdmin ? "/admin/stores" : "/")} variant="outline">
+          {isAdmin ? "Back to Stores" : "Back to Home"}
+        </Button>
+      </div>
+    ));
   }
 
   return (
     <>
-    <Layout title={`Edit: ${store.name}`}>
+    {renderLayout(`Edit: ${store.name}`, (
+      <>
       <div className="space-y-6">
         {(isAdmin || activeTab === "profile") && (<>
         <Card className="overflow-hidden">
@@ -4992,7 +5013,8 @@ export default function AdminStoreEditPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Layout>
+      </>
+    ))}
     {store && (
       <StoreLiveChat
         storeId={store.id}
