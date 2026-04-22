@@ -1888,26 +1888,22 @@ export default function AdminStoreEditPage() {
   );
 
   if (isLoading) {
-    return (
-      <Layout title="Edit Store">
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </Layout>
-    );
+    return renderLayout("Edit Store", (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    ));
   }
 
   if (!store) {
-    return (
-      <Layout title="Store Not Found">
-        <div className="text-center py-20 space-y-4">
-          <p className="text-muted-foreground">Store not found</p>
-          <Button onClick={() => navigate(isAdmin ? "/admin/stores" : "/")} variant="outline">
-            {isAdmin ? "Back to Stores" : "Back to Home"}
-          </Button>
-        </div>
-      </Layout>
-    );
+    return renderLayout("Store Not Found", (
+      <div className="text-center py-20 space-y-4">
+        <p className="text-muted-foreground">Store not found</p>
+        <Button onClick={() => navigate(isAdmin ? "/admin/stores" : "/")} variant="outline">
+          {isAdmin ? "Back to Stores" : "Back to Home"}
+        </Button>
+      </div>
+    ));
   }
 
   return (
