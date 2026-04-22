@@ -594,6 +594,7 @@ export default function StoreAdsManager({ storeId }: Props) {
                   onResume={(c) => toggleStatus.mutate({ id: c.id, status: "active" })}
                   onLaunch={(c) => launchCampaign.mutate(c)}
                   onDuplicate={(c) => duplicateCampaign.mutate(c)}
+                  onArchive={(c) => archiveCampaign.mutate(c.id)}
                   onClick={(c) => setDetailCampaign(c)}
                 />
               ))}
