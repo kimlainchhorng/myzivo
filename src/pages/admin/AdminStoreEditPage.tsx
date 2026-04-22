@@ -3310,6 +3310,7 @@ export default function AdminStoreEditPage() {
                 )}
               </CardContent>
             </Card>
+            )}
           </TabsContent>
 
           {/* Payment / Booking Tab */}
