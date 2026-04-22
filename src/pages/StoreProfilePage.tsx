@@ -1102,6 +1102,8 @@ export default function StoreProfilePage() {
         )}
       </div>
       )}
+      </>
+      )}
 
       {/* ── Floating Cart Bar - Premium 3D ── */}
       <AnimatePresence>
