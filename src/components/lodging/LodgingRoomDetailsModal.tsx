@@ -170,15 +170,17 @@ export function LodgingRoomDetailsModal({
       footer={
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-xl font-extrabold text-foreground">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">From</p>
+            <p className="text-2xl font-extrabold text-foreground leading-none mt-0.5">
               {format(baseRateCents / 100, "USD")}
               <span className="text-xs font-medium text-muted-foreground"> /night</span>
             </p>
-            <p className="text-[10px] text-muted-foreground">Taxes calculated at booking</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Taxes calculated at booking</p>
           </div>
           <Button
             onClick={handleReserve}
-            className="font-bold"
+            size="lg"
+            className="font-bold rounded-full px-6 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25"
             aria-label={`Reserve ${name}`}
             data-testid="reserve-from-details"
           >
@@ -204,7 +206,7 @@ export function LodgingRoomDetailsModal({
                   const isErrored = !!errored[i];
                   return (
                     <CarouselItem key={`${src}-${i}`}>
-                      <div className="aspect-[4/5] sm:aspect-[3/4] max-h-[70vh] rounded-xl overflow-hidden bg-muted/60 relative">
+                      <div className="aspect-[4/5] sm:aspect-[3/4] max-h-[70vh] rounded-2xl overflow-hidden bg-muted/60 relative ring-1 ring-black/5 shadow-sm">
                         {/* LQIP / skeleton layer */}
                         {!isLoaded && !isErrored && (
                           lqip ? (
@@ -216,7 +218,7 @@ export function LodgingRoomDetailsModal({
                               style={{ filter: "blur(20px)", transform: "scale(1.05)" }}
                             />
                           ) : (
-                            <Skeleton className="absolute inset-0 rounded-xl" />
+                            <Skeleton className="absolute inset-0 rounded-2xl" />
                           )
                         )}
                         {isErrored ? (
@@ -243,6 +245,14 @@ export function LodgingRoomDetailsModal({
                             />
                           </ZoomableImage>
                         )}
+                        {/* Bottom gradient for legibility of counter chip */}
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
+                        {/* Counter chip */}
+                        {total > 1 && (
+                          <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-sm text-white text-[10px] font-semibold tabular-nums z-10">
+                            {idx + 1} / {total}
+                          </div>
+                        )}
                       </div>
                     </CarouselItem>
                   );
@@ -250,7 +260,7 @@ export function LodgingRoomDetailsModal({
               </CarouselContent>
             </Carousel>
           ) : (
-            <div className="aspect-[4/5] sm:aspect-[3/4] max-h-[70vh] rounded-xl overflow-hidden bg-muted/60 flex flex-col items-center justify-center gap-2">
+            <div className="aspect-[4/5] sm:aspect-[3/4] max-h-[70vh] rounded-2xl overflow-hidden bg-muted/60 flex flex-col items-center justify-center gap-2">
               <BedDouble className="h-10 w-10 text-muted-foreground/40" />
               <span className="text-xs text-muted-foreground">Photo coming soon</span>
             </div>
@@ -261,7 +271,7 @@ export function LodgingRoomDetailsModal({
               type="button"
               onClick={openLightbox}
               aria-label="Open full-screen photo viewer"
-              className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow z-10 hover:bg-background"
+              className="absolute top-2.5 right-2.5 h-9 w-9 rounded-full bg-background/90 backdrop-blur-md flex items-center justify-center shadow-md ring-1 ring-black/5 z-10 hover:bg-background transition"
             >
               <Expand className="h-4 w-4" />
             </button>
@@ -273,7 +283,7 @@ export function LodgingRoomDetailsModal({
                 type="button"
                 onClick={() => api?.scrollPrev()}
                 aria-label="Previous photo"
-                className={`absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow z-10 transition-opacity ${edgePulse ? "opacity-100 animate-pulse" : "opacity-30 hover:opacity-100"}`}
+                className={`absolute left-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/90 backdrop-blur-md flex items-center justify-center shadow-md ring-1 ring-black/5 z-10 transition-opacity ${edgePulse ? "opacity-100 animate-pulse" : "opacity-40 hover:opacity-100"}`}
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -281,23 +291,23 @@ export function LodgingRoomDetailsModal({
                 type="button"
                 onClick={() => api?.scrollNext()}
                 aria-label="Next photo"
-                className={`absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow z-10 transition-opacity ${edgePulse ? "opacity-100 animate-pulse" : "opacity-30 hover:opacity-100"}`}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-background/90 backdrop-blur-md flex items-center justify-center shadow-md ring-1 ring-black/5 z-10 transition-opacity ${edgePulse ? "opacity-100 animate-pulse" : "opacity-40 hover:opacity-100"}`}
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+              <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1 z-10">
                 {orderedPhotos.map((_, i) => (
                   <button
                     key={i}
                     type="button"
                     aria-label={`Go to photo ${i + 1}`}
                     onClick={() => api?.scrollTo(i)}
-                    className={`h-1.5 rounded-full transition-all ${i === idx ? "w-4 bg-white" : "w-1.5 bg-white/50"}`}
+                    className={`h-1.5 rounded-full transition-all ${i === idx ? "w-5 bg-white" : "w-1.5 bg-white/60 hover:bg-white/80"}`}
                   />
                 ))}
               </div>
               {showHint && (
-                <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-black/70 text-white text-[10px] font-medium z-10 animate-fade-in">
+                <div className="pointer-events-none absolute bottom-9 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-black/70 text-white text-[10px] font-medium z-10 animate-fade-in">
                   ← → arrows · swipe to browse
                 </div>
               )}
@@ -305,26 +315,50 @@ export function LodgingRoomDetailsModal({
           )}
         </div>
 
-        {/* Counter + caption strip (outside the image) */}
-        {total > 0 && (
-          <div className="flex items-center justify-between gap-2 -mt-3 px-1 text-[11px] text-muted-foreground">
-            <span className="tabular-nums font-medium">Photo {idx + 1} of {total}</span>
-            {currentCaption && <span className="truncate">{currentCaption}</span>}
+        {/* Caption strip */}
+        {total > 0 && currentCaption && (
+          <div className="-mt-3 px-1 text-[11px] text-muted-foreground italic truncate">
+            {currentCaption}
           </div>
         )}
 
-        {/* Quick stats */}
-        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-          {beds && <span className="flex items-center gap-1.5"><BedDouble className="h-3.5 w-3.5" /> {beds}</span>}
-          <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Sleeps {maxGuests}</span>
-          {sizeSqm != null && <span className="flex items-center gap-1.5"><Maximize2 className="h-3.5 w-3.5" /> {sizeSqm} m²</span>}
-          {breakfastIncluded && <span className="flex items-center gap-1.5 text-primary"><Coffee className="h-3.5 w-3.5" /> Breakfast included</span>}
+        {/* Premium stat tiles */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {beds && (
+            <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl bg-gradient-to-br from-sky-50 to-sky-100/50 border border-sky-200/60 dark:from-sky-950/40 dark:to-sky-900/20 dark:border-sky-800/40">
+              <BedDouble className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Beds</span>
+              <span className="text-xs font-bold text-foreground leading-tight">{beds}</span>
+            </div>
+          )}
+          <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl bg-gradient-to-br from-violet-50 to-violet-100/50 border border-violet-200/60 dark:from-violet-950/40 dark:to-violet-900/20 dark:border-violet-800/40">
+            <Users className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Sleeps</span>
+            <span className="text-xs font-bold text-foreground leading-tight">{maxGuests} guests</span>
+          </div>
+          {sizeSqm != null && (
+            <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200/60 dark:from-amber-950/40 dark:to-amber-900/20 dark:border-amber-800/40">
+              <Maximize2 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Size</span>
+              <span className="text-xs font-bold text-foreground leading-tight">{sizeSqm} m²</span>
+            </div>
+          )}
+          {breakfastIncluded && (
+            <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200/60 dark:from-emerald-950/40 dark:to-emerald-900/20 dark:border-emerald-800/40">
+              <Coffee className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Included</span>
+              <span className="text-xs font-bold text-foreground leading-tight">Breakfast</span>
+            </div>
+          )}
         </div>
 
         {/* Description */}
         {description && (
           <div>
-            <h3 className="text-sm font-bold mb-1.5">About this room</h3>
+            <h3 className="text-sm font-bold mb-1.5 flex items-center gap-1.5">
+              <span className="h-3.5 w-1 rounded-full bg-emerald-500" />
+              About this room
+            </h3>
             <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">{description}</p>
           </div>
         )}
@@ -332,13 +366,16 @@ export function LodgingRoomDetailsModal({
         {/* Amenities */}
         {amenities.length > 0 && (
           <div>
-            <h3 className="text-sm font-bold mb-2">Amenities</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <h3 className="text-sm font-bold mb-2 flex items-center gap-1.5">
+              <span className="h-3.5 w-1 rounded-full bg-sky-500" />
+              Amenities
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
               {amenities.map((a) => {
                 const Icon = getAmenityIcon(a);
                 return (
-                  <div key={a} className="flex items-center gap-2 text-xs text-foreground">
-                    <Icon className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <div key={a} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-muted/50 border border-border/50 text-xs text-foreground">
+                    <Icon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <span className="truncate">{a}</span>
                   </div>
                 );
@@ -351,24 +388,25 @@ export function LodgingRoomDetailsModal({
         {addons.length > 0 && (
           <div>
             <h3 className="text-sm font-bold mb-2 flex items-center gap-1.5">
-              <Plus className="h-3.5 w-3.5 text-primary" /> Available extras
+              <span className="h-3.5 w-1 rounded-full bg-amber-500" />
+              <Plus className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" /> Available extras
             </h3>
             <div className="space-y-1.5">
               {addons.map((a, i) => (
-                <div key={i} className="flex items-start justify-between gap-3 p-2.5 rounded-lg bg-muted/40 border border-border/50">
+                <div key={i} className="flex items-start justify-between gap-3 p-3 rounded-xl bg-gradient-to-r from-muted/40 to-muted/20 border border-border/60 hover:border-amber-300/60 transition">
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-semibold text-foreground truncate">{a.name || "Untitled"}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{PER_LABEL[a.per]}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-bold text-foreground tabular-nums">
                       +{format(a.price_cents / 100, "USD")}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">{PER_LABEL[a.per]}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1.5">
+            <p className="text-[10px] text-muted-foreground mt-2 italic">
               Optional — choose during booking. Prices shown per the property's policy.
             </p>
           </div>
@@ -377,23 +415,32 @@ export function LodgingRoomDetailsModal({
         {/* Policies */}
         <div>
           <h3 className="text-sm font-bold mb-2 flex items-center gap-1.5">
-            <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Policies
+            <span className="h-3.5 w-1 rounded-full bg-violet-500" />
+            <ShieldCheck className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" /> Policies
           </h3>
-          <div className="space-y-1.5 text-xs text-muted-foreground">
+          <div className="rounded-xl bg-muted/30 border border-border/60 p-3 space-y-2 text-xs text-muted-foreground">
             {cancellationPolicy && (
-              <p><span className="font-medium text-foreground">Cancellation:</span> {POLICY_LABELS[cancellationPolicy] ?? cancellationPolicy}</p>
+              <p className="leading-relaxed">
+                <span className="font-semibold text-foreground">Cancellation: </span>
+                {POLICY_LABELS[cancellationPolicy] ?? cancellationPolicy}
+              </p>
             )}
             {(checkInTime || checkOutTime) && (
-              <p className="flex items-center gap-1.5">
-                <Clock className="h-3 w-3" />
+              <p className="flex items-start gap-1.5">
+                <Clock className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                 <span>
-                  {checkInTime && <>Check-in from <span className="font-medium text-foreground">{checkInTime}</span></>}
+                  {checkInTime && <>Check-in from <span className="font-semibold text-foreground">{checkInTime}</span></>}
                   {checkInTime && checkOutTime && " · "}
-                  {checkOutTime && <>Check-out by <span className="font-medium text-foreground">{checkOutTime}</span></>}
+                  {checkOutTime && <>Check-out by <span className="font-semibold text-foreground">{checkOutTime}</span></>}
                 </span>
               </p>
             )}
-            {breakfastIncluded && <p>Breakfast is included with your stay.</p>}
+            {breakfastIncluded && (
+              <p className="flex items-center gap-1.5">
+                <Coffee className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                Breakfast is included with your stay.
+              </p>
+            )}
           </div>
         </div>
       </div>
