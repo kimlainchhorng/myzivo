@@ -681,6 +681,57 @@ export default function StoreProfilePage() {
         </div>
       )}
 
+      {/* ── Lodging: Rooms & Rates ── */}
+      {isLodging ? (
+        <div className="px-4 pt-5 pb-40 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <BedDouble className="h-4 w-4 text-primary" />
+              <h2 className="text-sm font-bold text-foreground">Rooms & Rates</h2>
+            </div>
+            <span className="text-[10px] text-muted-foreground font-medium">
+              {rooms.length} {rooms.length === 1 ? "room" : "rooms"}
+            </span>
+          </div>
+
+          <LodgingStaySelector
+            checkIn={stay.checkIn} checkOut={stay.checkOut}
+            adults={stay.adults} children={stay.children}
+            onChange={updateStay}
+          />
+
+          {loadingRooms ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : rooms.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <BedDouble className="h-12 w-12 text-muted-foreground/20" />
+              <p className="text-sm text-muted-foreground">No rooms listed yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {rooms.map((r) => (
+                <LodgingRoomCard
+                  key={r.id}
+                  name={r.name}
+                  type={r.room_type}
+                  beds={r.beds}
+                  maxGuests={r.max_guests}
+                  baseRateCents={r.base_rate_cents}
+                  amenities={r.amenities || []}
+                  breakfastIncluded={r.breakfast_included}
+                  imageUrl={(r.photos && r.photos[0]) as string | undefined}
+                  description={r.description}
+                  addonsCount={(r.addons || []).length}
+                  onReserve={() => setBookingRoom(r)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+      <>
       {/* ── Section Header ── */}
       <div className="flex items-center justify-between px-4 pt-5 pb-1">
         <div className="flex items-center gap-1.5">
