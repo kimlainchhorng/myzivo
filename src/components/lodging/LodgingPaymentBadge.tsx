@@ -2,8 +2,12 @@
  * LodgingPaymentBadge — Stripe payment_status chip for lodging reservations.
  * Surfaces refund + retry states; renders a "processing" spinner while a Stripe
  * webhook is in flight, plus a micro-caption with the last received event time.
+ *
+ * Retry hardening: when the deposit retry returns 423 Locked, surfaces an inline
+ * countdown alert (data-testid="lodge-retry-locked") and auto-re-enables when the
+ * cooldown elapses.
  */
-import { ShieldCheck, CheckCircle2, Clock, XCircle, RotateCcw, Undo2, Loader2 } from "lucide-react";
+import { ShieldCheck, CheckCircle2, Clock, XCircle, RotateCcw, Undo2, Loader2, Lock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -20,11 +24,22 @@ type PaymentStatus =
   | string
   | null;
 
+interface RetryResult {
+  locked?: boolean;
+  retry_after_seconds?: number;
+  error?: string;
+}
+
 interface Props {
   status: PaymentStatus;
   amountCents?: number | null;
   className?: string;
-  onRetry?: () => Promise<void> | void;
+  /**
+   * Retry handler. May return a `RetryResult` describing a 423 Locked outcome
+   * so the badge can render an inline countdown alert. Returning `void` keeps
+   * the existing happy-path behaviour.
+   */
+  onRetry?: () => Promise<RetryResult | void> | RetryResult | void;
   /** ISO timestamp of last Stripe webhook touching this reservation. */
   lastEventAt?: string | null;
   /** Stripe event type, e.g. "payment_intent.succeeded". */
@@ -58,13 +73,21 @@ export function LodgingPaymentBadge({
   const [retrying, setRetrying] = useState(false);
   const retryInFlightRef = useRef(false);
   const [, setTick] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
 
-  // Re-render every 5s so timeAgo + processing window stay fresh.
+  // Re-render every 1s while locked or every 5s for stale-time refresh.
   useEffect(() => {
-    if (!lastEventAt && !TRANSITIONAL.has(String(status))) return;
-    const id = setInterval(() => setTick((t) => t + 1), 5_000);
+    const needsFastTick = lockedUntil !== null;
+    const needsSlowTick = !!lastEventAt || TRANSITIONAL.has(String(status));
+    if (!needsFastTick && !needsSlowTick) return;
+    const id = setInterval(() => setTick((t) => t + 1), needsFastTick ? 1_000 : 5_000);
     return () => clearInterval(id);
-  }, [lastEventAt, status]);
+  }, [lastEventAt, status, lockedUntil]);
+
+  // Auto-clear lock when its countdown elapses
+  useEffect(() => {
+    if (lockedUntil && Date.now() >= lockedUntil) setLockedUntil(null);
+  });
 
   if (!status || status === "unpaid") return null;
 
@@ -72,6 +95,7 @@ export function LodgingPaymentBadge({
     ? Date.now() - new Date(lastEventAt).getTime() < PROCESSING_WINDOW_MS
     : false;
   const isProcessing = TRANSITIONAL.has(String(status)) || eventFresh;
+  const lockSecondsLeft = lockedUntil ? Math.max(0, Math.ceil((lockedUntil - Date.now()) / 1000)) : 0;
 
   const config: Record<string, { tone: string; icon: typeof Clock; label: string }> = {
     pending: {
@@ -125,16 +149,20 @@ export function LodgingPaymentBadge({
   const baseCls = cn(
     "inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-semibold",
     cfg.tone,
-    className
+    className,
   );
 
   const handleRetryClick = async () => {
     if (!onRetry) return;
-    if (retryInFlightRef.current || retrying) return;
+    if (retryInFlightRef.current || retrying || lockedUntil) return;
     retryInFlightRef.current = true;
     setRetrying(true);
     try {
-      await onRetry();
+      const result = await onRetry();
+      if (result && typeof result === "object" && (result as RetryResult).locked) {
+        const seconds = Math.max(2, Math.min(120, Number((result as RetryResult).retry_after_seconds) || 5));
+        setLockedUntil(Date.now() + seconds * 1000);
+      }
     } finally {
       // 5s cool-down before another retry can fire
       setTimeout(() => {
@@ -145,24 +173,40 @@ export function LodgingPaymentBadge({
   };
 
   const renderProcessingPill = isProcessing && status !== "failed";
-
   const wrapperCls = "inline-flex flex-col items-start gap-0.5";
+
+  // Locked alert (shown above the badge when a parallel retry is in progress)
+  const lockedAlert = lockedUntil ? (
+    <div
+      data-testid="lodge-retry-locked"
+      className="inline-flex items-start gap-1.5 px-2 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-700 text-[10px] max-w-[260px]"
+    >
+      <Lock className="h-3 w-3 mt-0.5 shrink-0" />
+      <div>
+        <p className="font-semibold">Retry already in progress</p>
+        <p className="opacity-80">
+          Another retry is running. Re-enabling in {lockSecondsLeft}s…
+        </p>
+      </div>
+    </div>
+  ) : null;
 
   // Retry-failed clickable variant
   if (status === "failed" && onRetry) {
     return (
       <span className={wrapperCls}>
+        {lockedAlert}
         <button
           type="button"
           onClick={handleRetryClick}
-          disabled={retrying}
+          disabled={retrying || !!lockedUntil}
           className={cn(
             baseCls,
-            "hover:bg-destructive/15 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            "hover:bg-destructive/15 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed",
           )}
         >
-          {retrying ? <Loader2 className="h-3 w-3 animate-spin" /> : <Icon className="h-3 w-3" />}
-          {retrying ? "Retrying…" : cfg.label}
+          {retrying ? <Loader2 className="h-3 w-3 animate-spin" /> : lockedUntil ? <Lock className="h-3 w-3" /> : <Icon className="h-3 w-3" />}
+          {retrying ? "Retrying…" : lockedUntil ? `Locked · ${lockSecondsLeft}s` : cfg.label}
         </button>
         {lastEventAt && (
           <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground pl-1">
@@ -176,6 +220,7 @@ export function LodgingPaymentBadge({
 
   return (
     <span className={wrapperCls}>
+      {lockedAlert}
       <span className={baseCls}>
         {renderProcessingPill ? (
           <Loader2 className="h-3 w-3 animate-spin" />
