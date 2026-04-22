@@ -38,6 +38,7 @@ const CHANNELS: { id: Channel; icon: any; label: string; desc: string }[] = [
 ];
 
 export default function CreateMarketingCampaignWizard({ open, onClose, storeId, onCreated }: Props) {
+  const qc = useQueryClient();
   const [step, setStep] = useState(1);
   const [channel, setChannel] = useState<Channel>("push");
   const [name, setName] = useState("");
