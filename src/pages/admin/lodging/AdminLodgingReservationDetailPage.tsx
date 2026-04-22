@@ -400,28 +400,20 @@ export default function AdminLodgingReservationDetailPage() {
 
         {/* Audit log */}
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><History className="h-4 w-4" /> Audit log</CardTitle></CardHeader>
+          <CardHeader className="pb-3 flex-row items-center justify-between gap-2">
+            <CardTitle className="text-sm flex items-center gap-2"><History className="h-4 w-4" /> Audit log</CardTitle>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1 text-xs"
+              disabled={!(audit.data || []).length}
+              onClick={() => downloadAuditCsv(reservation.number || reservation.id, (audit.data || []) as any)}
+            >
+              <Download className="h-3 w-3" /> CSV
+            </Button>
+          </CardHeader>
           <CardContent>
-            {audit.isLoading ? (
-              <p className="text-xs text-muted-foreground">Loading…</p>
-            ) : (audit.data || []).length === 0 ? (
-              <p className="text-xs text-muted-foreground">No status changes yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {(audit.data || []).map((a) => (
-                  <div key={a.id} className="p-2.5 rounded-lg border border-border bg-card text-xs">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-semibold">
-                        {a.from_status ? `${STATUS_LABEL[a.from_status] || a.from_status} → ` : ""}
-                        {STATUS_LABEL[a.to_status] || a.to_status}
-                      </p>
-                      <span className="text-[10px] text-muted-foreground">{format(new Date(a.created_at), "MMM d, HH:mm")}</span>
-                    </div>
-                    {a.note && <p className="text-muted-foreground mt-1 whitespace-pre-wrap">{a.note}</p>}
-                  </div>
-                ))}
-              </div>
-            )}
+            <ReservationStatusHistory reservationId={reservation.id} />
           </CardContent>
         </Card>
       </div>
