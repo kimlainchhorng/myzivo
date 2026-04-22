@@ -1,9 +1,12 @@
 /**
- * LodgingBookingDrawer - Multi-step booking sheet (stay → add-ons → guest info).
- * Writes a 'hold' lodge_reservations row with addons + fee breakdown snapshot.
+ * LodgingBookingDrawer - Multi-step booking sheet (stay → add-ons → guest → review → success).
+ * Writes a 'hold' lodge_reservations row with addons + fee breakdown + payment method.
  */
 import { useMemo, useState } from "react";
-import { Loader2, ChevronLeft, ChevronRight, CheckCircle2, Minus, Plus, AlertTriangle } from "lucide-react";
+import {
+  Loader2, ChevronLeft, ChevronRight, CheckCircle2, Minus, Plus, AlertTriangle,
+  Wallet, CreditCard, Building2, Copy, CalendarPlus, MessageCircle, ShieldCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +18,7 @@ import { LodgingStaySelector } from "@/components/lodging/LodgingStaySelector";
 import { useRoomAvailability, hasUnavailableNight } from "@/hooks/lodging/useRoomAvailability";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import type { LodgeAddon, RoomFees, ChildPolicy } from "@/hooks/lodging/useLodgeRooms";
 
 interface Props {
@@ -22,6 +26,7 @@ interface Props {
   onClose: () => void;
   storeId: string;
   storeName: string;
+  storePhone?: string | null;
   roomId: string;
   roomName: string;
   baseRateCents: number;
@@ -42,7 +47,8 @@ interface Props {
   onBooked?: () => void;
 }
 
-type Step = "stay" | "addons" | "guest";
+type Step = "stay" | "addons" | "guest" | "review" | "success";
+type PayMethod = "pay_at_property" | "card_on_arrival" | "bank_transfer";
 
 interface SelectedAddon extends LodgeAddon {
   qty: number;
@@ -52,8 +58,14 @@ const ETA_OPTIONS = [
   "Before 3 PM", "3 – 6 PM", "6 – 9 PM", "After 9 PM", "Next day", "Not sure yet",
 ];
 
+const PAY_METHODS: { id: PayMethod; label: string; sub: string; icon: typeof Wallet }[] = [
+  { id: "pay_at_property", label: "Pay at the property", sub: "Cash or card on arrival — no charge now", icon: Wallet },
+  { id: "card_on_arrival", label: "Card on file (charged on arrival)", sub: "We'll collect card details at check-in", icon: CreditCard },
+  { id: "bank_transfer",  label: "Bank transfer / deposit", sub: "Host will share details by message", icon: Building2 },
+];
+
 export function LodgingBookingDrawer({
-  open, onClose, storeId, storeName, roomId, roomName,
+  open, onClose, storeId, storeName, storePhone, roomId, roomName,
   baseRateCents, weekendRateCents, weeklyDiscountPct = 0, monthlyDiscountPct = 0,
   cancellationPolicy, addons = [], fees, childPolicy,
   minStay = 1, maxStay, noArrivalWeekdays = [],
@@ -72,7 +84,11 @@ export function LodgingBookingDrawer({
   const [country, setCountry] = useState("");
   const [eta, setEta] = useState("");
   const [notes, setNotes] = useState("");
+  const [payMethod, setPayMethod] = useState<PayMethod>("pay_at_property");
+  const [agreeRules, setAgreeRules] = useState(false);
+  const [agreeCancel, setAgreeCancel] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [reference, setReference] = useState<string | null>(null);
 
   const { availabilityMap, disabledDates } = useRoomAvailability(open ? roomId : undefined);
   const rangeIssue = useMemo(
@@ -102,7 +118,7 @@ export function LodgingBookingDrawer({
     let weekendNights = 0;
     for (let i = 0; i < nights; i++) {
       const d = new Date(ci.getTime() + i * 86400000);
-      const dow = d.getDay(); // 5=Fri, 6=Sat
+      const dow = d.getDay();
       const isWeekend = dow === 5 || dow === 6;
       if (isWeekend && weekendRateCents) weekendNights++;
       roomTotal += isWeekend && weekendRateCents ? weekendRateCents : baseRateCents;
@@ -114,7 +130,6 @@ export function LodgingBookingDrawer({
     const discountCents = Math.round(roomTotal * (discountPct / 100));
     const roomAfter = roomTotal - discountCents;
 
-    // Add-ons
     const addonsSnapshot: (LodgeAddon & { qty: number; subtotal_cents: number })[] = [];
     let addonsTotal = 0;
     Object.values(selected).forEach((a) => {
@@ -131,18 +146,13 @@ export function LodgingBookingDrawer({
       });
     });
 
-    // Extra-guest fees (rough — only kicks in above 2 base guests)
     const baseOccupancy = 2;
     const extraAdults = Math.max(0, adults - baseOccupancy);
     const extraChildren = children;
-    const freeChildAge = childPolicy?.free_age ?? 0;
-    // (We don't know individual ages — treat all "children" as paying unless free_age is set high)
-    const chargeableChildren = freeChildAge > 0 ? extraChildren : extraChildren;
     const extraAdultFee = (childPolicy?.extra_adult_fee_cents || 0) * extraAdults * nights;
-    const extraChildFee = (childPolicy?.extra_child_fee_cents || 0) * chargeableChildren * nights;
+    const extraChildFee = (childPolicy?.extra_child_fee_cents || 0) * extraChildren * nights;
     const extraGuestTotal = extraAdultFee + extraChildFee;
 
-    // Fees
     const cityTax = (fees?.city_tax_cents || 0) * totalGuests * nights;
     const resortFee = (fees?.resort_fee_cents || 0) * nights;
     const cleaningFee = fees?.cleaning_fee_cents || 0;
@@ -172,17 +182,33 @@ export function LodgingBookingDrawer({
     };
   }, [checkIn, checkOut, baseRateCents, weekendRateCents, weeklyDiscountPct, monthlyDiscountPct, selected, adults, children, fees, childPolicy]);
 
-  const goNext = () => setStep(step === "stay" ? "addons" : "guest");
-  const goBack = () => setStep(step === "guest" ? "addons" : "stay");
+  const hasAddons = (addons || []).length > 0;
+  const securityDeposit = (childPolicy as any)?.security_deposit_cents || 0;
+
+  const goNext = () => {
+    if (step === "stay") setStep(hasAddons ? "addons" : "guest");
+    else if (step === "addons") setStep("guest");
+    else if (step === "guest") setStep("review");
+  };
+  const goBack = () => {
+    if (step === "review") setStep("guest");
+    else if (step === "guest") setStep(hasAddons ? "addons" : "stay");
+    else if (step === "addons") setStep("stay");
+  };
+
+  const guestValid = name.trim().length > 1 && phone.trim().length > 5;
+  const reviewValid = agreeRules && agreeCancel && !!payMethod;
 
   const submit = async () => {
-    if (!name.trim() || !phone.trim()) { toast.error("Name and phone required"); return; }
+    if (!guestValid) { toast.error("Name and phone required"); setStep("guest"); return; }
+    if (!reviewValid) { toast.error("Please confirm the policies"); return; }
     setSubmitting(true);
     try {
+      const ref = `RES-${Date.now().toString().slice(-6)}`;
       const { error } = await supabase.from("lodge_reservations" as any).insert({
         store_id: storeId,
         room_id: roomId,
-        number: `RES-${Date.now().toString().slice(-6)}`,
+        number: ref,
         guest_name: name, guest_phone: phone, guest_email: email || null, guest_country: country || null,
         adults, children, check_in: checkIn, check_out: checkOut,
         status: "hold", source: "direct",
@@ -190,13 +216,13 @@ export function LodgingBookingDrawer({
         addons: breakdown.addonsSnapshot,
         addon_selections: breakdown.addonsSnapshot,
         fee_breakdown: breakdown.feeBreakdown,
-        guest_details: { name, phone, email, country, eta, notes },
+        guest_details: { name, phone, email, country, eta, notes, pay_method: payMethod },
         notes: notes || null,
       });
       if (error) throw error;
-      toast.success(`Booking request sent to ${storeName}`);
+      setReference(ref);
+      setStep("success");
       onBooked?.();
-      onClose();
     } catch (e: any) {
       toast.error(e.message || "Failed to submit booking");
     } finally {
@@ -205,10 +231,14 @@ export function LodgingBookingDrawer({
   };
 
   const fmtMoney = (c: number) => `$${(c / 100).toFixed(2)}`;
-  const hasAddons = (addons || []).length > 0;
   const blocked = rangeIssue.invalid || stayIssue.invalid;
 
-  const stepLabel = step === "stay" ? "1 of 3 · Your stay" : step === "addons" ? "2 of 3 · Add-ons" : "3 of 3 · Guest info";
+  const stepLabel =
+    step === "stay" ? "Step 1 · Your stay" :
+    step === "addons" ? "Step 2 · Add-ons" :
+    step === "guest" ? "Step 3 · Guest info" :
+    step === "review" ? "Step 4 · Review & confirm" :
+    "Booking submitted";
 
   const setAddonQty = (idx: number, qty: number, addon?: LodgeAddon) => {
     setSelected(prev => {
@@ -219,38 +249,82 @@ export function LodgingBookingDrawer({
     });
   };
 
+  const handleClose = () => {
+    // Reset for next open
+    if (step === "success") {
+      setStep("stay"); setSelected({}); setReference(null);
+      setName(""); setPhone(""); setEmail(""); setCountry(""); setEta(""); setNotes("");
+      setAgreeRules(false); setAgreeCancel(false); setPayMethod("pay_at_property");
+    }
+    onClose();
+  };
+
+  // Calendar (.ics) generator
+  const downloadIcs = () => {
+    const dt = (s: string) => s.replace(/-/g, "");
+    const ics = [
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//ZIVO//Lodging//EN",
+      "BEGIN:VEVENT",
+      `UID:${reference}@zivo`,
+      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").split(".")[0]}Z`,
+      `DTSTART;VALUE=DATE:${dt(checkIn)}`,
+      `DTEND;VALUE=DATE:${dt(checkOut)}`,
+      `SUMMARY:Stay at ${storeName} – ${roomName}`,
+      `DESCRIPTION:Booking ${reference}\\nGuest: ${name}\\nTotal: ${fmtMoney(breakdown.total)}`,
+      `LOCATION:${storeName}`,
+      "END:VEVENT", "END:VCALENDAR",
+    ].join("\r\n");
+    const blob = new Blob([ics], { type: "text/calendar" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${reference}.ics`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const copyRef = () => {
+    if (!reference) return;
+    navigator.clipboard.writeText(reference);
+    toast.success("Reference copied");
+  };
+
   return (
     <ResponsiveModal
       open={open}
-      onOpenChange={(v) => !v && onClose()}
-      title={`Reserve ${roomName}`}
+      onOpenChange={(v) => !v && handleClose()}
+      title={step === "success" ? "🎉 Booking submitted" : `Reserve ${roomName}`}
       description={stepLabel}
       footer={
-        <ResponsiveModalFooter>
-          {step !== "stay" && (
-            <Button variant="outline" onClick={goBack} className="gap-1">
-              <ChevronLeft className="h-4 w-4" /> Back
-            </Button>
-          )}
-          {step !== "guest" ? (
-            <Button
-              onClick={() => (step === "stay" && !hasAddons ? setStep("guest") : goNext())}
-              className="gap-1"
-              disabled={blocked}
-            >
-              Continue <ChevronRight className="h-4 w-4" />
-            </Button>
-          ) : (
-            <Button onClick={submit} disabled={submitting || blocked} className="gap-1 font-bold">
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-              Request · {fmtMoney(breakdown.total)}
-            </Button>
-          )}
-        </ResponsiveModalFooter>
+        step === "success" ? (
+          <ResponsiveModalFooter>
+            <Button onClick={handleClose} className="font-bold w-full">Done</Button>
+          </ResponsiveModalFooter>
+        ) : (
+          <ResponsiveModalFooter>
+            {step !== "stay" && (
+              <Button variant="outline" onClick={goBack} className="gap-1">
+                <ChevronLeft className="h-4 w-4" /> Back
+              </Button>
+            )}
+            {step !== "review" ? (
+              <Button
+                onClick={goNext}
+                className="gap-1"
+                disabled={blocked || (step === "guest" && !guestValid)}
+              >
+                Continue <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button onClick={submit} disabled={submitting || blocked || !reviewValid} className="gap-1 font-bold">
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                Confirm · {fmtMoney(breakdown.total)}
+              </Button>
+            )}
+          </ResponsiveModalFooter>
+        )
       }
     >
       <div className="space-y-4 pt-2">
-        {(rangeIssue.invalid || stayIssue.invalid) && (
+        {step !== "success" && (rangeIssue.invalid || stayIssue.invalid) && (
           <div className="flex items-start gap-2 p-3 rounded-xl bg-destructive/10 text-destructive border border-destructive/20">
             <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
             <div className="text-xs font-medium space-y-0.5">
@@ -262,6 +336,7 @@ export function LodgingBookingDrawer({
             </div>
           </div>
         )}
+
         {step === "stay" && (
           <>
             <LodgingStaySelector
@@ -275,7 +350,7 @@ export function LodgingBookingDrawer({
           </>
         )}
 
-        {step !== "stay" && (
+        {(step === "addons" || step === "guest" || step === "review") && (
           <LodgingStaySelector
             checkIn={checkIn} checkOut={checkOut} adults={adults} children={children}
             onChange={() => {}}
@@ -312,10 +387,8 @@ export function LodgingBookingDrawer({
                       </div>
                       {checked && (
                         <div className="flex items-center gap-1 shrink-0">
-                          <Button
-                            type="button" size="icon" variant="outline" className="h-7 w-7"
-                            onClick={() => setAddonQty(i, Math.max(0, (sel.qty || 1) - 1), a)}
-                          >
+                          <Button type="button" size="icon" variant="outline" className="h-7 w-7"
+                            onClick={() => setAddonQty(i, Math.max(0, (sel.qty || 1) - 1), a)}>
                             <Minus className="h-3 w-3" />
                           </Button>
                           <Input
@@ -327,10 +400,8 @@ export function LodgingBookingDrawer({
                               setAddonQty(i, n, a);
                             }}
                           />
-                          <Button
-                            type="button" size="icon" variant="outline" className="h-7 w-7"
-                            onClick={() => setAddonQty(i, (sel.qty || 1) + 1, a)}
-                          >
+                          <Button type="button" size="icon" variant="outline" className="h-7 w-7"
+                            onClick={() => setAddonQty(i, (sel.qty || 1) + 1, a)}>
                             <Plus className="h-3 w-3" />
                           </Button>
                         </div>
@@ -364,16 +435,133 @@ export function LodgingBookingDrawer({
               </select>
             </div>
             <div><Label>Notes / special requests</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Late check-in, extra pillows, dietary needs…" /></div>
+            <PriceSummary breakdown={breakdown} fmt={fmtMoney} />
+          </>
+        )}
+
+        {step === "review" && (
+          <>
+            {/* Booking summary */}
+            <div className="p-3 rounded-xl border border-border bg-card space-y-1.5 text-xs">
+              <p className="font-bold text-sm">{roomName}</p>
+              <p className="text-muted-foreground">{storeName}</p>
+              <div className="flex justify-between"><span className="text-muted-foreground">Dates</span><span>{checkIn} → {checkOut} · {breakdown.nights}n</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Guests</span><span>{adults} adult{adults > 1 ? "s" : ""}{children > 0 ? `, ${children} child${children > 1 ? "ren" : ""}` : ""}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Guest</span><span>{name}</span></div>
+              {eta && <div className="flex justify-between"><span className="text-muted-foreground">Arrival ETA</span><span>{eta}</span></div>}
+            </div>
+
+            {/* Payment method */}
+            <div className="space-y-2">
+              <Label>Payment method</Label>
+              {PAY_METHODS.map(m => {
+                const Icon = m.icon;
+                const active = payMethod === m.id;
+                return (
+                  <button
+                    key={m.id} type="button" onClick={() => setPayMethod(m.id)}
+                    className={cn(
+                      "w-full flex items-start gap-3 p-3 rounded-xl border text-left transition-colors",
+                      active ? "border-primary bg-primary/5" : "border-border bg-card hover:bg-muted/40"
+                    )}
+                  >
+                    <Icon className={cn("h-5 w-5 mt-0.5 shrink-0", active ? "text-primary" : "text-muted-foreground")} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold">{m.label}</p>
+                      <p className="text-[11px] text-muted-foreground">{m.sub}</p>
+                    </div>
+                    <div className={cn(
+                      "h-4 w-4 rounded-full border-2 mt-1 shrink-0",
+                      active ? "border-primary bg-primary" : "border-muted-foreground/30"
+                    )} />
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Deposit notice */}
+            {securityDeposit > 0 && (
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs">
+                <ShieldCheck className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <p>A refundable security deposit of <strong>{fmtMoney(securityDeposit)}</strong> may be collected at check-in.</p>
+              </div>
+            )}
 
             <PriceSummary breakdown={breakdown} fmt={fmtMoney} />
 
-            <div className="text-[11px] text-muted-foreground space-y-1">
-              <p>Your request will be sent to {storeName} for confirmation. Pay at the property unless arranged with the host.</p>
-              {cancellationPolicy && (
-                <p>Cancellation policy: <span className="font-semibold">{cancellationPolicy.replace("_", "-")}</span>.</p>
+            {/* Consent */}
+            <div className="space-y-2">
+              <label className="flex items-start gap-2 text-xs cursor-pointer">
+                <Checkbox checked={agreeRules} onCheckedChange={(v) => setAgreeRules(!!v)} className="mt-0.5" />
+                <span>I have read and agree to the <strong>house rules</strong> and check-in policy.</span>
+              </label>
+              <label className="flex items-start gap-2 text-xs cursor-pointer">
+                <Checkbox checked={agreeCancel} onCheckedChange={(v) => setAgreeCancel(!!v)} className="mt-0.5" />
+                <span>
+                  I accept the <strong>cancellation policy</strong>
+                  {cancellationPolicy ? <> ({cancellationPolicy.replace(/_/g, "-")})</> : null} and authorise {storeName} to contact me about this reservation.
+                </span>
+              </label>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">
+              By tapping <strong>Confirm</strong>, your request is sent to {storeName} for confirmation. ZIVO is a marketplace; the property is the merchant of record for your stay.
+            </p>
+          </>
+        )}
+
+        {step === "success" && reference && (
+          <div className="space-y-4 py-2">
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <CheckCircle2 className="h-9 w-9 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground">Your booking request was sent to</p>
+              <p className="font-bold text-lg">{storeName}</p>
+            </div>
+
+            <div className="p-3 rounded-xl border border-border bg-card text-center">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Reference</p>
+              <div className="flex items-center justify-center gap-2 mt-1">
+                <p className="font-extrabold text-xl tracking-wider">{reference}</p>
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={copyRef}>
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-muted/40 text-xs space-y-1">
+              <div className="flex justify-between"><span className="text-muted-foreground">Room</span><span className="font-semibold">{roomName}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Check-in</span><span>{checkIn}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Check-out</span><span>{checkOut}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Guests</span><span>{adults + children}</span></div>
+              <div className="flex justify-between border-t border-border/50 pt-1.5 mt-1.5">
+                <span className="font-bold">Total</span>
+                <span className="font-bold text-primary">{fmtMoney(breakdown.total)}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" className="gap-1.5" onClick={downloadIcs}>
+                <CalendarPlus className="h-4 w-4" /> Add to calendar
+              </Button>
+              {storePhone ? (
+                <a href={`tel:${storePhone}`} className="block">
+                  <Button variant="outline" className="gap-1.5 w-full">
+                    <MessageCircle className="h-4 w-4" /> Contact host
+                  </Button>
+                </a>
+              ) : (
+                <Button variant="outline" className="gap-1.5" disabled>
+                  <MessageCircle className="h-4 w-4" /> Contact host
+                </Button>
               )}
             </div>
-          </>
+
+            <p className="text-[11px] text-muted-foreground text-center">
+              You'll receive a confirmation once {storeName} accepts your request. Keep your reference handy for check-in.
+            </p>
+          </div>
         )}
       </div>
     </ResponsiveModal>
@@ -381,7 +569,6 @@ export function LodgingBookingDrawer({
 }
 
 type Breakdown = ReturnType<typeof buildBreakdownType>;
-// type alias trick — we mirror the breakdown shape via the actual function
 function buildBreakdownType() {
   return null as unknown as {
     nights: number;
