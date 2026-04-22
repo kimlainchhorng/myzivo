@@ -32,6 +32,7 @@ import { LodgingBookingDrawer } from "@/components/lodging/LodgingBookingDrawer"
 import { LodgingHighlightsStrip } from "@/components/lodging/LodgingHighlightsStrip";
 import { LodgingAmenitiesPanel } from "@/components/lodging/LodgingAmenitiesPanel";
 import { LodgingPolicyPanel } from "@/components/lodging/LodgingPolicyPanel";
+import { LodgingAvailabilityTable } from "@/components/lodging/LodgingAvailabilityTable";
 import { useHasStoreBooking } from "@/hooks/useHasStoreBooking";
 
 /**
@@ -824,29 +825,38 @@ export default function StoreProfilePage() {
               <p className="text-sm text-muted-foreground">No rooms listed yet</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {rooms.map((r) => (
-                <LodgingRoomCard
-                  key={r.id}
-                  name={r.name}
-                  type={r.room_type}
-                  beds={r.beds}
-                  maxGuests={r.max_guests}
-                  baseRateCents={r.base_rate_cents}
-                  amenities={r.amenities || []}
-                  breakfastIncluded={r.breakfast_included}
-                  photos={(r.photos as string[]) || []}
-                  coverIndex={r.cover_photo_index ?? 0}
-                  description={r.description}
-                  sizeSqm={r.size_sqm}
-                  addons={r.addons || []}
-                  cancellationPolicy={r.cancellation_policy}
-                  checkInTime={r.check_in_time}
-                  checkOutTime={r.check_out_time}
-                  onReserve={() => setBookingRoom(r)}
-                />
-              ))}
-            </div>
+            <>
+              {/* Desktop Booking.com-style table */}
+              <LodgingAvailabilityTable
+                rooms={rooms}
+                onReserve={(r) => setBookingRoom(r)}
+              />
+
+              {/* Mobile / tablet card list */}
+              <div className="space-y-3 lg:hidden">
+                {rooms.map((r) => (
+                  <LodgingRoomCard
+                    key={r.id}
+                    name={r.name}
+                    type={r.room_type}
+                    beds={r.beds}
+                    maxGuests={r.max_guests}
+                    baseRateCents={r.base_rate_cents}
+                    amenities={r.amenities || []}
+                    breakfastIncluded={r.breakfast_included}
+                    photos={(r.photos as string[]) || []}
+                    coverIndex={r.cover_photo_index ?? 0}
+                    description={r.description}
+                    sizeSqm={r.size_sqm}
+                    addons={r.addons || []}
+                    cancellationPolicy={r.cancellation_policy}
+                    checkInTime={r.check_in_time}
+                    checkOutTime={r.check_out_time}
+                    onReserve={() => setBookingRoom(r)}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
       ) : (
