@@ -724,7 +724,11 @@ export default function StoreProfilePage() {
                   photos={(r.photos as string[]) || []}
                   coverIndex={r.cover_photo_index ?? 0}
                   description={r.description}
-                  addonsCount={(r.addons || []).length}
+                  sizeSqm={r.size_sqm}
+                  addons={r.addons || []}
+                  cancellationPolicy={r.cancellation_policy}
+                  checkInTime={r.check_in_time}
+                  checkOutTime={r.check_out_time}
                   onReserve={() => setBookingRoom(r)}
                 />
               ))}
