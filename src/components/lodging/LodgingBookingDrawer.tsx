@@ -20,6 +20,7 @@ import { ReservationStatusTimeline } from "@/components/lodging/ReservationStatu
 import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
 import { IcsPreviewPanel } from "@/components/lodging/IcsPreviewPanel";
 import { PolicySourceSheet } from "@/components/lodging/PolicySourceSheet";
+import { ConflictReasonPanel } from "@/components/lodging/ConflictReasonPanel";
 import { useRoomAvailability, hasUnavailableNight } from "@/hooks/lodging/useRoomAvailability";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { useRoomConflictCheck, checkRoomConflictNow } from "@/hooks/lodging/useRoomConflictCheck";
@@ -106,6 +107,8 @@ export function LodgingBookingDrawer({
   const [policyOverflows, setPolicyOverflows] = useState(false);
   const [viewedRulesSource, setViewedRulesSource] = useState(false);
   const [viewedCancelSource, setViewedCancelSource] = useState(false);
+  const [rulesViewedAt, setRulesViewedAt] = useState<string | null>(null);
+  const [cancelViewedAt, setCancelViewedAt] = useState<string | null>(null);
   const policyRef = useRef<HTMLDivElement | null>(null);
 
   const { data: propertyProfile } = useLodgePropertyProfile(storeId);
@@ -120,6 +123,7 @@ export function LodgingBookingDrawer({
     open ? roomId : undefined, checkIn, checkOut, step === "review"
   );
   const conflictDetected = !!conflictData?.conflict;
+  const conflictRows = conflictData?.rows || [];
 
   const { data: liveReservation } = useReservationLive(reservationId || undefined);
 
