@@ -14,8 +14,12 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BedDouble, Plus, Trash2, Pencil, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
-import { useLodgeRooms, type LodgeRoom, type LodgeAddon } from "@/hooks/lodging/useLodgeRooms";
+import { useLodgeRooms, type LodgeRoom, type LodgeAddon, type RoomFees, type ChildPolicy } from "@/hooks/lodging/useLodgeRooms";
 import { LodgingRoomPhotoUploader } from "@/components/lodging/LodgingRoomPhotoUploader";
+import { BedConfigBuilder, bedConfigSummary, bedConfigSleeps } from "@/components/lodging/BedConfigBuilder";
+
+const VIEW_OPTIONS = ["", "Sea view", "Garden view", "Pool view", "Mountain view", "City view", "Courtyard view", "River view"];
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const ROOM_TYPES = ["Standard", "Deluxe", "Suite", "Villa", "Family", "Bungalow", "Cottage", "Dormitory", "Apartment", "Studio", "Penthouse"];
 const AMENITY_OPTIONS = [
@@ -97,6 +101,9 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
     weekly_discount_pct: 0, monthly_discount_pct: 0,
     breakfast_included: false, amenities: [], photos: [], sort_order: 0, is_active: true,
     description: "", cancellation_policy: "flexible", addons: [], cover_photo_index: 0,
+    bed_config: [{ type: "Queen", qty: 1 }], view: null, floor: null, wing: null,
+    child_policy: { child_max_age: 12, free_age: 3 }, fees: {}, seasonal_rates: [],
+    min_stay: 1, max_stay: null, no_arrival_weekdays: [],
   });
 
   const openNew = () => { setEditing(blank()); setOpen(true); };
