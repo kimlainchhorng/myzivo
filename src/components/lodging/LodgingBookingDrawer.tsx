@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Loader2, ChevronLeft, ChevronRight, CheckCircle2, Minus, Plus, AlertTriangle,
   Wallet, CreditCard, Building2, Copy, CalendarPlus, MessageCircle, ShieldCheck,
-  ArrowDown,
+  ArrowDown, Share2, BookOpen, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
