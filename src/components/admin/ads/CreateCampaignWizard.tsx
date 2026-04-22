@@ -56,6 +56,9 @@ interface Props {
   accounts: AdAccount[];
   onSave: (form: CampaignFormState, asDraft: boolean) => void;
   saving: boolean;
+  walletBalanceCents?: number;
+  onConnectPlatform?: (p: AdPlatform) => void;
+  onAddFunds?: () => void;
 }
 
 const OBJECTIVES: { id: string; label: string; rationale: string; icon: LucideIcon }[] = [
@@ -89,6 +92,9 @@ export default function CreateCampaignWizard({
   accounts,
   onSave,
   saving,
+  walletBalanceCents = 0,
+  onConnectPlatform,
+  onAddFunds,
 }: Props) {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<CampaignFormState>(initial);
