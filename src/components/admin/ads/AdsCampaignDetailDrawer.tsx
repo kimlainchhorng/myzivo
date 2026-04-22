@@ -30,16 +30,6 @@ import {
 import { cn } from "@/lib/utils";
 import type { AdCampaign, AdPlatform } from "@/hooks/useStoreAdsOverview";
 
-const ResponsiveContainerCompat = ResponsiveContainer as any;
-const LineChartCompat = LineChart as any;
-const LineCompat = Line as any;
-const BarChartCompat = BarChart as any;
-const BarCompat = Bar as any;
-const XAxisCompat = XAxis as any;
-const YAxisCompat = YAxis as any;
-const TooltipCompat = Tooltip as any;
-const CartesianGridCompat = CartesianGrid as any;
-
 interface PlatformDef {
   id: AdPlatform;
   label: string;

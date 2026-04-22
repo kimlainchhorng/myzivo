@@ -40,8 +40,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
-const HelmetCompat = Helmet as any;
-
 type NavItem = { label: string; icon: any; path: string };
 type NavGroup = { label: string; icon: any; children: NavItem[] };
 type NavEntry = NavItem | NavGroup;
@@ -119,10 +117,10 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
 
   return (
     <>
-      <HelmetCompat>
+      <Helmet>
         <title>{title} — {resolvedBrandLabel}</title>
         <meta name="robots" content="noindex, nofollow" />
-      </HelmetCompat>
+      </Helmet>
 
       <div className="min-h-screen bg-background flex">
         {sidebarOpen && (

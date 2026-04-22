@@ -22,17 +22,6 @@ import { PerformanceChartSkeleton, BreakdownTableSkeleton, LedgerListSkeleton } 
 import MarketingEmptyState from "@/components/admin/ads/MarketingEmptyState";
 import { useIsMobilePreview } from "@/components/admin/ads/useResponsiveWidth";
 
-const ResponsiveContainerCompat = ResponsiveContainer as any;
-const AreaChartCompat = AreaChart as any;
-const AreaCompat = Area as any;
-const XAxisCompat = XAxis as any;
-const YAxisCompat = YAxis as any;
-const TooltipCompat = Tooltip as any;
-const CartesianGridCompat = CartesianGrid as any;
-const BarChartCompat = BarChart as any;
-const BarCompat = Bar as any;
-const LegendCompat = Legend as any;
-
 const usdFormatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 const numFormatter = new Intl.NumberFormat("en-US");
 

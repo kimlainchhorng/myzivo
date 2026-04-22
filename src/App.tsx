@@ -1029,7 +1029,7 @@ const App = () => (
   </BrandProvider>
   </QueryClientProvider>
   </ThemeProvider>
-  </HelmetProviderCompat>
+  </HelmetProvider>
   </ErrorBoundary>
 );
 
