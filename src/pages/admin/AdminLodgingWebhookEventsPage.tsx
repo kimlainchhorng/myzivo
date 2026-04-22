@@ -154,7 +154,7 @@ export default function AdminLodgingWebhookEventsPage() {
       {/* Filters */}
       <Card className="rounded-2xl border-border/60">
         <CardContent className="p-3 space-y-2">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
             <div>
               <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Event type</label>
               <select
@@ -191,12 +191,21 @@ export default function AdminLodgingWebhookEventsPage() {
                 className="h-8 rounded-xl text-[12px]"
               />
             </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Stripe event ID</label>
+              <Input
+                value={eventId}
+                onChange={(e) => setEventId(e.target.value.trim())}
+                placeholder="evt_…"
+                className="h-8 rounded-xl text-[12px] font-mono"
+              />
+            </div>
           </div>
-          {(eventType || status || resId) && (
+          {(eventType || status || resId || eventId) && (
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => { setEventType(""); setStatus(""); setResId(""); }}
+              onClick={() => { setEventType(""); setStatus(""); setResId(""); setEventId(""); }}
               className="text-[11px] h-7 rounded-lg"
             >
               Clear filters
