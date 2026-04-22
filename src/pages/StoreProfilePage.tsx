@@ -1165,6 +1165,26 @@ export default function StoreProfilePage() {
           onClose={() => setChatOpen(false)}
         />
       )}
+      {bookingRoom && store && (
+        <LodgingBookingDrawer
+          open={!!bookingRoom}
+          onClose={() => setBookingRoom(null)}
+          storeId={store.id}
+          storeName={store.name}
+          roomId={bookingRoom.id}
+          roomName={bookingRoom.name}
+          baseRateCents={bookingRoom.base_rate_cents}
+          weekendRateCents={bookingRoom.weekend_rate_cents}
+          weeklyDiscountPct={bookingRoom.weekly_discount_pct}
+          monthlyDiscountPct={bookingRoom.monthly_discount_pct}
+          cancellationPolicy={bookingRoom.cancellation_policy}
+          addons={bookingRoom.addons || []}
+          checkIn={stay.checkIn}
+          checkOut={stay.checkOut}
+          adults={stay.adults}
+          children={stay.children}
+        />
+      )}
       <ZivoMobileNav />
     </div>
   );
