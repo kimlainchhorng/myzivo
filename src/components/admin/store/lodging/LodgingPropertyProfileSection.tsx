@@ -269,7 +269,7 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
             </Card>
             <Card>
               <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Utensils className="h-3.5 w-3.5" /> Meal plans</CardTitle></CardHeader>
-              <CardContent className="pt-0"><ChipGroup options={MEAL_PLANS.filter(matches)} selected={form.meal_plans || []} onToggle={v => toggleIn("meal_plans", v)} /></CardContent>
+              <CardContent className="pt-0"><ChipGroup options={MEAL_PLANS.filter(matches)} selected={form.meal_plans || []} onToggle={v => toggleIn("meal_plans", v)} withIcons /></CardContent>
             </Card>
           </AccordionContent>
         </AccordionItem>
