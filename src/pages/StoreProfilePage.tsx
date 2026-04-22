@@ -447,6 +447,7 @@ export default function StoreProfilePage() {
                 <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">Chat with store</p>
               </div>
             </motion.button>
+            )}
 
             {/* Facebook button */}
             {(store as any).facebook_url && isAllowedSocialUrl((store as any).facebook_url) && (
