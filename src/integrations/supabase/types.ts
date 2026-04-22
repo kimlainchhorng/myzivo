@@ -26896,6 +26896,54 @@ export type Database = {
         }
         Relationships: []
       }
+      lodge_property_profile: {
+        Row: {
+          accessibility: string[]
+          created_at: string
+          facilities: string[]
+          hero_badges: string[]
+          house_rules: Json
+          id: string
+          included_highlights: string[]
+          languages: string[]
+          meal_plans: string[]
+          nearby: Json
+          store_id: string
+          sustainability: string[]
+          updated_at: string
+        }
+        Insert: {
+          accessibility?: string[]
+          created_at?: string
+          facilities?: string[]
+          hero_badges?: string[]
+          house_rules?: Json
+          id?: string
+          included_highlights?: string[]
+          languages?: string[]
+          meal_plans?: string[]
+          nearby?: Json
+          store_id: string
+          sustainability?: string[]
+          updated_at?: string
+        }
+        Update: {
+          accessibility?: string[]
+          created_at?: string
+          facilities?: string[]
+          hero_badges?: string[]
+          house_rules?: Json
+          id?: string
+          included_highlights?: string[]
+          languages?: string[]
+          meal_plans?: string[]
+          nearby?: Json
+          store_id?: string
+          sustainability?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lodge_reservation_audit: {
         Row: {
           actor_id: string | null
@@ -26966,6 +27014,7 @@ export type Database = {
       }
       lodge_reservations: {
         Row: {
+          addon_selections: Json
           addons: Json
           adults: number | null
           check_in: string
@@ -26973,7 +27022,9 @@ export type Database = {
           children: number | null
           created_at: string
           extras_cents: number | null
+          fee_breakdown: Json
           guest_country: string | null
+          guest_details: Json
           guest_email: string | null
           guest_id: string | null
           guest_name: string | null
@@ -26997,6 +27048,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          addon_selections?: Json
           addons?: Json
           adults?: number | null
           check_in: string
@@ -27004,7 +27056,9 @@ export type Database = {
           children?: number | null
           created_at?: string
           extras_cents?: number | null
+          fee_breakdown?: Json
           guest_country?: string | null
+          guest_details?: Json
           guest_email?: string | null
           guest_id?: string | null
           guest_name?: string | null
@@ -27028,6 +27082,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          addon_selections?: Json
           addons?: Json
           adults?: number | null
           check_in?: string
@@ -27035,7 +27090,9 @@ export type Database = {
           children?: number | null
           created_at?: string
           extras_cents?: number | null
+          fee_breakdown?: Json
           guest_country?: string | null
+          guest_details?: Json
           guest_email?: string | null
           guest_id?: string | null
           guest_name?: string | null
@@ -27095,82 +27152,112 @@ export type Database = {
           addons: Json
           amenities: string[] | null
           base_rate_cents: number | null
+          bed_config: Json
           beds: string | null
           breakfast_included: boolean | null
           cancellation_policy: string
           check_in_time: string | null
           check_out_time: string | null
+          child_policy: Json
           cover_photo_index: number
           created_at: string
           description: string | null
+          fees: Json
+          floor: string | null
           id: string
           is_active: boolean | null
           max_guests: number | null
+          max_stay: number | null
+          min_stay: number
           monthly_discount_pct: number | null
           name: string
+          no_arrival_weekdays: number[]
           photos: Json | null
           room_type: string | null
+          seasonal_rates: Json
           size_sqm: number | null
           sort_order: number | null
           store_id: string
           units_total: number | null
           updated_at: string
+          view: string | null
           weekend_rate_cents: number | null
           weekly_discount_pct: number | null
+          wing: string | null
         }
         Insert: {
           addons?: Json
           amenities?: string[] | null
           base_rate_cents?: number | null
+          bed_config?: Json
           beds?: string | null
           breakfast_included?: boolean | null
           cancellation_policy?: string
           check_in_time?: string | null
           check_out_time?: string | null
+          child_policy?: Json
           cover_photo_index?: number
           created_at?: string
           description?: string | null
+          fees?: Json
+          floor?: string | null
           id?: string
           is_active?: boolean | null
           max_guests?: number | null
+          max_stay?: number | null
+          min_stay?: number
           monthly_discount_pct?: number | null
           name: string
+          no_arrival_weekdays?: number[]
           photos?: Json | null
           room_type?: string | null
+          seasonal_rates?: Json
           size_sqm?: number | null
           sort_order?: number | null
           store_id: string
           units_total?: number | null
           updated_at?: string
+          view?: string | null
           weekend_rate_cents?: number | null
           weekly_discount_pct?: number | null
+          wing?: string | null
         }
         Update: {
           addons?: Json
           amenities?: string[] | null
           base_rate_cents?: number | null
+          bed_config?: Json
           beds?: string | null
           breakfast_included?: boolean | null
           cancellation_policy?: string
           check_in_time?: string | null
           check_out_time?: string | null
+          child_policy?: Json
           cover_photo_index?: number
           created_at?: string
           description?: string | null
+          fees?: Json
+          floor?: string | null
           id?: string
           is_active?: boolean | null
           max_guests?: number | null
+          max_stay?: number | null
+          min_stay?: number
           monthly_discount_pct?: number | null
           name?: string
+          no_arrival_weekdays?: number[]
           photos?: Json | null
           room_type?: string | null
+          seasonal_rates?: Json
           size_sqm?: number | null
           sort_order?: number | null
           store_id?: string
           units_total?: number | null
           updated_at?: string
+          view?: string | null
           weekend_rate_cents?: number | null
           weekly_discount_pct?: number | null
+          wing?: string | null
         }
         Relationships: []
       }

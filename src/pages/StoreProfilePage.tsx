@@ -1184,6 +1184,11 @@ export default function StoreProfilePage() {
           monthlyDiscountPct={bookingRoom.monthly_discount_pct}
           cancellationPolicy={bookingRoom.cancellation_policy}
           addons={bookingRoom.addons || []}
+          fees={(bookingRoom as any).fees}
+          childPolicy={(bookingRoom as any).child_policy}
+          minStay={(bookingRoom as any).min_stay}
+          maxStay={(bookingRoom as any).max_stay}
+          noArrivalWeekdays={(bookingRoom as any).no_arrival_weekdays}
           checkIn={stay.checkIn}
           checkOut={stay.checkOut}
           adults={stay.adults}

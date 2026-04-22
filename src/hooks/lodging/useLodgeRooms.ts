@@ -4,6 +4,34 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface BedSlot {
+  type: string; // King, Queen, Double, Single, Sofa bed, Bunk, Crib
+  qty: number;
+}
+
+export interface ChildPolicy {
+  child_max_age?: number; // age cutoff for "child" pricing
+  free_age?: number; // children under this stay free
+  extra_adult_fee_cents?: number; // per night
+  extra_child_fee_cents?: number; // per night
+  cot_available?: boolean;
+}
+
+export interface RoomFees {
+  city_tax_cents?: number; // per night per guest
+  resort_fee_cents?: number; // per night
+  cleaning_fee_cents?: number; // per stay
+  service_charge_pct?: number; // %
+  vat_pct?: number; // %
+}
+
+export interface SeasonalRate {
+  label: string; // e.g. "Peak season"
+  start: string; // ISO date YYYY-MM-DD
+  end: string; // ISO date
+  nightly_cents: number;
+}
+
 export interface LodgeRoom {
   id: string;
   store_id: string;
@@ -28,6 +56,17 @@ export interface LodgeRoom {
   check_in_time?: string | null;
   check_out_time?: string | null;
   addons?: LodgeAddon[];
+  // New: structured room metadata
+  bed_config?: BedSlot[];
+  view?: string | null;
+  floor?: string | null;
+  wing?: string | null;
+  child_policy?: ChildPolicy;
+  fees?: RoomFees;
+  seasonal_rates?: SeasonalRate[];
+  min_stay?: number;
+  max_stay?: number | null;
+  no_arrival_weekdays?: number[]; // 0=Sun..6=Sat
   created_at: string;
   updated_at: string;
 }
