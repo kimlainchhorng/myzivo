@@ -425,8 +425,8 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
   );
 }
 
-function ChipGroup({ options, selected, onToggle, max, labelMap }: {
-  options: string[]; selected: string[]; onToggle: (v: string) => void; max?: number; labelMap?: Record<string, string>;
+function ChipGroup({ options, selected, onToggle, max, labelMap, withIcons }: {
+  options: string[]; selected: string[]; onToggle: (v: string) => void; max?: number; labelMap?: Record<string, string>; withIcons?: boolean;
 }) {
   const atMax = max != null && selected.length >= max;
   return (
@@ -434,17 +434,19 @@ function ChipGroup({ options, selected, onToggle, max, labelMap }: {
       {options.map(o => {
         const on = selected.includes(o);
         const disabled = !on && atMax;
+        const Icon = withIcons ? getAmenityIcon(o) : null;
         return (
           <button
             key={o} type="button" disabled={disabled} onClick={() => onToggle(o)}
-            className={`px-2.5 py-1 rounded-full text-[11px] border transition ${
+            className={`px-2.5 py-1 rounded-full text-[11px] border transition inline-flex items-center gap-1 ${
               on
-                ? "bg-primary text-primary-foreground border-primary"
+                ? "bg-primary text-primary-foreground border-primary shadow-sm font-semibold"
                 : disabled
                 ? "bg-background border-border text-muted-foreground/40 cursor-not-allowed"
-                : "bg-background border-border text-muted-foreground hover:border-primary/40"
+                : "bg-background border-border text-foreground hover:border-primary/40 hover:bg-primary/5"
             }`}
           >
+            {Icon && <Icon className="h-3 w-3" />}
             {labelMap?.[o] || o}
           </button>
         );
