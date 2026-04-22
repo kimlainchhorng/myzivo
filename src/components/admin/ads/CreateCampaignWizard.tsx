@@ -272,28 +272,29 @@ export default function CreateCampaignWizard({
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => connected && togglePlatform(p.id)}
-                    disabled={!connected}
+                    onClick={() => connected ? togglePlatform(p.id) : onConnectPlatform?.(p.id)}
                     aria-pressed={selected}
-                    title={connected ? p.label : `Connect ${p.label} first`}
+                    title={connected ? p.label : `Connect ${p.label}`}
                     className={cn(
-                      "flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition active:scale-95 touch-manipulation",
+                      "flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition active:scale-95 touch-manipulation relative",
                       selected ? "border-primary bg-primary/5" : "border-border",
-                      !connected && "opacity-40 cursor-not-allowed"
+                      !connected && "opacity-60"
                     )}
                   >
                     <Icon className={cn("w-4 h-4", p.color)} />
                     <span className="text-[10px]">{p.label.split(" ")[0]}</span>
+                    {!connected && (
+                      <span className="absolute -top-1 -right-1 text-[8px] bg-amber-500 text-white rounded-full px-1 leading-tight">+</span>
+                    )}
                   </button>
                 );
               })}
             </div>
-            {form.platforms.some((p) => !connectedPlatforms.has(p)) === false &&
-              platforms.some((p) => !connectedPlatforms.has(p.id)) && (
-                <p className="text-[10px] text-muted-foreground mt-1.5">
-                  Disabled platforms need to be connected first.
-                </p>
-              )}
+            {platforms.some((p) => !connectedPlatforms.has(p.id)) && (
+              <p className="text-[10px] text-muted-foreground mt-1.5">
+                Tap a dimmed platform to connect it.
+              </p>
+            )}
           </div>
           <div>
             <Label className="text-xs">Audience preset</Label>
