@@ -3903,7 +3903,10 @@ export type Database = {
         Row: {
           converted_workorder_id: string | null
           created_at: string
+          customer_email: string | null
           customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
           expires_at: string | null
           id: string
           line_items: Json
@@ -3916,11 +3919,15 @@ export type Database = {
           total_cents: number
           updated_at: string
           vehicle_id: string | null
+          vehicle_label: string | null
         }
         Insert: {
           converted_workorder_id?: string | null
           created_at?: string
+          customer_email?: string | null
           customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           expires_at?: string | null
           id?: string
           line_items?: Json
@@ -3933,11 +3940,15 @@ export type Database = {
           total_cents?: number
           updated_at?: string
           vehicle_id?: string | null
+          vehicle_label?: string | null
         }
         Update: {
           converted_workorder_id?: string | null
           created_at?: string
+          customer_email?: string | null
           customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           expires_at?: string | null
           id?: string
           line_items?: Json
@@ -3950,6 +3961,7 @@ export type Database = {
           total_cents?: number
           updated_at?: string
           vehicle_id?: string | null
+          vehicle_label?: string | null
         }
         Relationships: []
       }
@@ -4258,7 +4270,10 @@ export type Database = {
           checklist: Json
           completed_at: string | null
           created_at: string
+          customer_email: string | null
           customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
           customer_signature_url: string | null
           estimate_id: string | null
           id: string
@@ -4276,13 +4291,17 @@ export type Database = {
           total_cents: number
           updated_at: string
           vehicle_id: string | null
+          vehicle_label: string | null
         }
         Insert: {
           bay_id?: string | null
           checklist?: Json
           completed_at?: string | null
           created_at?: string
+          customer_email?: string | null
           customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           customer_signature_url?: string | null
           estimate_id?: string | null
           id?: string
@@ -4300,13 +4319,17 @@ export type Database = {
           total_cents?: number
           updated_at?: string
           vehicle_id?: string | null
+          vehicle_label?: string | null
         }
         Update: {
           bay_id?: string | null
           checklist?: Json
           completed_at?: string | null
           created_at?: string
+          customer_email?: string | null
           customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           customer_signature_url?: string | null
           estimate_id?: string | null
           id?: string
@@ -4324,6 +4347,7 @@ export type Database = {
           total_cents?: number
           updated_at?: string
           vehicle_id?: string | null
+          vehicle_label?: string | null
         }
         Relationships: []
       }
