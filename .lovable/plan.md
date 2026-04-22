@@ -1,214 +1,183 @@
 
 
-# Marketing & Ads — Phase 4 finish: end-to-end flows wired
+# Marketing & Ads — Pass 2: Wire every remaining flow end-to-end
 
-Five connected workstreams that take the existing UI shells (wizard, tiles, sub-tabs) and make every button complete a real database round-trip with correct status, realtime updates, and shareable output.
+Five connected workstreams that complete the Phase 4 finish work: Ads connection round-trips, campaign row actions, Marketing Overview wiring, edge-function backends for sending and automations, and promo redemption attribution.
 
 ---
 
-## 1. Ads campaign flow — full DB persistence
+## 1. Ads connection — OAuth popup, manual fallback, reconnect, disconnect
 
-`CreateCampaignWizard` and `AdsCampaignRow` get real mutations.
+**`AdsConnectDialog.tsx`** becomes a real round-trip:
 
-- **Submit** → insert `store_ad_campaigns` with `status='pending_review'`, all wizard fields persisted (objective, targeting_json, creative_url, daily_budget_cents, schedule_start, schedule_end, platforms[]).
-- **Save Draft** at any step → `status='draft'`, modal closes, row appears in list with "Resume" action that reopens wizard pre-filled at last completed step (`draft_step` int column).
-- **Creative upload** → `user-posts` bucket at `ads/{store_id}/{uuid}.{ext}`, ≤8 MB, aspect validated against chosen format.
-- **Wallet gate** — already scaffolded; finish by linking the inline "Add funds" CTA to scroll-and-focus the wallet card.
-- **Platform gate** — disabled chips open `AdsConnectDialog` for that specific platform, then return to wizard with it preselected.
-- **Row overflow menu** (`AdsCampaignRowMenu.tsx`, new) — Edit, Duplicate, Pause, Resume, Archive, Delete, all as mutations that invalidate `["store-ads-overview", storeId]`.
-- **Realtime status toasts** — already subscribed; add toast on `status` transition (approved / rejected / paused_by_system).
+- **"Continue with Meta / Google / TikTok"** → calls existing `ads-oauth-start` edge function (or new stub if missing) which returns an `auth_url` and a `state` token. Open `auth_url` in a 600×700 popup, then poll `store_ad_accounts` every 2s (max 60s) filtered by `state=...` until a row appears with `status='connected'`. On success: close popup, invalidate `["store-ads-overview", storeId]`, toast "Connected as {display_name}".
+- **Manual fallback** form already exists — wire the save button to insert `store_ad_accounts` with `status='pending_manual'` + `external_account_id` + `display_name`.
+- **Disconnect** button on each platform tile → confirm dialog → delete the `store_ad_accounts` row → invalidate cache → checklist + wizard platform availability recompute instantly.
+- **Reconnect** for `expired` status → relaunches OAuth flow, on success updates the existing row (`token_expires_at`, `status='connected'`).
 
-**DB:** add `draft_step int default 0`, `archived_at timestamptz` to `store_ad_campaigns`.
+**`AdsPlatformTile.tsx`** gets per-status pills: `connected` (emerald), `pending_manual` (amber), `expired` (red, opens reconnect), `disconnected` (slate). Clicking the tile when disconnected opens the dialog; when connected opens a small popover with Reconnect / Disconnect / View account.
 
-## 2. Connection experience — OAuth + reconnect + disconnect + gates
+**Wizard step 2** reads platform statuses live; non-`connected` chips are disabled and clicking them opens `AdsConnectDialog` with that platform pre-selected, then returns the user to the wizard with the platform pre-checked once connected.
 
-`AdsConnectDialog` becomes the single entry point.
+## 2. Ads campaign row actions — Edit, Duplicate, Pause, Resume, Archive, Delete
 
-- **Continue with Meta / Google / TikTok** → calls existing `ads-oauth-start` edge function, opens popup, polls `store_ad_accounts` insert (5s interval, 60s timeout), closes on success, toast "Connected as {account_name}".
-- **Manual fallback** form (account ID + name) inserts `status='pending_manual'`.
-- **Per-tile actions** in `AdsPlatformTile`: Connect / Reconnect / Disconnect / View account. Disconnect deletes the row and recomputes the checklist + wizard platform availability instantly via cache invalidation.
-- **Status pills**: `connected` (emerald), `pending_manual` (amber), `expired` (red, opens reconnect), `disconnected` (slate).
-- **Wizard step 2** reads platform statuses live; expired platforms force reconnect before they can be selected.
-- **Checklist** auto-derives "Connect at least one platform" from `store_ad_accounts.status='connected'` count.
+**New `AdsCampaignRowMenu.tsx`** — a `DropdownMenu` triggered by the existing overflow button on each row. Items shown contextually based on `campaign.status`:
 
-## 3. Marketing tabs — every CTA completes a real action
+- **Edit** — opens `CreateCampaignWizard` in edit mode at the saved `draft_step`, prefilled from row data.
+- **Duplicate** — inserts a new row with `name = "{name} (copy)"`, `status='draft'`, `draft_step=4`.
+- **Pause** — `update status='paused'` (visible when status is `active` or `pending_review`).
+- **Resume** — `update status='active'` (visible when status is `paused`).
+- **Archive** — `update status='archived', archived_at=now()` (hides from default list, surfaces under "Archived" filter).
+- **Delete** — confirm dialog → hard delete → toast "Campaign deleted".
 
-Wire the four sub-tabs end-to-end:
+All mutations live in **`useStoreAdsOverview.ts`** and invalidate `["store-ads-overview", storeId]` on success. Realtime subscription already exists in `StoreAdsManager.tsx` — add a toast diff on `status` transitions for `approved`, `rejected`, `paused_by_system` so changes from the server (e.g. moderator approval) surface instantly without polling.
 
-**Overview**
-- Replace flat header with `MarketingStatStrip` + `MarketingChannelTile` row + sticky "+ New Campaign" FAB (mobile) / button (desktop).
-- "+ New Campaign" opens `CreateMarketingCampaignWizard`; submit/schedule/draft already wired — add the "Send test" action on each channel tile (writes to `marketing_test_sends`, invokes `send-marketing-campaign` with `is_test=true`).
+## 3. Marketing Overview — stat strip header + correct-wizard FAB
 
-**Audience**
-- `SegmentsManager` → `+ New Segment` opens `SegmentBuilder`.
-- New `useSegmentLiveCount` hook: debounced (400ms) count query against `profiles` + `orders` per condition group, shown as "≈ 1,247 customers" while editing.
-- "Refresh now" updates `member_count` + `last_refreshed_at`.
-- Segments appear as audience presets in **both** wizards (Marketing step 2, Ads step 2) via shared `<SegmentPicker>` component.
+**`StoreMarketingSection.tsx`** Overview tab gets restructured:
 
-**Templates**
-- `TemplatesLibrary` filterable by channel, shows `usage_count` + `last_used_at`.
-- `TemplateEditor` channel-aware composer (subject+body / push / SMS char-counter / ad creative).
-- Wizard step 3 gets "Use template" picker (fills form, queues `usage_count++` on send) and "Save as template" (writes new row).
+- Replace the current flat header with `<MarketingStatStrip>` at the top.
+- Below: a 4-tile `MarketingChannelTile` row (Push / Email / SMS / In-app) with status, last-sent time, 7d sparkline, and a "Send test" action that opens **`SendTestDialog.tsx`** (new) — sends to operator's own account via `send-marketing-campaign` with `is_test=true`, writes to `marketing_test_sends`.
+- Sticky FAB (mobile) / pill button (desktop): **"+ New Campaign"**.
+- "+ New Campaign" opens a small channel picker first (Push · Email · SMS · In-app · Multi-channel) → opens `CreateMarketingCampaignWizard` with that channel pre-selected on step 1 (skip the channel step or mark it complete).
+- "Send test" buttons on each `MarketingChannelTile` open `CreateMarketingCampaignWizard` directly with that channel preselected and "Send test" mode enabled.
 
-**Flows**
-- `AutomationsBuilder` saves `trigger_json` + `steps_json` to `marketing_automations`.
-- `Activate` toggle flips `status='active'` + spawns initial enrollment via the new `marketing-automations-tick` edge function.
-- Live "N customers in this flow" counter reads from `marketing_automation_enrollments`.
-- Pause/Resume/Archive in row menu.
+## 4. Edge functions — `send-marketing-campaign` + `marketing-automations-tick`
 
-**Performance** — covered in #5.
+**`supabase/functions/send-marketing-campaign/index.ts`** (new):
+- Auth: validate JWT via `getClaims()`, confirm caller owns the store.
+- Input: `{ campaign_id: uuid, is_test?: boolean, test_recipient_user_id?: uuid }`.
+- Loads campaign, resolves audience (segment or inline filters) → user IDs.
+- For `is_test=true`: sends only to `test_recipient_user_id`, writes one row to `marketing_test_sends`, returns `{ ok: true, recipients: 1 }`.
+- For real send: chunks recipients (500/batch), writes one `marketing_campaign_events` row per recipient with `event_type='sent'`, then per channel:
+  - `push` → invokes existing `send-push-notification` per device token
+  - `email` → SMTP stub (logs payload, marks `delivered`)
+  - `sms` → Twilio stub via existing helper if present, otherwise logs
+  - `in_app` → inserts into `notifications` table
+- Updates `marketing_campaigns.status='sent', sent_at=now()` on completion.
+- Returns `{ ok, recipients, batches, errors }`.
 
-## 4. Segments & Templates — shared across Ads and Marketing
+**`supabase/functions/marketing-automations-tick/index.ts`** (new):
+- Triggered by pg_cron every 5 minutes (no JWT — public endpoint guarded by `CRON_SECRET` env var in `Authorization: Bearer ...` header).
+- For each `status='active'` automation:
+  1. **Enroll** new users matching `trigger_json` (cart_abandoned ≥ N min, first_order, no_order_in_days, birthday, loyalty_tier_change, wishlist_price_drop) into `marketing_automation_enrollments` (unique on automation_id+user_id).
+  2. **Advance** existing enrollments where `next_run_at <= now()` and `status='active'`:
+     - Read current step from `steps_json[current_step]`
+     - If `type='wait'`: bump `next_run_at` by `config.hours`
+     - If `type='send_push|send_email|send_sms'`: invoke `send-marketing-campaign` with synthetic campaign payload OR direct send-push call
+     - If `type='apply_promo'`: insert a per-user promo from `marketing_promo_codes` template
+     - If `type='add_to_segment'`: tag user
+     - Increment `current_step`; if past end, mark `status='completed', completed_at=now()`
+- Updates `marketing_automations.enrolled_count` + `completed_count` on each tick.
+- Returns `{ automations_processed, enrollments_created, steps_advanced, completed }`.
 
-- New `<SegmentPicker storeId channel?>` and `<TemplatePicker storeId channel>` components used by both wizards.
-- `marketing_segments` gets `usage_count` (campaigns referencing it) + `synced_to_meta`/`synced_to_google` booleans.
-- `marketing_templates` gets `usage_count` + `last_campaign_id` (already present in current types).
-- Segment row shows: name · live member count · last refreshed · "Used in N campaigns" · sync status pills.
-- Template row shows: name · channel · variables · usage count · "Last used in {campaign}".
-- Optional "Sync to ad platforms" toggle on segments — calls `sync-segment-to-meta` / `sync-segment-to-google` edge functions (stub returns success with audience_id placeholder when platform creds aren't connected yet).
+**pg_cron schedule** added via `INSERT` (not migration — contains URL + key) every 5 min hitting the tick function.
 
-## 5. Performance reporting — date ranges, conversions, CSV export
+## 5. Promo code redemption — end-to-end attribution
 
-`UnifiedPerformancePanel` upgrade:
-
-- **Date range picker**: 7d / 30d / 90d / Custom (uses Shadcn Calendar in popover with `pointer-events-auto`).
-- **KPI strip**: Spend, Revenue, ROAS, Conversions, CVR, CPA, AOV — all derived from `ads_studio_events` + `marketing_campaign_events` joined to `orders`.
-- **Stacked area chart**: Ads vs Marketing vs Organic revenue over the range.
-- **Funnel** (Recharts FunnelChart): Impression → Click → Add to cart → Purchase, with drop-off % between stages.
-- **Top campaigns table**: sortable by ROAS / revenue / CTR / conversions, channel filter pills (All / Ads / Push / Email / SMS).
-- **Channel mix donut**: revenue by channel.
-- **Export CSV** button — generates two CSVs zipped client-side (`papaparse` already in tree, falls back to manual builder): `campaigns.csv` (one row per campaign with all KPIs) + `events.csv` (raw event list for the range). Filename `zivo-performance-{store}-{from}-{to}.zip`.
-- **Share link** — copies a URL with the date range encoded as query params so the operator can paste into Slack/email and the recipient lands on the same view.
-
-## 6. Polish & glue
-
-- Pulsing dot on Ads / Marketing tab badges when: pending_review campaign exists, wallet < $10, expired connection, or scheduled send overdue.
-- Skeleton → content cross-fade (replace snap) on all panels.
-- `aria-live="polite"` on wizard step containers.
-- Mobile FABs respect `safe-area-inset-bottom` (already a project standard — verify).
-- Empty-state CTAs preselect the right modal (e.g., "Try a Welcome push" → wizard with Push + Welcome template chosen).
+- **`track-promo-redemption` edge function** (new): called from checkout when an order applies a promo code.
+  - Input: `{ promo_code: string, user_id: uuid, order_id: uuid, discount_cents: int }`
+  - Validates code is active, not expired, under `max_redemptions`, user under `per_customer_limit`, order meets `min_order_cents`.
+  - Inserts `marketing_promo_redemptions` row.
+  - Increments `marketing_promo_codes.redemption_count`.
+  - If the promo is attached to a `marketing_campaigns` row (via `marketing_promo_codes.campaign_id`), writes a `marketing_campaign_events` row with `event_type='converted', revenue_cents=order.total_cents` for attribution.
+  - Returns `{ ok, redemption_id, discount_cents }`.
+- **Checkout integration** — find the existing checkout flow and add a single `supabase.functions.invoke('track-promo-redemption', ...)` call when a promo applies (non-blocking; logs on error).
+- **Performance panel attribution** — `useUnifiedPerformance.ts` already reads `marketing_campaign_events`; with `event_type='converted'` rows now flowing in, promo conversions appear in the funnel ("Add to cart → Purchase" lift) and the channel mix donut without further changes.
+- **Promo detail drawer** — `PromoCodesManager.tsx` row click opens a small drawer showing redemption count, total revenue attributed, top redeemers, and a 30-day redemption sparkline from `marketing_promo_redemptions`.
 
 ---
 
 ## Database additions
 
 ```sql
--- store_ad_campaigns: resume drafts + archive
-alter table store_ad_campaigns
-  add column if not exists draft_step int not null default 0,
-  add column if not exists archived_at timestamptz;
+-- already added in prior migration:
+-- marketing_automation_enrollments, marketing_promo_redemptions,
+-- marketing_test_sends, store_ad_campaigns.draft_step, .archived_at
 
--- segment usage tracking + sync flags
-alter table marketing_segments
-  add column if not exists usage_count int not null default 0,
-  add column if not exists synced_to_meta boolean not null default false,
-  add column if not exists synced_to_google boolean not null default false,
-  add column if not exists external_audience_ids jsonb not null default '{}'::jsonb;
+-- new for this pass:
+alter table marketing_automations
+  add column if not exists completed_at timestamptz,
+  add column if not exists last_tick_at timestamptz;
 
--- automation enrollment (new)
-create table marketing_automation_enrollments (
-  id uuid primary key default gen_random_uuid(),
-  automation_id uuid not null references marketing_automations(id) on delete cascade,
-  user_id uuid not null,
-  current_step int not null default 0,
-  next_run_at timestamptz not null default now(),
-  status text not null default 'active', -- active|paused|completed|failed
-  enrolled_at timestamptz not null default now(),
-  unique (automation_id, user_id)
-);
+alter table marketing_campaigns
+  add column if not exists sent_at timestamptz;
 
--- promo redemptions (new)
-create table marketing_promo_redemptions (
-  id uuid primary key default gen_random_uuid(),
-  promo_code_id uuid not null references marketing_promo_codes(id) on delete cascade,
-  user_id uuid not null,
-  order_id uuid,
-  discount_cents int not null default 0,
-  redeemed_at timestamptz not null default now()
-);
+alter table marketing_promo_codes
+  add column if not exists campaign_id uuid references marketing_campaigns(id) on delete set null,
+  add column if not exists per_customer_limit int;
 
--- test sends audit (new)
-create table marketing_test_sends (
-  id uuid primary key default gen_random_uuid(),
-  store_id uuid not null,
-  channel text not null,
-  payload_jsonb jsonb not null,
-  sent_by uuid not null,
-  sent_at timestamptz not null default now()
-);
-
--- helpful indexes
-create index on marketing_campaigns (store_id, status, scheduled_at);
-create index on store_ad_campaigns (store_id, status);
-create index on marketing_campaign_events (campaign_id, event_type, created_at);
-create index on marketing_automation_enrollments (automation_id, status, next_run_at);
+create index if not exists idx_promo_redemptions_promo
+  on marketing_promo_redemptions (promo_code_id, redeemed_at desc);
+create index if not exists idx_promo_redemptions_user
+  on marketing_promo_redemptions (user_id, redeemed_at desc);
 ```
 
-All new tables RLS-scoped to store owner + admin via existing `has_role` helper.
+RLS: store owners + admins read/write their own promo redemptions + automations.
 
-## Edge functions
+## Edge function secrets
 
-- `send-marketing-campaign` — fan-out to push/email/SMS (stubbed providers; writes events)
-- `marketing-automations-tick` — pg_cron every 5 min, advances enrollments
-- `marketing-segments-refresh` — pg_cron nightly, recomputes `member_count`
-- `sync-segment-to-meta` / `sync-segment-to-google` — Custom Audience push (stub when not connected)
-- `track-promo-redemption` — checkout webhook
+- `CRON_SECRET` — shared secret for pg_cron → tick function calls (added via secrets tool before deploy).
+- Existing `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY` already present.
 
 ## Files
 
+**New edge functions**
+- `supabase/functions/send-marketing-campaign/index.ts`
+- `supabase/functions/marketing-automations-tick/index.ts`
+- `supabase/functions/track-promo-redemption/index.ts`
+
 **New components**
 - `src/components/admin/ads/AdsCampaignRowMenu.tsx`
-- `src/components/admin/marketing/SegmentPicker.tsx`
-- `src/components/admin/marketing/TemplatePicker.tsx`
 - `src/components/admin/marketing/SendTestDialog.tsx`
-- `src/components/admin/marketing/PerformanceDateRangePicker.tsx`
-- `src/components/admin/marketing/PerformanceKpiStrip.tsx`
-- `src/components/admin/marketing/PerformanceFunnel.tsx`
-- `src/components/admin/marketing/PerformanceTopCampaigns.tsx`
-- `src/lib/performanceCsvExport.ts`
-
-**New hooks**
-- `src/hooks/useSegmentLiveCount.ts`
-- `src/hooks/useMarketingAutomationEnrollments.ts`
-- `src/hooks/useUnifiedPerformanceRange.ts` (extends existing hook with custom range)
+- `src/components/admin/marketing/NewCampaignChannelPicker.tsx` (small modal preceding the wizard)
+- `src/components/admin/marketing/PromoRedemptionsDrawer.tsx`
 
 **Edited**
-- `src/components/admin/ads/CreateCampaignWizard.tsx` — full submit/draft wiring, draft_step persistence, creative upload, scroll-to-wallet
-- `src/components/admin/ads/AdsCampaignRow.tsx` — overflow menu integration
-- `src/components/admin/ads/AdsConnectDialog.tsx` — OAuth popup polling, manual fallback, reconnect
-- `src/components/admin/ads/AdsPlatformTile.tsx` — Reconnect/Disconnect actions, status pills
-- `src/components/admin/StoreAdsManager.tsx` — realtime status toasts, pulsing badge logic
-- `src/components/admin/StoreMarketingSection.tsx` — Overview header swap + FAB
-- `src/components/admin/marketing/CreateMarketingCampaignWizard.tsx` — mount SegmentPicker + TemplatePicker
-- `src/components/admin/marketing/SegmentBuilder.tsx` — live count
-- `src/components/admin/marketing/AutomationsBuilder.tsx` — activate + counter
-- `src/components/admin/marketing/UnifiedPerformancePanel.tsx` — date range, KPI strip, funnel, CSV export, share link
-- `src/hooks/useStoreAdsOverview.ts` — pause/resume/duplicate/archive/delete mutations
-- `src/hooks/useStoreMarketingOverview.ts` — already has send/schedule; add row mutations + test send
-- `src/hooks/useUnifiedPerformance.ts` — accept custom from/to dates, return funnel + KPI extras
+- `src/components/admin/ads/AdsConnectDialog.tsx` — OAuth popup polling + reconnect path
+- `src/components/admin/ads/AdsPlatformTile.tsx` — per-status pills + Reconnect/Disconnect popover
+- `src/components/admin/ads/CreateCampaignWizard.tsx` — platform-gate redirect to AdsConnectDialog with preselect
+- `src/components/admin/ads/AdsCampaignRow.tsx` — mount AdsCampaignRowMenu
+- `src/components/admin/StoreAdsManager.tsx` — already toasts; add archive filter pill
+- `src/components/admin/StoreMarketingSection.tsx` — Overview header swap + FAB + channel picker integration
+- `src/components/admin/marketing/MarketingChannelTile.tsx` — Send test action wired
+- `src/components/admin/marketing/PromoCodesManager.tsx` — row click opens PromoRedemptionsDrawer
+- `src/hooks/useStoreAdsOverview.ts` — pause/resume/duplicate/archive/delete + reconnect/disconnect mutations
+- `src/hooks/useStoreMarketingOverview.ts` — invokeSend mutation + sendTest helper
+- `src/hooks/useMarketingPromoCodes.ts` — attach-to-campaign + redemptions query
 
 **Migration**
-- `supabase/migrations/<ts>_marketing_phase4_finish.sql`
+- `supabase/migrations/<ts>_marketing_phase4_pass2.sql` — schema additions above
+
+**Cron registration (insert tool, not migration)**
+- `select cron.schedule('marketing-automations-tick', '*/5 * * * *', $$ select net.http_post(...) $$);`
 
 ## Build order
 
-1. Migration (schema additions + new tables + RLS + indexes)
-2. Edge function stubs (send-marketing-campaign, automations-tick, segments-refresh, sync-segment-to-*, track-promo-redemption) + pg_cron schedules
-3. Ads: CreateCampaignWizard full submit/draft + draft resume + creative upload
-4. Ads: AdsCampaignRowMenu (pause/resume/duplicate/archive/delete) + realtime toasts
-5. Ads: AdsConnectDialog OAuth popup polling + manual + per-tile reconnect/disconnect + status pills
-6. Marketing Overview: stat strip + channel tiles + FAB + SendTestDialog
-7. Shared SegmentPicker + TemplatePicker mounted in both wizards
-8. SegmentBuilder live count via useSegmentLiveCount
-9. AutomationsBuilder activate toggle + enrollment counter
-10. UnifiedPerformancePanel: date range, KPI strip, funnel, top-campaigns table, channel mix, CSV export, share link
-11. Polish: pulsing badges, cross-fade skeletons, a11y sweep, empty-state CTAs
+1. Secrets: `CRON_SECRET` (ask user to add before deploying tick function).
+2. Migration: schema additions for automations / campaigns / promo codes + indexes.
+3. Edge function `send-marketing-campaign` (handles real + test sends, writes events).
+4. Edge function `marketing-automations-tick` (enrolls + advances + completes).
+5. Edge function `track-promo-redemption` (validation + redemption + attribution event).
+6. Cron registration via insert tool.
+7. `AdsConnectDialog` OAuth popup polling + reconnect.
+8. `AdsPlatformTile` per-status pills + Reconnect/Disconnect popover.
+9. `useStoreAdsOverview` mutations: pause / resume / duplicate / archive / delete / disconnect / reconnect.
+10. `AdsCampaignRowMenu` + integration into `AdsCampaignRow`.
+11. `StoreMarketingSection` Overview restructure: stat strip + channel tiles + FAB + channel picker → wizard with preselect.
+12. `SendTestDialog` + wire to `MarketingChannelTile` "Send test" buttons.
+13. `PromoRedemptionsDrawer` + `PromoCodesManager` row click.
+14. Checkout hook into `track-promo-redemption` (locate existing checkout, add non-blocking invoke).
+
+---
 
 ## Recommendation
 
-Ship in two passes to keep PRs reviewable:
-- **Pass 1 (steps 1–5):** Ads end-to-end + connection experience — directly answers "make sure can ads".
-- **Pass 2 (steps 6–11):** Marketing wiring + shared pickers + performance reporting + polish.
+These 5 items are tightly interlocked — shipping them as one pass makes the whole Marketing & Ads surface feel "alive" (real connects, real sends, real automations, real attribution). If you want to split:
 
-Reply "all", "Pass 1", "Pass 1 + 2", or specific step numbers.
+- **Slice A (steps 1–6):** Backend — secrets, schema, 3 edge functions, cron. Nothing visible yet but everything else depends on it.
+- **Slice B (steps 7–10):** Ads end-to-end — connect/disconnect + row actions.
+- **Slice C (steps 11–14):** Marketing Overview + send test + promo attribution.
+
+Reply "all", "Slice A + B", or specific step numbers.
 
