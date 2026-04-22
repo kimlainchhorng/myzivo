@@ -774,6 +774,8 @@ const AppHome = () => {
               </div>
             </motion.div>
           )}
+          {/* Spacer for fixed bottom nav */}
+          <div className="h-24 md:h-8" aria-hidden="true" />
         </div>
       </div>
 
