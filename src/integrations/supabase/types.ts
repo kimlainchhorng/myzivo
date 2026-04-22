@@ -27305,6 +27305,125 @@ export type Database = {
         }
         Relationships: []
       }
+      lodging_deposit_retry_attempts: {
+        Row: {
+          checkout_url: string | null
+          completed_at: string | null
+          dedup_key: string
+          id: string
+          reservation_id: string
+          result: string | null
+          started_at: string
+          stripe_session_id: string | null
+        }
+        Insert: {
+          checkout_url?: string | null
+          completed_at?: string | null
+          dedup_key: string
+          id?: string
+          reservation_id: string
+          result?: string | null
+          started_at?: string
+          stripe_session_id?: string | null
+        }
+        Update: {
+          checkout_url?: string | null
+          completed_at?: string | null
+          dedup_key?: string
+          id?: string
+          reservation_id?: string
+          result?: string | null
+          started_at?: string
+          stripe_session_id?: string | null
+        }
+        Relationships: []
+      }
+      lodging_stripe_webhook_events: {
+        Row: {
+          error_message: string | null
+          event_created_at: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          processing_status: string
+          received_at: string
+          reservation_id: string | null
+          stripe_event_id: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          processing_status?: string
+          received_at?: string
+          reservation_id?: string | null
+          stripe_event_id: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          processing_status?: string
+          received_at?: string
+          reservation_id?: string | null
+          stripe_event_id?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+        }
+        Relationships: []
+      }
+      lodging_wiring_remediation_actions: {
+        Row: {
+          action_type: string
+          admin_id: string
+          check_id: string
+          check_name: string | null
+          created_at: string
+          editor_url: string | null
+          id: string
+          metadata: Json
+          run_id: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_id?: string
+          check_id: string
+          check_name?: string | null
+          created_at?: string
+          editor_url?: string | null
+          id?: string
+          metadata?: Json
+          run_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          check_id?: string
+          check_name?: string | null
+          created_at?: string
+          editor_url?: string | null
+          id?: string
+          metadata?: Json
+          run_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodging_wiring_remediation_actions_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "lodging_wiring_report_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lodging_wiring_report_runs: {
         Row: {
           fail_count: number
@@ -27312,6 +27431,7 @@ export type Database = {
           pass_count: number
           ran_at: string
           ran_by: string | null
+          schema_version: number
           summary: Json
         }
         Insert: {
@@ -27320,6 +27440,7 @@ export type Database = {
           pass_count?: number
           ran_at?: string
           ran_by?: string | null
+          schema_version?: number
           summary: Json
         }
         Update: {
@@ -27328,6 +27449,7 @@ export type Database = {
           pass_count?: number
           ran_at?: string
           ran_by?: string | null
+          schema_version?: number
           summary?: Json
         }
         Relationships: []

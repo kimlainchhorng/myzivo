@@ -3,6 +3,9 @@
  * Listens to Stripe payment_intent + charge events and updates lodge_reservations.payment_status.
  * Also stamps `stripe_last_event_at` + `stripe_last_event_type` on every handled event so the
  * UI can surface a live "Updated 12s ago · payment_intent.succeeded" caption.
+ *
+ * Persists every event to `lodging_stripe_webhook_events` with a unique constraint on
+ * `stripe_event_id` so duplicates (Stripe redelivery) are idempotently dropped.
  */
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
@@ -37,10 +40,80 @@ Deno.serve(async (req) => {
   const eventType = event.type as string;
   const eventStamp = new Date().toISOString();
 
+  // Pull common identifiers off the event for the log row
+  const obj = event.data?.object || {};
+  const piIdRaw =
+    obj.id && obj.object === "payment_intent" ? obj.id :
+    typeof obj.payment_intent === "string" ? obj.payment_intent :
+    obj.payment_intent?.id || null;
+  const sessionIdRaw = obj.object === "checkout.session" ? obj.id : null;
+
+  // Try to resolve reservation_id ahead of insert (best-effort; non-blocking)
+  let resolvedReservationId: string | null = null;
+  if (piIdRaw) {
+    const { data } = await admin
+      .from("lodge_reservations")
+      .select("id")
+      .eq("stripe_payment_intent_id", piIdRaw)
+      .maybeSingle();
+    resolvedReservationId = (data as any)?.id || null;
+  }
+  if (!resolvedReservationId && sessionIdRaw) {
+    const { data } = await admin
+      .from("lodge_reservations")
+      .select("id")
+      .eq("stripe_session_id", sessionIdRaw)
+      .maybeSingle();
+    resolvedReservationId = (data as any)?.id || null;
+  }
+
+  // Trim payload so we don't blow past row size limits
+  const trimmedPayload = {
+    id: event.id,
+    type: event.type,
+    created: event.created,
+    api_version: event.api_version,
+    livemode: event.livemode,
+    data: { object: { ...obj, customer: undefined } },
+  };
+
+  // Idempotent insert. Conflict means we've seen this event before — short-circuit.
+  const { data: inserted, error: insertErr } = await admin
+    .from("lodging_stripe_webhook_events")
+    .upsert(
+      {
+        stripe_event_id: event.id,
+        event_type: eventType,
+        event_created_at: event.created ? new Date(event.created * 1000).toISOString() : null,
+        reservation_id: resolvedReservationId,
+        stripe_payment_intent_id: piIdRaw,
+        stripe_session_id: sessionIdRaw,
+        processing_status: "received",
+        payload: trimmedPayload,
+      },
+      { onConflict: "stripe_event_id", ignoreDuplicates: true },
+    )
+    .select("id")
+    .maybeSingle();
+
+  if (insertErr) {
+    console.error("[stripe-lodging-webhook] event log insert failed", insertErr);
+  }
+
+  // If insert returned nothing, it was a duplicate — skip side effects.
+  if (!inserted) {
+    return new Response(
+      JSON.stringify({ received: true, dedup: true }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  const logRowId = inserted.id;
+
   const updateByPI = async (
     paymentIntentId: string,
     payment_status: string,
-    extra: Record<string, any> = {}
+    extra: Record<string, any> = {},
   ) => {
     const { error } = await admin
       .from("lodge_reservations")
@@ -54,21 +127,27 @@ Deno.serve(async (req) => {
     if (error) console.error("[stripe-lodging-webhook] update failed", error);
   };
 
+  let processingStatus: "applied" | "skipped" | "error" = "skipped";
+  let processingError: string | null = null;
+
   try {
     switch (eventType) {
       case "payment_intent.amount_capturable_updated": {
         const pi = event.data.object;
         await updateByPI(pi.id, "authorized", { last_payment_error: null });
+        processingStatus = "applied";
         break;
       }
       case "payment_intent.processing": {
         const pi = event.data.object;
         await updateByPI(pi.id, "processing");
+        processingStatus = "applied";
         break;
       }
       case "payment_intent.succeeded": {
         const pi = event.data.object;
         await updateByPI(pi.id, "captured", { last_payment_error: null });
+        processingStatus = "applied";
         break;
       }
       case "payment_intent.payment_failed": {
@@ -78,11 +157,13 @@ Deno.serve(async (req) => {
           pi?.last_payment_error?.code ||
           "Stripe reported a payment failure";
         await updateByPI(pi.id, "failed", { last_payment_error: errMsg });
+        processingStatus = "applied";
         break;
       }
       case "payment_intent.canceled": {
         const pi = event.data.object;
         await updateByPI(pi.id, "unpaid");
+        processingStatus = "applied";
         break;
       }
       case "charge.refund.updated": {
@@ -96,13 +177,17 @@ Deno.serve(async (req) => {
           } else if (refund.status === "failed" || refund.status === "canceled") {
             await updateByPI(piId, "captured", { last_payment_error: `Refund ${refund.status}` });
           }
+          processingStatus = "applied";
         }
         break;
       }
       case "charge.refunded": {
         const charge = event.data.object;
         const piId = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
-        if (piId) await updateByPI(piId, "refunded");
+        if (piId) {
+          await updateByPI(piId, "refunded");
+          processingStatus = "applied";
+        }
         break;
       }
       case "checkout.session.completed": {
@@ -119,18 +204,32 @@ Deno.serve(async (req) => {
             .eq("stripe_session_id", session.id)
             .is("stripe_payment_intent_id", null);
           if (error) console.error("[stripe-lodging-webhook] backfill PI failed", error);
+          processingStatus = "applied";
         }
         break;
       }
       default:
+        processingStatus = "skipped";
         break;
     }
-    return new Response(JSON.stringify({ received: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
   } catch (e: any) {
-    console.error("[stripe-lodging-webhook] error", e);
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500 });
+    processingStatus = "error";
+    processingError = String(e?.message || e);
+    console.error("[stripe-lodging-webhook] handler error", e);
   }
+
+  // Stamp the log row with the final processing status
+  await admin
+    .from("lodging_stripe_webhook_events")
+    .update({
+      processing_status: processingStatus,
+      error_message: processingError,
+      reservation_id: resolvedReservationId,
+    })
+    .eq("id", logRowId);
+
+  return new Response(JSON.stringify({ received: true, status: processingStatus }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 });

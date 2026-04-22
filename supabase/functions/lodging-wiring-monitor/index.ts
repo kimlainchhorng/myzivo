@@ -37,19 +37,24 @@ Deno.serve(async (req) => {
     // Load previous run before inserting the new one
     const { data: prev } = await admin
       .from("lodging_wiring_report_runs")
-      .select("summary, ran_at")
+      .select("summary, ran_at, schema_version")
       .order("ran_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
     // Persist current snapshot
+    const SCHEMA_VERSION = 2;
     await admin.from("lodging_wiring_report_runs").insert({
       summary: r as any,
       pass_count: r.pass_count,
       fail_count: r.fail_count,
-    });
+      schema_version: SCHEMA_VERSION,
+    } as any);
 
-    const prevChecks: Check[] = (prev?.summary as any)?.checks || [];
+    // Skip diffing if the prior run was on a different schema (avoids spurious regressions).
+    const prevSchema = (prev as any)?.schema_version ?? 1;
+    const sameSchema = prevSchema === SCHEMA_VERSION;
+    const prevChecks: Check[] = sameSchema ? ((prev?.summary as any)?.checks || []) : [];
     const prevById = new Map(prevChecks.map((c) => [c.id || c.name, c]));
 
     const newFailures: Check[] = [];
@@ -90,6 +95,13 @@ Deno.serve(async (req) => {
       );
     }
 
+    // CI may request the full report inline.
+    let includeReport = false;
+    try {
+      const reqBody = await req.clone().json();
+      includeReport = !!reqBody?.include_report;
+    } catch (_) { /* no body */ }
+
     return new Response(
       JSON.stringify({
         ran_at: r.ran_at,
@@ -97,8 +109,10 @@ Deno.serve(async (req) => {
         fail: r.fail_count,
         new_failures: newFailures.length,
         recoveries: recoveries.length,
+        schema_version: SCHEMA_VERSION,
+        ...(includeReport ? { report: r } : {}),
       }),
-      { status: r.fail_count > 0 ? 200 : 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { "Content-Type": "application/json" } },
     );
   } catch (e: any) {
     console.error("[lodging-wiring-monitor] error", e);

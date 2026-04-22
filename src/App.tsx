@@ -182,6 +182,7 @@ const AdminStoresPage = lazy(() => import("./pages/admin/AdminStoresPage"));
 const AdminStoreEditPage = lazy(() => import("./pages/admin/AdminStoreEditPage"));
 const AdminLodgingReservationDetailPage = lazy(() => import("./pages/admin/lodging/AdminLodgingReservationDetailPage"));
 const AdminLodgingWiringCheckPage = lazy(() => import("./pages/admin/AdminLodgingWiringCheckPage"));
+const AdminLodgingWebhookEventsPage = lazy(() => import("./pages/admin/AdminLodgingWebhookEventsPage"));
 const StoreAssetsUploadCheck = lazy(() => import("./pages/admin/StoreAssetsUploadCheck"));
 const StoreSetup = lazy(() => import("./pages/store/StoreSetup"));
 const ServiceBookingPage = lazy(() => import("./pages/store/ServiceBookingPage"));
@@ -743,6 +744,7 @@ const App = () => (
                 <Route path="/admin/stores/:storeId/upload-check" element={<ProtectedRoute><StoreAssetsUploadCheck /></ProtectedRoute>} />
                 <Route path="/admin/stores/:storeId/lodging/reservations/:reservationId" element={<ProtectedRoute><AdminLodgingReservationDetailPage /></ProtectedRoute>} />
                 <Route path="/admin/lodging/wiring-check" element={<ProtectedRoute><AdminLodgingWiringCheckPage /></ProtectedRoute>} />
+                <Route path="/admin/lodging/webhook-events" element={<ProtectedRoute><AdminLodgingWebhookEventsPage /></ProtectedRoute>} />
                 <Route path="/store/setup" element={<ProtectedRoute><StoreSetup /></ProtectedRoute>} />
                 <Route path="/admin/employees" element={<ProtectedRoute><AdminEmployeesPage /></ProtectedRoute>} />
                 <Route path="/admin/wallet" element={<ProtectedRoute><AdminWalletPage /></ProtectedRoute>} />

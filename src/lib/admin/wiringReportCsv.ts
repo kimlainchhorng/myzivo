@@ -1,7 +1,12 @@
 /**
  * wiringReportCsv — Build + download a CSV snapshot of a lodging wiring report.
  * Excel-friendly: UTF-8 BOM prefix, CRLF line endings, RFC4180-quoted fields.
+ *
+ * Schema versioning: bump WIRING_REPORT_SCHEMA_VERSION when columns change so
+ * downstream consumers (and the monitor diff logic) can detect format shifts.
  */
+export const WIRING_REPORT_SCHEMA_VERSION = 2;
+
 export interface WiringCheck {
   id?: string;
   group: string;
@@ -44,6 +49,7 @@ export function buildWiringReportCsv(report: WiringReport): string {
     "message",
     "fix_sql",
     "failing_query",
+    "schema_version",
   ];
   const rows = (report.checks || []).map((c) =>
     [
@@ -56,9 +62,15 @@ export function buildWiringReportCsv(report: WiringReport): string {
       c.message || "",
       c.fix || "",
       c.failing_query || "",
+      String(WIRING_REPORT_SCHEMA_VERSION),
     ].map(escape).join(",")
   );
-  return "\uFEFF" + [headers.join(","), ...rows].join("\r\n");
+  // Leading metadata comment lines (Excel-tolerant; strict parsers can `tail -n +3`)
+  const metaLines = [
+    `# schema_version=${WIRING_REPORT_SCHEMA_VERSION}`,
+    `# generated_at=${ranAt}`,
+  ];
+  return "\uFEFF" + [...metaLines, headers.join(","), ...rows].join("\r\n");
 }
 
 export function downloadWiringReportCsv(report: WiringReport): void {
