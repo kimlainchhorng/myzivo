@@ -64,6 +64,15 @@ import AutoRepairTiresSection from "@/components/admin/store/autorepair/AutoRepa
 import AutoRepairWarrantySection from "@/components/admin/store/autorepair/AutoRepairWarrantySection";
 import AutoRepairFleetSection from "@/components/admin/store/autorepair/AutoRepairFleetSection";
 import AutoRepairReportsSection from "@/components/admin/store/autorepair/AutoRepairReportsSection";
+import LodgingRoomsSection from "@/components/admin/store/lodging/LodgingRoomsSection";
+import LodgingReservationsSection from "@/components/admin/store/lodging/LodgingReservationsSection";
+import LodgingCalendarSection from "@/components/admin/store/lodging/LodgingCalendarSection";
+import LodgingGuestsSection from "@/components/admin/store/lodging/LodgingGuestsSection";
+import LodgingFrontDeskSection from "@/components/admin/store/lodging/LodgingFrontDeskSection";
+import LodgingHousekeepingSection from "@/components/admin/store/lodging/LodgingHousekeepingSection";
+import LodgingMaintenanceSection from "@/components/admin/store/lodging/LodgingMaintenanceSection";
+import LodgingAmenitiesSection from "@/components/admin/store/lodging/LodgingAmenitiesSection";
+import LodgingReportsSection from "@/components/admin/store/lodging/LodgingReportsSection";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
