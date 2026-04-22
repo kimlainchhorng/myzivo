@@ -204,30 +204,31 @@ export function LodgingRoomPhotoUploader({
               {!isCover && onCoverChange && (
                 <button
                   type="button"
-                  onClick={() => setCover(i)}
+                  onClick={(e) => { e.stopPropagation(); setCover(i); }}
                   aria-label="Set as cover"
                   title="Set as cover"
-                  className="absolute top-1 left-1 h-5 w-5 rounded-full bg-background/90 flex items-center justify-center shadow opacity-0 group-hover:opacity-100 focus:opacity-100 transition"
+                  className="absolute top-1 left-1 h-7 w-7 rounded-full bg-background/95 flex items-center justify-center shadow-md ring-1 ring-border active:scale-95 transition"
                 >
-                  <Star className="h-3 w-3 text-foreground" />
+                  <Star className="h-3.5 w-3.5 text-foreground" />
                 </button>
               )}
 
               <button
                 type="button"
-                onClick={() => remove(i)}
+                onClick={(e) => { e.stopPropagation(); remove(i); }}
                 aria-label="Remove photo"
-                className="absolute top-1 right-1 h-5 w-5 rounded-full bg-background/90 flex items-center justify-center shadow"
+                title="Remove photo"
+                className="absolute top-1 right-1 h-7 w-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md ring-2 ring-background active:scale-95 transition z-10"
               >
-                <X className="h-3 w-3 text-destructive" />
+                <X className="h-3.5 w-3.5" strokeWidth={2.5} />
               </button>
-              <div className="absolute bottom-1 left-1 right-1 flex justify-between opacity-0 group-hover:opacity-100 transition">
-                <button type="button" onClick={() => move(i, -1)} disabled={i === 0}
-                  className="h-5 w-5 rounded-full bg-background/90 flex items-center justify-center disabled:opacity-30">
+              <div className="absolute bottom-1 left-1 right-1 flex justify-between">
+                <button type="button" onClick={(e) => { e.stopPropagation(); move(i, -1); }} disabled={i === 0}
+                  className="h-6 w-6 rounded-full bg-background/95 flex items-center justify-center shadow ring-1 ring-border disabled:opacity-30 active:scale-95 transition">
                   <ArrowLeft className="h-3 w-3" />
                 </button>
-                <button type="button" onClick={() => move(i, 1)} disabled={i === photos.length - 1}
-                  className="h-5 w-5 rounded-full bg-background/90 flex items-center justify-center disabled:opacity-30">
+                <button type="button" onClick={(e) => { e.stopPropagation(); move(i, 1); }} disabled={i === photos.length - 1}
+                  className="h-6 w-6 rounded-full bg-background/95 flex items-center justify-center shadow ring-1 ring-border disabled:opacity-30 active:scale-95 transition">
                   <ArrowRight className="h-3 w-3" />
                 </button>
               </div>
