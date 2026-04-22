@@ -1,71 +1,48 @@
 
 
-# Verify and finalize store-assets hardening + add owner self-check page
+# Fix store "time open" / hours display on the storefront
 
-Most of this work was completed in the prior turns. This plan **verifies what already shipped**, fills the **two genuinely missing pieces**, and avoids re-doing what's done.
+The user is on `/grocery/shop/koh-sdach-resort-by-ehm` and the store status / opening hours shown there is wrong or missing. The status is computed by `src/utils/storeStatus.ts` from the store's `hours` string and `market` code.
 
-## What's already done (verified in repo)
+## Likely causes
 
-| Requirement | Status | Where |
-|---|---|---|
-| Backfill old `products/<storeId>/...` → `<storeId>/products/...` (storage rows + URLs in `store_products`) | ✅ Done | `supabase/migrations/20260422035609_*.sql` |
-| Owner-only write/update/delete on `store-assets`, admins full access | ✅ Done | `supabase/migrations/20260422040327_*.sql` (latest, uses qualified `storage.objects.name`) |
-| Editor reverts preview + per-surface error toast (gallery/logo/cover/room) | ✅ Done | `src/pages/admin/AdminStoreEditPage.tsx` via `uploadStoreAsset.ts` helper |
-| Upload helper verifies object exists + HEAD-checks public URL | ✅ Done | `src/pages/admin/utils/uploadStoreAsset.ts` |
-| RLS test suite (owner A allowed paths, owner B blocked, admin full) | ✅ Done | `src/test/rls/storeAssetsRls.test.ts` + `npm run test:rls` |
+1. The store row has `hours` in a format the regex in `parseHoursString` does not recognize (e.g. `"24/7"`, `"Open 24 hours"`, `"7:00 - 22:00"` without am/pm, or empty). When parsing fails, the helper returns a hard-coded `{ isOpen: true, status: "open", label: "Open" }` regardless of real time.
+2. `market` may not be passed from the storefront page, so timezone falls back to the device clock — wrong status for Cambodia stores when viewer is elsewhere.
+3. Hotel/resort entries are effectively 24/7 but stored as `"24/7"` which the regex rejects.
 
-## What's missing — the two new pieces
+## Plan
 
-### 1. Self-check page: `/admin/stores/:id/upload-check`
+### 1. Make `getStoreStatus` understand more hours formats
 
-A small in-app diagnostic that the signed-in store owner can hit to confirm all four upload surfaces work end-to-end, with clear pass/fail per surface.
+Edit `src/utils/storeStatus.ts`:
 
-**New file**: `src/pages/admin/StoreAssetsUploadCheck.tsx`
+- **24/7 support**: if `hours` matches `/24\s*\/\s*7|24\s*hours|always\s*open/i` → return `{ isOpen: true, status: "open", label: "Open 24 hours", formattedHours: "Open 24 hours" }`.
+- **24-hour clock support**: extend `parseHoursString` regex to also match `"7:00 - 22:00"` / `"07:00–22:00"` (no am/pm). When am/pm is absent, treat numbers as 24h directly.
+- **Closed marker**: if `hours` is empty / `"closed"` → return closed with label `Hours not set`.
+- **Overnight hours** (e.g. `10pm–2am`): if `closeMinutes <= openMinutes`, treat close as next-day (`closeMinutes += 24*60`) and compare against `currentMinutes` plus a 24h wrap.
+- Keep current am/pm parsing as the fallback path.
 
-- Header: "Store assets upload check" + store name
-- Four rows, one per surface: **Gallery**, **Profile / Logo**, **Cover**, **Room / Product**
-- Each row has a "Run check" button (or a single "Run all" at top) that:
-  1. Generates a tiny PNG `Blob` in-memory (1×1 transparent pixel — same one used in the RLS tests)
-  2. Calls `uploadStoreAsset({ storeId, file, surface })` from the existing helper
-  3. On success: green badge `Passed`, shows the resolved public URL (clickable), and immediately deletes the test object via `supabase.storage.from('store-assets').remove([path])` so we don't leave litter
-  4. On failure: red badge `Failed` + the exact error string returned (already labeled by surface, e.g. `Gallery upload failed: new row violates row-level security policy`)
-- "Run all" button runs the four sequentially and shows a final summary line: `4/4 passed` or `2/4 passed — see failures above`
-- Footer link back to the store editor
+### 2. Always pass `market` from storefront
 
-**Route**: register in `src/App.tsx` (or wherever store admin routes live — same pattern as `AdminStoreEditPage`):
-```
-<Route path="/admin/stores/:id/upload-check" element={<StoreAssetsUploadCheck />} />
-```
+Find the grocery shop page (`src/pages/grocery/...` — likely `GroceryStorePage.tsx` or similar that renders `/grocery/shop/:slug`) and confirm `getStoreStatus(store.hours, store.market || store.country)` is called with the market code. If not, pass it.
 
-**Editor entry point**: in `src/pages/admin/AdminStoreEditPage.tsx`, add a small "Run upload check" link in the page header next to the existing actions, pointing to the new route. One-line change.
+### 3. Self-heal admin form
 
-### 2. RLS test coverage gap — admin can read/write across stores
+In `src/pages/admin/AdminStoreEditPage.tsx`, add a tiny live preview under the Hours input that runs `getStoreStatus(value, form.market)` and shows the resolved status + formatted hours. If it returns the fallback `Open` with no `formattedHours`, show an inline warning: *"Hours format not recognized — try `7am–10pm`, `07:00–22:00`, or `24/7`."* This stops bad data getting saved.
 
-The existing admin test only verifies admin **upload**. Add two more cases inside the existing `describeAdmin` block in `src/test/rls/storeAssetsRls.test.ts`:
+### 4. Verify on the affected store
 
-- **Admin can update** an object in any store folder (overwrite without `upsert`)
-- **Admin can delete** an arbitrary object they uploaded under another store's folder
-
-This closes the "admins keep full access" half of the test matrix.
-
-No new file, no new env vars — uses the same `VITE_TEST_ADMIN_*` already documented in `src/test/rls/README.md`.
+After the parser fix, the Koh Sdach Resort page should display the correct live status driven by `Asia/Phnom_Penh` time, or `Open 24 hours` if it's a 24/7 resort.
 
 ## Files
 
-- **New**: `src/pages/admin/StoreAssetsUploadCheck.tsx`
-- **Edit**: `src/App.tsx` — register the new route
-- **Edit**: `src/pages/admin/AdminStoreEditPage.tsx` — add "Run upload check" link in header
-- **Edit**: `src/test/rls/storeAssetsRls.test.ts` — add 2 admin update/delete cases
+- **Edit**: `src/utils/storeStatus.ts` — add 24/7, 24h clock, overnight, and closed handling
+- **Edit**: storefront page rendering `/grocery/shop/:slug` — ensure `market` is passed to `getStoreStatus` (only if missing)
+- **Edit**: `src/pages/admin/AdminStoreEditPage.tsx` — live hours preview + format hint under the Hours field
 
 ## Out of scope
 
-- Changing existing migrations (already applied)
-- Re-implementing the upload helper or revert/verify behavior (already shipped)
-- Any new SQL — every requirement in the request is already enforceable with current policies; the self-check page is a UI-only diagnostic
-
-## Verification (manual, after implementation)
-
-1. Open `/admin/stores/<your-store-id>/upload-check` as a store owner → click **Run all** → expect 4/4 green.
-2. Open the same URL while signed in as a different non-owner non-admin user → expect 4/4 red with the RLS error labeled per surface.
-3. `npm run test:rls` (with the documented env vars) passes all owner + admin cases including the two new admin update/delete checks.
+- Migrating existing `hours` strings in the DB (parser now tolerates them)
+- Adding per-day hours (Mon–Fri vs Sat/Sun) — current schema is a single string
+- Timezone changes outside KH/US (only those two are mapped today)
 
