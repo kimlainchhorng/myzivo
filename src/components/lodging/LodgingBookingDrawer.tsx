@@ -104,6 +104,8 @@ export function LodgingBookingDrawer({
   const [guestTouched, setGuestTouched] = useState<Record<string, boolean>>({});
   const [policyScrolled, setPolicyScrolled] = useState(false);
   const [policyOverflows, setPolicyOverflows] = useState(false);
+  const [viewedRulesSource, setViewedRulesSource] = useState(false);
+  const [viewedCancelSource, setViewedCancelSource] = useState(false);
   const policyRef = useRef<HTMLDivElement | null>(null);
 
   const { data: propertyProfile } = useLodgePropertyProfile(storeId);
@@ -114,6 +116,12 @@ export function LodgingBookingDrawer({
     () => hasUnavailableNight(availabilityMap, checkIn, checkOut),
     [availabilityMap, checkIn, checkOut]
   );
+  const { data: conflictData, refetch: refetchConflict } = useRoomConflictCheck(
+    open ? roomId : undefined, checkIn, checkOut, step === "review"
+  );
+  const conflictDetected = !!conflictData?.conflict;
+
+  const { data: liveReservation } = useReservationLive(reservationId || undefined);
 
   // Stay-rules validation
   const stayIssue = useMemo(() => {
