@@ -256,6 +256,22 @@ export default function StoreAdsManager({ storeId }: Props) {
     onError: (e: any) => toast.error(e.message),
   });
 
+  // ===== Realtime status-change toast =====
+  const lastStatusRef = useRef<Record<string, string>>({});
+  useEffect(() => {
+    const map = lastStatusRef.current;
+    for (const c of campaigns) {
+      const prev = map[c.id];
+      if (prev && prev !== c.status) {
+        if (c.status === "active") toast.success(`"${c.name}" is now live`);
+        else if (c.status === "rejected") toast.error(`"${c.name}" was rejected`);
+        else if (c.status === "paused" && prev === "active") toast.info(`"${c.name}" paused`);
+        else if (c.status === "ended") toast.info(`"${c.name}" ended`);
+      }
+      map[c.id] = c.status;
+    }
+  }, [campaigns]);
+
   // ===== Handlers =====
 
   const openCreate = () => { setEditing(null); setCreateOpen(true); };
