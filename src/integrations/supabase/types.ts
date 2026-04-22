@@ -26925,6 +26925,7 @@ export type Database = {
       }
       lodge_reservations: {
         Row: {
+          addons: Json
           adults: number | null
           check_in: string
           check_out: string
@@ -26955,6 +26956,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          addons?: Json
           adults?: number | null
           check_in: string
           check_out: string
@@ -26985,6 +26987,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          addons?: Json
           adults?: number | null
           check_in?: string
           check_out?: string
@@ -27048,11 +27051,16 @@ export type Database = {
       }
       lodge_rooms: {
         Row: {
+          addons: Json
           amenities: string[] | null
           base_rate_cents: number | null
           beds: string | null
           breakfast_included: boolean | null
+          cancellation_policy: string
+          check_in_time: string | null
+          check_out_time: string | null
           created_at: string
+          description: string | null
           id: string
           is_active: boolean | null
           max_guests: number | null
@@ -27069,11 +27077,16 @@ export type Database = {
           weekly_discount_pct: number | null
         }
         Insert: {
+          addons?: Json
           amenities?: string[] | null
           base_rate_cents?: number | null
           beds?: string | null
           breakfast_included?: boolean | null
+          cancellation_policy?: string
+          check_in_time?: string | null
+          check_out_time?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           is_active?: boolean | null
           max_guests?: number | null
@@ -27090,11 +27103,16 @@ export type Database = {
           weekly_discount_pct?: number | null
         }
         Update: {
+          addons?: Json
           amenities?: string[] | null
           base_rate_cents?: number | null
           beds?: string | null
           breakfast_included?: boolean | null
+          cancellation_policy?: string
+          check_in_time?: string | null
+          check_out_time?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           is_active?: boolean | null
           max_guests?: number | null
