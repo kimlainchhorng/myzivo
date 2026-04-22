@@ -28,14 +28,16 @@ import PetChildPolicyCard from "./property-profile/PetChildPolicyCard";
 import ContactCard from "./property-profile/ContactCard";
 
 const LANGUAGES = ["English", "Spanish", "French", "German", "Italian", "Portuguese", "Khmer", "Thai", "Vietnamese", "Chinese", "Japanese", "Korean", "Russian", "Arabic", "Hindi"];
-const FACILITIES = [
-  "Outdoor pool", "Indoor pool", "Restaurant", "Bar", "Gym", "Spa", "Sauna", "Hot tub",
-  "Kids club", "Playground", "Business center", "Conference room", "Co-working space",
-  "Laundry service", "Dry cleaning", "24h front desk", "Concierge",
-  "Airport shuttle", "Free parking", "Valet parking", "EV charging", "Bicycle hire",
-  "Beach access", "Beachfront", "Garden", "Library", "Lounge", "Terrace", "Rooftop bar",
-  "Tour desk", "Currency exchange", "ATM on site", "Souvenir shop",
+const FACILITY_GROUPS: { label: string; items: string[] }[] = [
+  { label: "Pools & wellness", items: ["Outdoor pool", "Indoor pool", "Spa", "Sauna", "Hot tub", "Gym", "Steam room", "Massage"] },
+  { label: "Food & drink", items: ["Restaurant", "Bar", "Rooftop bar", "Lounge", "Snack bar", "Room service"] },
+  { label: "Family & entertainment", items: ["Kids club", "Playground", "Game room", "Library"] },
+  { label: "Business", items: ["Business center", "Conference room", "Co-working space", "Meeting rooms"] },
+  { label: "Services", items: ["Laundry service", "Dry cleaning", "24h front desk", "Concierge", "Tour desk", "Currency exchange", "ATM on site", "Souvenir shop", "Daily housekeeping", "Baggage storage"] },
+  { label: "Transport & parking", items: ["Airport shuttle", "Free parking", "Valet parking", "EV charging", "Bicycle hire", "Car rental"] },
+  { label: "Outdoor & location", items: ["Beach access", "Beachfront", "Garden", "Terrace", "BBQ area", "Sun deck"] },
 ];
+const FACILITIES = FACILITY_GROUPS.flatMap(g => g.items);
 const MEAL_PLANS = ["Room only", "Bed & Breakfast", "Half board", "Full board", "All-inclusive"];
 const ACCESSIBILITY = [
   "Step-free access", "Wheelchair accessible", "Accessible bathroom", "Roll-in shower",
