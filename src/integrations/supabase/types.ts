@@ -27043,6 +27043,8 @@ export type Database = {
           notes: string | null
           number: string
           paid_cents: number
+          payment_lock_expires_at: string | null
+          payment_lock_token: string | null
           payment_status: string | null
           policy_consent: Json | null
           policy_consent_version: string | null
@@ -27053,6 +27055,8 @@ export type Database = {
           source: string | null
           status: string
           store_id: string
+          stripe_last_event_at: string | null
+          stripe_last_event_type: string | null
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
           tax_cents: number
@@ -27083,6 +27087,8 @@ export type Database = {
           notes?: string | null
           number: string
           paid_cents?: number
+          payment_lock_expires_at?: string | null
+          payment_lock_token?: string | null
           payment_status?: string | null
           policy_consent?: Json | null
           policy_consent_version?: string | null
@@ -27093,6 +27099,8 @@ export type Database = {
           source?: string | null
           status?: string
           store_id: string
+          stripe_last_event_at?: string | null
+          stripe_last_event_type?: string | null
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           tax_cents?: number
@@ -27123,6 +27131,8 @@ export type Database = {
           notes?: string | null
           number?: string
           paid_cents?: number
+          payment_lock_expires_at?: string | null
+          payment_lock_token?: string | null
           payment_status?: string | null
           policy_consent?: Json | null
           policy_consent_version?: string | null
@@ -27133,6 +27143,8 @@ export type Database = {
           source?: string | null
           status?: string
           store_id?: string
+          stripe_last_event_at?: string | null
+          stripe_last_event_type?: string | null
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           tax_cents?: number
@@ -27290,6 +27302,33 @@ export type Database = {
           weekend_rate_cents?: number | null
           weekly_discount_pct?: number | null
           wing?: string | null
+        }
+        Relationships: []
+      }
+      lodging_wiring_report_runs: {
+        Row: {
+          fail_count: number
+          id: string
+          pass_count: number
+          ran_at: string
+          ran_by: string | null
+          summary: Json
+        }
+        Insert: {
+          fail_count?: number
+          id?: string
+          pass_count?: number
+          ran_at?: string
+          ran_by?: string | null
+          summary: Json
+        }
+        Update: {
+          fail_count?: number
+          id?: string
+          pass_count?: number
+          ran_at?: string
+          ran_by?: string | null
+          summary?: Json
         }
         Relationships: []
       }
