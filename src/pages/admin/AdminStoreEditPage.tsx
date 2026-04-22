@@ -23,6 +23,7 @@ const FFMPEG_CDN_BASE = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm";
 const ffmpegCoreUrl = `${FFMPEG_CDN_BASE}/ffmpeg-core.js`;
 const ffmpegWasmUrl = `${FFMPEG_CDN_BASE}/ffmpeg-core.wasm`;
 import { supabase } from "@/integrations/supabase/client";
+import { uploadStoreAsset, verifyStoreProfileUrl, verifyStoreProfileGallery } from "@/pages/admin/utils/uploadStoreAsset";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import AdminLayout from "@/components/admin/AdminLayout";
 import StoreOwnerLayout from "@/components/admin/StoreOwnerLayout";
@@ -1594,19 +1595,24 @@ export default function AdminStoreEditPage() {
       toast.error("Maximum 8 images allowed");
       return;
     }
+    const prevUrls = currentImages;
+    const prevPrimary = productForm.image_url;
     setUploadingProductImage(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${storeId}/products/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
-      if (upErr) throw upErr;
-      const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
-      const newUrls = [...currentImages, urlData.publicUrl];
+      const { publicUrl } = await uploadStoreAsset({
+        storeId: storeId!,
+        file,
+        surface: "room",
+      });
+      const newUrls = [...currentImages, publicUrl];
       updateProductField("image_urls", newUrls);
       updateProductField("image_url", newUrls[0]); // keep first as primary
       toast.success("Image uploaded");
     } catch (e: any) {
-      toast.error(`Room image upload failed: ${e.message || "unknown error"}`);
+      // Revert preview to last working state
+      updateProductField("image_urls", prevUrls);
+      updateProductField("image_url", prevPrimary);
+      toast.error(e?.message || "Room image upload failed");
     } finally {
       setUploadingProductImage(false);
     }
@@ -1739,24 +1745,33 @@ export default function AdminStoreEditPage() {
       toast.error("Maximum 10 gallery images allowed");
       return;
     }
+    const prev = galleryImages;
     setUploadingGallery(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${storeId}/gallery-${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
-      if (uploadErr) throw uploadErr;
-      const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
-      const newImages = [...galleryImages, urlData.publicUrl];
+      const { publicUrl } = await uploadStoreAsset({
+        storeId: storeId!,
+        file,
+        surface: "gallery",
+      });
+      const newImages = [...galleryImages, publicUrl];
       setGalleryImages(newImages);
       const { error: saveErr } = await supabase
         .from("store_profiles")
         .update({ gallery_images: newImages } as any)
         .eq("id", storeId!);
       if (saveErr) throw saveErr;
+      // Verify persistence
+      const persisted = await verifyStoreProfileGallery(storeId!, newImages);
+      if (!persisted) {
+        setGalleryImages(prev);
+        toast.error("Saved URL did not persist — try again");
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: ["admin-store", storeId] });
       toast.success("Gallery image added");
     } catch (e: any) {
-      toast.error(`Gallery upload failed: ${e.message || "unknown error"}`);
+      setGalleryImages(prev);
+      toast.error(e?.message || "Gallery upload failed");
     } finally {
       setUploadingGallery(false);
     }
@@ -1780,27 +1795,34 @@ export default function AdminStoreEditPage() {
 
   const uploadImage = async (file: File, type: "logo" | "cover") => {
     const isLogo = type === "logo";
+    const field = isLogo ? "logo_url" : "banner_url";
+    const prevUrl = (form as any)[field];
     isLogo ? setUploadingLogo(true) : setUploadingCover(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${storeId}/${type}-${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage
-        .from("store-assets")
-        .upload(path, file, { upsert: true });
-      if (uploadErr) throw uploadErr;
-      const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
-      const field = isLogo ? "logo_url" : "banner_url";
-      updateField(field, urlData.publicUrl);
+      const { publicUrl } = await uploadStoreAsset({
+        storeId: storeId!,
+        file,
+        surface: isLogo ? "logo" : "cover",
+      });
+      updateField(field, publicUrl);
       // Auto-save immediately
       const { error: saveErr } = await supabase
         .from("store_profiles")
-        .update({ [field]: urlData.publicUrl })
+        .update({ [field]: publicUrl })
         .eq("id", storeId!);
       if (saveErr) throw saveErr;
+      // Verify persistence
+      const persisted = await verifyStoreProfileUrl(storeId!, field, publicUrl);
+      if (!persisted) {
+        updateField(field, prevUrl);
+        toast.error("Saved URL did not persist — try again");
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: ["admin-store", storeId] });
       toast.success(`${isLogo ? "Profile" : "Cover"} image updated`);
     } catch (e: any) {
-      toast.error(`${isLogo ? "Profile" : "Cover"} image upload failed: ${e.message || "unknown error"}`);
+      updateField(field, prevUrl);
+      toast.error(e?.message || `${isLogo ? "Profile" : "Cover"} image upload failed`);
     } finally {
       isLogo ? setUploadingLogo(false) : setUploadingCover(false);
     }
