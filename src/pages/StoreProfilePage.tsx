@@ -69,7 +69,7 @@ function BokehDot({ delay, size, x, y, color }: { delay: number; size: number; x
 
 export default function StoreProfilePage() {
   const { slug } = useParams<{ slug: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const cart = useGroceryCart();
   const [showCart, setShowCart] = useState(false);
@@ -83,6 +83,29 @@ export default function StoreProfilePage() {
   const { data: store, isLoading: loadingStore } = useStoreProfile(slug || "");
   const { data: products = [], isLoading: loadingProducts } = useStoreProducts(store?.id, selectedCategory);
   const { data: categories = [] } = useStoreProductCategories(store?.id);
+
+  // Lodging support
+  const isLodging = !!store && ["hotel", "resort", "guesthouse"].includes(store.category);
+  const { data: allRooms = [], isLoading: loadingRooms } = useLodgeRooms(isLodging ? store!.id : "");
+  const rooms = useMemo(() => (allRooms || []).filter(r => r.is_active), [allRooms]);
+
+  const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const tomorrowISO = useMemo(() => new Date(Date.now() + 86400000).toISOString().slice(0, 10), []);
+  const stay = {
+    checkIn: searchParams.get("ci") || todayISO,
+    checkOut: searchParams.get("co") || tomorrowISO,
+    adults: parseInt(searchParams.get("ad") || "2"),
+    children: parseInt(searchParams.get("ch") || "0"),
+  };
+  const updateStay = (next: { checkIn: string; checkOut: string; adults: number; children: number }) => {
+    const sp = new URLSearchParams(searchParams);
+    sp.set("ci", next.checkIn);
+    sp.set("co", next.checkOut);
+    sp.set("ad", String(next.adults));
+    sp.set("ch", String(next.children));
+    setSearchParams(sp, { replace: true });
+  };
+  const [bookingRoom, setBookingRoom] = useState<LodgeRoom | null>(null);
 
   const handleAddToCart = (product: StoreProductItem, sizeVariant?: { size: string; price_khr: number; price_usd: number }) => {
     const displayName = localizedName(product.name, currentLanguage);
