@@ -29,6 +29,7 @@ import { LodgingBookingDrawer } from "@/components/lodging/LodgingBookingDrawer"
 import { LodgingHighlightsStrip } from "@/components/lodging/LodgingHighlightsStrip";
 import { LodgingAmenitiesPanel } from "@/components/lodging/LodgingAmenitiesPanel";
 import { LodgingPolicyPanel } from "@/components/lodging/LodgingPolicyPanel";
+import { useHasStoreBooking } from "@/hooks/useHasStoreBooking";
 
 /**
  * Extract the correct language part from dual-format text like "Khmer/English".
