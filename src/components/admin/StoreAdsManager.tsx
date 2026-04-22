@@ -7,7 +7,7 @@
  *  - 4-step CreateCampaignWizard (Goal → Audience → Creative → Budget)
  *  - Sticky FAB + realtime via useStoreAdsOverview
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -580,6 +580,9 @@ export default function StoreAdsManager({ storeId }: Props) {
         accounts={accounts}
         onSave={(form, asDraft) => saveCampaign.mutate({ form, asDraft })}
         saving={saveCampaign.isPending}
+        walletBalanceCents={wallet.balance_cents}
+        onConnectPlatform={(p) => { setCreateOpen(false); setConnectPlatform(p); }}
+        onAddFunds={goToWallet}
       />
 
       {/* Campaign detail drawer */}
