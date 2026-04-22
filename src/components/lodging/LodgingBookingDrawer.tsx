@@ -95,6 +95,7 @@ export function LodgingBookingDrawer({
       let units = a.qty;
       if (a.per === "night") units *= nights;
       else if (a.per === "guest") units *= (adults + children);
+      else if (a.per === "person_night") units *= nights * (adults + children);
       const subtotal = a.price_cents * units;
       addonsTotal += subtotal;
       addonsSnapshot.push({ name: a.name, price_cents: a.price_cents, per: a.per, qty: a.qty, subtotal_cents: subtotal });

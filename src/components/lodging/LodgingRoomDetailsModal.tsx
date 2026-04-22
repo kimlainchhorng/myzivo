@@ -52,6 +52,7 @@ const PER_LABEL: Record<LodgeAddon["per"], string> = {
   night: "per night",
   guest: "per guest",
   stay: "per stay",
+  person_night: "per guest / night",
 };
 
 const HINTS_KEY = "lodging.gallery.hintsSeen";

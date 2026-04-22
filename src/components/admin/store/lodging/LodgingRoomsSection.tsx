@@ -17,8 +17,68 @@ import { toast } from "sonner";
 import { useLodgeRooms, type LodgeRoom, type LodgeAddon } from "@/hooks/lodging/useLodgeRooms";
 import { LodgingRoomPhotoUploader } from "@/components/lodging/LodgingRoomPhotoUploader";
 
-const ROOM_TYPES = ["Standard", "Deluxe", "Suite", "Villa", "Family", "Dormitory"];
-const AMENITY_OPTIONS = ["AC", "Wi-Fi", "TV", "Mini-bar", "Safe", "Balcony", "Bathtub", "Pool view", "Sea view", "City view"];
+const ROOM_TYPES = ["Standard", "Deluxe", "Suite", "Villa", "Family", "Bungalow", "Cottage", "Dormitory", "Apartment", "Studio", "Penthouse"];
+const AMENITY_OPTIONS = [
+  // Comfort
+  "AC", "Heating", "Wi-Fi", "TV", "Smart TV", "Netflix",
+  // Bath
+  "Bathtub", "Hot shower", "Hairdryer", "Toiletries", "Bathrobe", "Slippers",
+  // Kitchen / dining
+  "Mini-bar", "Mini-fridge", "Coffee maker", "Kettle", "Kitchenette", "Microwave",
+  // Workspace / family
+  "Workspace", "Iron", "Crib available", "Family-friendly",
+  // Outdoor / view
+  "Balcony", "Terrace", "Garden view", "Pool view", "Sea view", "Mountain view", "City view",
+  // Premium
+  "Safe", "Jacuzzi", "Private pool", "Beach access", "Fireplace",
+  // Services
+  "Daily housekeeping", "Room service", "24h reception",
+  // Accessibility & policy
+  "Wheelchair accessible", "Pet-friendly", "Smoking allowed", "Non-smoking", "EV charger", "Free parking"
+];
+
+// Curated quick-add presets — one tap to add common hotel/resort extras
+const ADDON_PRESETS: { name: string; price_cents: number; per: "stay" | "night" | "guest" | "person_night"; category: string; icon: string }[] = [
+  // Food & drink
+  { name: "Breakfast", price_cents: 800, per: "person_night", category: "Food & drink", icon: "🥐" },
+  { name: "Half board (breakfast + dinner)", price_cents: 2500, per: "person_night", category: "Food & drink", icon: "🍽️" },
+  { name: "Full board (3 meals)", price_cents: 4000, per: "person_night", category: "Food & drink", icon: "🍴" },
+  { name: "Welcome drink", price_cents: 500, per: "guest", category: "Food & drink", icon: "🍹" },
+  { name: "Bottle of wine", price_cents: 2500, per: "stay", category: "Food & drink", icon: "🍷" },
+  { name: "Mini-bar package", price_cents: 1500, per: "stay", category: "Food & drink", icon: "🥤" },
+  // Transport
+  { name: "Airport pickup", price_cents: 2500, per: "stay", category: "Transport", icon: "🚐" },
+  { name: "Airport drop-off", price_cents: 2500, per: "stay", category: "Transport", icon: "🚖" },
+  { name: "Round-trip airport transfer", price_cents: 4500, per: "stay", category: "Transport", icon: "🚗" },
+  { name: "Scooter rental", price_cents: 1000, per: "night", category: "Transport", icon: "🛵" },
+  { name: "Car rental", price_cents: 4500, per: "night", category: "Transport", icon: "🚙" },
+  { name: "Bicycle rental", price_cents: 500, per: "night", category: "Transport", icon: "🚲" },
+  // Stay flexibility
+  { name: "Early check-in", price_cents: 1500, per: "stay", category: "Stay", icon: "⏰" },
+  { name: "Late check-out", price_cents: 1500, per: "stay", category: "Stay", icon: "🕒" },
+  { name: "Extra bed", price_cents: 1500, per: "night", category: "Stay", icon: "🛏️" },
+  { name: "Baby crib", price_cents: 0, per: "stay", category: "Stay", icon: "👶" },
+  { name: "Extra guest", price_cents: 1500, per: "person_night", category: "Stay", icon: "👤" },
+  { name: "Pet fee", price_cents: 1000, per: "night", category: "Stay", icon: "🐾" },
+  // Wellness & experiences
+  { name: "Spa massage (60 min)", price_cents: 4500, per: "guest", category: "Wellness", icon: "💆" },
+  { name: "Couples massage", price_cents: 8000, per: "stay", category: "Wellness", icon: "💑" },
+  { name: "Yoga session", price_cents: 1500, per: "guest", category: "Wellness", icon: "🧘" },
+  { name: "Snorkeling tour", price_cents: 3500, per: "guest", category: "Experiences", icon: "🤿" },
+  { name: "Island hopping tour", price_cents: 5000, per: "guest", category: "Experiences", icon: "🏝️" },
+  { name: "Sunset cruise", price_cents: 6500, per: "guest", category: "Experiences", icon: "⛵" },
+  { name: "Private chef dinner", price_cents: 7500, per: "stay", category: "Experiences", icon: "👨‍🍳" },
+  // Romance & celebration
+  { name: "Honeymoon package", price_cents: 5000, per: "stay", category: "Celebration", icon: "💐" },
+  { name: "Birthday cake", price_cents: 1500, per: "stay", category: "Celebration", icon: "🎂" },
+  { name: "Flower bouquet", price_cents: 2000, per: "stay", category: "Celebration", icon: "🌹" },
+  { name: "Champagne on arrival", price_cents: 3500, per: "stay", category: "Celebration", icon: "🍾" },
+  // Practical services
+  { name: "Daily housekeeping", price_cents: 800, per: "night", category: "Services", icon: "🧹" },
+  { name: "Laundry service", price_cents: 1200, per: "stay", category: "Services", icon: "🧺" },
+  { name: "Parking", price_cents: 500, per: "night", category: "Services", icon: "🅿️" },
+  { name: "Beach towel rental", price_cents: 200, per: "guest", category: "Services", icon: "🏖️" },
+];
 const CANCEL_POLICIES: { value: string; label: string }[] = [
   { value: "flexible", label: "Flexible — full refund up to 24h before" },
   { value: "moderate", label: "Moderate — full refund up to 5 days before" },
@@ -239,17 +299,69 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                 <div className="flex items-center justify-between">
                   <Label>Add-ons (optional extras)</Label>
                   <Button type="button" size="sm" variant="outline" onClick={addAddon} className="h-7 gap-1">
-                    <Plus className="h-3 w-3" /> Add
+                    <Plus className="h-3 w-3" /> Custom
                   </Button>
                 </div>
+
+                {/* Quick-add presets — grouped by category */}
+                <div className="rounded-lg border border-dashed border-border p-2.5 bg-muted/10 space-y-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Quick add — tap to include
+                  </p>
+                  {Array.from(new Set(ADDON_PRESETS.map(p => p.category))).map(cat => {
+                    const items = ADDON_PRESETS.filter(p => p.category === cat);
+                    return (
+                      <div key={cat} className="space-y-1">
+                        <p className="text-[10px] text-muted-foreground/80">{cat}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {items.map(preset => {
+                            const already = (editing.addons || []).some(a => a.name === preset.name);
+                            return (
+                              <button
+                                key={preset.name}
+                                type="button"
+                                disabled={already}
+                                onClick={() => setEditing({
+                                  ...editing,
+                                  addons: [...(editing.addons || []), {
+                                    name: preset.name,
+                                    price_cents: preset.price_cents,
+                                    per: preset.per,
+                                    category: preset.category,
+                                    icon: preset.icon,
+                                  }]
+                                })}
+                                className={`px-2 py-1 rounded-full text-[11px] border transition flex items-center gap-1 ${
+                                  already
+                                    ? "bg-primary/10 border-primary/30 text-primary cursor-not-allowed opacity-60"
+                                    : "bg-background border-border hover:border-primary/40 hover:bg-primary/5"
+                                }`}
+                              >
+                                <span>{preset.icon}</span>
+                                <span>{preset.name}</span>
+                                {preset.price_cents > 0 && (
+                                  <span className="text-muted-foreground">
+                                    ${(preset.price_cents / 100).toFixed(0)}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
                 {(editing.addons || []).length === 0 ? (
-                  <p className="text-xs text-muted-foreground">e.g. Breakfast +$8/night, Airport pickup +$25/stay</p>
+                  <p className="text-xs text-muted-foreground">e.g. Breakfast +$8/guest/night, Airport pickup +$25/stay</p>
                 ) : (
                   <div className="space-y-2">
                     {(editing.addons || []).map((a, i) => (
                       <div key={i} className="grid grid-cols-12 gap-1.5 items-center p-2 rounded-lg border border-border bg-muted/20">
+                        {a.icon && <span className="col-span-1 text-center text-base">{a.icon}</span>}
                         <Input
-                          className="col-span-5 h-8 text-xs"
+                          className={`${a.icon ? 'col-span-4' : 'col-span-5'} h-8 text-xs`}
                           placeholder="Breakfast"
                           value={a.name}
                           onChange={e => updateAddon(i, { name: e.target.value })}
@@ -269,6 +381,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                           <option value="stay">/ stay</option>
                           <option value="night">/ night</option>
                           <option value="guest">/ guest</option>
+                          <option value="person_night">/ guest/night</option>
                         </select>
                         <Button type="button" size="icon" variant="ghost" className="col-span-1 h-8 w-8" onClick={() => removeAddon(i)}>
                           <Trash2 className="h-3.5 w-3.5 text-destructive" />
