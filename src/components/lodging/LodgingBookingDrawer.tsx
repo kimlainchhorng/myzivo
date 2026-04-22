@@ -573,17 +573,67 @@ export function LodgingBookingDrawer({
 
             <PriceSummary breakdown={breakdown} fmt={fmtMoney} />
 
+            {/* House rules + cancellation policy (scroll-to-confirm) */}
+            <div className="space-y-2">
+              <Label className="flex items-center justify-between">
+                <span>House rules &amp; cancellation policy</span>
+                {policyOverflows && !policyScrolled && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600">
+                    <ArrowDown className="h-3 w-3" /> Scroll to read all
+                  </span>
+                )}
+              </Label>
+              <div
+                ref={policyRef}
+                onScroll={onPolicyScroll}
+                className="max-h-44 overflow-y-auto rounded-xl border border-border bg-muted/30 p-3 text-[11px] leading-relaxed space-y-2"
+              >
+                <div>
+                  <p className="font-bold text-xs mb-1">House rules</p>
+                  <ul className="list-disc pl-4 space-y-0.5">
+                    {houseRules.quiet_hours && <li>Quiet hours: {houseRules.quiet_hours}</li>}
+                    <li>Parties / events: {houseRules.parties_allowed ? "allowed (please notify host)" : "not allowed"}</li>
+                    {houseRules.smoking_zones && <li>Smoking: {houseRules.smoking_zones}</li>}
+                    {houseRules.min_age != null && <li>Minimum guest age: {houseRules.min_age}+</li>}
+                    {houseRules.id_at_checkin && <li>Government-issued ID required at check-in</li>}
+                    {securityDeposit > 0 && <li>Refundable security deposit: <strong>{fmtMoney(securityDeposit)}</strong> (collected at check-in)</li>}
+                    {!Object.keys(houseRules).length && (
+                      <li className="text-muted-foreground">Standard house rules apply. Please respect the property and other guests.</li>
+                    )}
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-bold text-xs mb-1">
+                    Cancellation policy · {cancellationLabel(cancellationPolicy)}
+                  </p>
+                  <p>{cancellationDescription(cancellationPolicy)}</p>
+                </div>
+                <p className="text-muted-foreground pt-1">
+                  ZIVO is a marketplace; {storeName} is the merchant of record for your stay and handles refunds, modifications, and on-site issues.
+                </p>
+              </div>
+            </div>
+
             {/* Consent */}
             <div className="space-y-2">
-              <label className="flex items-start gap-2 text-xs cursor-pointer">
-                <Checkbox checked={agreeRules} onCheckedChange={(v) => setAgreeRules(!!v)} className="mt-0.5" />
+              <label className={cn("flex items-start gap-2 text-xs cursor-pointer", policyOverflows && !policyScrolled && "opacity-50 pointer-events-none")}>
+                <Checkbox
+                  checked={agreeRules}
+                  onCheckedChange={(v) => setAgreeRules(!!v)}
+                  className="mt-0.5"
+                  disabled={policyOverflows && !policyScrolled}
+                />
                 <span>I have read and agree to the <strong>house rules</strong> and check-in policy.</span>
               </label>
-              <label className="flex items-start gap-2 text-xs cursor-pointer">
-                <Checkbox checked={agreeCancel} onCheckedChange={(v) => setAgreeCancel(!!v)} className="mt-0.5" />
+              <label className={cn("flex items-start gap-2 text-xs cursor-pointer", policyOverflows && !policyScrolled && "opacity-50 pointer-events-none")}>
+                <Checkbox
+                  checked={agreeCancel}
+                  onCheckedChange={(v) => setAgreeCancel(!!v)}
+                  className="mt-0.5"
+                  disabled={policyOverflows && !policyScrolled}
+                />
                 <span>
-                  I accept the <strong>cancellation policy</strong>
-                  {cancellationPolicy ? <> ({cancellationPolicy.replace(/_/g, "-")})</> : null} and authorise {storeName} to contact me about this reservation.
+                  I accept the <strong>{cancellationLabel(cancellationPolicy)}</strong> cancellation policy and authorise {storeName} to contact me about this reservation.
                 </span>
               </label>
             </div>
