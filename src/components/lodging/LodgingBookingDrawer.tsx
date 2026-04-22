@@ -616,28 +616,45 @@ export function LodgingBookingDrawer({
               </div>
             </div>
 
+            {/* Conflict banner (live re-check) */}
+            {conflictDetected && (
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 text-xs font-medium">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <p>These dates are no longer available — please pick new dates.</p>
+              </div>
+            )}
+
             {/* Consent */}
-            <div className="space-y-2">
-              <label className={cn("flex items-start gap-2 text-xs cursor-pointer", policyOverflows && !policyScrolled && "opacity-50 pointer-events-none")}>
-                <Checkbox
-                  checked={agreeRules}
-                  onCheckedChange={(v) => setAgreeRules(!!v)}
-                  className="mt-0.5"
-                  disabled={policyOverflows && !policyScrolled}
-                />
-                <span>I have read and agree to the <strong>house rules</strong> and check-in policy.</span>
-              </label>
-              <label className={cn("flex items-start gap-2 text-xs cursor-pointer", policyOverflows && !policyScrolled && "opacity-50 pointer-events-none")}>
-                <Checkbox
-                  checked={agreeCancel}
-                  onCheckedChange={(v) => setAgreeCancel(!!v)}
-                  className="mt-0.5"
-                  disabled={policyOverflows && !policyScrolled}
-                />
-                <span>
-                  I accept the <strong>{cancellationLabel(cancellationPolicy)}</strong> cancellation policy and authorise {storeName} to contact me about this reservation.
-                </span>
-              </label>
+            <div className="space-y-3">
+              <div>
+                <label className={cn("flex items-start gap-2 text-xs cursor-pointer", ((policyOverflows && !policyScrolled) || !viewedRulesSource) && "opacity-50 pointer-events-none")}>
+                  <Checkbox
+                    checked={agreeRules}
+                    onCheckedChange={(v) => setAgreeRules(!!v)}
+                    className="mt-0.5"
+                    disabled={(policyOverflows && !policyScrolled) || !viewedRulesSource}
+                  />
+                  <span>I have read and agree to the <strong>house rules</strong> and check-in policy.</span>
+                </label>
+                <PolicySourceSheet type="house_rules" houseRules={houseRules as any} onOpened={() => setViewedRulesSource(true)} />
+                {!viewedRulesSource && <p className="text-[10px] text-amber-600 mt-0.5">Tap <strong>View source</strong> to enable this checkbox</p>}
+              </div>
+
+              <div>
+                <label className={cn("flex items-start gap-2 text-xs cursor-pointer", ((policyOverflows && !policyScrolled) || !viewedCancelSource) && "opacity-50 pointer-events-none")}>
+                  <Checkbox
+                    checked={agreeCancel}
+                    onCheckedChange={(v) => setAgreeCancel(!!v)}
+                    className="mt-0.5"
+                    disabled={(policyOverflows && !policyScrolled) || !viewedCancelSource}
+                  />
+                  <span>
+                    I accept the <strong>{cancellationLabel(cancellationPolicy)}</strong> cancellation policy and authorise {storeName} to contact me about this reservation.
+                  </span>
+                </label>
+                <PolicySourceSheet type="cancellation" cancellationKey={cancellationPolicy} onOpened={() => setViewedCancelSource(true)} />
+                {!viewedCancelSource && <p className="text-[10px] text-amber-600 mt-0.5">Tap <strong>View source</strong> to enable this checkbox</p>}
+              </div>
             </div>
 
             <p className="text-[11px] text-muted-foreground">
@@ -683,10 +700,36 @@ export function LodgingBookingDrawer({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" className="gap-1.5" onClick={downloadIcs}>
-                <CalendarPlus className="h-4 w-4" /> Add to calendar
-              </Button>
+            {/* Payment badge (live via realtime) */}
+            {liveReservation?.payment_status && liveReservation.payment_status !== "unpaid" && (
+              <div className="flex justify-center">
+                <LodgingPaymentBadge
+                  status={liveReservation.payment_status}
+                  amountCents={liveReservation.deposit_cents || liveReservation.total_cents}
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <IcsPreviewPanel
+                defaults={{
+                  reference,
+                  storeName,
+                  roomName,
+                  storePhone: storePhone || null,
+                  storeUrl: typeof window !== "undefined" ? window.location.href : null,
+                  guestName: name,
+                  guestEmail: email || null,
+                  checkIn,
+                  checkOut,
+                  defaultAddress: (propertyProfile as any)?.address || "",
+                  defaultCheckInTime: (propertyProfile as any)?.check_in_from || "15:00",
+                  defaultCheckOutTime: (propertyProfile as any)?.check_out_until || "11:00",
+                  defaultTimezone: (propertyProfile as any)?.timezone || "Asia/Phnom_Penh",
+                  totalText: fmtMoney(breakdown.total),
+                  cancellationText: cancellationDescription(cancellationPolicy),
+                }}
+              />
               {storePhone ? (
                 <a href={`tel:${storePhone}`} className="block">
                   <Button variant="outline" className="gap-1.5 w-full">
@@ -694,7 +737,7 @@ export function LodgingBookingDrawer({
                   </Button>
                 </a>
               ) : (
-                <Button variant="outline" className="gap-1.5" disabled>
+                <Button variant="outline" className="gap-1.5 w-full" disabled>
                   <MessageCircle className="h-4 w-4" /> Contact host
                 </Button>
               )}
