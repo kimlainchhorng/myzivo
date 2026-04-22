@@ -3191,6 +3191,9 @@ export default function AdminStoreEditPage() {
 
           {/* Products Tab */}
           <TabsContent value="products">
+            {isLodging ? (
+              <LodgingRoomsSection storeId={storeId!} />
+            ) : (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base">{form.category === "auto-repair" ? "Bookings" : t("admin.store.products")}</CardTitle>
@@ -3307,6 +3310,7 @@ export default function AdminStoreEditPage() {
                 )}
               </CardContent>
             </Card>
+            )}
           </TabsContent>
 
           {/* Payment / Booking Tab */}
