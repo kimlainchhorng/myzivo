@@ -1,18 +1,12 @@
 /**
  * AdsCampaignRow — campaign card with sparkline + budget bar + overflow menu.
  */
-import { type LucideIcon, MoreHorizontal, Pause, Play, Edit, Trash2, Copy, Megaphone } from "lucide-react";
+import { type LucideIcon, Pause, Play, Megaphone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
+import AdsCampaignRowMenu from "./AdsCampaignRowMenu";
 import type { AdCampaign, AdPlatform } from "@/hooks/useStoreAdsOverview";
 
 interface PlatformDef {
