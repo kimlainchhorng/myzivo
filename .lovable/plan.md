@@ -1,77 +1,94 @@
 
 
-# Hotels & Resort — Connect, polish & harden the full booking workflow
+# Hotels & Resort — Wiring report exports, payment liveness, idempotency & monitoring
 
-A focused round to wire the host-side admin to all the new guest-side intelligence, tighten UX, and audit the data flow end-to-end.
+Five upgrades that finish the diagnostics + Stripe-safety story.
 
-## 1. Bring the host admin up to parity with the guest experience
+## 1. CSV export of the wiring-check report
 
-The guest-side success screen and `TripDetailPage` already render the new `ReservationStatusTimeline`, `ReservationStatusHistory`, `LodgingPaymentBadge`, `PolicyAcknowledgementCard`, retry button, and CSV export. The host's `AdminLodgingReservationDetailPage` and `LodgingReservationsSection` still show the old plain badges only. Connect them:
+In `AdminLodgingWiringCheckPage.tsx`:
 
-- **`AdminLodgingReservationDetailPage`**:
-  - Add `ReservationStatusTimeline` at the top of the page body.
-  - Replace the hand-rolled "Audit log" card with `ReservationStatusHistory` (gets actor name + role automatically) + a `Download CSV` button using `auditCsv.ts`.
-  - Add a `LodgingPaymentBadge` next to the price block, with `onRetry` wired to `create-lodging-deposit` so hosts can re-mint a Stripe link if the guest's first attempt failed.
-  - Add `PolicyAcknowledgementCard` reading `policy_consent` + `policy_consent_version` from the row — hosts get legal proof at a glance.
-  - Use `useReservationLive(reservationId)` so status, payment_status, and audit rows refresh in real time as the guest pays / cancels.
-- **`LodgingReservationsSection` list**: render a compact `LodgingPaymentBadge` and a `ShieldCheck` "Policies acknowledged" pip on each row when `policy_consent` exists, so hosts can scan refund-pending and verified rows quickly.
+- New `Export CSV` button in the page header (next to `Re-run`).
+- Util `src/lib/admin/wiringReportCsv.ts` builds CSV with columns:
+  `run_at_iso, group, check_id, name, pass, severity, message, fix_sql`
+  Header row + UTF-8 BOM so Excel opens it cleanly. `fix_sql` is wrapped in quotes with `"` escaped.
+- File name: `lodging-wiring-report-{YYYYMMDD-HHmm}.csv`, downloaded via Blob + `URL.createObjectURL`.
+- Also persist the latest report snapshot to a new table `lodging_wiring_report_runs (id, ran_at, summary jsonb, pass_count int, fail_count int, ran_by uuid)` on every run, so monitoring (item 5) has history to diff against.
 
-## 2. Booking drawer — clearer, faster, fewer dead ends
+## 2. Loading + last-event marker on `LodgingPaymentBadge`
 
-Polish based on the screenshots:
+Two new visual states:
 
-- **Step 3 (Guest info)**: when the user lands on it via "back" (image 220), the dates summary is missing — render the locked `LodgingStaySelector` at the top of every step (stay/addons/guest/review), matching review's pattern. Adds the "Go back to change dates or guests" affordance everywhere.
-- **Step 4 consent block** (image 223): collapse the two long "Tap **View source** to enable this checkbox" hints into one compact row with a single emerald `View house rules · View cancellation` chip pair. Once a chip is tapped (opens `PolicySourceSheet`), it flips to `ShieldCheck Verified`. Removes the duplicate hint clutter.
-- **Step 4 marketplace footer** ("ZIVO is a marketplace…"): move it inside the policy scroll area so it doesn't compete with the Confirm button.
-- **Success step**: add three quick actions in a row above the .ics panel — `Copy ref`, `Share booking` (uses `navigator.share` with deep link `/trip/{id}`), and `Open chat with host` (deep links to `/chat?with={ownerId}`). Keep the existing `Contact host` (tel:) below.
-- **Sticky total bar**: at the bottom of every step, show a thin pill `{nights}n · {guests} · {total}` so the user always sees the running price (currently only visible in the price summary cards).
+- **Processing**: while a Stripe webhook is mid-flight (detected when `payment_status` is one of the transitional values `pending`, `processing`, OR when `stripe_last_event_at` is within the last 8 s). Renders a spinning `Loader2` chip "Processing Stripe update…" in muted tone.
+- **Last event timestamp**: small `Clock` micro-caption under the badge: `"Updated {timeAgo} · {event_type}"` (e.g. "Updated 12s ago · payment_intent.succeeded"). Hidden if no events yet.
 
-## 3. Sync `lodge_reservations.nights` and computed values via DB trigger
+Schema additions (migration):
+- `lodge_reservations.stripe_last_event_at timestamptz`
+- `lodge_reservations.stripe_last_event_type text`
 
-The drawer currently writes `total_cents`, `addons`, `fee_breakdown`, etc., but **does not write `nights`** — it relies on the row already having a default. The host detail page reads `reservation.nights` and shows `0` if the trigger isn't there.
+`stripe-lodging-webhook` writes both on every handled event (in addition to the existing payment_status update).
 
-- Add a Postgres trigger `tg_lodge_reservation_set_nights` on `lodge_reservations` (`BEFORE INSERT OR UPDATE OF check_in, check_out`) that sets `nights = (check_out - check_in)`. Idempotent.
-- Backfill existing rows: `UPDATE lodge_reservations SET nights = (check_out - check_in) WHERE nights IS NULL OR nights = 0`.
-- Also ensure `extras_cents`, `tax_cents`, `paid_cents` default to 0 (verify in migration; add `DEFAULT 0 NOT NULL` if missing) so the admin price card never shows `NaN`.
+The badge already subscribes via `useReservationLive`, so the spinner clears the moment the webhook commits.
 
-## 4. Payment-status retry & link-expiry hardening on `create-lodging-deposit`
+## 3. Wiring-check failures show failing SQL + "Open in editor"
 
-The retry button currently calls the function blindly. Make the function safe to re-invoke:
+Enhance the existing `lodging_wiring_report()` RPC and the page UI:
 
-- If the reservation already has a `stripe_session_id` AND the existing Checkout Session is still `open` (check via `stripe.checkout.sessions.retrieve`), return the same `url` instead of minting a new one — prevents duplicate authorizations.
-- If the session is `expired` or `complete` with a failed PI, create a fresh session and overwrite `stripe_session_id` + `stripe_payment_intent_id`.
-- Refuse to mint a session when `payment_status` is already `authorized`, `captured`, or `refund_pending` — return a structured `{ already_paid: true, status }` payload that the badge surfaces as a toast ("Already authorized — no charge needed").
-- Include `reservation_id` in `metadata` of both the Session and the PaymentIntent so the webhook never has to fall back to email matching.
+- RPC already returns `fix` (remediation SQL). Add two more JSON fields per check:
+  - `failing_query` — the exact diagnostic SQL that produced the failing result (e.g. `SELECT relrowsecurity FROM pg_class WHERE oid = 'public.lodge_reservations'::regclass`).
+  - `editor_url` — built server-side as `https://supabase.com/dashboard/project/slirphzzwcogdbkeicff/sql/new?content={url-encoded SQL}`.
+- In `AdminLodgingWiringCheckPage.tsx` each failing card now shows:
+  - A `<details>` "Show failing query" → mono `<pre>` with copy button.
+  - A primary `Open in SQL editor` button (opens `editor_url` in new tab) preloaded with the **fix** SQL (not the diagnostic) so the admin can run it immediately.
+  - Existing copy-fix button stays.
 
-## 5. End-to-end connection sanity audit
+## 4. Stronger idempotency on deposit retry
 
-A short verification pass — no new features, just confirming data flows wired correctly. Output a one-page "Lodging wiring report" in chat after the migration runs:
+Lock down `create-lodging-deposit` against race-condition double-charges:
 
-- **RLS**: `lodge_reservations` SELECT/INSERT/UPDATE policies cover `(guest = auth.uid()) OR (store owner)` — confirm via the security linter and adjust if the new `policy_consent`, `last_payment_error`, `stripe_*` columns need to remain readable to both parties.
-- **Realtime**: confirm `lodge_reservations` and `lodge_reservation_audit` are in `supabase_realtime` publication (already added previously, but double-check after any schema change).
-- **Edge functions**: `verify_jwt = false` only on `stripe-lodging-webhook`; everything else stays JWT-protected. Run `supabase--linter` and fix anything it flags.
-- **Foreign keys**: `lodge_reservations.room_id` → `lodge_rooms.id ON DELETE SET NULL` (so deleting a room doesn't wipe history); `lodge_reservation_audit.reservation_id` → `lodge_reservations.id ON DELETE CASCADE`. Add if missing.
-- **Indexes**: add `CREATE INDEX IF NOT EXISTS` on `(store_id, status, check_in)` and on `(stripe_payment_intent_id)` to keep the host list and webhook lookups O(log n) as data grows.
+- **DB**: add `lodge_reservations.payment_lock_token text` + `payment_lock_expires_at timestamptz`. Function uses an **advisory lock** keyed by `hashtext('lodge_dep_' || reservation_id)` for the duration of the call (Postgres `pg_try_advisory_xact_lock`). If lock fails → return `423 Locked` with `{ retry_after: 2 }`.
+- **Idempotency-Key**: pass `Idempotency-Key: lodge_dep_{reservation_id}_{attempt_hash}` on every `stripe.checkout.sessions.create` and `stripe.paymentIntents.update` call. `attempt_hash` = sha256 of `(reservation_id, deposit_cents, mode, current_payment_status)` — same inputs → same key → Stripe returns the same Session even on duplicate POSTs.
+- **Re-check after acquire**: re-read `payment_status` inside the lock and re-apply the existing `TERMINAL_PAYMENT_STATES` guard, so a webhook that arrives between the client click and the function entry can't be overridden.
+- **Client**: the badge's retry handler already disables itself while in flight; add a 5 s cool-down + dedupe via a `retryInFlightRef` ref so rapid taps don't spawn parallel calls.
+
+## 5. Automated wiring-report monitoring + alerts
+
+A scheduled run that diffs against the last snapshot and notifies on any change.
+
+- **Edge function** `lodging-wiring-monitor`:
+  - Calls `lodging_wiring_report()` via service role.
+  - Inserts a new `lodging_wiring_report_runs` row.
+  - Loads the previous run; computes a per-check diff (`pass→fail`, `fail→pass`, `still_failing` after N runs).
+  - On any **new failure** or **regression** (was-pass, now-fail), sends an alert through the existing `send-admin-alert` channel (Telegram + email) with the check name, message, and a link to `/admin/lodging/wiring-check`.
+  - "Recovered" alerts when fail→pass.
+- **pg_cron**: schedule every 15 min via the `pg_cron` + `pg_net` pattern (existing project uses these per the schedule-jobs guide).
+- **CI hook**: a one-shot GitHub-style script `scripts/wiring-check.ts` that hits the same edge function and exits non-zero on any failure — documented in the page footer ("Use in CI: `deno run scripts/wiring-check.ts`"). Optional, no GH Actions file added (project doesn't appear to manage one).
+- **History panel** at the bottom of `AdminLodgingWiringCheckPage`: last 10 runs as a sparkline + table (`ran_at`, `pass`, `fail`, delta vs prior).
 
 ## File map
 
+**Created**
+- `src/lib/admin/wiringReportCsv.ts` — CSV builder + download.
+- `supabase/functions/lodging-wiring-monitor/index.ts` — scheduled diff + alert.
+- `scripts/wiring-check.ts` — optional CI runner.
+
 **Modified**
-- `src/pages/admin/lodging/AdminLodgingReservationDetailPage.tsx` — timeline + history + payment badge + retry + ack card + live subscription + CSV button.
-- `src/components/admin/store/lodging/LodgingReservationsSection.tsx` — payment badge + acknowledged pip per row.
-- `src/components/lodging/LodgingBookingDrawer.tsx` — locked stay header on every step, compact consent chips, sticky total pill, success quick-actions row.
-- `supabase/functions/create-lodging-deposit/index.ts` — session reuse, metadata, already-paid guard.
+- `src/pages/admin/AdminLodgingWiringCheckPage.tsx` — Export CSV button, failing-SQL `<details>`, Open-in-editor button, history panel.
+- `src/components/lodging/LodgingPaymentBadge.tsx` — processing spinner state, last-event caption.
+- `supabase/functions/stripe-lodging-webhook/index.ts` — write `stripe_last_event_at` + `stripe_last_event_type` on every event.
+- `supabase/functions/create-lodging-deposit/index.ts` — advisory lock, Idempotency-Key headers, in-lock re-check, 423 on contention.
 
 **Migration**
-- Trigger `tg_lodge_reservation_set_nights` + backfill.
-- Defaults / NOT NULL on `extras_cents`, `tax_cents`, `paid_cents` if missing.
-- FK `room_id` → `lodge_rooms.id ON DELETE SET NULL`; FK on audit → cascade.
-- New indexes on `(store_id, status, check_in)` and `(stripe_payment_intent_id)`.
-
-**No new files**, no new dependencies. All UI follows v2026 high-density tokens (Lucide icons only, no emojis except on success header which already uses 🎉 — leave as-is).
+- Add `stripe_last_event_at timestamptz`, `stripe_last_event_type text`, `payment_lock_token text`, `payment_lock_expires_at timestamptz` to `lodge_reservations`.
+- Create table `lodging_wiring_report_runs` with RLS (admin-only via existing `has_role(uid,'admin')`).
+- Update `lodging_wiring_report()` RPC to include `failing_query` + `editor_url` per check.
+- Schedule `lodging-wiring-monitor` via `pg_cron` every 15 min (separate insert query — not in the migration, since it embeds the project ref + anon key per the scheduling guide).
 
 ## Technical notes
 
-- The retry hardening relies on Stripe SDK `sessions.retrieve` + `paymentIntents.retrieve` — both already imported via the shared `_shared/stripe.ts` shim.
-- `useReservationLive` is reused on the admin page — same channel name keys by reservation id, so both guest and host sit on the same realtime topic.
-- After the migration, run the security linter; if it flags any of the new columns, lock them down with a follow-up policy and report it in the wiring report.
+- Stripe SDK already supports `{ idempotencyKey }` as a per-request option on `sessions.create` / `paymentIntents.*` — no SDK upgrade needed.
+- Advisory locks are transaction-scoped (`pg_try_advisory_xact_lock`) — they auto-release on function exit, so no orphaned locks even if the function crashes.
+- `lodging_wiring_report_runs` only retains the last 200 runs (a `BEFORE INSERT` trigger trims the tail) to keep storage bounded.
+- All UI follows v2026 high-density tokens (Lucide only, `text-[11px]`, `rounded-xl`).
+- No new npm dependencies.
 
