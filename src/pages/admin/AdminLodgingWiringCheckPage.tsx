@@ -6,7 +6,7 @@
  * Actions audit tab, CSV export, and a deep-link to the webhook event log.
  */
 import { useEffect, useMemo, useState, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,6 +64,7 @@ const isWebhookCheck = (c: WiringCheck): boolean => {
 
 export default function AdminLodgingWiringCheckPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const currentRunIdRef = useRef<string | null>(null);
 
   const { data, isLoading, isFetching, refetch, error } = useQuery({
@@ -77,7 +78,24 @@ export default function AdminLodgingWiringCheckPage() {
 
   const [history, setHistory] = useState<RunRow[]>([]);
   const [actions, setActions] = useState<ActionRow[]>([]);
+  const [adminEmails, setAdminEmails] = useState<Record<string, string>>({});
   const [historyTab, setHistoryTab] = useState<"runs" | "actions">("runs");
+
+  // Action-panel filters (URL-synced)
+  const [filterAdmin, setFilterAdmin] = useState(searchParams.get("admin") || "");
+  const [filterRun, setFilterRun] = useState(searchParams.get("run") || "");
+  const [filterCheck, setFilterCheck] = useState(searchParams.get("check") || "");
+  const [filterType, setFilterType] = useState<string>(searchParams.get("type") || "");
+
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    filterAdmin ? next.set("admin", filterAdmin) : next.delete("admin");
+    filterRun ? next.set("run", filterRun) : next.delete("run");
+    filterCheck ? next.set("check", filterCheck) : next.delete("check");
+    filterType ? next.set("type", filterType) : next.delete("type");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterAdmin, filterRun, filterCheck, filterType]);
 
   const loadHistory = async () => {
     const { data } = await (supabase as any)
@@ -94,7 +112,19 @@ export default function AdminLodgingWiringCheckPage() {
       .select("id, created_at, admin_id, run_id, check_id, check_name, action_type, editor_url")
       .order("created_at", { ascending: false })
       .limit(50);
-    setActions((data as ActionRow[]) || []);
+    const list = (data as ActionRow[]) || [];
+    setActions(list);
+    // Resolve admin emails (one shot)
+    const ids = Array.from(new Set(list.map((a) => a.admin_id))).filter(Boolean);
+    if (ids.length > 0) {
+      const { data: profs } = await (supabase as any)
+        .from("profiles")
+        .select("user_id, email")
+        .in("user_id", ids);
+      const map: Record<string, string> = {};
+      (profs || []).forEach((p: any) => { if (p.user_id) map[p.user_id] = p.email || ""; });
+      setAdminEmails(map);
+    }
   };
 
   useEffect(() => { loadHistory(); loadActions(); }, [data]);
