@@ -27021,6 +27021,7 @@ export type Database = {
           check_out: string
           children: number | null
           created_at: string
+          deposit_cents: number
           extras_cents: number | null
           fee_breakdown: Json
           guest_country: string | null
@@ -27043,6 +27044,8 @@ export type Database = {
           source: string | null
           status: string
           store_id: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           tax_cents: number | null
           total_cents: number | null
           updated_at: string
@@ -27055,6 +27058,7 @@ export type Database = {
           check_out: string
           children?: number | null
           created_at?: string
+          deposit_cents?: number
           extras_cents?: number | null
           fee_breakdown?: Json
           guest_country?: string | null
@@ -27077,6 +27081,8 @@ export type Database = {
           source?: string | null
           status?: string
           store_id: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           tax_cents?: number | null
           total_cents?: number | null
           updated_at?: string
@@ -27089,6 +27095,7 @@ export type Database = {
           check_out?: string
           children?: number | null
           created_at?: string
+          deposit_cents?: number
           extras_cents?: number | null
           fee_breakdown?: Json
           guest_country?: string | null
@@ -27111,6 +27118,8 @@ export type Database = {
           source?: string | null
           status?: string
           store_id?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           tax_cents?: number | null
           total_cents?: number | null
           updated_at?: string

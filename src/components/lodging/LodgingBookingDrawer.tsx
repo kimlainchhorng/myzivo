@@ -2,10 +2,11 @@
  * LodgingBookingDrawer - Multi-step booking sheet (stay → add-ons → guest → review → success).
  * Writes a 'hold' lodge_reservations row with addons + fee breakdown + payment method.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Loader2, ChevronLeft, ChevronRight, CheckCircle2, Minus, Plus, AlertTriangle,
   Wallet, CreditCard, Building2, Copy, CalendarPlus, MessageCircle, ShieldCheck,
+  ArrowDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,10 +16,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ResponsiveModal, ResponsiveModalFooter } from "@/components/ui/responsive-modal";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { LodgingStaySelector } from "@/components/lodging/LodgingStaySelector";
+import { ReservationStatusTimeline } from "@/components/lodging/ReservationStatusTimeline";
 import { useRoomAvailability, hasUnavailableNight } from "@/hooks/lodging/useRoomAvailability";
+import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { cancellationLabel, cancellationDescription } from "@/lib/lodging/cancellationCopy";
+import { validateGuest } from "@/lib/lodging/guestSchema";
+import { buildBookingIcs, downloadIcsFile } from "@/lib/lodging/ics";
 import type { LodgeAddon, RoomFees, ChildPolicy } from "@/hooks/lodging/useLodgeRooms";
 
 interface Props {
@@ -89,6 +95,15 @@ export function LodgingBookingDrawer({
   const [agreeCancel, setAgreeCancel] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [reference, setReference] = useState<string | null>(null);
+  const [reservationId, setReservationId] = useState<string | null>(null);
+  const [reservationStatus] = useState<"hold" | "confirmed" | "checked_in" | "checked_out" | "cancelled" | "no_show">("hold");
+  const [guestTouched, setGuestTouched] = useState<Record<string, boolean>>({});
+  const [policyScrolled, setPolicyScrolled] = useState(false);
+  const [policyOverflows, setPolicyOverflows] = useState(false);
+  const policyRef = useRef<HTMLDivElement | null>(null);
+
+  const { data: propertyProfile } = useLodgePropertyProfile(storeId);
+  const houseRules = (propertyProfile?.house_rules || {}) as Record<string, any>;
 
   const { availabilityMap, disabledDates } = useRoomAvailability(open ? roomId : undefined);
   const rangeIssue = useMemo(
@@ -196,16 +211,32 @@ export function LodgingBookingDrawer({
     else if (step === "addons") setStep("stay");
   };
 
-  const guestValid = name.trim().length > 1 && phone.trim().length > 5;
-  const reviewValid = agreeRules && agreeCancel && !!payMethod;
+  const guestCheck = useMemo(() => validateGuest({ name, phone, email }), [name, phone, email]);
+  const guestValid = guestCheck.valid;
+  const reviewValid = agreeRules && agreeCancel && !!payMethod && (policyScrolled || !policyOverflows);
+
+  // Detect if policy panel overflows once rendered
+  useEffect(() => {
+    if (step !== "review") return;
+    const el = policyRef.current;
+    if (!el) return;
+    const overflows = el.scrollHeight > el.clientHeight + 2;
+    setPolicyOverflows(overflows);
+    if (!overflows) setPolicyScrolled(true);
+  }, [step, propertyProfile, cancellationPolicy]);
+
+  const onPolicyScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 6) setPolicyScrolled(true);
+  };
 
   const submit = async () => {
-    if (!guestValid) { toast.error("Name and phone required"); setStep("guest"); return; }
-    if (!reviewValid) { toast.error("Please confirm the policies"); return; }
+    if (!guestValid) { toast.error("Please complete your guest details"); setStep("guest"); return; }
+    if (!reviewValid) { toast.error("Please read & accept the policies"); return; }
     setSubmitting(true);
     try {
       const ref = `RES-${Date.now().toString().slice(-6)}`;
-      const { error } = await supabase.from("lodge_reservations" as any).insert({
+      const { data: inserted, error } = await supabase.from("lodge_reservations" as any).insert({
         store_id: storeId,
         room_id: roomId,
         number: ref,
@@ -218,11 +249,34 @@ export function LodgingBookingDrawer({
         fee_breakdown: breakdown.feeBreakdown,
         guest_details: { name, phone, email, country, eta, notes, pay_method: payMethod },
         notes: notes || null,
-      });
+      }).select("id").maybeSingle();
       if (error) throw error;
       setReference(ref);
+      setReservationId((inserted as any)?.id || null);
       setStep("success");
       onBooked?.();
+
+      // Trigger Stripe deposit/hold for "card on arrival"
+      if (payMethod === "card_on_arrival" && (inserted as any)?.id) {
+        try {
+          const depositCents = securityDeposit > 0 ? securityDeposit : breakdown.total;
+          const { data: sessionData, error: fnErr } = await supabase.functions.invoke("create-lodging-deposit", {
+            body: {
+              reservation_id: (inserted as any).id,
+              store_id: storeId,
+              deposit_cents: depositCents,
+              mode: securityDeposit > 0 ? "deposit" : "full",
+            },
+          });
+          if (fnErr) throw fnErr;
+          if (sessionData?.url) {
+            window.open(sessionData.url, "_blank");
+            toast.success("Opening secure Stripe checkout…");
+          }
+        } catch (payErr: any) {
+          toast.error(payErr?.message || "Could not open Stripe checkout");
+        }
+      }
     } catch (e: any) {
       toast.error(e.message || "Failed to submit booking");
     } finally {
@@ -252,33 +306,35 @@ export function LodgingBookingDrawer({
   const handleClose = () => {
     // Reset for next open
     if (step === "success") {
-      setStep("stay"); setSelected({}); setReference(null);
+      setStep("stay"); setSelected({}); setReference(null); setReservationId(null);
       setName(""); setPhone(""); setEmail(""); setCountry(""); setEta(""); setNotes("");
       setAgreeRules(false); setAgreeCancel(false); setPayMethod("pay_at_property");
+      setGuestTouched({}); setPolicyScrolled(false); setPolicyOverflows(false);
     }
     onClose();
   };
 
-  // Calendar (.ics) generator
+  // Rich .ics generator with timezone, address, contact, and timed events
   const downloadIcs = () => {
-    const dt = (s: string) => s.replace(/-/g, "");
-    const ics = [
-      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//ZIVO//Lodging//EN",
-      "BEGIN:VEVENT",
-      `UID:${reference}@zivo`,
-      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").split(".")[0]}Z`,
-      `DTSTART;VALUE=DATE:${dt(checkIn)}`,
-      `DTEND;VALUE=DATE:${dt(checkOut)}`,
-      `SUMMARY:Stay at ${storeName} – ${roomName}`,
-      `DESCRIPTION:Booking ${reference}\\nGuest: ${name}\\nTotal: ${fmtMoney(breakdown.total)}`,
-      `LOCATION:${storeName}`,
-      "END:VEVENT", "END:VCALENDAR",
-    ].join("\r\n");
-    const blob = new Blob([ics], { type: "text/calendar" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `${reference}.ics`; a.click();
-    URL.revokeObjectURL(url);
+    if (!reference) return;
+    const ics = buildBookingIcs({
+      reference,
+      storeName,
+      roomName,
+      storeAddress: (propertyProfile as any)?.address || null,
+      storePhone: storePhone || null,
+      storeUrl: typeof window !== "undefined" ? window.location.href : null,
+      guestName: name,
+      guestEmail: email || null,
+      checkIn,
+      checkOut,
+      checkInTime: (propertyProfile as any)?.check_in_from || "15:00",
+      checkOutTime: (propertyProfile as any)?.check_out_until || "11:00",
+      timezone: (propertyProfile as any)?.timezone || undefined,
+      totalText: fmtMoney(breakdown.total),
+      cancellationText: cancellationDescription(cancellationPolicy),
+    });
+    downloadIcsFile(reference, ics);
   };
 
   const copyRef = () => {
@@ -417,13 +473,41 @@ export function LodgingBookingDrawer({
 
         {step === "guest" && (
           <>
-            <div><Label>Full name *</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" /></div>
             <div>
+              <Label>Full name *</Label>
+              <Input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                onBlur={() => setGuestTouched(t => ({ ...t, name: true }))}
+                placeholder="Your full name"
+                aria-invalid={!!(guestTouched.name && guestCheck.errors.name)}
+              />
+              {guestTouched.name && guestCheck.errors.name && (
+                <p className="text-[11px] text-destructive mt-1">{guestCheck.errors.name}</p>
+              )}
+            </div>
+            <div onBlur={() => setGuestTouched(t => ({ ...t, phone: true }))}>
               <Label>Phone *</Label>
               <CountryPhoneInput value={phone} onChange={setPhone} />
+              {guestTouched.phone && guestCheck.errors.phone && (
+                <p className="text-[11px] text-destructive mt-1">{guestCheck.errors.phone}</p>
+              )}
             </div>
             <div className="grid grid-cols-1 gap-3">
-              <div><Label>Email</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" /></div>
+              <div>
+                <Label>Email *</Label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  onBlur={() => setGuestTouched(t => ({ ...t, email: true }))}
+                  placeholder="you@example.com"
+                  aria-invalid={!!(guestTouched.email && guestCheck.errors.email)}
+                />
+                {guestTouched.email && guestCheck.errors.email && (
+                  <p className="text-[11px] text-destructive mt-1">{guestCheck.errors.email}</p>
+                )}
+              </div>
               <div><Label>Country</Label><Input value={country} onChange={e => setCountry(e.target.value)} placeholder="e.g. United States" /></div>
             </div>
             <div>
@@ -489,17 +573,67 @@ export function LodgingBookingDrawer({
 
             <PriceSummary breakdown={breakdown} fmt={fmtMoney} />
 
+            {/* House rules + cancellation policy (scroll-to-confirm) */}
+            <div className="space-y-2">
+              <Label className="flex items-center justify-between">
+                <span>House rules &amp; cancellation policy</span>
+                {policyOverflows && !policyScrolled && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600">
+                    <ArrowDown className="h-3 w-3" /> Scroll to read all
+                  </span>
+                )}
+              </Label>
+              <div
+                ref={policyRef}
+                onScroll={onPolicyScroll}
+                className="max-h-44 overflow-y-auto rounded-xl border border-border bg-muted/30 p-3 text-[11px] leading-relaxed space-y-2"
+              >
+                <div>
+                  <p className="font-bold text-xs mb-1">House rules</p>
+                  <ul className="list-disc pl-4 space-y-0.5">
+                    {houseRules.quiet_hours && <li>Quiet hours: {houseRules.quiet_hours}</li>}
+                    <li>Parties / events: {houseRules.parties_allowed ? "allowed (please notify host)" : "not allowed"}</li>
+                    {houseRules.smoking_zones && <li>Smoking: {houseRules.smoking_zones}</li>}
+                    {houseRules.min_age != null && <li>Minimum guest age: {houseRules.min_age}+</li>}
+                    {houseRules.id_at_checkin && <li>Government-issued ID required at check-in</li>}
+                    {securityDeposit > 0 && <li>Refundable security deposit: <strong>{fmtMoney(securityDeposit)}</strong> (collected at check-in)</li>}
+                    {!Object.keys(houseRules).length && (
+                      <li className="text-muted-foreground">Standard house rules apply. Please respect the property and other guests.</li>
+                    )}
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-bold text-xs mb-1">
+                    Cancellation policy · {cancellationLabel(cancellationPolicy)}
+                  </p>
+                  <p>{cancellationDescription(cancellationPolicy)}</p>
+                </div>
+                <p className="text-muted-foreground pt-1">
+                  ZIVO is a marketplace; {storeName} is the merchant of record for your stay and handles refunds, modifications, and on-site issues.
+                </p>
+              </div>
+            </div>
+
             {/* Consent */}
             <div className="space-y-2">
-              <label className="flex items-start gap-2 text-xs cursor-pointer">
-                <Checkbox checked={agreeRules} onCheckedChange={(v) => setAgreeRules(!!v)} className="mt-0.5" />
+              <label className={cn("flex items-start gap-2 text-xs cursor-pointer", policyOverflows && !policyScrolled && "opacity-50 pointer-events-none")}>
+                <Checkbox
+                  checked={agreeRules}
+                  onCheckedChange={(v) => setAgreeRules(!!v)}
+                  className="mt-0.5"
+                  disabled={policyOverflows && !policyScrolled}
+                />
                 <span>I have read and agree to the <strong>house rules</strong> and check-in policy.</span>
               </label>
-              <label className="flex items-start gap-2 text-xs cursor-pointer">
-                <Checkbox checked={agreeCancel} onCheckedChange={(v) => setAgreeCancel(!!v)} className="mt-0.5" />
+              <label className={cn("flex items-start gap-2 text-xs cursor-pointer", policyOverflows && !policyScrolled && "opacity-50 pointer-events-none")}>
+                <Checkbox
+                  checked={agreeCancel}
+                  onCheckedChange={(v) => setAgreeCancel(!!v)}
+                  className="mt-0.5"
+                  disabled={policyOverflows && !policyScrolled}
+                />
                 <span>
-                  I accept the <strong>cancellation policy</strong>
-                  {cancellationPolicy ? <> ({cancellationPolicy.replace(/_/g, "-")})</> : null} and authorise {storeName} to contact me about this reservation.
+                  I accept the <strong>{cancellationLabel(cancellationPolicy)}</strong> cancellation policy and authorise {storeName} to contact me about this reservation.
                 </span>
               </label>
             </div>
@@ -528,6 +662,12 @@ export function LodgingBookingDrawer({
                   <Copy className="h-3.5 w-3.5" />
                 </Button>
               </div>
+            </div>
+
+            {/* Status timeline */}
+            <div className="p-3 rounded-xl border border-border bg-card">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Booking status</p>
+              <ReservationStatusTimeline status={reservationStatus} />
             </div>
 
             <div className="p-3 rounded-xl bg-muted/40 text-xs space-y-1">
