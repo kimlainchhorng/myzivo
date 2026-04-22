@@ -1,7 +1,8 @@
 /**
  * stripe-lodging-webhook
  * Listens to Stripe payment_intent + charge events and updates lodge_reservations.payment_status.
- * Also handles refund-in-progress and stores last_payment_error for retry context.
+ * Also stamps `stripe_last_event_at` + `stripe_last_event_type` on every handled event so the
+ * UI can surface a live "Updated 12s ago · payment_intent.succeeded" caption.
  */
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
@@ -33,20 +34,36 @@ Deno.serve(async (req) => {
   }
 
   const admin = createClient(supabaseUrl, serviceKey);
+  const eventType = event.type as string;
+  const eventStamp = new Date().toISOString();
 
-  const updateByPI = async (paymentIntentId: string, payment_status: string, extra: Record<string, any> = {}) => {
+  const updateByPI = async (
+    paymentIntentId: string,
+    payment_status: string,
+    extra: Record<string, any> = {}
+  ) => {
     const { error } = await admin
       .from("lodge_reservations")
-      .update({ payment_status, ...extra })
+      .update({
+        payment_status,
+        stripe_last_event_at: eventStamp,
+        stripe_last_event_type: eventType,
+        ...extra,
+      })
       .eq("stripe_payment_intent_id", paymentIntentId);
     if (error) console.error("[stripe-lodging-webhook] update failed", error);
   };
 
   try {
-    switch (event.type) {
+    switch (eventType) {
       case "payment_intent.amount_capturable_updated": {
         const pi = event.data.object;
         await updateByPI(pi.id, "authorized", { last_payment_error: null });
+        break;
+      }
+      case "payment_intent.processing": {
+        const pi = event.data.object;
+        await updateByPI(pi.id, "processing");
         break;
       }
       case "payment_intent.succeeded": {
@@ -92,10 +109,13 @@ Deno.serve(async (req) => {
         const session = event.data.object;
         const piId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
         if (piId) {
-          // ensure stripe_payment_intent_id is stored even if create-lodging-deposit didn't have it yet
           const { error } = await admin
             .from("lodge_reservations")
-            .update({ stripe_payment_intent_id: piId })
+            .update({
+              stripe_payment_intent_id: piId,
+              stripe_last_event_at: eventStamp,
+              stripe_last_event_type: eventType,
+            })
             .eq("stripe_session_id", session.id)
             .is("stripe_payment_intent_id", null);
           if (error) console.error("[stripe-lodging-webhook] backfill PI failed", error);
@@ -103,7 +123,6 @@ Deno.serve(async (req) => {
         break;
       }
       default:
-        // ignore
         break;
     }
     return new Response(JSON.stringify({ received: true }), {

@@ -2,9 +2,9 @@
  * AdminLodgingWiringCheckPage
  * End-to-end wiring check for the lodging booking workflow.
  * Calls `lodging_wiring_report()` (admin-only RPC) and renders pass/fail per check
- * with copyable SQL fixes and links to related dashboards.
+ * with copyable SQL fixes, "Open in SQL editor" deep links, history sparkline, and CSV export.
  */
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,33 +13,30 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft, RefreshCw, CheckCircle2, XCircle, Copy, ExternalLink,
-  Database, Radio, Link as LinkIcon, Layers, Columns, Wrench, Activity,
+  Database, Radio, Link as LinkIcon, Layers, Columns, Wrench, Activity, Download, Code2,
 } from "lucide-react";
 import { toast } from "sonner";
-
-type Check = {
-  group: string;
-  name: string;
-  pass: boolean;
-  fix: string;
-};
-
-type Report = {
-  generated_at: string;
-  reservations_count: number;
-  audit_count: number;
-  checks: Check[];
-};
+import { downloadWiringReportCsv, type WiringReport, type WiringCheck } from "@/lib/admin/wiringReportCsv";
 
 const SUPABASE_PROJECT = "slirphzzwcogdbkeicff";
+
 const groupIcon: Record<string, typeof Database> = {
   RLS: Database,
+  Security: Database,
   Realtime: Radio,
   "Foreign keys": LinkIcon,
-  Indexes: Layers,
   Schema: Columns,
+  Performance: Layers,
+  Indexes: Layers,
   Triggers: Wrench,
 };
+
+interface RunRow {
+  id: string;
+  ran_at: string;
+  pass_count: number;
+  fail_count: number;
+}
 
 export default function AdminLodgingWiringCheckPage() {
   const navigate = useNavigate();
@@ -49,12 +46,37 @@ export default function AdminLodgingWiringCheckPage() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("lodging_wiring_report" as any);
       if (error) throw error;
-      return data as unknown as Report;
+      return data as unknown as WiringReport;
     },
   });
 
+  const [history, setHistory] = useState<RunRow[]>([]);
+  const loadHistory = async () => {
+    const { data } = await (supabase as any)
+      .from("lodging_wiring_report_runs")
+      .select("id, ran_at, pass_count, fail_count")
+      .order("ran_at", { ascending: false })
+      .limit(10);
+    setHistory((data as RunRow[]) || []);
+  };
+  useEffect(() => { loadHistory(); }, [data]);
+
+  // Persist a run row each time we refetch (admin-only RLS)
+  useEffect(() => {
+    if (!data) return;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      await (supabase as any).from("lodging_wiring_report_runs").insert({
+        summary: data,
+        pass_count: data.pass_count ?? 0,
+        fail_count: data.fail_count ?? 0,
+        ran_by: u?.user?.id ?? null,
+      });
+    })().catch(() => {});
+  }, [data]);
+
   const grouped = useMemo(() => {
-    const out = new Map<string, Check[]>();
+    const out = new Map<string, WiringCheck[]>();
     (data?.checks || []).forEach((c) => {
       if (!out.has(c.group)) out.set(c.group, []);
       out.get(c.group)!.push(c);
@@ -73,9 +95,15 @@ export default function AdminLodgingWiringCheckPage() {
 
   const allPass = totals.fail === 0 && totals.total > 0;
 
-  const copyFix = (sql: string) => {
-    navigator.clipboard.writeText(sql);
-    toast.success("Fix copied to clipboard");
+  const copyText = (txt: string, label = "Copied") => {
+    navigator.clipboard.writeText(txt);
+    toast.success(label);
+  };
+
+  const handleExportCsv = () => {
+    if (!data) return;
+    downloadWiringReportCsv(data);
+    toast.success("CSV exported");
   };
 
   return (
@@ -95,16 +123,27 @@ export default function AdminLodgingWiringCheckPage() {
             </p>
           </div>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="rounded-xl"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isFetching ? "animate-spin" : ""}`} />
-          Re-run
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleExportCsv}
+            disabled={!data || isLoading}
+            className="rounded-xl"
+          >
+            <Download className="h-3.5 w-3.5 mr-1.5" /> Export CSV
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="rounded-xl"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isFetching ? "animate-spin" : ""}`} />
+            Re-run
+          </Button>
+        </div>
       </div>
 
       {/* Summary */}
@@ -137,7 +176,7 @@ export default function AdminLodgingWiringCheckPage() {
                     {allPass ? "All wired correctly" : `${totals.fail} check${totals.fail === 1 ? "" : "s"} failing`}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    {totals.pass}/{totals.total} pass · {data?.reservations_count ?? 0} reservations · {data?.audit_count ?? 0} audit rows
+                    {totals.pass}/{totals.total} pass
                   </p>
                 </div>
               </div>
@@ -214,7 +253,7 @@ export default function AdminLodgingWiringCheckPage() {
               <CardContent className="p-3 pt-0 space-y-2">
                 {items.map((c) => (
                   <div
-                    key={c.name}
+                    key={c.id || c.name}
                     className={`rounded-xl border p-2.5 ${
                       c.pass
                         ? "border-emerald-500/20 bg-emerald-500/5"
@@ -228,25 +267,62 @@ export default function AdminLodgingWiringCheckPage() {
                         ) : (
                           <XCircle className="h-3.5 w-3.5 text-destructive mt-0.5 shrink-0" />
                         )}
-                        <p className="text-[12px] font-medium text-foreground break-words">
-                          {c.name}
-                        </p>
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-medium text-foreground break-words">
+                            {c.name}
+                          </p>
+                          {c.message && (
+                            <p className="text-[10px] text-muted-foreground break-words mt-0.5">{c.message}</p>
+                          )}
+                        </div>
                       </div>
-                      {!c.pass && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => copyFix(c.fix)}
-                          className="h-6 px-2 rounded-lg text-[10px]"
-                        >
-                          <Copy className="h-3 w-3 mr-1" /> Copy fix
-                        </Button>
+                      {!c.pass && c.fix && (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => copyText(c.fix!, "Fix copied")}
+                            className="h-6 px-2 rounded-lg text-[10px]"
+                          >
+                            <Copy className="h-3 w-3 mr-1" /> Copy
+                          </Button>
+                          {c.editor_url && (
+                            <a
+                              href={c.editor_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 h-6 px-2 rounded-lg text-[10px] bg-primary text-primary-foreground hover:opacity-90"
+                            >
+                              <ExternalLink className="h-3 w-3" /> Open in editor
+                            </a>
+                          )}
+                        </div>
                       )}
                     </div>
-                    {!c.pass && (
+                    {!c.pass && c.fix && (
                       <pre className="mt-2 text-[10px] bg-muted/50 rounded-lg p-2 overflow-x-auto text-muted-foreground whitespace-pre-wrap break-all">
                         {c.fix}
                       </pre>
+                    )}
+                    {!c.pass && c.failing_query && (
+                      <details className="mt-2 group">
+                        <summary className="cursor-pointer text-[10px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+                          <Code2 className="h-3 w-3" /> Show failing query
+                        </summary>
+                        <div className="mt-1.5 flex items-start gap-1">
+                          <pre className="flex-1 text-[10px] bg-background border border-border rounded-lg p-2 overflow-x-auto text-muted-foreground whitespace-pre-wrap break-all">
+                            {c.failing_query}
+                          </pre>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => copyText(c.failing_query!, "Query copied")}
+                            className="h-6 px-2 rounded-lg text-[10px] shrink-0"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </details>
                     )}
                   </div>
                 ))}
@@ -256,9 +332,64 @@ export default function AdminLodgingWiringCheckPage() {
         })}
       </div>
 
-      {data?.generated_at && (
+      {/* History panel */}
+      {history.length > 0 && (
+        <Card className="rounded-2xl border-border/60">
+          <CardHeader className="p-3 pb-2">
+            <CardTitle className="text-[13px] font-semibold flex items-center gap-2">
+              <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+              Recent runs
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            {/* Sparkline */}
+            <div className="flex items-end gap-1 h-10 mb-2">
+              {[...history].reverse().map((h) => {
+                const total = h.pass_count + h.fail_count || 1;
+                const passPct = (h.pass_count / total) * 100;
+                return (
+                  <div
+                    key={h.id}
+                    title={`${new Date(h.ran_at).toLocaleString()} — ${h.pass_count} pass / ${h.fail_count} fail`}
+                    className="flex-1 rounded-t-sm bg-muted relative overflow-hidden"
+                    style={{ height: "100%" }}
+                  >
+                    <div
+                      className={`absolute bottom-0 left-0 right-0 ${h.fail_count === 0 ? "bg-emerald-500" : "bg-destructive"}`}
+                      style={{ height: `${passPct}%` }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div className="space-y-1">
+              {history.map((h, i) => {
+                const prev = history[i + 1];
+                const delta = prev ? h.fail_count - prev.fail_count : 0;
+                return (
+                  <div key={h.id} className="flex items-center justify-between text-[11px] text-muted-foreground border-b border-border/40 last:border-b-0 py-1">
+                    <span>{new Date(h.ran_at).toLocaleString()}</span>
+                    <span className="flex items-center gap-2">
+                      <span className="text-emerald-600">{h.pass_count}p</span>
+                      <span className={h.fail_count > 0 ? "text-destructive" : ""}>{h.fail_count}f</span>
+                      {delta !== 0 && (
+                        <span className={delta > 0 ? "text-destructive" : "text-emerald-600"}>
+                          {delta > 0 ? `+${delta}` : delta}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {data?.ran_at && (
         <p className="text-[10px] text-muted-foreground text-center">
-          Generated {new Date(data.generated_at).toLocaleString()}
+          Generated {new Date(data.ran_at).toLocaleString()} ·
+          Use in CI: <code className="px-1 rounded bg-muted">deno run --allow-net --allow-env scripts/wiring-check.ts</code>
         </p>
       )}
     </div>
