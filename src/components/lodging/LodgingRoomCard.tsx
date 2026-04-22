@@ -17,21 +17,27 @@ interface Props {
   imageUrl?: string;
   description?: string | null;
   addonsCount?: number;
+  /** Optional: full photos array + cover index. If provided, takes precedence over imageUrl. */
+  photos?: string[];
+  coverIndex?: number;
   onReserve: () => void;
 }
 
 export function LodgingRoomCard({
   name, type, beds, maxGuests, baseRateCents, amenities = [], breakfastIncluded, imageUrl,
-  description, addonsCount = 0, onReserve,
+  description, addonsCount = 0, photos, coverIndex, onReserve,
 }: Props) {
+  const resolvedImage = (photos && photos.length > 0)
+    ? (photos[coverIndex ?? 0] ?? photos[0])
+    : imageUrl;
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
       className="rounded-2xl overflow-hidden border border-border/60 bg-card shadow-sm"
     >
       <div className="aspect-[16/9] bg-muted/30 relative">
-        {imageUrl ? (
-          <img src={imageUrl} alt={name} className="h-full w-full object-cover" loading="lazy" />
+        {resolvedImage ? (
+          <img src={resolvedImage} alt={name} className="h-full w-full object-cover" loading="lazy" />
         ) : (
           <div className="h-full w-full flex items-center justify-center">
             <BedDouble className="h-10 w-10 text-muted-foreground/30" />

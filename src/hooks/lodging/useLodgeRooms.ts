@@ -22,6 +22,7 @@ export interface LodgeRoom {
   photos: string[];
   sort_order: number;
   is_active: boolean;
+  cover_photo_index?: number | null;
   description?: string | null;
   cancellation_policy?: string | null;
   check_in_time?: string | null;
