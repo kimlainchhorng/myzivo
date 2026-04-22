@@ -26947,6 +26947,8 @@ export type Database = {
       lodge_reservation_audit: {
         Row: {
           actor_id: string | null
+          actor_role: string | null
+          actor_user_id: string | null
           created_at: string
           from_status: string | null
           id: string
@@ -26957,6 +26959,8 @@ export type Database = {
         }
         Insert: {
           actor_id?: string | null
+          actor_role?: string | null
+          actor_user_id?: string | null
           created_at?: string
           from_status?: string | null
           id?: string
@@ -26967,6 +26971,8 @@ export type Database = {
         }
         Update: {
           actor_id?: string | null
+          actor_role?: string | null
+          actor_user_id?: string | null
           created_at?: string
           from_status?: string | null
           id?: string

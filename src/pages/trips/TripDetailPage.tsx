@@ -20,6 +20,10 @@ import {
   useDeleteTripItem, ItemType, TripItem,
 } from "@/hooks/useTripItineraries";
 import { format } from "date-fns";
+import { ReservationStatusTimeline, type LodgeStatus } from "@/components/lodging/ReservationStatusTimeline";
+import { ReservationStatusHistory } from "@/components/lodging/ReservationStatusHistory";
+import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
+import { useReservationLive } from "@/hooks/lodging/useReservationLive";
 
 const itemIcons: Record<ItemType, typeof Plane> = {
   flight: Plane,
@@ -196,6 +200,11 @@ export default function TripDetailPage() {
 
         <Separator className="mb-6" />
 
+        {/* Lodging reservation timeline (auto-rendered if trip has linked lodge_reservation_id in metadata) */}
+        {(trip as any).lodge_reservation_id && (
+          <LodgingTimelineBlock reservationId={(trip as any).lodge_reservation_id} />
+        )}
+
         {/* Add item button */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-lg">Itinerary</h2>
@@ -356,5 +365,31 @@ function TripItemCard({ item, onDelete }: { item: TripItem; onDelete: () => void
         </CardContent>
       </Card>
     </motion.div>
+  );
+}
+
+function LodgingTimelineBlock({ reservationId }: { reservationId: string }) {
+  const { data: live } = useReservationLive(reservationId);
+  if (!live) return null;
+  return (
+    <div className="mb-6 space-y-3">
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h3 className="text-sm font-bold flex items-center gap-1.5"><Hotel className="h-3.5 w-3.5 text-primary" /> Booking status</h3>
+            {live.payment_status && live.payment_status !== "unpaid" && (
+              <LodgingPaymentBadge status={live.payment_status} amountCents={live.deposit_cents || live.total_cents} />
+            )}
+          </div>
+          <ReservationStatusTimeline status={live.status as LodgeStatus} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <h3 className="text-xs font-bold uppercase text-muted-foreground">Status history</h3>
+          <ReservationStatusHistory reservationId={reservationId} />
+        </CardContent>
+      </Card>
+    </div>
   );
 }
