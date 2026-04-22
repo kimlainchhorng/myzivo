@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Bell, Mail, MessageSquare, Smartphone, Layers, ChevronRight, ChevronLeft, Check, Send, Users, Calendar, FileText, AlertCircle, Save } from "lucide-react";
 import { useMarketingSegments } from "@/hooks/useMarketingSegments";
+import SegmentPicker from "./SegmentPicker";
+import TemplatePicker from "./TemplatePicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -199,19 +201,12 @@ export default function CreateMarketingCampaignWizard({ open, onClose, storeId, 
                 )}
 
                 {step === 2 && (
-                  <div className="space-y-3">
-                    <Label className="text-xs flex items-center gap-1"><Users className="w-3 h-3" /> Audience</Label>
-                    <Select value={segmentId} onValueChange={setSegmentId}>
-                      <SelectTrigger><SelectValue placeholder="All customers (default)" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All customers</SelectItem>
-                        {(segments || []).map((s) => (
-                          <SelectItem key={s.id} value={s.id}>
-                            {s.name} · {s.member_count.toLocaleString()}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="space-y-3" aria-live="polite">
+                    <SegmentPicker
+                      storeId={storeId}
+                      value={segmentId && segmentId !== "all" ? segmentId : null}
+                      onChange={(v) => setSegmentId(v ?? "all")}
+                    />
                     <p className="text-[11px] text-muted-foreground">
                       Build new segments in the Audience tab to target by tags, last-order date, total spend, etc.
                     </p>
@@ -219,8 +214,24 @@ export default function CreateMarketingCampaignWizard({ open, onClose, storeId, 
                 )}
 
                 {step === 3 && (
-                  <div className="space-y-3">
+                  <div className="space-y-3" aria-live="polite">
                     <Label className="text-xs flex items-center gap-1"><FileText className="w-3 h-3" /> Content</Label>
+                    <details className="rounded-lg border bg-muted/30">
+                      <summary className="cursor-pointer text-[11px] px-2.5 py-1.5 font-medium hover:bg-muted/50">
+                        Use a template
+                      </summary>
+                      <div className="p-2.5 border-t">
+                        <TemplatePicker
+                          storeId={storeId}
+                          channel={channel === "multi" ? undefined : channel}
+                          onPick={(t) => {
+                            if (t.subject) setSubject(t.subject);
+                            if (t.body) setBody(t.body);
+                            toast.success(`Template "${t.name}" applied`);
+                          }}
+                        />
+                      </div>
+                    </details>
                     {channel === "email" && (
                       <div>
                         <Label className="text-[11px] text-muted-foreground">Subject</Label>
