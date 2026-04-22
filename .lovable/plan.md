@@ -1,66 +1,58 @@
 
 
-# Room photo viewer: LQIP, hints, counter, zoom & full-screen
+# Hotels & Resort — Next-level upgrades
 
-Five upgrades layered onto `LodgingRoomDetailsModal.tsx` plus one new full-screen viewer component. No DB or upload changes — purely viewer polish.
+The room editor and booking flow already cover photos, rates, amenities, 30+ add-on presets, cancellation, and check-in/out times. Here's what's still missing for a competitive hotel/resort listing — grouped so you can pick what to ship first.
 
-## 1. Blurred LQIP placeholders
+## 1. Room-level upgrades (admin editor)
 
-While each photo loads, show a blurred low-quality version instead of a flat skeleton:
+- **Bed configuration builder** — replace the free-text "Beds" field with a structured editor: `[+ King × 1] [+ Single × 2] [+ Sofa bed × 1]`. Drives "Sleeps X" automatically and shows clean badges on the public card.
+- **View / floor / wing fields** — dropdowns for `View` (Sea, Garden, Pool, Mountain, City, Courtyard), `Floor`, and optional `Wing/Building name` for resorts with multiple buildings.
+- **Children & extra-guest policy** — child age cutoff, free-stay age, extra-adult fee, extra-child fee. Used during booking total calculation.
+- **Tax & fee breakdown** — per-stay city tax, per-night resort fee, cleaning fee, service charge %. Today only "Taxes calculated at booking" shows — replace with a transparent line-item breakdown in the drawer.
+- **Seasonal / date-range pricing** — calendar-driven price overrides (e.g. "Dec 20 – Jan 5: $299/night"). Replaces the single weekend-rate toggle for high/low/peak seasons.
+- **Min / max stay rules** — minimum nights, maximum nights, no-arrival weekdays.
 
-- For Supabase-hosted images, request a tiny preview via the existing `/render/image/` transform (e.g. `?width=24&quality=20`) and render it `object-contain` with `filter: blur(20px) scale(1.1)` underneath the full image.
-- Full image fades from `opacity-0` → `opacity-100` over 400ms; blurred layer fades out simultaneously.
-- For non-Supabase URLs (or when the transform fails), fall back to the existing shimmer `Skeleton`.
-- Helper: small `getLqipUrl(src)` util that detects Supabase storage URLs and rewrites the render path.
+## 2. New "Property profile" tab (resort-level, not per room)
 
-## 2. Swipe & keyboard hints + smooth transitions
+A new admin section `LodgingPropertyProfileSection.tsx` holding what belongs to the whole resort, not a single room:
 
-- First time the modal opens in a session (tracked via `sessionStorage["lodging.gallery.hintsSeen"]`), overlay a 2-second auto-dismissing pill at the bottom of the carousel: `← → arrows · swipe to browse`.
-- Permanent micro-hints: small `ChevronLeft`/`ChevronRight` ghost icons at the edges that gently pulse for the first 3 seconds, then fade to subtle (`opacity-30`).
-- Smooth transitions: keep Embla `loop:true`, add `duration: 28` for snappier-but-smooth ease; cross-fade the active slide's image opacity on `select` event for an extra polished feel on top of Embla's translate animation.
+- **Languages spoken at reception** (multi-select chips).
+- **Property-wide facilities & services** — pool, restaurant, bar, gym, spa, kids club, business center, conference room, laundry, 24h front desk, airport shuttle, EV charging. Separate from in-room amenities.
+- **Meal plans offered** — Room only / Bed & Breakfast / Half board / Full board / All-inclusive. Shown as filter badges on the storefront.
+- **House rules** — quiet hours, party policy, smoking zones, age requirement, ID at check-in, security deposit amount.
+- **Accessibility** — step-free access, accessible bathroom, elevator, braille signage, hearing-loop.
+- **Sustainability badges** — single-use plastic free, solar, towel reuse, EV-only fleet (purely informational chips).
 
-## 3. Visible counter + caption strip (outside the image)
+## 3. Booking flow upgrades (guest-facing)
 
-- Move the counter pill **out of the image overlay** into a dedicated strip directly below the carousel: `Photo 2 of 7` on the left, optional caption on the right.
-- Caption sources, in priority: `photo.caption` (if photos become objects later), else inferred from filename (strip extension, replace `-`/`_` with spaces, title-case), else empty.
-- Strip uses `text-[11px] text-muted-foreground` matching the high-density UI standard so it never competes with the photo.
-- The in-image counter pill is removed so the photo is fully visible — the strip below replaces it.
+- **Guest details collection** — primary guest name, email, phone, optional special requests textarea, ETA dropdown ("Arriving around 6 PM"). Currently the drawer only collects dates and guest count.
+- **Add-on cart** — checkbox list with quantity steppers (e.g. "2 × Spa massage"), live total update, persists into the reservation.
+- **Price transparency panel** — itemised: room nights × rate, weekend uplift, add-ons, taxes, fees, discount, **Grand total**. Matches the new fee breakdown in the editor.
+- **Multi-room booking** — let one guest reserve 2 rooms in the same trip (currently 1 room per drawer open).
+- **Confirmation screen + email** — booking reference, QR code for check-in, ICS calendar attachment, host contact card.
 
-## 4. Pinch-to-zoom + double-tap zoom (in-modal)
+## 4. Storefront polish
 
-Inside the details modal carousel, add gesture-driven zoom on the active slide:
+- **Property hero badges** — "Beachfront", "Free cancellation", "Breakfast included", "Pet-friendly" pulled from the new property profile + room flags.
+- **"What's included in your stay" strip** — 4-icon row above Rooms & Rates summarizing top property facilities, so guests don't have to open a room to see "Pool / Wi-Fi / Breakfast / Airport pickup".
+- **Map pin + nearby** — a small embedded map plus "5 min to beach · 15 min to airport" distance chips.
+- **Reviews section** — pull existing store reviews into a dedicated lodging review block with category sub-scores (Cleanliness, Location, Value, Staff).
 
-- New tiny `ZoomableImage` wrapper using pointer events:
-  - **Pinch**: track two pointers, compute distance ratio → `transform: scale(s)` (clamped 1×–4×).
-  - **Double-tap**: toggle 1× ↔ 2.5× centered on tap point.
-  - **Pan when zoomed**: single-pointer drag translates within bounds.
-- When `scale > 1`, Embla swipe is disabled (`api?.reInit({ watchDrag: false })` style — toggle a `panning` ref) so zoom-pan doesn't accidentally change slides. Reset to 1× on slide change.
-- Small `100% / 250%` indicator appears top-left only while zoomed.
+## Suggested first slice
 
-## 5. Full-screen photo viewer with zoom controls
+If you want to ship one focused batch first, I'd recommend:
 
-New component `LodgingPhotoLightbox.tsx`:
+1. Bed-configuration builder + view/floor fields (room editor)
+2. Tax & fee breakdown with itemised price panel in the booking drawer
+3. New Property Profile tab with facilities, meal plans, house rules, languages
+4. Guest details + add-on cart in the booking drawer
 
-- Triggered by an `Expand` (maximize) icon button in the carousel's top-right corner of the details modal.
-- Renders a portal `Dialog` with `bg-black/95`, photo centered with `object-contain` filling the viewport (max `100vw`/`100vh`).
-- Reuses `ZoomableImage` for pinch/double-tap.
-- On-screen controls bar (bottom): `−` zoom out, `Reset`, `+` zoom in, divider, `Prev` / counter `2 / 7` / `Next`, divider, `X` close. All keyboard-accessible: `+`/`-`/`0` for zoom, arrows for nav, `Esc` to close.
-- Same LQIP + fade-in treatment as the modal carousel for consistency.
-- Preserves currently-viewed slide index when opening from the modal; on close, the modal's Embla scrolls back to that index so context is kept.
+That bundle takes the listing from "room card" to a real bookable hotel page. Tell me which group(s) you want — or say "all of #1 and #3" — and I'll implement.
 
-## Files
+## Technical notes
 
-**Create**
-- `src/components/lodging/LodgingPhotoLightbox.tsx` — full-screen viewer with zoom controls + keyboard nav.
-- `src/components/lodging/ZoomableImage.tsx` — pointer-based pinch / double-tap / pan wrapper, shared by the modal carousel and the lightbox.
-- `src/lib/lqip.ts` — `getLqipUrl(src)` Supabase render-transform helper + filename → caption inferer.
-
-**Edit**
-- `src/components/lodging/LodgingRoomDetailsModal.tsx` — wrap each slide in `ZoomableImage`, add LQIP layer, hint pill + edge chevrons, move counter to a caption strip below carousel, add Expand button that opens the lightbox, disable Embla drag while zoomed.
-
-## Out of scope
-
-- Per-photo captions stored in DB (inferred from filename for now).
-- Thumbnail strip / filmstrip navigation in the lightbox (counter + arrows are enough for v1).
-- Server-generated true LQIP base64 (uses Supabase render transform instead — no upload-time work).
+- **DB**: needs migrations for `lodge_rooms` (bed_config jsonb, view, floor, wing, child_policy jsonb, fees jsonb, seasonal_rates jsonb, min_stay, max_stay) and a new `lodge_property_profile` table keyed by `store_id` (facilities[], meal_plans[], languages[], house_rules jsonb, accessibility[], sustainability[]).
+- **Booking**: extend `lodge_reservations` (or equivalent) with `guest_details jsonb`, `addon_selections jsonb`, `fee_breakdown jsonb`.
+- **No new dependencies** — all UI built from existing shadcn components and Lucide icons per project icon standard.
 
