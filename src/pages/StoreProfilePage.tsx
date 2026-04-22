@@ -693,6 +693,19 @@ export default function StoreProfilePage() {
             </p>
           )}
 
+          {/* Stay selector — embedded in profile card for lodging stores */}
+          {isLodging && (
+            <div className="mt-3 pt-3 border-t border-white/[0.06]">
+              <LodgingStaySelector
+                checkIn={stay.checkIn}
+                checkOut={stay.checkOut}
+                adults={stay.adults}
+                children={stay.children}
+                onChange={updateStay}
+              />
+            </div>
+          )}
+
           {/* Book Now button for auto-repair stores */}
           {store.category === "auto-repair" && (
             <motion.div
@@ -799,12 +812,6 @@ export default function StoreProfilePage() {
           {propertyProfile && <LodgingPolicyPanel profile={propertyProfile} />}
 
           <LodgingAmenitiesPanel storeId={store!.id} />
-
-          <LodgingStaySelector
-            checkIn={stay.checkIn} checkOut={stay.checkOut}
-            adults={stay.adults} children={stay.children}
-            onChange={updateStay}
-          />
 
           {loadingRooms ? (
             <div className="flex items-center justify-center py-12">
