@@ -26833,6 +26833,69 @@ export type Database = {
         }
         Relationships: []
       }
+      lodge_maintenance: {
+        Row: {
+          assignee_id: string | null
+          assignee_name: string | null
+          category: string | null
+          cost_cents: number | null
+          created_at: string
+          id: string
+          notes: string | null
+          photos: Json | null
+          priority: string
+          reported_at: string
+          reported_by: string | null
+          resolved_at: string | null
+          room_id: string | null
+          room_number: string | null
+          status: string
+          store_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          assignee_name?: string | null
+          category?: string | null
+          cost_cents?: number | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          photos?: Json | null
+          priority?: string
+          reported_at?: string
+          reported_by?: string | null
+          resolved_at?: string | null
+          room_id?: string | null
+          room_number?: string | null
+          status?: string
+          store_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          assignee_name?: string | null
+          category?: string | null
+          cost_cents?: number | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          photos?: Json | null
+          priority?: string
+          reported_at?: string
+          reported_by?: string | null
+          resolved_at?: string | null
+          room_id?: string | null
+          room_number?: string | null
+          status?: string
+          store_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lodge_reservation_charges: {
         Row: {
           amount_cents: number

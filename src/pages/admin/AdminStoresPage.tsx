@@ -19,7 +19,7 @@ import { toast } from "sonner";
 const DAYS_OF_WEEK = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 const DAY_LABELS: Record<string, string> = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
 
-type DaySchedule = { open: string; close: string; closed: boolean };
+type DaySchedule = { open: string; close: string; closed: boolean; is24h?: boolean };
 type WeeklySchedule = Record<string, DaySchedule>;
 
 const DEFAULT_SCHEDULE: WeeklySchedule = Object.fromEntries(
@@ -533,6 +533,15 @@ export default function AdminStoresPage() {
                     const updated = { ...schedule, [day]: { ...schedule[day], [field]: value } };
                     updateField("hours", JSON.stringify(updated));
                   };
+                  const toggle24h = (day: string, on: boolean) => {
+                    const updated = {
+                      ...schedule,
+                      [day]: on
+                        ? { open: "12:00 AM", close: "11:30 PM", closed: false, is24h: true }
+                        : { ...schedule[day], is24h: false, closed: false },
+                    };
+                    updateField("hours", JSON.stringify(updated));
+                  };
                   return DAYS_OF_WEEK.map((day, idx) => (
                     <div key={day} className={`flex items-center gap-2 px-3 py-2 ${idx > 0 ? "border-t border-border" : ""} ${schedule[day]?.closed ? "bg-muted/50" : ""}`}>
                       <div className="w-16 flex-shrink-0">
@@ -544,7 +553,9 @@ export default function AdminStoresPage() {
                         className="scale-75"
                       />
                       {schedule[day]?.closed ? (
-                        <span className="text-xs text-muted-foreground italic">Closed</span>
+                        <span className="text-xs text-muted-foreground italic flex-1">Closed</span>
+                      ) : schedule[day]?.is24h ? (
+                        <span className="text-xs font-semibold text-primary flex-1">Open 24 hours</span>
                       ) : (
                         <div className="flex items-center gap-1 flex-1">
                           <select
@@ -563,6 +574,16 @@ export default function AdminStoresPage() {
                             {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
                           </select>
                         </div>
+                      )}
+                      {!schedule[day]?.closed && (
+                        <label className="flex items-center gap-1 ml-1 cursor-pointer">
+                          <Switch
+                            checked={!!schedule[day]?.is24h}
+                            onCheckedChange={(on) => toggle24h(day, on)}
+                            className="scale-75"
+                          />
+                          <span className="text-[10px] font-semibold text-muted-foreground">24h</span>
+                        </label>
                       )}
                     </div>
                   ));

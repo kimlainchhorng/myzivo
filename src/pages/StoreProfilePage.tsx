@@ -268,6 +268,13 @@ export default function StoreProfilePage() {
                         </span>
                       );
                     }
+                    if (todayHours?.is24h) {
+                      return (
+                        <span className="flex items-center gap-0.5 text-xs text-primary font-semibold">
+                          <Clock className="h-3 w-3" /> Open 24 hours
+                        </span>
+                      );
+                    }
                     if (todayHours?.open && todayHours?.close) {
                       return (
                         <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
@@ -278,7 +285,7 @@ export default function StoreProfilePage() {
                   } catch {}
                   return null;
                 })()}
-                {store.delivery_min && store.category !== "auto-repair" && (
+                {store.delivery_min && !["auto-repair","hotel","resort","guesthouse"].includes(store.category) && (
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/15">
                     {store.delivery_min}m delivery
                   </Badge>
