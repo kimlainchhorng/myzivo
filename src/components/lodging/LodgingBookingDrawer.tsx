@@ -2,10 +2,11 @@
  * LodgingBookingDrawer - Multi-step booking sheet (stay → add-ons → guest → review → success).
  * Writes a 'hold' lodge_reservations row with addons + fee breakdown + payment method.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Loader2, ChevronLeft, ChevronRight, CheckCircle2, Minus, Plus, AlertTriangle,
   Wallet, CreditCard, Building2, Copy, CalendarPlus, MessageCircle, ShieldCheck,
+  ArrowDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,10 +16,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ResponsiveModal, ResponsiveModalFooter } from "@/components/ui/responsive-modal";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { LodgingStaySelector } from "@/components/lodging/LodgingStaySelector";
+import { ReservationStatusTimeline } from "@/components/lodging/ReservationStatusTimeline";
 import { useRoomAvailability, hasUnavailableNight } from "@/hooks/lodging/useRoomAvailability";
+import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { cancellationLabel, cancellationDescription } from "@/lib/lodging/cancellationCopy";
+import { validateGuest } from "@/lib/lodging/guestSchema";
+import { buildBookingIcs, downloadIcsFile } from "@/lib/lodging/ics";
 import type { LodgeAddon, RoomFees, ChildPolicy } from "@/hooks/lodging/useLodgeRooms";
 
 interface Props {
