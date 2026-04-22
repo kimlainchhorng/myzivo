@@ -330,19 +330,26 @@ export default function CreateMarketingCampaignWizard({ open, onClose, storeId, 
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-3 border-t bg-muted/20">
+        <div className="flex items-center justify-between gap-2 p-3 border-t bg-muted/20">
           <Button variant="ghost" size="sm" onClick={step === 1 ? close : prev}>
             {step === 1 ? "Cancel" : <><ChevronLeft className="w-4 h-4 mr-1" />Back</>}
           </Button>
-          {step < 5 ? (
-            <Button size="sm" onClick={next} disabled={!canNext()}>
-              Next <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          ) : (
-            <Button size="sm" onClick={handleSubmit} disabled={!confirmed || submitting}>
-              {submitting ? "Sending..." : <>{scheduleMode === "now" ? <Send className="w-4 h-4 mr-1" /> : <Check className="w-4 h-4 mr-1" />} {scheduleMode === "now" ? "Send now" : "Schedule"}</>}
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {step > 1 && (
+              <Button variant="outline" size="sm" onClick={() => handleSubmit(true)} disabled={submitting}>
+                <Save className="w-4 h-4 mr-1" /> Draft
+              </Button>
+            )}
+            {step < 5 ? (
+              <Button size="sm" onClick={next} disabled={!canNext()}>
+                Next <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            ) : (
+              <Button size="sm" onClick={() => handleSubmit(false)} disabled={!confirmed || submitting}>
+                {submitting ? "Sending..." : <>{scheduleMode === "now" ? <Send className="w-4 h-4 mr-1" /> : <Check className="w-4 h-4 mr-1" />} {scheduleMode === "now" ? "Send now" : "Schedule"}</>}
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
