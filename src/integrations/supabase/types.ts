@@ -26728,24 +26728,60 @@ export type Database = {
       lodge_amenities: {
         Row: {
           amenities: Json | null
+          categories: Json
+          extra_charge_keys: string[]
           id: string
+          internet_mode: string | null
+          parking_mode: string | null
           policies: Json | null
           store_id: string
           updated_at: string
         }
         Insert: {
           amenities?: Json | null
+          categories?: Json
+          extra_charge_keys?: string[]
           id?: string
+          internet_mode?: string | null
+          parking_mode?: string | null
           policies?: Json | null
           store_id: string
           updated_at?: string
         }
         Update: {
           amenities?: Json | null
+          categories?: Json
+          extra_charge_keys?: string[]
           id?: string
+          internet_mode?: string | null
+          parking_mode?: string | null
           policies?: Json | null
           store_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      lodge_amenity_feedback: {
+        Row: {
+          created_at: string
+          helpful: boolean | null
+          id: string
+          message: string | null
+          store_id: string
+        }
+        Insert: {
+          created_at?: string
+          helpful?: boolean | null
+          id?: string
+          message?: string | null
+          store_id: string
+        }
+        Update: {
+          created_at?: string
+          helpful?: boolean | null
+          id?: string
+          message?: string | null
+          store_id?: string
         }
         Relationships: []
       }
