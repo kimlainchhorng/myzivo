@@ -255,7 +255,8 @@ export default function GroceryDeliveryBar({ onAddressChange }: GroceryDeliveryB
             <div className="px-4 py-3 space-y-2">
               {/* Existing addresses */}
               {addresses.map((addr) => {
-                const Icon = LABEL_ICONS[addr.label];
+                const Icon = LABEL_ICONS[addr.label] ?? MapPin;
+                const labelColor = LABEL_COLORS[addr.label] ?? "text-muted-foreground";
                 const isSelected = selectedAddress?.id === addr.id;
                 return (
                   <motion.div
