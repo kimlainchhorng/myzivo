@@ -23,6 +23,7 @@ const FFMPEG_CDN_BASE = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm";
 const ffmpegCoreUrl = `${FFMPEG_CDN_BASE}/ffmpeg-core.js`;
 const ffmpegWasmUrl = `${FFMPEG_CDN_BASE}/ffmpeg-core.wasm`;
 import { supabase } from "@/integrations/supabase/client";
+import { uploadStoreAsset, verifyStoreProfileUrl, verifyStoreProfileGallery } from "@/pages/admin/utils/uploadStoreAsset";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import AdminLayout from "@/components/admin/AdminLayout";
 import StoreOwnerLayout from "@/components/admin/StoreOwnerLayout";
