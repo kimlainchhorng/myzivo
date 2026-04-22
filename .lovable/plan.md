@@ -1,111 +1,100 @@
 
-Fix the hotel profile image uploads too. This error is a different bucket than the post uploader.
 
-## Root cause
+# Hardening store-assets uploads: tests, safeguards, verification, and backfill
 
-The failing **Gallery Images / logo / cover / product-room image** uploads in the store owner editor use the **`store-assets`** bucket, not `store-posts`.
+Five linked improvements to the `store-assets` upload flow.
 
-Current owner-side upload code in `src/pages/admin/AdminStoreEditPage.tsx` writes to:
+## 1. Shared upload helper with verification + revert
 
-- Gallery: `${storeId}/gallery-${Date.now()}.${ext}`
-- Logo/Cover: `${storeId}/${type}-${Date.now()}.${ext}`
-- Product/Room image: `products/${storeId}/${Date.now()}.${ext}`
+New `src/pages/admin/utils/uploadStoreAsset.ts`:
 
-But the only write policies on `store-assets` are admin-only:
+```ts
+type Surface = "gallery" | "logo" | "cover" | "room";
+export async function uploadStoreAsset({ storeId, file, surface, subfolder }) {
+  // 1. Build path: `${storeId}/...` (room -> `${storeId}/products/...`)
+  // 2. supabase.storage.from('store-assets').upload(path, file, { upsert: true })
+  // 3. VERIFY: list parent folder, confirm uploaded filename present
+  // 4. getPublicUrl -> HEAD fetch, expect 200 (verification)
+  // 5. Return { path, publicUrl }
+  // Throws labeled error: `${surface} upload failed: ${reason}`
+}
+```
 
-`supabase/migrations/20260325165235_72a3131e-c731-4e39-bdae-e02510823b51.sql`
-- INSERT/UPDATE/DELETE require `public.has_role(auth.uid(), 'admin')`
+Used by all four call sites in `AdminStoreEditPage.tsx`.
 
-So a signed-in **Store Owner** can update `store_profiles`, but cannot upload files into `store-assets`, which is why the UI still shows:
+## 2. Editor: revert preview on failure + surface label
 
-`new row violates row-level security policy`
+Track previous value before each upload; on `catch` restore it and toast with surface name.
 
-The previous fix only solved `store-posts` for the Post Picture dialog.
+`src/pages/admin/AdminStoreEditPage.tsx`:
+- `uploadImage(logo|cover)` — capture `prevUrl = form.logo_url|banner_url`; on error `updateField(field, prevUrl)` + toast `Profile/Cover image upload failed`.
+- `uploadGalleryImage` — capture `prev = galleryImages`; on error `setGalleryImages(prev)`.
+- `uploadProductImage` — capture `prevUrls = productForm.image_urls`; on error `updateProductField('image_urls', prevUrls)`.
 
-## Implementation
+## 3. Auto-verify URL persisted to correct profile field
 
-### 1) Add store-owner write access to `store-assets`
-Create a new SQL migration that keeps admin access, but also allows a store owner to upload/delete assets for stores they own.
+After each `store_profiles` update (logo/cover/gallery), re-`select` the row and assert the URL was stored. If mismatch, toast `Saved URL did not persist — try again` and revert local state. For `room` images, re-select the `store_products` row after save.
 
-Recommended rule:
-- Owner uploads are allowed when the storage path resolves to a store they own in `public.store_profiles.owner_id`.
+## 4. Backfill old `products/<storeId>/...` paths
 
-Use path-aware policies for these shapes:
-- `<storeId>/...` for logo, cover, gallery
-- `<storeId>/products/...` for product/room images
+New migration `supabase/migrations/<ts>_backfill_store_assets_products_path.sql`:
 
-This is cleaner than the current mixed pattern.
-
-### 2) Standardize owner uploads to storeId-first paths
-Update `src/pages/admin/AdminStoreEditPage.tsx` so all owner-side `store-assets` uploads use the same structure:
-
-- Gallery: `${storeId}/gallery-${Date.now()}.${ext}`
-- Logo/Cover: `${storeId}/${type}-${Date.now()}.${ext}`
-- Product/Room image: change from `products/${storeId}/...` to `${storeId}/products/${Date.now()}.${ext}`
-
-This makes one storage policy cover all owner asset uploads.
-
-### 3) Keep admin-only admin dashboard behavior unchanged
-`src/pages/admin/AdminStoresPage.tsx` uses `store-assets` with a temp path and is part of the admin dashboard. That flow can stay admin-only.
-
-No change needed there unless you also want non-admin store owners to use that page.
-
-### 4) Improve upload error clarity
-In `AdminStoreEditPage.tsx`, keep the existing toast, but add slightly clearer per-surface messaging so failures say which upload failed:
-
-- “Gallery upload failed”
-- “Profile image upload failed”
-- “Cover image upload failed”
-- “Room image upload failed”
-
-That makes future bucket-policy issues easier to spot.
-
-## Technical details
-
-Recommended policy logic in the migration:
-
-- Keep existing admin policies or replace them with broader policies:
-  - Admins can manage any object in `store-assets`
-  - Store owners can manage objects in `store-assets` when the first path segment is a `store_profiles.id` they own
-
-Example ownership check shape:
 ```sql
-exists (
-  select 1
-  from public.store_profiles sp
-  where sp.id::text = (storage.foldername(name))[1]
-    and sp.owner_id = auth.uid()
+-- Move existing storage rows
+UPDATE storage.objects
+SET name = regexp_replace(name, '^products/([^/]+)/(.*)$', '\1/products/\2')
+WHERE bucket_id = 'store-assets'
+  AND name LIKE 'products/%';
+
+-- Update any URLs stored in store_products.image_url / image_urls
+UPDATE public.store_products
+SET image_url = replace(
+  image_url,
+  '/store-assets/products/' || store_id || '/',
+  '/store-assets/' || store_id || '/products/'
 )
+WHERE image_url LIKE '%/store-assets/products/' || store_id || '/%';
+
+UPDATE public.store_products
+SET image_urls = (
+  SELECT jsonb_agg(
+    replace(
+      url::text,
+      '/store-assets/products/' || store_id || '/',
+      '/store-assets/' || store_id || '/products/'
+    )::jsonb
+  )
+  FROM jsonb_array_elements(image_urls) url
+)
+WHERE image_urls::text LIKE '%/store-assets/products/' || store_id || '/%';
 ```
 
-Because product uploads will be moved to:
-```text
-<storeId>/products/<filename>
-```
-the first folder remains the store ID, so one rule works for gallery, logo, cover, and product/room images.
+## 5. Vitest RLS test suite
+
+New `src/test/rls/storeAssetsRls.test.ts` (uses anon key + signs in two test users via env-provided credentials; skipped if env not set):
+
+Tests:
+- Owner A can `upload` to `${storeIdA}/gallery-x.jpg` ✓
+- Owner A can `upload` to `${storeIdA}/logo-x.jpg` ✓
+- Owner A can `upload` to `${storeIdA}/cover-x.jpg` ✓
+- Owner A can `upload` to `${storeIdA}/products/x.jpg` ✓
+- Owner A `upload` to `${storeIdB}/...` → fails with RLS ✗
+- Owner A `update` and `delete` of B's objects → fail ✗
+- Admin can read/write any path ✓
+
+Add npm script `"test:rls": "vitest run src/test/rls"` and a README in `src/test/rls/README.md` listing the four required env vars (`VITE_TEST_OWNER_A_EMAIL/PASSWORD/STORE_ID`, same for B).
 
 ## Files
 
-- New migration in `supabase/migrations/*` — extend `store-assets` storage RLS for store owners
-- `src/pages/admin/AdminStoreEditPage.tsx` — standardize `store-assets` paths and improve upload toasts
-
-## Verification
-
-After the fix, test as a **Store Owner** on `/admin/stores/:id`:
-
-1. Upload a **Gallery Image**
-2. Upload **Profile image**
-3. Upload **Cover image**
-4. Upload a **Room/Product image**
-
-Expected:
-- No RLS toast
-- Public URLs save into `store_profiles`
-- Existing old images still render
-- New uploads appear immediately
+- New: `src/pages/admin/utils/uploadStoreAsset.ts`
+- Edit: `src/pages/admin/AdminStoreEditPage.tsx` (4 upload functions → use helper, add revert + verify-persist)
+- New migration: backfill + URL rewrite
+- New: `src/test/rls/storeAssetsRls.test.ts` + `README.md`
+- Edit: `package.json` (add `test:rls` script)
 
 ## Out of scope
 
-- Backfilling old `products/<storeId>/...` asset paths
-- Changing public read access on `store-assets`
-- Reworking the separate `store-posts` bucket again
+- Changing `StoreSetup.tsx` `setup/<userId>/...` paths (different RLS shape — separate fix).
+- Admin dashboard `temp/...` uploads in `AdminStoresPage.tsx` (admin-only flow already works).
+- Backfilling deleted/orphaned objects.
+
