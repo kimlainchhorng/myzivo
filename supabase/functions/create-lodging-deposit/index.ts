@@ -2,10 +2,12 @@
  * create-lodging-deposit
  * Creates (or reuses) a Stripe Checkout Session to authorise / charge a lodging deposit.
  *
- * Hardening (idempotency):
- *  - Postgres advisory lock keyed by reservation id prevents concurrent runs (returns 423).
- *  - Stripe Idempotency-Key derived from (reservation_id, deposit_cents, mode, payment_status)
- *    means duplicate POSTs return the same Checkout Session instead of double-authorising.
+ * Hardening (idempotency + dedup):
+ *  - Row-level lock via lodge_reservations.payment_lock_token + payment_lock_expires_at:
+ *      if an unexpired token exists belonging to another caller → 423 Locked.
+ *  - dedup_key persisted to lodging_deposit_retry_attempts (unique). Conflict → reused result.
+ *  - Stripe Idempotency-Key derived from (reservation_id, deposit_cents, mode, payment_status,
+ *    client_attempt_id) — duplicate POSTs return the same Checkout Session.
  *  - Re-reads payment_status under the lock and bails out if the row already settled.
  */
 import { createClient } from "../_shared/deps.ts";
@@ -17,6 +19,7 @@ interface Body {
   store_id: string;
   deposit_cents: number;
   mode?: "deposit" | "full";
+  client_attempt_id?: string;
 }
 
 const TERMINAL_PAYMENT_STATES = new Set([
@@ -27,10 +30,14 @@ const TERMINAL_PAYMENT_STATES = new Set([
   "refunded",
 ]);
 
+const ROW_LOCK_TTL_SECONDS = 60;
+
 const sha256Hex = async (s: string) => {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
 };
+
+const randomToken = () => crypto.randomUUID().replace(/-/g, "");
 
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req);
@@ -65,25 +72,16 @@ Deno.serve(async (req) => {
 
     const depositCents = Math.max(50, Math.round(Number(body.deposit_cents) || 0));
     const mode: "deposit" | "full" = body.mode === "full" ? "full" : "deposit";
+    const clientAttemptId = (body.client_attempt_id || "default").slice(0, 64);
 
     const admin = createClient(supabaseUrl, serviceKey);
+    const myLockToken = randomToken();
 
-    // ---- Advisory lock (race-condition guard) ----
-    // hashtext('lodge_dep_' || reservation_id) keeps the int4 fingerprint stable per row.
-    const { data: lockRow, error: lockErr } = await admin.rpc("pg_try_advisory_lock" as any, {
-      key: `lodge_dep_${body.reservation_id}`,
-    } as any).single?.() ?? { data: null, error: null } as any;
-
-    // Fallback path: do the lock via a tiny inline RPC using SQL since pg_try_advisory_lock isn't
-    // exposed by default. We use a SECURITY DEFINER wrapper if present; otherwise skip and rely on
-    // Stripe Idempotency-Key (still safe). We swallow lockErr because it's purely advisory.
-    void lockRow; void lockErr;
-
-    // Re-load reservation under the (best-effort) lock
+    // ---- Re-load reservation ----
     const { data: reservation, error: resErr } = await admin
       .from("lodge_reservations")
       .select(
-        "id, number, guest_name, guest_email, room_id, check_in, check_out, total_cents, payment_status, stripe_session_id, stripe_payment_intent_id"
+        "id, number, guest_name, guest_email, room_id, check_in, check_out, total_cents, payment_status, stripe_session_id, stripe_payment_intent_id, payment_lock_token, payment_lock_expires_at",
       )
       .eq("id", body.reservation_id)
       .maybeSingle();
@@ -95,10 +93,64 @@ Deno.serve(async (req) => {
       });
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const r = reservation as any;
+
+    // ---- Row-level lock check ----
+    const lockExpires = r.payment_lock_expires_at ? new Date(r.payment_lock_expires_at).getTime() : 0;
+    const now = Date.now();
+    if (r.payment_lock_token && lockExpires > now) {
+      const retryAfter = Math.ceil((lockExpires - now) / 1000);
+      return new Response(
+        JSON.stringify({
+          error: "retry_in_progress",
+          retry_after_seconds: retryAfter,
+          locked_since: r.payment_lock_expires_at,
+          lock_owner_hint: "other",
+        }),
+        {
+          status: 423,
+          headers: { ...cors, "Content-Type": "application/json", "Retry-After": String(retryAfter) },
+        },
+      );
+    }
+
+    // Acquire the row lock (best-effort optimistic — only set if still unlocked)
+    {
+      const { error: lockSetErr } = await admin
+        .from("lodge_reservations")
+        .update({
+          payment_lock_token: myLockToken,
+          payment_lock_expires_at: new Date(now + ROW_LOCK_TTL_SECONDS * 1000).toISOString(),
+        })
+        .eq("id", body.reservation_id)
+        .or(`payment_lock_token.is.null,payment_lock_expires_at.lt.${new Date(now).toISOString()}`);
+      if (lockSetErr) {
+        console.warn("[create-lodging-deposit] lock acquire warn", lockSetErr.message);
+      }
+    }
+
+    // Re-fetch to confirm we own the lock; if not, somebody else just grabbed it.
+    {
+      const { data: confirm } = await admin
+        .from("lodge_reservations")
+        .select("payment_lock_token, payment_lock_expires_at")
+        .eq("id", body.reservation_id)
+        .maybeSingle();
+      if ((confirm as any)?.payment_lock_token !== myLockToken) {
+        return new Response(
+          JSON.stringify({
+            error: "retry_in_progress",
+            retry_after_seconds: 5,
+            locked_since: (confirm as any)?.payment_lock_expires_at,
+            lock_owner_hint: "other",
+          }),
+          { status: 423, headers: { ...cors, "Content-Type": "application/json", "Retry-After": "5" } },
+        );
+      }
+    }
 
     // Refuse to re-mint if already in a terminal/successful state.
-    const currentStatus = (reservation as any).payment_status as string | null;
+    const currentStatus = r.payment_status as string | null;
     if (currentStatus && TERMINAL_PAYMENT_STATES.has(currentStatus)) {
       return new Response(
         JSON.stringify({
@@ -106,26 +158,71 @@ Deno.serve(async (req) => {
           status: currentStatus,
           message: `Payment is already ${currentStatus.replace("_", " ")} — no new charge needed.`,
         }),
-        { headers: { ...cors, "Content-Type": "application/json" } }
+        { headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
 
+    // ---- Dedup-key check (cross-tab + redelivery) ----
+    const dedupKey = `${body.reservation_id}|${r.stripe_payment_intent_id || "none"}|${clientAttemptId}|${depositCents}|${mode}`;
+    const { data: dedupRow } = await admin
+      .from("lodging_deposit_retry_attempts")
+      .insert({
+        dedup_key: dedupKey,
+        reservation_id: body.reservation_id,
+        result: "in_progress",
+      })
+      .select("id")
+      .maybeSingle();
+
+    if (!dedupRow) {
+      // Conflict — fetch the prior attempt's cached URL
+      const { data: prior } = await admin
+        .from("lodging_deposit_retry_attempts")
+        .select("checkout_url, stripe_session_id")
+        .eq("dedup_key", dedupKey)
+        .maybeSingle();
+      if ((prior as any)?.checkout_url) {
+        return new Response(
+          JSON.stringify({
+            url: (prior as any).checkout_url,
+            session_id: (prior as any).stripe_session_id,
+            reused: true,
+          }),
+          { headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
+    }
+    const dedupRowId = (dedupRow as any)?.id || null;
+
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+
     // Reuse open Checkout Session.
-    const existingSessionId = (reservation as any).stripe_session_id as string | null;
+    const existingSessionId = r.stripe_session_id as string | null;
     if (existingSessionId) {
       try {
         const existing = await stripe.checkout.sessions.retrieve(existingSessionId);
         if (existing.status === "open" && existing.url) {
+          if (dedupRowId) {
+            await admin
+              .from("lodging_deposit_retry_attempts")
+              .update({
+                completed_at: new Date().toISOString(),
+                result: "reused_session",
+                checkout_url: existing.url,
+                stripe_session_id: existing.id,
+              })
+              .eq("id", dedupRowId);
+          }
           return new Response(
             JSON.stringify({ url: existing.url, session_id: existing.id, reused: true }),
-            { headers: { ...cors, "Content-Type": "application/json" } }
+            { headers: { ...cors, "Content-Type": "application/json" } },
           );
         }
       } catch (_) { /* fall through */ }
     }
 
     let customerId: string | undefined;
-    const email = user?.email || (reservation as any).guest_email || undefined;
+    const email = user?.email || r.guest_email || undefined;
     if (email) {
       const customers = await stripe.customers.list({ email, limit: 1 });
       if (customers.data.length > 0) customerId = customers.data[0].id;
@@ -134,12 +231,12 @@ Deno.serve(async (req) => {
     const origin = req.headers.get("origin") || "https://hizivo.com";
     const productName =
       mode === "deposit"
-        ? `Refundable hold – Reservation ${(reservation as any).number}`
-        : `Reservation ${(reservation as any).number}`;
+        ? `Refundable hold – Reservation ${r.number}`
+        : `Reservation ${r.number}`;
 
-    // Stable idempotency key — same inputs produce the same Stripe Session even on retry storms.
+    // Stable Stripe Idempotency-Key — same inputs (incl. client_attempt_id) → same Session.
     const attemptHash = await sha256Hex(
-      `${body.reservation_id}|${depositCents}|${mode}|${currentStatus ?? "null"}`
+      `${body.reservation_id}|${depositCents}|${mode}|${currentStatus ?? "null"}|${clientAttemptId}`,
     );
     const idempotencyKey = `lodge_dep_${body.reservation_id}_${attemptHash.slice(0, 16)}`;
 
@@ -172,15 +269,15 @@ Deno.serve(async (req) => {
             mode,
           },
         },
-        success_url: `${origin}/grocery/shop?lodging_paid=1&ref=${(reservation as any).number}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/grocery/shop?lodging_paid=0&ref=${(reservation as any).number}`,
+        success_url: `${origin}/grocery/shop?lodging_paid=1&ref=${r.number}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/grocery/shop?lodging_paid=0&ref=${r.number}`,
         metadata: {
           reservation_id: body.reservation_id,
           store_id: body.store_id,
           mode,
         },
       },
-      { idempotencyKey }
+      { idempotencyKey },
     );
 
     await admin
@@ -191,10 +288,23 @@ Deno.serve(async (req) => {
         deposit_cents: depositCents,
         payment_status: mode === "deposit" ? "authorized" : "pending",
         last_payment_error: null,
-        payment_lock_token: idempotencyKey,
-        payment_lock_expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+        // Lock auto-expires; release proactively now that we've handed off to Stripe.
+        payment_lock_token: null,
+        payment_lock_expires_at: null,
       })
       .eq("id", body.reservation_id);
+
+    if (dedupRowId) {
+      await admin
+        .from("lodging_deposit_retry_attempts")
+        .update({
+          completed_at: new Date().toISOString(),
+          result: "created_session",
+          checkout_url: session.url,
+          stripe_session_id: session.id,
+        })
+        .eq("id", dedupRowId);
+    }
 
     return new Response(JSON.stringify({ url: session.url, session_id: session.id }), {
       headers: { ...cors, "Content-Type": "application/json" },

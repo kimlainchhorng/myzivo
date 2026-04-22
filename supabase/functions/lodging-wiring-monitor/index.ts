@@ -43,13 +43,18 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     // Persist current snapshot
+    const SCHEMA_VERSION = 2;
     await admin.from("lodging_wiring_report_runs").insert({
       summary: r as any,
       pass_count: r.pass_count,
       fail_count: r.fail_count,
-    });
+      schema_version: SCHEMA_VERSION,
+    } as any);
 
-    const prevChecks: Check[] = (prev?.summary as any)?.checks || [];
+    // Skip diffing if the prior run was on a different schema (avoids spurious regressions).
+    const prevSchema = (prev as any)?.schema_version ?? 1;
+    const sameSchema = prevSchema === SCHEMA_VERSION;
+    const prevChecks: Check[] = sameSchema ? ((prev?.summary as any)?.checks || []) : [];
     const prevById = new Map(prevChecks.map((c) => [c.id || c.name, c]));
 
     const newFailures: Check[] = [];
