@@ -13,8 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
-  ArrowLeft, RefreshCw, Webhook, AlertCircle, CheckCircle2, Clock, SkipForward, XCircle,
+  ArrowLeft, RefreshCw, Webhook, AlertCircle, CheckCircle2, Clock, SkipForward, XCircle, Download,
 } from "lucide-react";
+import { toast } from "sonner";
+import { downloadWebhookEventsCsv } from "@/lib/admin/webhookEventsCsv";
 
 interface WebhookEvent {
   id: string;
@@ -42,6 +44,7 @@ export default function AdminLodgingWebhookEventsPage() {
   const [eventType, setEventType] = useState<string>(searchParams.get("type") || "");
   const [status, setStatus] = useState<string>(searchParams.get("status") || "");
   const [resId, setResId] = useState<string>(searchParams.get("reservation_id") || "");
+  const [eventId, setEventId] = useState<string>(searchParams.get("event_id") || "");
 
   // Persist filters to query string
   useEffect(() => {
@@ -49,11 +52,12 @@ export default function AdminLodgingWebhookEventsPage() {
     if (eventType) next.set("type", eventType);
     if (status) next.set("status", status);
     if (resId) next.set("reservation_id", resId);
+    if (eventId) next.set("event_id", eventId);
     setSearchParams(next, { replace: true });
-  }, [eventType, status, resId, setSearchParams]);
+  }, [eventType, status, resId, eventId, setSearchParams]);
 
   const { data, isFetching, refetch } = useQuery({
-    queryKey: ["lodging-webhook-events", eventType, status, resId],
+    queryKey: ["lodging-webhook-events", eventType, status, resId, eventId],
     queryFn: async () => {
       let q = (supabase as any)
         .from("lodging_stripe_webhook_events")
@@ -63,11 +67,18 @@ export default function AdminLodgingWebhookEventsPage() {
       if (eventType) q = q.eq("event_type", eventType);
       if (status) q = q.eq("processing_status", status);
       if (resId) q = q.eq("reservation_id", resId);
+      if (eventId) q = q.eq("stripe_event_id", eventId);
       const { data, error } = await q;
       if (error) throw error;
       return (data || []) as WebhookEvent[];
     },
   });
+
+  const handleExportCsv = () => {
+    if (!data || data.length === 0) return;
+    downloadWebhookEventsCsv(data);
+    toast.success(`Exported ${data.length} event${data.length === 1 ? "" : "s"}`);
+  };
 
   const eventTypes = useMemo(() => {
     const set = new Set<string>();
@@ -105,6 +116,15 @@ export default function AdminLodgingWebhookEventsPage() {
           >
             ← Wiring check
           </Link>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleExportCsv}
+            disabled={!data || data.length === 0}
+            className="rounded-xl"
+          >
+            <Download className="h-3.5 w-3.5 mr-1.5" /> Export CSV
+          </Button>
           <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching} className="rounded-xl">
             <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isFetching ? "animate-spin" : ""}`} />
             Refresh
@@ -134,7 +154,7 @@ export default function AdminLodgingWebhookEventsPage() {
       {/* Filters */}
       <Card className="rounded-2xl border-border/60">
         <CardContent className="p-3 space-y-2">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
             <div>
               <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Event type</label>
               <select
@@ -171,12 +191,21 @@ export default function AdminLodgingWebhookEventsPage() {
                 className="h-8 rounded-xl text-[12px]"
               />
             </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Stripe event ID</label>
+              <Input
+                value={eventId}
+                onChange={(e) => setEventId(e.target.value.trim())}
+                placeholder="evt_…"
+                className="h-8 rounded-xl text-[12px] font-mono"
+              />
+            </div>
           </div>
-          {(eventType || status || resId) && (
+          {(eventType || status || resId || eventId) && (
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => { setEventType(""); setStatus(""); setResId(""); }}
+              onClick={() => { setEventType(""); setStatus(""); setResId(""); setEventId(""); }}
               className="text-[11px] h-7 rounded-lg"
             >
               Clear filters

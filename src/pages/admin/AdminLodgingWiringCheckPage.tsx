@@ -6,7 +6,7 @@
  * Actions audit tab, CSV export, and a deep-link to the webhook event log.
  */
 import { useEffect, useMemo, useState, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,6 +64,7 @@ const isWebhookCheck = (c: WiringCheck): boolean => {
 
 export default function AdminLodgingWiringCheckPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const currentRunIdRef = useRef<string | null>(null);
 
   const { data, isLoading, isFetching, refetch, error } = useQuery({
@@ -77,7 +78,24 @@ export default function AdminLodgingWiringCheckPage() {
 
   const [history, setHistory] = useState<RunRow[]>([]);
   const [actions, setActions] = useState<ActionRow[]>([]);
+  const [adminEmails, setAdminEmails] = useState<Record<string, string>>({});
   const [historyTab, setHistoryTab] = useState<"runs" | "actions">("runs");
+
+  // Action-panel filters (URL-synced)
+  const [filterAdmin, setFilterAdmin] = useState(searchParams.get("admin") || "");
+  const [filterRun, setFilterRun] = useState(searchParams.get("run") || "");
+  const [filterCheck, setFilterCheck] = useState(searchParams.get("check") || "");
+  const [filterType, setFilterType] = useState<string>(searchParams.get("type") || "");
+
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    filterAdmin ? next.set("admin", filterAdmin) : next.delete("admin");
+    filterRun ? next.set("run", filterRun) : next.delete("run");
+    filterCheck ? next.set("check", filterCheck) : next.delete("check");
+    filterType ? next.set("type", filterType) : next.delete("type");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterAdmin, filterRun, filterCheck, filterType]);
 
   const loadHistory = async () => {
     const { data } = await (supabase as any)
@@ -94,7 +112,19 @@ export default function AdminLodgingWiringCheckPage() {
       .select("id, created_at, admin_id, run_id, check_id, check_name, action_type, editor_url")
       .order("created_at", { ascending: false })
       .limit(50);
-    setActions((data as ActionRow[]) || []);
+    const list = (data as ActionRow[]) || [];
+    setActions(list);
+    // Resolve admin emails (one shot)
+    const ids = Array.from(new Set(list.map((a) => a.admin_id))).filter(Boolean);
+    if (ids.length > 0) {
+      const { data: profs } = await (supabase as any)
+        .from("profiles")
+        .select("user_id, email")
+        .in("user_id", ids);
+      const map: Record<string, string> = {};
+      (profs || []).forEach((p: any) => { if (p.user_id) map[p.user_id] = p.email || ""; });
+      setAdminEmails(map);
+    }
   };
 
   useEffect(() => { loadHistory(); loadActions(); }, [data]);
@@ -379,6 +409,25 @@ export default function AdminLodgingWiringCheckPage() {
                         </div>
                       )}
                     </div>
+                    {!c.pass && isWebhookCheck(c) && (
+                      <div className="mt-2 flex items-center gap-1 flex-wrap">
+                        <span className="text-[10px] text-muted-foreground">Recent related events:</span>
+                        {(c.related_event_ids && c.related_event_ids.length > 0) ? (
+                          c.related_event_ids.slice(0, 3).map((eid, idx) => (
+                            <Link
+                              key={eid}
+                              to={`/admin/lodging/webhook-events?event_id=${encodeURIComponent(eid)}`}
+                              className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border border-border bg-background hover:bg-accent font-mono"
+                            >
+                              <Webhook className="h-2.5 w-2.5" />
+                              {c.related_event_types?.[idx] || "event"} · {eid.slice(0, 10)}…
+                            </Link>
+                          ))
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground italic">No related events found.</span>
+                        )}
+                      </div>
+                    )}
                     {!c.pass && c.fix && (
                       <pre className="mt-2 text-[10px] bg-muted/50 rounded-lg p-2 overflow-x-auto text-muted-foreground whitespace-pre-wrap break-all">
                         {c.fix}
@@ -438,82 +487,196 @@ export default function AdminLodgingWiringCheckPage() {
           <CardContent className="p-3 pt-0">
             {historyTab === "runs" ? (
               <>
-                {/* Sparkline */}
+                {/* Sparkline (color-coded by schema version) */}
                 <div className="flex items-end gap-1 h-10 mb-2">
-                  {[...history].reverse().map((h) => {
+                  {[...history].reverse().map((h, i, arr) => {
                     const total = h.pass_count + h.fail_count || 1;
                     const passPct = (h.pass_count / total) * 100;
+                    const prev = arr[i - 1];
+                    const versionChanged = prev && (prev.schema_version ?? 1) !== (h.schema_version ?? 1);
+                    const isCurrent = (h.schema_version ?? 1) === 2;
                     return (
                       <div
                         key={h.id}
-                        title={`${new Date(h.ran_at).toLocaleString()} — ${h.pass_count} pass / ${h.fail_count} fail`}
-                        className="flex-1 rounded-t-sm bg-muted relative overflow-hidden"
+                        title={`v${h.schema_version ?? 1} · ${new Date(h.ran_at).toLocaleString()} — ${h.pass_count} pass / ${h.fail_count} fail`}
+                        className={`flex-1 rounded-t-sm relative overflow-hidden ${isCurrent ? "bg-muted" : "bg-muted/50"} ${versionChanged ? "border-l border-foreground/40" : ""}`}
                         style={{ height: "100%" }}
                       >
                         <div
-                          className={`absolute bottom-0 left-0 right-0 ${h.fail_count === 0 ? "bg-emerald-500" : "bg-destructive"}`}
+                          className={`absolute bottom-0 left-0 right-0 ${h.fail_count === 0 ? (isCurrent ? "bg-emerald-500" : "bg-muted-foreground") : "bg-destructive"}`}
                           style={{ height: `${passPct}%` }}
                         />
                       </div>
                     );
                   })}
                 </div>
-                <div className="space-y-1">
-                  {history.map((h, i) => {
-                    const prev = history[i + 1];
-                    const delta = prev ? h.fail_count - prev.fail_count : 0;
-                    return (
-                      <div key={h.id} className="flex items-center justify-between text-[11px] text-muted-foreground border-b border-border/40 last:border-b-0 py-1">
-                        <span className="flex items-center gap-1.5">
-                          {new Date(h.ran_at).toLocaleString()}
-                          {h.schema_version != null && (
-                            <code className="text-[9px] px-1 rounded bg-muted">v{h.schema_version}</code>
-                          )}
-                        </span>
-                        <span className="flex items-center gap-2">
-                          <span className="text-emerald-600">{h.pass_count}p</span>
-                          <span className={h.fail_count > 0 ? "text-destructive" : ""}>{h.fail_count}f</span>
-                          {delta !== 0 && (
-                            <span className={delta > 0 ? "text-destructive" : "text-emerald-600"}>
-                              {delta > 0 ? `+${delta}` : delta}
-                            </span>
-                          )}
-                        </span>
+                {/* Schema-grouped runs */}
+                {(() => {
+                  const groups = new Map<number, RunRow[]>();
+                  history.forEach((h) => {
+                    const v = h.schema_version ?? 1;
+                    if (!groups.has(v)) groups.set(v, []);
+                    groups.get(v)!.push(h);
+                  });
+                  const sorted = Array.from(groups.entries()).sort((a, b) => b[0] - a[0]);
+                  return sorted.map(([v, rows]) => (
+                    <div key={v} className="mb-2 last:mb-0">
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground uppercase tracking-wide mb-1 mt-2">
+                        <span>Schema v{v} · {rows.length} run{rows.length === 1 ? "" : "s"}</span>
+                        <span className="opacity-70" title="Diffs are computed within a schema version">ⓘ same-version diff</span>
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className="space-y-1">
+                        {rows.map((h, i) => {
+                          const prev = rows[i + 1]; // same-version previous
+                          const delta = prev ? h.fail_count - prev.fail_count : 0;
+                          const isBoundary = !prev && history.findIndex((x) => x.id === h.id) < history.length - 1;
+                          return (
+                            <div
+                              key={h.id}
+                              data-suppressed={isBoundary ? "true" : "false"}
+                              className="flex items-center justify-between text-[11px] text-muted-foreground border-b border-border/40 last:border-b-0 py-1"
+                            >
+                              <span className="flex items-center gap-1.5">
+                                {new Date(h.ran_at).toLocaleString()}
+                                <code className="text-[9px] px-1 rounded bg-muted">v{h.schema_version ?? 1}·{h.id.slice(0, 8)}</code>
+                              </span>
+                              <span className="flex items-center gap-2">
+                                <span className="text-emerald-600">{h.pass_count}p</span>
+                                <span className={h.fail_count > 0 ? "text-destructive" : ""}>{h.fail_count}f</span>
+                                {prev ? (
+                                  delta !== 0 ? (
+                                    <span className={delta > 0 ? "text-destructive" : "text-emerald-600"}>
+                                      {delta > 0 ? `+${delta}` : delta}
+                                    </span>
+                                  ) : <span className="text-muted-foreground">·</span>
+                                ) : (
+                                  <span className="text-muted-foreground" title="Schema mismatch — diff suppressed">—</span>
+                                )}
+                              </span>
+                            </div>
+                          );
+                        })}
+                        {rows.length > 0 && (() => {
+                          const last = rows[rows.length - 1];
+                          const idxInAll = history.findIndex((x) => x.id === last.id);
+                          if (idxInAll < history.length - 1) {
+                            return (
+                              <p className="text-[10px] text-muted-foreground italic pl-1">Schema mismatch with older runs — diff suppressed.</p>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    </div>
+                  ));
+                })()}
               </>
             ) : (
-              <div className="space-y-1">
-                {actions.length === 0 ? (
-                  <p className="text-[11px] text-muted-foreground py-2">No remediation actions recorded yet.</p>
-                ) : actions.map((a) => (
-                  <div key={a.id} className="flex items-center justify-between text-[11px] border-b border-border/40 last:border-b-0 py-1.5 gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className={`rounded-full text-[10px] ${actionToneClass[a.action_type]}`}>
-                          {a.action_type.replace(/_/g, " ")}
-                        </Badge>
-                        <span className="text-foreground font-medium truncate">{a.check_name || a.check_id}</span>
+              <>
+                {/* Filter bar */}
+                {(() => {
+                  const filtered = actions.filter((a) => {
+                    if (filterType && a.action_type !== filterType) return false;
+                    if (filterRun && !(a.run_id || "").startsWith(filterRun)) return false;
+                    if (filterCheck && !a.check_id.toLowerCase().includes(filterCheck.toLowerCase())) return false;
+                    if (filterAdmin) {
+                      const email = (adminEmails[a.admin_id] || "").toLowerCase();
+                      if (!email.includes(filterAdmin.toLowerCase())) return false;
+                    }
+                    return true;
+                  });
+                  const hasFilter = !!(filterAdmin || filterRun || filterCheck || filterType);
+                  return (
+                    <>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 mb-2">
+                        <input
+                          value={filterAdmin}
+                          onChange={(e) => setFilterAdmin(e.target.value)}
+                          placeholder="admin email"
+                          className="h-7 rounded-lg border border-border bg-background text-[11px] px-2"
+                        />
+                        <input
+                          value={filterRun}
+                          onChange={(e) => setFilterRun(e.target.value.trim())}
+                          placeholder="run id (8+ chars)"
+                          className="h-7 rounded-lg border border-border bg-background text-[11px] px-2 font-mono"
+                        />
+                        <input
+                          value={filterCheck}
+                          onChange={(e) => setFilterCheck(e.target.value)}
+                          placeholder="check id"
+                          className="h-7 rounded-lg border border-border bg-background text-[11px] px-2 font-mono"
+                        />
+                        <select
+                          value={filterType}
+                          onChange={(e) => setFilterType(e.target.value)}
+                          className="h-7 rounded-lg border border-border bg-background text-[11px] px-2"
+                        >
+                          <option value="">All actions</option>
+                          <option value="copy_fix_sql">Copy fix</option>
+                          <option value="copy_failing_query">Copy diagnostic</option>
+                          <option value="open_sql_editor">Open in editor</option>
+                          <option value="mark_resolved">Mark resolved</option>
+                        </select>
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5 font-mono truncate">
-                        {a.admin_id.slice(0, 8)}… · {new Date(a.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                    {a.editor_url && (
-                      <a
-                        href={a.editor_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-[10px] text-primary hover:underline inline-flex items-center gap-1 shrink-0"
-                      >
-                        <ExternalLink className="h-3 w-3" /> Open
-                      </a>
-                    )}
-                  </div>
-                ))}
-              </div>
+                      {hasFilter && (
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] text-muted-foreground">{filtered.length}/{actions.length} matching</span>
+                          <button
+                            onClick={() => { setFilterAdmin(""); setFilterRun(""); setFilterCheck(""); setFilterType(""); }}
+                            className="text-[10px] text-primary hover:underline"
+                          >
+                            Clear filters
+                          </button>
+                        </div>
+                      )}
+                      <div className="space-y-1">
+                        {filtered.length === 0 ? (
+                          <p className="text-[11px] text-muted-foreground py-2">
+                            {actions.length === 0 ? "No remediation actions recorded yet." : "No actions match these filters."}
+                          </p>
+                        ) : filtered.map((a) => {
+                          const email = adminEmails[a.admin_id];
+                          return (
+                            <div key={a.id} className="flex items-center justify-between text-[11px] border-b border-border/40 last:border-b-0 py-1.5 gap-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <Badge variant="outline" className={`rounded-full text-[10px] ${actionToneClass[a.action_type]}`}>
+                                    {a.action_type.replace(/_/g, " ")}
+                                  </Badge>
+                                  <span className="text-foreground font-medium truncate">{a.check_name || a.check_id}</span>
+                                  {a.run_id && (
+                                    <button
+                                      onClick={() => setFilterRun(a.run_id!.slice(0, 8))}
+                                      className="text-[9px] px-1 rounded bg-muted font-mono hover:bg-accent"
+                                      title="Filter by this run"
+                                    >
+                                      run·{a.run_id.slice(0, 8)}
+                                    </button>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-muted-foreground mt-0.5 font-mono truncate">
+                                  {email || `${a.admin_id.slice(0, 8)}…`} · {new Date(a.created_at).toLocaleString()}
+                                </p>
+                              </div>
+                              {a.editor_url && (
+                                <a
+                                  href={a.editor_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-[10px] text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+                                >
+                                  <ExternalLink className="h-3 w-3" /> Open
+                                </a>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  );
+                })()}
+              </>
             )}
           </CardContent>
         </Card>

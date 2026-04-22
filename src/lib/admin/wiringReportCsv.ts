@@ -17,6 +17,8 @@ export interface WiringCheck {
   fix?: string;
   failing_query?: string;
   editor_url?: string;
+  related_event_ids?: string[];
+  related_event_types?: string[];
 }
 
 export interface WiringReport {

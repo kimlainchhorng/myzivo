@@ -7,7 +7,7 @@
  * countdown alert (data-testid="lodge-retry-locked") and auto-re-enables when the
  * cooldown elapses.
  */
-import { ShieldCheck, CheckCircle2, Clock, XCircle, RotateCcw, Undo2, Loader2, Lock } from "lucide-react";
+import { ShieldCheck, CheckCircle2, Clock, XCircle, RotateCcw, Undo2, Loader2, Lock, User, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +28,10 @@ interface RetryResult {
   locked?: boolean;
   retry_after_seconds?: number;
   error?: string;
+  lock_attempt_id?: string | null;
+  lock_started_at?: string | null;
+  lock_owner_hint?: "self" | "other" | null;
+  lock_admin_hint?: string | null;
 }
 
 interface Props {
@@ -74,6 +78,7 @@ export function LodgingPaymentBadge({
   const retryInFlightRef = useRef(false);
   const [, setTick] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const [lockInfo, setLockInfo] = useState<RetryResult | null>(null);
 
   // Re-render every 1s while locked or every 5s for stale-time refresh.
   useEffect(() => {
@@ -86,7 +91,7 @@ export function LodgingPaymentBadge({
 
   // Auto-clear lock when its countdown elapses
   useEffect(() => {
-    if (lockedUntil && Date.now() >= lockedUntil) setLockedUntil(null);
+    if (lockedUntil && Date.now() >= lockedUntil) { setLockedUntil(null); setLockInfo(null); }
   });
 
   if (!status || status === "unpaid") return null;
@@ -160,8 +165,10 @@ export function LodgingPaymentBadge({
     try {
       const result = await onRetry();
       if (result && typeof result === "object" && (result as RetryResult).locked) {
-        const seconds = Math.max(2, Math.min(120, Number((result as RetryResult).retry_after_seconds) || 5));
+        const r = result as RetryResult;
+        const seconds = Math.max(2, Math.min(120, Number(r.retry_after_seconds) || 5));
         setLockedUntil(Date.now() + seconds * 1000);
+        setLockInfo(r);
       }
     } finally {
       // 5s cool-down before another retry can fire
@@ -176,17 +183,36 @@ export function LodgingPaymentBadge({
   const wrapperCls = "inline-flex flex-col items-start gap-0.5";
 
   // Locked alert (shown above the badge when a parallel retry is in progress)
+  const isSelf = lockInfo?.lock_owner_hint === "self";
+  const OwnerIcon = isSelf ? User : Users;
   const lockedAlert = lockedUntil ? (
     <div
       data-testid="lodge-retry-locked"
-      className="inline-flex items-start gap-1.5 px-2 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-700 text-[10px] max-w-[260px]"
+      data-lock-owner={lockInfo?.lock_owner_hint || "unknown"}
+      className="inline-flex items-start gap-1.5 px-2 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-700 text-[10px] max-w-[280px]"
     >
       <Lock className="h-3 w-3 mt-0.5 shrink-0" />
-      <div>
-        <p className="font-semibold">Retry already in progress</p>
-        <p className="opacity-80">
-          Another retry is running. Re-enabling in {lockSecondsLeft}s…
+      <div className="space-y-0.5">
+        <p className="font-semibold">
+          {isSelf ? "Same-tab retry already running" : "Retry already in progress"}
         </p>
+        {!isSelf && (
+          <p className="opacity-80">
+            Another retry is running. Re-enabling in {lockSecondsLeft}s…
+          </p>
+        )}
+        {lockInfo?.lock_attempt_id && (
+          <p className="opacity-80 inline-flex items-center gap-1 font-mono">
+            <OwnerIcon className="h-2.5 w-2.5" />
+            {isSelf ? "self" : "other tab"} · {lockInfo.lock_attempt_id.slice(0, 8)}
+            {lockInfo.lock_started_at && (
+              <span className="opacity-70"> · started {timeAgo(lockInfo.lock_started_at)}</span>
+            )}
+          </p>
+        )}
+        {lockInfo?.lock_admin_hint && (
+          <p className="opacity-70 font-mono">admin …{lockInfo.lock_admin_hint}</p>
+        )}
       </div>
     </div>
   ) : null;
