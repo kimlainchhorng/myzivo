@@ -381,11 +381,11 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
           <AccordionContent className="px-3 pb-3 space-y-3">
             <Card>
               <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Accessibility className="h-3.5 w-3.5" /> Accessibility</CardTitle></CardHeader>
-              <CardContent className="pt-0"><ChipGroup options={ACCESSIBILITY.filter(matches)} selected={form.accessibility || []} onToggle={v => toggleIn("accessibility", v)} /></CardContent>
+              <CardContent className="pt-0"><ChipGroup options={ACCESSIBILITY.filter(matches)} selected={form.accessibility || []} onToggle={v => toggleIn("accessibility", v)} withIcons /></CardContent>
             </Card>
             <Card>
               <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Leaf className="h-3.5 w-3.5" /> Sustainability</CardTitle></CardHeader>
-              <CardContent className="pt-0"><ChipGroup options={SUSTAINABILITY.filter(matches)} selected={form.sustainability || []} onToggle={v => toggleIn("sustainability", v)} /></CardContent>
+              <CardContent className="pt-0"><ChipGroup options={SUSTAINABILITY.filter(matches)} selected={form.sustainability || []} onToggle={v => toggleIn("sustainability", v)} withIcons /></CardContent>
             </Card>
 
             <Card>
