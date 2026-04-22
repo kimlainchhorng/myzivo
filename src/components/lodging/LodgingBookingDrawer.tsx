@@ -792,6 +792,7 @@ export function LodgingBookingDrawer({
                   defaultTimezone: (propertyProfile as any)?.timezone || "Asia/Phnom_Penh",
                   totalText: fmtMoney(breakdown.total),
                   cancellationText: cancellationDescription(cancellationPolicy),
+                  lockHours: Number((houseRules as any)?.ics_lock_hours ?? 24),
                 }}
               />
               {storePhone ? (

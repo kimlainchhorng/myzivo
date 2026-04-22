@@ -23,7 +23,12 @@ import { format } from "date-fns";
 import { ReservationStatusTimeline, type LodgeStatus } from "@/components/lodging/ReservationStatusTimeline";
 import { ReservationStatusHistory } from "@/components/lodging/ReservationStatusHistory";
 import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
+import { PolicyAcknowledgementCard } from "@/components/lodging/PolicyAcknowledgementCard";
 import { useReservationLive } from "@/hooks/lodging/useReservationLive";
+import { downloadAuditCsv } from "@/lib/lodging/auditCsv";
+import { supabase } from "@/integrations/supabase/client";
+import { Download } from "lucide-react";
+import { toast } from "sonner";
 
 const itemIcons: Record<ItemType, typeof Plane> = {
   flight: Plane,
@@ -370,7 +375,60 @@ function TripItemCard({ item, onDelete }: { item: TripItem; onDelete: () => void
 
 function LodgingTimelineBlock({ reservationId }: { reservationId: string }) {
   const { data: live } = useReservationLive(reservationId);
+
+  const handleRetryPayment = async () => {
+    if (!live) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("create-lodging-deposit", {
+        body: {
+          reservation_id: live.id,
+          store_id: live.store_id,
+          deposit_cents: (live as any).deposit_cents || live.total_cents || 0,
+          mode: "deposit",
+        },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+        toast.success("Opening secure Stripe checkout…");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Could not retry payment");
+    }
+  };
+
+  const exportCsv = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("lodge_reservation_audit" as any)
+        .select("created_at, from_status, to_status, actor_role, actor_user_id, note")
+        .eq("reservation_id", reservationId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const rows = (data || []).map((r: any) => ({
+        created_at: r.created_at,
+        from_status: r.from_status,
+        to_status: r.to_status,
+        actor_role: r.actor_role,
+        actor_name: r.actor_user_id ? r.actor_user_id.slice(0, 8) : null,
+        note: r.note,
+      }));
+      if (!rows.length) {
+        toast.info("No history to export yet");
+        return;
+      }
+      const ref = (live as any)?.number || reservationId.slice(0, 8);
+      downloadAuditCsv(ref, rows);
+      toast.success("History downloaded");
+    } catch (e: any) {
+      toast.error(e?.message || "Could not export history");
+    }
+  };
+
   if (!live) return null;
+  const consent = (live as any).policy_consent;
+  const consentVersion = (live as any).policy_consent_version;
+
   return (
     <div className="mb-6 space-y-3">
       <Card>
@@ -378,15 +436,27 @@ function LodgingTimelineBlock({ reservationId }: { reservationId: string }) {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <h3 className="text-sm font-bold flex items-center gap-1.5"><Hotel className="h-3.5 w-3.5 text-primary" /> Booking status</h3>
             {live.payment_status && live.payment_status !== "unpaid" && (
-              <LodgingPaymentBadge status={live.payment_status} amountCents={live.deposit_cents || live.total_cents} />
+              <LodgingPaymentBadge
+                status={live.payment_status}
+                amountCents={(live as any).deposit_cents || live.total_cents}
+                onRetry={handleRetryPayment}
+              />
             )}
           </div>
           <ReservationStatusTimeline status={live.status as LodgeStatus} />
         </CardContent>
       </Card>
+      {(consent?.rules || consent?.cancellation) && (
+        <PolicyAcknowledgementCard consent={consent} versionStamp={consentVersion} />
+      )}
       <Card>
         <CardContent className="p-4 space-y-2">
-          <h3 className="text-xs font-bold uppercase text-muted-foreground">Status history</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase text-muted-foreground">Status history</h3>
+            <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1" onClick={exportCsv}>
+              <Download className="h-3 w-3" /> Export CSV
+            </Button>
+          </div>
           <ReservationStatusHistory reservationId={reservationId} />
         </CardContent>
       </Card>
