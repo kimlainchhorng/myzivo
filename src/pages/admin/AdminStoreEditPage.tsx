@@ -56,6 +56,14 @@ import AutoRepairAutoCheckSection from "@/components/admin/store/autorepair/Auto
 import AutoRepairPartShopSection from "@/components/admin/store/autorepair/AutoRepairPartShopSection";
 import AutoRepairInspectionsSection from "@/components/admin/store/autorepair/AutoRepairInspectionsSection";
 import AutoRepairVehiclesSection from "@/components/admin/store/autorepair/AutoRepairVehiclesSection";
+import AutoRepairEstimatesSection from "@/components/admin/store/autorepair/AutoRepairEstimatesSection";
+import AutoRepairWorkOrdersSection from "@/components/admin/store/autorepair/AutoRepairWorkOrdersSection";
+import AutoRepairTechniciansSection from "@/components/admin/store/autorepair/AutoRepairTechniciansSection";
+import AutoRepairRemindersSection from "@/components/admin/store/autorepair/AutoRepairRemindersSection";
+import AutoRepairTiresSection from "@/components/admin/store/autorepair/AutoRepairTiresSection";
+import AutoRepairWarrantySection from "@/components/admin/store/autorepair/AutoRepairWarrantySection";
+import AutoRepairFleetSection from "@/components/admin/store/autorepair/AutoRepairFleetSection";
+import AutoRepairReportsSection from "@/components/admin/store/autorepair/AutoRepairReportsSection";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
@@ -1779,7 +1787,21 @@ export default function AdminStoreEditPage() {
 
   const employeeTitles: Record<string, string> = { employees: "Employees", payroll: "Payroll", "employee-schedule": "Employee Schedule", "time-clock": "Time Clock", "employee-rules": "Employee Rules", attendance: "Attendance & Leave", training: "Training & Onboarding", documents: "Documents & Files" };
   const isAutoRepair = form.category === "auto-repair";
-  const autoRepairTitles: Record<string, string> = { "ar-invoices": "Invoices & Estimates", "ar-autocheck": "Auto Check (VIN)", "ar-parts": "Part Shop", "ar-inspections": "Digital Inspections", "ar-vehicles": "Customer Vehicles" };
+  const autoRepairTitles: Record<string, string> = {
+    "ar-invoices": "Invoices & Estimates",
+    "ar-autocheck": "Auto Check (VIN)",
+    "ar-parts": "Part Shop",
+    "ar-inspections": "Digital Inspections",
+    "ar-vehicles": "Customer Vehicles",
+    "ar-estimates": "Estimates & Quotes",
+    "ar-workorders": "Work Orders",
+    "ar-techs": "Technicians & Bays",
+    "ar-reminders": "Reminders & Recalls",
+    "ar-tires": "Tire Inventory",
+    "ar-warranty": "Warranty & Comebacks",
+    "ar-fleet": "Fleet Accounts",
+    "ar-reports": "Reports & Analytics",
+  };
   const storeOwnerTitle = autoRepairTitles[activeTab] || employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? (isAutoRepair ? "Services" : "Products") : activeTab === "payment" ? (form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : t("admin.store.payment")) : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "livestream" ? "Live Stream" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
   const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
     <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} storeCategory={form.category} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
@@ -3329,6 +3351,14 @@ export default function AdminStoreEditPage() {
               <TabsContent value="ar-parts"><AutoRepairPartShopSection storeId={storeId!} /></TabsContent>
               <TabsContent value="ar-inspections"><AutoRepairInspectionsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="ar-vehicles"><AutoRepairVehiclesSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-estimates"><AutoRepairEstimatesSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-workorders"><AutoRepairWorkOrdersSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-techs"><AutoRepairTechniciansSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-reminders"><AutoRepairRemindersSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-tires"><AutoRepairTiresSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-warranty"><AutoRepairWarrantySection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-fleet"><AutoRepairFleetSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="ar-reports"><AutoRepairReportsSection storeId={storeId!} /></TabsContent>
             </>
           )}
 
