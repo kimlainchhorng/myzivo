@@ -559,15 +559,17 @@ export default function AdminStoreEditPage() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState(emptyProduct);
 
-  // Auto-draft: persist product form to localStorage
+  // Auto-draft: persist product form to localStorage (debounced to avoid
+  // re-running on every keystroke, which can contribute to render churn).
   const draftKey = `zivo_product_draft_${storeId}`;
   useEffect(() => {
     if (!productDialog || editingProduct) return;
-    // Only save draft for new products with some data entered
     const hasData = productForm.name || productForm.price > 0 || productForm.price_khr > 0 || (productForm.image_urls || []).length > 0 || productForm.category || productForm.brand;
-    if (hasData) {
+    if (!hasData) return;
+    const handle = setTimeout(() => {
       try { localStorage.setItem(draftKey, JSON.stringify(productForm)); } catch {}
-    }
+    }, 400);
+    return () => clearTimeout(handle);
   }, [productForm, productDialog, editingProduct, draftKey]);
 
   const clearProductDraft = () => { try { localStorage.removeItem(draftKey); } catch {} };
