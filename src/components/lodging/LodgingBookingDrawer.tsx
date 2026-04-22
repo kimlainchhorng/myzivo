@@ -17,14 +17,18 @@ import { ResponsiveModal, ResponsiveModalFooter } from "@/components/ui/responsi
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { LodgingStaySelector } from "@/components/lodging/LodgingStaySelector";
 import { ReservationStatusTimeline } from "@/components/lodging/ReservationStatusTimeline";
+import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
+import { IcsPreviewPanel } from "@/components/lodging/IcsPreviewPanel";
+import { PolicySourceSheet } from "@/components/lodging/PolicySourceSheet";
 import { useRoomAvailability, hasUnavailableNight } from "@/hooks/lodging/useRoomAvailability";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
+import { useRoomConflictCheck, checkRoomConflictNow } from "@/hooks/lodging/useRoomConflictCheck";
+import { useReservationLive } from "@/hooks/lodging/useReservationLive";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { cancellationLabel, cancellationDescription } from "@/lib/lodging/cancellationCopy";
 import { validateGuest } from "@/lib/lodging/guestSchema";
-import { buildBookingIcs, downloadIcsFile } from "@/lib/lodging/ics";
 import type { LodgeAddon, RoomFees, ChildPolicy } from "@/hooks/lodging/useLodgeRooms";
 
 interface Props {
