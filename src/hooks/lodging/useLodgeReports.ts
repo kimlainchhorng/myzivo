@@ -28,7 +28,9 @@ export function useLodgeReports(storeId: string, fromDate: string, toDate: strin
           .in("status", ["confirmed", "checked_in", "checked_out"]),
       ]);
 
-      const totalUnits = (rooms || []).reduce((s: number, r: any) => s + (r.units_total || 1), 0);
+      const roomsList: any[] = (rooms as any) || [];
+      const reservationsList: any[] = (reservations as any) || [];
+      const totalUnits = roomsList.reduce((s: number, r: any) => s + (r.units_total || 1), 0);
       const days = Math.max(1, (new Date(toDate).getTime() - new Date(fromDate).getTime()) / 86400000);
       const availableNights = totalUnits * days;
 
@@ -37,10 +39,10 @@ export function useLodgeReports(storeId: string, fromDate: string, toDate: strin
       const byRoom: Record<string, { nights: number; revenue: number; name: string }> = {};
       const bySource: Record<string, { nights: number; revenue: number }> = {};
 
-      (reservations || []).forEach((r: any) => {
+      reservationsList.forEach((r: any) => {
         nightsSold += r.nights || 0;
         revenue += r.total_cents || 0;
-        const room = (rooms || []).find((rm: any) => rm.id === r.room_id);
+        const room = roomsList.find((rm: any) => rm.id === r.room_id);
         const key = room?.name || "Unassigned";
         byRoom[key] = byRoom[key] || { nights: 0, revenue: 0, name: key };
         byRoom[key].nights += r.nights || 0;
@@ -54,7 +56,7 @@ export function useLodgeReports(storeId: string, fromDate: string, toDate: strin
       const occupancyPct = availableNights > 0 ? (nightsSold / availableNights) * 100 : 0;
       const adrCents = nightsSold > 0 ? revenue / nightsSold : 0;
       const revparCents = availableNights > 0 ? revenue / availableNights : 0;
-      const avgLos = (reservations || []).length > 0 ? nightsSold / (reservations || []).length : 0;
+      const avgLos = reservationsList.length > 0 ? nightsSold / reservationsList.length : 0;
 
       const perRoomType = Object.values(byRoom).sort((a, b) => b.revenue - a.revenue);
       const perSource = Object.entries(bySource)
