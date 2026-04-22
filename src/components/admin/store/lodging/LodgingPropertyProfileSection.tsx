@@ -13,6 +13,7 @@ import {
   Hotel, Utensils, Globe, Accessibility, Leaf, Shield, MapPin, Sparkles, Plus, Trash2,
   Search, Footprints, Car, Ship, Save, Check, GripVertical,
 } from "lucide-react";
+import { getAmenityIcon } from "@/components/lodging/amenityIcons";
 import { toast } from "sonner";
 import {
   useLodgePropertyProfile,
@@ -27,14 +28,16 @@ import PetChildPolicyCard from "./property-profile/PetChildPolicyCard";
 import ContactCard from "./property-profile/ContactCard";
 
 const LANGUAGES = ["English", "Spanish", "French", "German", "Italian", "Portuguese", "Khmer", "Thai", "Vietnamese", "Chinese", "Japanese", "Korean", "Russian", "Arabic", "Hindi"];
-const FACILITIES = [
-  "Outdoor pool", "Indoor pool", "Restaurant", "Bar", "Gym", "Spa", "Sauna", "Hot tub",
-  "Kids club", "Playground", "Business center", "Conference room", "Co-working space",
-  "Laundry service", "Dry cleaning", "24h front desk", "Concierge",
-  "Airport shuttle", "Free parking", "Valet parking", "EV charging", "Bicycle hire",
-  "Beach access", "Beachfront", "Garden", "Library", "Lounge", "Terrace", "Rooftop bar",
-  "Tour desk", "Currency exchange", "ATM on site", "Souvenir shop",
+const FACILITY_GROUPS: { label: string; items: string[] }[] = [
+  { label: "Pools & wellness", items: ["Outdoor pool", "Indoor pool", "Spa", "Sauna", "Hot tub", "Gym", "Steam room", "Massage"] },
+  { label: "Food & drink", items: ["Restaurant", "Bar", "Rooftop bar", "Lounge", "Snack bar", "Room service"] },
+  { label: "Family & entertainment", items: ["Kids club", "Playground", "Game room", "Library"] },
+  { label: "Business", items: ["Business center", "Conference room", "Co-working space", "Meeting rooms"] },
+  { label: "Services", items: ["Laundry service", "Dry cleaning", "24h front desk", "Concierge", "Tour desk", "Currency exchange", "ATM on site", "Souvenir shop", "Daily housekeeping", "Baggage storage"] },
+  { label: "Transport & parking", items: ["Airport shuttle", "Free parking", "Valet parking", "EV charging", "Bicycle hire", "Car rental"] },
+  { label: "Outdoor & location", items: ["Beach access", "Beachfront", "Garden", "Terrace", "BBQ area", "Sun deck"] },
 ];
+const FACILITIES = FACILITY_GROUPS.flatMap(g => g.items);
 const MEAL_PLANS = ["Room only", "Bed & Breakfast", "Half board", "Full board", "All-inclusive"];
 const ACCESSIBILITY = [
   "Step-free access", "Wheelchair accessible", "Accessible bathroom", "Roll-in shower",
@@ -189,7 +192,7 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
             <Card>
               <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> Hero badges <span className="text-[10px] font-normal text-muted-foreground">· top 3 visible</span></CardTitle></CardHeader>
               <CardContent className="pt-0">
-                <ChipGroup options={HERO_BADGES.filter(matches)} selected={form.hero_badges || []} onToggle={v => toggleIn("hero_badges", v)} />
+                <ChipGroup options={HERO_BADGES.filter(matches)} selected={form.hero_badges || []} onToggle={v => toggleIn("hero_badges", v)} withIcons />
                 {(form.hero_badges || []).length > 0 && (
                   <p className="text-[10px] text-muted-foreground mt-2">Visible on storefront: <b>{(form.hero_badges || []).slice(0, 3).join(" · ")}</b></p>
                 )}
@@ -199,7 +202,7 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
             <Card>
               <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Hotel className="h-3.5 w-3.5" /> Included highlights <span className="text-[10px] font-normal text-muted-foreground">· {(form.included_highlights || []).length}/6</span></CardTitle></CardHeader>
               <CardContent className="pt-0 space-y-2">
-                <ChipGroup options={INCLUDED.filter(matches)} selected={form.included_highlights || []} onToggle={v => toggleIn("included_highlights", v)} max={6} />
+                <ChipGroup options={INCLUDED.filter(matches)} selected={form.included_highlights || []} onToggle={v => toggleIn("included_highlights", v)} max={6} withIcons />
                 {(form.included_highlights || []).length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {(form.included_highlights || []).map((h, i) => (
@@ -234,12 +237,39 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
           </AccordionTrigger>
           <AccordionContent className="px-3 pb-3 space-y-3">
             <Card>
-              <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Hotel className="h-3.5 w-3.5" /> Property-wide facilities</CardTitle></CardHeader>
-              <CardContent className="pt-0"><ChipGroup options={FACILITIES.filter(matches)} selected={form.facilities || []} onToggle={v => toggleIn("facilities", v)} /></CardContent>
+              <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Hotel className="h-3.5 w-3.5" /> Property-wide facilities <span className="text-[10px] font-normal text-muted-foreground">· {(form.facilities || []).length} selected</span></CardTitle></CardHeader>
+              <CardContent className="pt-0 space-y-3">
+                {FACILITY_GROUPS.map(group => {
+                  const items = group.items.filter(matches);
+                  if (items.length === 0) return null;
+                  const selectedInGroup = items.filter(i => (form.facilities || []).includes(i)).length;
+                  return (
+                    <div key={group.label}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{group.label} <span className="text-muted-foreground/60 normal-case">· {selectedInGroup}/{items.length}</span></p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const allSelected = items.every(i => (form.facilities || []).includes(i));
+                            const next = allSelected
+                              ? (form.facilities || []).filter(f => !items.includes(f))
+                              : Array.from(new Set([...(form.facilities || []), ...items]));
+                            setForm({ ...form, facilities: next });
+                          }}
+                          className="text-[10px] text-primary hover:underline font-medium"
+                        >
+                          {items.every(i => (form.facilities || []).includes(i)) ? "Clear" : "Select all"}
+                        </button>
+                      </div>
+                      <ChipGroup options={items} selected={form.facilities || []} onToggle={v => toggleIn("facilities", v)} withIcons />
+                    </div>
+                  );
+                })}
+              </CardContent>
             </Card>
             <Card>
               <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Utensils className="h-3.5 w-3.5" /> Meal plans</CardTitle></CardHeader>
-              <CardContent className="pt-0"><ChipGroup options={MEAL_PLANS.filter(matches)} selected={form.meal_plans || []} onToggle={v => toggleIn("meal_plans", v)} /></CardContent>
+              <CardContent className="pt-0"><ChipGroup options={MEAL_PLANS.filter(matches)} selected={form.meal_plans || []} onToggle={v => toggleIn("meal_plans", v)} withIcons /></CardContent>
             </Card>
           </AccordionContent>
         </AccordionItem>
@@ -351,11 +381,11 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
           <AccordionContent className="px-3 pb-3 space-y-3">
             <Card>
               <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Accessibility className="h-3.5 w-3.5" /> Accessibility</CardTitle></CardHeader>
-              <CardContent className="pt-0"><ChipGroup options={ACCESSIBILITY.filter(matches)} selected={form.accessibility || []} onToggle={v => toggleIn("accessibility", v)} /></CardContent>
+              <CardContent className="pt-0"><ChipGroup options={ACCESSIBILITY.filter(matches)} selected={form.accessibility || []} onToggle={v => toggleIn("accessibility", v)} withIcons /></CardContent>
             </Card>
             <Card>
               <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Leaf className="h-3.5 w-3.5" /> Sustainability</CardTitle></CardHeader>
-              <CardContent className="pt-0"><ChipGroup options={SUSTAINABILITY.filter(matches)} selected={form.sustainability || []} onToggle={v => toggleIn("sustainability", v)} /></CardContent>
+              <CardContent className="pt-0"><ChipGroup options={SUSTAINABILITY.filter(matches)} selected={form.sustainability || []} onToggle={v => toggleIn("sustainability", v)} withIcons /></CardContent>
             </Card>
 
             <Card>
@@ -424,8 +454,8 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
   );
 }
 
-function ChipGroup({ options, selected, onToggle, max, labelMap }: {
-  options: string[]; selected: string[]; onToggle: (v: string) => void; max?: number; labelMap?: Record<string, string>;
+function ChipGroup({ options, selected, onToggle, max, labelMap, withIcons }: {
+  options: string[]; selected: string[]; onToggle: (v: string) => void; max?: number; labelMap?: Record<string, string>; withIcons?: boolean;
 }) {
   const atMax = max != null && selected.length >= max;
   return (
@@ -433,17 +463,19 @@ function ChipGroup({ options, selected, onToggle, max, labelMap }: {
       {options.map(o => {
         const on = selected.includes(o);
         const disabled = !on && atMax;
+        const Icon = withIcons ? getAmenityIcon(o) : null;
         return (
           <button
             key={o} type="button" disabled={disabled} onClick={() => onToggle(o)}
-            className={`px-2.5 py-1 rounded-full text-[11px] border transition ${
+            className={`px-2.5 py-1 rounded-full text-[11px] border transition inline-flex items-center gap-1 ${
               on
-                ? "bg-primary text-primary-foreground border-primary"
+                ? "bg-primary text-primary-foreground border-primary shadow-sm font-semibold"
                 : disabled
                 ? "bg-background border-border text-muted-foreground/40 cursor-not-allowed"
-                : "bg-background border-border text-muted-foreground hover:border-primary/40"
+                : "bg-background border-border text-foreground hover:border-primary/40 hover:bg-primary/5"
             }`}
           >
+            {Icon && <Icon className="h-3 w-3" />}
             {labelMap?.[o] || o}
           </button>
         );
