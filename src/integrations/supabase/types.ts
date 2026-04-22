@@ -27038,11 +27038,14 @@ export type Database = {
           guest_phone: string | null
           id: string
           id_photo_url: string | null
+          last_payment_error: string | null
           nights: number | null
           notes: string | null
           number: string
           paid_cents: number | null
           payment_status: string | null
+          policy_consent: Json | null
+          policy_consent_version: string | null
           rate_cents: number | null
           room_id: string | null
           room_number: string | null
@@ -27075,11 +27078,14 @@ export type Database = {
           guest_phone?: string | null
           id?: string
           id_photo_url?: string | null
+          last_payment_error?: string | null
           nights?: number | null
           notes?: string | null
           number: string
           paid_cents?: number | null
           payment_status?: string | null
+          policy_consent?: Json | null
+          policy_consent_version?: string | null
           rate_cents?: number | null
           room_id?: string | null
           room_number?: string | null
@@ -27112,11 +27118,14 @@ export type Database = {
           guest_phone?: string | null
           id?: string
           id_photo_url?: string | null
+          last_payment_error?: string | null
           nights?: number | null
           notes?: string | null
           number?: string
           paid_cents?: number | null
           payment_status?: string | null
+          policy_consent?: Json | null
+          policy_consent_version?: string | null
           rate_cents?: number | null
           room_id?: string | null
           room_number?: string | null
