@@ -13,6 +13,7 @@ import {
   Hotel, Utensils, Globe, Accessibility, Leaf, Shield, MapPin, Sparkles, Plus, Trash2,
   Search, Footprints, Car, Ship, Save, Check, GripVertical,
 } from "lucide-react";
+import { getAmenityIcon } from "@/components/lodging/amenityIcons";
 import { toast } from "sonner";
 import {
   useLodgePropertyProfile,
