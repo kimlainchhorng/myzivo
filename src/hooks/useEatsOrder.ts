@@ -149,6 +149,21 @@ export function useEatsOrder() {
         console.error("[EatsOrder] Dispatch error:", dispatchErr);
       }
 
+      // 3.5 Track promo redemption (non-blocking attribution)
+      if (params.promoCode && params.discountAmount && params.discountAmount > 0) {
+        supabase.functions
+          .invoke("track-promo-redemption", {
+            body: {
+              promo_code: params.promoCode,
+              user_id: user.id,
+              order_id: orderId,
+              discount_cents: Math.round((params.discountAmount || 0) * 100),
+              order_total_cents: Math.round(params.totalAmount * 100),
+            },
+          })
+          .catch((err) => console.warn("[EatsOrder] promo attribution failed:", err));
+      }
+
       // 4. Notify
       notify("order_placed", {
         orderId: trackingCode,
