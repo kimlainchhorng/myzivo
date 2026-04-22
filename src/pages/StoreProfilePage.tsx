@@ -2,9 +2,16 @@
  * StoreProfilePage - Ultra-premium 3D/4D Spatial UI store profile
  * Immersive glassmorphic design with depth, perspective, holographic cards
  */
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck, BedDouble } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck, BedDouble, Lock } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react";
+import { track } from "@/lib/analytics";
+
+// Module-scope guard so we only fire `store_contact_unlocked` once per
+// (session, store) — re-renders won't double-count.
+const _unlockedFired = new Set<string>();
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -93,7 +100,27 @@ export default function StoreProfilePage() {
   const isLodging = !!store && ["hotel", "resort", "guesthouse"].includes(store.category);
   const { data: allRooms = [], isLoading: loadingRooms } = useLodgeRooms(isLodging ? store!.id : "");
   const { data: propertyProfile } = useLodgePropertyProfile(isLodging ? store!.id : "");
-  const { data: hasBooking = false } = useHasStoreBooking(store?.id);
+  const { data: bookingCheck, isLoading: loadingBooking } = useHasStoreBooking(store?.id);
+  const hasBooking = !!bookingCheck?.hasBooking;
+  const bookingSource = bookingCheck?.source ?? null;
+  const phoneNumber = (store as any)?.phone || (store as any)?.contact?.phone || "";
+  const callable = hasBooking && !!phoneNumber;
+  const chattable = hasBooking;
+
+  // Fire `store_contact_unlocked` once per (session, store)
+  useEffect(() => {
+    if (!store?.id || !hasBooking) return;
+    if (_unlockedFired.has(store.id)) return;
+    _unlockedFired.add(store.id);
+    const storeType: "lodge" | "food" =
+      bookingSource === "lodge_reservation" ? "lodge" : "food";
+    track("store_contact_unlocked", {
+      store_id: store.id,
+      store_type: storeType,
+      source: bookingSource,
+    });
+  }, [store?.id, hasBooking, bookingSource]);
+
   const rooms = useMemo(() => (allRooms || []).filter(r => r.is_active), [allRooms]);
 
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
