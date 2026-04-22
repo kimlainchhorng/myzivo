@@ -27002,6 +27002,87 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_automations: {
+        Row: {
+          completed_count: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          enrolled_count: number
+          id: string
+          name: string
+          status: string
+          steps_json: Json
+          store_id: string
+          trigger_json: Json
+          updated_at: string
+        }
+        Insert: {
+          completed_count?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enrolled_count?: number
+          id?: string
+          name: string
+          status?: string
+          steps_json?: Json
+          store_id: string
+          trigger_json?: Json
+          updated_at?: string
+        }
+        Update: {
+          completed_count?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enrolled_count?: number
+          id?: string
+          name?: string
+          status?: string
+          steps_json?: Json
+          store_id?: string
+          trigger_json?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketing_campaign_events: {
+        Row: {
+          campaign_id: string
+          channel: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          revenue_cents: number
+          store_id: string
+          user_id: string | null
+        }
+        Insert: {
+          campaign_id: string
+          channel?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          revenue_cents?: number
+          store_id: string
+          user_id?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          channel?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          revenue_cents?: number
+          store_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       marketing_campaign_stats: {
         Row: {
           campaign_id: string | null
@@ -27150,6 +27231,66 @@ export type Database = {
           },
         ]
       }
+      marketing_promo_codes: {
+        Row: {
+          campaign_id: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          max_redemptions: number | null
+          metadata: Json
+          min_order_cents: number
+          per_customer_limit: number
+          redemption_count: number
+          revenue_cents: number
+          status: string
+          store_id: string
+          type: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          campaign_id?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          max_redemptions?: number | null
+          metadata?: Json
+          min_order_cents?: number
+          per_customer_limit?: number
+          redemption_count?: number
+          revenue_cents?: number
+          status?: string
+          store_id: string
+          type?: string
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          campaign_id?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          max_redemptions?: number | null
+          metadata?: Json
+          min_order_cents?: number
+          per_customer_limit?: number
+          redemption_count?: number
+          revenue_cents?: number
+          status?: string
+          store_id?: string
+          type?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
       marketing_qa_runs: {
         Row: {
           admin_id: string
@@ -27177,6 +27318,96 @@ export type Database = {
           results?: Json
           store_id?: string
           viewport?: string
+        }
+        Relationships: []
+      }
+      marketing_segments: {
+        Row: {
+          conditions_jsonb: Json
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          last_refreshed_at: string | null
+          member_count: number
+          name: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          conditions_jsonb?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          last_refreshed_at?: string | null
+          member_count?: number
+          name: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          conditions_jsonb?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          last_refreshed_at?: string | null
+          member_count?: number
+          name?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketing_templates: {
+        Row: {
+          body: string | null
+          channel: string
+          created_at: string
+          created_by: string | null
+          id: string
+          last_campaign_id: string | null
+          last_used_at: string | null
+          name: string
+          preview_image_url: string | null
+          store_id: string
+          subject: string | null
+          updated_at: string
+          usage_count: number
+          variables_jsonb: Json
+        }
+        Insert: {
+          body?: string | null
+          channel: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_campaign_id?: string | null
+          last_used_at?: string | null
+          name: string
+          preview_image_url?: string | null
+          store_id: string
+          subject?: string | null
+          updated_at?: string
+          usage_count?: number
+          variables_jsonb?: Json
+        }
+        Update: {
+          body?: string | null
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_campaign_id?: string | null
+          last_used_at?: string | null
+          name?: string
+          preview_image_url?: string | null
+          store_id?: string
+          subject?: string | null
+          updated_at?: string
+          usage_count?: number
+          variables_jsonb?: Json
         }
         Relationships: []
       }
@@ -58647,10 +58878,9 @@ export type Database = {
         Returns: boolean
       }
       is_store_featured: { Args: { p_store_id: string }; Returns: boolean }
-      is_store_owner: {
-        Args: { _store_id: string; _user_id: string }
-        Returns: boolean
-      }
+      is_store_owner:
+        | { Args: { _store_id: string }; Returns: boolean }
+        | { Args: { _store_id: string; _user_id: string }; Returns: boolean }
       is_trip_participant: {
         Args: { _ride_id: string; _user_id: string }
         Returns: boolean
