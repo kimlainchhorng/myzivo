@@ -3502,7 +3502,10 @@ export default function AdminStoreEditPage() {
 
       {/* Product Add/Edit Dialog */}
       <Dialog open={productDialog} onOpenChange={setProductDialog}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent
+          className="max-w-lg max-h-[85dvh] overflow-y-auto overscroll-contain"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>{editingProduct ? (form.category === "auto-repair" ? "Edit Service" : "Edit Product") : (form.category === "auto-repair" ? "Add Service" : "Add Product")}</DialogTitle>
           </DialogHeader>
