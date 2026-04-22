@@ -702,6 +702,7 @@ export default function StoreProfilePage() {
                 adults={stay.adults}
                 children={stay.children}
                 onChange={updateStay}
+                fromPriceCents={rooms.length > 0 ? Math.min(...rooms.map(r => r.price_cents)) : undefined}
               />
             </div>
           )}
