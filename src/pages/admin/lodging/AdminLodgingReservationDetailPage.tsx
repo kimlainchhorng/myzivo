@@ -41,7 +41,39 @@ export default function AdminLodgingReservationDetailPage() {
 
   const [pendingStatus, setPendingStatus] = useState<ReservationStatus | null>(null);
   const [note, setNote] = useState("");
+  const [reason, setReason] = useState<string>("");
   const [saving, setSaving] = useState(false);
+
+  const NOTE_TEMPLATES: Record<string, string[]> = {
+    confirmed: ["Confirmed by admin", "Payment received", "Phone-verified"],
+    checked_in: ["Guest arrived on time", "Early check-in approved", "ID verified at desk"],
+    checked_out: ["Standard check-out", "Late check-out (fee applied)", "Damages noted"],
+    cancelled: ["Customer cancellation request", "Reschedule requested", "Overbooking"],
+    no_show: ["Customer no-show", "Unreachable by phone", "Late arrival cut-off"],
+  };
+  const REASON_OPTIONS: Record<string, { value: string; label: string }[]> = {
+    cancelled: [
+      { value: "guest_request", label: "Guest request" },
+      { value: "payment_failed", label: "Payment failed" },
+      { value: "overbooking", label: "Overbooking" },
+      { value: "property_unavailable", label: "Property unavailable" },
+      { value: "policy_violation", label: "Policy violation" },
+      { value: "other", label: "Other" },
+    ],
+    no_show: [
+      { value: "no_arrival", label: "No arrival" },
+      { value: "unreachable", label: "Unreachable" },
+      { value: "late_beyond_cutoff", label: "Late beyond cut-off" },
+      { value: "other", label: "Other" },
+    ],
+  };
+  const reasonRequired = pendingStatus === "cancelled" || pendingStatus === "no_show";
+  const reasonLabel = (val: string) =>
+    REASON_OPTIONS[pendingStatus || ""]?.find((o) => o.value === val)?.label || val;
+
+  const appendTemplate = (tpl: string) => {
+    setNote((prev) => (prev.trim() ? `${prev}\n${tpl}` : tpl));
+  };
 
   const { data: reservation, isLoading } = useQuery({
     queryKey: ["lodge-reservation", reservationId],
