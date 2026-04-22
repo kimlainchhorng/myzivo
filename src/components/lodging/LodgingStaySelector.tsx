@@ -125,6 +125,11 @@ export function LodgingStaySelector({
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
+            {fromPriceLabel && (
+              <div className="px-3 pt-3 pb-1 text-[11px] font-semibold text-foreground">
+                From <span className="text-primary">{fromPriceLabel}</span> <span className="text-muted-foreground font-normal">/ night</span>
+              </div>
+            )}
             <Calendar
               mode="single"
               selected={ciDate}
@@ -141,12 +146,10 @@ export function LodgingStaySelector({
                 unavailable: "line-through text-muted-foreground/60",
               }}
               components={{
-                DayContent: ({ date }) => (
-                  <span aria-label={dayLabel(date)} title={dayLabel(date)}>{date.getDate()}</span>
-                ),
+                DayContent: ({ date }) => renderDayContent(date, "in"),
               }}
               initialFocus
-              className={cn("p-3 pointer-events-auto")}
+              className={cn("p-3 pointer-events-auto", fromPriceLabel && "pt-1")}
             />
           </PopoverContent>
         </Popover>
