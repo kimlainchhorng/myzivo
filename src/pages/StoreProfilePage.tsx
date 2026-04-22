@@ -29,6 +29,7 @@ import { LodgingBookingDrawer } from "@/components/lodging/LodgingBookingDrawer"
 import { LodgingHighlightsStrip } from "@/components/lodging/LodgingHighlightsStrip";
 import { LodgingAmenitiesPanel } from "@/components/lodging/LodgingAmenitiesPanel";
 import { LodgingPolicyPanel } from "@/components/lodging/LodgingPolicyPanel";
+import { useHasStoreBooking } from "@/hooks/useHasStoreBooking";
 
 /**
  * Extract the correct language part from dual-format text like "Khmer/English".
@@ -92,6 +93,7 @@ export default function StoreProfilePage() {
   const isLodging = !!store && ["hotel", "resort", "guesthouse"].includes(store.category);
   const { data: allRooms = [], isLoading: loadingRooms } = useLodgeRooms(isLodging ? store!.id : "");
   const { data: propertyProfile } = useLodgePropertyProfile(isLodging ? store!.id : "");
+  const { data: hasBooking = false } = useHasStoreBooking(store?.id);
   const rooms = useMemo(() => (allRooms || []).filter(r => r.is_active), [allRooms]);
 
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
@@ -370,7 +372,7 @@ export default function StoreProfilePage() {
                 </div>
               </motion.button>
             )}
-            {store.phone && (
+            {store.phone && hasBooking && (
               <motion.a
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
@@ -411,7 +413,8 @@ export default function StoreProfilePage() {
               </motion.a>
             )}
 
-            {/* Live Chat button */}
+            {/* Live Chat button — customers with a booking only */}
+            {hasBooking && (
             <motion.button
               whileTap={{ scale: 0.94, rotateX: 2 }}
               whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
@@ -444,6 +447,7 @@ export default function StoreProfilePage() {
                 <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">Chat with store</p>
               </div>
             </motion.button>
+            )}
 
             {/* Facebook button */}
             {(store as any).facebook_url && isAllowedSocialUrl((store as any).facebook_url) && (
@@ -597,6 +601,15 @@ export default function StoreProfilePage() {
               </motion.a>
             )}
           </div>
+
+          {!hasBooking && (
+            <div className="mt-2.5 flex items-start gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+              <MessageCircle className="h-3.5 w-3.5 text-white/60 mt-0.5 shrink-0" />
+              <p className="text-[11px] leading-snug text-white/70">
+                Call Store & Live Chat unlock once you complete a booking with this store while signed in to your ZIVO account.
+              </p>
+            </div>
+          )}
 
           {/* Book Now button for auto-repair stores */}
           {store.category === "auto-repair" && (
