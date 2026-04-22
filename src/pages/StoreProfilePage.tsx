@@ -4,7 +4,7 @@
  */
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck, BedDouble } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useStoreProfile, useStoreProducts, useStoreProductCategories, type StoreProductItem } from "@/hooks/useStoreProfile";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { GroceryCheckoutDrawer } from "@/components/grocery/GroceryCheckoutDrawer";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import StoreHeroCarousel from "@/components/grocery/StoreHeroCarousel";
 import { toast } from "sonner";
 import { useI18n } from "@/hooks/useI18n";
@@ -21,6 +21,10 @@ import storeCallBg from "@/assets/store-call-bg.jpg";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import { isAllowedSocialUrl } from "@/lib/urlSafety";
 import { getStoreStatus } from "@/utils/storeStatus";
+import { useLodgeRooms, type LodgeRoom } from "@/hooks/lodging/useLodgeRooms";
+import { LodgingRoomCard } from "@/components/lodging/LodgingRoomCard";
+import { LodgingStaySelector } from "@/components/lodging/LodgingStaySelector";
+import { LodgingBookingDrawer } from "@/components/lodging/LodgingBookingDrawer";
 
 /**
  * Extract the correct language part from dual-format text like "Khmer/English".
