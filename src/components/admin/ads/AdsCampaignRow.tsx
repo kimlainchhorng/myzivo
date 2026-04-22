@@ -26,6 +26,7 @@ interface Props {
   onResume: (c: AdCampaign) => void;
   onLaunch: (c: AdCampaign) => void;
   onDuplicate?: (c: AdCampaign) => void;
+  onArchive?: (c: AdCampaign) => void;
   onClick?: (c: AdCampaign) => void;
 }
 
@@ -51,6 +52,7 @@ export default function AdsCampaignRow({
   onResume,
   onLaunch,
   onDuplicate,
+  onArchive,
   onClick,
 }: Props) {
   const spark = makeSpark(c.id, c.clicks);
