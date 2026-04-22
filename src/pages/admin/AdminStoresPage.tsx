@@ -492,8 +492,12 @@ export default function AdminStoresPage() {
                   onChange={e => updateField("category", e.target.value)}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  {STORE_CATEGORY_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  {Array.from(new Set(STORE_CATEGORY_OPTIONS.map(o => o.group || "Other"))).map(group => (
+                    <optgroup key={group} label={group}>
+                      {STORE_CATEGORY_OPTIONS.filter(o => (o.group || "Other") === group).map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </div>
