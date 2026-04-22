@@ -41,6 +41,7 @@ export function LodgingStaySelector({
   checkIn, checkOut, adults, children, onChange,
   disabledDates = [], availabilityMap,
   locked = false, showReasonLegend = false,
+  fromPriceCents, currency = "USD",
 }: Props) {
   const [openGuests, setOpenGuests] = useState(false);
   const ciDate = checkIn ? new Date(checkIn) : new Date();
@@ -58,6 +59,50 @@ export function LodgingStaySelector({
     const hit = availabilityMap?.get(format(d, "yyyy-MM-dd"));
     if (!hit?.unavailable) return undefined;
     return hit.reason === "sold_out" ? "Sold out · already booked" : "Restricted · blocked by host";
+  };
+
+  const fromPriceLabel = fromPriceCents != null
+    ? new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 0 }).format(fromPriceCents / 100)
+    : null;
+
+  /** Renders a tiny "from $X" badge under the first available, non-past day in the visible month (the cheapest entry-point night). */
+  const renderDayContent = (date: Date, mode: "in" | "out") => {
+    const iso = format(date, "yyyy-MM-dd");
+    const isUnavailable = availabilityMap?.get(iso)?.unavailable ?? false;
+    const isPast = date < today0();
+    const isFirstAvailableOfMonth =
+      fromPriceLabel != null &&
+      !isUnavailable &&
+      !isPast &&
+      (mode === "in" ? true : date > ciDate) &&
+      date.getDate() === firstAvailableDayOfMonth(date, mode);
+
+    return (
+      <span aria-label={dayLabel(date)} title={dayLabel(date)} className="relative inline-flex flex-col items-center leading-none">
+        <span>{date.getDate()}</span>
+        {isFirstAvailableOfMonth && (
+          <span className="absolute -bottom-3 text-[8px] font-bold text-primary whitespace-nowrap">
+            {fromPriceLabel}
+          </span>
+        )}
+      </span>
+    );
+  };
+
+  /** First selectable day-of-month in the same month as `d` (skips past + unavailable). */
+  const firstAvailableDayOfMonth = (d: Date, mode: "in" | "out") => {
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const lastDay = new Date(y, m + 1, 0).getDate();
+    for (let day = 1; day <= lastDay; day++) {
+      const probe = new Date(y, m, day);
+      if (probe < today0()) continue;
+      if (mode === "out" && probe <= ciDate) continue;
+      const iso = format(probe, "yyyy-MM-dd");
+      if (availabilityMap?.get(iso)?.unavailable) continue;
+      return day;
+    }
+    return -1;
   };
 
   const lockedClass = locked ? "pointer-events-none opacity-70" : "";
