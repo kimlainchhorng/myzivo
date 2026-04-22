@@ -579,6 +579,22 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName, s
           <StoreAdsManager storeId={storeId} />
         </TabsContent>
 
+        <TabsContent value="audience" className="space-y-4 mt-4">
+          <SegmentsManager storeId={storeId} />
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-4 mt-4">
+          <TemplatesLibrary storeId={storeId} />
+        </TabsContent>
+
+        <TabsContent value="automations" className="space-y-4 mt-4">
+          <AutomationsBuilder storeId={storeId} />
+        </TabsContent>
+
+        <TabsContent value="performance" className="space-y-4 mt-4">
+          <UnifiedPerformancePanel storeId={storeId} />
+        </TabsContent>
+
         {/* ═══ POSTS ═══ */}
         <TabsContent value="posts" className="space-y-4 mt-4">
           <div className="flex items-center justify-between">
