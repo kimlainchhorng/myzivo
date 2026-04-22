@@ -119,7 +119,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   const isAutoRepair = storeCategory === "auto-repair";
   const isLodging = ["hotel", "resort", "guesthouse"].includes(storeCategory || "");
   const productsLabel = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
-  const paymentLabel = isAutoRepair ? "Bookings" : isLodging ? "Reservations" : "Payment";
+  const paymentLabel = isAutoRepair ? "Bookings" : "Payment & Payouts";
 
   const navItems = [
     { id: "profile", label: "Profile", icon: Store },
