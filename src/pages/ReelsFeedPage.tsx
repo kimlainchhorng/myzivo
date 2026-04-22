@@ -859,6 +859,8 @@ export default function ReelsFeedPage() {
                   {idx === 2 && <Suspense fallback={null}><SuggestedUsersCarousel variant="inline" /></Suspense>}
                 </div>
               ))}
+              {/* Spacer so last post clears the fixed bottom nav */}
+              <div className="md:hidden" style={{ height: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 6rem)' }} aria-hidden="true" />
             </div>
             );
           })()}
