@@ -3,8 +3,8 @@ import { useLocation } from "react-router-dom";
 
 /**
  * Maps routes to their lazy-loaded chunk files.
- * When a user hovers over navigation links or lands on the homepage,
- * we prefetch the most likely next pages.
+ * Prefetch happens only on user intent (hover/focus) — no eager
+ * homepage auto-prefetch that competes with hero LCP bandwidth.
  */
 const PREFETCH_ROUTES: Record<string, () => Promise<unknown>> = {
   "/flights": () => import("@/pages/FlightLanding"),
@@ -12,6 +12,7 @@ const PREFETCH_ROUTES: Record<string, () => Promise<unknown>> = {
   "/cars": () => import("@/pages/CarRentalLanding"),
   "/rides": () => import("@/pages/app/RideHubPage"),
   "/eats": () => import("@/pages/EatsLanding"),
+  "/feed": () => import("@/pages/FeedPage"),
 };
 
 const prefetched = new Set<string>();
@@ -21,33 +22,32 @@ function prefetchRoute(path: string) {
   const loader = PREFETCH_ROUTES[path];
   if (!loader) return;
   prefetched.add(path);
-  // Use requestIdleCallback for non-blocking prefetch
   const schedule = window.requestIdleCallback || ((cb: () => void) => setTimeout(cb, 100));
   schedule(() => {
     loader().catch(() => {
-      // Silently fail — prefetch is best-effort
       prefetched.delete(path);
     });
   });
 }
 
 /**
- * RoutePrefetcher: Automatically prefetches key routes
- * - On homepage: prefetch flights, hotels, cars after idle
- * - Provides onMouseEnter handler for nav links
+ * RoutePrefetcher: intent-based prefetch only.
+ * - On homepage: prefetch /feed (the desktop redirect target) on idle.
+ * - Provides hover/focus prefetch handler for nav links.
  */
 export function useRoutePrefetch() {
   const location = useLocation();
 
-  // Auto-prefetch top routes when on homepage
+  // Only prefetch the redirect target on homepage — not all top routes.
   useEffect(() => {
     if (location.pathname !== "/") return;
-    const timer = setTimeout(() => {
-      prefetchRoute("/flights");
-      prefetchRoute("/hotels");
-      prefetchRoute("/cars");
-    }, 2000); // Wait 2s after homepage load
-    return () => clearTimeout(timer);
+    const schedule = window.requestIdleCallback || ((cb: () => void) => setTimeout(cb, 200));
+    const handle = schedule(() => prefetchRoute("/feed"));
+    return () => {
+      if (typeof handle === "number" && window.cancelIdleCallback) {
+        window.cancelIdleCallback(handle);
+      }
+    };
   }, [location.pathname]);
 
   const handlePrefetch = useCallback((path: string) => {
@@ -57,9 +57,6 @@ export function useRoutePrefetch() {
   return { prefetch: handlePrefetch };
 }
 
-/**
- * Drop-in component version — add to App layout
- */
 export default function RoutePrefetcher() {
   useRoutePrefetch();
   return null;

@@ -70,8 +70,8 @@ const DesktopHomePage = () => {
         <ServicesShowcase />
         <StatsSection />
 
-        {/* ─── MOBILE-APP POWER SECTIONS (adapted for desktop) ─── */}
-        <LazySection>
+        {/* ─── MOBILE-APP POWER SECTIONS (lazy with rootMargin for just-in-time load) ─── */}
+        <LazySection rootMargin="400px">
           <Suspense fallback={<div className="h-20" />}>
             <div className="max-w-7xl mx-auto px-4 sm:px-8">
               <LiveTripTracker />
@@ -79,7 +79,7 @@ const DesktopHomePage = () => {
           </Suspense>
         </LazySection>
 
-        <LazySection>
+        <LazySection rootMargin="300px">
           <Suspense fallback={<CardGridSkeleton />}>
             <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
               <TrendingNearYou />
@@ -87,7 +87,7 @@ const DesktopHomePage = () => {
           </Suspense>
         </LazySection>
 
-        <LazySection>
+        <LazySection rootMargin="300px">
           <Suspense fallback={<CardGridSkeleton />}>
             <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
               <AISmartDeals />
@@ -95,7 +95,7 @@ const DesktopHomePage = () => {
           </Suspense>
         </LazySection>
 
-        <LazySection>
+        <LazySection rootMargin="300px">
           <Suspense fallback={<CardGridSkeleton />}>
             <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
               <DesktopHotDeals />
@@ -103,7 +103,7 @@ const DesktopHomePage = () => {
           </Suspense>
         </LazySection>
 
-        <LazySection>
+        <LazySection rootMargin="300px">
           <Suspense fallback={<div className="h-20" />}>
             <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
               <PriceAlertsWidget />
@@ -111,19 +111,19 @@ const DesktopHomePage = () => {
           </Suspense>
         </LazySection>
 
-        {/* ─── EXISTING BELOW-FOLD SECTIONS ─── */}
-        <LazySection><Suspense fallback={<BannerSkeleton />}><VideoAdsSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<RoutesSkeleton />}><PopularRoutesSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<BannerSkeleton />}><ServiceFlowBanner /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<LogosSkeleton />}><PartnerLogosSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<CardGridSkeleton />}><DestinationShowcase /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<CardGridSkeleton />}><FeaturedCarsSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<CardGridSkeleton />}><FeaturedHotelsSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<CardGridSkeleton />}><FeaturedEatsSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<StepsSkeleton />}><HowItWorksSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<TestimonialsSkeleton />}><TestimonialsSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<BannerSkeleton />}><DownloadAppSection /></Suspense></LazySection>
-        <LazySection><Suspense fallback={<BannerSkeleton />}><NewsletterSection /></Suspense></LazySection>
+        {/* ─── EXISTING BELOW-FOLD SECTIONS — load just before viewport ─── */}
+        <LazySection rootMargin="300px"><Suspense fallback={<BannerSkeleton />}><VideoAdsSection /></Suspense></LazySection>
+        <LazySection rootMargin="300px"><Suspense fallback={<RoutesSkeleton />}><PopularRoutesSection /></Suspense></LazySection>
+        <LazySection rootMargin="300px"><Suspense fallback={<BannerSkeleton />}><ServiceFlowBanner /></Suspense></LazySection>
+        <LazySection rootMargin="300px"><Suspense fallback={<LogosSkeleton />}><PartnerLogosSection /></Suspense></LazySection>
+        <LazySection rootMargin="300px"><Suspense fallback={<CardGridSkeleton />}><DestinationShowcase /></Suspense></LazySection>
+        <LazySection rootMargin="300px"><Suspense fallback={<CardGridSkeleton />}><FeaturedCarsSection /></Suspense></LazySection>
+        <LazySection rootMargin="300px"><Suspense fallback={<CardGridSkeleton />}><FeaturedHotelsSection /></Suspense></LazySection>
+        <LazySection rootMargin="300px"><Suspense fallback={<CardGridSkeleton />}><FeaturedEatsSection /></Suspense></LazySection>
+        <LazySection rootMargin="300px"><Suspense fallback={<StepsSkeleton />}><HowItWorksSection /></Suspense></LazySection>
+        <LazySection rootMargin="300px"><Suspense fallback={<TestimonialsSkeleton />}><TestimonialsSection /></Suspense></LazySection>
+        <LazySection rootMargin="300px"><Suspense fallback={<BannerSkeleton />}><DownloadAppSection /></Suspense></LazySection>
+        <LazySection rootMargin="300px"><Suspense fallback={<BannerSkeleton />}><NewsletterSection /></Suspense></LazySection>
       </main>
 
       <Footer />
