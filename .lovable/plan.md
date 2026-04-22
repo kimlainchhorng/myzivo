@@ -1,119 +1,95 @@
 
 
-# Hotels & Resort — Fix RLS save bug + Booking.com-grade amenities
+# Property Profile — Booking.com-grade overhaul + completeness meter
 
-Two focused fixes that unblock saves across all property panels and bring the amenity catalog up to industry-standard depth.
+The RLS save bug is already fixed at the database layer (verified in `pg_policy`). What's missing is a polished, dense, client-friendly editor for Property Profile to match the new Amenities section. This plan also adds fields the form is missing today (check-in/out, deposits, pet policy, child policy, cancellation policy, contact, etc.) so the store profile is truly Booking-grade.
 
-## 1. Fix the "row violates RLS" save error (Property Profile, and audit the rest)
+## 1. Friendlier section header + completeness meter
 
-**Root cause** — the RLS policies on `lodge_property_profile` reference the wrong owner table:
+Top of `LodgingPropertyProfileSection.tsx`:
 
-```
-EXISTS (SELECT 1 FROM restaurants r
-        WHERE r.id = lodge_property_profile.store_id
-          AND r.owner_id = auth.uid())
-```
+- Sticky header strip with:
+  - Title "Property Profile" + sub-line "Make your storefront irresistible. Updates publish instantly."
+  - **Completeness meter** — circular progress (0–100%) computed from 12 weighted fields (hero badges 10, included 10, languages 8, facilities 12, meals 6, house rules 12, accessibility 8, sustainability 6, nearby 10, check-in/out 8, contact 6, policies 4). Shows pill: `78% complete · 3 sections to finish`.
+  - Live save indicator: `Saved · 2m ago` / `Unsaved changes` / `Saving…`.
+- Replaces the raw bottom-only Save button with a **sticky footer save bar** (mirrors the Amenities pattern) that appears only when `dirty` is true.
 
-But lodging stores live in `store_profiles`, not `restaurants`. Confirmed: store `Koh Sdach Resort` exists in `store_profiles` with the logged-in owner — so the check always fails and every insert/update returns "new row violates row-level security policy."
+## 2. Reorganized sections (collapsible accordion + search)
 
-A correct helper already exists (`public.is_lodge_store_owner(uuid)`), and the sibling table `lodge_amenities` already uses it correctly.
+Current page is a long scroll of 9 cards with no grouping. Rework into 4 collapsible groups, each opens by default if incomplete:
 
-**Fix (migration)**
+1. **Storefront essentials** — Hero badges · Included highlights · Languages
+2. **Facilities & dining** — Property facilities · Meal plans
+3. **Stay rules & policies** — Check-in/out windows · House rules · Cancellation policy · Pet policy · Child policy
+4. **Trust & location** — Accessibility · Sustainability · Nearby · Contact
 
-- Drop the four broken policies on `lodge_property_profile` and recreate them mirroring `lodge_amenities`:
-  - `FOR ALL USING (is_lodge_store_owner(store_id) OR has_role(auth.uid(),'admin')) WITH CHECK (same)`
-  - Keep the public read policy as-is.
-- Audit & repair every other `lodge_*` table that joins `restaurants` instead of `store_profiles`. Tables to verify and fix in the same migration if affected: `lodge_rooms`, `lodge_reservations`, `lodge_room_blocks`, `lodge_guests`, `lodge_housekeeping`, `lodge_maintenance`, `lodge_reservation_audit`, `lodge_reservation_charges`. Each gets the same `is_lodge_store_owner(store_id)` pattern.
-- Add a new wiring-check entry `rls.lodge_owner_table_consistency` that flags any future policy referencing `restaurants` for a `lodge_*` table, so this regression can't sneak back.
+Sticky search bar above the accordion filters chips/labels across all groups (matches Amenities UX).
 
-**Client side**
+## 3. Expanded data model (NEW fields)
 
-- `useLodgePropertyProfile.upsert` — already uses upsert + onConflict `store_id`, so once RLS is fixed saves go through. Add a friendlier error toast that explains "You must be the store owner to edit this property" when a 401/403 leaks through, instead of the raw Postgres message currently shown in the screenshot.
+Add to `lodge_property_profile` (migration):
 
-## 2. Bring Amenities up to Booking.com-grade depth & polish
+- `check_in_from text` (e.g. "15:00"), `check_in_until text`, `check_out_from text`, `check_out_until text`
+- `cancellation_policy text` (free text; one of templated presets via UI)
+- `cancellation_window_hours int` (e.g. 48)
+- `pet_policy jsonb` — `{ allowed: bool, fee_cents: int, max_weight_kg: int, notes: text }`
+- `child_policy jsonb` — `{ allowed: bool, min_age: int, cot_available: bool, extra_bed_fee_cents: int, notes: text }`
+- `contact jsonb` — `{ phone, email, whatsapp, website, emergency_phone }`
+- `payment_methods text[]` — `["card","cash","aba","bank_transfer"]`
+- `currencies_accepted text[]` — `["USD","KHR","THB"]`
+- `deposit_required boolean default false` + `deposit_percent int` (0–100)
 
-Today's `LodgingAmenitiesSection` only ships **16 flat amenities** + a handful of policy fields. The reference shows a richly categorized catalog. Replace the flat list with a category-driven editor.
+Extend `LodgePropertyProfile` TS interface and `EMPTY` defaults in `useLodgePropertyProfile.ts`.
 
-**New canonical catalog** (`src/components/lodging/amenityCatalog.ts`, ~150 amenities across 14 groups, matching the reference image):
+## 4. UI upgrades per section
 
-```text
-Most Popular        Outdoor pool · Non-smoking rooms · Free Wi-Fi · Restaurant · Fitness centre · Beachfront · Bar · Private beach
-Great for stay      Restaurant · Private bathroom · A/C · Free Wi-Fi · Adults only · Fitness centre · Free shuttle · Outdoor pool · Watersports …
-Bathroom            Toilet paper · Towels · Bidet · Towels/Sheets (extra) · Private bathroom · Toilet · Shower · Hairdryer · Bathrobe · Slippers
-Bedroom             Linens · Wardrobe · Alarm clock
-Outdoors            Picnic area · Outdoor furniture · Beachfront · Sun deck · Private beach area · Terrace · BBQ · Garden
-Room amenities      Socket near bed · Drying rack · Iron · Fan · Mosquito net
-Activities          Bicycle rental* · Bingo · Live sports broadcast · Happy hour · Themed dinners* · Beach · Evening entertainment · Watersports* …
-Food & Drink        Wine/Champagne · Special diet meals (req) · Snack bar · Bar · Restaurant · Kids' meals · Breakfast in the room
-Internet            Wi-Fi all areas (free) · Wired internet
-Parking             No parking | Free public parking | Paid private parking on-site | EV charging | Valet
-Transportation      Public transit tickets* · Airport shuttle · Car hire · Bicycle hire
-Services            Shuttle · Daily housekeeping · Lockers · Baggage storage · Tour desk · Laundry* · 24-hour front desk · Concierge · Currency exchange
-Front Desk          Invoice provided · Express check-in/out · Private check-in
-Entertainment & Family   Board games/Puzzles · Kids' club · Babysitting · Playground · Family rooms
-Safety & Security   Fire extinguishers · CCTV common areas · Smoke alarms · Security alarm · Key-card access · Key access · 24-hour security · Safe
-General             Adults only · Designated smoking area · Soundproof · Soundproof rooms · Non-smoking rooms · A/C · Lift · Heating
-Accessibility       Entire unit on ground floor · Wheelchair accessible · Roll-in shower · Braille signage · Visual alarm
-Pool detail         Open all year · Adults only · Beach chairs/Loungers · Pool towels · Heated pool
-Spa                 Fitness · Beach umbrellas · Hot tub/Jacuzzi · Sauna · Steam room · Massage · Body treatments
-Languages spoken    English · Khmer · French · Spanish · German · Italian · Chinese · Japanese · Korean · Russian · Arabic · Hindi · Thai · Vietnamese · Portuguese
-```
+- **Hero badges**: cap at 3 visible on the storefront with live preview pill ("Visible: Beachfront · Free cancellation · Eco-stay").
+- **Included highlights**: drag-to-reorder (uses native HTML5 drag, no new deps), max 6 enforced with a counter chip `4/6`.
+- **House rules**: time pickers (native `type="time"`) for quiet hours start/end; switches grouped into a 2-col grid; `Security deposit` shows the converted KHR amount (`1 USD = 4,062.5 KHR`) inline.
+- **Check-in/out**: 4 time pickers in a 2x2 grid + "Same as standard (15:00 / 11:00)" quick-fill button.
+- **Cancellation policy**: 4 preset cards (Flexible / Moderate / Strict / Non-refundable) → click selects + auto-fills the window; advanced text override below.
+- **Pet & Child policies**: each a compact row with allowed switch → reveals extra fields only when allowed.
+- **Nearby**: distance row gains a small icon picker (walk/drive/boat) shown as Lucide chips instead of `<select>`; reorderable; auto-validates label is non-empty before save.
+- **Contact**: 5 inputs (phone, email, whatsapp, website, emergency phone) with inline validation; phone uses `CountryPhoneInput` component already in the codebase.
+- **Payment methods & currencies**: chip groups.
 
-Each amenity has a key, label, optional `extraCharge: boolean`, and a Lucide icon (re-using `getAmenityIcon`).
+## 5. Validation, autosave hint, error UX
 
-**Schema additions** (migration)
+- Inline field-level validation (red ring + helper text) for: invalid email, malformed time, negative deposit, child min-age out of range.
+- On save:
+  - Friendly toast already in place — keep RLS-specific error message for safety.
+  - On success, header pill flashes "Saved" with a check icon for 2s.
+- Block save while validation errors exist; the sticky bar shows `2 fields need fixing` instead of disabling silently.
+- Detect `dirty` via deep-equal vs server snapshot; warn on tab close (`beforeunload`) when dirty.
 
-- `lodge_amenities.categories jsonb default '{}'::jsonb` — stores `{ "bathroom": ["towels","bidet"], "outdoors": ["sun_deck"] , … }` so each category persists independently.
-- `lodge_amenities.extra_charge_keys text[] default '{}'::text[]` — list of amenity keys that are offered but at extra charge, so the UI can render the small "Additional charge" tag like Booking.
-- `lodge_amenities.parking_mode text` — one of `none|free_public|paid_private|paid_public|free_private` (radio, mirrors Booking).
-- `lodge_amenities.internet_mode text` — `free_all|free_some|paid|none`.
-- Keep the legacy `amenities jsonb` column as a write-through compatibility shim (auto-derived on save by flattening categories to `{ key: true }`), so guest-side code that reads `amenities` keeps working.
+## 6. Guest-side reflection
 
-**New host-side editor** (`LodgingAmenitiesSection.tsx`, full rewrite)
-
-- Sticky search bar at the top: free-text filter across all categories (case-insensitive).
-- Category accordion (collapsed by default except "Most Popular"); each panel:
-  - Two-column grid on desktop, single on mobile.
-  - Each row = checkbox + Lucide icon + label + small "Extra charge" toggle (only visible when amenity is selected). Rows are 32 px tall = high-density v2026.
-  - Per-category `Select all / Clear` micro-buttons in the header.
-- Special category renderers:
-  - **Parking** & **Internet**: radio groups (single choice) instead of checkboxes — matches Booking pattern.
-  - **Languages spoken**: chip group, max 12 visible + "More" expander.
-- Live counter chip in the page header: `48 / 152 selected · 6 with extra charge`.
-- Sticky footer save bar (matches the booking-drawer pattern from the previous round): shows unsaved-changes count + Save button. Disabled until something changes.
-- Optimistic update via `useLodgeAmenities.save`; toast + auto-collapse all categories on success.
-
-**New guest-side renderer** (`LodgingAmenitiesPanel.tsx`, used inside `StoreProfilePage`)
-
-- Renders the same Booking-style "Most popular" hero strip + 3-column categorized grid below (image 226 layout).
-- Each amenity row = check icon · label · optional "Additional charge" pill.
-- Empty categories are hidden. "Missing some information? Yes / No" footer link writes a row to a new `lodge_amenity_feedback` table (admin-only read) so hosts get nudged to complete their profile.
-
-**Policies section** stays intact but moves into its own card below the amenities accordion (cleaner separation; today they're awkwardly stacked).
+- `LodgingHighlightsStrip.tsx` extended to surface check-in/out times and cancellation policy summary.
+- New `LodgingPolicyPanel.tsx` rendered on `StoreProfilePage` between rooms and amenities — clean Booking-style grid: Check-in window · Check-out window · Cancellation · Pets · Children · Payment methods · Languages.
 
 ## File map
 
 **Created**
-- `src/components/lodging/amenityCatalog.ts` — the 152-amenity catalog (categories + icons + extra-charge metadata).
-- `src/components/lodging/LodgingAmenitiesPanel.tsx` — guest-side renderer.
+- `src/components/admin/store/lodging/PropertyCompletenessMeter.tsx`
+- `src/components/admin/store/lodging/property-profile/CheckInOutCard.tsx`
+- `src/components/admin/store/lodging/property-profile/CancellationPolicyCard.tsx`
+- `src/components/admin/store/lodging/property-profile/PetChildPolicyCard.tsx`
+- `src/components/admin/store/lodging/property-profile/ContactCard.tsx`
+- `src/components/lodging/LodgingPolicyPanel.tsx` — guest-side policy summary.
 
 **Modified**
-- `src/components/admin/store/lodging/LodgingAmenitiesSection.tsx` — full rewrite (categorized accordion, search, sticky footer, parking/internet radios, language chips, extra-charge toggles).
-- `src/hooks/lodging/useLodgeAmenities.ts` — extend the type with `categories`, `extra_charge_keys`, `parking_mode`, `internet_mode`; auto-derive the legacy flat `amenities` map on save.
-- `src/pages/StoreProfilePage.tsx` — render `<LodgingAmenitiesPanel/>` between the highlights strip and the room list.
-- `src/components/admin/store/lodging/LodgingPropertyProfileSection.tsx` — friendlier error toast on RLS failure.
+- `src/components/admin/store/lodging/LodgingPropertyProfileSection.tsx` — full rewrite (accordion, search, sticky save, completeness meter, validation).
+- `src/hooks/lodging/useLodgePropertyProfile.ts` — extended interface, EMPTY defaults, dirty/diff helper.
+- `src/components/lodging/LodgingHighlightsStrip.tsx` — show check-in/out.
+- `src/pages/StoreProfilePage.tsx` — render `<LodgingPolicyPanel/>`.
 
 **Migration**
-- Drop & recreate `lodge_property_profile` policies using `is_lodge_store_owner` (keeps public read).
-- Audit & fix any other `lodge_*` policy still pointing at `restaurants`.
-- Add `categories jsonb`, `extra_charge_keys text[]`, `parking_mode text`, `internet_mode text` to `lodge_amenities` with safe defaults.
-- Create `lodge_amenity_feedback (id, store_id, message text, created_at)` with admin-only RLS.
-- Add a new wiring-check `rls.lodge_owner_table_consistency` to the `lodging_wiring_report()` RPC that flags any `lodge_*` policy whose `pg_get_expr(polqual)` mentions `restaurants`.
+- Add the 11 new columns/fields to `lodge_property_profile` with safe defaults; backfill `check_in_from='15:00'`, `check_out_until='11:00'` for existing rows.
 
 ## Notes
 
-- No new npm dependencies. All icons via existing `getAmenityIcon` (already supports the canonical names; we'll add ~20 missing mappings).
-- All UI follows v2026 high-density tokens (`text-[11px]`, `rounded-xl`, semantic colors, Lucide-only).
-- Guest-side `LodgingAmenitiesPanel` reads the new `categories` jsonb when present, falls back to the legacy `amenities` map otherwise — zero downtime for stores that haven't re-saved.
-- Run the security linter after the migration; if it flags the new `lodge_amenity_feedback` table, lock down inserts to authenticated users only.
+- RLS save bug already resolved (verified) — saves to `lodge_property_profile` succeed end-to-end now.
+- All UI keeps v2026 high-density tokens (`text-[11px]`, `rounded-xl`, semantic colors, Lucide-only icons).
+- No new npm dependencies; native HTML5 drag-and-drop for reordering.
+- Guest-side `LodgingPolicyPanel` reads new fields if present, hides cleanly when empty.
 
