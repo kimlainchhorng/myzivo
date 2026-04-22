@@ -17,10 +17,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Helmet } from "react-helmet-async";
-
-const HelmetCompat = Helmet as any;
 import { useFocusTrap } from "./useFocusTrap";
 import { useFocusReturn } from "./ads/useFocusReturn";
+
+const HelmetCompat = Helmet as any;
 
 interface StoreOwnerLayoutProps {
   children: ReactNode;

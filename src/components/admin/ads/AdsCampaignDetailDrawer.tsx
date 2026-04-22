@@ -27,6 +27,8 @@ import {
   ExternalLink,
   type LucideIcon,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { AdCampaign, AdPlatform } from "@/hooks/useStoreAdsOverview";
 
 const ResponsiveContainerCompat = ResponsiveContainer as any;
 const LineChartCompat = LineChart as any;
@@ -37,8 +39,6 @@ const XAxisCompat = XAxis as any;
 const YAxisCompat = YAxis as any;
 const TooltipCompat = Tooltip as any;
 const CartesianGridCompat = CartesianGrid as any;
-import { cn } from "@/lib/utils";
-import type { AdCampaign, AdPlatform } from "@/hooks/useStoreAdsOverview";
 
 interface PlatformDef {
   id: AdPlatform;
@@ -268,24 +268,24 @@ export default function AdsCampaignDetailDrawer({
             Last 14 days
           </div>
           <div className="h-40 -mx-1">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={series} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="2 2" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis
+            <ResponsiveContainerCompat width="100%" height="100%">
+              <LineChartCompat data={series} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGridCompat strokeDasharray="2 2" stroke="hsl(var(--border))" vertical={false} />
+                <XAxisCompat
                   dataKey="day"
                   tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                   tickLine={false}
                   axisLine={false}
                   interval="preserveStartEnd"
                 />
-                <YAxis
+                <YAxisCompat
                   yAxisId="left"
                   tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                   tickLine={false}
                   axisLine={false}
                   width={28}
                 />
-                <YAxis
+                <YAxisCompat
                   yAxisId="right"
                   orientation="right"
                   tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
@@ -293,7 +293,7 @@ export default function AdsCampaignDetailDrawer({
                   axisLine={false}
                   width={32}
                 />
-                <Tooltip
+                <TooltipCompat
                   contentStyle={{
                     fontSize: 11,
                     background: "hsl(var(--popover))",
@@ -301,7 +301,7 @@ export default function AdsCampaignDetailDrawer({
                     borderRadius: 6,
                   }}
                 />
-                <Line
+                <LineCompat
                   yAxisId="left"
                   type="monotone"
                   dataKey="clicks"
@@ -310,7 +310,7 @@ export default function AdsCampaignDetailDrawer({
                   dot={false}
                   name="Clicks"
                 />
-                <Line
+                <LineCompat
                   yAxisId="right"
                   type="monotone"
                   dataKey="spend"

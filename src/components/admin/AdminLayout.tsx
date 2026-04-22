@@ -32,16 +32,15 @@ import {
   UserPlus,
   Wallet,
 } from "lucide-react";
-
-const HelmetCompat = Helmet as any;
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Helmet } from "react-helmet-async";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+
+const HelmetCompat = Helmet as any;
 
 type NavItem = { label: string; icon: any; path: string };
 type NavGroup = { label: string; icon: any; children: NavItem[] };
