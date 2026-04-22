@@ -25,6 +25,7 @@ const ffmpegWasmUrl = `${FFMPEG_CDN_BASE}/ffmpeg-core.wasm`;
 import { supabase } from "@/integrations/supabase/client";
 import { uploadStoreAsset, verifyStoreProfileUrl, verifyStoreProfileGallery } from "@/pages/admin/utils/uploadStoreAsset";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
+import { getStoreStatus } from "@/utils/storeStatus";
 import AdminLayout from "@/components/admin/AdminLayout";
 import StoreOwnerLayout from "@/components/admin/StoreOwnerLayout";
 import { Button } from "@/components/ui/button";
@@ -2704,6 +2705,33 @@ export default function AdminStoreEditPage() {
                       ));
                     })()}
                   </div>
+                  {/* Live status preview — verifies hours parse correctly */}
+                  {(() => {
+                    const status = getStoreStatus(form.hours, form.market);
+                    const tone = status.status === "open"
+                      ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                      : status.status === "closing-soon" || status.status === "almost-open"
+                      ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                      : "bg-red-500/10 text-red-600 border-red-500/20";
+                    const unrecognized = status.label === "Hours unavailable";
+                    return (
+                      <div className="space-y-1">
+                        <div className={`inline-flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-md border ${tone}`}>
+                          <span className="font-medium">Live preview:</span>
+                          <span>{status.label}</span>
+                          {status.formattedHours && status.label !== status.formattedHours && (
+                            <span className="opacity-70">· {status.formattedHours}</span>
+                          )}
+                          {form.market && <span className="opacity-50">({form.market})</span>}
+                        </div>
+                        {unrecognized && (
+                          <p className="text-[11px] text-amber-600">
+                            Hours format not recognized — try <code className="px-1 rounded bg-muted">7am–10pm</code>, <code className="px-1 rounded bg-muted">07:00–22:00</code>, or <code className="px-1 rounded bg-muted">24/7</code>.
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Holiday / Special Closed Dates */}
