@@ -398,11 +398,18 @@ export default function StoreProfilePage() {
                 </div>
               </motion.button>
             )}
-            {store.phone && hasBooking && (
+            {loadingBooking && (
+              <>
+                <Skeleton className="h-14 rounded-xl" />
+                <Skeleton className="h-14 rounded-xl" />
+              </>
+            )}
+            {!loadingBooking && callable && (
               <motion.a
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
                 href={`tel:${store.phone.startsWith("+") ? store.phone.replace(/\s+/g, "") : `+855${store.phone.replace(/\s+/g, "")}`}`}
+                onClick={() => track("store_contact_action", { store_id: store.id, channel: "call" })}
                 className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
                 style={{
                   transformStyle: "preserve-3d",
@@ -440,11 +447,14 @@ export default function StoreProfilePage() {
             )}
 
             {/* Live Chat button — customers with a booking only */}
-            {hasBooking && (
+            {!loadingBooking && chattable && (
             <motion.button
               whileTap={{ scale: 0.94, rotateX: 2 }}
               whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
-              onClick={() => setChatOpen(true)}
+              onClick={() => {
+                track("store_contact_action", { store_id: store.id, channel: "chat" });
+                setChatOpen(true);
+              }}
               className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
               style={{
                 transformStyle: "preserve-3d",
