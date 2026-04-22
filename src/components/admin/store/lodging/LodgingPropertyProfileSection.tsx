@@ -202,7 +202,7 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
             <Card>
               <CardHeader className="py-2.5"><CardTitle className="text-[12px] flex items-center gap-1.5"><Hotel className="h-3.5 w-3.5" /> Included highlights <span className="text-[10px] font-normal text-muted-foreground">· {(form.included_highlights || []).length}/6</span></CardTitle></CardHeader>
               <CardContent className="pt-0 space-y-2">
-                <ChipGroup options={INCLUDED.filter(matches)} selected={form.included_highlights || []} onToggle={v => toggleIn("included_highlights", v)} max={6} />
+                <ChipGroup options={INCLUDED.filter(matches)} selected={form.included_highlights || []} onToggle={v => toggleIn("included_highlights", v)} max={6} withIcons />
                 {(form.included_highlights || []).length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {(form.included_highlights || []).map((h, i) => (
