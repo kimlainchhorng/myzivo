@@ -473,13 +473,41 @@ export function LodgingBookingDrawer({
 
         {step === "guest" && (
           <>
-            <div><Label>Full name *</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" /></div>
             <div>
+              <Label>Full name *</Label>
+              <Input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                onBlur={() => setGuestTouched(t => ({ ...t, name: true }))}
+                placeholder="Your full name"
+                aria-invalid={!!(guestTouched.name && guestCheck.errors.name)}
+              />
+              {guestTouched.name && guestCheck.errors.name && (
+                <p className="text-[11px] text-destructive mt-1">{guestCheck.errors.name}</p>
+              )}
+            </div>
+            <div onBlur={() => setGuestTouched(t => ({ ...t, phone: true }))}>
               <Label>Phone *</Label>
               <CountryPhoneInput value={phone} onChange={setPhone} />
+              {guestTouched.phone && guestCheck.errors.phone && (
+                <p className="text-[11px] text-destructive mt-1">{guestCheck.errors.phone}</p>
+              )}
             </div>
             <div className="grid grid-cols-1 gap-3">
-              <div><Label>Email</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" /></div>
+              <div>
+                <Label>Email *</Label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  onBlur={() => setGuestTouched(t => ({ ...t, email: true }))}
+                  placeholder="you@example.com"
+                  aria-invalid={!!(guestTouched.email && guestCheck.errors.email)}
+                />
+                {guestTouched.email && guestCheck.errors.email && (
+                  <p className="text-[11px] text-destructive mt-1">{guestCheck.errors.email}</p>
+                )}
+              </div>
               <div><Label>Country</Label><Input value={country} onChange={e => setCountry(e.target.value)} placeholder="e.g. United States" /></div>
             </div>
             <div>
