@@ -1,81 +1,94 @@
 
 
-# Hotels & Resorts: complete the Booking flow + room photo uploads
+# Lodging admin polish + booking availability blocking
 
-## What's broken / missing today
+Four enhancements that build on the booking flow already shipped.
 
-1. **Public store profile** for hotels/resorts/guesthouses shows "No products available yet" (image 1). `StoreProfilePage.tsx` only branches on `auto-repair`; lodging falls through to the empty product grid. The `LodgingRoomCard` and `LodgingBookingDrawer` components exist but are never rendered anywhere.
-2. **Admin "Add Room" dialog** (image 2 / `LodgingRoomsSection.tsx`) has no photo upload — `photos: []` is hardcoded. Owners can't show what the room actually looks like.
-3. **Add-ons** (extra services like breakfast, airport transfer, late checkout) don't exist on rooms or in the booking drawer.
-4. **Booking drawer** is a hand-rolled fixed overlay (z-60), no date picker (`checkIn/checkOut` come in as strings from a parent that doesn't exist on the public profile), no add-on selection, no per-night breakdown beyond a flat total.
+## 1. Reservation Details page (admin)
 
-## What we'll build
+New route: `/admin/stores/:storeId/lodging/reservations/:reservationId`, opened from `LodgingReservationsSection` row tap.
 
-### 1. Admin — richer "Add / Edit Room" dialog (`LodgingRoomsSection.tsx`)
+Sections:
+- **Header**: guest name, reservation number (`RES-XXXXXX`), current status badge, source.
+- **Stay**: room name + photo, check-in/out dates, nights, adults/children, special requests/notes.
+- **Price breakdown**: room nightly rate × nights, weekend uplift, length-of-stay discount, each add-on line (from `addons` JSONB snapshot showing `name · qty × per · subtotal`), grand total, paid amount, balance due.
+- **Status panel**: current status + action buttons (Hold → Confirmed → Checked-In → Checked-Out, plus Cancel / No-show). Each transition opens a small inline form requiring an **audit note**, then writes both the new status AND an entry to a new `lodge_reservation_audit` table.
+- **Audit log**: chronological list of `{ from_status, to_status, note, actor_id, created_at }`.
 
-- **Photos uploader** (up to 8 per room): drag/drop + tap to pick, thumbnail grid with remove + drag-reorder, first photo = cover. Reuses the existing `store-assets` bucket under path `lodging/{storeId}/rooms/{roomId|new}/{uuid}.{ext}`. Same pattern as `AdminStoresPage` logo/banner upload, with the existing `uploadStoreAsset` helper.
-- **Description textarea** (new column `description text`) — short marketing copy shown on the public card detail.
-- **Cancellation policy** select: `flexible` / `moderate` / `strict` / `non_refundable` (new column `cancellation_policy text`).
-- **Check-in / check-out time** inputs (store-level fallback already exists; per-room override optional — new columns `check_in_time time`, `check_out_time time` nullable).
-- **Add-ons editor**: rows of `{ name, price_cents, per: "stay" | "night" | "guest" }`. Stored in new JSONB column `addons jsonb default '[]'`. Examples: "Breakfast +$8/night", "Airport pickup +$25/stay".
-- Keep the existing null-safe number inputs from the prior fix.
+## 2. Database — audit trail + cover photo
 
-### 2. Database migration
+New migration:
 
-New columns on `lodge_rooms`:
-- `description text`
-- `cancellation_policy text default 'flexible'`
-- `check_in_time time`, `check_out_time time`
-- `addons jsonb not null default '[]'::jsonb`
+```sql
+create table public.lodge_reservation_audit (
+  id uuid primary key default gen_random_uuid(),
+  reservation_id uuid not null references lodge_reservations(id) on delete cascade,
+  store_id uuid not null,
+  from_status text,
+  to_status text not null,
+  note text,
+  actor_id uuid,
+  created_at timestamptz not null default now()
+);
+alter table lodge_reservation_audit enable row level security;
+-- RLS: store owners + admins can select/insert for their store (mirror lodge_reservations policies)
 
-(Photos already supported via existing `photos jsonb` column — we just start writing to it.)
+alter table lodge_rooms add column cover_photo_index integer not null default 0;
+```
 
-New column on `lodge_reservations`:
-- `addons jsonb not null default '[]'::jsonb` (snapshot of selected add-ons + computed price per booking)
+Plus a small `useLodgeReservationAudit(reservationId)` hook (list + insert).
 
-### 3. Public store profile — render rooms for lodging stores (`StoreProfilePage.tsx`)
+## 3. Cover photo selector in room editor
 
-Add an `isLodging` branch (parallel to the existing `auto-repair` branch) at line ~673:
+Update `LodgingRoomPhotoUploader.tsx`:
+- Add `coverIndex` + `onCoverChange` props.
+- Each thumbnail gets a **"Set as cover"** star button (corner, always visible on the active cover, hover/tap on others). The selected cover shows the existing emerald `Star · Cover` chip.
+- Helper text becomes `{count}/{max} photos · tap ★ to set cover`.
+- Reordering and removal adjust `coverIndex` correctly (shift down on remove-before-cover, swap on move).
 
-- Fetch rooms via `useLodgeRooms(store.id)` filtered to `is_active = true`.
-- Replace the "All Products" header with **"Rooms & Rates"** + room count.
-- Render a vertical stack of `LodgingRoomCard` (already exists) — pass first photo as `imageUrl`.
-- Above the list, a **stay selector bar** (sticky-ish): Check-in date, Check-out date, Adults, Children. Defaults: today / +1 day / 2 / 0. Persist in URL params so deep-links work.
-- Empty state: "No rooms listed yet" with bed icon (not the package icon).
+`LodgingRoomsSection.tsx` passes `cover_photo_index`, persists it on save, and the rooms list thumbnail uses `photos[cover_photo_index] ?? photos[0]`.
 
-### 4. Booking flow upgrade (`LodgingBookingDrawer.tsx` → migrated to `ResponsiveModal`)
+`StoreProfilePage.tsx` + `LodgingRoomCard.tsx` + reservation details page all read `photos[cover_photo_index ?? 0]` instead of `photos[0]`.
 
-- **Step 1 — Stay**: date range picker (uses existing `Calendar` from shadcn), guest counters (adults/children), room/units count if multiple.
-- **Step 2 — Add-ons**: list of room's `addons` with checkboxes + qty (for per-guest items). Live total updates.
-- **Step 3 — Guest info**: name, phone, email, country, special requests (current form, kept). Phone uses `CountryPhoneInput` per project standard.
-- **Price breakdown**: rate × nights, weekend rate auto-applied for Fri/Sat nights, weekly/monthly discount auto-applied, add-ons line, **Total** in bold. Sub-line: "Pay at the property unless arranged with host" (preserve current MoR-style disclaimer).
-- On submit → insert `lodge_reservations` with `addons` snapshot + `status: 'hold'` (current behavior preserved).
-- Use `ResponsiveModal` (bottom sheet on mobile, dialog on desktop) so it matches the rest of the v2026 UI and respects safe-area + keyboard.
+## 4. Public booking — date availability blocking
 
-### 5. Reuse where possible
+In `LodgingBookingDrawer.tsx` switch the date inputs in `LodgingStaySelector` to a `Calendar` (shadcn date range, `mode="range"`) inside a `Popover`, so we control which days are selectable.
 
-- `ResponsiveModal` for the booking sheet.
-- `uploadStoreAsset` helper for room photo uploads.
-- `useLodgeRooms` already supports the new fields once the migration runs (it does `select *`).
-- `LodgingRoomCard` stays as-is (already accepts `imageUrl`, `amenities`, `breakfastIncluded`).
+New hook `useRoomAvailability(roomId, monthsAhead = 6)`:
+- Fetches `lodge_room_blocks` for `roomId` (manual blocks with `reason`).
+- Fetches `lodge_reservations` for `roomId` with `status in ('hold','confirmed','checked_in','checked_out')`, expands each to per-night dates (excluding the checkout day).
+- Returns `Map<dateISO, { unavailable: boolean; reason: 'sold_out' | 'restricted' | 'past' }>` plus a `disabledDates` array for `Calendar`.
+
+Calendar wiring:
+- `disabled={[{ before: today }, ...unavailableDates]}` — past dates disabled, plus blocked/booked dates.
+- `modifiers` add `unavailable` styling (strike-through + muted) so users see why a date is greyed out.
+- Below the date pickers a small legend: `■ Unavailable · ■ Selected · ■ Today`.
+- If the user previously selected a range that now contains an unavailable night (e.g. via deep-link URL params), surface a banner: *"One or more nights are no longer available — please pick new dates."* and disable the Continue button until resolved.
+- Tooltip / aria-label on each disabled day reads `Sold out` or `Not available` based on reason source.
+
+`LodgingStaySelector.tsx` accepts an optional `disabledDates` + `availabilityMap` prop so the same UX can be reused on `StoreProfilePage`'s sticky bar (only the booking drawer fetches availability per-room; the store-profile selector stays unrestricted because it spans many rooms).
 
 ## Files
 
-**Edit**
-- `src/components/admin/store/lodging/LodgingRoomsSection.tsx` — add photos uploader, description, cancellation policy, check-in/out times, add-ons editor.
-- `src/hooks/lodging/useLodgeRooms.ts` — extend `LodgeRoom` interface with the new fields.
-- `src/components/lodging/LodgingBookingDrawer.tsx` — convert to `ResponsiveModal`, add date picker, add-ons step, weekend/discount math, snapshot add-ons on insert.
-- `src/components/lodging/LodgingRoomCard.tsx` — show description preview + "X add-ons available" hint when present.
-- `src/pages/StoreProfilePage.tsx` — render lodging rooms branch with stay selector + booking drawer wiring.
-
 **Create**
-- `src/components/lodging/LodgingStaySelector.tsx` — date range + guests bar used on store profile.
-- `src/components/lodging/LodgingRoomPhotoUploader.tsx` — thumbnail grid + add/remove/reorder.
-- Supabase migration: add columns above to `lodge_rooms` and `lodge_reservations`.
+- `src/pages/admin/lodging/AdminLodgingReservationDetailPage.tsx`
+- `src/hooks/lodging/useLodgeReservationAudit.ts`
+- `src/hooks/lodging/useRoomAvailability.ts`
+- Supabase migration: `lodge_reservation_audit` table + RLS, `lodge_rooms.cover_photo_index` column
+
+**Edit**
+- `src/components/admin/store/lodging/LodgingReservationsSection.tsx` — make rows tappable → details page; keep quick-actions as shortcuts.
+- `src/components/lodging/LodgingRoomPhotoUploader.tsx` — cover selector star.
+- `src/components/admin/store/lodging/LodgingRoomsSection.tsx` — pass `cover_photo_index` through, list thumb uses cover.
+- `src/hooks/lodging/useLodgeRooms.ts` — extend `LodgeRoom` with `cover_photo_index`.
+- `src/components/lodging/LodgingRoomCard.tsx` + `src/pages/StoreProfilePage.tsx` — read cover via `photos[cover_photo_index ?? 0]`.
+- `src/components/lodging/LodgingStaySelector.tsx` — Calendar range picker with `disabledDates` support.
+- `src/components/lodging/LodgingBookingDrawer.tsx` — wire `useRoomAvailability` into the selector + show legend + invalid-range banner.
+- `src/App.tsx` (or admin routes file) — register new reservation detail route.
 
 ## Out of scope
 
-- Real-time availability calendar blocking on the public side (already exists in admin via `LodgingCalendarSection`; integrating with the booking drawer to grey out sold-out dates is a follow-up).
-- Card payments / Stripe for hotels (current model is "request booking, pay at property").
-- Multi-room cart (one room per booking request for now).
+- Multi-room availability search ("show me all rooms free this weekend") — stays per-room.
+- Email/SMS notification on status change — current toasts only.
+- Editing past audit notes (append-only log).
 
