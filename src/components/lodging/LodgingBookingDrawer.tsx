@@ -420,25 +420,33 @@ export function LodgingBookingDrawer({
           </ResponsiveModalFooter>
         ) : (
           <ResponsiveModalFooter>
-            {step !== "stay" && (
-              <Button variant="outline" onClick={goBack} className="gap-1">
-                <ChevronLeft className="h-4 w-4" /> Back
-              </Button>
-            )}
-            {step !== "review" ? (
-              <Button
-                onClick={goNext}
-                className="gap-1"
-                disabled={blocked || (step === "guest" && !guestValid)}
-              >
-                Continue <ChevronRight className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button onClick={submit} disabled={submitting || blocked || !reviewValid} className="gap-1 font-bold">
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                Confirm · {fmtMoney(breakdown.total)}
-              </Button>
-            )}
+            <div className="flex items-center justify-between gap-2 w-full">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-[11px] font-semibold text-foreground">
+                {breakdown.nights}n · {adults + children}g · {fmtMoney(breakdown.total)}
+              </span>
+              <div className="flex items-center gap-2">
+                {step !== "stay" && (
+                  <Button variant="outline" onClick={goBack} className="gap-1" size="sm">
+                    <ChevronLeft className="h-4 w-4" /> Back
+                  </Button>
+                )}
+                {step !== "review" ? (
+                  <Button
+                    onClick={goNext}
+                    className="gap-1"
+                    size="sm"
+                    disabled={blocked || (step === "guest" && !guestValid)}
+                  >
+                    Continue <ChevronRight className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button onClick={submit} disabled={submitting || blocked || !reviewValid} className="gap-1 font-bold" size="sm">
+                    {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                    Confirm · {fmtMoney(breakdown.total)}
+                  </Button>
+                )}
+              </div>
+            </div>
           </ResponsiveModalFooter>
         )
       }
