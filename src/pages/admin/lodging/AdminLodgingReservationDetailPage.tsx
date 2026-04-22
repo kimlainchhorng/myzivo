@@ -274,8 +274,47 @@ export default function AdminLodgingReservationDetailPage() {
               <Row label="Balance due" value={fmt(balanceDue)} bold className={balanceDue > 0 ? "text-destructive" : "text-primary"} />
             </div>
             <p className="text-[11px] text-muted-foreground pt-1 capitalize">Payment: {reservation.payment_status}</p>
+            <div className="pt-2">
+              <LodgingPaymentBadge
+                status={reservation.payment_status}
+                amountCents={reservation.deposit_cents || reservation.total_cents}
+                onRetry={async () => {
+                  if (retrying) return;
+                  setRetrying(true);
+                  try {
+                    const { data, error } = await supabase.functions.invoke("create-lodging-deposit", {
+                      body: {
+                        reservation_id: reservation.id,
+                        store_id: reservation.store_id,
+                        deposit_cents: reservation.deposit_cents || reservation.total_cents,
+                        mode: reservation.deposit_cents ? "deposit" : "full",
+                      },
+                    });
+                    if (error) throw error;
+                    if ((data as any)?.already_paid) {
+                      toast.info((data as any).message || "Already paid");
+                    } else if ((data as any)?.url) {
+                      window.open((data as any).url, "_blank");
+                      toast.success("Opening Stripe checkout…");
+                    }
+                  } catch (e: any) {
+                    toast.error(e.message || "Retry failed");
+                  } finally {
+                    setRetrying(false);
+                  }
+                }}
+              />
+            </div>
           </CardContent>
         </Card>
+
+        {/* Policy acknowledgement */}
+        {reservation.policy_consent && (
+          <PolicyAcknowledgementCard
+            consent={reservation.policy_consent as any}
+            version={reservation.policy_consent_version}
+          />
+        )}
 
         {/* Status workflow */}
         <Card>
