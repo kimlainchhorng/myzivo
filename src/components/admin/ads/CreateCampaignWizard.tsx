@@ -183,7 +183,8 @@ export default function CreateCampaignWizard({
               <Button
                 className="w-full sm:w-auto h-10"
                 onClick={() => onSave(form, false)}
-                disabled={!stepValid() || saving}
+                disabled={!stepValid() || submitDisabled}
+                title={walletBlocks ? "Wallet balance below daily budget — add funds to submit" : undefined}
               >
                 {saving && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
                 Submit for review
