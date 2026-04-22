@@ -60163,6 +60163,7 @@ export type Database = {
       link_user_device:
         | { Args: { p_device_id: string; p_role: string }; Returns: undefined }
         | { Args: { p_device_id: string; p_role?: string }; Returns: undefined }
+      lodging_wiring_report: { Args: never; Returns: Json }
       log_pii_access: {
         Args: {
           _access_context?: string
