@@ -35,6 +35,15 @@ import AdsStudioDashboard from "./AdsStudioDashboard";
 import AdsStudioRecommendations from "./AdsStudioRecommendations";
 import { MarketingPreviewProvider } from "./ads/MarketingPreviewContext";
 import MarketingPreviewSwitcher, { MarketingPreviewFrame } from "./ads/MarketingPreviewSwitcher";
+import SegmentsManager from "./marketing/SegmentsManager";
+import TemplatesLibrary from "./marketing/TemplatesLibrary";
+import AutomationsBuilder from "./marketing/AutomationsBuilder";
+import UnifiedPerformancePanel from "./marketing/UnifiedPerformancePanel";
+import PromoCodesManager from "./marketing/PromoCodesManager";
+import MarketingStatStrip from "./marketing/MarketingStatStrip";
+import MarketingChannelTile from "./marketing/MarketingChannelTile";
+import CreateMarketingCampaignWizard from "./marketing/CreateMarketingCampaignWizard";
+import { useStoreMarketingOverview } from "@/hooks/useStoreMarketingOverview";
 
 interface Props {
   storeId: string;
