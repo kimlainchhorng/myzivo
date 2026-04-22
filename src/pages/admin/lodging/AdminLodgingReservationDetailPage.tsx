@@ -312,7 +312,7 @@ export default function AdminLodgingReservationDetailPage() {
         {reservation.policy_consent && (
           <PolicyAcknowledgementCard
             consent={reservation.policy_consent as any}
-            version={reservation.policy_consent_version}
+            versionStamp={reservation.policy_consent_version}
           />
         )}
 
