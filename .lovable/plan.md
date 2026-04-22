@@ -1,49 +1,66 @@
 
 
-# Room Details Modal: carousel, amenities, add-ons, reserve flow polish
+# Room photo viewer: LQIP, hints, counter, zoom & full-screen
 
-Targeted upgrades to `LodgingRoomDetailsModal.tsx` and the small wiring in `LodgingRoomCard.tsx` so the details view matches a real OTA experience.
+Five upgrades layered onto `LodgingRoomDetailsModal.tsx` plus one new full-screen viewer component. No DB or upload changes — purely viewer polish.
 
-## 1. Swipeable carousel + keyboard nav + skeletons
+## 1. Blurred LQIP placeholders
 
-Replace the current static-image carousel with a richer one:
-- Wrap the gallery in shadcn `Carousel` (Embla) with `opts={{ loop: true }}` for swipe-to-advance on touch and built-in pointer drag on desktop.
-- Sync Embla via `setApi` so the existing pagination dots and prev/next buttons stay in sync (and dot taps call `api.scrollTo(i)`).
-- Keyboard: when the modal is open, `ArrowLeft` / `ArrowRight` advance slides; `Home` / `End` jump to first/last. Bound on a focusable wrapper with `tabIndex={0}` and `aria-roledescription="carousel"`. Embla's built-in `keyboard` plugin would also fire, but explicit handler ensures it works even when focus is on body.
-- Loading skeletons: each `<img>` uses `loading="lazy"` and tracks `loaded[i]` state. Until loaded, render a `Skeleton` overlay with the existing shimmer animation in the same `aspect-[16/10]` slot — no layout shift. On error, fall back to the bed-icon placeholder per slide.
-- Counter pill (`{idx + 1} / {total}`) in the top-right corner for orientation.
+While each photo loads, show a blurred low-quality version instead of a flat skeleton:
 
-## 2. All amenities with consistent iconography
+- For Supabase-hosted images, request a tiny preview via the existing `/render/image/` transform (e.g. `?width=24&quality=20`) and render it `object-contain` with `filter: blur(20px) scale(1.1)` underneath the full image.
+- Full image fades from `opacity-0` → `opacity-100` over 400ms; blurred layer fades out simultaneously.
+- For non-Supabase URLs (or when the transform fails), fall back to the existing shimmer `Skeleton`.
+- Helper: small `getLqipUrl(src)` util that detects Supabase storage URLs and rewrites the render path.
 
-- Add a small `AMENITY_ICON_MAP` (record of normalized name → Lucide icon) covering the full canonical set used elsewhere in lodging (Wi-Fi, AC, Pool, Parking, Breakfast, TV, Kitchen, Workspace, Laundry, Gym, Pets, Balcony, Heating, Hot tub, Beach access, Airport shuttle, Smoke detector, etc.). Lookup is case-insensitive and normalizes spaces/underscores.
-- Render **all** amenities (no truncation), one row per item: `[icon] [label]` in a 2-column grid on mobile, 3-column on `sm:`. Unknown amenity → fallback `Check` icon (current behavior) so nothing breaks.
-- Same map is exported and reused in `LodgingRoomCard`'s amenity preview chip strip so card and modal stay visually consistent.
+## 2. Swipe & keyboard hints + smooth transitions
 
-## 3. Add-ons with proper currency + clear per-X labels
+- First time the modal opens in a session (tracked via `sessionStorage["lodging.gallery.hintsSeen"]`), overlay a 2-second auto-dismissing pill at the bottom of the carousel: `← → arrows · swipe to browse`.
+- Permanent micro-hints: small `ChevronLeft`/`ChevronRight` ghost icons at the edges that gently pulse for the first 3 seconds, then fade to subtle (`opacity-30`).
+- Smooth transitions: keep Embla `loop:true`, add `duration: 28` for snappier-but-smooth ease; cross-fade the active slide's image opacity on `select` event for an extra polished feel on top of Embla's translate animation.
 
-- Replace ad-hoc `formatAddonPrice` with the global `useCurrency()` hook (`format(amountUsd, "USD")`) so prices honor the user's selected display currency just like `PriceDisplay`.
-- Per-X label rendered as a separate muted line under the formatted price: `per night`, `per guest`, `per stay` (full words, no slash abbreviation).
-- Layout per row: name (medium-bold, 13px) on the left with optional one-line description if present in the `LodgeAddon` shape; on the right a vertical stack: price (bold, currency symbol included) + per-X line (10px muted).
-- Empty state stays hidden if no add-ons; otherwise the helper line below becomes "Optional — choose during booking. Prices shown per the property's policy."
+## 3. Visible counter + caption strip (outside the image)
 
-## 4. Clean Reserve handoff
+- Move the counter pill **out of the image overlay** into a dedicated strip directly below the carousel: `Photo 2 of 7` on the left, optional caption on the right.
+- Caption sources, in priority: `photo.caption` (if photos become objects later), else inferred from filename (strip extension, replace `-`/`_` with spaces, title-case), else empty.
+- Strip uses `text-[11px] text-muted-foreground` matching the high-density UI standard so it never competes with the photo.
+- The in-image counter pill is removed so the photo is fully visible — the strip below replaces it.
 
-- Footer Reserve button calls `onReserve()` first, then `onOpenChange(false)` inside a `requestAnimationFrame` so the parent gets the room id / open command **before** the modal teardown animation, eliminating the brief flash where neither sheet is mounted on mobile.
-- `LodgingRoomCard` already passes the active room into `setBookingRoom` via `onReserve`; verify that the same `room` reference is captured (closure) so the booking drawer opens with identical room context. No prop changes needed beyond confirming the handler.
-- Add `aria-label="Reserve {name}"` for screen readers and `data-testid="reserve-from-details"` for QA.
+## 4. Pinch-to-zoom + double-tap zoom (in-modal)
+
+Inside the details modal carousel, add gesture-driven zoom on the active slide:
+
+- New tiny `ZoomableImage` wrapper using pointer events:
+  - **Pinch**: track two pointers, compute distance ratio → `transform: scale(s)` (clamped 1×–4×).
+  - **Double-tap**: toggle 1× ↔ 2.5× centered on tap point.
+  - **Pan when zoomed**: single-pointer drag translates within bounds.
+- When `scale > 1`, Embla swipe is disabled (`api?.reInit({ watchDrag: false })` style — toggle a `panning` ref) so zoom-pan doesn't accidentally change slides. Reset to 1× on slide change.
+- Small `100% / 250%` indicator appears top-left only while zoomed.
+
+## 5. Full-screen photo viewer with zoom controls
+
+New component `LodgingPhotoLightbox.tsx`:
+
+- Triggered by an `Expand` (maximize) icon button in the carousel's top-right corner of the details modal.
+- Renders a portal `Dialog` with `bg-black/95`, photo centered with `object-contain` filling the viewport (max `100vw`/`100vh`).
+- Reuses `ZoomableImage` for pinch/double-tap.
+- On-screen controls bar (bottom): `−` zoom out, `Reset`, `+` zoom in, divider, `Prev` / counter `2 / 7` / `Next`, divider, `X` close. All keyboard-accessible: `+`/`-`/`0` for zoom, arrows for nav, `Esc` to close.
+- Same LQIP + fade-in treatment as the modal carousel for consistency.
+- Preserves currently-viewed slide index when opening from the modal; on close, the modal's Embla scrolls back to that index so context is kept.
 
 ## Files
 
-**Edit**
-- `src/components/lodging/LodgingRoomDetailsModal.tsx` — carousel via shadcn `Carousel` + Embla api, keyboard handler, per-slide skeleton + error fallback, amenity icon map, currency-aware add-on rows, reserve handoff order.
-- `src/components/lodging/LodgingRoomCard.tsx` — import shared `AMENITY_ICON_MAP` for the card's amenity chips so iconography matches the modal.
+**Create**
+- `src/components/lodging/LodgingPhotoLightbox.tsx` — full-screen viewer with zoom controls + keyboard nav.
+- `src/components/lodging/ZoomableImage.tsx` — pointer-based pinch / double-tap / pan wrapper, shared by the modal carousel and the lightbox.
+- `src/lib/lqip.ts` — `getLqipUrl(src)` Supabase render-transform helper + filename → caption inferer.
 
-**No changes needed**
-- `LodgingBookingDrawer.tsx`, `StoreProfilePage.tsx` — existing `onReserve` wiring is already correct; just polish the call order inside the modal.
+**Edit**
+- `src/components/lodging/LodgingRoomDetailsModal.tsx` — wrap each slide in `ZoomableImage`, add LQIP layer, hint pill + edge chevrons, move counter to a caption strip below carousel, add Expand button that opens the lightbox, disable Embla drag while zoomed.
 
 ## Out of scope
 
-- Full-screen lightbox / pinch-zoom on photos (carousel inside modal is enough for v1).
-- Persisting amenity icon choices in the DB (mapping stays client-side).
-- Per-add-on quantity selection inside the details modal (still chosen in the booking drawer).
+- Per-photo captions stored in DB (inferred from filename for now).
+- Thumbnail strip / filmstrip navigation in the lightbox (counter + arrows are enough for v1).
+- Server-generated true LQIP base64 (uses Supabase render transform instead — no upload-time work).
 
