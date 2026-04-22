@@ -109,6 +109,19 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
   const openNew = () => { setEditing(blank()); setOpen(true); };
   const openEdit = (r: LodgeRoom) => { setEditing({ ...r, addons: r.addons || [], photos: r.photos || [] }); setOpen(true); };
 
+  const updateEditingPhotos = (next: string[]) => {
+    setEditing((prev) => {
+      if (!prev) return prev;
+      const cur = prev.cover_photo_index ?? 0;
+      const safe = Math.min(Math.max(cur, 0), Math.max(0, next.length - 1));
+      return { ...prev, photos: next, cover_photo_index: safe };
+    });
+  };
+
+  const updateEditingCover = (idx: number) => {
+    setEditing((prev) => (prev ? { ...prev, cover_photo_index: idx } : prev));
+  };
+
   const save = async () => {
     if (!editing?.name) { toast.error("Name required"); return; }
     try {
@@ -200,13 +213,9 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                   heroOnly
                   storeId={storeId}
                   photos={(editing.photos as string[]) || []}
-                  onChange={(next) => {
-                    const cur = editing.cover_photo_index ?? 0;
-                    const safe = Math.min(Math.max(cur, 0), Math.max(0, next.length - 1));
-                    setEditing({ ...editing, photos: next, cover_photo_index: safe });
-                  }}
+                  onChange={updateEditingPhotos}
                   coverIndex={editing.cover_photo_index ?? 0}
-                  onCoverChange={(idx) => setEditing({ ...editing, cover_photo_index: idx })}
+                  onCoverChange={updateEditingCover}
                 />
                 <p className="text-[10px] text-muted-foreground mt-1.5">
                   Cover photo · shown on room cards & booking pages
@@ -221,13 +230,9 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                     gridOnly
                     storeId={storeId}
                     photos={(editing.photos as string[]) || []}
-                    onChange={(next) => {
-                      const cur = editing.cover_photo_index ?? 0;
-                      const safe = Math.min(Math.max(cur, 0), Math.max(0, next.length - 1));
-                      setEditing({ ...editing, photos: next, cover_photo_index: safe });
-                    }}
+                    onChange={updateEditingPhotos}
                     coverIndex={editing.cover_photo_index ?? 0}
-                    onCoverChange={(idx) => setEditing({ ...editing, cover_photo_index: idx })}
+                    onCoverChange={updateEditingCover}
                   />
                 </div>
               )}
