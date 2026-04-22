@@ -10,7 +10,8 @@ import {
   LogOut, ChevronLeft, ChevronDown, Menu, Home, Store,
   Package, CreditCard, Users, Megaphone, ClipboardList, Settings,
   Wallet, Calendar, Clock, Shield, CalendarCheck, GraduationCap, FolderOpen, Radio,
-  FileText, ScanSearch, Wrench, ClipboardCheck, Car
+  FileText, ScanSearch, Wrench, ClipboardCheck, Car,
+  FileSignature, Hammer, HardHat, BellRing, CircleDot, ShieldAlert, Truck, BarChart3
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -129,6 +130,15 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       { id: "ar-parts", label: "Part Shop", icon: Wrench },
       { id: "ar-inspections", label: "Inspections", icon: ClipboardCheck },
       { id: "ar-vehicles", label: "Vehicles", icon: Car },
+      { id: "_ar_shop_ops_label", label: "SHOP OPS", icon: Wrench, divider: true },
+      { id: "ar-estimates", label: "Estimates", icon: FileSignature },
+      { id: "ar-workorders", label: "Work Orders", icon: Hammer },
+      { id: "ar-techs", label: "Technicians & Bays", icon: HardHat },
+      { id: "ar-reminders", label: "Reminders & Recalls", icon: BellRing },
+      { id: "ar-tires", label: "Tire Inventory", icon: CircleDot },
+      { id: "ar-warranty", label: "Warranty & Comebacks", icon: ShieldAlert },
+      { id: "ar-fleet", label: "Fleet Accounts", icon: Truck },
+      { id: "ar-reports", label: "Reports", icon: BarChart3 },
     ] : []),
     { id: "customers", label: "Customers", icon: Users },
     { id: "marketing", label: "Marketing & Ads", icon: Megaphone },
@@ -263,7 +273,15 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
         >
           <p id="sidebar-group-manage" className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Manage</p>
           <div className="space-y-0.5" role="group" aria-labelledby="sidebar-group-manage">
-            {navItems.map((item) => {
+            {navItems.map((item: any) => {
+              if (item.divider) {
+                return (
+                  <div key={item.id} className="pt-3 pb-1 px-3">
+                    <div className="border-t border-border/60 mb-2" />
+                    <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">{item.label}</p>
+                  </div>
+                );
+              }
               const isActive = activeTab === item.id;
               return (
                 <button

@@ -3869,6 +3869,464 @@ export type Database = {
           },
         ]
       }
+      ar_bays: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          lift_type: string | null
+          name: string
+          sort_order: number
+          store_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          lift_type?: string | null
+          name: string
+          sort_order?: number
+          store_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          lift_type?: string | null
+          name?: string
+          sort_order?: number
+          store_id?: string
+        }
+        Relationships: []
+      }
+      ar_estimates: {
+        Row: {
+          converted_workorder_id: string | null
+          created_at: string
+          customer_id: string | null
+          expires_at: string | null
+          id: string
+          line_items: Json
+          notes: string | null
+          number: string
+          status: string
+          store_id: string
+          subtotal_cents: number
+          tax_cents: number
+          total_cents: number
+          updated_at: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          converted_workorder_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          expires_at?: string | null
+          id?: string
+          line_items?: Json
+          notes?: string | null
+          number: string
+          status?: string
+          store_id: string
+          subtotal_cents?: number
+          tax_cents?: number
+          total_cents?: number
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          converted_workorder_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          expires_at?: string | null
+          id?: string
+          line_items?: Json
+          notes?: string | null
+          number?: string
+          status?: string
+          store_id?: string
+          subtotal_cents?: number
+          tax_cents?: number
+          total_cents?: number
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Relationships: []
+      }
+      ar_fleet_accounts: {
+        Row: {
+          active: boolean
+          billing_terms: string
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          credit_limit_cents: number
+          id: string
+          name: string
+          notes: string | null
+          po_required: boolean
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          billing_terms?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          credit_limit_cents?: number
+          id?: string
+          name: string
+          notes?: string | null
+          po_required?: boolean
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          billing_terms?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          credit_limit_cents?: number
+          id?: string
+          name?: string
+          notes?: string | null
+          po_required?: boolean
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ar_fleet_vehicles: {
+        Row: {
+          created_at: string
+          fleet_account_id: string
+          id: string
+          label: string | null
+          plate: string | null
+          vehicle_id: string | null
+          vin: string | null
+        }
+        Insert: {
+          created_at?: string
+          fleet_account_id: string
+          id?: string
+          label?: string | null
+          plate?: string | null
+          vehicle_id?: string | null
+          vin?: string | null
+        }
+        Update: {
+          created_at?: string
+          fleet_account_id?: string
+          id?: string
+          label?: string | null
+          plate?: string | null
+          vehicle_id?: string | null
+          vin?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ar_fleet_vehicles_fleet_account_id_fkey"
+            columns: ["fleet_account_id"]
+            isOneToOne: false
+            referencedRelation: "ar_fleet_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ar_recall_checks: {
+        Row: {
+          campaign_id: string | null
+          fetched_at: string
+          id: string
+          severity: string | null
+          store_id: string
+          summary: string | null
+          vehicle_id: string | null
+          vin: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          fetched_at?: string
+          id?: string
+          severity?: string | null
+          store_id: string
+          summary?: string | null
+          vehicle_id?: string | null
+          vin: string
+        }
+        Update: {
+          campaign_id?: string | null
+          fetched_at?: string
+          id?: string
+          severity?: string | null
+          store_id?: string
+          summary?: string | null
+          vehicle_id?: string | null
+          vin?: string
+        }
+        Relationships: []
+      }
+      ar_service_reminders: {
+        Row: {
+          channel: string
+          created_at: string
+          customer_id: string | null
+          due_at: string | null
+          due_mileage: number | null
+          id: string
+          message: string | null
+          reminder_type: string
+          sent_at: string | null
+          status: string
+          store_id: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          customer_id?: string | null
+          due_at?: string | null
+          due_mileage?: number | null
+          id?: string
+          message?: string | null
+          reminder_type: string
+          sent_at?: string | null
+          status?: string
+          store_id: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          customer_id?: string | null
+          due_at?: string | null
+          due_mileage?: number | null
+          id?: string
+          message?: string | null
+          reminder_type?: string
+          sent_at?: string | null
+          status?: string
+          store_id?: string
+          vehicle_id?: string | null
+        }
+        Relationships: []
+      }
+      ar_technicians: {
+        Row: {
+          active: boolean
+          avatar_url: string | null
+          certifications: string[]
+          created_at: string
+          email: string | null
+          hourly_rate_cents: number
+          id: string
+          name: string
+          phone: string | null
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          avatar_url?: string | null
+          certifications?: string[]
+          created_at?: string
+          email?: string | null
+          hourly_rate_cents?: number
+          id?: string
+          name: string
+          phone?: string | null
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          avatar_url?: string | null
+          certifications?: string[]
+          created_at?: string
+          email?: string | null
+          hourly_rate_cents?: number
+          id?: string
+          name?: string
+          phone?: string | null
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ar_tires: {
+        Row: {
+          brand: string | null
+          cost_cents: number
+          created_at: string
+          dot: string | null
+          id: string
+          load_index: string | null
+          model: string | null
+          qty: number
+          reorder_point: number
+          retail_cents: number
+          season: string | null
+          size: string
+          speed_rating: string | null
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          cost_cents?: number
+          created_at?: string
+          dot?: string | null
+          id?: string
+          load_index?: string | null
+          model?: string | null
+          qty?: number
+          reorder_point?: number
+          retail_cents?: number
+          season?: string | null
+          size: string
+          speed_rating?: string | null
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          cost_cents?: number
+          created_at?: string
+          dot?: string | null
+          id?: string
+          load_index?: string | null
+          model?: string | null
+          qty?: number
+          reorder_point?: number
+          retail_cents?: number
+          season?: string | null
+          size?: string
+          speed_rating?: string | null
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ar_warranties: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          mileage_limit: number | null
+          notes: string | null
+          period_days: number | null
+          service_name: string | null
+          starts_at: string
+          store_id: string
+          workorder_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          mileage_limit?: number | null
+          notes?: string | null
+          period_days?: number | null
+          service_name?: string | null
+          starts_at?: string
+          store_id: string
+          workorder_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          mileage_limit?: number | null
+          notes?: string | null
+          period_days?: number | null
+          service_name?: string | null
+          starts_at?: string
+          store_id?: string
+          workorder_id?: string
+        }
+        Relationships: []
+      }
+      ar_work_orders: {
+        Row: {
+          bay_id: string | null
+          checklist: Json
+          completed_at: string | null
+          created_at: string
+          customer_id: string | null
+          customer_signature_url: string | null
+          estimate_id: string | null
+          id: string
+          is_comeback: boolean
+          labor_hours: number
+          notes: string | null
+          number: string
+          parent_workorder_id: string | null
+          parts_used: Json
+          photos: Json
+          started_at: string | null
+          status: string
+          store_id: string
+          technician_id: string | null
+          total_cents: number
+          updated_at: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          bay_id?: string | null
+          checklist?: Json
+          completed_at?: string | null
+          created_at?: string
+          customer_id?: string | null
+          customer_signature_url?: string | null
+          estimate_id?: string | null
+          id?: string
+          is_comeback?: boolean
+          labor_hours?: number
+          notes?: string | null
+          number: string
+          parent_workorder_id?: string | null
+          parts_used?: Json
+          photos?: Json
+          started_at?: string | null
+          status?: string
+          store_id: string
+          technician_id?: string | null
+          total_cents?: number
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          bay_id?: string | null
+          checklist?: Json
+          completed_at?: string | null
+          created_at?: string
+          customer_id?: string | null
+          customer_signature_url?: string | null
+          estimate_id?: string | null
+          id?: string
+          is_comeback?: boolean
+          labor_hours?: number
+          notes?: string | null
+          number?: string
+          parent_workorder_id?: string | null
+          parts_used?: Json
+          photos?: Json
+          started_at?: string | null
+          status?: string
+          store_id?: string
+          technician_id?: string | null
+          total_cents?: number
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Relationships: []
+      }
       archived_chats: {
         Row: {
           archived_at: string | null
