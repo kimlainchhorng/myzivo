@@ -1,62 +1,91 @@
 
 
-# Store Profile — Unlock gating polish, analytics & richer matching
+# Store Profile — Phone verification, resilient analytics & smarter unlock UX
 
-Five focused refinements to the Call Store / Live Chat gating added in the last round.
+Five focused refinements on top of the gating + analytics work.
 
-## 1. Analytics events on unlock
+## 1. "Verify phone" step for store owners
 
-When `hasBooking` flips from `undefined → true` for a given store, fire two events via the existing analytics helper (`@/lib/analytics` — already used elsewhere for `track('reel_view', …)`):
+In `LodgingPropertyProfileSection` → Contact card (and the equivalent food-store profile editor):
 
-- `store_contact_unlocked` — `{ store_id, store_type: 'lodge'|'food', source: 'lodge_reservation'|'food_order' }`
-- `store_contact_action` — fired on actual click: `{ store_id, channel: 'call'|'chat' }`
+- Phone input gains a sibling **"Verify phone"** button when `contact.phone` is set but `contact.phone_verified_at` is null.
+- Click → opens a small inline OTP sheet using the existing Twilio Verify flow (`send-otp-sms` + `verify-otp` edge functions, already used by `CountryPhoneInput` for user signup).
+- On success: write `phone_verified_at = now()` to `lodge_property_profile.contact` (jsonb merge) and show an emerald "Verified" pill next to the phone.
+- Customer side (`StoreProfilePage`): `callable = hasBooking && !!contact.phone` (verification not strictly required to display, but the verified pill is shown to customers as a trust signal in the new policy panel).
 
-Implementation: extend `useHasStoreBooking` to return `{ hasBooking, source }` (which table matched), and add a `useEffect` in `StoreProfilePage` that fires `store_contact_unlocked` once per session per store (guarded by a `Set` in module scope so re-renders don't double-fire).
+No new edge functions — reuses existing OTP infra. Migration: none (data lives inside existing `contact` jsonb).
 
-## 2. Hide Call Store when there is no phone number
+## 2. Session-scoped unlock flag (replaces module Set)
 
-Today both buttons render together. Update `StoreProfilePage`:
+Today `store_contact_unlocked` uses a module-scope `Set<string>` which resets on HMR / route remount and double-fires.
 
-- `const callable = hasBooking && !!(store?.phone || store?.contact?.phone)`
-- `const chattable = hasBooking` (unchanged)
-- Render Call Store only when `callable`; Live Chat only when `chattable`. If `hasBooking` is true but no phone exists, show a tiny muted helper line under Live Chat: "This store hasn't shared a phone number."
+Replace with `sessionStorage`:
 
-## 3. Skeleton loading states
+```ts
+const key = `zivo:unlock_fired:${storeId}`;
+if (!sessionStorage.getItem(key)) {
+  track('store_contact_unlocked', {...});
+  sessionStorage.setItem(key, '1');
+}
+```
 
-While `useHasStoreBooking` is `isLoading`, render `<Skeleton className="h-9 w-28 rounded-xl" />` placeholders in place of the two buttons (using the existing `@/components/ui/skeleton`). Prevents the buttons from "popping in" after the booking check resolves.
+- Survives HMR and component remounts within the tab session.
+- Naturally resets when the tab closes (matches "once per browser session" intent).
+- Wrapped in `try/catch` for Safari private mode.
 
-## 4. Richer hasBooking matching
+## 3. Analytics offline fallback + flush-on-online
 
-Extend `useHasStoreBooking` to widen the match surface so legitimate guests aren't locked out by email-case or alias mismatches:
+Extend `src/lib/analytics.ts`:
 
-- **Lodge**: match on ANY of:
-  - `guest_user_id = auth.uid()` (new, primary)
-  - `guest_email ILIKE auth_email`
-  - `guest_email ILIKE any (profile.alt_emails)` if the `profiles` row exposes alternate emails (best-effort; skip silently if column missing)
-- **Food**: keep `user_id = auth.uid()`, plus add `customer_email ILIKE auth_email` fallback for guest-checkout orders.
-- All four sub-queries run in parallel via `Promise.allSettled` so one failing branch (e.g. column doesn't exist on a fork) doesn't break the whole check. Return the first matching `source` for analytics.
+- On insert failure (catch + `.then(_, onErr)`), push the event to `localStorage` under key `zivo:analytics_queue` (capped at 200 events; oldest dropped).
+- Add a one-time `flushQueue()` helper invoked:
+  - On module load (covers reload after offline).
+  - On `window.addEventListener('online', …)`.
+  - On every successful insert (lazy drain — try up to 25 queued at a time).
+- Each queued event keeps its original `created_at`, plus `flushed_at` set on retry success.
+- Never throws; queue ops are wrapped in `try/catch`.
 
-Schema note: `lodge_reservations.guest_user_id` already exists in this project — verified via the existing reservation create flow. No migration needed.
+## 4. Tooltip reasoning on the locked CTA
 
-## 5. "Complete your booking to unlock chat" CTA
+`StoreProfilePage`'s "Complete a booking to unlock chat" button gains a `Tooltip`:
 
-When `!isLoading && !hasBooking`:
+- Default copy: "Live Chat & Call Store unlock after a confirmed booking at this store."
+- When `useHasStoreBooking` returns `source` from a *different* store (we already know the user has SOME bookings in app state): copy adapts → "Your other bookings don't qualify — you need a confirmed reservation **here**."
+- For lodge stores: "Confirmed reservation required (lodge_reservation)."
+- For food stores: "Completed order required (food_order)."
 
-- Replace the current grey notice with a single emerald outline button: `<Button variant="outline" onClick={() => navigate('/account/bookings')}>Complete a booking to unlock chat</Button>`
-- Below it, a tiny muted line: "Already booked? Make sure you used the same account email." with a `<Link to="/account/bookings">View my bookings</Link>` for direct deep-link.
-- Route confirmed: `/account/bookings` is the canonical bookings list (used by `useBookingHistory`).
+The store type is derived from `store.kind` (`lodge` vs `food`) which is already on the loaded store object. Uses existing `@/components/ui/tooltip`.
+
+## 5. Unique `event_id` on contact actions
+
+- Add `event_id: crypto.randomUUID()` to every `track()` call automatically — extend `analytics.ts` so all events get a stable id (used downstream for dedupe in BigQuery / SQL views).
+- `store_contact_action` specifically: also include a `click_nonce` generated per render of the buttons, so a double-click within the same render shares a nonce (analytics dedupes on `nonce`), but a deliberate second click after re-render gets a new one.
+
+```ts
+track('store_contact_action', {
+  store_id,
+  channel: 'call',
+  click_nonce: nonceRef.current,
+});
+```
+
+`nonceRef` is reset whenever `hasBooking` flips or the store id changes.
 
 ## File map
 
 **Modified**
-- `src/hooks/useHasStoreBooking.ts` — return `{ hasBooking, source, isLoading }`; add `guest_user_id` + `customer_email` fallbacks via `Promise.allSettled`.
-- `src/pages/StoreProfilePage.tsx` — skeletons, phone-aware Call Store gate, analytics fire, replacement CTA.
+- `src/lib/analytics.ts` — add `event_id`, localStorage queue, `flushQueue`, `online` listener.
+- `src/hooks/useHasStoreBooking.ts` — already returns `source`; no change unless we also surface a `hasAnyBooking` flag (added: lightweight extra query without `store_id` filter, cached 5 min, used only for tooltip copy).
+- `src/pages/StoreProfilePage.tsx` — sessionStorage unlock guard, tooltip on locked CTA, `click_nonce` on contact actions, "Verified" pill in policy panel.
+- `src/components/admin/store/lodging/property-profile/ContactCard.tsx` — "Verify phone" button + inline OTP sheet, writes `phone_verified_at`.
+- `src/hooks/lodging/useLodgePropertyProfile.ts` — extend `contact` jsonb type with optional `phone_verified_at: string | null`.
 
-**No new files, no migration, no new dependencies.**
+**No migration. No new edge functions. No new dependencies.**
 
 ## Notes
 
-- v2026 high-density tokens preserved (`text-[11px]`, `rounded-xl`, emerald semantic).
-- Analytics fires once per (session, store) — avoids inflated counts on re-mount.
-- `Promise.allSettled` keeps the hook resilient to schema drift across forks/environments.
+- All UI keeps v2026 high-density tokens (`text-[11px]`, `rounded-xl`, emerald semantic, Lucide-only).
+- Analytics queue is bounded (200 events) and silently drops oldest — no risk of localStorage bloat.
+- OTP reuse means store owners verify with the same SMS infra used elsewhere; rate limits already enforced (5 SMS/day per number).
+- `event_id` is generated client-side; if the analytics table doesn't have an `event_id` column yet, the helper writes it inside the `properties` jsonb instead — zero schema change required.
 
