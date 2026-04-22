@@ -481,8 +481,8 @@ export function LodgingBookingDrawer({
 
             {/* Deposit notice */}
             {securityDeposit > 0 && (
-              <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs">
-                <ShieldCheck className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-muted/40 border border-border text-xs">
+                <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <p>A refundable security deposit of <strong>{fmtMoney(securityDeposit)}</strong> may be collected at check-in.</p>
               </div>
             )}
