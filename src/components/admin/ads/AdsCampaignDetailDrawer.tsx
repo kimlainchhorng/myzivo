@@ -258,24 +258,24 @@ export default function AdsCampaignDetailDrawer({
             Last 14 days
           </div>
           <div className="h-40 -mx-1">
-            <ResponsiveContainerCompat width="100%" height="100%">
-              <LineChartCompat data={series} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGridCompat strokeDasharray="2 2" stroke="hsl(var(--border))" vertical={false} />
-                <XAxisCompat
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={series} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="2 2" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis
                   dataKey="day"
                   tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                   tickLine={false}
                   axisLine={false}
                   interval="preserveStartEnd"
                 />
-                <YAxisCompat
+                <YAxis
                   yAxisId="left"
                   tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                   tickLine={false}
                   axisLine={false}
                   width={28}
                 />
-                <YAxisCompat
+                <YAxis
                   yAxisId="right"
                   orientation="right"
                   tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
@@ -283,7 +283,7 @@ export default function AdsCampaignDetailDrawer({
                   axisLine={false}
                   width={32}
                 />
-                <TooltipCompat
+                <Tooltip
                   contentStyle={{
                     fontSize: 11,
                     background: "hsl(var(--popover))",
@@ -291,7 +291,7 @@ export default function AdsCampaignDetailDrawer({
                     borderRadius: 6,
                   }}
                 />
-                <LineCompat
+                <Line
                   yAxisId="left"
                   type="monotone"
                   dataKey="clicks"
@@ -300,7 +300,7 @@ export default function AdsCampaignDetailDrawer({
                   dot={false}
                   name="Clicks"
                 />
-                <LineCompat
+                <Line
                   yAxisId="right"
                   type="monotone"
                   dataKey="spend"
@@ -310,8 +310,8 @@ export default function AdsCampaignDetailDrawer({
                   dot={false}
                   name="Spend ($)"
                 />
-              </LineChartCompat>
-            </ResponsiveContainerCompat>
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
