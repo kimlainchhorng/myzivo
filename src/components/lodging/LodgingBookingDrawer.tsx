@@ -246,6 +246,32 @@ export function LodgingBookingDrawer({
     if (el.scrollTop + el.clientHeight >= el.scrollHeight - 6) setPolicyScrolled(true);
   };
 
+  const triggerStripeDeposit = async (resId: string) => {
+    try {
+      const depositCents = securityDeposit > 0 ? securityDeposit : breakdown.total;
+      const { data: sessionData, error: fnErr } = await supabase.functions.invoke("create-lodging-deposit", {
+        body: {
+          reservation_id: resId,
+          store_id: storeId,
+          deposit_cents: depositCents,
+          mode: securityDeposit > 0 ? "deposit" : "full",
+        },
+      });
+      if (fnErr) throw fnErr;
+      if (sessionData?.url) {
+        window.open(sessionData.url, "_blank");
+        toast.success("Opening secure Stripe checkout…");
+      }
+    } catch (payErr: any) {
+      toast.error(payErr?.message || "Could not open Stripe checkout");
+    }
+  };
+
+  const handleRetryPayment = async () => {
+    if (!reservationId) return;
+    await triggerStripeDeposit(reservationId);
+  };
+
   const submit = async () => {
     if (!guestValid) { toast.error("Please complete your guest details"); setStep("guest"); return; }
     if (!reviewValid) { toast.error("Please read & accept the policies"); return; }
@@ -253,15 +279,32 @@ export function LodgingBookingDrawer({
     try {
       // Race-condition guard: re-check availability immediately before insert
       try {
-        const conflict = await checkRoomConflictNow(roomId, checkIn, checkOut);
-        if (conflict) {
-          toast.error("These dates were just booked by someone else. Please pick new dates.");
+        const fresh = await checkRoomConflictNow(roomId, checkIn, checkOut);
+        if (fresh.conflict) {
+          const refs = fresh.rows.map(r => `#${r.reference || r.id.slice(0, 6)}`).join(", ");
+          toast.error("These dates were just booked", {
+            description: `Conflicts with ${refs}. Please pick new dates.`,
+          });
           setSubmitting(false);
           await refetchConflict();
           return;
         }
       } catch (_) { /* non-fatal */ }
       const ref = `RES-${Date.now().toString().slice(-6)}`;
+      const policyConsent = {
+        rules: {
+          viewed_at: rulesViewedAt,
+          viewed_section: "house_rules",
+        },
+        cancellation: {
+          viewed_at: cancelViewedAt,
+          viewed_section: "cancellation_policy",
+          policy_key: cancellationPolicy || null,
+        },
+        agreed_at: new Date().toISOString(),
+      };
+      const policyConsentVersion =
+        (propertyProfile as any)?.updated_at || new Date().toISOString();
       const { data: inserted, error } = await supabase.from("lodge_reservations" as any).insert({
         store_id: storeId,
         room_id: roomId,
@@ -275,6 +318,8 @@ export function LodgingBookingDrawer({
         fee_breakdown: breakdown.feeBreakdown,
         guest_details: { name, phone, email, country, eta, notes, pay_method: payMethod },
         notes: notes || null,
+        policy_consent: policyConsent,
+        policy_consent_version: policyConsentVersion,
       }).select("id").maybeSingle();
       if (error) throw error;
       setReference(ref);
@@ -284,24 +329,7 @@ export function LodgingBookingDrawer({
 
       // Trigger Stripe deposit/hold for "card on arrival"
       if (payMethod === "card_on_arrival" && (inserted as any)?.id) {
-        try {
-          const depositCents = securityDeposit > 0 ? securityDeposit : breakdown.total;
-          const { data: sessionData, error: fnErr } = await supabase.functions.invoke("create-lodging-deposit", {
-            body: {
-              reservation_id: (inserted as any).id,
-              store_id: storeId,
-              deposit_cents: depositCents,
-              mode: securityDeposit > 0 ? "deposit" : "full",
-            },
-          });
-          if (fnErr) throw fnErr;
-          if (sessionData?.url) {
-            window.open(sessionData.url, "_blank");
-            toast.success("Opening secure Stripe checkout…");
-          }
-        } catch (payErr: any) {
-          toast.error(payErr?.message || "Could not open Stripe checkout");
-        }
+        await triggerStripeDeposit((inserted as any).id);
       }
     } catch (e: any) {
       toast.error(e.message || "Failed to submit booking");
