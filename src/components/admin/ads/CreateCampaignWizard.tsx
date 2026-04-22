@@ -119,6 +119,14 @@ export default function CreateCampaignWizard({
     }));
   };
 
+  const dailyBudgetCents = Math.round(form.daily_budget * 100);
+  const walletBlocks = walletBalanceCents > 0 || isEditing
+    ? walletBalanceCents < dailyBudgetCents && !isEditing
+    : false;
+  // Only block submit (not draft) when wallet < daily budget AND user has any balance set up.
+  // If wallet is 0 (never funded) we still allow submit and let backend enforce.
+  const submitDisabled = saving || walletBlocks;
+
   const stepValid = (): boolean => {
     if (step === 0) return !!form.objective;
     if (step === 1) return form.platforms.length > 0;
