@@ -378,6 +378,35 @@ export function LodgingBookingDrawer({
     toast.success("Reference copied");
   };
 
+  const shareBooking = async () => {
+    if (!reservationId) return;
+    const url = `${window.location.origin}/trip/${reservationId}`;
+    const title = `Booking ${reference} · ${storeName}`;
+    try {
+      if ((navigator as any).share) {
+        await (navigator as any).share({ title, text: title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Booking link copied");
+      }
+    } catch (_) { /* user cancelled */ }
+  };
+
+  const openChatWithHost = async () => {
+    try {
+      const { data: store } = await supabase
+        .from("restaurants" as any)
+        .select("owner_id")
+        .eq("id", storeId)
+        .maybeSingle();
+      const ownerId = (store as any)?.owner_id;
+      if (!ownerId) { toast.error("Host chat unavailable"); return; }
+      window.location.href = `/chat?with=${ownerId}`;
+    } catch {
+      toast.error("Could not open chat");
+    }
+  };
+
   return (
     <ResponsiveModal
       open={open}
