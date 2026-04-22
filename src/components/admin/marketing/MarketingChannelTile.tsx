@@ -1,12 +1,13 @@
 /**
  * MarketingChannelTile — Status, last sent, 7d sparkline, "Send test" action.
  */
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Mail, MessageSquare, Smartphone, Send } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
-import { toast } from "sonner";
+import SendTestDialog from "./SendTestDialog";
 import type { ChannelStatus } from "@/hooks/useStoreMarketingOverview";
 
 const META = {
@@ -31,43 +32,63 @@ function Sparkline({ data }: { data: number[] }) {
   );
 }
 
-export default function MarketingChannelTile({ channel, onCompose }: { channel: ChannelStatus; onCompose?: (ch: string) => void }) {
+export default function MarketingChannelTile({
+  channel,
+  storeId,
+  onCompose,
+}: {
+  channel: ChannelStatus;
+  storeId?: string;
+  onCompose?: (ch: string) => void;
+}) {
   const meta = META[channel.channel];
   const Icon = meta.icon;
+  const [testOpen, setTestOpen] = useState(false);
+
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow">
-      <CardContent className="p-3">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${meta.color}`}>
-              <Icon className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold">{meta.label}</div>
-              <Badge variant={channel.status === "configured" ? "default" : "secondary"} className="text-[9px] h-4 px-1.5">
-                {channel.status === "configured" ? "Active" : "Setup needed"}
-              </Badge>
+    <>
+      <Card className="overflow-hidden hover:shadow-md transition-shadow">
+        <CardContent className="p-3">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${meta.color}`}>
+                <Icon className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold">{meta.label}</div>
+                <Badge variant={channel.status === "configured" ? "default" : "secondary"} className="text-[9px] h-4 px-1.5">
+                  {channel.status === "configured" ? "Active" : "Setup needed"}
+                </Badge>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="text-[11px] text-muted-foreground mb-1.5">
-          {channel.last_sent_at
-            ? `Last sent ${formatDistanceToNow(parseISO(channel.last_sent_at), { addSuffix: true })}`
-            : "Never sent"}
-        </div>
-        <Sparkline data={channel.volume_7d} />
-        <Button
-          size="sm"
-          variant="ghost"
-          className="w-full h-7 text-xs mt-1"
-          onClick={() => {
-            if (onCompose) onCompose(channel.channel);
-            else toast.success(`Test ${meta.label} queued`);
-          }}
-        >
-          <Send className="w-3 h-3 mr-1" /> Send test
-        </Button>
-      </CardContent>
-    </Card>
+          <div className="text-[11px] text-muted-foreground mb-1.5">
+            {channel.last_sent_at
+              ? `Last sent ${formatDistanceToNow(parseISO(channel.last_sent_at), { addSuffix: true })}`
+              : "Never sent"}
+          </div>
+          <Sparkline data={channel.volume_7d} />
+          <Button
+            size="sm"
+            variant="ghost"
+            className="w-full h-7 text-xs mt-1"
+            onClick={() => {
+              if (onCompose) onCompose(channel.channel);
+              else setTestOpen(true);
+            }}
+          >
+            <Send className="w-3 h-3 mr-1" /> Send test
+          </Button>
+        </CardContent>
+      </Card>
+      {storeId && (
+        <SendTestDialog
+          open={testOpen}
+          onClose={() => setTestOpen(false)}
+          storeId={storeId}
+          channel={channel.channel}
+        />
+      )}
+    </>
   );
 }

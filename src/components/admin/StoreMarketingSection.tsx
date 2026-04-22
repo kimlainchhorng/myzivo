@@ -40,9 +40,7 @@ import TemplatesLibrary from "./marketing/TemplatesLibrary";
 import AutomationsBuilder from "./marketing/AutomationsBuilder";
 import UnifiedPerformancePanel from "./marketing/UnifiedPerformancePanel";
 import PromoCodesManager from "./marketing/PromoCodesManager";
-import MarketingStatStrip from "./marketing/MarketingStatStrip";
-import MarketingChannelTile from "./marketing/MarketingChannelTile";
-import CreateMarketingCampaignWizard from "./marketing/CreateMarketingCampaignWizard";
+import MarketingOverviewHeader from "./marketing/MarketingOverviewHeader";
 import { useStoreMarketingOverview } from "@/hooks/useStoreMarketingOverview";
 
 interface Props {
@@ -351,6 +349,8 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName, s
 
         {/* ═══ OVERVIEW ═══ */}
         <TabsContent value="overview" className="space-y-4 mt-4">
+          <MarketingOverviewHeader storeId={storeId} />
+
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <StatCard label="Total Views" value={analytics.totalViews.toLocaleString()} change={0} icon={Eye} color="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" />
             <StatCard label="Engagements" value={(analytics.totalLikes + analytics.totalShares).toLocaleString()} change={0} icon={Heart} color="bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400" />

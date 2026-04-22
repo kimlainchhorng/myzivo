@@ -2,7 +2,7 @@
  * CreateMarketingCampaignWizard — 5-step wizard with live device preview.
  * Persists to marketing_campaigns; "Send now" calls send-marketing-campaign edge fn.
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ interface Props {
   onClose: () => void;
   storeId: string;
   onCreated?: () => void;
+  defaultChannel?: Channel;
 }
 
 const CHANNELS: { id: Channel; icon: any; label: string; desc: string }[] = [
@@ -39,10 +40,17 @@ const CHANNELS: { id: Channel; icon: any; label: string; desc: string }[] = [
   { id: "multi", icon: Layers, label: "Multi-channel", desc: "Sequential" },
 ];
 
-export default function CreateMarketingCampaignWizard({ open, onClose, storeId, onCreated }: Props) {
+export default function CreateMarketingCampaignWizard({ open, onClose, storeId, onCreated, defaultChannel }: Props) {
   const qc = useQueryClient();
   const [step, setStep] = useState(1);
-  const [channel, setChannel] = useState<Channel>("push");
+  const [channel, setChannel] = useState<Channel>(defaultChannel ?? "push");
+
+  // Apply preselected channel whenever the dialog opens with a new value
+  useEffect(() => {
+    if (open && defaultChannel) {
+      setChannel(defaultChannel);
+    }
+  }, [open, defaultChannel]);
   const [name, setName] = useState("");
   const [segmentId, setSegmentId] = useState<string>("");
   const [subject, setSubject] = useState("");
