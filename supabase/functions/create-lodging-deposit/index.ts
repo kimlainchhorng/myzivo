@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     // Load reservation for description
     const { data: reservation, error: resErr } = await admin
       .from("lodge_reservations")
-      .select("id, number, guest_name, guest_email, room_id, check_in, check_out, total_cents")
+      .select("id, number, guest_name, guest_email, room_id, check_in, check_out, total_cents, payment_status, stripe_session_id")
       .eq("id", body.reservation_id)
       .maybeSingle();
     if (resErr) throw resErr;
@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
       },
     });
 
-    // Persist Stripe IDs and bump payment_status
+    // Persist Stripe IDs and bump payment_status (clears prior failure on retry)
     await admin
       .from("lodge_reservations")
       .update({
@@ -124,6 +124,7 @@ Deno.serve(async (req) => {
         stripe_payment_intent_id: (session.payment_intent as string) || null,
         deposit_cents: depositCents,
         payment_status: mode === "deposit" ? "authorized" : "pending",
+        last_payment_error: null,
       })
       .eq("id", body.reservation_id);
 

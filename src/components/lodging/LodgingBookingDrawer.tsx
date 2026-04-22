@@ -20,6 +20,7 @@ import { ReservationStatusTimeline } from "@/components/lodging/ReservationStatu
 import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
 import { IcsPreviewPanel } from "@/components/lodging/IcsPreviewPanel";
 import { PolicySourceSheet } from "@/components/lodging/PolicySourceSheet";
+import { ConflictReasonPanel } from "@/components/lodging/ConflictReasonPanel";
 import { useRoomAvailability, hasUnavailableNight } from "@/hooks/lodging/useRoomAvailability";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { useRoomConflictCheck, checkRoomConflictNow } from "@/hooks/lodging/useRoomConflictCheck";
@@ -106,6 +107,8 @@ export function LodgingBookingDrawer({
   const [policyOverflows, setPolicyOverflows] = useState(false);
   const [viewedRulesSource, setViewedRulesSource] = useState(false);
   const [viewedCancelSource, setViewedCancelSource] = useState(false);
+  const [rulesViewedAt, setRulesViewedAt] = useState<string | null>(null);
+  const [cancelViewedAt, setCancelViewedAt] = useState<string | null>(null);
   const policyRef = useRef<HTMLDivElement | null>(null);
 
   const { data: propertyProfile } = useLodgePropertyProfile(storeId);
@@ -120,6 +123,7 @@ export function LodgingBookingDrawer({
     open ? roomId : undefined, checkIn, checkOut, step === "review"
   );
   const conflictDetected = !!conflictData?.conflict;
+  const conflictRows = conflictData?.rows || [];
 
   const { data: liveReservation } = useReservationLive(reservationId || undefined);
 
@@ -242,6 +246,32 @@ export function LodgingBookingDrawer({
     if (el.scrollTop + el.clientHeight >= el.scrollHeight - 6) setPolicyScrolled(true);
   };
 
+  const triggerStripeDeposit = async (resId: string) => {
+    try {
+      const depositCents = securityDeposit > 0 ? securityDeposit : breakdown.total;
+      const { data: sessionData, error: fnErr } = await supabase.functions.invoke("create-lodging-deposit", {
+        body: {
+          reservation_id: resId,
+          store_id: storeId,
+          deposit_cents: depositCents,
+          mode: securityDeposit > 0 ? "deposit" : "full",
+        },
+      });
+      if (fnErr) throw fnErr;
+      if (sessionData?.url) {
+        window.open(sessionData.url, "_blank");
+        toast.success("Opening secure Stripe checkout…");
+      }
+    } catch (payErr: any) {
+      toast.error(payErr?.message || "Could not open Stripe checkout");
+    }
+  };
+
+  const handleRetryPayment = async () => {
+    if (!reservationId) return;
+    await triggerStripeDeposit(reservationId);
+  };
+
   const submit = async () => {
     if (!guestValid) { toast.error("Please complete your guest details"); setStep("guest"); return; }
     if (!reviewValid) { toast.error("Please read & accept the policies"); return; }
@@ -249,15 +279,32 @@ export function LodgingBookingDrawer({
     try {
       // Race-condition guard: re-check availability immediately before insert
       try {
-        const conflict = await checkRoomConflictNow(roomId, checkIn, checkOut);
-        if (conflict) {
-          toast.error("These dates were just booked by someone else. Please pick new dates.");
+        const fresh = await checkRoomConflictNow(roomId, checkIn, checkOut);
+        if (fresh.conflict) {
+          const refs = fresh.rows.map(r => `#${r.reference || r.id.slice(0, 6)}`).join(", ");
+          toast.error("These dates were just booked", {
+            description: `Conflicts with ${refs}. Please pick new dates.`,
+          });
           setSubmitting(false);
           await refetchConflict();
           return;
         }
       } catch (_) { /* non-fatal */ }
       const ref = `RES-${Date.now().toString().slice(-6)}`;
+      const policyConsent = {
+        rules: {
+          viewed_at: rulesViewedAt,
+          viewed_section: "house_rules",
+        },
+        cancellation: {
+          viewed_at: cancelViewedAt,
+          viewed_section: "cancellation_policy",
+          policy_key: cancellationPolicy || null,
+        },
+        agreed_at: new Date().toISOString(),
+      };
+      const policyConsentVersion =
+        (propertyProfile as any)?.updated_at || new Date().toISOString();
       const { data: inserted, error } = await supabase.from("lodge_reservations" as any).insert({
         store_id: storeId,
         room_id: roomId,
@@ -271,6 +318,8 @@ export function LodgingBookingDrawer({
         fee_breakdown: breakdown.feeBreakdown,
         guest_details: { name, phone, email, country, eta, notes, pay_method: payMethod },
         notes: notes || null,
+        policy_consent: policyConsent,
+        policy_consent_version: policyConsentVersion,
       }).select("id").maybeSingle();
       if (error) throw error;
       setReference(ref);
@@ -280,24 +329,7 @@ export function LodgingBookingDrawer({
 
       // Trigger Stripe deposit/hold for "card on arrival"
       if (payMethod === "card_on_arrival" && (inserted as any)?.id) {
-        try {
-          const depositCents = securityDeposit > 0 ? securityDeposit : breakdown.total;
-          const { data: sessionData, error: fnErr } = await supabase.functions.invoke("create-lodging-deposit", {
-            body: {
-              reservation_id: (inserted as any).id,
-              store_id: storeId,
-              deposit_cents: depositCents,
-              mode: securityDeposit > 0 ? "deposit" : "full",
-            },
-          });
-          if (fnErr) throw fnErr;
-          if (sessionData?.url) {
-            window.open(sessionData.url, "_blank");
-            toast.success("Opening secure Stripe checkout…");
-          }
-        } catch (payErr: any) {
-          toast.error(payErr?.message || "Could not open Stripe checkout");
-        }
+        await triggerStripeDeposit((inserted as any).id);
       }
     } catch (e: any) {
       toast.error(e.message || "Failed to submit booking");
@@ -333,6 +365,7 @@ export function LodgingBookingDrawer({
       setAgreeRules(false); setAgreeCancel(false); setPayMethod("pay_at_property");
       setGuestTouched({}); setPolicyScrolled(false); setPolicyOverflows(false);
       setViewedRulesSource(false); setViewedCancelSource(false);
+      setRulesViewedAt(null); setCancelViewedAt(null);
     }
     onClose();
   };
@@ -616,12 +649,12 @@ export function LodgingBookingDrawer({
               </div>
             </div>
 
-            {/* Conflict banner (live re-check) */}
+            {/* Conflict reason panel (live re-check) */}
             {conflictDetected && (
-              <div className="flex items-start gap-2 p-3 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 text-xs font-medium">
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                <p>These dates are no longer available — please pick new dates.</p>
-              </div>
+              <ConflictReasonPanel
+                conflicts={conflictRows}
+                onPickNewDates={() => setStep("stay")}
+              />
             )}
 
             {/* Consent */}
@@ -636,8 +669,23 @@ export function LodgingBookingDrawer({
                   />
                   <span>I have read and agree to the <strong>house rules</strong> and check-in policy.</span>
                 </label>
-                <PolicySourceSheet type="house_rules" houseRules={houseRules as any} onOpened={() => setViewedRulesSource(true)} />
-                {!viewedRulesSource && <p className="text-[10px] text-amber-600 mt-0.5">Tap <strong>View source</strong> to enable this checkbox</p>}
+                <PolicySourceSheet
+                  type="house_rules"
+                  houseRules={houseRules as any}
+                  onOpened={() => {
+                    if (!viewedRulesSource) {
+                      setViewedRulesSource(true);
+                      setRulesViewedAt(new Date().toISOString());
+                    }
+                  }}
+                />
+                {viewedRulesSource ? (
+                  <p className="text-[10px] text-emerald-600 mt-0.5 inline-flex items-center gap-0.5">
+                    <ShieldCheck className="h-2.5 w-2.5" /> Verified · source viewed
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-amber-600 mt-0.5">Tap <strong>View source</strong> to enable this checkbox</p>
+                )}
               </div>
 
               <div>
@@ -652,8 +700,23 @@ export function LodgingBookingDrawer({
                     I accept the <strong>{cancellationLabel(cancellationPolicy)}</strong> cancellation policy and authorise {storeName} to contact me about this reservation.
                   </span>
                 </label>
-                <PolicySourceSheet type="cancellation" cancellationKey={cancellationPolicy} onOpened={() => setViewedCancelSource(true)} />
-                {!viewedCancelSource && <p className="text-[10px] text-amber-600 mt-0.5">Tap <strong>View source</strong> to enable this checkbox</p>}
+                <PolicySourceSheet
+                  type="cancellation"
+                  cancellationKey={cancellationPolicy}
+                  onOpened={() => {
+                    if (!viewedCancelSource) {
+                      setViewedCancelSource(true);
+                      setCancelViewedAt(new Date().toISOString());
+                    }
+                  }}
+                />
+                {viewedCancelSource ? (
+                  <p className="text-[10px] text-emerald-600 mt-0.5 inline-flex items-center gap-0.5">
+                    <ShieldCheck className="h-2.5 w-2.5" /> Verified · source viewed
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-amber-600 mt-0.5">Tap <strong>View source</strong> to enable this checkbox</p>
+                )}
               </div>
             </div>
 
@@ -700,12 +763,13 @@ export function LodgingBookingDrawer({
               </div>
             </div>
 
-            {/* Payment badge (live via realtime) */}
+            {/* Payment badge (live via realtime) — supports retry on failed */}
             {liveReservation?.payment_status && liveReservation.payment_status !== "unpaid" && (
               <div className="flex justify-center">
                 <LodgingPaymentBadge
                   status={liveReservation.payment_status}
                   amountCents={liveReservation.deposit_cents || liveReservation.total_cents}
+                  onRetry={handleRetryPayment}
                 />
               </div>
             )}
@@ -728,6 +792,7 @@ export function LodgingBookingDrawer({
                   defaultTimezone: (propertyProfile as any)?.timezone || "Asia/Phnom_Penh",
                   totalText: fmtMoney(breakdown.total),
                   cancellationText: cancellationDescription(cancellationPolicy),
+                  lockHours: Number((houseRules as any)?.ics_lock_hours ?? 24),
                 }}
               />
               {storePhone ? (

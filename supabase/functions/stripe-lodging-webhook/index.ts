@@ -1,6 +1,7 @@
 /**
  * stripe-lodging-webhook
  * Listens to Stripe payment_intent + charge events and updates lodge_reservations.payment_status.
+ * Also handles refund-in-progress and stores last_payment_error for retry context.
  */
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
@@ -45,22 +46,40 @@ Deno.serve(async (req) => {
     switch (event.type) {
       case "payment_intent.amount_capturable_updated": {
         const pi = event.data.object;
-        await updateByPI(pi.id, "authorized");
+        await updateByPI(pi.id, "authorized", { last_payment_error: null });
         break;
       }
       case "payment_intent.succeeded": {
         const pi = event.data.object;
-        await updateByPI(pi.id, "captured");
+        await updateByPI(pi.id, "captured", { last_payment_error: null });
         break;
       }
       case "payment_intent.payment_failed": {
         const pi = event.data.object;
-        await updateByPI(pi.id, "failed");
+        const errMsg =
+          pi?.last_payment_error?.message ||
+          pi?.last_payment_error?.code ||
+          "Stripe reported a payment failure";
+        await updateByPI(pi.id, "failed", { last_payment_error: errMsg });
         break;
       }
       case "payment_intent.canceled": {
         const pi = event.data.object;
         await updateByPI(pi.id, "unpaid");
+        break;
+      }
+      case "charge.refund.updated": {
+        const refund = event.data.object;
+        const piId = typeof refund.payment_intent === "string" ? refund.payment_intent : refund.payment_intent?.id;
+        if (piId) {
+          if (refund.status === "pending") {
+            await updateByPI(piId, "refund_pending");
+          } else if (refund.status === "succeeded") {
+            await updateByPI(piId, "refunded");
+          } else if (refund.status === "failed" || refund.status === "canceled") {
+            await updateByPI(piId, "captured", { last_payment_error: `Refund ${refund.status}` });
+          }
+        }
         break;
       }
       case "charge.refunded": {
