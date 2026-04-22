@@ -186,8 +186,9 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@radix-ui/react-slot": path.resolve(__dirname, "./node_modules/@radix-ui/react-slot"),
     },
     // Prevent duplicate React copies (fixes "Cannot read properties of null (reading 'useEffect')")
-    dedupe: ["react", "react-dom"],
+    dedupe: ["react", "react-dom", "@radix-ui/react-slot"],
   },
 }));
