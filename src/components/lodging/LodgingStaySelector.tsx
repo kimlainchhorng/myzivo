@@ -28,6 +28,10 @@ interface Props {
   locked?: boolean;
   /** Render richer legend with per-reason swatches. */
   showReasonLegend?: boolean;
+  /** Optional: lowest nightly rate (in minor currency units). Renders a "from" badge on the cheapest date. */
+  fromPriceCents?: number;
+  /** ISO currency code, defaults to USD. */
+  currency?: string;
 }
 
 const toISO = (d: Date) => format(d, "yyyy-MM-dd");
