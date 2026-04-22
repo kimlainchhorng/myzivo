@@ -72,7 +72,7 @@ function TrendingCard({ store, index }: { store: TrendingStore; index: number })
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.3 }}
       whileTap={{ scale: 0.97 }}
-      onClick={() => navigate(`/store-map`)}
+      onClick={() => navigate(`/shop/${store.store_id}`)}
       className={cn(
         "shrink-0 w-[170px] rounded-2xl border border-border/60 bg-card overflow-hidden text-left snap-start",
         "hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300",
