@@ -37,7 +37,7 @@ export default function TemplateEditor({ open, onClose, storeId, template }: Pro
 
   const handleSave = async () => {
     if (!name.trim()) return;
-    await upsert.mutateAsync({ id: template?.id, name, channel, subject, body });
+    await upsert.mutateAsync({ id: template?.id, name, channel: channel as any, subject, body });
     onClose();
   };
 

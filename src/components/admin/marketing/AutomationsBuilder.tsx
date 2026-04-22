@@ -61,7 +61,7 @@ export default function AutomationsBuilder({ storeId }: { storeId: string }) {
                     <Badge variant={a.status === "active" ? "default" : "secondary"} className="text-[9px] h-4 px-1.5">{a.status}</Badge>
                   </div>
                   <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                    <span className="capitalize">Trigger: {a.trigger_json?.type?.replaceAll("_", " ")}</span>
+                    <span className="capitalize">Trigger: {(a.trigger_json?.type || "").replace(/_/g, " ")}</span>
                     <span>· {a.steps_json?.length || 0} steps</span>
                     <span className="flex items-center gap-1"><Users className="w-2.5 h-2.5" />{a.enrolled_count}</span>
                   </div>
