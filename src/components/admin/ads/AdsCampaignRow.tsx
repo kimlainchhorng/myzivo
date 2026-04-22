@@ -137,35 +137,15 @@ export default function AdsCampaignRow({
               <Play className="w-3.5 h-3.5" />
             </Button>
           )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 w-7 p-0"
-                aria-label="Campaign actions"
-              >
-                <MoreHorizontal className="w-3.5 h-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={() => onEdit(c)}>
-                <Edit className="w-3.5 h-3.5 mr-2" /> Edit
-              </DropdownMenuItem>
-              {onDuplicate && (
-                <DropdownMenuItem onClick={() => onDuplicate(c)}>
-                  <Copy className="w-3.5 h-3.5 mr-2" /> Duplicate
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => onDelete(c)}
-                className="text-red-500 focus:text-red-500"
-              >
-                <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <AdsCampaignRowMenu
+            campaign={c}
+            onEdit={onEdit}
+            onDuplicate={(cam) => onDuplicate?.(cam)}
+            onPause={onPause}
+            onResume={onResume}
+            onArchive={(cam) => onArchive?.(cam)}
+            onDelete={onDelete}
+          />
         </div>
       </div>
 
