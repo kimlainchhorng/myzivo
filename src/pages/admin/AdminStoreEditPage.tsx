@@ -1861,8 +1861,30 @@ export default function AdminStoreEditPage() {
   const productsLabelTitle = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
   const paymentLabelTitle = form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : isLodging ? "Payment & Payouts" : t("admin.store.payment");
   const storeOwnerTitle = autoRepairTitles[activeTab] || lodgingTitles[activeTab] || employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? productsLabelTitle : activeTab === "payment" ? paymentLabelTitle : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "livestream" ? "Live Stream" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
-  const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
-    <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} storeCategory={form.category} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
+  // IMPORTANT: Do NOT define a component inside render — it creates a new component
+  // type on every render, which forces React to unmount + remount the entire subtree
+  // (including the Add Product dialog inputs) on every keystroke. Use a render helper instead.
+  const renderLayout = useCallback(
+    (title: string, children: React.ReactNode) => {
+      if (isAdmin) {
+        return <AdminLayout title={title}>{children}</AdminLayout>;
+      }
+      return (
+        <StoreOwnerLayout
+          title={storeOwnerTitle}
+          storeId={storeId}
+          storeName={store?.name}
+          storeLogoUrl={store?.logo_url}
+          storeCategory={form.category}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          productCount={products?.length}
+        >
+          {children}
+        </StoreOwnerLayout>
+      );
+    },
+    [isAdmin, storeOwnerTitle, storeId, store?.name, store?.logo_url, form.category, activeTab, products?.length],
   );
 
   if (isLoading) {
