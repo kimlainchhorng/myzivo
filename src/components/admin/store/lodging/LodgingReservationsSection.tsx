@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle, ChevronRight } from "lucide-react";
+import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle, ChevronRight, ShieldCheck } from "lucide-react";
 import { useLodgeReservations, type ReservationStatus } from "@/hooks/lodging/useLodgeReservations";
+import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
 import { toast } from "sonner";
 
 const STATUSES: (ReservationStatus | "all")[] = ["all", "hold", "confirmed", "checked_in", "checked_out", "cancelled", "no_show"];
