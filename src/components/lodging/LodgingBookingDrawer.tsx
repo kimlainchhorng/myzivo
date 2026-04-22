@@ -407,6 +407,10 @@ export function LodgingBookingDrawer({
     }
   };
 
+  const stepIndex = step === "stay" ? 0 : step === "addons" ? 1 : step === "guest" ? 2 : step === "review" ? 3 : 4;
+  const totalSteps = hasAddons ? 4 : 3;
+  const visibleStepIndex = hasAddons ? stepIndex : (stepIndex === 0 ? 0 : stepIndex - 1);
+
   return (
     <ResponsiveModal
       open={open}
@@ -416,31 +420,31 @@ export function LodgingBookingDrawer({
       footer={
         step === "success" ? (
           <ResponsiveModalFooter>
-            <Button onClick={handleClose} className="font-bold w-full">Done</Button>
+            <Button onClick={handleClose} className="font-bold w-full rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25" size="lg">Done</Button>
           </ResponsiveModalFooter>
         ) : (
           <ResponsiveModalFooter>
             <div className="flex items-center justify-between gap-2 w-full">
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-[11px] font-semibold text-foreground">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-50 to-emerald-100 border border-emerald-200 text-[11px] font-bold text-emerald-700 dark:from-emerald-950/40 dark:to-emerald-900/30 dark:border-emerald-800/50 dark:text-emerald-300 tabular-nums">
                 {breakdown.nights}n · {adults + children}g · {fmtMoney(breakdown.total)}
               </span>
               <div className="flex items-center gap-2">
                 {step !== "stay" && (
-                  <Button variant="outline" onClick={goBack} className="gap-1" size="sm">
+                  <Button variant="outline" onClick={goBack} className="gap-1 rounded-full" size="sm">
                     <ChevronLeft className="h-4 w-4" /> Back
                   </Button>
                 )}
                 {step !== "review" ? (
                   <Button
                     onClick={goNext}
-                    className="gap-1"
+                    className="gap-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/25"
                     size="sm"
                     disabled={blocked || (step === "guest" && !guestValid)}
                   >
                     Continue <ChevronRight className="h-4 w-4" />
                   </Button>
                 ) : (
-                  <Button onClick={submit} disabled={submitting || blocked || !reviewValid} className="gap-1 font-bold" size="sm">
+                  <Button onClick={submit} disabled={submitting || blocked || !reviewValid} className="gap-1 font-bold rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/25" size="sm">
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                     Confirm · {fmtMoney(breakdown.total)}
                   </Button>
