@@ -133,8 +133,12 @@ export default function AdminLodgingReservationDetailPage() {
   const submitTransition = async () => {
     if (!pendingStatus || !reservation) return;
     if (!note.trim()) { toast.error("Audit note required"); return; }
+    if (reasonRequired && !reason) { toast.error("Reason required"); return; }
     setSaving(true);
     try {
+      const finalNote = reasonRequired
+        ? `[Reason: ${reasonLabel(reason)}] ${note.trim()}`
+        : note.trim();
       const { error } = await supabase
         .from("lodge_reservations" as any)
         .update({ status: pendingStatus })
@@ -145,13 +149,18 @@ export default function AdminLodgingReservationDetailPage() {
         store_id: reservation.store_id,
         from_status: reservation.status,
         to_status: pendingStatus,
-        note: note.trim(),
+        note: finalNote,
       });
-      toast.success(`Status updated to ${STATUS_LABEL[pendingStatus]}`);
+      toast.success(
+        reasonRequired
+          ? `${STATUS_LABEL[pendingStatus]} — reason: ${reasonLabel(reason)}`
+          : `Status updated to ${STATUS_LABEL[pendingStatus]}`
+      );
       qc.invalidateQueries({ queryKey: ["lodge-reservation", reservationId] });
       qc.invalidateQueries({ queryKey: ["lodge-reservations", reservation.store_id] });
       setPendingStatus(null);
       setNote("");
+      setReason("");
     } catch (e: any) {
       toast.error(e.message || "Update failed");
     } finally {
