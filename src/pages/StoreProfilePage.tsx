@@ -20,6 +20,7 @@ import storeRideBg from "@/assets/store-ride-bg.jpg";
 import storeCallBg from "@/assets/store-call-bg.jpg";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import { isAllowedSocialUrl } from "@/lib/urlSafety";
+import { getStoreStatus } from "@/utils/storeStatus";
 
 /**
  * Extract the correct language part from dual-format text like "Khmer/English".
@@ -255,35 +256,23 @@ export default function StoreProfilePage() {
                   {store.rating || "4.5"}
                 </span>
                 {store.hours && (() => {
-                  // Parse hours JSON and show today's hours (or "Open 24 hours" if all 7 days are 24h)
-                  try {
-                    const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-                    const today = days[new Date().getDay()];
-                    const parsed = typeof store.hours === "string" ? JSON.parse(store.hours) : store.hours;
-                    const formatDayHours = (d: any) => {
-                      if (!d) return null;
-                      if (d.closed) return { text: "Closed Today", cls: "text-red-500", bold: false };
-                      if (d.is24h) return { text: "Open 24 hours", cls: "text-primary", bold: true };
-                      if (d.open && d.close) return { text: `${d.open} – ${d.close}`, cls: "text-muted-foreground", bold: false };
-                      return null;
-                    };
-                    const allDays24h = days.every(k => parsed?.[k]?.is24h);
-                    if (allDays24h) {
-                      return (
-                        <span className="flex items-center gap-0.5 text-xs text-primary font-semibold">
-                          <Clock className="h-3 w-3" /> Open 24 hours
-                        </span>
-                      );
-                    }
-                    const label = formatDayHours(parsed?.[today]);
-                    if (!label) return null;
-                    return (
-                      <span className={`flex items-center gap-0.5 text-xs ${label.cls} ${label.bold ? "font-semibold" : ""}`}>
-                        <Clock className="h-3 w-3" /> {label.text}
-                      </span>
-                    );
-                  } catch {}
-                  return null;
+                  const market = (store as any).market || (store as any).country;
+                  const status = getStoreStatus(store.hours as string, market);
+                  const cls = status.status === "open"
+                    ? "text-emerald-500 font-semibold"
+                    : status.status === "closing-soon"
+                    ? "text-amber-500 font-semibold"
+                    : status.status === "almost-open"
+                    ? "text-amber-500"
+                    : "text-red-500";
+                  return (
+                    <span className={`flex items-center gap-1 text-xs ${cls}`}>
+                      <Clock className="h-3 w-3" /> {status.label}
+                      {status.formattedHours && status.label !== status.formattedHours && (
+                        <span className="text-muted-foreground font-normal">· {status.formattedHours}</span>
+                      )}
+                    </span>
+                  );
                 })()}
                 {store.delivery_min && !["auto-repair","hotel","resort","guesthouse"].includes(store.category) && (
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/15">
