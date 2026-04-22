@@ -1,100 +1,71 @@
 
 
-# Hardening store-assets uploads: tests, safeguards, verification, and backfill
+# Verify and finalize store-assets hardening + add owner self-check page
 
-Five linked improvements to the `store-assets` upload flow.
+Most of this work was completed in the prior turns. This plan **verifies what already shipped**, fills the **two genuinely missing pieces**, and avoids re-doing what's done.
 
-## 1. Shared upload helper with verification + revert
+## What's already done (verified in repo)
 
-New `src/pages/admin/utils/uploadStoreAsset.ts`:
+| Requirement | Status | Where |
+|---|---|---|
+| Backfill old `products/<storeId>/...` → `<storeId>/products/...` (storage rows + URLs in `store_products`) | ✅ Done | `supabase/migrations/20260422035609_*.sql` |
+| Owner-only write/update/delete on `store-assets`, admins full access | ✅ Done | `supabase/migrations/20260422040327_*.sql` (latest, uses qualified `storage.objects.name`) |
+| Editor reverts preview + per-surface error toast (gallery/logo/cover/room) | ✅ Done | `src/pages/admin/AdminStoreEditPage.tsx` via `uploadStoreAsset.ts` helper |
+| Upload helper verifies object exists + HEAD-checks public URL | ✅ Done | `src/pages/admin/utils/uploadStoreAsset.ts` |
+| RLS test suite (owner A allowed paths, owner B blocked, admin full) | ✅ Done | `src/test/rls/storeAssetsRls.test.ts` + `npm run test:rls` |
 
-```ts
-type Surface = "gallery" | "logo" | "cover" | "room";
-export async function uploadStoreAsset({ storeId, file, surface, subfolder }) {
-  // 1. Build path: `${storeId}/...` (room -> `${storeId}/products/...`)
-  // 2. supabase.storage.from('store-assets').upload(path, file, { upsert: true })
-  // 3. VERIFY: list parent folder, confirm uploaded filename present
-  // 4. getPublicUrl -> HEAD fetch, expect 200 (verification)
-  // 5. Return { path, publicUrl }
-  // Throws labeled error: `${surface} upload failed: ${reason}`
-}
+## What's missing — the two new pieces
+
+### 1. Self-check page: `/admin/stores/:id/upload-check`
+
+A small in-app diagnostic that the signed-in store owner can hit to confirm all four upload surfaces work end-to-end, with clear pass/fail per surface.
+
+**New file**: `src/pages/admin/StoreAssetsUploadCheck.tsx`
+
+- Header: "Store assets upload check" + store name
+- Four rows, one per surface: **Gallery**, **Profile / Logo**, **Cover**, **Room / Product**
+- Each row has a "Run check" button (or a single "Run all" at top) that:
+  1. Generates a tiny PNG `Blob` in-memory (1×1 transparent pixel — same one used in the RLS tests)
+  2. Calls `uploadStoreAsset({ storeId, file, surface })` from the existing helper
+  3. On success: green badge `Passed`, shows the resolved public URL (clickable), and immediately deletes the test object via `supabase.storage.from('store-assets').remove([path])` so we don't leave litter
+  4. On failure: red badge `Failed` + the exact error string returned (already labeled by surface, e.g. `Gallery upload failed: new row violates row-level security policy`)
+- "Run all" button runs the four sequentially and shows a final summary line: `4/4 passed` or `2/4 passed — see failures above`
+- Footer link back to the store editor
+
+**Route**: register in `src/App.tsx` (or wherever store admin routes live — same pattern as `AdminStoreEditPage`):
+```
+<Route path="/admin/stores/:id/upload-check" element={<StoreAssetsUploadCheck />} />
 ```
 
-Used by all four call sites in `AdminStoreEditPage.tsx`.
+**Editor entry point**: in `src/pages/admin/AdminStoreEditPage.tsx`, add a small "Run upload check" link in the page header next to the existing actions, pointing to the new route. One-line change.
 
-## 2. Editor: revert preview on failure + surface label
+### 2. RLS test coverage gap — admin can read/write across stores
 
-Track previous value before each upload; on `catch` restore it and toast with surface name.
+The existing admin test only verifies admin **upload**. Add two more cases inside the existing `describeAdmin` block in `src/test/rls/storeAssetsRls.test.ts`:
 
-`src/pages/admin/AdminStoreEditPage.tsx`:
-- `uploadImage(logo|cover)` — capture `prevUrl = form.logo_url|banner_url`; on error `updateField(field, prevUrl)` + toast `Profile/Cover image upload failed`.
-- `uploadGalleryImage` — capture `prev = galleryImages`; on error `setGalleryImages(prev)`.
-- `uploadProductImage` — capture `prevUrls = productForm.image_urls`; on error `updateProductField('image_urls', prevUrls)`.
+- **Admin can update** an object in any store folder (overwrite without `upsert`)
+- **Admin can delete** an arbitrary object they uploaded under another store's folder
 
-## 3. Auto-verify URL persisted to correct profile field
+This closes the "admins keep full access" half of the test matrix.
 
-After each `store_profiles` update (logo/cover/gallery), re-`select` the row and assert the URL was stored. If mismatch, toast `Saved URL did not persist — try again` and revert local state. For `room` images, re-select the `store_products` row after save.
-
-## 4. Backfill old `products/<storeId>/...` paths
-
-New migration `supabase/migrations/<ts>_backfill_store_assets_products_path.sql`:
-
-```sql
--- Move existing storage rows
-UPDATE storage.objects
-SET name = regexp_replace(name, '^products/([^/]+)/(.*)$', '\1/products/\2')
-WHERE bucket_id = 'store-assets'
-  AND name LIKE 'products/%';
-
--- Update any URLs stored in store_products.image_url / image_urls
-UPDATE public.store_products
-SET image_url = replace(
-  image_url,
-  '/store-assets/products/' || store_id || '/',
-  '/store-assets/' || store_id || '/products/'
-)
-WHERE image_url LIKE '%/store-assets/products/' || store_id || '/%';
-
-UPDATE public.store_products
-SET image_urls = (
-  SELECT jsonb_agg(
-    replace(
-      url::text,
-      '/store-assets/products/' || store_id || '/',
-      '/store-assets/' || store_id || '/products/'
-    )::jsonb
-  )
-  FROM jsonb_array_elements(image_urls) url
-)
-WHERE image_urls::text LIKE '%/store-assets/products/' || store_id || '/%';
-```
-
-## 5. Vitest RLS test suite
-
-New `src/test/rls/storeAssetsRls.test.ts` (uses anon key + signs in two test users via env-provided credentials; skipped if env not set):
-
-Tests:
-- Owner A can `upload` to `${storeIdA}/gallery-x.jpg` ✓
-- Owner A can `upload` to `${storeIdA}/logo-x.jpg` ✓
-- Owner A can `upload` to `${storeIdA}/cover-x.jpg` ✓
-- Owner A can `upload` to `${storeIdA}/products/x.jpg` ✓
-- Owner A `upload` to `${storeIdB}/...` → fails with RLS ✗
-- Owner A `update` and `delete` of B's objects → fail ✗
-- Admin can read/write any path ✓
-
-Add npm script `"test:rls": "vitest run src/test/rls"` and a README in `src/test/rls/README.md` listing the four required env vars (`VITE_TEST_OWNER_A_EMAIL/PASSWORD/STORE_ID`, same for B).
+No new file, no new env vars — uses the same `VITE_TEST_ADMIN_*` already documented in `src/test/rls/README.md`.
 
 ## Files
 
-- New: `src/pages/admin/utils/uploadStoreAsset.ts`
-- Edit: `src/pages/admin/AdminStoreEditPage.tsx` (4 upload functions → use helper, add revert + verify-persist)
-- New migration: backfill + URL rewrite
-- New: `src/test/rls/storeAssetsRls.test.ts` + `README.md`
-- Edit: `package.json` (add `test:rls` script)
+- **New**: `src/pages/admin/StoreAssetsUploadCheck.tsx`
+- **Edit**: `src/App.tsx` — register the new route
+- **Edit**: `src/pages/admin/AdminStoreEditPage.tsx` — add "Run upload check" link in header
+- **Edit**: `src/test/rls/storeAssetsRls.test.ts` — add 2 admin update/delete cases
 
 ## Out of scope
 
-- Changing `StoreSetup.tsx` `setup/<userId>/...` paths (different RLS shape — separate fix).
-- Admin dashboard `temp/...` uploads in `AdminStoresPage.tsx` (admin-only flow already works).
-- Backfilling deleted/orphaned objects.
+- Changing existing migrations (already applied)
+- Re-implementing the upload helper or revert/verify behavior (already shipped)
+- Any new SQL — every requirement in the request is already enforceable with current policies; the self-check page is a UI-only diagnostic
+
+## Verification (manual, after implementation)
+
+1. Open `/admin/stores/<your-store-id>/upload-check` as a store owner → click **Run all** → expect 4/4 green.
+2. Open the same URL while signed in as a different non-owner non-admin user → expect 4/4 red with the RLS error labeled per surface.
+3. `npm run test:rls` (with the documented env vars) passes all owner + admin cases including the two new admin update/delete checks.
 
