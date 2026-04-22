@@ -542,6 +542,14 @@ export default function AdminStoresPage() {
                     };
                     updateField("hours", JSON.stringify(updated));
                   };
+                  const toggleClosed = (day: string, isOpen: boolean) => {
+                    // Mutually exclusive with 24h: toggling Closed on clears is24h
+                    const updated = {
+                      ...schedule,
+                      [day]: { ...schedule[day], closed: !isOpen, ...(isOpen ? {} : { is24h: false }) },
+                    };
+                    updateField("hours", JSON.stringify(updated));
+                  };
                   return DAYS_OF_WEEK.map((day, idx) => (
                     <div key={day} className={`flex items-center gap-2 px-3 py-2 ${idx > 0 ? "border-t border-border" : ""} ${schedule[day]?.closed ? "bg-muted/50" : ""}`}>
                       <div className="w-16 flex-shrink-0">
@@ -549,13 +557,24 @@ export default function AdminStoresPage() {
                       </div>
                       <Switch
                         checked={!schedule[day]?.closed}
-                        onCheckedChange={(open) => updateDay(day, "closed", !open)}
+                        onCheckedChange={(open) => toggleClosed(day, open)}
                         className="scale-75"
                       />
                       {schedule[day]?.closed ? (
                         <span className="text-xs text-muted-foreground italic flex-1">Closed</span>
                       ) : schedule[day]?.is24h ? (
-                        <span className="text-xs font-semibold text-primary flex-1">Open 24 hours</span>
+                        <div className="flex items-center gap-2 flex-1">
+                          <span className="text-xs font-semibold text-primary">Open 24 hours</span>
+                          <div className="flex items-center gap-1 opacity-50 cursor-not-allowed pointer-events-none">
+                            <select disabled value="12:00 AM" className="flex h-8 rounded-md border border-input bg-background px-1.5 text-xs">
+                              <option>12:00 AM</option>
+                            </select>
+                            <span className="text-xs text-muted-foreground">to</span>
+                            <select disabled value="11:30 PM" className="flex h-8 rounded-md border border-input bg-background px-1.5 text-xs">
+                              <option>11:30 PM</option>
+                            </select>
+                          </div>
+                        </div>
                       ) : (
                         <div className="flex items-center gap-1 flex-1">
                           <select
@@ -589,6 +608,9 @@ export default function AdminStoresPage() {
                   ));
                 })()}
               </div>
+              <p className="text-[11px] text-muted-foreground">
+                Toggle <strong>24h</strong> for always-open days. Toggle <strong>Closed</strong> to mark a day off.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

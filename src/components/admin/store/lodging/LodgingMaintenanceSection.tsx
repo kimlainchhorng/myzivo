@@ -1,7 +1,7 @@
 /**
  * Lodging — Maintenance / Work Orders board.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Wrench, Plus, Trash2, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
+import { Wrench, Plus, Trash2, CheckCircle2, AlertTriangle, Clock, Search, X } from "lucide-react";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import {
   useLodgeMaintenance, type MaintenanceStatus, type MaintenancePriority,
@@ -35,7 +35,26 @@ const PRIORITY_COLOR: Record<MaintenancePriority, string> = {
   high: "bg-amber-500/15 text-amber-700",
   urgent: "bg-rose-500/20 text-rose-700",
 };
+const PRIORITY_RANK: Record<MaintenancePriority, number> = { urgent: 0, high: 1, normal: 2, low: 3 };
+const STATUS_RANK: Record<MaintenanceStatus, number> = { open: 0, in_progress: 1, blocked: 2, done: 3 };
 const CATEGORIES = ["general", "plumbing", "electrical", "hvac", "furniture", "appliance", "exterior"];
+
+type SortKey = "newest" | "oldest" | "priority" | "status";
+
+interface Filters {
+  q: string;
+  room: string;        // "" = all, "__none__" = no room
+  assignee: string;    // "" = all, "__unassigned__" = unassigned
+  category: string;    // "" = all
+  priority: string;    // "" = all
+  from: string;        // yyyy-mm-dd
+  to: string;
+  sort: SortKey;
+}
+
+const DEFAULT_FILTERS: Filters = {
+  q: "", room: "", assignee: "", category: "", priority: "", from: "", to: "", sort: "newest",
+};
 
 export default function LodgingMaintenanceSection({ storeId }: { storeId: string }) {
   const { data: rooms = [] } = useLodgeRooms(storeId);
@@ -46,6 +65,21 @@ export default function LodgingMaintenanceSection({ storeId }: { storeId: string
     title: "", room_id: "", category: "general",
     priority: "normal" as MaintenancePriority, notes: "",
   });
+
+  const storageKey = `lodge-maint-filters:${storeId}`;
+  const [filters, setFilters] = useState<Filters>(() => {
+    try {
+      const raw = sessionStorage.getItem(storageKey);
+      return raw ? { ...DEFAULT_FILTERS, ...JSON.parse(raw) } : DEFAULT_FILTERS;
+    } catch { return DEFAULT_FILTERS; }
+  });
+  useEffect(() => {
+    try { sessionStorage.setItem(storageKey, JSON.stringify(filters)); } catch {}
+  }, [filters, storageKey]);
+
+  const updateFilter = <K extends keyof Filters>(k: K, v: Filters[K]) =>
+    setFilters(prev => ({ ...prev, [k]: v }));
+  const resetFilters = () => setFilters(DEFAULT_FILTERS);
 
   const stats = useMemo(() => {
     const open = tickets.filter(t => t.status === "open").length;
@@ -59,7 +93,48 @@ export default function LodgingMaintenanceSection({ storeId }: { storeId: string
     return { open, inProgress, doneWeek, avgHours };
   }, [tickets]);
 
-  const filtered = filterStatus === "all" ? tickets : tickets.filter(t => t.status === filterStatus);
+  const assigneeOptions = useMemo(() => {
+    const set = new Set<string>();
+    tickets.forEach(t => { if (t.assignee_name) set.add(t.assignee_name); });
+    return Array.from(set).sort();
+  }, [tickets]);
+
+  const filtered = useMemo(() => {
+    const q = filters.q.trim().toLowerCase();
+    const fromTs = filters.from ? new Date(filters.from + "T00:00:00").getTime() : null;
+    const toTs = filters.to ? new Date(filters.to + "T23:59:59").getTime() : null;
+
+    let out = tickets.filter(t => {
+      if (filterStatus !== "all" && t.status !== filterStatus) return false;
+      if (q) {
+        const hay = [t.title, t.notes, t.room_number, t.assignee_name].filter(Boolean).join(" ").toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (filters.room === "__none__" ? t.room_id : filters.room ? t.room_id !== filters.room : false) return false;
+      if (filters.assignee === "__unassigned__") { if (t.assignee_name) return false; }
+      else if (filters.assignee && t.assignee_name !== filters.assignee) return false;
+      if (filters.category && (t.category || "general") !== filters.category) return false;
+      if (filters.priority && t.priority !== filters.priority) return false;
+      const ts = new Date(t.reported_at).getTime();
+      if (fromTs !== null && ts < fromTs) return false;
+      if (toTs !== null && ts > toTs) return false;
+      return true;
+    });
+
+    out = [...out].sort((a, b) => {
+      switch (filters.sort) {
+        case "oldest": return new Date(a.reported_at).getTime() - new Date(b.reported_at).getTime();
+        case "priority": return PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority];
+        case "status": return STATUS_RANK[a.status] - STATUS_RANK[b.status];
+        default: return new Date(b.reported_at).getTime() - new Date(a.reported_at).getTime();
+      }
+    });
+    return out;
+  }, [tickets, filters, filterStatus]);
+
+  const hasActiveFilters = useMemo(() => {
+    return JSON.stringify({ ...filters, sort: "newest" }) !== JSON.stringify({ ...DEFAULT_FILTERS, sort: "newest" });
+  }, [filters]);
 
   const submit = async () => {
     if (!form.title.trim()) return toast.error("Title required");
@@ -86,6 +161,8 @@ export default function LodgingMaintenanceSection({ storeId }: { storeId: string
     if (h < 24) return `${h}h ago`;
     return `${Math.round(h / 24)}d ago`;
   };
+
+  const selectCls = "h-9 text-xs rounded-md border border-input bg-background px-2";
 
   return (
     <Card>
@@ -116,7 +193,7 @@ export default function LodgingMaintenanceSection({ storeId }: { storeId: string
           ))}
         </div>
 
-        {/* Filters */}
+        {/* Status chip strip */}
         <div className="flex gap-1.5 flex-wrap">
           {(["all", "open", "in_progress", "blocked", "done"] as const).map(s => (
             <button
@@ -132,13 +209,73 @@ export default function LodgingMaintenanceSection({ storeId }: { storeId: string
           ))}
         </div>
 
+        {/* Filter bar */}
+        <div className="rounded-xl border border-border bg-muted/30 p-2.5 space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                value={filters.q}
+                onChange={e => updateFilter("q", e.target.value)}
+                placeholder="Search title, notes, room, assignee…"
+                className="h-9 pl-8 text-xs"
+              />
+            </div>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" className="h-9 gap-1 text-xs" onClick={resetFilters}>
+                <X className="h-3.5 w-3.5" /> Reset
+              </Button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+            <select className={selectCls} value={filters.room} onChange={e => updateFilter("room", e.target.value)}>
+              <option value="">All rooms</option>
+              <option value="__none__">— No room —</option>
+              {rooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+            </select>
+            <select className={selectCls} value={filters.assignee} onChange={e => updateFilter("assignee", e.target.value)}>
+              <option value="">All assignees</option>
+              <option value="__unassigned__">Unassigned</option>
+              {assigneeOptions.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+            <select className={selectCls} value={filters.category} onChange={e => updateFilter("category", e.target.value)}>
+              <option value="">All categories</option>
+              {CATEGORIES.map(c => <option key={c} value={c}>{c[0].toUpperCase() + c.slice(1)}</option>)}
+            </select>
+            <select className={selectCls} value={filters.priority} onChange={e => updateFilter("priority", e.target.value)}>
+              <option value="">All priorities</option>
+              {(["urgent", "high", "normal", "low"] as MaintenancePriority[]).map(p => (
+                <option key={p} value={p}>{PRIORITY_LABEL[p]}</option>
+              ))}
+            </select>
+            <Input type="date" value={filters.from} onChange={e => updateFilter("from", e.target.value)} className="h-9 text-xs" aria-label="From date" />
+            <Input type="date" value={filters.to} onChange={e => updateFilter("to", e.target.value)} className="h-9 text-xs" aria-label="To date" />
+          </div>
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <span className="text-[11px] text-muted-foreground">
+              Showing <strong className="text-foreground">{filtered.length}</strong> of {tickets.length}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] text-muted-foreground">Sort:</span>
+              <select className={selectCls} value={filters.sort} onChange={e => updateFilter("sort", e.target.value as SortKey)}>
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="priority">Priority (urgent → low)</option>
+                <option value="status">Status (open → done)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         {/* List */}
         {isLoading ? (
           <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p>
         ) : filtered.length === 0 ? (
           <div className="py-12 text-center">
             <Wrench className="h-10 w-10 mx-auto text-muted-foreground/30 mb-2" />
-            <p className="text-sm text-muted-foreground">No tickets — open one when something breaks.</p>
+            <p className="text-sm text-muted-foreground">
+              {tickets.length === 0 ? "No tickets — open one when something breaks." : "No tickets match your filters."}
+            </p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -153,6 +290,7 @@ export default function LodgingMaintenanceSection({ storeId }: { storeId: string
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
                       {t.room_number ? `Room ${t.room_number} · ` : ""}{ageStr(t.reported_at)}
+                      {t.assignee_name ? ` · ${t.assignee_name}` : ""}
                     </p>
                     {t.notes && <p className="text-xs text-foreground/70 mt-1">{t.notes}</p>}
                   </div>

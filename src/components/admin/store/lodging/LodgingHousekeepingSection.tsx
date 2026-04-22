@@ -1,12 +1,17 @@
 /**
  * Lodging — Housekeeping board (per-room status).
  */
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Sparkles } from "lucide-react";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgeHousekeeping, type HousekeepingStatus } from "@/hooks/lodging/useLodgeHousekeeping";
+import { useLodgeMaintenance } from "@/hooks/lodging/useLodgeMaintenance";
 import { toast } from "sonner";
 
 const STATUSES: HousekeepingStatus[] = ["clean", "dirty", "in_progress", "inspected", "out_of_service"];
@@ -24,6 +29,8 @@ const COLOR: Record<HousekeepingStatus, string> = {
 export default function LodgingHousekeepingSection({ storeId }: { storeId: string }) {
   const { data: rooms = [] } = useLodgeRooms(storeId);
   const { data: tasks = [], isLoading, upsert, setStatus } = useLodgeHousekeeping(storeId);
+  const { upsert: upsertMaintenance } = useLodgeMaintenance(storeId);
+  const [pendingOOS, setPendingOOS] = useState<{ roomId: string | null; roomNumber: string | null } | null>(null);
 
   // Auto-create housekeeping rows for rooms that don't have one yet
   useEffect(() => {
@@ -35,9 +42,40 @@ export default function LodgingHousekeepingSection({ storeId }: { storeId: strin
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rooms.length, tasks.length]);
 
-  const change = async (id: string, s: HousekeepingStatus) => {
-    try { await setStatus.mutateAsync({ id, status: s }); toast.success(`Marked ${LABEL[s]}`); }
-    catch (e: any) { toast.error(e.message || "Failed"); }
+  const change = async (id: string, s: HousekeepingStatus, roomId: string | null, roomNumber: string | null) => {
+    try {
+      await setStatus.mutateAsync({ id, status: s });
+      toast.success(`Marked ${LABEL[s]}`);
+      if (s === "out_of_service") {
+        setPendingOOS({ roomId, roomNumber });
+      }
+    } catch (e: any) { toast.error(e.message || "Failed"); }
+  };
+
+  const createTicketFromOOS = async () => {
+    if (!pendingOOS) return;
+    const { roomId, roomNumber } = pendingOOS;
+    setPendingOOS(null);
+    try {
+      await upsertMaintenance.mutateAsync({
+        store_id: storeId,
+        room_id: roomId,
+        room_number: roomNumber,
+        title: `Room ${roomNumber || ""} — Out of service`.trim(),
+        category: "general",
+        priority: "high",
+        status: "open",
+        notes: "Auto-created from housekeeping",
+      });
+      toast.success("Ticket created", {
+        action: {
+          label: "View",
+          onClick: () => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-maintenance" } })),
+        },
+      });
+    } catch (e: any) {
+      toast.error(e.message || "Failed to create ticket");
+    }
   };
 
   return (
@@ -57,7 +95,7 @@ export default function LodgingHousekeepingSection({ storeId }: { storeId: strin
                     {t.last_cleaned_at && <p className="text-[10px] text-muted-foreground">Cleaned {new Date(t.last_cleaned_at).toLocaleString()}</p>}
                   </div>
                   <Badge className={`text-[10px] border ${COLOR[t.status]}`}>{LABEL[t.status]}</Badge>
-                  <select value={t.status} onChange={e => change(t.id, e.target.value as HousekeepingStatus)}
+                  <select value={t.status} onChange={e => change(t.id, e.target.value as HousekeepingStatus, t.room_id, t.room_number)}
                     className="h-8 text-xs rounded-md border border-input bg-background px-2">
                     {STATUSES.map(s => <option key={s} value={s}>{LABEL[s]}</option>)}
                   </select>
@@ -66,6 +104,21 @@ export default function LodgingHousekeepingSection({ storeId }: { storeId: strin
             </div>
           )}
       </CardContent>
+
+      <AlertDialog open={!!pendingOOS} onOpenChange={(open) => { if (!open) setPendingOOS(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Open a maintenance ticket?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Room {pendingOOS?.roomNumber || ""} was marked Out of Service. Create a maintenance ticket so the issue is tracked and assigned.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Not now</AlertDialogCancel>
+            <AlertDialogAction onClick={createTicketFromOOS}>Create ticket</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
