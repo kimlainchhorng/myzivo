@@ -49,6 +49,8 @@ export default function AdminLodgingReservationDetailPage() {
   const [note, setNote] = useState("");
   const [reason, setReason] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  useReservationLive(reservationId);
 
   const NOTE_TEMPLATES: Record<string, string[]> = {
     confirmed: ["Confirmed by admin", "Payment received", "Phone-verified"],
