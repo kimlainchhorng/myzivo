@@ -7,10 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck, BedDouble, Lock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { track } from "@/lib/analytics";
-
-// Module-scope guard so we only fire `store_contact_unlocked` once per
-// (session, store) — re-renders won't double-count.
-const _unlockedFired = new Set<string>();
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
