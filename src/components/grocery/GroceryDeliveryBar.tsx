@@ -271,7 +271,7 @@ export default function GroceryDeliveryBar({ onAddressChange }: GroceryDeliveryB
                     onClick={() => { selectAddress(addr.id); setIsOpen(false); }}
                   >
                     <div className={`p-2 rounded-xl ${isSelected ? "bg-primary/15" : "bg-muted/30"}`}>
-                      <Icon className={`h-4 w-4 ${isSelected ? "text-primary" : LABEL_COLORS[addr.label]}`} />
+                      <Icon className={`h-4 w-4 ${isSelected ? "text-primary" : labelColor}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] font-bold text-foreground">{addr.label}</p>
