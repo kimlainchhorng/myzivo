@@ -3385,6 +3385,20 @@ export default function AdminStoreEditPage() {
             </>
           )}
 
+          {["hotel","resort","guesthouse"].includes(form.category) && (
+            <>
+              <TabsContent value="lodge-rooms"><LodgingRoomsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-reservations"><LodgingReservationsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-calendar"><LodgingCalendarSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-guests"><LodgingGuestsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-frontdesk"><LodgingFrontDeskSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-housekeeping"><LodgingHousekeepingSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-maintenance"><LodgingMaintenanceSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-amenities"><LodgingAmenitiesSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-reports"><LodgingReportsSection storeId={storeId!} /></TabsContent>
+            </>
+          )}
+
         </Tabs>
       </div>
 
