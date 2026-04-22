@@ -367,3 +367,29 @@ function TripItemCard({ item, onDelete }: { item: TripItem; onDelete: () => void
     </motion.div>
   );
 }
+
+function LodgingTimelineBlock({ reservationId }: { reservationId: string }) {
+  const { data: live } = useReservationLive(reservationId);
+  if (!live) return null;
+  return (
+    <div className="mb-6 space-y-3">
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h3 className="text-sm font-bold flex items-center gap-1.5"><Hotel className="h-3.5 w-3.5 text-primary" /> Booking status</h3>
+            {live.payment_status && live.payment_status !== "unpaid" && (
+              <LodgingPaymentBadge status={live.payment_status} amountCents={live.deposit_cents || live.total_cents} />
+            )}
+          </div>
+          <ReservationStatusTimeline status={live.status as LodgeStatus} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <h3 className="text-xs font-bold uppercase text-muted-foreground">Status history</h3>
+          <ReservationStatusHistory reservationId={reservationId} />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
