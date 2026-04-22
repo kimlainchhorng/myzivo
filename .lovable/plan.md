@@ -1,94 +1,69 @@
 
 
-# Lodging admin polish + booking availability blocking
+# Lodging polish: lock dates after add-ons, audit templates, live cover preview, richer legend, cancellation reasons
 
-Four enhancements that build on the booking flow already shipped.
+Five focused refinements on the booking drawer, room editor, and admin reservation detail.
 
-## 1. Reservation Details page (admin)
+## 1. Lock date pickers after leaving the Stay step (`LodgingBookingDrawer.tsx`)
 
-New route: `/admin/stores/:storeId/lodging/reservations/:reservationId`, opened from `LodgingReservationsSection` row tap.
+Once the user advances past Step 1 ("Your stay") into Add-ons or Guest Info, dates and guests must not change — otherwise the price/add-on totals they're reviewing become stale.
 
-Sections:
-- **Header**: guest name, reservation number (`RES-XXXXXX`), current status badge, source.
-- **Stay**: room name + photo, check-in/out dates, nights, adults/children, special requests/notes.
-- **Price breakdown**: room nightly rate × nights, weekend uplift, length-of-stay discount, each add-on line (from `addons` JSONB snapshot showing `name · qty × per · subtotal`), grand total, paid amount, balance due.
-- **Status panel**: current status + action buttons (Hold → Confirmed → Checked-In → Checked-Out, plus Cancel / No-show). Each transition opens a small inline form requiring an **audit note**, then writes both the new status AND an entry to a new `lodge_reservation_audit` table.
-- **Audit log**: chronological list of `{ from_status, to_status, note, actor_id, created_at }`.
+- Pass a new `locked` prop into `LodgingStaySelector` (true when `step !== "stay"`).
+- When locked: render the stay bar in a read-only state — popovers disabled, buttons get `pointer-events-none opacity-70`, a small `Lock` icon + "Go back to change dates" hint appears below.
+- Re-validate on every breakdown recompute: if `hasUnavailableNight` flips to `invalid` while the user is on Add-ons/Guest steps (e.g. a cached availability refresh), surface the existing red `AlertTriangle` banner with a new line: **"Tap Back to pick new dates."** Continue/Submit are already disabled via `rangeIssue.invalid`.
 
-## 2. Database — audit trail + cover photo
+## 2. Quick-select audit note templates (`AdminLodgingReservationDetailPage.tsx`)
 
-New migration:
+Inside the pending-transition panel (above the Textarea):
 
-```sql
-create table public.lodge_reservation_audit (
-  id uuid primary key default gen_random_uuid(),
-  reservation_id uuid not null references lodge_reservations(id) on delete cascade,
-  store_id uuid not null,
-  from_status text,
-  to_status text not null,
-  note text,
-  actor_id uuid,
-  created_at timestamptz not null default now()
-);
-alter table lodge_reservation_audit enable row level security;
--- RLS: store owners + admins can select/insert for their store (mirror lodge_reservations policies)
+- Render a horizontally-scrollable row of `Badge`-style chips from a context-aware template list keyed by `pendingStatus`:
+  - **confirmed** → "Confirmed by admin", "Payment received", "Phone-verified"
+  - **checked_in** → "Guest arrived on time", "Early check-in approved", "ID verified at desk"
+  - **checked_out** → "Standard check-out", "Late check-out (fee applied)", "Damages noted"
+  - **cancelled** → "Customer cancellation request", "Reschedule requested", "Overbooking"
+  - **no_show** → "Customer no-show", "Unreachable by phone", "Late arrival cut-off"
+- Tapping a chip appends (with `\n` separator if note already has text) into `note`. Chips are additive so admins can stack a template + free text.
 
-alter table lodge_rooms add column cover_photo_index integer not null default 0;
-```
+## 3. Required cancellation/no-show reason field
 
-Plus a small `useLodgeReservationAudit(reservationId)` hook (list + insert).
+When `pendingStatus` is `cancelled` or `no_show`, the inline transition form gains a required **Reason** select above the audit note:
 
-## 3. Cover photo selector in room editor
+- Cancelled options: `guest_request`, `payment_failed`, `overbooking`, `property_unavailable`, `policy_violation`, `other`
+- No-show options: `no_arrival`, `unreachable`, `late_beyond_cutoff`, `other`
+- Save is disabled until both `reason` and `note` are filled.
+- On submit, the reason is prepended into the audit note string as `[Reason: <label>] <note>` so it's visible in the existing audit log without a schema change. (Append-only log preserved.)
+- Toast message confirms: `"Cancelled — reason: Guest request"`.
 
-Update `LodgingRoomPhotoUploader.tsx`:
-- Add `coverIndex` + `onCoverChange` props.
-- Each thumbnail gets a **"Set as cover"** star button (corner, always visible on the active cover, hover/tap on others). The selected cover shows the existing emerald `Star · Cover` chip.
-- Helper text becomes `{count}/{max} photos · tap ★ to set cover`.
-- Reordering and removal adjust `coverIndex` correctly (shift down on remove-before-cover, swap on move).
+## 4. Live cover-image preview in the room editor header (`LodgingRoomsSection.tsx` dialog)
 
-`LodgingRoomsSection.tsx` passes `cover_photo_index`, persists it on save, and the rooms list thumbnail uses `photos[cover_photo_index] ?? photos[0]`.
+Add a small preview strip at the top of the Edit/Add Room dialog, above the photo uploader:
 
-`StoreProfilePage.tsx` + `LodgingRoomCard.tsx` + reservation details page all read `photos[cover_photo_index ?? 0]` instead of `photos[0]`.
+- 96px tall banner showing `photos[cover_photo_index]` with object-cover. Empty state: dashed placeholder with `BedDouble` icon + "Cover preview".
+- Live: the existing `onCoverChange` handler already updates `editing.cover_photo_index`, so the preview re-renders instantly when a star is tapped.
+- Below the preview, small caption: "Cover photo · shown on room cards & booking pages".
+- Reuses current state — no extra effects.
 
-## 4. Public booking — date availability blocking
+## 5. Per-date legend + tooltip text under the booking date pickers (`LodgingStaySelector.tsx` + drawer)
 
-In `LodgingBookingDrawer.tsx` switch the date inputs in `LodgingStaySelector` to a `Calendar` (shadcn date range, `mode="range"`) inside a `Popover`, so we control which days are selectable.
+The current legend is minimal ("Unavailable / Selected"). Make it richer **only when used inside the booking drawer** (room-scoped availability):
 
-New hook `useRoomAvailability(roomId, monthsAhead = 6)`:
-- Fetches `lodge_room_blocks` for `roomId` (manual blocks with `reason`).
-- Fetches `lodge_reservations` for `roomId` with `status in ('hold','confirmed','checked_in','checked_out')`, expands each to per-night dates (excluding the checkout day).
-- Returns `Map<dateISO, { unavailable: boolean; reason: 'sold_out' | 'restricted' | 'past' }>` plus a `disabledDates` array for `Calendar`.
-
-Calendar wiring:
-- `disabled={[{ before: today }, ...unavailableDates]}` — past dates disabled, plus blocked/booked dates.
-- `modifiers` add `unavailable` styling (strike-through + muted) so users see why a date is greyed out.
-- Below the date pickers a small legend: `■ Unavailable · ■ Selected · ■ Today`.
-- If the user previously selected a range that now contains an unavailable night (e.g. via deep-link URL params), surface a banner: *"One or more nights are no longer available — please pick new dates."* and disable the Continue button until resolved.
-- Tooltip / aria-label on each disabled day reads `Sold out` or `Not available` based on reason source.
-
-`LodgingStaySelector.tsx` accepts an optional `disabledDates` + `availabilityMap` prop so the same UX can be reused on `StoreProfilePage`'s sticky bar (only the booking drawer fetches availability per-room; the store-profile selector stays unrestricted because it spans many rooms).
+- Add a `showReasonLegend?: boolean` prop on `LodgingStaySelector`. Drawer passes `true`; the public store-profile selector keeps the simple legend.
+- When true, render a compact two-line legend strip below the date row:
+  - Line 1 (swatches): `■ Sold out` (muted-foreground/40), `■ Restricted` (destructive/30), `■ Selected` (primary), `■ Today` (accent ring).
+  - Line 2 (helper text): "Hover or long-press a date to see why it's unavailable."
+- Tooltips: extend the existing `DayContent` aria/title to differentiate — `"Sold out · already booked"` vs `"Restricted · blocked by host"` (already wired through `availabilityMap.reason`, just refine the text).
 
 ## Files
 
-**Create**
-- `src/pages/admin/lodging/AdminLodgingReservationDetailPage.tsx`
-- `src/hooks/lodging/useLodgeReservationAudit.ts`
-- `src/hooks/lodging/useRoomAvailability.ts`
-- Supabase migration: `lodge_reservation_audit` table + RLS, `lodge_rooms.cover_photo_index` column
-
 **Edit**
-- `src/components/admin/store/lodging/LodgingReservationsSection.tsx` — make rows tappable → details page; keep quick-actions as shortcuts.
-- `src/components/lodging/LodgingRoomPhotoUploader.tsx` — cover selector star.
-- `src/components/admin/store/lodging/LodgingRoomsSection.tsx` — pass `cover_photo_index` through, list thumb uses cover.
-- `src/hooks/lodging/useLodgeRooms.ts` — extend `LodgeRoom` with `cover_photo_index`.
-- `src/components/lodging/LodgingRoomCard.tsx` + `src/pages/StoreProfilePage.tsx` — read cover via `photos[cover_photo_index ?? 0]`.
-- `src/components/lodging/LodgingStaySelector.tsx` — Calendar range picker with `disabledDates` support.
-- `src/components/lodging/LodgingBookingDrawer.tsx` — wire `useRoomAvailability` into the selector + show legend + invalid-range banner.
-- `src/App.tsx` (or admin routes file) — register new reservation detail route.
+- `src/components/lodging/LodgingBookingDrawer.tsx` — pass `locked` + `showReasonLegend` to the selector; tweak invalid-range banner copy.
+- `src/components/lodging/LodgingStaySelector.tsx` — `locked` (read-only mode), `showReasonLegend` (richer legend + clearer tooltips).
+- `src/pages/admin/lodging/AdminLodgingReservationDetailPage.tsx` — template chips, required Reason select for cancel/no-show, prepend reason into audit note.
+- `src/components/admin/store/lodging/LodgingRoomsSection.tsx` — live cover preview banner inside the room dialog.
 
 ## Out of scope
 
-- Multi-room availability search ("show me all rooms free this weekend") — stays per-room.
-- Email/SMS notification on status change — current toasts only.
-- Editing past audit notes (append-only log).
+- Persisting cancellation reason as a structured column on `lodge_reservations` (kept inline in audit note for now; can be promoted to a dedicated `cancellation_reason text` column later if needed for analytics).
+- Editing already-saved audit notes (still append-only).
+- Allowing the public selector to surface room-specific reasons (it spans many rooms).
 
