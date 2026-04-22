@@ -32,14 +32,14 @@ export default defineConfig(({ mode }) => ({
           "vendor-supabase": ["@supabase/supabase-js"],
           "vendor-query": ["@tanstack/react-query"],
           "vendor-icons": ["lucide-react"],
-          // Split Radix into 2 groups: heavy overlays vs. lighter primitives
-          "vendor-radix-overlays": [
+          // Keep all Radix in ONE chunk — splitting causes shared internals
+          // (react-primitive, use-callback-ref, etc.) to be evaluated out of
+          // order across chunks, producing runtime "on is not a function".
+          "vendor-radix": [
             "@radix-ui/react-dialog",
             "@radix-ui/react-popover",
             "@radix-ui/react-dropdown-menu",
             "@radix-ui/react-toast",
-          ],
-          "vendor-radix-core": [
             "@radix-ui/react-tabs",
             "@radix-ui/react-select",
             "@radix-ui/react-accordion",
