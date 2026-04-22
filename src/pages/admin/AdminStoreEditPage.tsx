@@ -1597,7 +1597,7 @@ export default function AdminStoreEditPage() {
     setUploadingProductImage(true);
     try {
       const ext = file.name.split(".").pop() || "jpg";
-      const path = `products/${storeId}/${Date.now()}.${ext}`;
+      const path = `${storeId}/products/${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
@@ -1606,7 +1606,7 @@ export default function AdminStoreEditPage() {
       updateProductField("image_url", newUrls[0]); // keep first as primary
       toast.success("Image uploaded");
     } catch (e: any) {
-      toast.error(e.message || "Upload failed");
+      toast.error(`Room image upload failed: ${e.message || "unknown error"}`);
     } finally {
       setUploadingProductImage(false);
     }
@@ -1756,7 +1756,7 @@ export default function AdminStoreEditPage() {
       queryClient.invalidateQueries({ queryKey: ["admin-store", storeId] });
       toast.success("Gallery image added");
     } catch (e: any) {
-      toast.error(e.message || "Upload failed");
+      toast.error(`Gallery upload failed: ${e.message || "unknown error"}`);
     } finally {
       setUploadingGallery(false);
     }
@@ -1800,7 +1800,7 @@ export default function AdminStoreEditPage() {
       queryClient.invalidateQueries({ queryKey: ["admin-store", storeId] });
       toast.success(`${isLogo ? "Profile" : "Cover"} image updated`);
     } catch (e: any) {
-      toast.error(e.message || "Upload failed");
+      toast.error(`${isLogo ? "Profile" : "Cover"} image upload failed: ${e.message || "unknown error"}`);
     } finally {
       isLogo ? setUploadingLogo(false) : setUploadingCover(false);
     }
