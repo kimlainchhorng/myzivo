@@ -211,16 +211,32 @@ export function LodgingBookingDrawer({
     else if (step === "addons") setStep("stay");
   };
 
-  const guestValid = name.trim().length > 1 && phone.trim().length > 5;
-  const reviewValid = agreeRules && agreeCancel && !!payMethod;
+  const guestCheck = useMemo(() => validateGuest({ name, phone, email }), [name, phone, email]);
+  const guestValid = guestCheck.valid;
+  const reviewValid = agreeRules && agreeCancel && !!payMethod && (policyScrolled || !policyOverflows);
+
+  // Detect if policy panel overflows once rendered
+  useEffect(() => {
+    if (step !== "review") return;
+    const el = policyRef.current;
+    if (!el) return;
+    const overflows = el.scrollHeight > el.clientHeight + 2;
+    setPolicyOverflows(overflows);
+    if (!overflows) setPolicyScrolled(true);
+  }, [step, propertyProfile, cancellationPolicy]);
+
+  const onPolicyScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 6) setPolicyScrolled(true);
+  };
 
   const submit = async () => {
-    if (!guestValid) { toast.error("Name and phone required"); setStep("guest"); return; }
-    if (!reviewValid) { toast.error("Please confirm the policies"); return; }
+    if (!guestValid) { toast.error("Please complete your guest details"); setStep("guest"); return; }
+    if (!reviewValid) { toast.error("Please read & accept the policies"); return; }
     setSubmitting(true);
     try {
       const ref = `RES-${Date.now().toString().slice(-6)}`;
-      const { error } = await supabase.from("lodge_reservations" as any).insert({
+      const { data: inserted, error } = await supabase.from("lodge_reservations" as any).insert({
         store_id: storeId,
         room_id: roomId,
         number: ref,
@@ -233,11 +249,34 @@ export function LodgingBookingDrawer({
         fee_breakdown: breakdown.feeBreakdown,
         guest_details: { name, phone, email, country, eta, notes, pay_method: payMethod },
         notes: notes || null,
-      });
+      }).select("id").maybeSingle();
       if (error) throw error;
       setReference(ref);
+      setReservationId((inserted as any)?.id || null);
       setStep("success");
       onBooked?.();
+
+      // Trigger Stripe deposit/hold for "card on arrival"
+      if (payMethod === "card_on_arrival" && (inserted as any)?.id) {
+        try {
+          const depositCents = securityDeposit > 0 ? securityDeposit : breakdown.total;
+          const { data: sessionData, error: fnErr } = await supabase.functions.invoke("create-lodging-deposit", {
+            body: {
+              reservation_id: (inserted as any).id,
+              store_id: storeId,
+              deposit_cents: depositCents,
+              mode: securityDeposit > 0 ? "deposit" : "full",
+            },
+          });
+          if (fnErr) throw fnErr;
+          if (sessionData?.url) {
+            window.open(sessionData.url, "_blank");
+            toast.success("Opening secure Stripe checkout…");
+          }
+        } catch (payErr: any) {
+          toast.error(payErr?.message || "Could not open Stripe checkout");
+        }
+      }
     } catch (e: any) {
       toast.error(e.message || "Failed to submit booking");
     } finally {
