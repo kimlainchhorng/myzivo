@@ -3,6 +3,7 @@
  * Large icons, clean labels, subtle active glow with photographic backgrounds
  */
 import { forwardRef } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Rss, MapPin, MessageCircle, User, Film, Newspaper, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,10 +36,6 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
   const { t } = useI18n();
   const { user } = useAuth();
 
-  // Guests: Account tab opens the sign-in page directly so they don't see
-  // the "Welcome to ZIVO" preview card first.
-  // Guests get sent to /login (with redirect back) for any members-only tab,
-  // so they don't hit a black/empty screen.
   const gated = (path: string) =>
     user ? path : `/login?redirect=${encodeURIComponent(path)}`;
 
@@ -66,24 +63,24 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
 
   const activeTab = getActiveTab();
 
-  return (
+  const nav = (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      ref={ref}
+      className="fixed inset-x-0 bottom-0 z-[1401] lg:hidden"
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      {/* iOS-style frosted glass background */}
-      <div className="absolute inset-0 bg-card/90 backdrop-blur-2xl border-t border-border/30" />
+      <div className="absolute inset-0 bg-card/90 backdrop-blur-2xl border-t border-border/30 shadow-[0_-6px_24px_hsl(var(--foreground)/0.08)]" />
 
       <div className="relative flex items-stretch justify-around h-[56px] max-w-lg mx-auto">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
-          
+
           return (
             <button
               key={tab.id}
               onClick={() => {
                 if (activeTab !== tab.id) {
-                  impact('light');
+                  impact("light");
                   navigate(tab.path);
                 }
               }}
@@ -103,26 +100,25 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
                   strokeWidth={isActive ? 2.2 : 1.4}
                   fill={isActive && tab.id === "home" ? "currentColor" : "none"}
                 />
-                
-                {/* Badge */}
-                {typeof tab.badge === 'number' && tab.badge > 0 && (
+
+                {typeof tab.badge === "number" && tab.badge > 0 && (
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 500, damping: 20 }}
                     className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm z-20"
                   >
-                    {tab.badge > 9 ? '9+' : tab.badge}
+                    {tab.badge > 9 ? "9+" : tab.badge}
                   </motion.span>
                 )}
               </div>
-              
-              <span className={cn(
-                "text-[10px] leading-none transition-all duration-200",
-                isActive
-                  ? "font-semibold text-primary"
-                  : "font-medium text-muted-foreground"
-              )}>
+
+              <span
+                className={cn(
+                  "text-[10px] leading-none transition-all duration-200",
+                  isActive ? "font-semibold text-primary" : "font-medium text-muted-foreground"
+                )}
+              >
                 {tab.id === "live" ? "Live" : t(tab.labelKey)}
               </span>
             </button>
@@ -131,6 +127,8 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
       </div>
     </nav>
   );
+
+  return typeof document !== "undefined" ? createPortal(nav, document.body) : nav;
 });
 
 ZivoMobileNav.displayName = "ZivoMobileNav";
