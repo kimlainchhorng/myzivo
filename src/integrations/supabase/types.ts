@@ -3528,6 +3528,24 @@ export type Database = {
         }
         Relationships: []
       }
+      app_private_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           created_at: string | null
@@ -58576,6 +58594,7 @@ export type Database = {
         Args: { p_service?: string; p_user_id: string }
         Returns: number
       }
+      get_cron_secret: { Args: never; Returns: string }
       get_current_policy_version: {
         Args: { p_policy_type: string }
         Returns: string
