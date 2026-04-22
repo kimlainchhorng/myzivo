@@ -1,58 +1,49 @@
 
 
-# Lodging: prominent photo upload + room details view
+# Room Details Modal: carousel, amenities, add-ons, reserve flow polish
 
-Two things to fix based on your screenshots:
+Targeted upgrades to `LodgingRoomDetailsModal.tsx` and the small wiring in `LodgingRoomCard.tsx` so the details view matches a real OTA experience.
 
-1. **IMG_2072 (Edit Room)** — empty cover preview is just decorative; users don't realize the small "Add" tile below is the upload. Make the cover preview itself the primary upload target.
-2. **IMG_2074 (Public Villa card)** — no photo, no description visible, no way to "see all information about room" before reserving. Need a tap-to-expand details view.
+## 1. Swipeable carousel + keyboard nav + skeletons
 
-## 1. Cover preview becomes the upload hero (`LodgingRoomsSection.tsx` + `LodgingRoomPhotoUploader.tsx`)
+Replace the current static-image carousel with a richer one:
+- Wrap the gallery in shadcn `Carousel` (Embla) with `opts={{ loop: true }}` for swipe-to-advance on touch and built-in pointer drag on desktop.
+- Sync Embla via `setApi` so the existing pagination dots and prev/next buttons stay in sync (and dot taps call `api.scrollTo(i)`).
+- Keyboard: when the modal is open, `ArrowLeft` / `ArrowRight` advance slides; `Home` / `End` jump to first/last. Bound on a focusable wrapper with `tabIndex={0}` and `aria-roledescription="carousel"`. Embla's built-in `keyboard` plugin would also fire, but explicit handler ensures it works even when focus is on body.
+- Loading skeletons: each `<img>` uses `loading="lazy"` and tracks `loaded[i]` state. Until loaded, render a `Skeleton` overlay with the existing shimmer animation in the same `aspect-[16/10]` slot — no layout shift. On error, fall back to the bed-icon placeholder per slide.
+- Counter pill (`{idx + 1} / {total}`) in the top-right corner for orientation.
 
-Replace the static 96px cover preview banner with an **interactive hero uploader**:
+## 2. All amenities with consistent iconography
 
-- 160px tall (taller than today's 96px) so it reads as a real action.
-- When no photos: dashed border, large `ImagePlus` icon + "Tap to upload cover photo · up to 8 images" — clicking opens the file picker directly.
-- When photos exist: shows the cover image full-bleed with a subtle gradient overlay + corner badge "Tap to change cover" (opens a small picker showing all uploaded photos as a grid where you tap one to set as cover).
-- Existing thumbnail uploader below stays for managing the full set, but is renamed "All photos" with a smaller header so the hero is clearly the primary entry point.
+- Add a small `AMENITY_ICON_MAP` (record of normalized name → Lucide icon) covering the full canonical set used elsewhere in lodging (Wi-Fi, AC, Pool, Parking, Breakfast, TV, Kitchen, Workspace, Laundry, Gym, Pets, Balcony, Heating, Hot tub, Beach access, Airport shuttle, Smoke detector, etc.). Lookup is case-insensitive and normalizes spaces/underscores.
+- Render **all** amenities (no truncation), one row per item: `[icon] [label]` in a 2-column grid on mobile, 3-column on `sm:`. Unknown amenity → fallback `Check` icon (current behavior) so nothing breaks.
+- Same map is exported and reused in `LodgingRoomCard`'s amenity preview chip strip so card and modal stay visually consistent.
 
-This makes the upload flow obvious on first open and removes the "why is the preview empty?" confusion.
+## 3. Add-ons with proper currency + clear per-X labels
 
-## 2. Room details modal — "See full details" before booking (`LodgingRoomCard.tsx` + new `LodgingRoomDetailsModal.tsx`)
+- Replace ad-hoc `formatAddonPrice` with the global `useCurrency()` hook (`format(amountUsd, "USD")`) so prices honor the user's selected display currency just like `PriceDisplay`.
+- Per-X label rendered as a separate muted line under the formatted price: `per night`, `per guest`, `per stay` (full words, no slash abbreviation).
+- Layout per row: name (medium-bold, 13px) on the left with optional one-line description if present in the `LodgeAddon` shape; on the right a vertical stack: price (bold, currency symbol included) + per-X line (10px muted).
+- Empty state stays hidden if no add-ons; otherwise the helper line below becomes "Optional — choose during booking. Prices shown per the property's policy."
 
-Make the entire public room card tappable (except the Reserve button) → opens a `ResponsiveModal` with the complete room information:
+## 4. Clean Reserve handoff
 
-- **Photo gallery** at top: swipeable carousel of all photos (cover first), pagination dots, fallback bed icon if none.
-- **Header**: name, type badge, bed config, sleeps N, size m².
-- **Description** (full, not truncated).
-- **Amenities**: complete grid with icons (not just first 4 + count).
-- **Add-ons preview**: list of available extras with prices (e.g. "Breakfast +$8/night") so guests know what's offered before booking.
-- **Policies**: cancellation policy in plain English, check-in/out times, breakfast inclusion.
-- **Sticky footer**: price + "Reserve" button (mirrors card so guests can book from inside the modal).
-
-On the card itself, add a small **"View details"** affordance (chevron + text) next to the price so the tappability is discoverable.
-
-## 3. Public card — better empty/no-photo state (`LodgingRoomCard.tsx`)
-
-When a room has no photos uploaded yet, instead of a bare bed icon:
-
-- Soft gradient background (`from-muted to-muted/50`) with the bed icon centered + caption "Photo coming soon" so the card doesn't look broken.
-- Keep the existing photo rendering when photos are present.
+- Footer Reserve button calls `onReserve()` first, then `onOpenChange(false)` inside a `requestAnimationFrame` so the parent gets the room id / open command **before** the modal teardown animation, eliminating the brief flash where neither sheet is mounted on mobile.
+- `LodgingRoomCard` already passes the active room into `setBookingRoom` via `onReserve`; verify that the same `room` reference is captured (closure) so the booking drawer opens with identical room context. No prop changes needed beyond confirming the handler.
+- Add `aria-label="Reserve {name}"` for screen readers and `data-testid="reserve-from-details"` for QA.
 
 ## Files
 
 **Edit**
-- `src/components/lodging/LodgingRoomPhotoUploader.tsx` — split into "Cover hero" (large tap area, opens picker or change-cover sheet) + "All photos" thumbnail grid; expose `renderCoverHero` prop so the room dialog can mount only the hero up top.
-- `src/components/admin/store/lodging/LodgingRoomsSection.tsx` — replace the inline 96px preview block with the new hero uploader; tighten "All photos" section copy.
-- `src/components/lodging/LodgingRoomCard.tsx` — add tappable wrapper opening details modal, "View details" affordance, improved empty-photo state.
-- `src/pages/StoreProfilePage.tsx` — pass full room object to card (already does most of this), wire details modal state.
+- `src/components/lodging/LodgingRoomDetailsModal.tsx` — carousel via shadcn `Carousel` + Embla api, keyboard handler, per-slide skeleton + error fallback, amenity icon map, currency-aware add-on rows, reserve handoff order.
+- `src/components/lodging/LodgingRoomCard.tsx` — import shared `AMENITY_ICON_MAP` for the card's amenity chips so iconography matches the modal.
 
-**Create**
-- `src/components/lodging/LodgingRoomDetailsModal.tsx` — `ResponsiveModal` with photo carousel, full description, amenities grid, add-ons list, policies, sticky Reserve footer.
+**No changes needed**
+- `LodgingBookingDrawer.tsx`, `StoreProfilePage.tsx` — existing `onReserve` wiring is already correct; just polish the call order inside the modal.
 
 ## Out of scope
 
-- Editing photos from the public details modal (admin-only).
-- Lightbox/full-screen photo zoom (carousel inside modal is enough for v1).
-- Per-photo captions/alt text in the uploader.
+- Full-screen lightbox / pinch-zoom on photos (carousel inside modal is enough for v1).
+- Persisting amenity icon choices in the DB (mapping stays client-side).
+- Per-add-on quantity selection inside the details modal (still chosen in the booking drawer).
 
