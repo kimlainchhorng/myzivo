@@ -1908,7 +1908,8 @@ export default function AdminStoreEditPage() {
 
   return (
     <>
-    <Layout title={`Edit: ${store.name}`}>
+    {renderLayout(`Edit: ${store.name}`, (
+      <>
       <div className="space-y-6">
         {(isAdmin || activeTab === "profile") && (<>
         <Card className="overflow-hidden">
@@ -5010,7 +5011,8 @@ export default function AdminStoreEditPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Layout>
+      </>
+    ))}
     {store && (
       <StoreLiveChat
         storeId={store.id}
