@@ -372,7 +372,7 @@ export default function StoreProfilePage() {
                 </div>
               </motion.button>
             )}
-            {store.phone && (
+            {store.phone && hasBooking && (
               <motion.a
                 whileTap={{ scale: 0.94, rotateX: 2 }}
                 whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
@@ -413,7 +413,8 @@ export default function StoreProfilePage() {
               </motion.a>
             )}
 
-            {/* Live Chat button */}
+            {/* Live Chat button — customers with a booking only */}
+            {hasBooking && (
             <motion.button
               whileTap={{ scale: 0.94, rotateX: 2 }}
               whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
