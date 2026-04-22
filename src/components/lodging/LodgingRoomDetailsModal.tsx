@@ -2,10 +2,10 @@
  * LodgingRoomDetailsModal — full room information view with photo carousel,
  * description, amenities, add-ons, and policies. Sticky footer with Reserve.
  */
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   ChevronLeft, ChevronRight, BedDouble, Users, Coffee, Maximize2, Clock,
-  ShieldCheck, Plus,
+  ShieldCheck, Plus, Expand,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResponsiveModal } from "@/components/ui/responsive-modal";
@@ -15,6 +15,9 @@ import {
 } from "@/components/ui/carousel";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { getAmenityIcon } from "@/components/lodging/amenityIcons";
+import { ZoomableImage } from "@/components/lodging/ZoomableImage";
+import { LodgingPhotoLightbox } from "@/components/lodging/LodgingPhotoLightbox";
+import { getLqipUrl, inferCaptionFromUrl } from "@/lib/lqip";
 import type { LodgeAddon } from "@/hooks/lodging/useLodgeRooms";
 
 interface Props {
@@ -51,6 +54,8 @@ const PER_LABEL: Record<LodgeAddon["per"], string> = {
   stay: "per stay",
 };
 
+const HINTS_KEY = "lodging.gallery.hintsSeen";
+
 export function LodgingRoomDetailsModal({
   open, onOpenChange, name, type, beds, maxGuests, sizeSqm, baseRateCents,
   description, amenities = [], breakfastIncluded, photos = [], coverIndex = 0,
@@ -68,6 +73,11 @@ export function LodgingRoomDetailsModal({
   const [idx, setIdx] = useState(0);
   const [loaded, setLoaded] = useState<Record<number, boolean>>({});
   const [errored, setErrored] = useState<Record<number, boolean>>({});
+  const [showHint, setShowHint] = useState(false);
+  const [edgePulse, setEdgePulse] = useState(true);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState(0);
+  const zoomedRef = useRef(false);
 
   // Sync embla → idx
   useEffect(() => {
@@ -87,9 +97,30 @@ export function LodgingRoomDetailsModal({
     }
   }, [open, api, total]);
 
-  // Keyboard nav while modal is open
+  // First-open hint pill
   useEffect(() => {
-    if (!open || !api || total <= 1) return;
+    if (!open || total <= 1) return;
+    try {
+      if (!sessionStorage.getItem(HINTS_KEY)) {
+        setShowHint(true);
+        sessionStorage.setItem(HINTS_KEY, "1");
+        const t = setTimeout(() => setShowHint(false), 2200);
+        return () => clearTimeout(t);
+      }
+    } catch { /* sessionStorage unavailable */ }
+  }, [open, total]);
+
+  // Edge chevrons pulse for first 3s
+  useEffect(() => {
+    if (!open) return;
+    setEdgePulse(true);
+    const t = setTimeout(() => setEdgePulse(false), 3000);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  // Keyboard nav while modal is open (lightbox handles its own keys when open)
+  useEffect(() => {
+    if (!open || lightboxOpen || !api || total <= 1) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") { e.preventDefault(); api.scrollPrev(); }
       else if (e.key === "ArrowRight") { e.preventDefault(); api.scrollNext(); }
@@ -98,12 +129,36 @@ export function LodgingRoomDetailsModal({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, api, total]);
+  }, [open, lightboxOpen, api, total]);
 
   const handleReserve = useCallback(() => {
     onReserve();
     requestAnimationFrame(() => onOpenChange(false));
   }, [onReserve, onOpenChange]);
+
+  const handleZoomChange = useCallback((slideIdx: number, scale: number) => {
+    if (slideIdx !== idx) return;
+    const isZoomed = scale > 1.05;
+    if (isZoomed === zoomedRef.current) return;
+    zoomedRef.current = isZoomed;
+    // Toggle Embla drag without full reInit
+    api?.reInit({ watchDrag: !isZoomed, loop: total > 1 });
+  }, [api, idx, total]);
+
+  const openLightbox = useCallback(() => {
+    setLightboxIdx(idx);
+    setLightboxOpen(true);
+  }, [idx]);
+
+  const handleLightboxClose = useCallback((v: boolean) => {
+    setLightboxOpen(v);
+    if (!v) {
+      // Sync modal carousel back to lightbox's last index
+      requestAnimationFrame(() => api?.scrollTo(lightboxIdx, true));
+    }
+  }, [api, lightboxIdx]);
+
+  const currentCaption = inferCaptionFromUrl(orderedPhotos[idx]);
 
   return (
     <ResponsiveModal
@@ -140,32 +195,57 @@ export function LodgingRoomDetailsModal({
           aria-label={`${name} photos`}
         >
           {total > 0 ? (
-            <Carousel opts={{ loop: total > 1 }} setApi={setApi} className="w-full">
+            <Carousel opts={{ loop: total > 1, duration: 28 }} setApi={setApi} className="w-full">
               <CarouselContent>
-                {orderedPhotos.map((src, i) => (
-                  <CarouselItem key={`${src}-${i}`}>
-                    <div className="aspect-[4/5] sm:aspect-[3/4] max-h-[70vh] rounded-xl overflow-hidden bg-muted/60 relative flex items-center justify-center">
-                      {!loaded[i] && !errored[i] && (
-                        <Skeleton className="absolute inset-0 rounded-xl" />
-                      )}
-                      {errored[i] ? (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                          <BedDouble className="h-10 w-10 text-muted-foreground/40" />
-                          <span className="text-xs text-muted-foreground">Image unavailable</span>
-                        </div>
-                      ) : (
-                        <img
-                          src={src}
-                          alt={`${name} photo ${i + 1} of ${total}`}
-                          loading="lazy"
-                          onLoad={() => setLoaded(p => ({ ...p, [i]: true }))}
-                          onError={() => setErrored(p => ({ ...p, [i]: true }))}
-                          className={`max-h-full max-w-full w-auto h-auto object-contain transition-opacity duration-300 ${loaded[i] ? "opacity-100" : "opacity-0"}`}
-                        />
-                      )}
-                    </div>
-                  </CarouselItem>
-                ))}
+                {orderedPhotos.map((src, i) => {
+                  const lqip = getLqipUrl(src);
+                  const isLoaded = !!loaded[i];
+                  const isErrored = !!errored[i];
+                  return (
+                    <CarouselItem key={`${src}-${i}`}>
+                      <div className="aspect-[4/5] sm:aspect-[3/4] max-h-[70vh] rounded-xl overflow-hidden bg-muted/60 relative">
+                        {/* LQIP / skeleton layer */}
+                        {!isLoaded && !isErrored && (
+                          lqip ? (
+                            <img
+                              src={lqip}
+                              alt=""
+                              aria-hidden
+                              className="absolute inset-0 w-full h-full object-contain transition-opacity duration-400"
+                              style={{ filter: "blur(20px)", transform: "scale(1.05)" }}
+                            />
+                          ) : (
+                            <Skeleton className="absolute inset-0 rounded-xl" />
+                          )
+                        )}
+                        {isErrored ? (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                            <BedDouble className="h-10 w-10 text-muted-foreground/40" />
+                            <span className="text-xs text-muted-foreground">Image unavailable</span>
+                          </div>
+                        ) : (
+                          <ZoomableImage
+                            active={i === idx}
+                            onScaleChange={(s) => handleZoomChange(i, s)}
+                            resetKey={i === idx ? `active-${idx}` : `inactive-${i}`}
+                            className="absolute inset-0"
+                          >
+                            <img
+                              src={src}
+                              alt={`${name} photo ${i + 1} of ${total}`}
+                              loading="lazy"
+                              draggable={false}
+                              onLoad={() => setLoaded((p) => ({ ...p, [i]: true }))}
+                              onError={() => setErrored((p) => ({ ...p, [i]: true }))}
+                              className={`max-h-full max-w-full w-auto h-auto object-contain transition-opacity duration-400 ${isLoaded ? "opacity-100" : "opacity-0"}`}
+                              style={{ userSelect: "none" }}
+                            />
+                          </ZoomableImage>
+                        )}
+                      </div>
+                    </CarouselItem>
+                  );
+                })}
               </CarouselContent>
             </Carousel>
           ) : (
@@ -175,13 +255,24 @@ export function LodgingRoomDetailsModal({
             </div>
           )}
 
+          {total > 0 && (
+            <button
+              type="button"
+              onClick={openLightbox}
+              aria-label="Open full-screen photo viewer"
+              className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow z-10 hover:bg-background"
+            >
+              <Expand className="h-4 w-4" />
+            </button>
+          )}
+
           {total > 1 && (
             <>
               <button
                 type="button"
                 onClick={() => api?.scrollPrev()}
                 aria-label="Previous photo"
-                className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow z-10"
+                className={`absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow z-10 transition-opacity ${edgePulse ? "opacity-100 animate-pulse" : "opacity-30 hover:opacity-100"}`}
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -189,13 +280,10 @@ export function LodgingRoomDetailsModal({
                 type="button"
                 onClick={() => api?.scrollNext()}
                 aria-label="Next photo"
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow z-10"
+                className={`absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow z-10 transition-opacity ${edgePulse ? "opacity-100 animate-pulse" : "opacity-30 hover:opacity-100"}`}
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
-              <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-background/80 backdrop-blur-sm text-[10px] font-semibold tabular-nums shadow">
-                {idx + 1} / {total}
-              </div>
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
                 {orderedPhotos.map((_, i) => (
                   <button
@@ -207,9 +295,22 @@ export function LodgingRoomDetailsModal({
                   />
                 ))}
               </div>
+              {showHint && (
+                <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-black/70 text-white text-[10px] font-medium z-10 animate-fade-in">
+                  ← → arrows · swipe to browse
+                </div>
+              )}
             </>
           )}
         </div>
+
+        {/* Counter + caption strip (outside the image) */}
+        {total > 0 && (
+          <div className="flex items-center justify-between gap-2 -mt-3 px-1 text-[11px] text-muted-foreground">
+            <span className="tabular-nums font-medium">Photo {idx + 1} of {total}</span>
+            {currentCaption && <span className="truncate">{currentCaption}</span>}
+          </div>
+        )}
 
         {/* Quick stats */}
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
@@ -295,6 +396,16 @@ export function LodgingRoomDetailsModal({
           </div>
         </div>
       </div>
+
+      {/* Full-screen lightbox */}
+      <LodgingPhotoLightbox
+        open={lightboxOpen}
+        onOpenChange={handleLightboxClose}
+        photos={orderedPhotos}
+        index={lightboxIdx}
+        onIndexChange={setLightboxIdx}
+        name={name}
+      />
     </ResponsiveModal>
   );
 }
