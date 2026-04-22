@@ -1,7 +1,7 @@
 /**
  * Multi-Provider Pricing Hook
  * Generates simulated alternative provider prices for MVP
- * Future: integrate TravelPayouts, Kiwi.com, or other meta-search APIs
+ * Future: integrate TravelPayouts or other meta-search APIs
  */
 
 import { useMemo } from "react";
