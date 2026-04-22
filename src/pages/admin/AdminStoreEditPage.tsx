@@ -1796,6 +1796,7 @@ export default function AdminStoreEditPage() {
 
   const employeeTitles: Record<string, string> = { employees: "Employees", payroll: "Payroll", "employee-schedule": "Employee Schedule", "time-clock": "Time Clock", "employee-rules": "Employee Rules", attendance: "Attendance & Leave", training: "Training & Onboarding", documents: "Documents & Files" };
   const isAutoRepair = form.category === "auto-repair";
+  const isLodging = ["hotel", "resort", "guesthouse"].includes(form.category);
   const autoRepairTitles: Record<string, string> = {
     "ar-invoices": "Invoices & Estimates",
     "ar-autocheck": "Auto Check (VIN)",
@@ -1811,7 +1812,20 @@ export default function AdminStoreEditPage() {
     "ar-fleet": "Fleet Accounts",
     "ar-reports": "Reports & Analytics",
   };
-  const storeOwnerTitle = autoRepairTitles[activeTab] || employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? (isAutoRepair ? "Services" : "Products") : activeTab === "payment" ? (form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : t("admin.store.payment")) : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "livestream" ? "Live Stream" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
+  const lodgingTitles: Record<string, string> = {
+    "lodge-rooms": "Rooms & Rates",
+    "lodge-reservations": "Reservations",
+    "lodge-calendar": "Calendar & Availability",
+    "lodge-guests": "Guests",
+    "lodge-frontdesk": "Front Desk",
+    "lodge-housekeeping": "Housekeeping",
+    "lodge-maintenance": "Maintenance & Work Orders",
+    "lodge-amenities": "Amenities & Policies",
+    "lodge-reports": "Reports & Analytics",
+  };
+  const productsLabelTitle = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
+  const paymentLabelTitle = form.category === "car-dealership" ? t("admin.store.booking_appointment") : isAutoRepair ? "Bookings" : isLodging ? "Reservations" : t("admin.store.payment");
+  const storeOwnerTitle = autoRepairTitles[activeTab] || lodgingTitles[activeTab] || employeeTitles[activeTab] || (activeTab === "orders" ? "Orders" : activeTab === "products" ? productsLabelTitle : activeTab === "payment" ? paymentLabelTitle : activeTab === "customers" ? "Customers" : activeTab === "marketing" ? "Marketing & Ads" : activeTab === "livestream" ? "Live Stream" : activeTab === "settings" ? "Settings" : `Edit: ${store?.name || "Store"}`);
   const Layout = isAdmin ? AdminLayout : ({ children, title }: { children: React.ReactNode; title: string }) => (
     <StoreOwnerLayout title={storeOwnerTitle} storeId={storeId} storeName={store?.name} storeLogoUrl={store?.logo_url} storeCategory={form.category} activeTab={activeTab} onTabChange={setActiveTab} productCount={products?.length}>{children}</StoreOwnerLayout>
   );
