@@ -426,7 +426,7 @@ export function LodgingBookingDrawer({
           <ResponsiveModalFooter>
             <div className="flex items-center justify-between gap-2 w-full">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-50 to-emerald-100 border border-emerald-200 text-[11px] font-bold text-emerald-700 dark:from-emerald-950/40 dark:to-emerald-900/30 dark:border-emerald-800/50 dark:text-emerald-300 tabular-nums">
-                {breakdown.nights}n · {adults + children}g · {fmtMoney(breakdown.total)}
+                {breakdown.nights} {breakdown.nights === 1 ? "night" : "nights"} · {adults + children} {adults + children === 1 ? "guest" : "guests"} · {fmtMoney(breakdown.total)}
               </span>
               <div className="flex items-center gap-2">
                 {step !== "stay" && (
