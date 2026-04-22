@@ -103,11 +103,25 @@ export default function StoreProfilePage() {
   const callable = hasBooking && !!phoneNumber;
   const chattable = hasBooking;
 
-  // Fire `store_contact_unlocked` once per (session, store)
+  // Per-render click nonce so double-clicks within one render share an id
+  // (deduped downstream); a deliberate later click after re-render gets a new one.
+  const clickNonceRef = useRef<string>(`${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+  useEffect(() => {
+    clickNonceRef.current = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }, [store?.id, hasBooking]);
+
+  // Fire `store_contact_unlocked` once per (browser session, store).
+  // Uses sessionStorage so HMR / route remounts don't double-fire,
+  // and naturally resets when the tab closes.
   useEffect(() => {
     if (!store?.id || !hasBooking) return;
-    if (_unlockedFired.has(store.id)) return;
-    _unlockedFired.add(store.id);
+    const key = `zivo:unlock_fired:${store.id}`;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+    } catch {
+      /* Safari private mode — fall through and fire anyway */
+    }
     const storeType: "lodge" | "food" =
       bookingSource === "lodge_reservation" ? "lodge" : "food";
     track("store_contact_unlocked", {
