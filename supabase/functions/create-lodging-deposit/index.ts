@@ -95,23 +95,57 @@ Deno.serve(async (req) => {
 
     const r = reservation as any;
 
-    // ---- Row-level lock check ----
-    const lockExpires = r.payment_lock_expires_at ? new Date(r.payment_lock_expires_at).getTime() : 0;
-    const now = Date.now();
-    if (r.payment_lock_token && lockExpires > now) {
-      const retryAfter = Math.ceil((lockExpires - now) / 1000);
+    // ---- Helper: build a 423 Locked payload with attribution ----
+    const buildLockedResponse = async (lockExpiresIso: string | null, fallbackSeconds: number) => {
+      const lockExpMs = lockExpiresIso ? new Date(lockExpiresIso).getTime() : Date.now() + fallbackSeconds * 1000;
+      const retryAfter = Math.max(1, Math.ceil((lockExpMs - Date.now()) / 1000)) || fallbackSeconds;
+      // Look up the most recent in-progress attempt for attribution
+      let lockAttemptId: string | null = null;
+      let lockStartedAt: string | null = null;
+      let lockOwnerHint: "self" | "other" = "other";
+      let lockAdminHint: string | null = null;
+      try {
+        const { data: attempt } = await admin
+          .from("lodging_deposit_retry_attempts")
+          .select("id, started_at, client_attempt_id, admin_id")
+          .eq("reservation_id", body.reservation_id)
+          .is("completed_at", null)
+          .order("started_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (attempt) {
+          lockAttemptId = (attempt as any).id;
+          lockStartedAt = (attempt as any).started_at;
+          if ((attempt as any).client_attempt_id && (attempt as any).client_attempt_id === clientAttemptId) {
+            lockOwnerHint = "self";
+          }
+          const aId = (attempt as any).admin_id as string | null;
+          if (aId) lockAdminHint = aId.slice(-4);
+        }
+      } catch (_) { /* attribution is best-effort */ }
+
       return new Response(
         JSON.stringify({
           error: "retry_in_progress",
           retry_after_seconds: retryAfter,
-          locked_since: r.payment_lock_expires_at,
-          lock_owner_hint: "other",
+          locked_since: lockExpiresIso,
+          lock_owner_hint: lockOwnerHint,
+          lock_attempt_id: lockAttemptId,
+          lock_started_at: lockStartedAt,
+          lock_admin_hint: lockAdminHint,
         }),
         {
           status: 423,
           headers: { ...cors, "Content-Type": "application/json", "Retry-After": String(retryAfter) },
         },
       );
+    };
+
+    // ---- Row-level lock check ----
+    const lockExpires = r.payment_lock_expires_at ? new Date(r.payment_lock_expires_at).getTime() : 0;
+    const now = Date.now();
+    if (r.payment_lock_token && lockExpires > now) {
+      return await buildLockedResponse(r.payment_lock_expires_at, Math.ceil((lockExpires - now) / 1000));
     }
 
     // Acquire the row lock (best-effort optimistic — only set if still unlocked)
@@ -137,15 +171,7 @@ Deno.serve(async (req) => {
         .eq("id", body.reservation_id)
         .maybeSingle();
       if ((confirm as any)?.payment_lock_token !== myLockToken) {
-        return new Response(
-          JSON.stringify({
-            error: "retry_in_progress",
-            retry_after_seconds: 5,
-            locked_since: (confirm as any)?.payment_lock_expires_at,
-            lock_owner_hint: "other",
-          }),
-          { status: 423, headers: { ...cors, "Content-Type": "application/json", "Retry-After": "5" } },
-        );
+        return await buildLockedResponse((confirm as any)?.payment_lock_expires_at ?? null, 5);
       }
     }
 
@@ -170,6 +196,8 @@ Deno.serve(async (req) => {
         dedup_key: dedupKey,
         reservation_id: body.reservation_id,
         result: "in_progress",
+        client_attempt_id: clientAttemptId,
+        admin_id: user?.id ?? null,
       })
       .select("id")
       .maybeSingle();
