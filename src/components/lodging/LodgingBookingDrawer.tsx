@@ -225,7 +225,7 @@ export function LodgingBookingDrawer({
 
   const guestCheck = useMemo(() => validateGuest({ name, phone, email }), [name, phone, email]);
   const guestValid = guestCheck.valid;
-  const reviewValid = agreeRules && agreeCancel && !!payMethod && (policyScrolled || !policyOverflows);
+  const reviewValid = agreeRules && agreeCancel && !!payMethod && (policyScrolled || !policyOverflows) && viewedRulesSource && viewedCancelSource && !conflictDetected;
 
   // Detect if policy panel overflows once rendered
   useEffect(() => {
@@ -247,6 +247,16 @@ export function LodgingBookingDrawer({
     if (!reviewValid) { toast.error("Please read & accept the policies"); return; }
     setSubmitting(true);
     try {
+      // Race-condition guard: re-check availability immediately before insert
+      try {
+        const conflict = await checkRoomConflictNow(roomId, checkIn, checkOut);
+        if (conflict) {
+          toast.error("These dates were just booked by someone else. Please pick new dates.");
+          setSubmitting(false);
+          await refetchConflict();
+          return;
+        }
+      } catch (_) { /* non-fatal */ }
       const ref = `RES-${Date.now().toString().slice(-6)}`;
       const { data: inserted, error } = await supabase.from("lodge_reservations" as any).insert({
         store_id: storeId,
@@ -322,6 +332,7 @@ export function LodgingBookingDrawer({
       setName(""); setPhone(""); setEmail(""); setCountry(""); setEta(""); setNotes("");
       setAgreeRules(false); setAgreeCancel(false); setPayMethod("pay_at_property");
       setGuestTouched({}); setPolicyScrolled(false); setPolicyOverflows(false);
+      setViewedRulesSource(false); setViewedCancelSource(false);
     }
     onClose();
   };
