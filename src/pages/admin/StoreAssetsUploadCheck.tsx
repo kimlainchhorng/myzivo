@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import Layout from "@/components/Layout";
+import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -103,16 +103,16 @@ export default function StoreAssetsUploadCheck() {
 
   if (isLoading) {
     return (
-      <Layout title="Upload Check">
+      <AdminLayout title="Upload Check">
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </Layout>
+      </AdminLayout>
     );
   }
 
   return (
-    <Layout title={`Upload Check: ${store?.name ?? "Store"}`}>
+    <AdminLayout title={`Upload Check: ${store?.name ?? "Store"}`}>
       <div className="space-y-6 max-w-3xl mx-auto">
         <div className="flex items-center gap-3">
           <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => navigate(`/admin/stores/${storeId}`)}>
@@ -206,6 +206,6 @@ export default function StoreAssetsUploadCheck() {
           </Link>
         </div>
       </div>
-    </Layout>
+    </AdminLayout>
   );
 }
