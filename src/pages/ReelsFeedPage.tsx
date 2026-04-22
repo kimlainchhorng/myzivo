@@ -950,10 +950,12 @@ export default function ReelsFeedPage() {
             })()}
           </AnimatePresence>
 
-           <Suspense fallback={null}><ZivoMobileNav /></Suspense>
         </PullToRefresh>
       </div>
 
+      {/* Bottom nav rendered outside PullToRefresh so its `transform` doesn't
+          break `position: fixed` (transformed ancestors become the containing block). */}
+      <Suspense fallback={null}><ZivoMobileNav /></Suspense>
     </>
   );
 }
