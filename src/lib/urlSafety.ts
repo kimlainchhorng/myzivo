@@ -24,7 +24,6 @@ const ALLOWED_PARTNER_DOMAINS: string[] = [
   'kiwitaxi.com',
   'gettransfer.com',
   'intui.travel',
-  'klook.com',
   'tiqets.com',
   'wegotrip.com',
   'ticketnetwork.com',

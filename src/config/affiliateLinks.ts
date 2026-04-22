@@ -110,7 +110,6 @@ export const TRAVELPAYOUTS_DIRECT_LINKS = {
   
   // ACTIVITIES / THINGS TO DO
   activities: {
-    klook: 'https://klook.tpo.li/ToVcOax7',
     tiqets: 'https://tiqets.tpo.li/5fqrcQWZ',
     wegotrip: 'https://wegotrip.tpo.li/QSrOpIdV',
     ticketnetwork: 'https://ticketnetwork.tpo.li/utk3u8Vr',
@@ -263,19 +262,6 @@ export const TRANSFER_PARTNERS: AffiliatePartner[] = [
 ];
 
 export const ACTIVITY_PARTNERS: AffiliatePartner[] = [
-  {
-    id: 'klook',
-    name: 'Klook',
-    network: 'travelpayouts',
-    baseUrl: 'https://www.klook.com',
-    trackingUrl: 'https://klook.tpo.li/ToVcOax7',
-    subId: 'zivo_activities_klook',
-    commissionRate: '5-10%',
-    features: ['Tours & attractions', 'Best price guaranteed', 'Free cancellation', 'Mobile tickets'],
-    logo: 'KL',
-    isActive: true,
-    priority: 100,
-  },
   {
     id: 'tiqets',
     name: 'Tiqets',

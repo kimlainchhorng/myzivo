@@ -162,9 +162,9 @@ export function useOutboundLink(options: UseOutboundLinkOptions) {
  */
 export const EXTRAS_LINKS = {
   activities: {
-    id: 'klook',
-    name: 'Klook',
-    url: 'https://klook.tpo.li/ToVcOax7',
+    id: 'tiqets',
+    name: 'Tiqets',
+    url: 'https://tiqets.tpo.li/5fqrcQWZ',
     product: 'activities',
   },
   museums: {

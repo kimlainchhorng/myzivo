@@ -34,7 +34,7 @@ This document defines all affiliate SubIDs used by ZIVO for revenue attribution 
 ### Activities & Tours
 | SubID | Partner | Description | Status |
 |-------|---------|-------------|--------|
-| `zivo_activities` | Klook | Tours, attractions, experiences | ✅ Active |
+| `zivo_activities` | Tiqets | Tours, attractions, experiences | ✅ Active |
 
 ---
 
@@ -48,7 +48,7 @@ https://[partner-domain]/[path]?subid=[zivo_subid]
 ### Example URLs
 ```
 Flights:    https://searadar.tpo.li/iAbLlX9i?subid=zivo_flights
-Activities: https://klook.tpo.li/ToVcOax7?subid=zivo_activities
+Activities: https://tiqets.tpo.li/5fqrcQWZ?subid=zivo_activities
 ```
 
 ---
