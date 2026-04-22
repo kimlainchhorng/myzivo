@@ -1,0 +1,99 @@
+/**
+ * Lodging — Reservations list with status filter & quick actions.
+ */
+import { useMemo, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle } from "lucide-react";
+import { useLodgeReservations, type ReservationStatus } from "@/hooks/lodging/useLodgeReservations";
+import { toast } from "sonner";
+
+const STATUSES: (ReservationStatus | "all")[] = ["all", "hold", "confirmed", "checked_in", "checked_out", "cancelled", "no_show"];
+const STATUS_LABEL: Record<string, string> = {
+  all: "All", hold: "Hold", confirmed: "Confirmed", checked_in: "Checked-In",
+  checked_out: "Checked-Out", cancelled: "Cancelled", no_show: "No-Show",
+};
+const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
+  hold: "outline", confirmed: "secondary", checked_in: "default", checked_out: "outline", cancelled: "destructive", no_show: "destructive",
+};
+
+export default function LodgingReservationsSection({ storeId }: { storeId: string }) {
+  const [status, setStatus] = useState<ReservationStatus | "all">("all");
+  const [q, setQ] = useState("");
+  const { data: reservations = [], isLoading, setStatus: setResStatus } = useLodgeReservations(storeId, status);
+
+  const filtered = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term) return reservations;
+    return reservations.filter(r =>
+      r.guest_name?.toLowerCase().includes(term) ||
+      r.guest_phone?.toLowerCase().includes(term) ||
+      r.number?.toLowerCase().includes(term)
+    );
+  }, [reservations, q]);
+
+  const act = async (id: string, s: ReservationStatus, msg: string) => {
+    try { await setResStatus.mutateAsync({ id, status: s }); toast.success(msg); }
+    catch (e: any) { toast.error(e.message || "Failed"); }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><CalendarRange className="h-5 w-5" /> Reservations</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap gap-2 items-center">
+          {STATUSES.map(s => (
+            <button key={s} onClick={() => setStatus(s)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${status === s ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground"}`}>
+              {STATUS_LABEL[s]}
+            </button>
+          ))}
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={q} onChange={e => setQ(e.target.value)} placeholder="Search guest, phone, ref…" className="pl-9" />
+        </div>
+
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p>
+        ) : filtered.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-8 text-center">No reservations</p>
+        ) : (
+          <div className="space-y-2">
+            {filtered.map(r => (
+              <div key={r.id} className="p-3 rounded-lg border bg-card">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-sm">{r.guest_name || "Guest"}</span>
+                      <Badge variant={STATUS_VARIANT[r.status] || "outline"} className="text-[10px]">{STATUS_LABEL[r.status]}</Badge>
+                      <span className="text-[10px] text-muted-foreground font-mono">{r.number}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {r.check_in} → {r.check_out} · {r.nights} night{r.nights !== 1 ? "s" : ""} · {r.adults}A{r.children ? `/${r.children}C` : ""}
+                    </p>
+                    {r.guest_phone && <p className="text-[11px] text-muted-foreground mt-0.5">{r.guest_phone}</p>}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-bold text-sm">${(r.total_cents / 100).toFixed(2)}</p>
+                    <p className="text-[10px] text-muted-foreground capitalize">{r.payment_status}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {r.status === "hold" && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "confirmed", "Confirmed")}><CheckCircle2 className="h-3 w-3" /> Confirm</Button>}
+                  {(r.status === "confirmed" || r.status === "hold") && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "checked_in", "Checked in")}><LogIn className="h-3 w-3" /> Check-In</Button>}
+                  {r.status === "checked_in" && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "checked_out", "Checked out")}><LogOut className="h-3 w-3" /> Check-Out</Button>}
+                  {!["cancelled", "checked_out"].includes(r.status) && <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-destructive" onClick={() => act(r.id, "cancelled", "Cancelled")}><XCircle className="h-3 w-3" /> Cancel</Button>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
