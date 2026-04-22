@@ -1,48 +1,55 @@
 
 
-# Fix store "time open" / hours display on the storefront
+# Fix Add Product dialog: inputs remounting on every keystroke
 
-The user is on `/grocery/shop/koh-sdach-resort-by-ehm` and the store status / opening hours shown there is wrong or missing. The status is computed by `src/utils/storeStatus.ts` from the store's `hours` string and `market` code.
+## Root cause (from session replay)
 
-## Likely causes
+The replay shows each typed character lands in a **different DOM element id** on the next keystroke (155476 → 156165 → 156854 → 157543). That means the input fields are being **unmounted and remounted on every keystroke** — not just re-rendered. The previous `dvh` + `onOpenAutoFocus` fix only addressed mobile keyboard viewport jumps; it did not address remounts, which is why the user still sees the dialog "jump up" while typing.
 
-1. The store row has `hours` in a format the regex in `parseHoursString` does not recognize (e.g. `"24/7"`, `"Open 24 hours"`, `"7:00 - 22:00"` without am/pm, or empty). When parsing fails, the helper returns a hard-coded `{ isOpen: true, status: "open", label: "Open" }` regardless of real time.
-2. `market` may not be passed from the storefront page, so timezone falls back to the device clock — wrong status for Cambodia stores when viewer is elsewhere.
-3. Hotel/resort entries are effectively 24/7 but stored as `"24/7"` which the regex rejects.
+The remount is triggered by parent re-renders of `AdminStoreEditPage` (5,000+ line component) that change subtree identity around the dialog. Likely contributors:
 
-## Plan
+1. The auto-draft `useEffect` (lines 564–571) writes to `localStorage` on every `productForm` change, which combined with React Query refetches and the surrounding `<Tabs>`/list re-renders causes the entire dialog JSX subtree to be re-evaluated in a way that loses input identity.
+2. The dialog (`lines 3504–4490`, ~1,000 lines of JSX) is inlined inside the page render. Any sibling state change (product list refetch, image upload progress, tag dropdown updates) re-runs this huge JSX block.
+3. A few inputs use `defaultValue` + `key={\`...-${productDialog}\`}` (line 4032), but the `productDialog` boolean only flips on open/close — that key is fine. The remount affects controlled `value={productForm.X}` inputs too, so the cause is parent-level, not key-level.
 
-### 1. Make `getStoreStatus` understand more hours formats
+## Fix
 
-Edit `src/utils/storeStatus.ts`:
+### 1. Extract the dialog into a memoized child component
 
-- **24/7 support**: if `hours` matches `/24\s*\/\s*7|24\s*hours|always\s*open/i` → return `{ isOpen: true, status: "open", label: "Open 24 hours", formattedHours: "Open 24 hours" }`.
-- **24-hour clock support**: extend `parseHoursString` regex to also match `"7:00 - 22:00"` / `"07:00–22:00"` (no am/pm). When am/pm is absent, treat numbers as 24h directly.
-- **Closed marker**: if `hours` is empty / `"closed"` → return closed with label `Hours not set`.
-- **Overnight hours** (e.g. `10pm–2am`): if `closeMinutes <= openMinutes`, treat close as next-day (`closeMinutes += 24*60`) and compare against `currentMinutes` plus a 24h wrap.
-- Keep current am/pm parsing as the fallback path.
+Create `src/pages/admin/components/ProductFormDialog.tsx`:
 
-### 2. Always pass `market` from storefront
+- Accepts props: `open`, `onOpenChange`, `productForm`, `setProductForm`, `editingProduct`, `form` (store form, for category/khr_rate/name), `savedCategories/Brands` + setters, `customBydModels`, image upload handlers, `onSave`, `onSaveAndAddAnother`, `t` (translation).
+- Wrapped in `React.memo` so it only re-renders when its own props change.
+- Internally holds the entire JSX currently at lines 3503–4490.
 
-Find the grocery shop page (`src/pages/grocery/...` — likely `GroceryStorePage.tsx` or similar that renders `/grocery/shop/:slug`) and confirm `getStoreStatus(store.hours, store.market || store.country)` is called with the market code. If not, pass it.
+Result: refetches and unrelated state changes in the parent no longer rebuild the dialog's input tree, so React preserves input identity and focus across keystrokes.
 
-### 3. Self-heal admin form
+### 2. Stop the draft effect from firing on every keystroke
 
-In `src/pages/admin/AdminStoreEditPage.tsx`, add a tiny live preview under the Hours input that runs `getStoreStatus(value, form.market)` and shows the resolved status + formatted hours. If it returns the fallback `Open` with no `formattedHours`, show an inline warning: *"Hours format not recognized — try `7am–10pm`, `07:00–22:00`, or `24/7`."* This stops bad data getting saved.
+In `AdminStoreEditPage.tsx` lines 564–571, debounce the `localStorage.setItem` to ~400 ms (using a `setTimeout` cleared on next change). The draft is a "don't lose work" safety net; saving on every character is unnecessary work and one of the things triggering parent re-renders mid-typing.
 
-### 4. Verify on the affected store
+### 3. Stabilize callback identities passed to the dialog
 
-After the parser fix, the Koh Sdach Resort page should display the correct live status driven by `Asia/Phnom_Penh` time, or `Open 24 hours` if it's a 24/7 resort.
+In the parent, wrap `updateProductField`, `uploadProductImage`, `removeProductImage`, `saveProduct`, and `setProductDialog` consumers in `useCallback` so the memoized child doesn't re-render needlessly.
+
+### 4. Remove the now-unnecessary remount key
+
+Line 4032: `key={\`price-${editingProduct?.id || "new"}-${productDialog}\`}` — once the parent stops remounting, this key (which was a band-aid) can be removed; the input should switch to controlled `value` to stay in sync with KHR auto-conversion.
+
+## Verification
+
+- Manual: open Add Product dialog on mobile (390×844), type a long name like "Premium Cambodia Mango Juice 500ml" — no scroll jump, focus never lost, no character drop.
+- Replay check: after fix, every keystroke for a single field should land on the **same** element id, not a new one each time.
+- Desktop: same behavior, no regression to image upload or KHR/USD price sync.
 
 ## Files
 
-- **Edit**: `src/utils/storeStatus.ts` — add 24/7, 24h clock, overnight, and closed handling
-- **Edit**: storefront page rendering `/grocery/shop/:slug` — ensure `market` is passed to `getStoreStatus` (only if missing)
-- **Edit**: `src/pages/admin/AdminStoreEditPage.tsx` — live hours preview + format hint under the Hours field
+- **Create**: `src/pages/admin/components/ProductFormDialog.tsx` (extracted dialog, `React.memo`)
+- **Edit**: `src/pages/admin/AdminStoreEditPage.tsx` — replace inline dialog JSX with `<ProductFormDialog ... />`, debounce draft effect, wrap handlers in `useCallback`, drop the price input's `key`
 
 ## Out of scope
 
-- Migrating existing `hours` strings in the DB (parser now tolerates them)
-- Adding per-day hours (Mon–Fri vs Sat/Sun) — current schema is a single string
-- Timezone changes outside KH/US (only those two are mapped today)
+- Refactoring the rest of the 5,000-line page
+- Changing the product schema or KHR/USD conversion logic
+- The unrelated "Missing Description for DialogContent" a11y warning in the console (separate issue)
 
