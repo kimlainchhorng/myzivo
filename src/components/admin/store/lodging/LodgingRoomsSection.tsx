@@ -521,3 +521,29 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
     </Card>
   );
 }
+
+function FeeInput({ label, value, onChange }: { label: string; value: number | undefined; onChange: (v: number | undefined) => void }) {
+  return (
+    <div>
+      <Label className="text-xs">{label}</Label>
+      <Input
+        type="number" step="0.01" inputMode="decimal"
+        value={value == null ? "" : (value / 100).toString()}
+        onChange={e => onChange(e.target.value === "" ? undefined : Math.round(parseFloat(e.target.value) * 100))}
+      />
+    </div>
+  );
+}
+
+function PctInput({ label, value, onChange }: { label: string; value: number | undefined; onChange: (v: number | undefined) => void }) {
+  return (
+    <div>
+      <Label className="text-xs">{label}</Label>
+      <Input
+        type="number" step="0.1" inputMode="decimal"
+        value={value ?? ""}
+        onChange={e => onChange(e.target.value === "" ? undefined : parseFloat(e.target.value))}
+      />
+    </div>
+  );
+}
