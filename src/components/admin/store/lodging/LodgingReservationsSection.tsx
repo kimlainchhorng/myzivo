@@ -16,6 +16,7 @@ import ChangeRequestsInbox from "@/components/lodging/host/ChangeRequestsInbox";
 import HostReservationOpsSummary from "@/components/lodging/host/HostReservationOpsSummary";
 import { useStoreChangeRequestInbox } from "@/hooks/lodging/useReservationChangeRequests";
 import { useHostLodgingOpsToasts } from "@/hooks/lodging/useHostLodgingOpsToasts";
+import { reservationDateLabel, reservationMinutes, reservationTimeRangeLabel } from "@/lib/lodging/reservationTime";
 
 type ReservationFilter = ReservationStatus | "active" | "all";
 const CLOSED_STATUSES = new Set<ReservationStatus>(["cancelled", "checked_out", "no_show"]);
@@ -29,12 +30,9 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "dest
 };
 
 const money = (cents?: number | null) => `$${((Number(cents) || 0) / 100).toFixed(2)}`;
-const dateLabel = (value?: string | null) => value ? new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—";
-const timeLabel = (value?: string | null, fallback?: string | null) => {
-  if (value && value.includes("T")) return new Date(value).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-  if (fallback) return fallback.slice(0, 5);
-  return "Time not set";
-};
+type TimeFilter = "all" | "morning" | "afternoon" | "evening";
+type SortMode = "date_desc" | "date_asc" | "checkin_asc" | "checkout_asc";
+const TIME_LABEL: Record<TimeFilter, string> = { all: "Any time", morning: "Morning", afternoon: "Afternoon", evening: "Evening" };
 
 export default function LodgingReservationsSection({ storeId }: { storeId: string }) {
   const navigate = useNavigate();
@@ -43,6 +41,8 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
   const initialStatus = (searchParams.get("tab") || "active") as ReservationFilter;
   const [status, setStatus] = useState<ReservationFilter>(STATUSES.includes(initialStatus) ? initialStatus : "active");
   const [q, setQ] = useState(searchParams.get("q") || "");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>((searchParams.get("time") as TimeFilter) || "all");
+  const [sortMode, setSortMode] = useState<SortMode>((searchParams.get("sort") as SortMode) || "date_desc");
   const queryStatus = status === "active" ? "all" : status;
   const { data: reservations = [], isLoading, setStatus: setResStatus } = useLodgeReservations(storeId, queryStatus);
   const { data: pendingRequests = [] } = useStoreChangeRequestInbox(storeId);
@@ -50,12 +50,23 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    const scoped = status === "active" ? reservations.filter(r => !CLOSED_STATUSES.has(r.status)) : reservations;
-    if (!term) return scoped;
-    return scoped.filter(r =>
+    let scoped = status === "active" ? reservations.filter(r => !CLOSED_STATUSES.has(r.status)) : reservations;
+    if (timeFilter !== "all") {
+      scoped = scoped.filter((r) => {
+        const mins = reservationMinutes(r.check_in, r.room?.check_in_time, "check_in");
+        return timeFilter === "morning" ? mins < 12 * 60 : timeFilter === "afternoon" ? mins >= 12 * 60 && mins < 17 * 60 : mins >= 17 * 60;
+      });
+    }
+    if (term) scoped = scoped.filter(r =>
       [r.guest_name, r.guest_phone, r.guest_email, r.number, r.room_number, r.payment_status, r.status].some(v => String(v || "").toLowerCase().includes(term))
     );
-  }, [reservations, q, status]);
+    return [...scoped].sort((a, b) => {
+      if (sortMode === "date_asc") return new Date(a.check_in).getTime() - new Date(b.check_in).getTime();
+      if (sortMode === "checkin_asc") return reservationMinutes(a.check_in, a.room?.check_in_time, "check_in") - reservationMinutes(b.check_in, b.room?.check_in_time, "check_in");
+      if (sortMode === "checkout_asc") return reservationMinutes(a.check_out, a.room?.check_out_time, "check_out") - reservationMinutes(b.check_out, b.room?.check_out_time, "check_out");
+      return new Date(b.check_in).getTime() - new Date(a.check_in).getTime();
+    });
+  }, [reservations, q, status, timeFilter, sortMode]);
 
   const act = async (id: string, s: ReservationStatus, msg: string) => {
     try { await setResStatus.mutateAsync({ id, status: s }); toast.success(msg); }
@@ -63,18 +74,29 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
   };
 
   const openReservation = (id: string, workflow?: "cancel" | "review" | "addons" | "payment" | "audit" | "workflow") => {
-    const returnTo = `${location.pathname}?tab=${encodeURIComponent(status)}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ""}`;
+    const params = new URLSearchParams();
+    if (status !== "active") params.set("tab", status);
+    if (q.trim()) params.set("q", q.trim());
+    if (timeFilter !== "all") params.set("time", timeFilter);
+    if (sortMode !== "date_desc") params.set("sort", sortMode);
+    const returnTo = `${location.pathname}${params.toString() ? `?${params}` : ""}`;
     navigate(`/admin/stores/${storeId}/lodging/reservations/${id}${workflow ? `?workflow=${workflow}` : ""}`, {
       state: { returnTo, workflow },
     });
   };
 
-  const updateFilter = (nextStatus: ReservationFilter, nextQ = q) => {
-    setStatus(nextStatus);
+  const syncParams = (nextStatus = status, nextQ = q, nextTime = timeFilter, nextSort = sortMode) => {
     const next = new URLSearchParams();
     if (nextStatus !== "active") next.set("tab", nextStatus);
     if (nextQ.trim()) next.set("q", nextQ.trim());
+    if (nextTime !== "all") next.set("time", nextTime);
+    if (nextSort !== "date_desc") next.set("sort", nextSort);
     setSearchParams(next, { replace: true });
+  };
+
+  const updateFilter = (nextStatus: ReservationFilter, nextQ = q) => {
+    setStatus(nextStatus);
+    syncParams(nextStatus, nextQ);
   };
 
   return (
