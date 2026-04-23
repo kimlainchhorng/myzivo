@@ -105,6 +105,8 @@ export default function AddOnsSheet({ open, onOpenChange, reservationId, addons,
     if (error || data?.error) {
       toast.error(data?.reason || data?.message || (data?.error === "no_saved_payment_method" ? "No saved payment method found. Add a card in Wallet first." : data?.error || error?.message || "Could not charge add-ons"));
       onPurchased?.("failed");
+      onOpenChange(false);
+      window.setTimeout(() => highlightTarget("#addon-status"), 180);
       return;
     }
     toast.success("Add-on charge successful", { description: `Charged $${((data?.charged_cents || total) / 100).toFixed(2)} to your saved card.` });

@@ -28,6 +28,7 @@ export function useLodgingTripToasts(reservationId: string | undefined) {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "lodge_reservation_change_requests", filter: `reservation_id=eq.${reservationId}` }, (payload) => {
         const row = payload.new as any;
         qc.invalidateQueries({ queryKey: ["lodge-change-requests", reservationId] });
+        qc.invalidateQueries({ queryKey: ["lodge-reservation-full", reservationId] });
         if (row.type === "addon" && row.status === "auto_approved") show("success", "Add-on charge successful", "Your reservation total has been updated.");
         if (row.type === "addon" && row.status === "failed") show("error", "Add-on charge failed", row.addon_payload?.failure_reason || "Your saved payment method was not charged.");
         if (row.type === "cancel") show("success", "Reservation cancelled", row.payment_status ? `Payment status: ${String(row.payment_status).replace(/_/g, " ")}` : undefined);
@@ -61,6 +62,7 @@ export function useLodgingTripToasts(reservationId: string | undefined) {
         const row = payload.new as any;
         if (String(row.metadata?.reservation_id || "") !== reservationId) return;
         qc.invalidateQueries({ queryKey: ["lodging-notification-audit", reservationId] });
+        qc.invalidateQueries({ queryKey: ["lodging-notification-audit", reservationId, String(row.channel || "sms")] });
         if (row.channel === "sms" && row.status === "failed") show("error", "SMS delivery failed", row.error || undefined);
         if (row.channel === "sms" && row.status === "sent") show("success", "SMS update sent");
         if (row.channel === "sms" && row.status === "skipped") show("info", "SMS update skipped", String(row.skip_reason || "").replace(/_/g, " "));
