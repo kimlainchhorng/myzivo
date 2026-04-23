@@ -23,6 +23,7 @@ export default function ReceiptHistoryCard({ reservationId, receipts }: Props) {
 
   const redownload = async (receipt: ReceiptHistoryItem) => {
     setLoadingId(receipt.id);
+    toast("Preparing PDF…");
     const { data, error } = await supabase.functions.invoke("lodging-reservation-receipt", {
       body: { reservation_id: reservationId, receipt_id: receipt.id },
     });
@@ -38,16 +39,22 @@ export default function ReceiptHistoryCard({ reservationId, receipts }: Props) {
     a.download = receipt.filename || `ZIVO-reservation-${receipt.reservation_number || "receipt"}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
+    toast.success("Receipt downloaded");
   };
 
   const shareReceipt = async (receipt: ReceiptHistoryItem) => {
     setLoadingId(`share-${receipt.id}`);
+    toast("Preparing PDF…");
     const { data, error } = await supabase.functions.invoke("lodging-reservation-receipt", { body: { reservation_id: reservationId, receipt_id: receipt.id } });
     setLoadingId(null);
     if (error || !data) return toast.error(error?.message || "Could not share receipt");
     const blob = data instanceof Blob ? data : new Blob([data], { type: "application/pdf" });
     const file = new File([blob], receipt.filename || "ZIVO-receipt.pdf", { type: "application/pdf" });
-    if (navigator.share && navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file], title: "ZIVO lodging receipt" });
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      toast("Opening share sheet…");
+      await navigator.share({ files: [file], title: "ZIVO lodging receipt" });
+      toast.success("Receipt shared");
+    }
     else {
       await navigator.clipboard?.writeText(`ZIVO lodging receipt ${receipt.reservation_number || ""}`);
       toast.success("Receipt summary copied");
@@ -56,6 +63,7 @@ export default function ReceiptHistoryCard({ reservationId, receipts }: Props) {
 
   const emailReceipt = async (receipt: ReceiptHistoryItem) => {
     setLoadingId(`email-${receipt.id}`);
+    toast("Preparing receipt email…");
     const { data, error } = await supabase.functions.invoke("share-lodging-receipt", { body: { receipt_id: receipt.id } });
     setLoadingId(null);
     if (error || data?.error) return toast.error(data?.error || error?.message || "Could not email receipt");

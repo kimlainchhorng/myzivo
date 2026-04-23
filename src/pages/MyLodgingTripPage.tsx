@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, CalendarRange, XCircle, CreditCard, Clock, ShoppingBag } from "lucide-react";
+import { ArrowLeft, CalendarRange, XCircle, CreditCard, Clock, ShoppingBag, ShieldCheck } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,8 @@ import LodgingTripHelpDrawer from "@/components/lodging/guest/LodgingTripHelpDra
 import AddOnStatusTimeline from "@/components/lodging/guest/AddOnStatusTimeline";
 import RefundDisputeCard from "@/components/lodging/guest/RefundDisputeCard";
 import { useLodgingRefundDisputes } from "@/hooks/lodging/useLodgingRefundDisputes";
+import LodgingTripNotificationSettings from "@/components/lodging/guest/LodgingTripNotificationSettings";
+import { toast } from "sonner";
 
 interface FullReservation {
   id: string;
@@ -292,6 +294,19 @@ export default function MyLodgingTripPage() {
 
       <AddOnStatusTimeline requests={requests} />
 
+      <Card id="cancellation-policy" className="scroll-mt-24">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2"><ShieldCheck className="w-4 h-4" /> Cancellation and refunds</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <p className="text-muted-foreground">{room?.cancellation_policy || "Standard lodging cancellation policy applies to this reservation."}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => document.querySelector("#request-history")?.scrollIntoView({ behavior: "smooth", block: "start" })}>Request history</Button>
+            <Button variant="outline" size="sm" onClick={() => document.querySelector("#refund-disputes")?.scrollIntoView({ behavior: "smooth", block: "start" })}>Refund review</Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <ReceiptActions
         reservationNumber={reservation.number}
         reservationId={reservation.id}
@@ -305,10 +320,13 @@ export default function MyLodgingTripPage() {
         checkOutTime={room?.check_out_time}
         totalText={`$${(reservation.total_cents / 100).toFixed(2)} · ${reservation.payment_status.replace(/_/g, " ")}`}
         cancellationText={room?.cancellation_policy}
+        latestReceiptId={receipts[0]?.id}
         onReceiptDownloaded={() => queryClient.invalidateQueries({ queryKey: ["lodge-receipt-history", reservationId] })}
       />
 
       <div id="receipt-history" className="scroll-mt-24"><ReceiptHistoryCard reservationId={reservation.id} receipts={receipts} /></div>
+
+      <LodgingTripNotificationSettings reservationId={reservation.id} />
 
       <RefundDisputeCard reservationId={reservation.id} disputes={disputes} canRequest={canDispute} maxAmountCents={maxDisputeCents} />
 
@@ -329,9 +347,11 @@ export default function MyLodgingTripPage() {
         addons={addons}
         nights={reservation.nights}
         guests={guests}
-        onPurchased={() => {
+        onPurchased={(result) => {
           queryClient.invalidateQueries({ queryKey: ["lodge-reservation-full", reservationId] });
           queryClient.invalidateQueries({ queryKey: ["lodge-change-requests", reservationId] });
+          if (result === "failed") toast.error("Add-on charge failed");
+          window.setTimeout(() => document.querySelector("#addon-status")?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
         }}
       />
       <CancelReservationSheet
