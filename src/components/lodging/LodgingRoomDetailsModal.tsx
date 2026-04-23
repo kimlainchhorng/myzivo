@@ -391,23 +391,30 @@ export function LodgingRoomDetailsModal({
           </div>
         )}
 
-        {/* Amenities */}
+        {/* Amenities — grouped Booking.com-style */}
         {amenities.length > 0 && (
           <div>
             <h3 className="text-sm font-bold mb-2 flex items-center gap-1.5">
               <span className="h-3.5 w-1 rounded-full bg-sky-500" />
               Amenities
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-              {amenities.map((a) => {
-                const Icon = getAmenityIcon(a);
-                return (
-                  <div key={a} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-muted/50 border border-border/50 text-xs text-foreground">
-                    <Icon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <span className="truncate">{a}</span>
+            <div className="space-y-3">
+              {groupAmenities(amenities).map((group) => (
+                <div key={group.label}>
+                  <p className="text-xs font-semibold text-foreground mb-1.5">{group.label}</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                    {group.items.map((a) => {
+                      const Icon = getAmenityIcon(a);
+                      return (
+                        <div key={a} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-muted/50 border border-border/50 text-xs text-foreground">
+                          <Icon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span className="truncate">{a}</span>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </div>
         )}
