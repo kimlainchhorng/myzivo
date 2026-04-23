@@ -940,54 +940,110 @@ function buildBreakdownType() {
 function PriceSummary({ breakdown, fmt }: { breakdown: Breakdown; fmt: (c: number) => string }) {
   return (
     <div className="p-3.5 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/20 border border-border/60 text-xs space-y-1 shadow-sm">
-      <div className="flex justify-between">
-        <span className="text-muted-foreground">Room · {breakdown.nights} night{breakdown.nights > 1 ? "s" : ""}</span>
+      <div className="flex justify-between items-center">
+        <span className="text-muted-foreground inline-flex items-center gap-1.5">
+          <BedDouble className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
+          Room · {breakdown.nights} night{breakdown.nights > 1 ? "s" : ""}
+        </span>
         <span className="font-semibold tabular-nums">{fmt(breakdown.roomTotal - breakdown.weekendUplift)}</span>
       </div>
       {breakdown.weekendUplift > 0 && (
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Weekend uplift</span>
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground inline-flex items-center gap-1.5">
+            <Sun className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+            Weekend uplift
+          </span>
           <span className="tabular-nums">{fmt(breakdown.weekendUplift)}</span>
         </div>
       )}
       {breakdown.discountCents > 0 && (
-        <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
-          <span>Discount ({breakdown.discountPct}%)</span>
+        <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-semibold">
+          <span className="inline-flex items-center gap-1.5">
+            <BadgePercent className="h-3.5 w-3.5 shrink-0" />
+            Discount ({breakdown.discountPct}%)
+          </span>
           <span className="tabular-nums">−{fmt(breakdown.discountCents)}</span>
         </div>
       )}
       {breakdown.addonsSnapshot.map((a, i) => (
-        <div key={i} className="flex justify-between">
+        <div key={i} className="flex justify-between items-center">
           <span className="text-muted-foreground truncate pr-2 inline-flex items-center gap-1.5">
-            {a.icon && <AddonIcon slug={a.icon} className="h-3 w-3 shrink-0" />}
+            {a.icon
+              ? <AddonIcon slug={a.icon} className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400 shrink-0" />
+              : <Sparkles className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400 shrink-0" />}
             <span className="truncate">{a.name} ({a.per === "stay" ? "stay" : `${a.qty}× ${a.per === "person_night" ? "guest/night" : a.per}`})</span>
           </span>
           <span className="tabular-nums shrink-0">{fmt(a.subtotal_cents)}</span>
         </div>
       ))}
       {breakdown.extraAdultFee > 0 && (
-        <div className="flex justify-between"><span className="text-muted-foreground">Extra adult fee</span><span className="tabular-nums">{fmt(breakdown.extraAdultFee)}</span></div>
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground inline-flex items-center gap-1.5">
+            <UserPlus className="h-3.5 w-3.5 text-orange-500 shrink-0" />
+            Extra adult fee
+          </span>
+          <span className="tabular-nums">{fmt(breakdown.extraAdultFee)}</span>
+        </div>
       )}
       {breakdown.extraChildFee > 0 && (
-        <div className="flex justify-between"><span className="text-muted-foreground">Extra child fee</span><span className="tabular-nums">{fmt(breakdown.extraChildFee)}</span></div>
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground inline-flex items-center gap-1.5">
+            <Baby className="h-3.5 w-3.5 text-pink-500 shrink-0" />
+            Extra child fee
+          </span>
+          <span className="tabular-nums">{fmt(breakdown.extraChildFee)}</span>
+        </div>
       )}
       {breakdown.cleaningFee > 0 && (
-        <div className="flex justify-between"><span className="text-muted-foreground">Cleaning fee</span><span className="tabular-nums">{fmt(breakdown.cleaningFee)}</span></div>
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground inline-flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
+            Cleaning fee
+          </span>
+          <span className="tabular-nums">{fmt(breakdown.cleaningFee)}</span>
+        </div>
       )}
       {breakdown.resortFee > 0 && (
-        <div className="flex justify-between"><span className="text-muted-foreground">Resort fee</span><span className="tabular-nums">{fmt(breakdown.resortFee)}</span></div>
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground inline-flex items-center gap-1.5">
+            <Building className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+            Resort fee
+          </span>
+          <span className="tabular-nums">{fmt(breakdown.resortFee)}</span>
+        </div>
       )}
       {breakdown.cityTax > 0 && (
-        <div className="flex justify-between"><span className="text-muted-foreground">City tax</span><span className="tabular-nums">{fmt(breakdown.cityTax)}</span></div>
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground inline-flex items-center gap-1.5">
+            <Landmark className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+            City tax
+          </span>
+          <span className="tabular-nums">{fmt(breakdown.cityTax)}</span>
+        </div>
       )}
       {breakdown.serviceCharge > 0 && (
-        <div className="flex justify-between"><span className="text-muted-foreground">Service charge</span><span className="tabular-nums">{fmt(breakdown.serviceCharge)}</span></div>
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground inline-flex items-center gap-1.5">
+            <ConciergeBell className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+            Service charge
+          </span>
+          <span className="tabular-nums">{fmt(breakdown.serviceCharge)}</span>
+        </div>
       )}
       {breakdown.vat > 0 && (
-        <div className="flex justify-between"><span className="text-muted-foreground">VAT</span><span className="tabular-nums">{fmt(breakdown.vat)}</span></div>
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground inline-flex items-center gap-1.5">
+            <Receipt className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400 shrink-0" />
+            VAT
+          </span>
+          <span className="tabular-nums">{fmt(breakdown.vat)}</span>
+        </div>
       )}
-      <div className="flex justify-between border-t-2 border-dashed border-border/70 pt-2 mt-2">
-        <span className="font-bold text-sm">Grand total</span>
+      <div className="flex justify-between items-center border-t-2 border-dashed border-border/70 pt-2 mt-2">
+        <span className="font-bold text-sm inline-flex items-center gap-1.5">
+          <Coins className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          Grand total
+        </span>
         <span className="font-extrabold text-base text-emerald-600 dark:text-emerald-400 tabular-nums">{fmt(breakdown.total)}</span>
       </div>
     </div>
