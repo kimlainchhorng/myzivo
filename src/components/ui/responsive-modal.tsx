@@ -49,8 +49,7 @@ export function ResponsiveModal({
         <SheetContent
           side="bottom"
           aria-modal="true"
-          style={{ bottom: "var(--zivo-mobile-nav-h, 64px)" }}
-          className="p-0 h-auto max-h-[calc(92dvh-var(--zivo-mobile-nav-h,64px))] flex flex-col rounded-t-2xl gap-0"
+          className="p-0 h-auto max-h-[92dvh] flex flex-col rounded-t-2xl gap-0"
         >
           {/* Drag handle — keyboard accessible */}
           <div
@@ -82,7 +81,10 @@ export function ResponsiveModal({
             {children}
           </div>
           {footer && (
-            <div className="shrink-0 border-t border-border px-4 py-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] bg-background">
+            <div
+              className="shrink-0 border-t border-border px-4 pt-3 bg-background"
+              style={{ paddingBottom: "calc(var(--zivo-mobile-nav-h, 64px) + env(safe-area-inset-bottom) + 0.75rem)" }}
+            >
               {footer}
             </div>
           )}
