@@ -252,7 +252,7 @@ export function LodgingRoomDetailsModal({
                   const isErrored = !!errored[i];
                   return (
                     <CarouselItem key={`${src}-${i}`}>
-                      <div className="aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] max-h-[55vh] sm:max-h-[60vh] lg:max-h-[65vh] rounded-2xl overflow-hidden bg-muted/60 relative ring-1 ring-black/5 shadow-sm">
+                      <div className="aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3] max-h-[42vh] sm:max-h-[55vh] lg:max-h-[58vh] rounded-2xl overflow-hidden bg-muted/60 relative ring-1 ring-black/5 shadow-sm">
                         {/* LQIP / skeleton layer */}
                         {!isLoaded && !isErrored && (
                           lqip ? (
