@@ -568,13 +568,12 @@ export default function AdminStoreEditPage() {
   }, [store]);
 
   useEffect(() => {
-    const normalizedCategory = (store?.category || "").toLowerCase().trim();
-    const isStoreLodging = ["hotel", "resort", "guesthouse", "guesthouse / b&b", "b&b"].includes(normalizedCategory);
+    const isStoreLodging = isLodgingStoreCategory(store?.category);
     if (!appliedLodgingDefaultTabRef.current && isStoreLodging && activeTab === "profile") {
       appliedLodgingDefaultTabRef.current = true;
-      setActiveTab("lodge-overview");
+      handleTabChange("lodge-overview");
     }
-  }, [store?.category, activeTab]);
+  }, [store?.category, activeTab, handleTabChange]);
 
   const saveProfile = useMutation({
     mutationFn: async () => {
@@ -1959,7 +1958,7 @@ export default function AdminStoreEditPage() {
   const employeeTitles: Record<string, string> = { employees: "Employees", payroll: "Payroll", "employee-schedule": "Employee Schedule", "time-clock": "Time Clock", "employee-rules": "Employee Rules", attendance: "Attendance & Leave", training: "Training & Onboarding", documents: "Documents & Files" };
   const normalizedCategory = (form.category || "").toLowerCase().trim();
   const isAutoRepair = normalizedCategory === "auto-repair";
-  const isLodging = ["hotel", "resort", "guesthouse", "guesthouse / b&b", "b&b"].includes(normalizedCategory);
+  const isLodging = isLodgingStoreCategory(normalizedCategory);
   const autoRepairTitles: Record<string, string> = {
     "ar-invoices": "Invoices & Estimates",
     "ar-autocheck": "Auto Check (VIN)",
