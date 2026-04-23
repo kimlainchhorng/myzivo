@@ -134,31 +134,61 @@ export function LodgingRoomCard({
               </div>
             </div>
 
-            {/* Right column: 2x2 on mobile, 4-col mosaic on desktop */}
+            {/* Right column: 2x2 on mobile/tablet, 4-col mosaic on desktop */}
             <div className="grid grid-rows-2 gap-1.5">
-              {[1, 2].map((row) => (
-                <div key={row} className="grid grid-cols-2 lg:grid-cols-4 gap-1.5">
-                  {(window.innerWidth >= 1024
-                    ? [gridPhotos[row * 4 - 3], gridPhotos[row * 4 - 2], gridPhotos[row * 4 - 1], gridPhotos[row * 4]]
-                    : [gridPhotos[row * 2 - 1], gridPhotos[row * 2]]
-                  ).map((src, i, arr) => (
-                    <div
-                      key={i}
-                      className={`relative bg-gradient-to-br from-muted to-muted/50 overflow-hidden ${row === 1 && i === arr.length - 1 ? "rounded-tr-2xl" : ""} ${row === 2 && i === arr.length - 1 ? "rounded-br-2xl" : ""}`}
-                    >
-                      {src ? (
-                        <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
-                      ) : cover ? (
-                        <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" loading="lazy" />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <BedDouble className="h-5 w-5 text-muted-foreground/30" />
+              {[1, 2].map((row) => {
+                // Mobile/tablet: 2 photos per row (indexes 1,2 then 3,4)
+                const mobileSet = [gridPhotos[row * 2 - 1], gridPhotos[row * 2]];
+                // Desktop: 4 photos per row (indexes 1-4 then 5-8)
+                const desktopSet = [
+                  gridPhotos[row * 4 - 3],
+                  gridPhotos[row * 4 - 2],
+                  gridPhotos[row * 4 - 1],
+                  gridPhotos[row * 4],
+                ];
+                return (
+                  <div key={row} className="contents">
+                    {/* Mobile/tablet view */}
+                    <div className="grid grid-cols-2 gap-1.5 lg:hidden">
+                      {mobileSet.map((src, i) => (
+                        <div
+                          key={i}
+                          className={`relative bg-gradient-to-br from-muted to-muted/50 overflow-hidden ${row === 1 && i === 1 ? "rounded-tr-2xl" : ""} ${row === 2 && i === 1 ? "rounded-br-2xl" : ""}`}
+                        >
+                          {src ? (
+                            <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+                          ) : cover ? (
+                            <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" loading="lazy" />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <BedDouble className="h-5 w-5 text-muted-foreground/30" />
+                            </div>
+                          )}
                         </div>
-                      )}
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ))}
+                    {/* Desktop view */}
+                    <div className="hidden lg:grid grid-cols-4 gap-1.5">
+                      {desktopSet.map((src, i) => (
+                        <div
+                          key={i}
+                          className={`relative bg-gradient-to-br from-muted to-muted/50 overflow-hidden ${row === 1 && i === 3 ? "rounded-tr-2xl" : ""} ${row === 2 && i === 3 ? "rounded-br-2xl" : ""}`}
+                        >
+                          {src ? (
+                            <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+                          ) : cover ? (
+                            <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" loading="lazy" />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <BedDouble className="h-5 w-5 text-muted-foreground/30" />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
