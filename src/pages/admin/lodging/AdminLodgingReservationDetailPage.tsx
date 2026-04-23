@@ -241,7 +241,7 @@ export default function AdminLodgingReservationDetailPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-6">
         <p className="text-sm text-muted-foreground">Reservation not found.</p>
-        <Button variant="outline" onClick={() => navigate(-1)}>Go back</Button>
+        <Button variant="outline" onClick={goBack}>Go back</Button>
       </div>
     );
   }
@@ -251,7 +251,7 @@ export default function AdminLodgingReservationDetailPage() {
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
+          <Button variant="ghost" size="icon" onClick={goBack} className="shrink-0" aria-label="Back to reservations">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="min-w-0 flex-1">
@@ -272,8 +272,32 @@ export default function AdminLodgingReservationDetailPage() {
           </CardContent>
         </Card>
 
+        <Card className={isClosed ? "border-muted bg-muted/20" : "border-primary/20"}>
+          <CardContent className="pt-4 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Operations next step</p>
+                <p className="text-sm font-bold">{recommendedAction}</p>
+              </div>
+              <Button size="sm" variant="outline" className="h-8 text-xs" onClick={goBack}>Back to reservations</Button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+              <OpsMetric icon={ClipboardCheck} label="Status" value={STATUS_LABEL[reservation.status] || reservation.status} />
+              <OpsMetric icon={CreditCard} label="Payment" value={String(reservation.payment_status || "pending").replace(/_/g, " ")} />
+              <OpsMetric icon={AlertCircle} label="Balance" value={fmt(balanceDue)} danger={balanceDue > 0} />
+              <OpsMetric icon={PackageCheck} label="Add-ons" value={`${addonRequests.length} attempt${addonRequests.length === 1 ? "" : "s"}`} />
+            </div>
+            {isClosed && (
+              <div className="rounded-xl border border-border bg-background/70 p-3 text-xs text-muted-foreground">
+                <p className="font-semibold text-foreground">Closed reservation</p>
+                <p>This booking is out of Active. Finish any payment/refund review, then keep notes in the audit log.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Stay */}
-        <Card>
+        <Card id="payment-review" className="scroll-mt-24 transition-shadow">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Stay</CardTitle>
           </CardHeader>
