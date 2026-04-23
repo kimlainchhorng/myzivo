@@ -27,15 +27,18 @@ installed locally; Lovable does not run this automatically.)
 
 ## Canary function
 
-`supabase/functions/_ping` deploys with only the shared `createClient` import.
-If a deploy mysteriously fails for a larger function, deploy `_ping` first to
-confirm the shared deps module bundles cleanly. If `_ping` fails too, the issue
-is in `_shared/deps.ts` itself.
+`supabase/functions/ping-canary` deploys with only the shared `createClient`
+import. If a deploy mysteriously fails for a larger function, deploy
+`ping-canary` first to confirm the shared deps module bundles cleanly. If
+`ping-canary` fails too, the issue is in `_shared/deps.ts` itself.
+
+(Note: Supabase rejects function slugs starting with `_`, so the canary lives
+under `ping-canary` even though it's logically a `_shared` sibling.)
 
 Invoke it to confirm runtime is up:
 
 ```bash
-curl -i "$SUPABASE_URL/functions/v1/_ping" -H "Authorization: Bearer $ANON_KEY"
+curl -i "$SUPABASE_URL/functions/v1/ping-canary" -H "Authorization: Bearer $ANON_KEY"
 ```
 
 Expected response:
