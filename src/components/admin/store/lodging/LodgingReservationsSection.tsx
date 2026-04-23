@@ -120,6 +120,18 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={q} onChange={e => { setQ(e.target.value); updateFilter(status, e.target.value); }} placeholder="Search guest, phone, email, room, ref, payment…" className="pl-9" />
         </div>
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/20 p-2 text-xs">
+          <span className="inline-flex items-center gap-1 font-semibold text-muted-foreground"><Clock className="h-3.5 w-3.5" /> Time</span>
+          {(["all", "morning", "afternoon", "evening"] as TimeFilter[]).map((value) => (
+            <button key={value} onClick={() => { setTimeFilter(value); syncParams(status, q, value, sortMode); }} className={`rounded-full border px-2.5 py-1 font-medium transition ${timeFilter === value ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground"}`}>{TIME_LABEL[value]}</button>
+          ))}
+          <select value={sortMode} onChange={(e) => { const next = e.target.value as SortMode; setSortMode(next); syncParams(status, q, timeFilter, next); }} className="ml-auto h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground">
+            <option value="date_desc">Newest check-in</option>
+            <option value="date_asc">Oldest check-in</option>
+            <option value="checkin_asc">Check-in time</option>
+            <option value="checkout_asc">Check-out time</option>
+          </select>
+        </div>
 
         {isLoading ? (
           <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p>
@@ -153,8 +165,8 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
                         <span className="text-[10px] text-muted-foreground font-mono">{r.number}</span>
                       </div>
                       <div className="mt-1 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
-                        <span className="inline-flex items-center gap-1.5"><CalendarRange className="h-3 w-3" /> {dateLabel(r.check_in)} → {dateLabel(r.check_out)} · {r.nights} night{r.nights !== 1 ? "s" : ""}</span>
-                        <span className="inline-flex items-center gap-1.5"><Clock className="h-3 w-3" /> In {timeLabel(r.check_in, r.room?.check_in_time)} · Out {timeLabel(r.check_out, r.room?.check_out_time)}</span>
+                        <span className="inline-flex items-center gap-1.5"><CalendarRange className="h-3 w-3" /> {reservationDateLabel(r.check_in)} → {reservationDateLabel(r.check_out)} · {r.nights} night{r.nights !== 1 ? "s" : ""}</span>
+                        <span className="inline-flex items-center gap-1.5"><Clock className="h-3 w-3" /> {reservationTimeRangeLabel(r.check_in, r.check_out, r.room?.check_in_time, r.room?.check_out_time)}</span>
                       </div>
                       <p className="text-[11px] text-muted-foreground mt-0.5">{r.adults} adult{r.adults !== 1 ? "s" : ""}{r.children ? ` · ${r.children} child${r.children > 1 ? "ren" : ""}` : ""}</p>
                       <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
