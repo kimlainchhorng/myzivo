@@ -49,7 +49,8 @@ export function ResponsiveModal({
         <SheetContent
           side="bottom"
           aria-modal="true"
-          className="p-0 h-auto max-h-[90dvh] flex flex-col rounded-t-2xl gap-0"
+          style={{ bottom: "calc(var(--zivo-mobile-nav-h, 64px) + env(safe-area-inset-bottom))" }}
+          className="p-0 h-auto max-h-[calc(90dvh-var(--zivo-mobile-nav-h,64px))] flex flex-col rounded-2xl gap-0 mx-2"
         >
           {/* Drag handle — keyboard accessible */}
           <div
