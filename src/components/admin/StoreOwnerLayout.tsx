@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   LogOut, ChevronLeft, ChevronDown, Menu, Home, Store,
   Package, CreditCard, Users, Megaphone, ClipboardList, Settings,
-  Wallet, Calendar, Clock, Shield, CalendarCheck, GraduationCap, FolderOpen, Radio,
+  Wallet, Calendar, Clock, Shield, ShieldCheck, CalendarCheck, GraduationCap, FolderOpen, Radio,
   FileText, ScanSearch, Wrench, ClipboardCheck, Car,
   FileSignature, Hammer, HardHat, BellRing, CircleDot, ShieldAlert, Truck, BarChart3,
   BedDouble, CalendarRange, CalendarDays, KeyRound, Sparkles, Hotel,
