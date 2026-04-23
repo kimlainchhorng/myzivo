@@ -96,7 +96,7 @@ export function LodgingRoomCard({
           aria-label={`View details for ${name}`}
           className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring px-3"
         >
-          <div className="grid grid-cols-2 gap-1.5 rounded-2xl overflow-hidden">
+          <div className="grid grid-cols-2 lg:grid-cols-[1fr_2fr] xl:grid-cols-[1fr_3fr] gap-1.5 rounded-2xl overflow-hidden">
             {/* Left big tile w/ info overlay */}
             <div className="relative aspect-[4/5] bg-gradient-to-br from-sky-100 to-sky-200/60 overflow-hidden rounded-l-2xl">
               {gridPhotos[0] ? (
@@ -134,14 +134,17 @@ export function LodgingRoomCard({
               </div>
             </div>
 
-            {/* Right column: 2x2 mini grid of photos */}
+            {/* Right column: 2x2 on mobile, 4-col mosaic on desktop */}
             <div className="grid grid-rows-2 gap-1.5">
               {[1, 2].map((row) => (
-                <div key={row} className="grid grid-cols-2 gap-1.5">
-                  {[gridPhotos[row * 2 - 1], gridPhotos[row * 2]].map((src, i) => (
+                <div key={row} className="grid grid-cols-2 lg:grid-cols-4 gap-1.5">
+                  {(window.innerWidth >= 1024
+                    ? [gridPhotos[row * 4 - 3], gridPhotos[row * 4 - 2], gridPhotos[row * 4 - 1], gridPhotos[row * 4]]
+                    : [gridPhotos[row * 2 - 1], gridPhotos[row * 2]]
+                  ).map((src, i, arr) => (
                     <div
                       key={i}
-                      className={`relative bg-gradient-to-br from-muted to-muted/50 overflow-hidden ${row === 1 && i === 1 ? "rounded-tr-2xl" : ""} ${row === 2 && i === 1 ? "rounded-br-2xl" : ""}`}
+                      className={`relative bg-gradient-to-br from-muted to-muted/50 overflow-hidden ${row === 1 && i === arr.length - 1 ? "rounded-tr-2xl" : ""} ${row === 2 && i === arr.length - 1 ? "rounded-br-2xl" : ""}`}
                     >
                       {src ? (
                         <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
