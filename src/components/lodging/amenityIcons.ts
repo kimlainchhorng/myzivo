@@ -11,11 +11,12 @@ import {
   Refrigerator as Fridge, ChefHat, CookingPot, Soup, Box, Wine, Container,
   Tv2, Monitor, Laptop, Music, Trees, Building, Eye, Anchor, Waves as River,
   Landmark, Palmtree, Bike, ShowerHead, Sofa, BookOpen, Gamepad2, Baby,
-  Accessibility, Cctv, KeyRound, Wrench, Hammer, Hand, Droplets,
+  Accessibility, Cctv, KeyRound, Wrench, Hammer, Hand, Droplets, Zap, Clock,
+  AlarmClock, Ruler, Users, Tv as Stream, ArrowUpToLine,
   type LucideIcon,
 } from "lucide-react";
 
-const norm = (s: string) => s.toLowerCase().replace(/[\s_\-/]+/g, "");
+const norm = (s: string) => s.toLowerCase().replace(/\([^)]*\)/g, "").replace(/['']/g, "").replace(/[\s_\-/>,.]+/g, "");
 
 const RAW_MAP: Record<string, LucideIcon> = {
   // Connectivity
@@ -192,8 +193,31 @@ const RAW_MAP: Record<string, LucideIcon> = {
   // Accessibility & family
   accessible: Accessibility,
   wheelchairaccessible: Accessibility,
+  upperfloorsaccessiblebyelevator: ArrowUpToLine,
+  evcharger: Zap,
   babycot: Baby,
   crib: Baby,
+  cribavailable: Baby,
+  babycotonrequest: Baby,
+  childrenscribscots: Baby,
+  familyfriendly: Users,
+
+  // Bedroom
+  linens: Bed,
+  extralongbeds: Ruler,
+  alarmclock: AlarmClock,
+
+  // Services & timing
+  hotshower: ShowerHead,
+  privatepool: Waves,
+  spatub: Bath,
+  "24hreception": Bell,
+  wakeupservice: AlarmClock,
+  laundryservice: WashingMachine,
+  streamingservice: Monitor,
+
+  // Parking variants
+  privateparking: ParkingCircle,
 
   // Misc
   books: BookOpen,
