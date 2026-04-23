@@ -132,6 +132,7 @@ export function LodgingEmbeddedCheckout({
             mode,
             ui_mode: "embedded",
             client_attempt_id: `embedded_${reservationId}${forceNew ? `_${Date.now()}` : ""}`,
+            force_new: forceNew,
           },
         }
       );
