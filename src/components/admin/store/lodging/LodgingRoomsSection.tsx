@@ -355,6 +355,24 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
           <DialogHeader><DialogTitle>{editing?.id ? "Edit Room" : "Add Room"}</DialogTitle></DialogHeader>
           {editing && (
             <div className="space-y-4">
+              {/* Quick-fill preset — Deluxe Double Sea View sample */}
+              <button
+                type="button"
+                onClick={applyDeluxeSeaViewPreset}
+                className="w-full flex items-center justify-between gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 px-3 py-2.5 text-left hover:bg-primary/10 transition"
+              >
+                <span className="flex items-center gap-2 text-sm">
+                  <Wand2 className="h-4 w-4 text-primary" />
+                  <span>
+                    <span className="font-semibold">Quick-fill: Deluxe Double Sea View</span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      323 ft² · 1 King · Sea view · Bathtub · Balcony · $146/night
+                    </span>
+                  </span>
+                </span>
+                <span className="text-[11px] text-primary font-medium">Apply</span>
+              </button>
+
               {/* Cover hero — primary upload entry point */}
               <div>
                 <LodgingRoomPhotoUploader
