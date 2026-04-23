@@ -97,6 +97,7 @@ export default function AdminLodgingReservationDetailPage() {
 
   const returnTo = (location.state as { returnTo?: string; workflow?: string } | null)?.returnTo;
   const goBack = () => navigate(returnTo || `/admin/stores/${storeId}`, { replace: !returnTo });
+  const clearWorkflow = () => navigate(location.pathname, { replace: true, state: location.state });
 
   const { data: reservation, isLoading } = useQuery({
     queryKey: ["lodge-reservation", reservationId],
@@ -228,7 +229,7 @@ export default function AdminLodgingReservationDetailPage() {
       setPendingStatus(null);
       setNote("");
       setReason("");
-      setSearchParams({});
+      clearWorkflow();
     } catch (e: any) {
       toast.error(e.message || "Update failed");
     } finally {
@@ -480,7 +481,7 @@ export default function AdminLodgingReservationDetailPage() {
                   />
                 </div>
                 <div className="flex gap-2 justify-end">
-                  <Button variant="outline" size="sm" onClick={() => { setPendingStatus(null); setNote(""); setReason(""); setSearchParams({}); }} disabled={saving}>Cancel</Button>
+                  <Button variant="outline" size="sm" onClick={() => { setPendingStatus(null); setNote(""); setReason(""); clearWorkflow(); }} disabled={saving}>Cancel</Button>
                   <Button
                     size="sm"
                     onClick={submitTransition}
