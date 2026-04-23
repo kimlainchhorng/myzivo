@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BarChart3, Download } from "lucide-react";
+import { BarChart3, CreditCard, Download, PackagePlus } from "lucide-react";
 import { useLodgeReports } from "@/hooks/lodging/useLodgeReports";
 
 function ymd(d: Date) { return d.toISOString().slice(0, 10); }
@@ -19,6 +19,9 @@ export default function LodgingReportsSection({ storeId }: { storeId: string }) 
   const { data, isLoading } = useLodgeReports(storeId, from, to);
 
   const usd = (cents: number) => `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const roomRevenue = data?.perRoomType.reduce((sum, room) => sum + room.revenue, 0) || 0;
+  const extrasRevenue = Math.max(0, (data?.totalRevenueCents || 0) - roomRevenue);
+  const paidEstimate = data?.totalRevenueCents || 0;
 
   const exportCsv = () => {
     if (!data) return;
@@ -59,6 +62,13 @@ export default function LodgingReportsSection({ storeId }: { storeId: string }) 
 
         {isLoading || !data ? <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p> : (
           <>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <FinanceCard icon={BarChart3} label="Room revenue" value={usd(roomRevenue)} />
+              <FinanceCard icon={PackagePlus} label="Extras revenue" value={usd(extrasRevenue)} />
+              <FinanceCard icon={CreditCard} label="Paid / posted" value={usd(paidEstimate)} />
+              <FinanceCard icon={BarChart3} label="Tax included" value="Tracked per reservation" />
+            </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { label: "Occupancy", value: `${data.occupancyPct.toFixed(1)}%` },
@@ -111,4 +121,8 @@ export default function LodgingReportsSection({ storeId }: { storeId: string }) 
       </CardContent>
     </Card>
   );
+}
+
+function FinanceCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return <div className="rounded-lg border border-border bg-primary/5 p-3"><div className="flex items-center justify-between gap-2"><p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</p><Icon className="h-4 w-4 text-primary" /></div><p className="mt-2 text-lg font-bold text-foreground truncate">{value}</p></div>;
 }
