@@ -83,13 +83,17 @@ export default function StoreHeroCarousel({ images, storeName, positions }: Stor
         <span className="tabular-nums">{selectedIndex + 1}/{images.length}</span>
       </div>
 
-      {/* Store name caption — bottom-left */}
-      <div className="absolute bottom-3 left-3 right-20 z-[3] pointer-events-none">
-        <p className="text-white text-[13px] font-bold drop-shadow-lg truncate">
+      {/* Store name caption — bottom-left, premium editorial style */}
+      <div className="absolute bottom-4 left-4 right-24 z-[3] pointer-events-none">
+        <div className="inline-flex items-center gap-1.5 mb-1.5">
+          <span className="h-1 w-1 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+          <span className="text-emerald-300 text-[9px] font-black uppercase tracking-[0.18em] drop-shadow">Live Gallery</span>
+        </div>
+        <p className="text-white text-[15px] font-black drop-shadow-2xl truncate leading-tight" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
           {storeName}
         </p>
-        <p className="text-white/80 text-[10px] font-medium drop-shadow truncate">
-          Tap to swipe through photos
+        <p className="text-white/75 text-[10px] font-semibold tracking-wide mt-0.5 truncate">
+          Swipe to explore · {images.length} photos
         </p>
       </div>
 
