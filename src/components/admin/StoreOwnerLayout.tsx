@@ -9,10 +9,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   LogOut, ChevronLeft, ChevronDown, Menu, Home, Store,
   Package, CreditCard, Users, Megaphone, ClipboardList, Settings,
-  Wallet, Calendar, Clock, Shield, CalendarCheck, GraduationCap, FolderOpen, Radio,
+  Wallet, Calendar, Clock, Shield, ShieldCheck, CalendarCheck, GraduationCap, FolderOpen, Radio,
   FileText, ScanSearch, Wrench, ClipboardCheck, Car,
   FileSignature, Hammer, HardHat, BellRing, CircleDot, ShieldAlert, Truck, BarChart3,
-  BedDouble, CalendarRange, CalendarDays, KeyRound, Sparkles, Hotel
+  BedDouble, CalendarRange, CalendarDays, KeyRound, Sparkles, Hotel,
+  PackagePlus, Utensils, Palmtree, HeartPulse, MessageSquareText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -146,6 +147,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       { id: "ar-reports", label: "Reports", icon: BarChart3 },
     ] : []),
     ...(isLodging ? [
+      { id: "lodge-overview", label: "Overview", icon: Hotel },
       { id: "_lodging_ops_label", label: "HOTEL OPS", icon: BedDouble, divider: true },
       { id: "lodge-rooms", label: "Rooms & Rates", icon: BedDouble },
       { id: "lodge-reservations", label: "Reservations", icon: CalendarRange },
@@ -154,8 +156,17 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       { id: "lodge-frontdesk", label: "Front Desk", icon: KeyRound },
       { id: "lodge-housekeeping", label: "Housekeeping", icon: Sparkles },
       { id: "lodge-maintenance", label: "Maintenance", icon: Wrench },
+      { id: "_lodging_guest_services_label", label: "GUEST SERVICES", icon: Sparkles, divider: true },
+      { id: "lodge-addons", label: "Add-ons & Packages", icon: PackagePlus },
+      { id: "lodge-dining", label: "Dining & Meal Plans", icon: Utensils },
+      { id: "lodge-experiences", label: "Experiences & Tours", icon: Palmtree },
+      { id: "lodge-transport", label: "Transport & Transfers", icon: Car },
+      { id: "lodge-wellness", label: "Spa & Wellness", icon: HeartPulse },
+      { id: "_lodging_sales_label", label: "SALES & GROWTH", icon: BarChart3, divider: true },
       { id: "lodge-property", label: "Property Profile", icon: Hotel },
       { id: "lodge-amenities", label: "Amenities & Policies", icon: Hotel },
+      { id: "lodge-policies", label: "Policies & Rules", icon: ShieldCheck },
+      { id: "lodge-reviews", label: "Reviews & Guest Feedback", icon: MessageSquareText },
       { id: "lodge-reports", label: "Reports", icon: BarChart3 },
     ] : []),
     { id: "customers", label: "Customers", icon: Users },

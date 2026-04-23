@@ -76,6 +76,14 @@ import LodgingHousekeepingSection from "@/components/admin/store/lodging/Lodging
 import LodgingMaintenanceSection from "@/components/admin/store/lodging/LodgingMaintenanceSection";
 import LodgingAmenitiesSection from "@/components/admin/store/lodging/LodgingAmenitiesSection";
 import LodgingReportsSection from "@/components/admin/store/lodging/LodgingReportsSection";
+import LodgingOverviewSection from "@/components/admin/store/lodging/LodgingOverviewSection";
+import LodgingAddOnsSection from "@/components/admin/store/lodging/LodgingAddOnsSection";
+import LodgingDiningSection from "@/components/admin/store/lodging/LodgingDiningSection";
+import LodgingExperiencesSection from "@/components/admin/store/lodging/LodgingExperiencesSection";
+import LodgingTransportSection from "@/components/admin/store/lodging/LodgingTransportSection";
+import LodgingWellnessSection from "@/components/admin/store/lodging/LodgingWellnessSection";
+import LodgingPoliciesSection from "@/components/admin/store/lodging/LodgingPoliciesSection";
+import LodgingReviewsSection from "@/components/admin/store/lodging/LodgingReviewsSection";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
@@ -1936,6 +1944,7 @@ export default function AdminStoreEditPage() {
     "ar-reports": "Reports & Analytics",
   };
   const lodgingTitles: Record<string, string> = {
+    "lodge-overview": "Hotel Overview",
     "lodge-rooms": "Rooms & Rates",
     "lodge-reservations": "Reservations",
     "lodge-calendar": "Calendar & Availability",
@@ -1943,8 +1952,15 @@ export default function AdminStoreEditPage() {
     "lodge-frontdesk": "Front Desk",
     "lodge-housekeeping": "Housekeeping",
     "lodge-maintenance": "Maintenance & Work Orders",
+    "lodge-addons": "Add-ons & Packages",
+    "lodge-dining": "Dining & Meal Plans",
+    "lodge-experiences": "Experiences & Tours",
+    "lodge-transport": "Transport & Transfers",
+    "lodge-wellness": "Spa & Wellness",
     "lodge-amenities": "Amenities & Policies",
     "lodge-property": "Property Profile",
+    "lodge-policies": "Policies & Rules",
+    "lodge-reviews": "Reviews & Guest Feedback",
     "lodge-reports": "Reports & Analytics",
   };
   const productsLabelTitle = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
@@ -3639,6 +3655,7 @@ export default function AdminStoreEditPage() {
 
           {["hotel","resort","guesthouse"].includes(form.category) && (
             <>
+              <TabsContent value="lodge-overview"><LodgingOverviewSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-rooms"><LodgingRoomsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-reservations"><LodgingReservationsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-calendar"><LodgingCalendarSection storeId={storeId!} /></TabsContent>
@@ -3646,8 +3663,15 @@ export default function AdminStoreEditPage() {
               <TabsContent value="lodge-frontdesk"><LodgingFrontDeskSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-housekeeping"><LodgingHousekeepingSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-maintenance"><LodgingMaintenanceSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-addons"><LodgingAddOnsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-dining"><LodgingDiningSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-experiences"><LodgingExperiencesSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-transport"><LodgingTransportSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-wellness"><LodgingWellnessSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-amenities"><LodgingAmenitiesSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-property"><LodgingPropertyProfileSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-policies"><LodgingPoliciesSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-reviews"><LodgingReviewsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-reports"><LodgingReportsSection storeId={storeId!} /></TabsContent>
             </>
           )}
