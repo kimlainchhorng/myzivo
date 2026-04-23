@@ -96,12 +96,14 @@ export default function AddOnsSheet({ open, onOpenChange, reservationId, addons,
     setLoading(false);
     if (error || data?.error) {
       toast.error(data?.reason || data?.message || (data?.error === "no_saved_payment_method" ? "No saved payment method found. Add a card in Wallet first." : data?.error || error?.message || "Could not charge add-ons"));
+      onPurchased?.("failed");
       return;
     }
-    toast.success(`Charged $${((data?.charged_cents || total) / 100).toFixed(2)} for add-ons`);
+    toast.success("Add-on charge successful", { description: `Charged $${((data?.charged_cents || total) / 100).toFixed(2)} to your saved card.` });
     setQty({});
-    onPurchased?.();
+    onPurchased?.("success");
     onOpenChange(false);
+    window.setTimeout(() => document.querySelector("#addon-status")?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
   };
 
   return (
