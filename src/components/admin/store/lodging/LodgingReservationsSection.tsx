@@ -82,19 +82,24 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
         {isLoading ? (
           <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p>
         ) : filtered.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-8 text-center">No reservations</p>
+          <p className="text-sm text-muted-foreground py-8 text-center">
+            {q.trim() ? "No reservations match your search" : status === "active" ? "No active reservations" : `No ${STATUS_LABEL[status].toLowerCase()} reservations`}
+          </p>
         ) : (
           <div className="space-y-2">
             {filtered.map(r => {
               const displayName = r.guest_name?.trim() || `Guest · ${r.number || r.id.slice(0, 8)}`;
               const balance = (r.total_cents || 0) - (r.paid_cents || 0);
               const hasPendingRequest = pendingRequests.some(req => req.reservation_id === r.id);
+              const paymentNeedsReview = ["failed", "pending", "processing"].includes(String(r.payment_status || ""));
+              const isClosed = CLOSED_STATUSES.has(r.status);
+              const needsReview = hasPendingRequest || balance > 0 || paymentNeedsReview || isClosed;
               return (
-              <div key={r.id} className="p-3 rounded-lg border bg-card">
+              <div key={r.id} className="p-3 rounded-lg border bg-card transition hover:border-primary/40 focus-within:border-primary/40">
                 <button
                   type="button"
-                  onClick={() => navigate(`/admin/stores/${storeId}/lodging/reservations/${r.id}`)}
-                  className="w-full text-left"
+                  onClick={() => openReservation(r.id)}
+                  className="w-full text-left rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -112,7 +117,7 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
                         {r.guest_email && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{r.guest_email}</span>}
                       </p>
                       <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        <LodgingPaymentBadge status={(r as any).payment_status} amountCents={(r as any).deposit_cents || r.total_cents} />
+                        <LodgingPaymentBadge status={(r as any).payment_status} reservationStatus={r.status} amountCents={(r as any).deposit_cents || r.total_cents} />
                         {balance > 0 && <Badge variant="destructive" className="text-[10px]">Balance {money(balance)}</Badge>}
                         {hasPendingRequest && <Badge variant="secondary" className="text-[10px]">Pending guest request</Badge>}
                         {r.status === "cancelled" && String(r.payment_status).includes("refund") && <Badge variant="secondary" className="text-[10px]">Refund workflow</Badge>}
@@ -133,10 +138,12 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
                   </div>
                 </button>
                 <div className="flex flex-wrap gap-1 mt-2">
+                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => openReservation(r.id)}><ExternalLink className="h-3 w-3" /> Open</Button>
+                  {needsReview && <Button size="sm" variant="secondary" className="h-7 text-xs gap-1" onClick={() => openReservation(r.id)}><ClipboardCheck className="h-3 w-3" /> Review</Button>}
                   {r.status === "hold" && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "confirmed", "Confirmed")}><CheckCircle2 className="h-3 w-3" /> Confirm</Button>}
                   {(r.status === "confirmed" || r.status === "hold") && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "checked_in", "Checked in")}><LogIn className="h-3 w-3" /> Check-In</Button>}
                   {r.status === "checked_in" && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "checked_out", "Checked out")}><LogOut className="h-3 w-3" /> Check-Out</Button>}
-                  {!["cancelled", "checked_out"].includes(r.status) && <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-destructive" onClick={() => act(r.id, "cancelled", "Cancelled")}><XCircle className="h-3 w-3" /> Cancel</Button>}
+                  {!CLOSED_STATUSES.has(r.status) && <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-destructive" onClick={() => openReservation(r.id, "cancel")}><XCircle className="h-3 w-3" /> Cancel / No-show</Button>}
                 </div>
               </div>
             );})}
