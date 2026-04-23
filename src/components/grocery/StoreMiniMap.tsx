@@ -101,18 +101,36 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug }: S
       });
       mapRef.current = map;
 
-      // Lucide-style MapPin teardrop SVG, emerald-filled with white stroke
+      // Premium ZIVO pin: glossy emerald teardrop with inner glow + soft ground shadow
       const pinSvg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="48" viewBox="0 0 40 48">
+        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="68" viewBox="0 0 56 68">
           <defs>
-            <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.35"/>
+            <radialGradient id="pinFill" cx="50%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#34d399"/>
+              <stop offset="55%" stop-color="#10b981"/>
+              <stop offset="100%" stop-color="#047857"/>
+            </radialGradient>
+            <radialGradient id="gloss" cx="35%" cy="25%" r="35%">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85"/>
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="pinShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.35"/>
             </filter>
           </defs>
-          <g filter="url(#shadow)">
-            <path d="M20 2 C11.16 2 4 9.16 4 18 c0 12 16 28 16 28 s16-16 16-28 C36 9.16 28.84 2 20 2 z"
-                  fill="#10b981" stroke="#ffffff" stroke-width="2.5"/>
-            <circle cx="20" cy="18" r="6" fill="#ffffff"/>
+          <!-- ground shadow ellipse -->
+          <ellipse cx="28" cy="63" rx="9" ry="2.5" fill="#000" opacity="0.25"/>
+          <g filter="url(#pinShadow)">
+            <!-- teardrop body -->
+            <path d="M28 3 C16.4 3 7 12.4 7 24 c0 15.5 21 36 21 36 s21-20.5 21-36 C49 12.4 39.6 3 28 3 z"
+                  fill="url(#pinFill)" stroke="#ffffff" stroke-width="3"/>
+            <!-- gloss highlight -->
+            <path d="M28 3 C16.4 3 7 12.4 7 24 c0 15.5 21 36 21 36 s21-20.5 21-36 C49 12.4 39.6 3 28 3 z"
+                  fill="url(#gloss)"/>
+            <!-- inner white disc -->
+            <circle cx="28" cy="24" r="9" fill="#ffffff"/>
+            <!-- emerald dot -->
+            <circle cx="28" cy="24" r="4" fill="#10b981"/>
           </g>
         </svg>`;
       const marker = new google.maps.Marker({
@@ -121,9 +139,10 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug }: S
         title: storeName,
         icon: {
           url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(pinSvg),
-          scaledSize: new google.maps.Size(40, 48),
-          anchor: new google.maps.Point(20, 46),
+          scaledSize: new google.maps.Size(56, 68),
+          anchor: new google.maps.Point(28, 64),
         },
+        animation: google.maps.Animation.DROP,
       });
 
       marker.addListener("click", () => {
