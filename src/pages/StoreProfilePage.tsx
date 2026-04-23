@@ -133,6 +133,41 @@ export default function StoreProfilePage() {
     });
   }, [store?.id, hasBooking, bookingSource]);
 
+  // Detect booking flip: false → true while page is open. Prompt user to open chat.
+  const prevHasBookingRef = useRef<boolean | undefined>(undefined);
+  useEffect(() => {
+    if (loadingBooking || !store?.id) return;
+    const prev = prevHasBookingRef.current;
+    if (prev === false && hasBooking === true) {
+      toast.success(
+        `Booking confirmed — chat with ${store.name || "this store"} is now unlocked`,
+        {
+          duration: 8000,
+          action: {
+            label: "Open chat",
+            onClick: () => setChatOpen(true),
+          },
+        }
+      );
+    }
+    prevHasBookingRef.current = hasBooking;
+  }, [hasBooking, loadingBooking, store?.id, store?.name]);
+
+  // Long-press support for the Share tile (copy link fallback).
+  const sharePressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sharePressFiredRef = useRef(false);
+  const copyShareLink = async () => {
+    try {
+      const url = typeof window !== "undefined" ? window.location.href : "";
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied to clipboard");
+      }
+    } catch {
+      toast.error("Could not copy link");
+    }
+  };
+
   const rooms = useMemo(() => (allRooms || []).filter(r => r.is_active), [allRooms]);
 
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
