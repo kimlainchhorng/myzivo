@@ -215,7 +215,6 @@ const RAW_MAP: Record<string, LucideIcon> = {
   wakeupservice: AlarmClock,
   laundryservice: WashingMachine,
   streamingservice: Monitor,
-  netflix: Monitor,
 
   // Parking variants
   privateparking: ParkingCircle,
