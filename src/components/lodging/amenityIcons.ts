@@ -198,8 +198,6 @@ const RAW_MAP: Record<string, LucideIcon> = {
   // Misc
   books: BookOpen,
   games: Gamepad2,
-  hairdryer: Wind,
-  toiletries: Droplets,
 };
 
 export function getAmenityIcon(name: string): LucideIcon {
