@@ -572,7 +572,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                   <div className="space-y-2">
                     {(editing.addons || []).map((a, i) => (
                       <div key={i} className="grid grid-cols-12 gap-1.5 items-center p-2 rounded-lg border border-border bg-muted/20">
-                        {a.icon && <span className="col-span-1 text-center text-base">{a.icon}</span>}
+                        {a.icon && <span className="col-span-1 flex justify-center"><AddonIcon slug={a.icon} className="h-4 w-4" /></span>}
                         <Input
                           className={`${a.icon ? 'col-span-4' : 'col-span-5'} h-8 text-xs`}
                           placeholder="Breakfast"
