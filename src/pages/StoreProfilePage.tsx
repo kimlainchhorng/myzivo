@@ -105,8 +105,19 @@ export default function StoreProfilePage() {
   const hasBooking = !!bookingCheck?.hasBooking;
   const bookingSource = bookingCheck?.source ?? null;
   const phoneNumber = (store as any)?.phone || (store as any)?.contact?.phone || "";
-  const callable = hasBooking && !!phoneNumber;
+  const storeCountryCode = (store as any)?.country_code || (store as any)?.country || "";
+  // Normalize phone to E.164 once. If raw value already has "+", keep as-is.
+  // Otherwise prefix with the store's country dial code (default +855 / Cambodia).
+  const normalizedPhone = useMemo(() => {
+    if (!phoneNumber) return "";
+    const trimmed = String(phoneNumber).trim();
+    if (trimmed.startsWith("+")) return normalizePhoneE164(trimmed);
+    const dial = String(storeCountryCode).toUpperCase() === "US" ? "+1" : "+855";
+    return buildPhoneE164(dial, trimmed);
+  }, [phoneNumber, storeCountryCode]);
+  const callable = hasBooking && !!normalizedPhone;
   const chattable = hasBooking;
+  const queryClient = useQueryClient();
 
   // Per-render click nonce so double-clicks within one render share an id
   // (deduped downstream); a deliberate later click after re-render gets a new one.
