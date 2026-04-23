@@ -498,6 +498,7 @@ export function LodgingRoomDetailsModal({
             )}
           </div>
         </div>
+        </div>
       </div>
 
       {/* Full-screen lightbox */}
