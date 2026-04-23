@@ -357,6 +357,14 @@ export default function AdminLodgingReservationDetailPage() {
                     <p className="font-semibold text-foreground">Confirm before saving</p>
                     <p>This reservation will leave the Active queue after it is marked {STATUS_LABEL[pendingStatus].toLowerCase()}.</p>
                     <p>Next steps: save a clear audit note, review payment/refund follow-up, then return to Active reservations.</p>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      <Button type="button" size="sm" variant={pendingStatus === "cancelled" ? "destructive" : "outline"} className="h-7 text-xs" onClick={() => { setPendingStatus("cancelled"); setReason(""); }}>
+                        Cancel reservation
+                      </Button>
+                      <Button type="button" size="sm" variant={pendingStatus === "no_show" ? "destructive" : "outline"} className="h-7 text-xs" onClick={() => { setPendingStatus("no_show"); setReason(""); }}>
+                        Mark no-show
+                      </Button>
+                    </div>
                   </div>
                 )}
 
