@@ -1781,6 +1781,67 @@ export default function AdminStoreEditPage() {
     }
   };
 
+  const uploadGalleryImages = async (files: File[]) => {
+    const remaining = 20 - galleryImages.length;
+    if (remaining <= 0) {
+      toast.error("Maximum 20 gallery images allowed");
+      return;
+    }
+    const queue = files.slice(0, remaining);
+    if (files.length > remaining) {
+      toast.warning(`Only ${remaining} of ${files.length} added (limit 20)`);
+    }
+    const prev = galleryImages;
+    let current = [...galleryImages];
+    setUploadingGallery(true);
+    const toastId = toast.loading(`Uploading 0/${queue.length}...`);
+    let success = 0;
+    let failed = 0;
+    try {
+      for (let i = 0; i < queue.length; i++) {
+        try {
+          const { publicUrl } = await uploadStoreAsset({
+            storeId: storeId!,
+            file: queue[i],
+            surface: "gallery",
+          });
+          current = [...current, publicUrl];
+          setGalleryImages(current);
+          success++;
+        } catch (err: any) {
+          failed++;
+          console.error("Gallery upload failed:", err);
+        }
+        toast.loading(`Uploading ${i + 1}/${queue.length}...`, { id: toastId });
+      }
+      if (success > 0) {
+        const { error: saveErr } = await supabase
+          .from("store_profiles")
+          .update({ gallery_images: current } as any)
+          .eq("id", storeId!);
+        if (saveErr) throw saveErr;
+        const persisted = await verifyStoreProfileGallery(storeId!, current);
+        if (!persisted) {
+          setGalleryImages(prev);
+          toast.error("Saved URLs did not persist — try again", { id: toastId });
+          return;
+        }
+        queryClient.invalidateQueries({ queryKey: ["admin-store", storeId] });
+      }
+      toast.success(
+        failed > 0
+          ? `Added ${success} image${success !== 1 ? "s" : ""}, ${failed} failed`
+          : `Added ${success} image${success !== 1 ? "s" : ""}`,
+        { id: toastId }
+      );
+    } catch (e: any) {
+      setGalleryImages(prev);
+      toast.error(e?.message || "Gallery upload failed", { id: toastId });
+    } finally {
+      setUploadingGallery(false);
+    }
+  };
+
   const removeGalleryImage = async (index: number) => {
     const newImages = galleryImages.filter((_, i) => i !== index);
     setGalleryImages(newImages);
@@ -2210,10 +2271,11 @@ export default function AdminStoreEditPage() {
               ref={galleryInputRef}
               type="file"
               accept="image/*"
+              multiple
               className="hidden"
               onChange={e => {
-                const f = e.target.files?.[0];
-                if (f) uploadGalleryImage(f);
+                const files = Array.from(e.target.files || []);
+                if (files.length > 0) uploadGalleryImages(files);
                 e.target.value = "";
               }}
             />
@@ -2512,10 +2574,11 @@ export default function AdminStoreEditPage() {
                   ref={galleryInputRef}
                   type="file"
                   accept="image/*"
+                  multiple
                   className="hidden"
                   onChange={e => {
-                    const f = e.target.files?.[0];
-                    if (f) uploadGalleryImage(f);
+                    const files = Array.from(e.target.files || []);
+                    if (files.length > 0) uploadGalleryImages(files);
                     e.target.value = "";
                   }}
                 />
