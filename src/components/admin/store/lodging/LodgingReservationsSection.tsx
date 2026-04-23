@@ -3,7 +3,7 @@
  * Tapping a row opens the full reservation details page.
  */
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +32,7 @@ const money = (cents?: number | null) => `$${((Number(cents) || 0) / 100).toFixe
 
 export default function LodgingReservationsSection({ storeId }: { storeId: string }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [status, setStatus] = useState<ReservationFilter>("active");
   const [q, setQ] = useState("");
   const queryStatus = status === "active" ? "all" : status;
@@ -53,8 +54,10 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
     catch (e: any) { toast.error(e.message || "Failed"); }
   };
 
-  const openReservation = (id: string, workflow?: "cancel") => {
-    navigate(`/admin/stores/${storeId}/lodging/reservations/${id}${workflow ? `?workflow=${workflow}` : ""}`);
+  const openReservation = (id: string, workflow?: "cancel" | "review" | "addons" | "payment" | "audit") => {
+    navigate(`/admin/stores/${storeId}/lodging/reservations/${id}${workflow ? `?workflow=${workflow}` : ""}`, {
+      state: { returnTo: `${location.pathname}${location.search}` },
+    });
   };
 
   return (
@@ -94,6 +97,7 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
               const paymentNeedsReview = ["failed", "pending", "processing"].includes(String(r.payment_status || ""));
               const isClosed = CLOSED_STATUSES.has(r.status);
               const needsReview = hasPendingRequest || balance > 0 || paymentNeedsReview || isClosed;
+              const reviewWorkflow = hasPendingRequest ? "addons" : paymentNeedsReview || balance > 0 ? "payment" : isClosed ? "audit" : "review";
               return (
               <div key={r.id} className="p-3 rounded-lg border bg-card transition hover:border-primary/40 focus-within:border-primary/40">
                 <button
@@ -139,7 +143,7 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
                 </button>
                 <div className="flex flex-wrap gap-1 mt-2">
                   <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => openReservation(r.id)}><ExternalLink className="h-3 w-3" /> Open</Button>
-                  {needsReview && <Button size="sm" variant="secondary" className="h-7 text-xs gap-1" onClick={() => openReservation(r.id)}><ClipboardCheck className="h-3 w-3" /> Review</Button>}
+                  {needsReview && <Button size="sm" variant="secondary" className="h-7 text-xs gap-1" onClick={() => openReservation(r.id, reviewWorkflow)}><ClipboardCheck className="h-3 w-3" /> Review</Button>}
                   {r.status === "hold" && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "confirmed", "Confirmed")}><CheckCircle2 className="h-3 w-3" /> Confirm</Button>}
                   {(r.status === "confirmed" || r.status === "hold") && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "checked_in", "Checked in")}><LogIn className="h-3 w-3" /> Check-In</Button>}
                   {r.status === "checked_in" && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "checked_out", "Checked out")}><LogOut className="h-3 w-3" /> Check-Out</Button>}
