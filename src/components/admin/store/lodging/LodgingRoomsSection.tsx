@@ -12,7 +12,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BedDouble, Plus, Trash2, Pencil, Image as ImageIcon } from "lucide-react";
+import {
+  BedDouble, Plus, Trash2, Pencil, Image as ImageIcon,
+  Landmark, Building, Sparkles, ConciergeBell, Receipt,
+  Baby, UserPlus, Users, Coins, BadgePercent, Sun,
+  Maximize2, Hash, CalendarDays, CalendarRange, Clock, ShieldCheck,
+  DollarSign, type LucideIcon,
+} from "lucide-react";
 import { AddonIcon } from "@/components/lodging/addonIcons";
 import { getAmenityIcon } from "@/components/lodging/amenityIcons";
 import { toast } from "sonner";
@@ -343,68 +349,77 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
               </div>
 
               <div className="grid grid-cols-3 gap-3">
-                <div><Label>Max guests</Label><Input type="number" inputMode="numeric" value={editing.max_guests ?? ""} onChange={e => setEditing({ ...editing, max_guests: e.target.value === "" ? null : parseInt(e.target.value) })} /></div>
-                <div><Label>Size m²</Label><Input type="number" inputMode="decimal" value={editing.size_sqm ?? ""} onChange={e => setEditing({ ...editing, size_sqm: e.target.value === "" ? null : parseFloat(e.target.value) })} /></div>
-                <div><Label>Units</Label><Input type="number" inputMode="numeric" value={editing.units_total ?? ""} onChange={e => setEditing({ ...editing, units_total: e.target.value === "" ? null : parseInt(e.target.value) })} /></div>
+                <div><Label className="inline-flex items-center gap-1.5"><Users className="h-3 w-3 text-muted-foreground" />Max guests</Label><Input type="number" inputMode="numeric" value={editing.max_guests ?? ""} onChange={e => setEditing({ ...editing, max_guests: e.target.value === "" ? null : parseInt(e.target.value) })} /></div>
+                <div><Label className="inline-flex items-center gap-1.5"><Maximize2 className="h-3 w-3 text-muted-foreground" />Size m²</Label><Input type="number" inputMode="decimal" value={editing.size_sqm ?? ""} onChange={e => setEditing({ ...editing, size_sqm: e.target.value === "" ? null : parseFloat(e.target.value) })} /></div>
+                <div><Label className="inline-flex items-center gap-1.5"><Hash className="h-3 w-3 text-muted-foreground" />Units</Label><Input type="number" inputMode="numeric" value={editing.units_total ?? ""} onChange={e => setEditing({ ...editing, units_total: e.target.value === "" ? null : parseInt(e.target.value) })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Base rate (USD)</Label><Input type="number" step="0.01" inputMode="decimal" value={editing.base_rate_cents == null ? "" : editing.base_rate_cents / 100} onChange={e => setEditing({ ...editing, base_rate_cents: e.target.value === "" ? null : Math.round(parseFloat(e.target.value) * 100) })} /></div>
-                <div><Label>Weekend rate (USD)</Label><Input type="number" step="0.01" inputMode="decimal" value={editing.weekend_rate_cents == null ? "" : editing.weekend_rate_cents / 100} onChange={e => setEditing({ ...editing, weekend_rate_cents: e.target.value === "" ? null : Math.round(parseFloat(e.target.value) * 100) })} /></div>
+                <div><Label className="inline-flex items-center gap-1.5"><DollarSign className="h-3 w-3 text-muted-foreground" />Base rate (USD)</Label><Input type="number" step="0.01" inputMode="decimal" value={editing.base_rate_cents == null ? "" : editing.base_rate_cents / 100} onChange={e => setEditing({ ...editing, base_rate_cents: e.target.value === "" ? null : Math.round(parseFloat(e.target.value) * 100) })} /></div>
+                <div><Label className="inline-flex items-center gap-1.5"><Sun className="h-3 w-3 text-amber-500" />Weekend rate (USD)</Label><Input type="number" step="0.01" inputMode="decimal" value={editing.weekend_rate_cents == null ? "" : editing.weekend_rate_cents / 100} onChange={e => setEditing({ ...editing, weekend_rate_cents: e.target.value === "" ? null : Math.round(parseFloat(e.target.value) * 100) })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Weekly discount %</Label><Input type="number" inputMode="decimal" value={editing.weekly_discount_pct ?? ""} onChange={e => setEditing({ ...editing, weekly_discount_pct: e.target.value === "" ? null : parseFloat(e.target.value) })} /></div>
-                <div><Label>Monthly discount %</Label><Input type="number" inputMode="decimal" value={editing.monthly_discount_pct ?? ""} onChange={e => setEditing({ ...editing, monthly_discount_pct: e.target.value === "" ? null : parseFloat(e.target.value) })} /></div>
+                <div><Label className="inline-flex items-center gap-1.5"><BadgePercent className="h-3 w-3 text-emerald-500" />Weekly discount %</Label><Input type="number" inputMode="decimal" value={editing.weekly_discount_pct ?? ""} onChange={e => setEditing({ ...editing, weekly_discount_pct: e.target.value === "" ? null : parseFloat(e.target.value) })} /></div>
+                <div><Label className="inline-flex items-center gap-1.5"><BadgePercent className="h-3 w-3 text-emerald-500" />Monthly discount %</Label><Input type="number" inputMode="decimal" value={editing.monthly_discount_pct ?? ""} onChange={e => setEditing({ ...editing, monthly_discount_pct: e.target.value === "" ? null : parseFloat(e.target.value) })} /></div>
               </div>
 
               {/* Tax & fee breakdown */}
               <div className="rounded-lg border border-dashed border-border p-3 space-y-2 bg-muted/10">
-                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Taxes & fees (shown to guest at checkout)</Label>
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground inline-flex items-center gap-1.5">
+                  <Receipt className="h-3.5 w-3.5" />
+                  Taxes & fees (shown to guest at checkout)
+                </Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <FeeInput label="City tax / guest / night (USD)" value={editing.fees?.city_tax_cents}
+                  <FeeInput icon={Landmark} label="City tax / guest / night (USD)" value={editing.fees?.city_tax_cents}
                     onChange={(v) => setEditing({ ...editing, fees: { ...(editing.fees as RoomFees || {}), city_tax_cents: v } })} />
-                  <FeeInput label="Resort fee / night (USD)" value={editing.fees?.resort_fee_cents}
+                  <FeeInput icon={Building} label="Resort fee / night (USD)" value={editing.fees?.resort_fee_cents}
                     onChange={(v) => setEditing({ ...editing, fees: { ...(editing.fees as RoomFees || {}), resort_fee_cents: v } })} />
-                  <FeeInput label="Cleaning fee / stay (USD)" value={editing.fees?.cleaning_fee_cents}
+                  <FeeInput icon={Sparkles} label="Cleaning fee / stay (USD)" value={editing.fees?.cleaning_fee_cents}
                     onChange={(v) => setEditing({ ...editing, fees: { ...(editing.fees as RoomFees || {}), cleaning_fee_cents: v } })} />
-                  <PctInput label="Service charge %" value={editing.fees?.service_charge_pct}
+                  <PctInput icon={ConciergeBell} label="Service charge %" value={editing.fees?.service_charge_pct}
                     onChange={(v) => setEditing({ ...editing, fees: { ...(editing.fees as RoomFees || {}), service_charge_pct: v } })} />
-                  <PctInput label="VAT %" value={editing.fees?.vat_pct}
+                  <PctInput icon={Receipt} label="VAT %" value={editing.fees?.vat_pct}
                     onChange={(v) => setEditing({ ...editing, fees: { ...(editing.fees as RoomFees || {}), vat_pct: v } })} />
                 </div>
               </div>
 
               {/* Children & extra-guest policy */}
               <div className="rounded-lg border border-dashed border-border p-3 space-y-2 bg-muted/10">
-                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Children & extra guests</Label>
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground inline-flex items-center gap-1.5">
+                  <Baby className="h-3.5 w-3.5" />
+                  Children & extra guests
+                </Label>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label className="text-xs">Child max age</Label>
+                    <Label className="text-xs inline-flex items-center gap-1.5"><Baby className="h-3 w-3 text-pink-500" />Child max age</Label>
                     <Input type="number" inputMode="numeric" value={editing.child_policy?.child_max_age ?? ""}
                       onChange={e => setEditing({ ...editing, child_policy: { ...(editing.child_policy as ChildPolicy || {}), child_max_age: e.target.value === "" ? undefined : parseInt(e.target.value) } })} />
                   </div>
                   <div>
-                    <Label className="text-xs">Free under age</Label>
+                    <Label className="text-xs inline-flex items-center gap-1.5"><BadgePercent className="h-3 w-3 text-emerald-500" />Free under age</Label>
                     <Input type="number" inputMode="numeric" value={editing.child_policy?.free_age ?? ""}
                       onChange={e => setEditing({ ...editing, child_policy: { ...(editing.child_policy as ChildPolicy || {}), free_age: e.target.value === "" ? undefined : parseInt(e.target.value) } })} />
                   </div>
-                  <FeeInput label="Extra adult / night (USD)" value={editing.child_policy?.extra_adult_fee_cents}
+                  <FeeInput icon={UserPlus} label="Extra adult / night (USD)" value={editing.child_policy?.extra_adult_fee_cents}
                     onChange={(v) => setEditing({ ...editing, child_policy: { ...(editing.child_policy as ChildPolicy || {}), extra_adult_fee_cents: v } })} />
-                  <FeeInput label="Extra child / night (USD)" value={editing.child_policy?.extra_child_fee_cents}
+                  <FeeInput icon={Baby} label="Extra child / night (USD)" value={editing.child_policy?.extra_child_fee_cents}
                     onChange={(v) => setEditing({ ...editing, child_policy: { ...(editing.child_policy as ChildPolicy || {}), extra_child_fee_cents: v } })} />
                 </div>
               </div>
 
               {/* Min / max stay rules */}
               <div className="rounded-lg border border-dashed border-border p-3 space-y-2 bg-muted/10">
-                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Stay rules</Label>
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground inline-flex items-center gap-1.5">
+                  <CalendarRange className="h-3.5 w-3.5" />
+                  Stay rules
+                </Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <div><Label className="text-xs">Min nights</Label><Input type="number" inputMode="numeric" min={1} value={editing.min_stay ?? 1}
+                  <div><Label className="text-xs inline-flex items-center gap-1.5"><CalendarDays className="h-3 w-3 text-muted-foreground" />Min nights</Label><Input type="number" inputMode="numeric" min={1} value={editing.min_stay ?? 1}
                     onChange={e => setEditing({ ...editing, min_stay: Math.max(1, parseInt(e.target.value) || 1) })} /></div>
-                  <div><Label className="text-xs">Max nights</Label><Input type="number" inputMode="numeric" value={editing.max_stay ?? ""}
+                  <div><Label className="text-xs inline-flex items-center gap-1.5"><CalendarDays className="h-3 w-3 text-muted-foreground" />Max nights</Label><Input type="number" inputMode="numeric" value={editing.max_stay ?? ""}
                     onChange={e => setEditing({ ...editing, max_stay: e.target.value === "" ? null : parseInt(e.target.value) })} placeholder="No limit" /></div>
                 </div>
                 <div>
-                  <Label className="text-xs">No arrivals on</Label>
+                  <Label className="text-xs inline-flex items-center gap-1.5"><CalendarDays className="h-3 w-3 text-muted-foreground" />No arrivals on</Label>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {WEEKDAYS.map((wd, i) => {
                       const on = (editing.no_arrival_weekdays || []).includes(i);
@@ -427,8 +442,8 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Check-in time</Label><Input type="time" value={editing.check_in_time || ""} onChange={e => setEditing({ ...editing, check_in_time: e.target.value || null })} /></div>
-                <div><Label>Check-out time</Label><Input type="time" value={editing.check_out_time || ""} onChange={e => setEditing({ ...editing, check_out_time: e.target.value || null })} /></div>
+                <div><Label className="inline-flex items-center gap-1.5"><Clock className="h-3 w-3 text-muted-foreground" />Check-in time</Label><Input type="time" value={editing.check_in_time || ""} onChange={e => setEditing({ ...editing, check_in_time: e.target.value || null })} /></div>
+                <div><Label className="inline-flex items-center gap-1.5"><Clock className="h-3 w-3 text-muted-foreground" />Check-out time</Label><Input type="time" value={editing.check_out_time || ""} onChange={e => setEditing({ ...editing, check_out_time: e.target.value || null })} /></div>
               </div>
 
               <div>
@@ -585,10 +600,13 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
   );
 }
 
-function FeeInput({ label, value, onChange }: { label: string; value: number | undefined; onChange: (v: number | undefined) => void }) {
+function FeeInput({ label, value, onChange, icon: Icon }: { label: string; value: number | undefined; onChange: (v: number | undefined) => void; icon?: LucideIcon }) {
   return (
     <div>
-      <Label className="text-xs">{label}</Label>
+      <Label className="text-xs inline-flex items-center gap-1.5">
+        {Icon && <Icon className="h-3 w-3 text-muted-foreground" />}
+        {label}
+      </Label>
       <Input
         type="number" step="0.01" inputMode="decimal"
         value={value == null ? "" : (value / 100).toString()}
@@ -598,10 +616,13 @@ function FeeInput({ label, value, onChange }: { label: string; value: number | u
   );
 }
 
-function PctInput({ label, value, onChange }: { label: string; value: number | undefined; onChange: (v: number | undefined) => void }) {
+function PctInput({ label, value, onChange, icon: Icon }: { label: string; value: number | undefined; onChange: (v: number | undefined) => void; icon?: LucideIcon }) {
   return (
     <div>
-      <Label className="text-xs">{label}</Label>
+      <Label className="text-xs inline-flex items-center gap-1.5">
+        {Icon && <Icon className="h-3 w-3 text-muted-foreground" />}
+        {label}
+      </Label>
       <Input
         type="number" step="0.1" inputMode="decimal"
         value={value ?? ""}
