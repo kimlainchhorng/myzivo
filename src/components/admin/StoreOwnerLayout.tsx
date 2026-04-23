@@ -13,7 +13,7 @@ import {
   FileText, ScanSearch, Wrench, ClipboardCheck, Car,
   FileSignature, Hammer, HardHat, BellRing, CircleDot, ShieldAlert, Truck, BarChart3,
   BedDouble, CalendarRange, CalendarDays, KeyRound, Sparkles, Hotel,
-  PackagePlus, Utensils, Palmtree, HeartPulse, MessageSquareText
+  PackagePlus, Utensils, Palmtree, HeartPulse, MessageSquareText, ListChecks, DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -151,6 +151,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       { id: "lodge-overview", label: "Hotel Operations", icon: Hotel },
       { id: "_lodging_ops_label", label: "HOTEL OPERATIONS", icon: BedDouble, divider: true },
       { id: "lodge-rooms", label: "Rooms & Rates", icon: BedDouble },
+      { id: "lodge-rate-plans", label: "Rate Plans & Availability", icon: DollarSign },
       { id: "lodge-reservations", label: "Reservations", icon: CalendarRange },
       { id: "lodge-calendar", label: "Calendar & Availability", icon: CalendarDays },
       { id: "lodge-guests", label: "Guests", icon: Users },
@@ -159,6 +160,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       { id: "lodge-maintenance", label: "Maintenance", icon: Wrench },
       { id: "_lodging_guest_services_label", label: "GUEST SERVICES", icon: Sparkles, divider: true },
       { id: "lodge-addons", label: "Add-ons & Packages", icon: PackagePlus },
+      { id: "lodge-guest-requests", label: "Guest Requests", icon: MessageSquareText },
       { id: "lodge-dining", label: "Dining & Meal Plans", icon: Utensils },
       { id: "lodge-experiences", label: "Experiences & Tours", icon: Palmtree },
       { id: "lodge-transport", label: "Transport & Transfers", icon: Car },
@@ -305,7 +307,8 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           {isLodging && (
             <div className="mb-2 rounded-lg border border-primary/20 bg-primary/8 px-3 py-2 text-primary">
               <div className="flex items-center gap-2 text-xs font-semibold"><Hotel className="h-3.5 w-3.5" /> Hotel / Resort Admin</div>
-              <p className="mt-0.5 text-[10px] text-primary/80">Rooms, reservations, services, policies, and reports are active.</p>
+              <p className="mt-0.5 text-[10px] text-primary/80">Setup progress: 9-step checklist in Hotel Overview.</p>
+              <div className="mt-1.5 flex items-center gap-1 text-[10px] font-medium text-primary/90"><ListChecks className="h-3 w-3" /> Rate plans and guest requests enabled</div>
             </div>
           )}
           <div className="space-y-0.5" role="group" aria-labelledby="sidebar-group-manage">
