@@ -100,6 +100,8 @@ export function LodgingBookingDrawer({
   const [eta, setEta] = useState("");
   const [notes, setNotes] = useState("");
   const [payMethod, setPayMethod] = useState<PayMethod>("pay_at_property");
+  // Inline payment-card method toggle (Card | Apple/Google Pay | Cash). Only used in success step.
+  const [inlineMethod, setInlineMethod] = useState<"card" | "wallet" | "cash">("card");
   const [agreeRules, setAgreeRules] = useState(false);
   const [agreeCancel, setAgreeCancel] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -848,25 +850,7 @@ export function LodgingBookingDrawer({
               </div>
             </div>
 
-            {/* Inline Stripe Embedded Checkout — keeps the user inside the ZIVO booking sheet
-                when they chose "Card on file (charged on arrival)". Hidden once the realtime
-                payment status moves out of the initial "authorized" placeholder. */}
-            {payMethod === "card_on_arrival" && reservationId && (
-              !liveReservation?.payment_status ||
-              liveReservation.payment_status === "authorized" ||
-              liveReservation.payment_status === "pending" ||
-              liveReservation.payment_status === "failed"
-            ) && (
-              <LodgingEmbeddedCheckout
-                reservationId={reservationId}
-                storeId={storeId}
-                amountCents={securityDeposit > 0 ? securityDeposit : breakdown.total}
-                mode={securityDeposit > 0 ? "deposit" : "full"}
-                onComplete={() => toast.success("Card authorised — your booking is locked in.")}
-              />
-            )}
-
-            {/* Payment badge (live via realtime) — supports retry on failed */}
+            {/* Payment badge (live via realtime) — compact summary above the inline payment card. */}
             {liveReservation?.payment_status && liveReservation.payment_status !== "unpaid" && (
               <div className="flex justify-center">
                 <LodgingPaymentBadge
@@ -875,6 +859,26 @@ export function LodgingBookingDrawer({
                   onRetry={handleRetryPayment}
                 />
               </div>
+            )}
+
+            {/* Inline payment hub — handles card, Apple/Google Pay (via Stripe), and cash inline.
+                Stays mounted through succeeded/failed terminal states so users see receipt or recovery
+                actions without leaving the booking sheet. */}
+            {payMethod === "card_on_arrival" && reservationId && (
+              <LodgingEmbeddedCheckout
+                reservationId={reservationId}
+                storeId={storeId}
+                amountCents={securityDeposit > 0 ? securityDeposit : breakdown.total}
+                mode={securityDeposit > 0 ? "deposit" : "full"}
+                method={inlineMethod}
+                onMethodChange={setInlineMethod}
+                paymentStatus={liveReservation?.payment_status}
+                lastPaymentError={(liveReservation as any)?.last_payment_error || null}
+                cardBrand={(liveReservation as any)?.card_brand || null}
+                cardLast4={(liveReservation as any)?.card_last4 || null}
+                reservationRef={reference}
+                onComplete={() => toast.success("Card authorised — your booking is locked in.")}
+              />
             )}
 
             {/* Quick actions */}
