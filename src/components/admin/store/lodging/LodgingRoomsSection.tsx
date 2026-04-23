@@ -220,6 +220,65 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
     toast.success("Filled with Deluxe Double Sea View preset");
   };
 
+  /**
+   * Apply the "Villa A" preset — $89/night garden-view villa with full bathroom
+   * and facility list, breakfast add-on, flexible cancellation, no smoking.
+   */
+  const applyVillaAPreset = () => {
+    if (!editing) return;
+    const sqm = Math.round(323 / 10.764 * 10) / 10; // 323 ft² → ~30 m²
+    const bathroomAmenities = [
+      "Free toiletries", "Shower", "Bathrobe", "Bidet", "Toilet",
+      "Towels", "Slippers", "Hairdryer",
+      "Towels/Sheets (extra fee)", "Toilet paper",
+    ];
+    const facilityAmenities = [
+      "Balcony", "Terrace", "Air conditioning", "Socket near the bed",
+      "Desk", "Sitting area", "Minibar", "Carpeted",
+      "Electric kettle", "Wardrobe or closet", "Dining area",
+      "Clothes rack", "Drying rack for clothing", "Non-smoking",
+    ];
+    const viewAmenities = ["Garden view"];
+    const merged = Array.from(new Set([
+      ...(editing.amenities || []),
+      ...bathroomAmenities, ...facilityAmenities, ...viewAmenities,
+    ]));
+    const existingAddons = editing.addons || [];
+    const ensureAddon = (name: string, price_cents: number, per: LodgeAddon["per"], category: string, icon: string) =>
+      existingAddons.some(a => a.name === name) ? null : { name, price_cents, per, category, icon };
+    const newAddons: LodgeAddon[] = [
+      ensureAddon("Exceptional breakfast", 1200, "person_night", "Food & drink", "breakfast"),
+      ensureAddon("15% off food & drink", 0, "stay", "Stay", "earlycheckin"),
+      ensureAddon("Late check-in", 0, "stay", "Stay", "latecheckout"),
+      ensureAddon("High-speed internet", 0, "stay", "Services", "housekeeping"),
+    ].filter(Boolean) as LodgeAddon[];
+
+    setEditing({
+      ...editing,
+      name: editing.name || "Villa A",
+      room_type: "Villa",
+      description:
+        "Comfy 323 ft² villa with garden view, balcony & terrace. 1 queen bed, sleeps 2. Private bathroom. Air-conditioned. Rated 9.4 for comfy beds (10 reviews).",
+      view: "Garden view",
+      beds: "1 Queen",
+      bed_config: [{ type: "Queen", qty: 1 }],
+      max_guests: 2,
+      size_sqm: sqm,
+      base_rate_cents: 8900,
+      weekend_rate_cents: editing.weekend_rate_cents || 9500,
+      breakfast_included: false,
+      amenities: merged,
+      fees: {
+        ...(editing.fees || {}),
+        vat_pct: 10,
+        city_tax_cents: 200, // 2% city tax placeholder
+      },
+      cancellation_policy: "flexible",
+      addons: [...existingAddons, ...newAddons],
+    });
+    toast.success("Filled with Villa A preset");
+  };
+
   const duplicate = async (r: LodgeRoom) => {
     try {
       const { id, created_at, updated_at, ...rest } = r as any;
