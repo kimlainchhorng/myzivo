@@ -1,4 +1,5 @@
 import { createClient } from "../_shared/deps.ts";
+import { notifyLodgingReservation } from "../_shared/lodging-notifications.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -134,6 +135,7 @@ Deno.serve(async (req) => {
     const pdf = makePdf(linesFromSnapshot(snapshot));
     const pdf_sha256 = await sha256Hex(pdf);
     await admin.from("lodge_reservation_receipts").insert({ reservation_id: r.id, store_id: r.store_id, generated_by: user.id, reservation_number: r.number, filename, snapshot, pdf_sha256 }).then(() => null);
+    await notifyLodgingReservation(admin, { reservationId: r.id, event: "receipt_ready", templateName: "lodging-receipt-ready", idempotencyKey: `receipt-ready-${r.id}-${pdf_sha256.slice(0, 12)}`, title: "Your lodging receipt is ready", message: "Your PDF receipt was generated and saved to your trip history.", templateData: { generatedAt: snapshot.generatedAt }, smsBody: `ZIVO: Your lodging receipt for reservation ${r.number} is ready in your trip history.` });
 
     return new Response(pdf, { headers: { ...corsHeaders, "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="${filename}"` } });
   } catch (err) {

@@ -1,5 +1,6 @@
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
+import { notifyLodgingReservation } from "../_shared/lodging-notifications.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -134,6 +135,7 @@ Deno.serve(async (req) => {
     await admin.from("lodge_reservation_change_requests").insert({ reservation_id: r.id, store_id: r.store_id, type: "addon", status: "auto_approved", addon_payload: normalized, price_delta_cents: total, requested_by: user.id, decided_by: user.id, decided_at: now, applied_at: now, stripe_payment_intent_id: pi.id, payment_status: "captured" });
     for (const item of normalized) await admin.from("lodge_reservation_charges").insert({ reservation_id: r.id, store_id: r.store_id, label: item.name, amount_cents: item.total_cents });
     await admin.from("lodge_reservations").update({ extras_cents: Number(r.extras_cents || 0) + total, total_cents: Number(r.total_cents || 0) + total, paid_cents: Number(r.paid_cents || 0) + total, addon_selections: [...existingSelections, ...normalized], addons: [...existingAddons, ...normalized], payment_status: "captured", last_payment_error: null }).eq("id", r.id);
+    await notifyLodgingReservation(admin, { reservationId: r.id, event: "addon_success", templateName: "lodging-addon-status", idempotencyKey: `addon-success-${pi.id}`, title: "Add-on charge successful", message: "Your add-ons were charged to your saved payment method and added to your reservation.", templateData: { amountCents: total, items: normalized.map((i) => `${i.name} ×${i.quantity}`).join(", ") }, smsBody: `ZIVO: Add-ons charged successfully for reservation ${r.id}.` });
 
     return new Response(JSON.stringify({ ok: true, charged_cents: total, payment_intent_id: pi.id, items: normalized }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {

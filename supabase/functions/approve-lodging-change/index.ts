@@ -1,6 +1,7 @@
 /** approve-lodging-change — host/admin approves or declines lodging change requests. */
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
+import { notifyLodgingReservation } from "../_shared/lodging-notifications.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,6 +38,7 @@ Deno.serve(async (req) => {
     const now = new Date().toISOString();
     if (action === "decline") {
       await admin.from("lodge_reservation_change_requests").update({ status: "declined", host_response: host_response || null, decided_by: user.id, decided_at: now }).eq("id", change_request_id);
+      await notifyLodgingReservation(admin, { reservationId: cr.reservation_id, event: "reschedule_update", templateName: "lodging-reschedule-update", idempotencyKey: `reschedule-declined-${change_request_id}`, title: "Date change declined", message: host_response || "Your original lodging dates are unchanged.", templateData: { status: "declined" }, smsBody: "ZIVO: Your lodging date change was declined." });
       return new Response(JSON.stringify({ ok: true, status: "declined" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
@@ -77,6 +79,7 @@ Deno.serve(async (req) => {
     }
 
     await admin.from("lodge_reservation_change_requests").update({ status: "approved", host_response: host_response || null, decided_by: user.id, decided_at: now, applied_at: now, payment_status: paymentStatus, stripe_payment_intent_id: paymentIntentId }).eq("id", change_request_id);
+    await notifyLodgingReservation(admin, { reservationId: cr.reservation_id, event: "reschedule_update", templateName: "lodging-reschedule-update", idempotencyKey: `reschedule-approved-${change_request_id}`, title: "Date change approved", message: "Your lodging reservation has been updated.", templateData: { checkIn: cr.proposed_check_in, checkOut: cr.proposed_check_out, status: "approved" }, smsBody: "ZIVO: Your lodging date change was approved." });
     return new Response(JSON.stringify({ ok: true, status: "approved", payment_status: paymentStatus }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     return new Response(JSON.stringify({ error: String((err as Error).message || err) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
