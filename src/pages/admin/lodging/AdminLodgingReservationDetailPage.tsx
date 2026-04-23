@@ -132,6 +132,15 @@ export default function AdminLodgingReservationDetailPage() {
   );
 
   const balanceDue = (reservation?.total_cents || 0) - (reservation?.paid_cents || 0);
+  const isClosed = ["cancelled", "checked_out", "no_show"].includes(String(reservation?.status || ""));
+  const pendingRequests = changeRequests.filter((r) => r.status === "pending");
+  const addonRequests = changeRequests.filter((r) => r.type === "addon");
+  const paymentNeedsReview = ["failed", "pending", "processing"].includes(String(reservation?.payment_status || "")) || balanceDue > 0;
+  const recommendedAction = isClosed
+    ? paymentNeedsReview ? "Review payment/refund" : "Audit complete"
+    : pendingRequests.length ? "Review guest request"
+      : paymentNeedsReview ? "Review payment"
+        : transitions[0]?.label || "Monitor stay";
   const cover = (() => {
     if (!room?.photos) return undefined;
     const photos = room.photos as string[];
@@ -162,6 +171,25 @@ export default function AdminLodgingReservationDetailPage() {
       setPendingStatus("no_show");
     }
   }, [pendingStatus, reservation, searchParams]);
+
+  useEffect(() => {
+    if (!reservation) return;
+    const workflow = searchParams.get("workflow");
+    const targetId = workflow === "addons" || workflow === "review"
+      ? "host-addons"
+      : workflow === "payment"
+        ? "payment-review"
+        : workflow === "audit"
+          ? "audit-log"
+          : null;
+    if (!targetId) return;
+    window.setTimeout(() => {
+      const target = document.getElementById(targetId);
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      target?.classList.add("ring-2", "ring-primary", "ring-offset-2", "ring-offset-background");
+      window.setTimeout(() => target?.classList.remove("ring-2", "ring-primary", "ring-offset-2", "ring-offset-background"), 1600);
+    }, 160);
+  }, [reservation, searchParams]);
 
   const submitTransition = async () => {
     if (!pendingStatus || !reservation) return;
