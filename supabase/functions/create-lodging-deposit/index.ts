@@ -192,7 +192,8 @@ Deno.serve(async (req) => {
     }
 
     // ---- Dedup-key check (cross-tab + redelivery) ----
-    const dedupKey = `${body.reservation_id}|${r.stripe_payment_intent_id || "none"}|${clientAttemptId}|${depositCents}|${mode}`;
+    // Include uiMode so embedded and hosted attempts don't collide.
+    const dedupKey = `${body.reservation_id}|${r.stripe_payment_intent_id || "none"}|${clientAttemptId}|${depositCents}|${mode}|${uiMode}`;
     const { data: dedupRow } = await admin
       .from("lodging_deposit_retry_attempts")
       .insert({
@@ -206,17 +207,35 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!dedupRow) {
-      // Conflict — fetch the prior attempt's cached URL
+      // Conflict — fetch the prior attempt's cached URL / client_secret
       const { data: prior } = await admin
         .from("lodging_deposit_retry_attempts")
         .select("checkout_url, stripe_session_id")
         .eq("dedup_key", dedupKey)
         .maybeSingle();
-      if ((prior as any)?.checkout_url) {
+      if ((prior as any)?.stripe_session_id && uiMode === "embedded") {
+        // Re-retrieve session to get fresh client_secret (it expires).
+        try {
+          const stripeTmp = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+          const existing = await stripeTmp.checkout.sessions.retrieve((prior as any).stripe_session_id);
+          if (existing.status === "open" && (existing as any).client_secret) {
+            return new Response(
+              JSON.stringify({
+                client_secret: (existing as any).client_secret,
+                session_id: existing.id,
+                ui_mode: "embedded",
+                reused: true,
+              }),
+              { headers: { ...cors, "Content-Type": "application/json" } },
+            );
+          }
+        } catch (_) { /* fall through to mint a new one */ }
+      } else if ((prior as any)?.checkout_url) {
         return new Response(
           JSON.stringify({
             url: (prior as any).checkout_url,
             session_id: (prior as any).stripe_session_id,
+            ui_mode: "hosted",
             reused: true,
           }),
           { headers: { ...cors, "Content-Type": "application/json" } },
