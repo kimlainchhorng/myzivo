@@ -57,6 +57,14 @@ export function useLodgingTripToasts(reservationId: string | undefined) {
         if (status === "declined") show("error", "Refund request declined", row.admin_response || undefined);
         if (status === "paid" || status === "closed") show("success", "Refund request updated", `Status: ${status.replace(/_/g, " ")}`);
       })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notification_audit" }, (payload) => {
+        const row = payload.new as any;
+        if (String(row.metadata?.reservation_id || "") !== reservationId) return;
+        qc.invalidateQueries({ queryKey: ["lodging-notification-audit", reservationId] });
+        if (row.channel === "sms" && row.status === "failed") show("error", "SMS delivery failed", row.error || undefined);
+        if (row.channel === "sms" && row.status === "sent") show("success", "SMS update sent");
+        if (row.channel === "sms" && row.status === "skipped") show("info", "SMS update skipped", String(row.skip_reason || "").replace(/_/g, " "));
+      })
       .subscribe();
 
     return () => {
