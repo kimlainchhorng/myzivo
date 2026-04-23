@@ -335,10 +335,10 @@ export function LodgingBookingDrawer({
       setStep("success");
       onBooked?.();
 
-      // Trigger Stripe deposit/hold for "card on arrival"
-      if (payMethod === "card_on_arrival" && (inserted as any)?.id) {
-        await triggerStripeDeposit((inserted as any).id);
-      }
+      // For "card_on_arrival" we no longer auto-open Stripe in a new tab —
+      // the inline LodgingEmbeddedCheckout shown on the success step now
+      // handles authorising the card without leaving the booking sheet.
+      // (Use the "Retry" button on the payment badge to fall back to hosted Stripe.)
     } catch (e: any) {
       toast.error(e.message || "Failed to submit booking");
     } finally {
