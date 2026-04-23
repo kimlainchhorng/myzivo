@@ -16,6 +16,7 @@ import ChangeRequestsInbox from "@/components/lodging/host/ChangeRequestsInbox";
 import HostReservationOpsSummary from "@/components/lodging/host/HostReservationOpsSummary";
 import { useStoreChangeRequestInbox } from "@/hooks/lodging/useReservationChangeRequests";
 import { useHostLodgingOpsToasts } from "@/hooks/lodging/useHostLodgingOpsToasts";
+import { reservationDateLabel, reservationMinutes, reservationTimeRangeLabel } from "@/lib/lodging/reservationTime";
 
 type ReservationFilter = ReservationStatus | "active" | "all";
 const CLOSED_STATUSES = new Set<ReservationStatus>(["cancelled", "checked_out", "no_show"]);
@@ -29,12 +30,9 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "dest
 };
 
 const money = (cents?: number | null) => `$${((Number(cents) || 0) / 100).toFixed(2)}`;
-const dateLabel = (value?: string | null) => value ? new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—";
-const timeLabel = (value?: string | null, fallback?: string | null) => {
-  if (value && value.includes("T")) return new Date(value).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-  if (fallback) return fallback.slice(0, 5);
-  return "Time not set";
-};
+type TimeFilter = "all" | "morning" | "afternoon" | "evening";
+type SortMode = "date_desc" | "date_asc" | "checkin_asc" | "checkout_asc";
+const TIME_LABEL: Record<TimeFilter, string> = { all: "Any time", morning: "Morning", afternoon: "Afternoon", evening: "Evening" };
 
 export default function LodgingReservationsSection({ storeId }: { storeId: string }) {
   const navigate = useNavigate();
@@ -43,6 +41,8 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
   const initialStatus = (searchParams.get("tab") || "active") as ReservationFilter;
   const [status, setStatus] = useState<ReservationFilter>(STATUSES.includes(initialStatus) ? initialStatus : "active");
   const [q, setQ] = useState(searchParams.get("q") || "");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>((searchParams.get("time") as TimeFilter) || "all");
+  const [sortMode, setSortMode] = useState<SortMode>((searchParams.get("sort") as SortMode) || "date_desc");
   const queryStatus = status === "active" ? "all" : status;
   const { data: reservations = [], isLoading, setStatus: setResStatus } = useLodgeReservations(storeId, queryStatus);
   const { data: pendingRequests = [] } = useStoreChangeRequestInbox(storeId);
@@ -50,12 +50,23 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    const scoped = status === "active" ? reservations.filter(r => !CLOSED_STATUSES.has(r.status)) : reservations;
-    if (!term) return scoped;
-    return scoped.filter(r =>
+    let scoped = status === "active" ? reservations.filter(r => !CLOSED_STATUSES.has(r.status)) : reservations;
+    if (timeFilter !== "all") {
+      scoped = scoped.filter((r) => {
+        const mins = reservationMinutes(r.check_in, r.room?.check_in_time, "check_in");
+        return timeFilter === "morning" ? mins < 12 * 60 : timeFilter === "afternoon" ? mins >= 12 * 60 && mins < 17 * 60 : mins >= 17 * 60;
+      });
+    }
+    if (term) scoped = scoped.filter(r =>
       [r.guest_name, r.guest_phone, r.guest_email, r.number, r.room_number, r.payment_status, r.status].some(v => String(v || "").toLowerCase().includes(term))
     );
-  }, [reservations, q, status]);
+    return [...scoped].sort((a, b) => {
+      if (sortMode === "date_asc") return new Date(a.check_in).getTime() - new Date(b.check_in).getTime();
+      if (sortMode === "checkin_asc") return reservationMinutes(a.check_in, a.room?.check_in_time, "check_in") - reservationMinutes(b.check_in, b.room?.check_in_time, "check_in");
+      if (sortMode === "checkout_asc") return reservationMinutes(a.check_out, a.room?.check_out_time, "check_out") - reservationMinutes(b.check_out, b.room?.check_out_time, "check_out");
+      return new Date(b.check_in).getTime() - new Date(a.check_in).getTime();
+    });
+  }, [reservations, q, status, timeFilter, sortMode]);
 
   const act = async (id: string, s: ReservationStatus, msg: string) => {
     try { await setResStatus.mutateAsync({ id, status: s }); toast.success(msg); }
@@ -63,18 +74,29 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
   };
 
   const openReservation = (id: string, workflow?: "cancel" | "review" | "addons" | "payment" | "audit" | "workflow") => {
-    const returnTo = `${location.pathname}?tab=${encodeURIComponent(status)}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ""}`;
+    const params = new URLSearchParams();
+    if (status !== "active") params.set("tab", status);
+    if (q.trim()) params.set("q", q.trim());
+    if (timeFilter !== "all") params.set("time", timeFilter);
+    if (sortMode !== "date_desc") params.set("sort", sortMode);
+    const returnTo = `${location.pathname}${params.toString() ? `?${params}` : ""}`;
     navigate(`/admin/stores/${storeId}/lodging/reservations/${id}${workflow ? `?workflow=${workflow}` : ""}`, {
       state: { returnTo, workflow },
     });
   };
 
-  const updateFilter = (nextStatus: ReservationFilter, nextQ = q) => {
-    setStatus(nextStatus);
+  const syncParams = (nextStatus = status, nextQ = q, nextTime = timeFilter, nextSort = sortMode) => {
     const next = new URLSearchParams();
     if (nextStatus !== "active") next.set("tab", nextStatus);
     if (nextQ.trim()) next.set("q", nextQ.trim());
+    if (nextTime !== "all") next.set("time", nextTime);
+    if (nextSort !== "date_desc") next.set("sort", nextSort);
     setSearchParams(next, { replace: true });
+  };
+
+  const updateFilter = (nextStatus: ReservationFilter, nextQ = q) => {
+    setStatus(nextStatus);
+    syncParams(nextStatus, nextQ);
   };
 
   return (
@@ -97,6 +119,18 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={q} onChange={e => { setQ(e.target.value); updateFilter(status, e.target.value); }} placeholder="Search guest, phone, email, room, ref, payment…" className="pl-9" />
+        </div>
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/20 p-2 text-xs">
+          <span className="inline-flex items-center gap-1 font-semibold text-muted-foreground"><Clock className="h-3.5 w-3.5" /> Time</span>
+          {(["all", "morning", "afternoon", "evening"] as TimeFilter[]).map((value) => (
+            <button key={value} onClick={() => { setTimeFilter(value); syncParams(status, q, value, sortMode); }} className={`rounded-full border px-2.5 py-1 font-medium transition ${timeFilter === value ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground"}`}>{TIME_LABEL[value]}</button>
+          ))}
+          <select value={sortMode} onChange={(e) => { const next = e.target.value as SortMode; setSortMode(next); syncParams(status, q, timeFilter, next); }} className="ml-auto h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground">
+            <option value="date_desc">Newest check-in</option>
+            <option value="date_asc">Oldest check-in</option>
+            <option value="checkin_asc">Check-in time</option>
+            <option value="checkout_asc">Check-out time</option>
+          </select>
         </div>
 
         {isLoading ? (
@@ -131,8 +165,8 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
                         <span className="text-[10px] text-muted-foreground font-mono">{r.number}</span>
                       </div>
                       <div className="mt-1 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
-                        <span className="inline-flex items-center gap-1.5"><CalendarRange className="h-3 w-3" /> {dateLabel(r.check_in)} → {dateLabel(r.check_out)} · {r.nights} night{r.nights !== 1 ? "s" : ""}</span>
-                        <span className="inline-flex items-center gap-1.5"><Clock className="h-3 w-3" /> In {timeLabel(r.check_in, r.room?.check_in_time)} · Out {timeLabel(r.check_out, r.room?.check_out_time)}</span>
+                        <span className="inline-flex items-center gap-1.5"><CalendarRange className="h-3 w-3" /> {reservationDateLabel(r.check_in)} → {reservationDateLabel(r.check_out)} · {r.nights} night{r.nights !== 1 ? "s" : ""}</span>
+                        <span className="inline-flex items-center gap-1.5"><Clock className="h-3 w-3" /> {reservationTimeRangeLabel(r.check_in, r.check_out, r.room?.check_in_time, r.room?.check_out_time)}</span>
                       </div>
                       <p className="text-[11px] text-muted-foreground mt-0.5">{r.adults} adult{r.adults !== 1 ? "s" : ""}{r.children ? ` · ${r.children} child${r.children > 1 ? "ren" : ""}` : ""}</p>
                       <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
