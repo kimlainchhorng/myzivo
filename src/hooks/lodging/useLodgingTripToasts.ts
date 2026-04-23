@@ -47,6 +47,16 @@ export function useLodgingTripToasts(reservationId: string | undefined) {
         if (status === "refunded") show("success", "Refund complete", "The saved payment method refund is complete.");
         if (status === "failed") show("error", "Payment update failed", "Please check your saved payment method.");
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "lodge_refund_disputes", filter: `reservation_id=eq.${reservationId}` }, (payload) => {
+        const row = (payload.new || payload.old) as any;
+        qc.invalidateQueries({ queryKey: ["lodge-refund-disputes", reservationId] });
+        const status = String(row.status || "pending");
+        if (payload.eventType === "INSERT") show("success", "Refund request submitted", "Your request is pending review.");
+        if (status === "under_review") show("info", "Refund request under review");
+        if (status === "approved") show("success", "Refund request approved", row.admin_response || undefined);
+        if (status === "declined") show("error", "Refund request declined", row.admin_response || undefined);
+        if (status === "paid" || status === "closed") show("success", "Refund request updated", `Status: ${status.replace(/_/g, " ")}`);
+      })
       .subscribe();
 
     return () => {

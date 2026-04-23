@@ -1,4 +1,4 @@
-import { FileText, Loader2, RefreshCw } from "lucide-react";
+import { FileText, Loader2, Mail, RefreshCw, Share2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,6 +40,28 @@ export default function ReceiptHistoryCard({ reservationId, receipts }: Props) {
     URL.revokeObjectURL(url);
   };
 
+  const shareReceipt = async (receipt: ReceiptHistoryItem) => {
+    setLoadingId(`share-${receipt.id}`);
+    const { data, error } = await supabase.functions.invoke("lodging-reservation-receipt", { body: { reservation_id: reservationId, receipt_id: receipt.id } });
+    setLoadingId(null);
+    if (error || !data) return toast.error(error?.message || "Could not share receipt");
+    const blob = data instanceof Blob ? data : new Blob([data], { type: "application/pdf" });
+    const file = new File([blob], receipt.filename || "ZIVO-receipt.pdf", { type: "application/pdf" });
+    if (navigator.share && navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file], title: "ZIVO lodging receipt" });
+    else {
+      await navigator.clipboard?.writeText(`ZIVO lodging receipt ${receipt.reservation_number || ""}`);
+      toast.success("Receipt summary copied");
+    }
+  };
+
+  const emailReceipt = async (receipt: ReceiptHistoryItem) => {
+    setLoadingId(`email-${receipt.id}`);
+    const { data, error } = await supabase.functions.invoke("share-lodging-receipt", { body: { receipt_id: receipt.id } });
+    setLoadingId(null);
+    if (error || data?.error) return toast.error(data?.error || error?.message || "Could not email receipt");
+    toast.success("Receipt email queued");
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -54,10 +76,17 @@ export default function ReceiptHistoryCard({ reservationId, receipts }: Props) {
               <p className="truncate text-sm font-medium">{receipt.filename}</p>
               <p className="text-xs text-muted-foreground">{format(parseISO(receipt.created_at), "MMM d, yyyy h:mm a")}</p>
             </div>
-            <Button variant="outline" size="sm" className="gap-2 shrink-0" onClick={() => redownload(receipt)} disabled={loadingId === receipt.id}>
-              {loadingId === receipt.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-              Re-download
-            </Button>
+            <div className="flex shrink-0 flex-wrap gap-2 justify-end">
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => redownload(receipt)} disabled={loadingId === receipt.id}>
+                {loadingId === receipt.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Re-download
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => shareReceipt(receipt)} disabled={loadingId === `share-${receipt.id}`}>
+                {loadingId === `share-${receipt.id}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5" />} Share
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => emailReceipt(receipt)} disabled={loadingId === `email-${receipt.id}`}>
+                {loadingId === `email-${receipt.id}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />} Email
+              </Button>
+            </div>
           </div>
         ))}
       </CardContent>

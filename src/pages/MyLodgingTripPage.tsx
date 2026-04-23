@@ -24,6 +24,10 @@ import MessagePropertyButton from "@/components/lodging/guest/MessagePropertyBut
 import ReceiptHistoryCard, { type ReceiptHistoryItem } from "@/components/lodging/guest/ReceiptHistoryCard";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import { useLodgingTripToasts } from "@/hooks/lodging/useLodgingTripToasts";
+import LodgingTripHelpDrawer from "@/components/lodging/guest/LodgingTripHelpDrawer";
+import AddOnStatusTimeline from "@/components/lodging/guest/AddOnStatusTimeline";
+import RefundDisputeCard from "@/components/lodging/guest/RefundDisputeCard";
+import { useLodgingRefundDisputes } from "@/hooks/lodging/useLodgingRefundDisputes";
 
 interface FullReservation {
   id: string;
@@ -99,6 +103,7 @@ export default function MyLodgingTripPage() {
   });
 
   const { data: requests = [] } = useReservationChangeRequests(reservationId);
+  const { data: disputes = [] } = useLodgingRefundDisputes(reservationId);
   const { data: room } = useQuery({
     queryKey: ["lodge-trip-room", reservation?.room_id],
     queryFn: async () => {
@@ -172,21 +177,28 @@ export default function MyLodgingTripPage() {
     status: reservation.status,
     href: `/my-trips/lodging/${reservation.id}`,
   };
+  const maxDisputeCents = Math.max(0, reservation.paid_cents - (requests.find((r) => r.type === "cancel")?.refund_cents || 0));
+  const canDispute = reservation.status === "cancelled" || String(reservation.payment_status || "").includes("refund") || reservation.payment_status === "cancelled_no_refund";
 
   return (
     <div className="container max-w-3xl mx-auto p-4 space-y-4 pb-24">
-      <Link to="/my-trips" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="w-4 h-4" /> All trips
-      </Link>
+      <div className="flex items-center justify-between gap-3">
+        <Link to="/my-trips" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="w-4 h-4" /> All trips
+        </Link>
+        <LodgingTripHelpDrawer reservationNumber={reservation.number} propertyName={store?.name || "Your stay"} dates={`${reservation.check_in} → ${reservation.check_out}`} paymentStatus={reservation.payment_status} />
+      </div>
 
-      <StayHeroCard
-        propertyName={store?.name || "Your stay"}
-        roomLabel={roomLabel}
-        checkIn={reservation.check_in}
-        checkOut={reservation.check_out}
-        nights={reservation.nights}
-        status={reservation.status}
-      />
+      <div id="stay-summary" className="scroll-mt-24">
+        <StayHeroCard
+          propertyName={store?.name || "Your stay"}
+          roomLabel={roomLabel}
+          checkIn={reservation.check_in}
+          checkOut={reservation.check_out}
+          nights={reservation.nights}
+          status={reservation.status}
+        />
+      </div>
 
       <CheckInQrCard
         reservationNumber={reservation.number}
@@ -198,7 +210,7 @@ export default function MyLodgingTripPage() {
 
       {/* Manage actions */}
       {isActive && (
-        <Card>
+        <Card id="manage-stay" className="scroll-mt-24">
           <CardHeader className="pb-3"><CardTitle className="text-base">Manage your stay</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-2 gap-2">
             <Button variant="outline" className="gap-2 h-auto py-3 flex-col" onClick={() => setRescheduleOpen(true)}>
@@ -213,18 +225,13 @@ export default function MyLodgingTripPage() {
               <ShoppingBag className="w-4 h-4" />
               <span className="text-xs">Add services</span>
             </Button>
-            <MessagePropertyButton
-              storeId={reservation.store_id}
-              storeName={store?.name || "Property"}
-              reservationContext={chatContext}
-              onOpenChat={() => setChatOpen(true)}
-            />
+            <div id="message-property" className="scroll-mt-24"><MessagePropertyButton storeId={reservation.store_id} storeName={store?.name || "Property"} reservationContext={chatContext} onOpenChat={() => setChatOpen(true)} /></div>
           </CardContent>
         </Card>
       )}
 
       {/* Payment summary */}
-      <Card>
+      <Card id="payment-summary" className="scroll-mt-24">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2"><CreditCard className="w-4 h-4" /> Payment</CardTitle>
         </CardHeader>
@@ -253,7 +260,7 @@ export default function MyLodgingTripPage() {
 
       {/* Change request history */}
       {requests.length > 0 && (
-        <Card>
+        <Card id="request-history" className="scroll-mt-24">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2"><Clock className="w-4 h-4" /> Request history</CardTitle>
           </CardHeader>
@@ -283,6 +290,8 @@ export default function MyLodgingTripPage() {
         </Card>
       )}
 
+      <AddOnStatusTimeline requests={requests} />
+
       <ReceiptActions
         reservationNumber={reservation.number}
         reservationId={reservation.id}
@@ -299,7 +308,9 @@ export default function MyLodgingTripPage() {
         onReceiptDownloaded={() => queryClient.invalidateQueries({ queryKey: ["lodge-receipt-history", reservationId] })}
       />
 
-      <ReceiptHistoryCard reservationId={reservation.id} receipts={receipts} />
+      <div id="receipt-history" className="scroll-mt-24"><ReceiptHistoryCard reservationId={reservation.id} receipts={receipts} /></div>
+
+      <RefundDisputeCard reservationId={reservation.id} disputes={disputes} canRequest={canDispute} maxAmountCents={maxDisputeCents} />
 
       <RescheduleSheet
         open={rescheduleOpen}
