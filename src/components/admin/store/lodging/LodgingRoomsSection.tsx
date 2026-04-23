@@ -276,8 +276,11 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                     </p>
                   </div>
                   <div className="flex gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => { if (confirm("Delete room?")) remove.mutate(r.id); }}>
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(r)} title="Edit"><Pencil className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => duplicate(r)} title="Duplicate" disabled={upsert.isPending}>
+                      <Copy className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => { if (confirm("Delete room?")) remove.mutate(r.id); }} title="Delete">
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
