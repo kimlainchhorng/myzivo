@@ -1858,6 +1858,30 @@ export default function AdminStoreEditPage() {
     }
   };
 
+  const [dragGalleryIdx, setDragGalleryIdx] = useState<number | null>(null);
+  const [dragOverGalleryIdx, setDragOverGalleryIdx] = useState<number | null>(null);
+
+  const reorderGalleryImages = async (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0 || from >= galleryImages.length || to >= galleryImages.length) return;
+    const prev = galleryImages;
+    const next = [...galleryImages];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setGalleryImages(next);
+    try {
+      const { error } = await supabase
+        .from("store_profiles")
+        .update({ gallery_images: next } as any)
+        .eq("id", storeId!);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["admin-store", storeId] });
+      toast.success("Order saved");
+    } catch (e: any) {
+      setGalleryImages(prev);
+      toast.error(e?.message || "Failed to reorder");
+    }
+  };
+
   const uploadImage = async (file: File, type: "logo" | "cover") => {
     const isLogo = type === "logo";
     const field = isLogo ? "logo_url" : "banner_url";
