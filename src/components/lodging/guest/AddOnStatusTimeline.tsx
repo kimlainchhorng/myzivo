@@ -12,7 +12,8 @@ function addonItems(payload: any) {
   const items = Array.isArray(payload) ? payload : Array.isArray(payload?.selections) ? payload.selections : Array.isArray(payload?.items) ? payload.items : [];
   return items.map((item: any) => {
     const quantity = Number(item.quantity || item.qty || 1);
-    const amount = Number(item.line_total_cents ?? item.total_cents ?? item.amount_cents ?? item.price_cents ?? 0);
+    const explicitAmount = item.line_total_cents ?? item.total_cents ?? item.amount_cents;
+    const amount = Number(explicitAmount ?? (item.price_cents ? Number(item.price_cents) * quantity : 0));
     return { name: item.name || item.label || item.id || "Add-on", quantity, amount };
   });
 }

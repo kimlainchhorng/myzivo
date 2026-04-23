@@ -3,7 +3,7 @@
  */
 import { Button } from "@/components/ui/button";
 import { FileText, CalendarPlus, Loader2, Mail, Share2, History } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildBookingIcs, downloadIcsFile } from "@/lib/lodging/ics";
@@ -32,6 +32,18 @@ export default function ReceiptActions(props: Props) {
   const [lastReceiptBlob, setLastReceiptBlob] = useState<Blob | null>(null);
   const [actionState, setActionState] = useState<"share" | "email" | null>(null);
   const [savingReceipt, setSavingReceipt] = useState(false);
+
+  useEffect(() => {
+    if (!followUpVisible || props.latestReceiptId || props.receiptHistoryLoading) return;
+    let cancelled = false;
+    setSavingReceipt(true);
+    Promise.resolve(props.onReceiptDownloaded?.()).finally(() => {
+      if (!cancelled) setSavingReceipt(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [followUpVisible, props.latestReceiptId, props.receiptHistoryLoading, props.onReceiptDownloaded]);
   const downloadIcs = () => {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Phnom_Penh";
     const ics = buildBookingIcs({
