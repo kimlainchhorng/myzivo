@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, CalendarRange, XCircle, MessageSquare, CreditCard, Clock } from "lucide-react";
+import { ArrowLeft, CalendarRange, XCircle, CreditCard, Clock, ShoppingBag } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,9 @@ import RescheduleSheet from "@/components/lodging/guest/RescheduleSheet";
 import CancelReservationSheet from "@/components/lodging/guest/CancelReservationSheet";
 import CheckInQrCard from "@/components/lodging/guest/CheckInQrCard";
 import ReceiptActions from "@/components/lodging/guest/ReceiptActions";
+import AddOnsSheet, { type LodgingAddon } from "@/components/lodging/guest/AddOnsSheet";
+import MessagePropertyButton from "@/components/lodging/guest/MessagePropertyButton";
+import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 
 interface FullReservation {
   id: string;
@@ -34,6 +37,16 @@ interface FullReservation {
   total_cents: number;
   paid_cents: number;
   room_number: string | null;
+  adults: number | null;
+  children: number | null;
+  guest_email: string | null;
+  guest_phone: string | null;
+  addons: any;
+  addon_selections: any;
+  fee_breakdown: any;
+  deposit_cents: number;
+  stripe_payment_intent_id: string | null;
+  last_payment_error: string | null;
 }
 
 const REQ_STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
@@ -48,13 +61,15 @@ export default function MyLodgingTripPage() {
   const { reservationId = "" } = useParams();
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [addonsOpen, setAddonsOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const { data: reservation, isLoading } = useQuery({
     queryKey: ["lodge-reservation-full", reservationId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lodge_reservations" as any)
-        .select("id, store_id, room_id, number, guest_name, check_in, check_out, nights, status, payment_status, total_cents, paid_cents, room_number")
+        .select("id, store_id, room_id, number, guest_name, guest_email, guest_phone, adults, children, check_in, check_out, nights, status, payment_status, total_cents, paid_cents, deposit_cents, room_number, addons, addon_selections, fee_breakdown, stripe_payment_intent_id, last_payment_error")
         .eq("id", reservationId)
         .maybeSingle();
       if (error) throw error;
@@ -71,15 +86,40 @@ export default function MyLodgingTripPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("restaurants" as any)
-        .select("name")
+        .select("name, logo_url")
         .eq("id", reservation!.store_id)
         .maybeSingle();
-      return (data as unknown) as { name: string } | null;
+      return (data as unknown) as { name: string; logo_url?: string | null } | null;
     },
     enabled: !!reservation?.store_id,
   });
 
   const { data: requests = [] } = useReservationChangeRequests(reservationId);
+  const { data: room } = useQuery({
+    queryKey: ["lodge-trip-room", reservation?.room_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("lodge_rooms" as any)
+        .select("name, room_type, base_rate_cents, cancellation_policy, addons")
+        .eq("id", reservation!.room_id)
+        .maybeSingle();
+      return data as unknown as { name?: string; room_type?: string; base_rate_cents?: number; cancellation_policy?: string | null; addons?: LodgingAddon[] } | null;
+    },
+    enabled: !!reservation?.room_id,
+  });
+
+  const { data: blockedDates = [] } = useQuery({
+    queryKey: ["lodge-trip-blocks", reservation?.room_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("lodge_room_blocks" as any)
+        .select("block_date")
+        .eq("room_id", reservation!.room_id);
+      return (data || []).map((r: any) => String(r.block_date));
+    },
+    enabled: !!reservation?.room_id,
+  });
+
 
   if (isLoading) {
     return (
@@ -102,6 +142,18 @@ export default function MyLodgingTripPage() {
 
   const isActive = !["cancelled", "checked_out", "no_show"].includes(reservation.status);
   const balanceCents = Math.max(0, reservation.total_cents - reservation.paid_cents);
+  const guests = Math.max(1, Number(reservation.adults || 1) + Number(reservation.children || 0));
+  const addons = Array.isArray(room?.addons) ? room.addons : [];
+  const latestRequest = requests[0];
+  const roomLabel = reservation.room_number ? `Room ${reservation.room_number}` : room?.name || room?.room_type || "Assigned room";
+  const chatContext = {
+    reservationId: reservation.id,
+    reservationNumber: reservation.number,
+    dates: `${reservation.check_in} → ${reservation.check_out}`,
+    roomLabel,
+    status: reservation.status,
+    href: `/my-trips/lodging/${reservation.id}`,
+  };
 
   return (
     <div className="container max-w-3xl mx-auto p-4 space-y-4 pb-24">
@@ -111,7 +163,7 @@ export default function MyLodgingTripPage() {
 
       <StayHeroCard
         propertyName={store?.name || "Your stay"}
-        roomLabel={reservation.room_number ? `Room ${reservation.room_number}` : null}
+        roomLabel={roomLabel}
         checkIn={reservation.check_in}
         checkOut={reservation.check_out}
         nights={reservation.nights}
@@ -139,12 +191,16 @@ export default function MyLodgingTripPage() {
               <XCircle className="w-4 h-4" />
               <span className="text-xs">Cancel</span>
             </Button>
-            <Button asChild variant="outline" className="gap-2 h-auto py-3 flex-col col-span-2">
-              <Link to={`/chat?store=${reservation.store_id}`}>
-                <MessageSquare className="w-4 h-4" />
-                <span className="text-xs">Message property</span>
-              </Link>
+            <Button variant="outline" className="gap-2 h-auto py-3 flex-col" onClick={() => setAddonsOpen(true)}>
+              <ShoppingBag className="w-4 h-4" />
+              <span className="text-xs">Add services</span>
             </Button>
+            <MessagePropertyButton
+              storeId={reservation.store_id}
+              storeName={store?.name || "Property"}
+              reservationContext={chatContext}
+              onOpenChat={() => setChatOpen(true)}
+            />
           </CardContent>
         </Card>
       )}
@@ -169,9 +225,11 @@ export default function MyLodgingTripPage() {
               <span className="font-bold text-destructive">${(balanceCents / 100).toFixed(2)}</span>
             </div>
           )}
-          <div className="pt-2">
+          <div className="pt-2 flex flex-wrap gap-2">
             <Badge variant="outline" className="capitalize">{reservation.payment_status.replace(/_/g, " ")}</Badge>
+            {latestRequest && <Badge variant="secondary" className="capitalize">Latest: {latestRequest.type} {latestRequest.status.replace(/_/g, " ")}</Badge>}
           </div>
+          {reservation.last_payment_error && <p className="text-xs text-destructive">{reservation.last_payment_error}</p>}
         </CardContent>
       </Card>
 
@@ -223,6 +281,15 @@ export default function MyLodgingTripPage() {
         checkIn={reservation.check_in}
         checkOut={reservation.check_out}
         totalCents={reservation.total_cents}
+        blockedDates={blockedDates}
+      />
+      <AddOnsSheet
+        open={addonsOpen}
+        onOpenChange={setAddonsOpen}
+        reservationId={reservation.id}
+        addons={addons}
+        nights={reservation.nights}
+        guests={guests}
       />
       <CancelReservationSheet
         open={cancelOpen}
@@ -231,6 +298,14 @@ export default function MyLodgingTripPage() {
         checkIn={reservation.check_in}
         totalCents={reservation.total_cents}
         paidCents={reservation.paid_cents}
+      />
+      <StoreLiveChat
+        storeId={reservation.store_id}
+        storeName={store?.name || "Property"}
+        storeLogo={store?.logo_url || null}
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        reservationContext={chatContext}
       />
     </div>
   );
