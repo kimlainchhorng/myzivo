@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BedDouble, Plus, Trash2, Pencil, Image as ImageIcon } from "lucide-react";
+import { AddonIcon } from "@/components/lodging/addonIcons";
 import { toast } from "sonner";
 import { useLodgeRooms, type LodgeRoom, type LodgeAddon, type RoomFees, type ChildPolicy } from "@/hooks/lodging/useLodgeRooms";
 import { LodgingRoomPhotoUploader } from "@/components/lodging/LodgingRoomPhotoUploader";
@@ -83,48 +84,50 @@ const AMENITY_GROUPS: { label: string; items: string[] }[] = [
 // Flat list (legacy) — used for backward compatibility / quick lookup
 const AMENITY_OPTIONS = AMENITY_GROUPS.flatMap(g => g.items);
 
-// Curated quick-add presets — one tap to add common hotel/resort extras
+// Curated quick-add presets — one tap to add common hotel/resort extras.
+// `icon` is a slug resolved by ADDON_ICON_MAP to a Lucide component (no emoji).
 const ADDON_PRESETS: { name: string; price_cents: number; per: "stay" | "night" | "guest" | "person_night"; category: string; icon: string }[] = [
   // Food & drink
-  { name: "Breakfast", price_cents: 800, per: "person_night", category: "Food & drink", icon: "🥐" },
-  { name: "Half board (breakfast + dinner)", price_cents: 2500, per: "person_night", category: "Food & drink", icon: "🍽️" },
-  { name: "Full board (3 meals)", price_cents: 4000, per: "person_night", category: "Food & drink", icon: "🍴" },
-  { name: "Welcome drink", price_cents: 500, per: "guest", category: "Food & drink", icon: "🍹" },
-  { name: "Bottle of wine", price_cents: 2500, per: "stay", category: "Food & drink", icon: "🍷" },
-  { name: "Mini-bar package", price_cents: 1500, per: "stay", category: "Food & drink", icon: "🥤" },
+  { name: "Breakfast", price_cents: 800, per: "person_night", category: "Food & drink", icon: "breakfast" },
+  { name: "Half board (breakfast + dinner)", price_cents: 2500, per: "person_night", category: "Food & drink", icon: "halfboard" },
+  { name: "Full board (3 meals)", price_cents: 4000, per: "person_night", category: "Food & drink", icon: "fullboard" },
+  { name: "Welcome drink", price_cents: 500, per: "guest", category: "Food & drink", icon: "welcomedrink" },
+  { name: "Bottle of wine", price_cents: 2500, per: "stay", category: "Food & drink", icon: "wine" },
+  { name: "Mini-bar package", price_cents: 1500, per: "stay", category: "Food & drink", icon: "minibar" },
   // Transport
-  { name: "Airport pickup", price_cents: 2500, per: "stay", category: "Transport", icon: "🚐" },
-  { name: "Airport drop-off", price_cents: 2500, per: "stay", category: "Transport", icon: "🚖" },
-  { name: "Round-trip airport transfer", price_cents: 4500, per: "stay", category: "Transport", icon: "🚗" },
-  { name: "Scooter rental", price_cents: 1000, per: "night", category: "Transport", icon: "🛵" },
-  { name: "Car rental", price_cents: 4500, per: "night", category: "Transport", icon: "🚙" },
-  { name: "Bicycle rental", price_cents: 500, per: "night", category: "Transport", icon: "🚲" },
+  { name: "Airport pickup", price_cents: 2500, per: "stay", category: "Transport", icon: "airportpickup" },
+  { name: "Airport drop-off", price_cents: 2500, per: "stay", category: "Transport", icon: "airportdropoff" },
+  { name: "Round-trip airport transfer", price_cents: 4500, per: "stay", category: "Transport", icon: "airporttransfer" },
+  { name: "Scooter rental", price_cents: 1000, per: "night", category: "Transport", icon: "scooter" },
+  { name: "Car rental", price_cents: 4500, per: "night", category: "Transport", icon: "carrental" },
+  { name: "Bicycle rental", price_cents: 500, per: "night", category: "Transport", icon: "bicycle" },
   // Stay flexibility
-  { name: "Early check-in", price_cents: 1500, per: "stay", category: "Stay", icon: "⏰" },
-  { name: "Late check-out", price_cents: 1500, per: "stay", category: "Stay", icon: "🕒" },
-  { name: "Extra bed", price_cents: 1500, per: "night", category: "Stay", icon: "🛏️" },
-  { name: "Baby crib", price_cents: 0, per: "stay", category: "Stay", icon: "👶" },
-  { name: "Extra guest", price_cents: 1500, per: "person_night", category: "Stay", icon: "👤" },
-  { name: "Pet fee", price_cents: 1000, per: "night", category: "Stay", icon: "🐾" },
+  { name: "Early check-in", price_cents: 1500, per: "stay", category: "Stay", icon: "earlycheckin" },
+  { name: "Late check-out", price_cents: 1500, per: "stay", category: "Stay", icon: "latecheckout" },
+  { name: "Extra bed", price_cents: 1500, per: "night", category: "Stay", icon: "extrabed" },
+  { name: "Baby crib", price_cents: 0, per: "stay", category: "Stay", icon: "babycrib" },
+  { name: "Extra guest", price_cents: 1500, per: "person_night", category: "Stay", icon: "extraguest" },
+  { name: "Pet fee", price_cents: 1000, per: "night", category: "Stay", icon: "petfee" },
   // Wellness & experiences
-  { name: "Spa massage (60 min)", price_cents: 4500, per: "guest", category: "Wellness", icon: "💆" },
-  { name: "Couples massage", price_cents: 8000, per: "stay", category: "Wellness", icon: "💑" },
-  { name: "Yoga session", price_cents: 1500, per: "guest", category: "Wellness", icon: "🧘" },
-  { name: "Snorkeling tour", price_cents: 3500, per: "guest", category: "Experiences", icon: "🤿" },
-  { name: "Island hopping tour", price_cents: 5000, per: "guest", category: "Experiences", icon: "🏝️" },
-  { name: "Sunset cruise", price_cents: 6500, per: "guest", category: "Experiences", icon: "⛵" },
-  { name: "Private chef dinner", price_cents: 7500, per: "stay", category: "Experiences", icon: "👨‍🍳" },
+  { name: "Spa massage (60 min)", price_cents: 4500, per: "guest", category: "Wellness", icon: "spa" },
+  { name: "Couples massage", price_cents: 8000, per: "stay", category: "Wellness", icon: "couplesmassage" },
+  { name: "Yoga session", price_cents: 1500, per: "guest", category: "Wellness", icon: "yoga" },
+  { name: "Snorkeling tour", price_cents: 3500, per: "guest", category: "Experiences", icon: "snorkeling" },
+  { name: "Island hopping tour", price_cents: 5000, per: "guest", category: "Experiences", icon: "island" },
+  { name: "Sunset cruise", price_cents: 6500, per: "guest", category: "Experiences", icon: "cruise" },
+  { name: "Private chef dinner", price_cents: 7500, per: "stay", category: "Experiences", icon: "chef" },
   // Romance & celebration
-  { name: "Honeymoon package", price_cents: 5000, per: "stay", category: "Celebration", icon: "💐" },
-  { name: "Birthday cake", price_cents: 1500, per: "stay", category: "Celebration", icon: "🎂" },
-  { name: "Flower bouquet", price_cents: 2000, per: "stay", category: "Celebration", icon: "🌹" },
-  { name: "Champagne on arrival", price_cents: 3500, per: "stay", category: "Celebration", icon: "🍾" },
+  { name: "Honeymoon package", price_cents: 5000, per: "stay", category: "Celebration", icon: "honeymoon" },
+  { name: "Birthday cake", price_cents: 1500, per: "stay", category: "Celebration", icon: "cake" },
+  { name: "Flower bouquet", price_cents: 2000, per: "stay", category: "Celebration", icon: "flowers" },
+  { name: "Champagne on arrival", price_cents: 3500, per: "stay", category: "Celebration", icon: "champagne" },
   // Practical services
-  { name: "Daily housekeeping", price_cents: 800, per: "night", category: "Services", icon: "🧹" },
-  { name: "Laundry service", price_cents: 1200, per: "stay", category: "Services", icon: "🧺" },
-  { name: "Parking", price_cents: 500, per: "night", category: "Services", icon: "🅿️" },
-  { name: "Beach towel rental", price_cents: 200, per: "guest", category: "Services", icon: "🏖️" },
+  { name: "Daily housekeeping", price_cents: 800, per: "night", category: "Services", icon: "housekeeping" },
+  { name: "Laundry service", price_cents: 1200, per: "stay", category: "Services", icon: "laundry" },
+  { name: "Parking", price_cents: 500, per: "night", category: "Services", icon: "parking" },
+  { name: "Beach towel rental", price_cents: 200, per: "guest", category: "Services", icon: "beachtowel" },
 ];
+
 const CANCEL_POLICIES: { value: string; label: string }[] = [
   { value: "flexible", label: "Flexible — full refund up to 24h before" },
   { value: "moderate", label: "Moderate — full refund up to 5 days before" },
@@ -506,7 +509,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                                     : "bg-background border-border hover:border-primary/40 hover:bg-primary/5"
                                 }`}
                               >
-                                <span>{preset.icon}</span>
+                                <AddonIcon slug={preset.icon} />
                                 <span>{preset.name}</span>
                                 {preset.price_cents > 0 && (
                                   <span className="text-muted-foreground">
@@ -528,7 +531,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                   <div className="space-y-2">
                     {(editing.addons || []).map((a, i) => (
                       <div key={i} className="grid grid-cols-12 gap-1.5 items-center p-2 rounded-lg border border-border bg-muted/20">
-                        {a.icon && <span className="col-span-1 text-center text-base">{a.icon}</span>}
+                        {a.icon && <span className="col-span-1 flex justify-center"><AddonIcon slug={a.icon} className="h-4 w-4" /></span>}
                         <Input
                           className={`${a.icon ? 'col-span-4' : 'col-span-5'} h-8 text-xs`}
                           placeholder="Breakfast"

@@ -18,6 +18,7 @@ import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { LodgingStaySelector } from "@/components/lodging/LodgingStaySelector";
 import { ReservationStatusTimeline } from "@/components/lodging/ReservationStatusTimeline";
 import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
+import { AddonIcon } from "@/components/lodging/addonIcons";
 import { IcsPreviewPanel } from "@/components/lodging/IcsPreviewPanel";
 import { PolicySourceSheet } from "@/components/lodging/PolicySourceSheet";
 import { ConflictReasonPanel } from "@/components/lodging/ConflictReasonPanel";
@@ -525,7 +526,7 @@ export function LodgingBookingDrawer({
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold flex items-center gap-1.5">
-                          {a.icon && <span>{a.icon}</span>}
+                          {a.icon && <AddonIcon slug={a.icon} className="h-3.5 w-3.5 text-primary" />}
                           {a.name || "Untitled add-on"}
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -955,7 +956,10 @@ function PriceSummary({ breakdown, fmt }: { breakdown: Breakdown; fmt: (c: numbe
       )}
       {breakdown.addonsSnapshot.map((a, i) => (
         <div key={i} className="flex justify-between">
-          <span className="text-muted-foreground truncate pr-2">{a.icon ? `${a.icon} ` : ""}{a.name} ({a.per === "stay" ? "stay" : `${a.qty}× ${a.per === "person_night" ? "guest/night" : a.per}`})</span>
+          <span className="text-muted-foreground truncate pr-2 inline-flex items-center gap-1.5">
+            {a.icon && <AddonIcon slug={a.icon} className="h-3 w-3 shrink-0" />}
+            <span className="truncate">{a.name} ({a.per === "stay" ? "stay" : `${a.qty}× ${a.per === "person_night" ? "guest/night" : a.per}`})</span>
+          </span>
           <span className="tabular-nums shrink-0">{fmt(a.subtotal_cents)}</span>
         </div>
       ))}
