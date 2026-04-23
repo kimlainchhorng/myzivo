@@ -45,11 +45,12 @@ export default function MessagePropertyButton({ storeId, storeName, reservationC
       threadId = created.id;
     }
 
-    const { data: existingLink } = await supabase
+    const { data: existingLinkRaw } = await supabase
       .from("lodge_reservation_messages_link" as any)
       .select("id, pinned_message_id")
       .eq("reservation_id", reservationContext.reservationId)
       .maybeSingle();
+    const existingLink = existingLinkRaw as { id: string; pinned_message_id: string | null } | null;
 
     if (!existingLink?.pinned_message_id) {
       const content = `Reservation ${reservationContext.reservationNumber}\n${reservationContext.dates}\n${reservationContext.roomLabel}\nStatus: ${reservationContext.status}\n${reservationContext.href}`;
