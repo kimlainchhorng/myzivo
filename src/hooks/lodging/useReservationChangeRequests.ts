@@ -27,6 +27,9 @@ export interface ReservationChangeRequest {
   decided_at: string | null;
   created_at: string;
   updated_at: string;
+  payment_status?: string | null;
+  stripe_payment_intent_id?: string | null;
+  applied_at?: string | null;
 }
 
 /** Guest-facing: requests for one reservation. */
@@ -106,7 +109,7 @@ export function useReservationActions(reservationId: string | undefined) {
         body: { reservation_id: reservationId, ...payload },
       });
       if (error) throw error;
-      return data as { refund_cents: number; status: string };
+      return data as { refund_cents: number; refund_percent?: number; refund_label?: string; payment_status?: string; status: string };
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["lodge-change-requests", reservationId] });
@@ -114,5 +117,20 @@ export function useReservationActions(reservationId: string | undefined) {
     },
   });
 
-  return { requestReschedule, requestCancel };
+  const purchaseAddons = useMutation({
+    mutationFn: async (payload: { selections: Array<{ id: string; quantity: number }> }) => {
+      const { data, error } = await supabase.functions.invoke("purchase-lodging-addons", {
+        body: { reservation_id: reservationId, ...payload },
+      });
+      if (error) throw error;
+      return data as { charged_cents: number; payment_intent_id: string };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["lodge-change-requests", reservationId] });
+      qc.invalidateQueries({ queryKey: ["lodge-reservation-live", reservationId] });
+      qc.invalidateQueries({ queryKey: ["lodge-reservation-full", reservationId] });
+    },
+  });
+
+  return { requestReschedule, requestCancel, purchaseAddons };
 }
