@@ -211,20 +211,21 @@ export function LodgingRoomDetailsModal({
       onOpenChange={onOpenChange}
       title={name}
       description={type || undefined}
+      className="sm:max-w-2xl lg:max-w-4xl xl:max-w-5xl"
       footer={
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">From</p>
-            <p className="text-2xl font-extrabold text-foreground leading-none mt-0.5">
+        <div className="flex items-end justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-semibold">From</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-foreground leading-none mt-0.5">
               {format(baseRateCents / 100, "USD")}
-              <span className="text-xs font-medium text-muted-foreground"> /night</span>
+              <span className="text-xs sm:text-sm font-medium text-muted-foreground"> /night</span>
             </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Taxes calculated at booking</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Taxes calculated at booking</p>
           </div>
           <Button
             onClick={handleReserve}
             size="lg"
-            className="font-bold rounded-full px-6 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25"
+            className="font-bold rounded-full px-6 sm:px-8 h-12 sm:h-12 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25 shrink-0"
             aria-label={`Reserve ${name}`}
             data-testid="reserve-from-details"
           >
