@@ -11,7 +11,8 @@ import {
   Refrigerator as Fridge, ChefHat, CookingPot, Soup, Box, Wine, Container,
   Tv2, Monitor, Laptop, Music, Trees, Building, Eye, Anchor, Waves as River,
   Landmark, Palmtree, Bike, ShowerHead, Sofa, BookOpen, Gamepad2, Baby,
-  Accessibility, Cctv, KeyRound, Wrench, Hammer, Hand, Droplets,
+  Accessibility, Cctv, KeyRound, Wrench, Hammer, Hand, Droplets, Zap, Clock,
+  AlarmClock, Ruler, Users, Tv as Stream, ArrowUpToLine,
   type LucideIcon,
 } from "lucide-react";
 
