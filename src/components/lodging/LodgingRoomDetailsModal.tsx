@@ -211,7 +211,7 @@ export function LodgingRoomDetailsModal({
       onOpenChange={onOpenChange}
       title={name}
       description={type || undefined}
-      className="sm:max-w-2xl lg:max-w-4xl xl:max-w-5xl"
+      className="sm:max-w-2xl lg:max-w-5xl xl:max-w-6xl"
       footer={
         <div className="flex items-end justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
