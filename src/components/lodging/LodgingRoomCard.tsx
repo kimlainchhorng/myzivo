@@ -96,7 +96,7 @@ export function LodgingRoomCard({
           aria-label={`View details for ${name}`}
           className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring px-3"
         >
-          <div className="grid grid-cols-2 gap-1.5 rounded-2xl overflow-hidden">
+          <div className="grid grid-cols-[1.05fr_1fr] gap-1.5 rounded-2xl overflow-hidden">
             {/* Left big tile w/ info overlay */}
             <div className="relative aspect-[4/5] bg-gradient-to-br from-sky-100 to-sky-200/60 overflow-hidden rounded-l-2xl">
               {gridPhotos[0] ? (
@@ -106,30 +106,32 @@ export function LodgingRoomCard({
                   <BedDouble className="h-10 w-10 text-muted-foreground/40" />
                 </div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-r from-sky-900/75 via-sky-900/35 to-transparent" />
+              {/* Stronger left-anchored gradient for text legibility */}
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-900/85 via-slate-900/55 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-900/30" />
               {/* Info overlay column */}
-              <div className="absolute inset-0 p-2.5 flex flex-col justify-between text-white">
-                <div className="space-y-2">
+              <div className="absolute inset-0 p-3 flex flex-col justify-between text-white">
+                <div className="space-y-2.5">
                   {type && (
                     <div>
-                      <p className="text-[8px] uppercase tracking-[0.12em] font-semibold text-white/70 leading-none">Type of {type.toLowerCase()}</p>
-                      <p className="text-[11px] font-bold leading-tight mt-0.5 line-clamp-2 drop-shadow">{name}</p>
+                      <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Type of {type.toLowerCase()}</p>
+                      <p className="text-[12px] font-extrabold leading-tight mt-1 line-clamp-2 drop-shadow-md tracking-wide uppercase">{name}</p>
                     </div>
                   )}
                   {beds && (
                     <div>
-                      <p className="text-[8px] uppercase tracking-[0.12em] font-semibold text-white/70 leading-none">Size of bed</p>
-                      <p className="text-[10px] font-semibold leading-tight mt-0.5 drop-shadow">{beds}</p>
+                      <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Size of bed</p>
+                      <p className="text-[11px] font-bold leading-tight mt-1 drop-shadow-md">{beds}</p>
                     </div>
                   )}
                   <div>
-                    <p className="text-[8px] uppercase tracking-[0.12em] font-semibold text-white/70 leading-none">Occupancy</p>
-                    <p className="text-[10px] font-semibold leading-tight mt-0.5 drop-shadow">{maxGuests} {maxGuests === 1 ? "guest" : "guests"}</p>
+                    <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Occupancy</p>
+                    <p className="text-[11px] font-bold leading-tight mt-1 drop-shadow-md">{maxGuests} {maxGuests === 1 ? "guest" : "guests"}</p>
                   </div>
                 </div>
-                <div>
-                  <p className="text-[8px] uppercase tracking-[0.12em] font-semibold text-white/70 leading-none">Weekday</p>
-                  <p className="text-[11px] font-extrabold leading-tight mt-0.5 drop-shadow">US${(baseRateCents / 100).toFixed(0)}</p>
+                <div className="pt-2 border-t border-white/15">
+                  <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Weekday</p>
+                  <p className="text-[15px] font-black leading-tight mt-1 drop-shadow-md tracking-tight">US${(baseRateCents / 100).toFixed(0)}</p>
                 </div>
               </div>
             </div>
@@ -138,22 +140,31 @@ export function LodgingRoomCard({
             <div className="grid grid-rows-2 gap-1.5">
               {[1, 2].map((row) => (
                 <div key={row} className="grid grid-cols-2 gap-1.5">
-                  {[gridPhotos[row * 2 - 1], gridPhotos[row * 2]].map((src, i) => (
-                    <div
-                      key={i}
-                      className={`relative bg-gradient-to-br from-muted to-muted/50 overflow-hidden ${row === 1 && i === 1 ? "rounded-tr-2xl" : ""} ${row === 2 && i === 1 ? "rounded-br-2xl" : ""}`}
-                    >
-                      {src ? (
-                        <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
-                      ) : cover ? (
-                        <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" loading="lazy" />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <BedDouble className="h-5 w-5 text-muted-foreground/30" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  {[gridPhotos[row * 2 - 1], gridPhotos[row * 2]].map((src, i) => {
+                    const isLastTile = row === 2 && i === 1;
+                    const extraCount = isLastTile && allPhotos.length > 5 ? allPhotos.length - 5 : 0;
+                    return (
+                      <div
+                        key={i}
+                        className={`relative bg-gradient-to-br from-muted to-muted/50 overflow-hidden ${row === 1 && i === 1 ? "rounded-tr-2xl" : ""} ${row === 2 && i === 1 ? "rounded-br-2xl" : ""}`}
+                      >
+                        {src ? (
+                          <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                        ) : cover ? (
+                          <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" loading="lazy" />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <BedDouble className="h-5 w-5 text-muted-foreground/30" />
+                          </div>
+                        )}
+                        {extraCount > 0 && (
+                          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] flex items-center justify-center">
+                            <span className="text-white text-[13px] font-extrabold tracking-tight drop-shadow">+{extraCount}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
             </div>
