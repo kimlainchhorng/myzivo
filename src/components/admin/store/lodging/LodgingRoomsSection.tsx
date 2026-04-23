@@ -443,15 +443,23 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                 <Label>Breakfast included</Label>
               </div>
               <div>
-                <Label>Amenities</Label>
-                <div className="flex flex-wrap gap-1.5 mt-1.5">
-                  {AMENITY_OPTIONS.map(a => {
-                    const on = (editing.amenities || []).includes(a);
-                    return (
-                      <button key={a} type="button" onClick={() => toggleAmenity(a)}
-                        className={`px-2.5 py-1 rounded-full text-xs border transition ${on ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:border-primary/40"}`}>{a}</button>
-                    );
-                  })}
+                <Label>Amenities & Facilities</Label>
+                <p className="text-[11px] text-muted-foreground mb-2">Tap to toggle. Grouped like Booking.com to make listing details look professional.</p>
+                <div className="space-y-3">
+                  {AMENITY_GROUPS.map(group => (
+                    <div key={group.label} className="rounded-lg border border-border/60 p-2.5 bg-muted/10">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">{group.label}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {group.items.map(a => {
+                          const on = (editing.amenities || []).includes(a);
+                          return (
+                            <button key={a} type="button" onClick={() => toggleAmenity(a)}
+                              className={`px-2.5 py-1 rounded-full text-xs border transition ${on ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:border-primary/40"}`}>{a}</button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
