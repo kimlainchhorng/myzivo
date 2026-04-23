@@ -146,7 +146,7 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
                         {hasPendingRequest && <Badge variant="secondary" className="text-[10px]">Pending guest request</Badge>}
                         {r.status === "cancelled" && String(r.payment_status).includes("refund") && <Badge variant="secondary" className="text-[10px]">Refund workflow</Badge>}
                         {(r as any).policy_consent && (
-                          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-600">
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-primary">
                             <ShieldCheck className="h-2.5 w-2.5" /> Policies acknowledged
                           </span>
                         )}

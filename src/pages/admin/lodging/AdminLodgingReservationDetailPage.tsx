@@ -9,7 +9,7 @@ import { format } from "date-fns";
 import {
   ArrowLeft, BedDouble, CalendarRange, User, Phone, Mail, Globe,
   CheckCircle2, LogIn, LogOut, XCircle, AlertCircle, History, Loader2, Download, RefreshCw,
-  ClipboardCheck, CreditCard, PackageCheck,
+  ClipboardCheck, CreditCard,
   Clock,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
