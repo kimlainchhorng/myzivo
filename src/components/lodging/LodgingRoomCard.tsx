@@ -61,6 +61,11 @@ export function LodgingRoomCard({
     allPhotos[1],
     allPhotos[2],
     allPhotos[3],
+    allPhotos[4],
+    allPhotos[5],
+    allPhotos[6],
+    allPhotos[7],
+    allPhotos[8],
   ];
   const totalAddons = addons?.length ?? addonsCount;
 
