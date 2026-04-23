@@ -263,7 +263,7 @@ const FlightReview = lazy(() => import("./pages/FlightReview"));
 // Hotels
 const HotelBooking = lazy(() => import("./pages/HotelBooking"));
 const HotelLanding = lazy(() => import("./pages/HotelLanding"));
-const HotelsPage = lazy(() => import("./pages/HotelsPage"));
+// HotelsPage removed
 // HotelDashboard removed
 const HotelResultsPage = lazy(() => import("./pages/HotelResultsPage"));
 
@@ -790,10 +790,8 @@ const App = () => (
                 {/* /checkout removed — partners block iframe; redirect model used instead */}
 
                 {/* Hotels */}
-                <Route path="/hotels" element={<RouteErrorBoundary section="Hotels"><HotelsPage /></RouteErrorBoundary>} />
                 <Route path="/hotels/:city" element={<RouteErrorBoundary section="Hotels"><HotelCityLandingPage /></RouteErrorBoundary>} />
-                <Route path="/hotels/in-:city" element={<RouteErrorBoundary section="Hotels"><HotelsPage /></RouteErrorBoundary>} />
-                {/* hotels-dashboard removed */}
+                {/* /hotels and /hotels/in-:city removed */}
 
                 {/* Car Rental */}
                 <Route path="/car-rental" element={<RouteErrorBoundary section="Cars"><CarRentalLanding /></RouteErrorBoundary>} />
