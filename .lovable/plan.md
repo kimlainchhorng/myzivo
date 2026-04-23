@@ -1,96 +1,159 @@
 
-Plan to finish and make the Hotel/Resort sidebar/add-on update visible and fully working
+Plan: upgrade the Hotel/Resort admin to the next operational step
 
-1. Verify why it still looks incomplete in the preview
-   - Check the active preview route and store category flow.
-   - Confirm the new hotel/resort sidebar only appears when editing a store with category:
-     - Hotel
-     - Resort
-     - Guesthouse / B&B
-   - If the preview is landing on `/index`, login, or a non-lodging store, add a clearer path/action so you can reach the upgraded Hotel/Resort admin screen without confusion.
+1. Add a clearer “Next Setup Steps” dashboard to Hotel Overview
+   - Add a top checklist card that tells the owner what is complete and what still needs setup:
+     - Rooms & rates
+     - Availability calendar
+     - Check-in/check-out times
+     - Property profile
+     - Policies & rules
+     - Add-ons & packages
+     - Housekeeping
+     - Maintenance
+     - Reports
+   - Each checklist row will have a status badge and a working button that jumps to the right hotel section.
+   - This will make it obvious what is already completed and what still needs action.
 
-2. Make the sidebar upgrade more obvious and easier to access
-   - Add a stronger “Hotel Operations” entry/state so the new lodging sections are visible immediately.
-   - Improve mobile sidebar spacing and labels so the added items do not feel hidden.
-   - Keep the groups clear:
-     - Manage
-     - Hotel Ops
-     - Guest Services
-     - Sales & Growth
-     - Team
-   - Make sure active tab highlighting works for every new lodging item.
+2. Add “Rate Plans & Availability” as the next hotel/resort sidebar item
+   - Add a new sidebar item under Hotel Operations:
+     - Rate Plans & Availability
+   - Create a working section for:
+     - Base rate
+     - Weekend rate
+     - Weekly/monthly discount
+     - Seasonal rates
+     - Minimum stay
+     - Maximum stay
+     - No-arrival weekdays
+     - Room inventory/unit count
+   - Reuse existing `lodge_rooms` fields first, so no database migration is required.
+   - Add clear empty states when no rooms exist yet.
 
-3. Finish any missing wiring for the new sections
-   - Re-check every added lodging tab:
-     - Overview
-     - Add-ons & Packages
-     - Dining & Meal Plans
-     - Experiences & Tours
-     - Transport & Transfers
-     - Spa & Wellness
-     - Policies & Rules
-     - Reviews & Guest Feedback
-   - Confirm every sidebar click changes the tab correctly.
-   - Confirm every “next action” button jumps to the correct existing workflow.
-   - Preserve the current mobile drawer close behavior after clicking a section.
+3. Improve Add-ons & Packages into a more complete manager
+   - Add filters for add-on category:
+     - All
+     - Food & drink
+     - Stay flexibility
+     - Transport
+     - Wellness
+     - Experiences
+     - Celebration
+     - Services
+   - Add search by add-on name or room name.
+   - Add status filters:
+     - Active
+     - Hidden
+     - Free
+     - Paid
+   - Add a clearer “where to edit” action for each add-on:
+     - “Edit in Rooms & Rates”
+   - Keep add-ons saved inside room records for now.
 
-4. Improve the new sections so they feel complete, not placeholder-like
-   - Add clearer empty states explaining what the owner should add next.
-   - Add more useful summary cards for hotel/resort operations.
-   - Add “Open Rooms & Rates”, “Open Reservations”, and “Edit Property Profile” CTAs only where they actually work.
-   - Avoid fake controls or buttons that do nothing.
+4. Add a “Guest Requests” workspace
+   - Add a sidebar item under Guest Services:
+     - Guest Requests
+   - Create a working dashboard that summarizes guest service work from existing reservation/add-on data:
+     - Pending add-on requests
+     - Approved services
+     - Failed/cancelled service requests
+     - Completed guest services
+   - Include recommended next actions:
+     - Review reservation
+     - Open front desk
+     - Manage add-ons
+   - Avoid fake controls; buttons will route to existing working pages.
 
-5. Expand and polish the add-on workflow further
-   - Re-check the room add-on preset catalog and make sure all names are correct hotel/resort terminology.
-   - Add any missing high-value presets if not already present:
-     - Room service
-     - Welcome fruit basket
-     - Airport VIP meet & greet
-     - Private driver
-     - Resort day pass
-     - Spa package
-     - Sauna access
-     - Gym day pass
-     - Kids club
-     - Extra towels
-     - Luggage storage
-     - Wake-up call
-   - Make sure each preset uses a supported billing type:
-     - stay
-     - night
-     - guest
-     - person_night
-   - Make sure every preset has a valid Lucide icon slug.
+5. Add a “Folio & Charges” view for reservations
+   - Use existing `lodge_reservation_charges` table and reservation totals.
+   - Add a clean section inside reservation detail showing:
+     - Room rate
+     - Extras/add-ons
+     - Tax
+     - Paid amount
+     - Balance due
+     - Additional charges
+   - Add loading and empty messages.
+   - If charge creation already works through existing data, expose it clearly; if not, keep it read-only with a proper “charges not added yet” state.
 
-6. Add a small completion/health check inside the lodging admin UI
-   - Add an “Operations setup” summary to Hotel Overview showing:
-     - Rooms configured
-     - Active reservations
-     - Active add-ons
-     - Property profile status
-     - Policies status
-     - Guest services status
-   - This will make it clear from the UI that the hotel/resort upgrade is active and connected.
+6. Modernize Front Desk, Housekeeping, and Reports screens
+   - Front Desk:
+     - Show today’s arrivals, in-house guests, and departures with check-in/check-out time labels.
+     - Add better empty messages instead of just “None”.
+   - Housekeeping:
+     - Add summary cards for clean, dirty, in progress, inspected, and out of service.
+     - Add room search/filter by status.
+   - Reports:
+     - Add clearer revenue cards:
+       - Room revenue
+       - Extras revenue
+       - Tax
+       - Paid vs unpaid
+     - Keep CSV export working.
 
-7. Validate everything after implementation
-   - Build the project.
-   - Check TypeScript errors.
-   - Confirm all lodging sidebar tabs render.
-   - Confirm all add-on presets save into room records.
-   - Confirm the updated UI is visible in a hotel/resort/guesthouse store admin page.
-   - If preview still opens on the wrong page, provide the exact route/button path to view the completed update.
+7. Make the mobile sidebar easier to understand
+   - Keep the Hotel / Resort Admin banner.
+   - Add a small “Setup progress” count in the banner.
+   - Make the new next-step sections visible without feeling hidden on the small 428px mobile preview.
+   - Preserve drawer close behavior and active tab highlighting.
 
-Files to update:
+8. Keep routing/state reliable
+   - Add all new tabs to `AdminStoreEditPage.tsx`.
+   - Add all new titles to the lodging title map.
+   - Use the existing `lodge-set-tab` event for cross-section navigation.
+   - Ensure direct sidebar clicks, overview checklist buttons, and next-action cards all open the correct section.
+
+Files to update
+
 - `src/components/admin/StoreOwnerLayout.tsx`
+  - Add new hotel/resort sidebar items:
+    - Rate Plans & Availability
+    - Guest Requests
+  - Improve Hotel / Resort Admin banner with setup progress.
+
 - `src/pages/admin/AdminStoreEditPage.tsx`
-- `src/components/admin/store/lodging/LodgingOperationsShared.tsx`
+  - Add tab titles and `TabsContent` entries for the new sections.
+
 - `src/components/admin/store/lodging/LodgingOverviewSection.tsx`
+  - Add the new “Next Setup Steps” checklist and completion status.
+
 - `src/components/admin/store/lodging/LodgingAddOnsSection.tsx`
-- `src/components/admin/store/lodging/LodgingDiningSection.tsx`
-- `src/components/admin/store/lodging/LodgingExperiencesSection.tsx`
-- `src/components/admin/store/lodging/LodgingTransportSection.tsx`
-- `src/components/admin/store/lodging/LodgingWellnessSection.tsx`
-- `src/components/admin/store/lodging/LodgingPoliciesSection.tsx`
-- `src/components/admin/store/lodging/LodgingReviewsSection.tsx`
-- `src/components/admin/store/lodging/LodgingRoomsSection.tsx`
-- `src/components/lodging/addonIcons.tsx`
+  - Add filters, search, grouped status, and edit-routing actions.
+
+- `src/components/admin/store/lodging/LodgingFrontDeskSection.tsx`
+  - Improve time display, empty states, and today workflow layout.
+
+- `src/components/admin/store/lodging/LodgingHousekeepingSection.tsx`
+  - Add summary cards and filters.
+
+- `src/components/admin/store/lodging/LodgingReportsSection.tsx`
+  - Add stronger revenue/folio reporting cards.
+
+New files to add
+
+- `src/components/admin/store/lodging/LodgingRatePlansSection.tsx`
+  - Rate plans, seasonal pricing, inventory, stay restrictions, and availability readiness.
+
+- `src/components/admin/store/lodging/LodgingGuestRequestsSection.tsx`
+  - Guest service/add-on request operations dashboard.
+
+- `src/components/admin/store/lodging/LodgingSetupChecklist.tsx`
+  - Reusable setup checklist used by Hotel Overview and sidebar progress.
+
+- `src/hooks/lodging/useLodgeReservationCharges.ts`
+  - Read reservation charge rows from `lodge_reservation_charges`.
+
+Optional reservation detail update
+
+- `src/pages/admin/lodging/AdminLodgingReservationDetailPage.tsx`
+  - Add “Folio & Charges” card using reservation totals and `lodge_reservation_charges`.
+
+Validation after implementation
+
+- Confirm new sidebar items appear for Hotel, Resort, Guesthouse, and B&B stores.
+- Confirm every new sidebar item opens a real working section.
+- Confirm all buttons route to existing working workflows.
+- Confirm mobile drawer remains scrollable and closes after tab selection.
+- Confirm add-on filters/search work.
+- Confirm front desk and reservation detail show check-in/check-out times.
+- Run a production build and fix any TypeScript errors.
