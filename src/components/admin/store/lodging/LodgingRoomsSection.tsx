@@ -174,7 +174,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
       "Towels/Sheets (extra fee)", "Toilet paper",
     ];
     const facilityAmenities = [
-      "Balcony", "Terrace", "Air conditioning", "Sitting area",
+      "Balcony", "Terrace", "Air conditioning", "Sofa", "Sitting area",
       "Socket near the bed", "Desk", "Minibar", "Carpeted",
       "Electric kettle", "Wardrobe or closet", "Dining area",
       "Clothes rack", "Drying rack for clothing", "Non-smoking",
