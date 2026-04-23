@@ -18,6 +18,7 @@ import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
 import { useI18n } from "@/hooks/useI18n";
 import { cn } from "@/lib/utils";
+import { isLodgingStoreCategory } from "@/hooks/useOwnerStoreProfile";
 
 const partnerLoginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -76,7 +77,7 @@ export default function PartnerLogin() {
     const storeIdInput = data.store_id?.replace(/^CBD/i, "").trim();
     if (storeIdInput && storeIdInput.length >= 8) {
       // Find store by matching first 8 chars of UUID (without dashes)
-      const { data: stores } = await supabase.from("store_profiles").select("id, name, setup_complete, owner_id").eq("owner_id", user.id);
+      const { data: stores } = await supabase.from("store_profiles").select("id, name, category, setup_complete, owner_id").eq("owner_id", user.id);
       const matchedStore = stores?.find((s: any) => s.id.replace(/-/g, "").toUpperCase().startsWith(storeIdInput.toUpperCase()));
 
       if (matchedStore) {
@@ -85,7 +86,7 @@ export default function PartnerLogin() {
         if (!matchedStore.setup_complete) {
           navigate("/store/setup", { replace: true });
         } else {
-          navigate(`/admin/stores/${matchedStore.id}`, { replace: true });
+          navigate(`/admin/stores/${matchedStore.id}${isLodgingStoreCategory(matchedStore.category) ? "?tab=lodge-overview" : ""}`, { replace: true });
         }
         return;
       } else {
@@ -101,7 +102,7 @@ export default function PartnerLogin() {
       supabase.from("hotels").select("id").eq("owner_id", user.id).maybeSingle(),
       supabase.from("rental_cars").select("id").eq("owner_id", user.id).limit(1),
       supabase.rpc("check_user_role", { _user_id: user.id, _role: "admin" }),
-      supabase.from("store_profiles").select("id, setup_complete").eq("owner_id", user.id).maybeSingle(),
+      supabase.from("store_profiles").select("id, category, setup_complete").eq("owner_id", user.id).maybeSingle(),
     ]);
 
     setIsLoading(false);
@@ -115,7 +116,7 @@ export default function PartnerLogin() {
       if (!storeProfile.data.setup_complete) {
         navigate("/store/setup", { replace: true });
       } else {
-        navigate(`/admin/stores/${storeProfile.data.id}`, { replace: true });
+        navigate(`/admin/stores/${storeProfile.data.id}${isLodgingStoreCategory(storeProfile.data.category) ? "?tab=lodge-overview" : ""}`, { replace: true });
       }
     } else if (restaurant.data) {
       toast.success("Welcome back, Partner!");
