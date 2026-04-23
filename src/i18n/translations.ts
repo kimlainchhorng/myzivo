@@ -1344,7 +1344,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "store.booking_status.checking": "កំពុងពិនិត្យការកក់របស់អ្នក…",
     "store.booking_status.unlocked": "ឆាត និងទូរស័ព្ទបានបើក",
     "store.booking_status.unlocked_sub": "មានការកក់រួចរាល់",
-    "store.booking_status.locked": "កក់ដើម្បីបើកឆាត",
+    "store.booking_status.locked": "បំពេញការកក់ដើម្បីបើក",
     "store.booking_status.refresh": "ផ្ទុកឡើងវិញ",
     "store.booking_status.rechecking": "កំពុងពិនិត្យឡើងវិញ…",
     "store.booking_status.view_bookings": "មើលការកក់",
