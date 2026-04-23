@@ -1,58 +1,59 @@
 
 
-## Reusable StarRating Component
+## Polished Push & In-App Notification Look
 
-Build a single shared component for star ratings and use it everywhere stars currently appear, with half-star support, value clamping, and a hover tooltip showing the exact number.
+Upgrade the visual quality of all push-style notifications (chat toasts, ride alerts, generic Sonner toasts) so they look premium, branded, and consistent — matching the v2026 chat toast style.
 
 ### What you'll see
 
-- **Stars look the same everywhere** — store header, room cards, restaurant reviews, ride/car reviews.
-- **Half stars work** — a 4.5 rating shows 4 full stars and one half-filled star (not rounded to 5).
-- **Hover tooltip** — hovering the stars on desktop shows "4.5 out of 5 (based on 128 reviews)" so the number is always discoverable.
-- **Each individual review row** in restaurant/store/ride/car review lists gets a small star row next to the reviewer's name (some currently only show a number).
-- **No more broken stars** — a bad value like `-1`, `7`, or `"abc"` won't crash; it clamps to 0–5 cleanly.
+- **Branded notification card** for every push/toast: rounded-[26px] glass surface, subtle ZIVO emerald accent, soft layered shadow, avatar/icon ring, type label ("New Message", "Driver Found", "Trip Update", etc.).
+- **Per-event icon + color accent** — chat (blue dot), ride driver (emerald), arrival (amber), trip complete (green check), promo (purple), surge (red).
+- **Slide-in animation** from the top with subtle spring + soft blur entrance.
+- **Tap targets**: primary action button on the right (Reply / View / Track), tap card body to open deep link, swipe/X to dismiss.
+- **Auto-stack** when multiple arrive, with collapsed counter ("+2 more").
+- **Dark/light aware** with `bg-background/95 backdrop-blur-2xl` and emerald ring.
+- **Native parity**: same look on web push toast, in-app sonner toast, and the Capacitor local-notification body text gets emoji + cleaner title.
 
 ### Technical Plan
 
-**1. New component: `src/components/shared/StarRating.tsx`**
-- Props: `value: number`, `max?: number = 5`, `size?: "xs" | "sm" | "md" | "lg"`, `showValue?: boolean`, `reviewCount?: number`, `tooltip?: boolean = true`, `className?: string`.
-- Clamping: `const safe = Number.isFinite(value) ? Math.max(0, Math.min(max, value)) : 0`.
-- Half-star rendering: render `max` Star icons; for each index `i`:
-  - If `safe >= i + 1` → full amber star (`fill-amber-400 text-amber-400`).
-  - Else if `safe >= i + 0.5` → half star using `StarHalf` from lucide-react (amber fill + amber text).
-  - Else → muted empty star.
-- Tooltip: wrap stars in `Tooltip` from `@/components/ui/tooltip`. Content = `"{safe.toFixed(1)} out of {max}"` plus `" • {reviewCount} reviews"` when provided.
-- Size map: `xs=h-3 w-3`, `sm=h-3.5 w-3.5`, `md=h-4 w-4`, `lg=h-5 w-5`.
+**1. New shared component: `src/components/notifications/NotificationToastCard.tsx`**
+- Props: `title`, `body`, `icon?: LucideIcon`, `variant?: "info" | "success" | "warning" | "ride" | "chat" | "promo" | "trip"`, `avatarUrl?`, `avatarFallback?`, `actionLabel?`, `onAction?`, `onDismiss?`, `meta?` (small uppercase chip text).
+- Visual: rounded-[26px], `bg-background/95 backdrop-blur-2xl`, ring-1 + variant-tinted ring, layered shadow `shadow-[0_18px_50px_rgba(0,0,0,0.14)]`.
+- Variant accents map → icon bg + ring color (emerald / amber / blue / purple / red / green).
+- Avatar with status dot OR icon pill (h-12 w-12) on the left.
+- Right side: optional pill action button (active:scale-95) + dismiss X button.
+- Body: 2-line clamp, 13px muted-foreground.
 
-**2. Replace existing inline star blocks** with `<StarRating />`:
-- `src/pages/StoreProfilePage.tsx` (header rating block at line ~326) — use `value={store.rating ?? 4.5}` with tooltip + review count.
-- `src/components/rides/RideSocialFeatures.tsx` (line ~152) — per-review row.
-- `src/pages/CarRentalBooking.tsx` (line ~781) — per-review row.
-- `src/pages/cars/CarDetailPage.tsx` (line ~302) — per-review row.
-- `src/components/flight/FlightReviewsWidget.tsx` (`renderStars`) — replace with StarRating.
-- `src/components/admin/store/StorePerformanceSection.tsx` (`renderStars`) — replace.
-- `src/components/marketplace/MarketplaceReviewSheet.tsx` — keep its interactive picker as-is (it's an input, not a display); leave untouched.
+**2. Update `src/components/chat/ChatNotificationToast.tsx`**
+- Refactor to render through `NotificationToastCard` with `variant="chat"`, icon dot, "New Message" meta.
 
-**3. Add per-row stars to review sections that currently show only numbers**
-- Audit restaurant/store reviews list inside `StoreProfilePage` (and any `StoreReviewsSection`-style component if present). For each review item render `<StarRating value={review.rating} size="xs" />` next to the reviewer name + date.
+**3. New helper: `src/lib/notify.ts`**
+- Wrappers `notify.chat()`, `notify.ride()`, `notify.success()`, `notify.error()`, `notify.info()`, `notify.promo()` — all call `toast.custom(t => <NotificationToastCard ... />, { duration })`.
+- Centralizes look so any caller gets the polished card without changing 380+ existing `toast.success/error` sites (those keep working via Sonner classNames upgrade in step 5).
 
-**4. TooltipProvider check**
-- App root already wraps in `TooltipProvider` (standard in this project via `App.tsx`); no extra setup needed. If a usage site is outside the provider, the component falls back gracefully (Radix Tooltip simply won't show).
+**4. Upgrade `src/hooks/useRideNotifications.ts`**
+- Replace `toast.info(msg.title, { description: body })` with `notify.ride(event, { title, body, onAction })` so ride lifecycle alerts use the branded card with the right variant + icon (Car, MapPin, CheckCircle2, AlertTriangle, Tag).
+
+**5. Upgrade `src/components/ui/sonner.tsx`**
+- Tighten Sonner default `classNames`: rounded-[22px], `border-border/40`, `bg-background/95 backdrop-blur-2xl`, `shadow-[0_18px_50px_rgba(0,0,0,0.14)]`, success/error/warning/info icon colors mapped to emerald/red/amber/sky. Adds offset for safe-area-top on mobile.
+- Set `expand` + `visibleToasts={3}` and `gap={8}` for clean stacking.
+
+**6. Web Notification API polish (`ChatNotificationListener.tsx`)**
+- Add `badge: "/icons/icon-72x72.png"`, `vibrate: [80, 40, 80]`, ensure `tag` deduplicates per sender so iOS/Android collapse multiple messages from the same person instead of stacking spam.
 
 ### Out of scope
-- The hotel "star class" displays (`hotel.starRating` showing how many stars a hotel is rated, e.g. "5-star hotel") will keep their existing simple full-star rendering since they represent a hotel category, not a review average.
-- The interactive "tap to rate" picker in `MarketplaceReviewSheet` stays as-is (input control, not a display).
+- No changes to server-side `send-push-notification` edge function payload — purely visual/client.
+- Native iOS/Android system notification appearance is controlled by the OS; only the in-app toast and web push visuals change.
 
 ### Files
 
 **Created**
-- `src/components/shared/StarRating.tsx`
+- `src/components/notifications/NotificationToastCard.tsx`
+- `src/lib/notify.ts`
 
 **Edited**
-- `src/pages/StoreProfilePage.tsx`
-- `src/components/rides/RideSocialFeatures.tsx`
-- `src/pages/CarRentalBooking.tsx`
-- `src/pages/cars/CarDetailPage.tsx`
-- `src/components/flight/FlightReviewsWidget.tsx`
-- `src/components/admin/store/StorePerformanceSection.tsx`
+- `src/components/chat/ChatNotificationToast.tsx`
+- `src/components/chat/ChatNotificationListener.tsx`
+- `src/hooks/useRideNotifications.ts`
+- `src/components/ui/sonner.tsx`
 
