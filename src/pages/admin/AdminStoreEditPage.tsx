@@ -2553,7 +2553,7 @@ export default function AdminStoreEditPage() {
         </Card>
         </>)}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
           {isAdmin && (
             <TabsList>
               <TabsTrigger value="profile" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {t("admin.store.profile")}</TabsTrigger>
