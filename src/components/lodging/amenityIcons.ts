@@ -40,6 +40,20 @@ const RAW_MAP: Record<string, LucideIcon> = {
   jacuzzi: Bath,
   bathtub: Bath,
   shower: ShowerHead,
+  walkinshower: ShowerHead,
+  rainshower: ShowerHead,
+
+  // Bathroom
+  freetoiletries: Droplets,
+  toiletries: Droplets,
+  bathrobe: Shirt,
+  slippers: Shirt,
+  hairdryer: Wind,
+  bidet: Droplets,
+  toilet: Bath,
+  toiletpaper: Box,
+  towels: Sparkles,
+  privatebathroom: Bath,
 
   // Parking & transport
   parking: ParkingCircle,
@@ -184,8 +198,6 @@ const RAW_MAP: Record<string, LucideIcon> = {
   // Misc
   books: BookOpen,
   games: Gamepad2,
-  hairdryer: Wind,
-  toiletries: Droplets,
 };
 
 export function getAmenityIcon(name: string): LucideIcon {
