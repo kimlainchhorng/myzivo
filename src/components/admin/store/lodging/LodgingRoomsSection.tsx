@@ -118,12 +118,12 @@ const ADDON_PRESETS: { name: string; price_cents: number; per: "stay" | "night" 
   { name: "Car rental", price_cents: 4500, per: "night", category: "Transport", icon: "carrental" },
   { name: "Bicycle rental", price_cents: 500, per: "night", category: "Transport", icon: "bicycle" },
   // Stay flexibility
-  { name: "Early check-in", price_cents: 1500, per: "stay", category: "Stay", icon: "earlycheckin" },
-  { name: "Late check-out", price_cents: 1500, per: "stay", category: "Stay", icon: "latecheckout" },
-  { name: "Extra bed", price_cents: 1500, per: "night", category: "Stay", icon: "extrabed" },
-  { name: "Baby crib", price_cents: 0, per: "stay", category: "Stay", icon: "babycrib" },
-  { name: "Extra guest", price_cents: 1500, per: "person_night", category: "Stay", icon: "extraguest" },
-  { name: "Pet fee", price_cents: 1000, per: "night", category: "Stay", icon: "petfee" },
+  { name: "Early check-in", price_cents: 1500, per: "stay", category: "Stay flexibility", icon: "earlycheckin" },
+  { name: "Late check-out", price_cents: 1500, per: "stay", category: "Stay flexibility", icon: "latecheckout" },
+  { name: "Extra bed", price_cents: 1500, per: "night", category: "Stay flexibility", icon: "extrabed" },
+  { name: "Baby crib", price_cents: 0, per: "stay", category: "Stay flexibility", icon: "babycrib" },
+  { name: "Extra guest", price_cents: 1500, per: "person_night", category: "Stay flexibility", icon: "extraguest" },
+  { name: "Pet fee", price_cents: 1000, per: "night", category: "Stay flexibility", icon: "petfee" },
   // Wellness & experiences
   { name: "Spa massage (60 min)", price_cents: 4500, per: "guest", category: "Wellness", icon: "spa" },
   { name: "Couples massage", price_cents: 8000, per: "stay", category: "Wellness", icon: "couplesmassage" },
