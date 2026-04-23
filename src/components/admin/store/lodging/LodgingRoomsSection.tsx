@@ -161,6 +161,24 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
   const openNew = () => { setEditing(blank()); setOpen(true); };
   const openEdit = (r: LodgeRoom) => { setEditing({ ...r, addons: r.addons || [], photos: r.photos || [] }); setOpen(true); };
 
+  const duplicate = async (r: LodgeRoom) => {
+    try {
+      const { id, created_at, updated_at, ...rest } = r as any;
+      const copy = {
+        ...rest,
+        name: `${r.name} (Copy)`,
+        addons: r.addons || [],
+        photos: r.photos || [],
+        amenities: r.amenities || [],
+        sort_order: (r.sort_order ?? 0) + 1,
+      };
+      await upsert.mutateAsync(copy);
+      toast.success("Room duplicated");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to duplicate room");
+    }
+  };
+
   const updateEditingPhotos = (next: string[]) => {
     setEditing((prev) => {
       if (!prev) return prev;
