@@ -1936,8 +1936,9 @@ export default function AdminStoreEditPage() {
   };
 
   const employeeTitles: Record<string, string> = { employees: "Employees", payroll: "Payroll", "employee-schedule": "Employee Schedule", "time-clock": "Time Clock", "employee-rules": "Employee Rules", attendance: "Attendance & Leave", training: "Training & Onboarding", documents: "Documents & Files" };
-  const isAutoRepair = form.category === "auto-repair";
-  const isLodging = ["hotel", "resort", "guesthouse"].includes(form.category);
+  const normalizedCategory = (form.category || "").toLowerCase().trim();
+  const isAutoRepair = normalizedCategory === "auto-repair";
+  const isLodging = ["hotel", "resort", "guesthouse", "guesthouse / b&b", "b&b"].includes(normalizedCategory);
   const autoRepairTitles: Record<string, string> = {
     "ar-invoices": "Invoices & Estimates",
     "ar-autocheck": "Auto Check (VIN)",
@@ -3663,7 +3664,7 @@ export default function AdminStoreEditPage() {
             </>
           )}
 
-          {["hotel","resort","guesthouse"].includes(form.category) && (
+          {isLodging && (
             <>
               <TabsContent value="lodge-overview"><LodgingOverviewSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-rooms"><LodgingRoomsSection storeId={storeId!} /></TabsContent>
