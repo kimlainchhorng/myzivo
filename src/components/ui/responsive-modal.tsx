@@ -109,7 +109,7 @@ export function ResponsiveModal({
           {children}
         </div>
         {footer && (
-          <div className="shrink-0 border-t border-border px-5 py-3 bg-background rounded-b-lg">
+          <div className="shrink-0 border-t-2 border-border/80 px-5 py-4 bg-muted/30 backdrop-blur-sm rounded-b-lg shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.08)]">
             {footer}
           </div>
         )}
