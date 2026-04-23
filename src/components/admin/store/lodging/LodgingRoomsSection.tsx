@@ -97,9 +97,14 @@ const AMENITY_OPTIONS = AMENITY_GROUPS.flatMap(g => g.items);
 // `icon` is a slug resolved by ADDON_ICON_MAP to a Lucide component (no emoji).
 const ADDON_PRESETS: { name: string; price_cents: number; per: "stay" | "night" | "guest" | "person_night"; category: string; icon: string }[] = [
   // Food & drink
-  { name: "Breakfast", price_cents: 800, per: "person_night", category: "Food & drink", icon: "breakfast" },
+  { name: "Breakfast buffet", price_cents: 1200, per: "person_night", category: "Food & drink", icon: "breakfast" },
+  { name: "Lunch set menu", price_cents: 1800, per: "guest", category: "Food & drink", icon: "lunch" },
+  { name: "Dinner set menu", price_cents: 2500, per: "guest", category: "Food & drink", icon: "dinner" },
+  { name: "Kids meal", price_cents: 900, per: "guest", category: "Food & drink", icon: "kidsmeal" },
   { name: "Half board (breakfast + dinner)", price_cents: 2500, per: "person_night", category: "Food & drink", icon: "halfboard" },
   { name: "Full board (3 meals)", price_cents: 4000, per: "person_night", category: "Food & drink", icon: "fullboard" },
+  { name: "Floating breakfast", price_cents: 3500, per: "stay", category: "Food & drink", icon: "floatingbreakfast" },
+  { name: "Romantic dinner", price_cents: 6500, per: "stay", category: "Food & drink", icon: "romanticdinner" },
   { name: "Welcome drink", price_cents: 500, per: "guest", category: "Food & drink", icon: "welcomedrink" },
   { name: "Bottle of wine", price_cents: 2500, per: "stay", category: "Food & drink", icon: "wine" },
   { name: "Mini-bar package", price_cents: 1500, per: "stay", category: "Food & drink", icon: "minibar" },
@@ -107,6 +112,8 @@ const ADDON_PRESETS: { name: string; price_cents: number; per: "stay" | "night" 
   { name: "Airport pickup", price_cents: 2500, per: "stay", category: "Transport", icon: "airportpickup" },
   { name: "Airport drop-off", price_cents: 2500, per: "stay", category: "Transport", icon: "airportdropoff" },
   { name: "Round-trip airport transfer", price_cents: 4500, per: "stay", category: "Transport", icon: "airporttransfer" },
+  { name: "Ferry transfer", price_cents: 3000, per: "guest", category: "Transport", icon: "ferrytransfer" },
+  { name: "Private boat transfer", price_cents: 12000, per: "stay", category: "Transport", icon: "privateboat" },
   { name: "Scooter rental", price_cents: 1000, per: "night", category: "Transport", icon: "scooter" },
   { name: "Car rental", price_cents: 4500, per: "night", category: "Transport", icon: "carrental" },
   { name: "Bicycle rental", price_cents: 500, per: "night", category: "Transport", icon: "bicycle" },
@@ -123,10 +130,11 @@ const ADDON_PRESETS: { name: string; price_cents: number; per: "stay" | "night" 
   { name: "Yoga session", price_cents: 1500, per: "guest", category: "Wellness", icon: "yoga" },
   { name: "Snorkeling tour", price_cents: 3500, per: "guest", category: "Experiences", icon: "snorkeling" },
   { name: "Island hopping tour", price_cents: 5000, per: "guest", category: "Experiences", icon: "island" },
+  { name: "Fishing trip", price_cents: 5500, per: "guest", category: "Experiences", icon: "fishing" },
   { name: "Sunset cruise", price_cents: 6500, per: "guest", category: "Experiences", icon: "cruise" },
   { name: "Private chef dinner", price_cents: 7500, per: "stay", category: "Experiences", icon: "chef" },
   // Romance & celebration
-  { name: "Honeymoon package", price_cents: 5000, per: "stay", category: "Celebration", icon: "honeymoon" },
+  { name: "Honeymoon setup", price_cents: 5000, per: "stay", category: "Celebration", icon: "honeymoon" },
   { name: "Birthday cake", price_cents: 1500, per: "stay", category: "Celebration", icon: "cake" },
   { name: "Flower bouquet", price_cents: 2000, per: "stay", category: "Celebration", icon: "flowers" },
   { name: "Champagne on arrival", price_cents: 3500, per: "stay", category: "Celebration", icon: "champagne" },
