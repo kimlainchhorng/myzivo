@@ -297,8 +297,8 @@ export default function StoreProfilePage() {
       })()}
 
       {/* ── Desktop split layout: left content + sticky right rail ── */}
-      <div className="max-w-7xl mx-auto lg:px-4 lg:grid lg:grid-cols-12 lg:gap-6 lg:pt-4">
-      <div className="lg:col-span-7 min-w-0">
+      <div className="max-w-7xl mx-auto lg:px-6 lg:grid lg:grid-cols-12 lg:gap-6 lg:pt-4">
+      <div className="lg:col-span-8 min-w-0">
 
       {/* ── Store Info Card - 3D glassmorphic ── */}
       <div className="relative px-4 -mt-16 lg:mt-0 z-10" style={{ perspective: "1000px" }}>
@@ -828,7 +828,7 @@ export default function StoreProfilePage() {
               <p className="text-sm text-muted-foreground">No rooms listed yet</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3">
               {rooms.map((r) => (
                 <LodgingRoomCard
                   key={r.id}
@@ -1237,7 +1237,7 @@ export default function StoreProfilePage() {
       </div>{/* /lg:col-span-7 left column */}
 
       {/* ── Desktop sticky right rail ── */}
-      <aside className="hidden lg:block lg:col-span-5 lg:sticky lg:top-20 lg:self-start">
+      <aside className="hidden lg:block lg:col-span-4 lg:sticky lg:top-20 lg:self-start">
         <StoreSideRail
           store={store}
           hasBooking={hasBooking}
