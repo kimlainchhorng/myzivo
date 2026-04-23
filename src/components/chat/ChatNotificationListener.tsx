@@ -66,7 +66,6 @@ export default function ChatNotificationListener() {
           tag: `chat-${senderId}`,
           renotify: true,
           silent: false,
-          // @ts-expect-error vibrate is supported on Android/Chrome
           vibrate: [80, 40, 80],
         } as NotificationOptions);
         notif.onclick = () => {

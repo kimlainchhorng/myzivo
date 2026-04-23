@@ -8,7 +8,7 @@ import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { notify } from "@/lib/notify";
+import { notify as showNotification } from "@/lib/notify";
 
 export type RideEvent =
   | "driver_assigned"
@@ -40,7 +40,7 @@ export function useRideNotifications() {
     const targetUserId = extra?.userId || user?.id;
 
     // Always show branded in-app toast (foreground)
-    notify.ride(event, { title: msg.title, body });
+    showNotification.ride(event, { title: msg.title, body });
 
     // Try native local notification on Capacitor (immediate, works offline)
     if (Capacitor.isNativePlatform()) {
