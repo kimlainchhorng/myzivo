@@ -30,6 +30,21 @@ export interface ReservationChangeRequest {
   payment_status?: string | null;
   stripe_payment_intent_id?: string | null;
   applied_at?: string | null;
+  reservation?: {
+    id: string;
+    number: string;
+    guest_name: string | null;
+    guest_phone: string | null;
+    guest_email: string | null;
+    check_in: string;
+    check_out: string;
+    nights: number;
+    room_number: string | null;
+    total_cents: number;
+    paid_cents: number;
+    payment_status: string;
+    room?: { name: string | null } | null;
+  } | null;
 }
 
 /** Guest-facing: requests for one reservation. */
@@ -58,7 +73,7 @@ export function useStoreChangeRequestInbox(storeId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lodge_reservation_change_requests" as any)
-        .select("*")
+        .select("*, reservation:lodge_reservations(id, number, guest_name, guest_phone, guest_email, check_in, check_out, nights, room_number, total_cents, paid_cents, payment_status, room:lodge_rooms(name))")
         .eq("store_id", storeId!)
         .in("status", ["pending"])
         .order("created_at", { ascending: false });
