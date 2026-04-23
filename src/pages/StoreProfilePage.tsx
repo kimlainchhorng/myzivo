@@ -703,9 +703,9 @@ export default function StoreProfilePage() {
             </p>
           )}
 
-          {/* Stay selector — embedded in profile card for lodging stores */}
+          {/* Stay selector — embedded in profile card on mobile only (rail hosts it on lg+) */}
           {isLodging && (
-            <div className="mt-3 pt-3 border-t border-white/[0.06]">
+            <div className="mt-3 pt-3 border-t border-white/[0.06] lg:hidden">
               <LodgingStaySelector
                 checkIn={stay.checkIn}
                 checkOut={stay.checkOut}
