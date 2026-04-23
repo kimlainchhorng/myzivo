@@ -75,8 +75,8 @@ export async function notifyLodgingReservation(admin: ReturnType<typeof createCl
         } else if (prefs?.phone_verified === false) {
           await audit(admin, { user_id: r.guest_id, channel: "sms", event_type: options.event, destination_masked: maskPhone(phone), status: "skipped", skip_reason: "phone_not_verified", metadata: { reservation_id: r.id } });
         } else {
-        const sms = await sendSms(phone, options.smsBody);
-        await audit(admin, { user_id: r.guest_id, channel: "sms", event_type: options.event, destination_masked: maskPhone(r.guest_phone), provider_id: sms.provider_id || null, status: sms.skipped ? "skipped" : "sent", skip_reason: sms.reason || null, metadata: { reservation_id: r.id } });
+          const sms = await sendSms(phone, options.smsBody);
+          await audit(admin, { user_id: r.guest_id, channel: "sms", event_type: options.event, destination_masked: maskPhone(phone), provider_id: sms.provider_id || null, status: sms.skipped ? "skipped" : "sent", skip_reason: sms.reason || null, metadata: { reservation_id: r.id } });
         }
       } catch (e) {
         await audit(admin, { user_id: r.guest_id, channel: "sms", event_type: options.event, destination_masked: maskPhone(r.guest_phone), status: "failed", error: String((e as Error).message || e), metadata: { reservation_id: r.id } });
