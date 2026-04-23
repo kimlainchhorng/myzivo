@@ -322,9 +322,19 @@ export default function StoreProfilePage() {
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-bold text-foreground truncate">{store.name}</h1>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                  {store.rating || "4.5"}
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-0.5">
+                    {(() => {
+                      const filled = Math.max(0, Math.min(5, Math.round(Number(store.rating) || 4.5)));
+                      return Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3 w-3 ${i < filled ? "fill-amber-400 text-amber-400" : "fill-muted text-muted-foreground/30"}`}
+                        />
+                      ));
+                    })()}
+                  </span>
+                  <span className="font-semibold text-foreground">{store.rating || "4.5"}</span>
                 </span>
                 {store.hours && (() => {
                   const market = (store as any).market || (store as any).country;
