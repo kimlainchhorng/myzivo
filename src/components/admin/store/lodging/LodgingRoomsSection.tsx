@@ -141,7 +141,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
     store_id: storeId, name: "", room_type: "Standard", beds: "1 Queen", max_guests: 2,
     units_total: 1, base_rate_cents: 5000, weekend_rate_cents: 6000,
     weekly_discount_pct: 0, monthly_discount_pct: 0,
-    breakfast_included: false, amenities: [], photos: [], sort_order: 0, is_active: true,
+    breakfast_included: false, amenities: ["Free toiletries", "Towels", "Toilet", "Shower", "Wi-Fi", "Air conditioning", "Wardrobe or closet", "Desk", "Non-smoking"], photos: [], sort_order: 0, is_active: true,
     description: "", cancellation_policy: "flexible", addons: [], cover_photo_index: 0,
     bed_config: [{ type: "Queen", qty: 1 }], view: null, floor: null, wing: null,
     child_policy: { child_max_age: 12, free_age: 3 }, fees: {}, seasonal_rates: [],
