@@ -1944,6 +1944,7 @@ export default function AdminStoreEditPage() {
     "ar-reports": "Reports & Analytics",
   };
   const lodgingTitles: Record<string, string> = {
+    "lodge-overview": "Hotel Overview",
     "lodge-rooms": "Rooms & Rates",
     "lodge-reservations": "Reservations",
     "lodge-calendar": "Calendar & Availability",
@@ -1951,8 +1952,15 @@ export default function AdminStoreEditPage() {
     "lodge-frontdesk": "Front Desk",
     "lodge-housekeeping": "Housekeeping",
     "lodge-maintenance": "Maintenance & Work Orders",
+    "lodge-addons": "Add-ons & Packages",
+    "lodge-dining": "Dining & Meal Plans",
+    "lodge-experiences": "Experiences & Tours",
+    "lodge-transport": "Transport & Transfers",
+    "lodge-wellness": "Spa & Wellness",
     "lodge-amenities": "Amenities & Policies",
     "lodge-property": "Property Profile",
+    "lodge-policies": "Policies & Rules",
+    "lodge-reviews": "Reviews & Guest Feedback",
     "lodge-reports": "Reports & Analytics",
   };
   const productsLabelTitle = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
