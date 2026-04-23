@@ -305,7 +305,7 @@ export function LodgingRoomDetailsModal({
               </CarouselContent>
             </Carousel>
           ) : (
-            <div className="aspect-[4/5] sm:aspect-[3/4] max-h-[70vh] rounded-2xl overflow-hidden bg-muted/60 flex flex-col items-center justify-center gap-2">
+            <div className="aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] max-h-[55vh] sm:max-h-[60vh] lg:max-h-[65vh] rounded-2xl overflow-hidden bg-muted/60 flex flex-col items-center justify-center gap-2">
               <BedDouble className="h-10 w-10 text-muted-foreground/40" />
               <span className="text-xs text-muted-foreground">Photo coming soon</span>
             </div>
