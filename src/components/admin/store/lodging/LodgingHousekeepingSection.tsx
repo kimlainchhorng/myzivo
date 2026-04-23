@@ -1,14 +1,15 @@
 /**
  * Lodging — Housekeeping board (per-room status).
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Sparkles } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgeHousekeeping, type HousekeepingStatus } from "@/hooks/lodging/useLodgeHousekeeping";
 import { useLodgeMaintenance } from "@/hooks/lodging/useLodgeMaintenance";
@@ -31,6 +32,13 @@ export default function LodgingHousekeepingSection({ storeId }: { storeId: strin
   const { data: tasks = [], isLoading, upsert, setStatus } = useLodgeHousekeeping(storeId);
   const { upsert: upsertMaintenance } = useLodgeMaintenance(storeId);
   const [pendingOOS, setPendingOOS] = useState<{ roomId: string | null; roomNumber: string | null } | null>(null);
+  const [statusFilter, setStatusFilter] = useState<HousekeepingStatus | "all">("all");
+  const [query, setQuery] = useState("");
+  const filteredTasks = useMemo(() => tasks.filter((task) => {
+    const matchesStatus = statusFilter === "all" || task.status === statusFilter;
+    const matchesQuery = !query.trim() || (task.room_number || "").toLowerCase().includes(query.trim().toLowerCase());
+    return matchesStatus && matchesQuery;
+  }), [tasks, statusFilter, query]);
 
   // Auto-create housekeeping rows for rooms that don't have one yet
   useEffect(() => {
@@ -87,8 +95,15 @@ export default function LodgingHousekeepingSection({ storeId }: { storeId: strin
         {isLoading ? <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p>
           : tasks.length === 0 ? <p className="text-sm text-muted-foreground py-8 text-center">Add rooms first</p>
           : (
-            <div className="space-y-2">
-              {tasks.map(t => (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {STATUSES.map(s => <button key={s} onClick={() => setStatusFilter(s)} className={`rounded-lg border p-2 text-left ${statusFilter === s ? "border-primary bg-primary/10" : "border-border bg-card"}`}><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{LABEL[s]}</p><p className="text-lg font-bold">{tasks.filter(t => t.status === s).length}</p></button>)}
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setStatusFilter("all")} className={`rounded-md border px-3 text-xs ${statusFilter === "all" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}>All</button>
+                <div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search room" className="pl-9" /></div>
+              </div>
+              {filteredTasks.map(t => (
                 <div key={t.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate">{t.room_number || "Room"}</p>
@@ -101,6 +116,7 @@ export default function LodgingHousekeepingSection({ storeId }: { storeId: strin
                   </select>
                 </div>
               ))}
+              {filteredTasks.length === 0 && <p className="rounded-lg border border-dashed border-border bg-muted/20 py-6 text-center text-sm text-muted-foreground">No rooms match this filter.</p>}
             </div>
           )}
       </CardContent>
