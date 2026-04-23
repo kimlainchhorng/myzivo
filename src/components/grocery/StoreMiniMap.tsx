@@ -1,10 +1,13 @@
 /**
  * StoreMiniMap — lightweight Google Static Maps thumbnail for the store profile rail.
- * Falls back to a branded gradient placeholder when coordinates or API key are missing.
- * Click → opens the full store map page.
+ * Fetches the Maps API key from the `maps-api-key` edge function (with env fallback)
+ * so it works in both dev and production. Falls back to a branded gradient when the
+ * key or coordinates are missing.
  */
+import { useEffect, useState } from "react";
 import { MapPin, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StoreMiniMapProps {
   latitude?: number | null;
@@ -13,16 +16,45 @@ interface StoreMiniMapProps {
   slug: string;
 }
 
-const GOOGLE_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+let cachedKey: string | null = null;
+
+async function getMapsKey(): Promise<string> {
+  if (cachedKey !== null) return cachedKey;
+  const envKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || "";
+  try {
+    const { data, error } = await supabase.functions.invoke("maps-api-key");
+    if (!error && data?.key) {
+      cachedKey = data.key;
+      return data.key;
+    }
+  } catch {
+    /* fall through to env */
+  }
+  cachedKey = envKey;
+  return envKey;
+}
 
 export default function StoreMiniMap({ latitude, longitude, storeName, slug }: StoreMiniMapProps) {
   const hasCoords = typeof latitude === "number" && typeof longitude === "number";
   const center = hasCoords ? `${latitude},${longitude}` : "";
+  const [apiKey, setApiKey] = useState<string>(cachedKey ?? "");
+
+  useEffect(() => {
+    if (!hasCoords) return;
+    let cancelled = false;
+    getMapsKey().then((k) => {
+      if (!cancelled) setApiKey(k);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hasCoords]);
 
   // Static map URL with emerald-tinted ZIVO pin
-  const staticMapUrl = hasCoords && GOOGLE_KEY
-    ? `https://maps.googleapis.com/maps/api/staticmap?center=${center}&zoom=15&size=640x320&scale=2&maptype=roadmap&markers=color:0x10b981%7C${center}&style=feature:poi%7Cvisibility:off&key=${GOOGLE_KEY}`
-    : null;
+  const staticMapUrl =
+    hasCoords && apiKey
+      ? `https://maps.googleapis.com/maps/api/staticmap?center=${center}&zoom=15&size=640x320&scale=2&maptype=roadmap&markers=color:0x10b981%7C${center}&style=feature:poi%7Cvisibility:off&key=${apiKey}`
+      : null;
 
   return (
     <Link
