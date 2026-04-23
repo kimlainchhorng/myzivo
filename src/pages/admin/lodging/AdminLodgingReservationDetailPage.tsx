@@ -25,6 +25,10 @@ import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
 import { PolicyAcknowledgementCard } from "@/components/lodging/PolicyAcknowledgementCard";
 import { downloadAuditCsv } from "@/lib/lodging/auditCsv";
 import type { ReservationStatus } from "@/hooks/lodging/useLodgeReservations";
+import HostAddOnTimeline from "@/components/lodging/host/HostAddOnTimeline";
+import HostRefundDisputeCard from "@/components/lodging/host/HostRefundDisputeCard";
+import { useReservationChangeRequests } from "@/hooks/lodging/useReservationChangeRequests";
+import { useLodgingRefundDisputes } from "@/hooks/lodging/useLodgingRefundDisputes";
 
 const STATUS_LABEL: Record<string, string> = {
   hold: "Hold", confirmed: "Confirmed", checked_in: "Checked-In",
@@ -51,13 +55,15 @@ export default function AdminLodgingReservationDetailPage() {
   const [saving, setSaving] = useState(false);
   const [retrying, setRetrying] = useState(false);
   useReservationLive(reservationId);
+  const { data: changeRequests = [] } = useReservationChangeRequests(reservationId);
+  const { data: refundDisputes = [] } = useLodgingRefundDisputes(reservationId);
 
   const NOTE_TEMPLATES: Record<string, string[]> = {
     confirmed: ["Confirmed by admin", "Payment received", "Phone-verified"],
     checked_in: ["Guest arrived on time", "Early check-in approved", "ID verified at desk"],
     checked_out: ["Standard check-out", "Late check-out (fee applied)", "Damages noted"],
-    cancelled: ["Customer cancellation request", "Reschedule requested", "Overbooking"],
-    no_show: ["Customer no-show", "Unreachable by phone", "Late arrival cut-off"],
+    cancelled: ["Guest requested cancellation", "Payment could not be captured", "Room unavailable / maintenance", "Refund handled outside Stripe"],
+    no_show: ["Late arrival beyond cut-off", "Unreachable by phone", "Guest moved to another room"],
   };
   const REASON_OPTIONS: Record<string, { value: string; label: string }[]> = {
     cancelled: [
@@ -65,7 +71,9 @@ export default function AdminLodgingReservationDetailPage() {
       { value: "payment_failed", label: "Payment failed" },
       { value: "overbooking", label: "Overbooking" },
       { value: "property_unavailable", label: "Property unavailable" },
+      { value: "room_maintenance", label: "Room unavailable / maintenance" },
       { value: "policy_violation", label: "Policy violation" },
+      { value: "external_refund", label: "Refund handled outside Stripe" },
       { value: "other", label: "Other" },
     ],
     no_show: [
@@ -307,6 +315,9 @@ export default function AdminLodgingReservationDetailPage() {
             </div>
           </CardContent>
         </Card>
+
+        <HostAddOnTimeline requests={changeRequests} />
+        <HostRefundDisputeCard disputes={refundDisputes} />
 
         {/* Policy acknowledgement */}
         {reservation.policy_consent && (
