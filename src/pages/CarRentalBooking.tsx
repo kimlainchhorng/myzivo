@@ -777,11 +777,7 @@ const CarRentalBooking = () => {
                           <p className="text-[10px] text-muted-foreground">{review.car} · {review.date}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-0.5">
-                        {Array.from({ length: review.rating }).map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                        ))}
-                      </div>
+                      <StarRating value={review.rating} size="xs" />
                     </div>
                     <p className="text-xs text-muted-foreground">{review.text}</p>
                   </div>

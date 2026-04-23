@@ -295,19 +295,7 @@ export default function CarDetailPage() {
                       <Card key={review.id}>
                         <CardContent className="p-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <div className="flex">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={cn(
-                                    "w-4 h-4",
-                                    i < (review.rating || 0)
-                                      ? "fill-amber-400 text-amber-400"
-                                      : "text-muted"
-                                  )}
-                                />
-                              ))}
-                            </div>
+                            <StarRating value={review.rating || 0} size="md" />
                             <span className="text-sm text-muted-foreground">
                               {format(new Date(review.created_at), "MMM d, yyyy")}
                             </span>

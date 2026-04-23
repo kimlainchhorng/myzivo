@@ -148,11 +148,7 @@ export default function RideSocialFeatures() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-foreground">{review.author}</span>
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: review.rating }).map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-primary text-primary" />
-                        ))}
-                      </div>
+                      <StarRating value={review.rating} size="xs" />
                     </div>
                     <span className="text-[10px] text-muted-foreground">{review.time}</span>
                   </div>
