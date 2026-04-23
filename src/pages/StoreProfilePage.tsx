@@ -1234,6 +1234,30 @@ export default function StoreProfilePage() {
       </>
       )}
 
+      </div>{/* /lg:col-span-7 left column */}
+
+      {/* ── Desktop sticky right rail ── */}
+      <aside className="hidden lg:block lg:col-span-5 lg:sticky lg:top-20 lg:self-start">
+        <StoreSideRail
+          store={store}
+          hasBooking={hasBooking}
+          loadingBooking={loadingBooking}
+          bookingSource={bookingSource}
+          callable={callable}
+          chattable={chattable}
+          phoneNumber={phoneNumber}
+          onOpenChat={() => setChatOpen(true)}
+          isLodging={isLodging}
+          stay={isLodging ? stay : undefined}
+          onStayChange={isLodging ? updateStay : undefined}
+          roomsMinPriceCents={isLodging && rooms.length > 0 ? Math.min(...rooms.map(r => r.base_rate_cents).filter(n => n > 0)) : undefined}
+          showBookService={store.category === "auto-repair"}
+          onBookService={() => navigate(`/book/${slug}`)}
+        />
+      </aside>
+
+      </div>{/* /desktop split grid */}
+
       {/* ── Floating Cart Bar - Premium 3D ── */}
       <AnimatePresence>
         {cart.itemCount > 0 && !showCart && (
