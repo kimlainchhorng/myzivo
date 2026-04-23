@@ -140,7 +140,10 @@ export default function AdminLodgingReservationDetailPage() {
     ? paymentNeedsReview ? "Review payment/refund" : "Audit complete"
     : pendingRequests.length ? "Review guest request"
       : paymentNeedsReview ? "Review payment"
-        : transitions[0]?.label || "Monitor stay";
+        : reservation?.status === "hold" ? "Confirm stay"
+          : reservation?.status === "confirmed" ? "Prepare check-in"
+            : reservation?.status === "checked_in" ? "Complete check-out"
+              : "Monitor stay";
   const cover = (() => {
     if (!room?.photos) return undefined;
     const photos = room.photos as string[];
