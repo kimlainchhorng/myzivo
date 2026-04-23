@@ -56,7 +56,7 @@ export default function AddOnStatusTimeline({ requests, isUpdating }: Props) {
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">{format(parseISO(r.created_at), "MMM d, yyyy h:mm a")} · {money(r.price_delta_cents)} · {payment}</p>
-                <p className="text-xs text-muted-foreground">Saved-card charge {success ? "completed and reservation total updated." : failed ? "failed; reservation total was not changed." : "is pending."}</p>
+                <p className="text-xs text-muted-foreground">Saved-card charge {failed ? "failed; reservation total was not changed." : success ? "completed and reservation total updated." : "is pending."}</p>
                 {r.stripe_payment_intent_id && <p className="text-xs text-muted-foreground">Payment ref: …{r.stripe_payment_intent_id.slice(-8)}</p>}
                 {failed && <p className="text-xs text-destructive">{failureReason(r)}</p>}
               </div>

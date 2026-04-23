@@ -2,7 +2,7 @@
  * MyLodgingTripPage — guest-facing trip detail page for a lodge reservation.
  * Route: /my-trips/lodging/:reservationId
  */
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, CalendarRange, XCircle, CreditCard, Clock, ShoppingBag, ShieldCheck } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -182,16 +182,16 @@ export default function MyLodgingTripPage() {
   };
   const maxDisputeCents = Math.max(0, reservation.paid_cents - (requests.find((r) => r.type === "cancel")?.refund_cents || 0));
   const canDispute = reservation.status === "cancelled" || String(reservation.payment_status || "").includes("refund") || reservation.payment_status === "cancelled_no_refund";
-  const refreshReceiptHistory = async () => {
+  const refreshReceiptHistory = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["lodge-receipt-history", reservationId] });
     return refetchReceipts();
-  };
-  const highlightAddonStatus = () => {
+  }, [queryClient, refetchReceipts, reservationId]);
+  const highlightAddonStatus = useCallback(() => {
     const target = document.querySelector("#addon-status") as HTMLElement | null;
     target?.scrollIntoView({ behavior: "smooth", block: "start" });
     target?.classList.add("transition-shadow", "ring-2", "ring-primary", "ring-offset-2", "ring-offset-background");
     window.setTimeout(() => target?.classList.remove("transition-shadow", "ring-2", "ring-primary", "ring-offset-2", "ring-offset-background"), 1600);
-  };
+  }, []);
 
   return (
     <div className="container max-w-3xl mx-auto p-4 space-y-4 pb-24">
