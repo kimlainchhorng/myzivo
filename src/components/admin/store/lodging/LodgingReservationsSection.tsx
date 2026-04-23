@@ -12,6 +12,7 @@ import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle, ChevronRig
 import { useLodgeReservations, type ReservationStatus } from "@/hooks/lodging/useLodgeReservations";
 import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
 import { toast } from "sonner";
+import ChangeRequestsInbox from "@/components/lodging/host/ChangeRequestsInbox";
 
 const STATUSES: (ReservationStatus | "all")[] = ["all", "hold", "confirmed", "checked_in", "checked_out", "cancelled", "no_show"];
 const STATUS_LABEL: Record<string, string> = {
@@ -44,6 +45,8 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
   };
 
   return (
+    <div className="space-y-4">
+      <ChangeRequestsInbox storeId={storeId} />
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><CalendarRange className="h-5 w-5" /> Reservations</CardTitle>
@@ -116,5 +119,6 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }
