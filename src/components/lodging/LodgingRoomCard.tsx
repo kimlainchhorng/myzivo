@@ -172,6 +172,12 @@ export function LodgingRoomCard({
                 <span className="inline-block h-1 w-1 rounded-full bg-muted-foreground/40" />
                 Sleeps {maxGuests}
               </span>
+              {sizeSqm && (
+                <span className="flex items-center gap-1">
+                  <span className="inline-block h-1 w-1 rounded-full bg-muted-foreground/40" />
+                  {sizeSqm} m² · {Math.round(sizeSqm * 10.764)} ft²
+                </span>
+              )}
             </div>
             {(quickChips.length > 0 || breakfastIncluded || totalAddons > 0) && (
               <div className="flex flex-wrap gap-1.5">
