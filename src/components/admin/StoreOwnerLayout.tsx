@@ -117,8 +117,9 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     scrollMemoryRef.current[tabKey] = e.currentTarget.scrollTop;
   };
 
-  const isAutoRepair = storeCategory === "auto-repair";
-  const isLodging = ["hotel", "resort", "guesthouse"].includes(storeCategory || "");
+  const normalizedStoreCategory = (storeCategory || "").toLowerCase().trim();
+  const isAutoRepair = normalizedStoreCategory === "auto-repair";
+  const isLodging = ["hotel", "resort", "guesthouse", "guesthouse / b&b", "b&b"].includes(normalizedStoreCategory);
   const productsLabel = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
   const paymentLabel = isAutoRepair ? "Bookings" : "Payment & Payouts";
 
@@ -147,8 +148,8 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       { id: "ar-reports", label: "Reports", icon: BarChart3 },
     ] : []),
     ...(isLodging ? [
-      { id: "lodge-overview", label: "Overview", icon: Hotel },
-      { id: "_lodging_ops_label", label: "HOTEL OPS", icon: BedDouble, divider: true },
+      { id: "lodge-overview", label: "Hotel Operations", icon: Hotel },
+      { id: "_lodging_ops_label", label: "HOTEL OPERATIONS", icon: BedDouble, divider: true },
       { id: "lodge-rooms", label: "Rooms & Rates", icon: BedDouble },
       { id: "lodge-reservations", label: "Reservations", icon: CalendarRange },
       { id: "lodge-calendar", label: "Calendar & Availability", icon: CalendarDays },
@@ -301,6 +302,12 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           <p id="sidebar-group-manage" className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Manage</p>
+          {isLodging && (
+            <div className="mb-2 rounded-lg border border-primary/20 bg-primary/8 px-3 py-2 text-primary">
+              <div className="flex items-center gap-2 text-xs font-semibold"><Hotel className="h-3.5 w-3.5" /> Hotel / Resort Admin</div>
+              <p className="mt-0.5 text-[10px] text-primary/80">Rooms, reservations, services, policies, and reports are active.</p>
+            </div>
+          )}
           <div className="space-y-0.5" role="group" aria-labelledby="sidebar-group-manage">
             {navItems.map((item: any) => {
               if (item.divider) {

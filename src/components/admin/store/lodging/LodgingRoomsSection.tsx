@@ -108,6 +108,8 @@ const ADDON_PRESETS: { name: string; price_cents: number; per: "stay" | "night" 
   { name: "Welcome drink", price_cents: 500, per: "guest", category: "Food & drink", icon: "welcomedrink" },
   { name: "Bottle of wine", price_cents: 2500, per: "stay", category: "Food & drink", icon: "wine" },
   { name: "Mini-bar package", price_cents: 1500, per: "stay", category: "Food & drink", icon: "minibar" },
+  { name: "Room service", price_cents: 1200, per: "stay", category: "Food & drink", icon: "roomservice" },
+  { name: "Welcome fruit basket", price_cents: 1800, per: "stay", category: "Food & drink", icon: "fruitbasket" },
   // Transport
   { name: "Airport pickup", price_cents: 2500, per: "stay", category: "Transport", icon: "airportpickup" },
   { name: "Airport drop-off", price_cents: 2500, per: "stay", category: "Transport", icon: "airportdropoff" },
@@ -117,6 +119,8 @@ const ADDON_PRESETS: { name: string; price_cents: number; per: "stay" | "night" 
   { name: "Scooter rental", price_cents: 1000, per: "night", category: "Transport", icon: "scooter" },
   { name: "Car rental", price_cents: 4500, per: "night", category: "Transport", icon: "carrental" },
   { name: "Bicycle rental", price_cents: 500, per: "night", category: "Transport", icon: "bicycle" },
+  { name: "Airport VIP meet & greet", price_cents: 5500, per: "stay", category: "Transport", icon: "airportvip" },
+  { name: "Private driver", price_cents: 9000, per: "stay", category: "Transport", icon: "privatedriver" },
   // Stay flexibility
   { name: "Early check-in", price_cents: 1500, per: "stay", category: "Stay flexibility", icon: "earlycheckin" },
   { name: "Late check-out", price_cents: 1500, per: "stay", category: "Stay flexibility", icon: "latecheckout" },
@@ -128,11 +132,16 @@ const ADDON_PRESETS: { name: string; price_cents: number; per: "stay" | "night" 
   { name: "Spa massage (60 min)", price_cents: 4500, per: "guest", category: "Wellness", icon: "spa" },
   { name: "Couples massage", price_cents: 8000, per: "stay", category: "Wellness", icon: "couplesmassage" },
   { name: "Yoga session", price_cents: 1500, per: "guest", category: "Wellness", icon: "yoga" },
+  { name: "Spa package", price_cents: 9500, per: "stay", category: "Wellness", icon: "spapackage" },
+  { name: "Sauna access", price_cents: 1200, per: "guest", category: "Wellness", icon: "sauna" },
+  { name: "Gym day pass", price_cents: 1000, per: "guest", category: "Wellness", icon: "gym" },
   { name: "Snorkeling tour", price_cents: 3500, per: "guest", category: "Experiences", icon: "snorkeling" },
   { name: "Island hopping tour", price_cents: 5000, per: "guest", category: "Experiences", icon: "island" },
   { name: "Fishing trip", price_cents: 5500, per: "guest", category: "Experiences", icon: "fishing" },
   { name: "Sunset cruise", price_cents: 6500, per: "guest", category: "Experiences", icon: "cruise" },
   { name: "Private chef dinner", price_cents: 7500, per: "stay", category: "Experiences", icon: "chef" },
+  { name: "Resort day pass", price_cents: 3000, per: "guest", category: "Experiences", icon: "resortdaypass" },
+  { name: "Kids club", price_cents: 1800, per: "guest", category: "Experiences", icon: "kidsclub" },
   // Romance & celebration
   { name: "Honeymoon setup", price_cents: 5000, per: "stay", category: "Celebration", icon: "honeymoon" },
   { name: "Birthday cake", price_cents: 1500, per: "stay", category: "Celebration", icon: "cake" },
@@ -143,6 +152,9 @@ const ADDON_PRESETS: { name: string; price_cents: number; per: "stay" | "night" 
   { name: "Laundry service", price_cents: 1200, per: "stay", category: "Services", icon: "laundry" },
   { name: "Parking", price_cents: 500, per: "night", category: "Services", icon: "parking" },
   { name: "Beach towel rental", price_cents: 200, per: "guest", category: "Services", icon: "beachtowel" },
+  { name: "Extra towels", price_cents: 300, per: "stay", category: "Services", icon: "extratowels" },
+  { name: "Luggage storage", price_cents: 500, per: "stay", category: "Services", icon: "luggage" },
+  { name: "Wake-up call", price_cents: 0, per: "stay", category: "Services", icon: "wakeup" },
 ];
 
 const CANCEL_POLICIES: { value: string; label: string }[] = [
