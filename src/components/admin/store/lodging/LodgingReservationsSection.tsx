@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle, ChevronRight, ShieldCheck, BedDouble, Mail, Phone, ExternalLink, ClipboardCheck } from "lucide-react";
+import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle, ChevronRight, ShieldCheck, BedDouble, Mail, Phone, ExternalLink, ClipboardCheck, Clock } from "lucide-react";
 import { useLodgeReservations, type ReservationStatus } from "@/hooks/lodging/useLodgeReservations";
 import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
 import { toast } from "sonner";
@@ -29,6 +29,12 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "dest
 };
 
 const money = (cents?: number | null) => `$${((Number(cents) || 0) / 100).toFixed(2)}`;
+const dateLabel = (value?: string | null) => value ? new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—";
+const timeLabel = (value?: string | null, fallback?: string | null) => {
+  if (value && value.includes("T")) return new Date(value).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  if (fallback) return fallback.slice(0, 5);
+  return "Time not set";
+};
 
 export default function LodgingReservationsSection({ storeId }: { storeId: string }) {
   const navigate = useNavigate();
@@ -124,9 +130,11 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
                         <Badge variant={STATUS_VARIANT[r.status] || "outline"} className="text-[10px]">{STATUS_LABEL[r.status]}</Badge>
                         <span className="text-[10px] text-muted-foreground font-mono">{r.number}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {r.check_in} → {r.check_out} · {r.nights} night{r.nights !== 1 ? "s" : ""} · {r.adults}A{r.children ? `/${r.children}C` : ""}
-                      </p>
+                      <div className="mt-1 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
+                        <span className="inline-flex items-center gap-1.5"><CalendarRange className="h-3 w-3" /> {dateLabel(r.check_in)} → {dateLabel(r.check_out)} · {r.nights} night{r.nights !== 1 ? "s" : ""}</span>
+                        <span className="inline-flex items-center gap-1.5"><Clock className="h-3 w-3" /> In {timeLabel(r.check_in, r.room?.check_in_time)} · Out {timeLabel(r.check_out, r.room?.check_out_time)}</span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{r.adults} adult{r.adults !== 1 ? "s" : ""}{r.children ? ` · ${r.children} child${r.children > 1 ? "ren" : ""}` : ""}</p>
                       <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
                         <span className="inline-flex items-center gap-1"><BedDouble className="h-3 w-3" />{r.room_number ? `Unit ${r.room_number}` : "Room unassigned"}</span>
                         {r.guest_phone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{r.guest_phone}</span>}
@@ -138,7 +146,7 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
                         {hasPendingRequest && <Badge variant="secondary" className="text-[10px]">Pending guest request</Badge>}
                         {r.status === "cancelled" && String(r.payment_status).includes("refund") && <Badge variant="secondary" className="text-[10px]">Refund workflow</Badge>}
                         {(r as any).policy_consent && (
-                          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-600">
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-primary">
                             <ShieldCheck className="h-2.5 w-2.5" /> Policies acknowledged
                           </span>
                         )}

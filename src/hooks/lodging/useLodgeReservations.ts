@@ -34,6 +34,7 @@ export interface LodgeReservation {
   notes: string | null;
   signature_url: string | null;
   id_photo_url: string | null;
+  room?: { check_in_time: string | null; check_out_time: string | null } | null;
   created_at: string;
   updated_at: string;
 }
@@ -46,7 +47,7 @@ export function useLodgeReservations(storeId: string, status?: ReservationStatus
     queryFn: async () => {
       let q = supabase
         .from("lodge_reservations" as any)
-        .select("*")
+        .select("*, room:lodge_rooms(check_in_time, check_out_time)")
         .eq("store_id", storeId)
         .order("check_in", { ascending: false });
       if (status && status !== "all") q = q.eq("status", status);
