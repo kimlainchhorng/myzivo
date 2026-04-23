@@ -27208,6 +27208,50 @@ export type Database = {
           },
         ]
       }
+      lodge_reservation_receipts: {
+        Row: {
+          created_at: string
+          filename: string
+          generated_by: string | null
+          id: string
+          pdf_sha256: string | null
+          reservation_id: string
+          reservation_number: string | null
+          snapshot: Json
+          store_id: string
+        }
+        Insert: {
+          created_at?: string
+          filename: string
+          generated_by?: string | null
+          id?: string
+          pdf_sha256?: string | null
+          reservation_id: string
+          reservation_number?: string | null
+          snapshot: Json
+          store_id: string
+        }
+        Update: {
+          created_at?: string
+          filename?: string
+          generated_by?: string | null
+          id?: string
+          pdf_sha256?: string | null
+          reservation_id?: string
+          reservation_number?: string | null
+          snapshot?: Json
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_reservation_receipts_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "lodge_reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lodge_reservations: {
         Row: {
           addon_selections: Json
@@ -60984,6 +61028,7 @@ export type Database = {
         | "approved"
         | "declined"
         | "cancelled"
+        | "failed"
       lodge_change_type: "reschedule" | "cancel" | "addon"
       notification_category:
         | "transactional"
@@ -61369,6 +61414,7 @@ export const Constants = {
         "approved",
         "declined",
         "cancelled",
+        "failed",
       ],
       lodge_change_type: ["reschedule", "cancel", "addon"],
       notification_category: [

@@ -1,6 +1,4 @@
-/**
- * cancel-lodging-reservation — guest cancels their own reservation with Stripe refund/cancel handling.
- */
+/** cancel-lodging-reservation — guest previews/cancels their own reservation with Stripe refund/cancel handling. */
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
 
@@ -12,12 +10,18 @@ const corsHeaders = {
 function hoursUntil(iso: string) {
   return (new Date(iso).getTime() - Date.now()) / 3600000;
 }
-
 function refundFor(checkIn: string, paidCents: number) {
   const h = hoursUntil(checkIn);
-  if (h >= 24 * 7) return { refundCents: paidCents, percent: 100, label: "Full refund" };
-  if (h >= 48) return { refundCents: Math.round(paidCents * 0.5), percent: 50, label: "50% refund" };
-  return { refundCents: 0, percent: 0, label: "No refund" };
+  if (h >= 24 * 7) return { refundCents: paidCents, nonRefundableCents: 0, percent: 100, label: "Full refund", window: "7+ days notice", hours_until_check_in: h };
+  if (h >= 48) return { refundCents: Math.round(paidCents * 0.5), nonRefundableCents: paidCents - Math.round(paidCents * 0.5), percent: 50, label: "50% refund", window: "2–6 days notice", hours_until_check_in: h };
+  return { refundCents: 0, nonRefundableCents: paidCents, percent: 0, label: "No refund", window: "Less than 48h notice", hours_until_check_in: h };
+}
+function paymentOutcome(policy: ReturnType<typeof refundFor>, piStatus?: string | null, hasPi?: boolean) {
+  if (!hasPi) return "No saved-card payment intent is attached to this reservation.";
+  if (["requires_capture", "requires_payment_method", "requires_confirmation", "requires_action", "processing"].includes(piStatus || "")) return "The card authorization will be cancelled; no additional charge will be made.";
+  if (policy.refundCents > 0 && piStatus === "succeeded") return "Refund will be sent back to the saved payment method used for the reservation.";
+  if (policy.refundCents <= 0) return "No refund is due, and the saved payment method will not be charged again.";
+  return "Refund handling depends on the current payment status and will be finalized by Stripe.";
 }
 
 Deno.serve(async (req) => {
@@ -32,7 +36,7 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return new Response(JSON.stringify({ error: "unauthenticated" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { reservation_id, reason } = await req.json();
+    const { reservation_id, reason, preview } = await req.json();
     if (!reservation_id) return new Response(JSON.stringify({ error: "missing_reservation_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const { data: r } = await supabase
@@ -45,6 +49,29 @@ Deno.serve(async (req) => {
     if (["cancelled", "checked_out", "no_show"].includes(r.status)) return new Response(JSON.stringify({ error: "already_inactive" }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const policy = refundFor(r.check_in, r.paid_cents || 0);
+    let piStatus: string | null = null;
+    if (r.stripe_payment_intent_id) {
+      const pi = await stripe.paymentIntents.retrieve(r.stripe_payment_intent_id);
+      piStatus = pi.status;
+    }
+
+    if (preview) {
+      return new Response(JSON.stringify({
+        ok: true,
+        preview: true,
+        policy_label: policy.label,
+        policy_window: policy.window,
+        hours_until_check_in: policy.hours_until_check_in,
+        days_until_check_in: policy.hours_until_check_in / 24,
+        refund_percent: policy.percent,
+        refundable_cents: policy.refundCents,
+        non_refundable_cents: policy.nonRefundableCents,
+        total_paid_cents: r.paid_cents || 0,
+        payment_intent_status: piStatus,
+        payment_method_outcome: paymentOutcome(policy, piStatus, Boolean(r.stripe_payment_intent_id)),
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     let paymentStatus = policy.refundCents > 0 ? "refund_pending" : "cancelled_no_refund";
     let stripeRefundId: string | null = null;
 
@@ -74,13 +101,13 @@ Deno.serve(async (req) => {
       decided_at: now,
       applied_at: now,
       payment_status: paymentStatus,
-      addon_payload: { policy_percent: policy.percent, policy_label: policy.label, stripe_refund_id: stripeRefundId },
+      addon_payload: { policy_percent: policy.percent, policy_label: policy.label, non_refundable_cents: policy.nonRefundableCents, payment_method_outcome: paymentOutcome(policy, piStatus, Boolean(r.stripe_payment_intent_id)), stripe_refund_id: stripeRefundId },
     });
 
     await admin.from("lodge_reservations").update({ status: "cancelled", payment_status: paymentStatus, last_payment_error: null }).eq("id", reservation_id);
-    await admin.from("lodge_reservation_audit").insert({ reservation_id, store_id: r.store_id, action: "cancelled", actor_id: user.id, notes: reason || null, metadata: { refund_cents: policy.refundCents, payment_status: paymentStatus } }).then(() => null);
+    await admin.from("lodge_reservation_audit").insert({ reservation_id, store_id: r.store_id, action: "cancelled", actor_id: user.id, notes: reason || null, metadata: { refund_cents: policy.refundCents, non_refundable_cents: policy.nonRefundableCents, payment_status: paymentStatus } }).then(() => null);
 
-    return new Response(JSON.stringify({ ok: true, status: "cancelled", refund_cents: policy.refundCents, refund_percent: policy.percent, refund_label: policy.label, payment_status: paymentStatus }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ ok: true, status: "cancelled", refund_cents: policy.refundCents, non_refundable_cents: policy.nonRefundableCents, refund_percent: policy.percent, refund_label: policy.label, payment_status: paymentStatus }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     return new Response(JSON.stringify({ error: String((err as Error).message || err) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }

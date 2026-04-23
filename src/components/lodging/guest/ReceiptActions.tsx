@@ -6,7 +6,7 @@ import { FileText, CalendarPlus, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format, parseISO } from "date-fns";
+import { buildBookingIcs, downloadIcsFile } from "@/lib/lodging/ics";
 
 interface Props {
   reservationNumber: string;
@@ -42,14 +42,22 @@ function buildIcs({ reservationNumber, propertyName, checkIn, checkOut }: Omit<P
 export default function ReceiptActions(props: Props) {
   const [loadingReceipt, setLoadingReceipt] = useState(false);
   const downloadIcs = () => {
-    const ics = buildIcs(props);
-    const blob = new Blob([ics], { type: "text/calendar" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${props.reservationNumber}.ics`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Phnom_Penh";
+    const ics = buildBookingIcs({
+      reference: props.reservationNumber,
+      storeName: props.propertyName,
+      roomName: props.roomName || "Assigned room",
+      guestName: props.guestName || "Guest",
+      guestEmail: props.guestEmail,
+      checkIn: props.checkIn,
+      checkOut: props.checkOut,
+      checkInTime: props.checkInTime || "15:00",
+      checkOutTime: props.checkOutTime || "11:00",
+      timezone,
+      totalText: props.totalText,
+      cancellationText: props.cancellationText || undefined,
+    });
+    downloadIcsFile(props.reservationNumber, ics);
   };
 
   const downloadReceipt = async () => {
@@ -69,6 +77,7 @@ export default function ReceiptActions(props: Props) {
     a.download = `ZIVO-reservation-${props.reservationNumber}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
+    props.onReceiptDownloaded?.();
   };
 
   return (

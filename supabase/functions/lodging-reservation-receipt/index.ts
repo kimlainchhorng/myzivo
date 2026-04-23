@@ -8,11 +8,9 @@ const corsHeaders = {
 function money(cents: number | null | undefined) {
   return `$${((cents || 0) / 100).toFixed(2)}`;
 }
-
 function escPdf(value: unknown) {
   return String(value ?? "").replace(/[\\()]/g, "\\$&").replace(/[\r\n]+/g, " ");
 }
-
 function makePdf(lines: string[]) {
   const content = ["BT", "/F1 18 Tf", "54 760 Td", `(ZIVO Lodging Receipt) Tj`, "/F1 10 Tf", "0 -28 Td"];
   for (const line of lines) content.push(`(${escPdf(line)}) Tj`, "0 -16 Td");
@@ -37,6 +35,33 @@ function makePdf(lines: string[]) {
   pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
   return new TextEncoder().encode(pdf);
 }
+async function sha256Hex(bytes: Uint8Array) {
+  const hash = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function linesFromSnapshot(snapshot: any) {
+  return [
+    `Property: ${snapshot.propertyName || "ZIVO property"}`,
+    `Reservation: ${snapshot.reservationNumber || ""}`,
+    `Guest: ${snapshot.guestName || "Guest"}`,
+    `Stay: ${snapshot.checkIn || ""} to ${snapshot.checkOut || ""} (${snapshot.nights || 0} nights)`,
+    `Room: ${snapshot.roomLabel || "Assigned room"}`,
+    `Reservation status: ${snapshot.status || ""}`,
+    `Payment status: ${snapshot.paymentStatus || "pending"}`,
+    `Total: ${money(snapshot.totalCents)}`,
+    `Paid: ${money(snapshot.paidCents)}`,
+    `Deposit: ${money(snapshot.depositCents)}`,
+    `Add-ons/extras: ${money(snapshot.extrasCents)}`,
+    `Taxes/fees: ${money(snapshot.taxCents)}`,
+    `Balance: ${money(snapshot.balanceCents)}`,
+    `Cancellation policy: ${snapshot.cancellationPolicy || "Standard ZIVO lodging policy"}`,
+    "",
+    "Charges:",
+    ...(Array.isArray(snapshot.charges) && snapshot.charges.length ? snapshot.charges.map((c: any) => `${c.label}: ${money(c.amount_cents)}`) : ["No extra charges recorded"]),
+    "",
+    `Generated: ${snapshot.generatedAt || new Date().toISOString()}`,
+  ];
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -53,7 +78,20 @@ Deno.serve(async (req) => {
     if (req.method !== "GET") body = await req.json().catch(() => ({}));
     const url = new URL(req.url);
     const reservationId = url.searchParams.get("reservation_id") || body.reservation_id;
-    if (!reservationId) return new Response(JSON.stringify({ error: "missing_reservation_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const receiptId = url.searchParams.get("receipt_id") || body.receipt_id;
+    if (!reservationId && !receiptId) return new Response(JSON.stringify({ error: "missing_reservation_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    if (receiptId) {
+      const { data: receipt } = await admin.from("lodge_reservation_receipts").select("*").eq("id", receiptId).maybeSingle();
+      if (!receipt) return new Response(JSON.stringify({ error: "receipt_not_found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const { data: r } = await admin.from("lodge_reservations").select("id, guest_id, store_id").eq("id", receipt.reservation_id).maybeSingle();
+      const { data: store } = await admin.from("restaurants").select("owner_id").eq("id", receipt.store_id).maybeSingle();
+      const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", user.id);
+      const isAdmin = (roles || []).some((role: any) => role.role === "admin");
+      if (r?.guest_id !== user.id && store?.owner_id !== user.id && !isAdmin) return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const pdf = makePdf(linesFromSnapshot(receipt.snapshot));
+      return new Response(pdf, { headers: { ...corsHeaders, "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="${receipt.filename}"` } });
+    }
 
     const { data: r, error } = await admin
       .from("lodge_reservations")
@@ -72,31 +110,32 @@ Deno.serve(async (req) => {
 
     const { data: charges } = await admin.from("lodge_reservation_charges").select("label, amount_cents, created_at").eq("reservation_id", r.id).order("created_at", { ascending: true });
     const balance = Math.max(0, (r.total_cents || 0) - (r.paid_cents || 0));
-    const lines = [
-      `Property: ${store?.name || "ZIVO property"}`,
-      `Reservation: ${r.number}`,
-      `Guest: ${r.guest_name || r.guest_email || "Guest"}`,
-      `Stay: ${r.check_in} to ${r.check_out} (${r.nights || 0} nights)`,
-      `Room: ${r.room_number || room?.name || room?.room_type || "Assigned room"}`,
-      `Reservation status: ${r.status}`,
-      `Payment status: ${r.payment_status || "pending"}`,
-      `Total: ${money(r.total_cents)}`,
-      `Paid: ${money(r.paid_cents)}`,
-      `Deposit: ${money(r.deposit_cents)}`,
-      `Add-ons/extras: ${money(r.extras_cents)}`,
-      `Taxes/fees: ${money(r.tax_cents)}`,
-      `Balance: ${money(balance)}`,
-      `Cancellation policy: ${room?.cancellation_policy || "Standard ZIVO lodging policy"}`,
-      "",
-      "Charges:",
-      ...((charges || []).length ? (charges || []).map((c: any) => `${c.label}: ${money(c.amount_cents)}`) : ["No extra charges recorded"]),
-      "",
-      `Generated: ${new Date().toISOString()}`,
-    ];
+    const filename = `ZIVO-reservation-${r.number}.pdf`;
+    const snapshot = {
+      propertyName: store?.name || "ZIVO property",
+      reservationNumber: r.number,
+      guestName: r.guest_name || r.guest_email || "Guest",
+      checkIn: r.check_in,
+      checkOut: r.check_out,
+      nights: r.nights || 0,
+      roomLabel: r.room_number || room?.name || room?.room_type || "Assigned room",
+      status: r.status,
+      paymentStatus: r.payment_status || "pending",
+      totalCents: r.total_cents,
+      paidCents: r.paid_cents,
+      depositCents: r.deposit_cents,
+      extrasCents: r.extras_cents,
+      taxCents: r.tax_cents,
+      balanceCents: balance,
+      cancellationPolicy: room?.cancellation_policy || "Standard ZIVO lodging policy",
+      charges: charges || [],
+      generatedAt: new Date().toISOString(),
+    };
+    const pdf = makePdf(linesFromSnapshot(snapshot));
+    const pdf_sha256 = await sha256Hex(pdf);
+    await admin.from("lodge_reservation_receipts").insert({ reservation_id: r.id, store_id: r.store_id, generated_by: user.id, reservation_number: r.number, filename, snapshot, pdf_sha256 }).then(() => null);
 
-    return new Response(makePdf(lines), {
-      headers: { ...corsHeaders, "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="ZIVO-reservation-${r.number}.pdf"` },
-    });
+    return new Response(pdf, { headers: { ...corsHeaders, "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="${filename}"` } });
   } catch (err) {
     return new Response(JSON.stringify({ error: String((err as Error).message || err) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
