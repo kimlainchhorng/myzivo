@@ -10,6 +10,7 @@ import { CalendarRange, XCircle, Plus, Inbox, Check, X } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useStoreChangeRequestInbox, type ReservationChangeRequest } from "@/hooks/lodging/useReservationChangeRequests";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const TYPE_ICON = {
   reschedule: CalendarRange,
@@ -23,7 +24,15 @@ const TYPE_LABEL = {
   addon: "Add-on",
 };
 
+const money = (cents?: number | null) => `$${((Number(cents) || 0) / 100).toFixed(2)}`;
+
+function addonSummary(payload: any) {
+  const items = Array.isArray(payload) ? payload : Array.isArray(payload?.selections) ? payload.selections : [];
+  return items.map((item: any) => `${item.name || item.id || "Add-on"}${item.quantity ? ` ×${item.quantity}` : ""}`).join(", ");
+}
+
 export default function ChangeRequestsInbox({ storeId }: { storeId: string }) {
+  const navigate = useNavigate();
   const { data: requests = [], isLoading, decide } = useStoreChangeRequestInbox(storeId);
   const [responseFor, setResponseFor] = useState<string | null>(null);
   const [response, setResponse] = useState("");
@@ -51,7 +60,10 @@ export default function ChangeRequestsInbox({ storeId }: { storeId: string }) {
         {isLoading ? (
           <p className="text-sm text-muted-foreground py-6 text-center">Loading…</p>
         ) : requests.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-6 text-center">No pending requests.</p>
+          <div className="py-6 text-center space-y-1">
+            <p className="text-sm font-medium">No guest requests waiting for approval</p>
+            <p className="text-xs text-muted-foreground">Date changes, cancellations, and add-on approval requests will appear here.</p>
+          </div>
         ) : (
           <div className="space-y-3">
             {requests.map((r) => {
@@ -68,10 +80,23 @@ export default function ChangeRequestsInbox({ storeId }: { storeId: string }) {
                           <span className="font-semibold text-sm">{TYPE_LABEL[r.type]}</span>
                           <Badge variant="outline" className="text-[10px]">{format(parseISO(r.created_at), "MMM d, h:mm a")}</Badge>
                         </div>
+                        <p className="text-xs font-medium mt-1">
+                          {r.reservation?.guest_name || `Guest · ${r.reservation?.number || r.reservation_id.slice(0, 8)}`}
+                          {r.reservation?.number ? <span className="text-muted-foreground font-mono"> · {r.reservation.number}</span> : null}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {r.reservation?.room?.name || "Room"}{r.reservation?.room_number ? ` · Unit ${r.reservation.room_number}` : ""} · {r.reservation?.check_in} → {r.reservation?.check_out}
+                        </p>
                         {r.type === "reschedule" && r.proposed_check_in && (
                           <p className="text-xs text-muted-foreground mt-1">
-                            Move to <span className="font-medium text-foreground">{r.proposed_check_in} → {r.proposed_check_out}</span>
+                            Requested dates: <span className="font-medium text-foreground">{r.proposed_check_in} → {r.proposed_check_out}</span>
                           </p>
+                        )}
+                        {r.type === "addon" && r.addon_payload && (
+                          <p className="text-xs text-muted-foreground mt-1">Add-ons: <span className="font-medium text-foreground">{addonSummary(r.addon_payload) || "Selected extras"}</span></p>
+                        )}
+                        {r.type === "cancel" && (
+                          <p className="text-xs text-muted-foreground mt-1">Paid {money(r.reservation?.paid_cents)} · estimated refund {money(r.refund_cents)} · non-refundable {money(Math.max(0, (r.reservation?.paid_cents || 0) - (r.refund_cents || 0)))}</p>
                         )}
                         {r.price_delta_cents !== 0 && (
                           <p className="text-xs mt-1">
@@ -82,6 +107,11 @@ export default function ChangeRequestsInbox({ storeId }: { storeId: string }) {
                           </p>
                         )}
                         {r.reason && <p className="text-xs text-muted-foreground mt-1 italic">"{r.reason}"</p>}
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          <Badge variant="secondary" className="text-[10px]">Room availability rechecked</Badge>
+                          {r.price_delta_cents > 0 && <Badge variant="secondary" className="text-[10px]">Saved card may be charged</Badge>}
+                          {(r.refund_cents || r.price_delta_cents < 0) ? <Badge variant="secondary" className="text-[10px]">Guest receives refund/credit update</Badge> : null}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -97,6 +127,7 @@ export default function ChangeRequestsInbox({ storeId }: { storeId: string }) {
                   )}
 
                   <div className="flex gap-2">
+                    <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => navigate(`/admin/stores/${storeId}/lodging/reservations/${r.reservation_id}`)}>Open reservation</Button>
                     <Button
                       size="sm"
                       variant="outline"

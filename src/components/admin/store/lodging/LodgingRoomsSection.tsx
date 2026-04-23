@@ -28,6 +28,8 @@ import { BedConfigBuilder, bedConfigSummary, bedConfigSleeps } from "@/component
 
 const VIEW_OPTIONS = ["", "Sea view", "Garden view", "Pool view", "Mountain view", "City view", "Courtyard view", "River view"];
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const ADDON_STATUS_OPTIONS = ["confirmed", "checked_in", "checked_out"];
+const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 const ROOM_TYPES = ["Standard", "Deluxe", "Suite", "Villa", "Family", "Bungalow", "Cottage", "Dormitory", "Apartment", "Studio", "Penthouse"];
 // Booking.com-style grouped amenities — shown as collapsible sections in the editor
@@ -326,10 +328,11 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
 
   const updateAddon = (idx: number, patch: Partial<LodgeAddon>) => {
     const next = [...(editing?.addons || [])];
-    next[idx] = { ...next[idx], ...patch };
+    const merged = { ...next[idx], ...patch };
+    next[idx] = patch.name && !patch.id ? { ...merged, id: slugify(patch.name) } : merged;
     setEditing({ ...editing, addons: next });
   };
-  const addAddon = () => setEditing({ ...editing, addons: [...(editing?.addons || []), { name: "", price_cents: 500, per: "stay" }] });
+  const addAddon = () => setEditing({ ...editing, addons: [...(editing?.addons || []), { id: "", name: "", price_cents: 500, per: "stay", category: "Services", active: true, max_quantity: 1, requires_status: ["confirmed", "checked_in"] }] });
   const removeAddon = (idx: number) => setEditing({ ...editing, addons: (editing?.addons || []).filter((_, i) => i !== idx) });
 
   return (
@@ -709,11 +712,15 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                                 onClick={() => setEditing({
                                   ...editing,
                                   addons: [...(editing.addons || []), {
+                                    id: slugify(preset.name),
                                     name: preset.name,
                                     price_cents: preset.price_cents,
                                     per: preset.per,
                                     category: preset.category,
                                     icon: preset.icon,
+                                    active: true,
+                                    max_quantity: 1,
+                                    requires_status: ["confirmed", "checked_in"],
                                   }]
                                 })}
                                 className={`px-2 py-1 rounded-full text-[11px] border transition flex items-center gap-1 ${
@@ -744,9 +751,9 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                   <div className="space-y-2">
                     {(editing.addons || []).map((a, i) => (
                       <div key={i} className="grid grid-cols-12 gap-1.5 items-center p-2 rounded-lg border border-border bg-muted/20">
-                        {a.icon && <span className="col-span-1 flex justify-center"><AddonIcon slug={a.icon} className="h-4 w-4" /></span>}
+                        <span className="col-span-1 flex justify-center"><AddonIcon slug={a.icon} className="h-4 w-4" /></span>
                         <Input
-                          className={`${a.icon ? 'col-span-4' : 'col-span-5'} h-8 text-xs`}
+                          className="col-span-4 h-8 text-xs"
                           placeholder="Breakfast"
                           value={a.name}
                           onChange={e => updateAddon(i, { name: e.target.value })}
@@ -771,6 +778,23 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                         <Button type="button" size="icon" variant="ghost" className="col-span-1 h-8 w-8" onClick={() => removeAddon(i)}>
                           <Trash2 className="h-3.5 w-3.5 text-destructive" />
                         </Button>
+                        <Input className="col-span-3 h-8 text-xs" placeholder="id / slug" value={a.id || slugify(a.name || "")} onChange={e => updateAddon(i, { id: slugify(e.target.value) })} />
+                        <Input className="col-span-3 h-8 text-xs" placeholder="Category" value={a.category || ""} onChange={e => updateAddon(i, { category: e.target.value })} />
+                        <Input className="col-span-2 h-8 text-xs" type="number" min={1} placeholder="Max qty" value={a.max_quantity ?? ""} onChange={e => updateAddon(i, { max_quantity: e.target.value === "" ? undefined : parseInt(e.target.value) })} />
+                        <Input className="col-span-2 h-8 text-xs" type="number" min={1} placeholder="Min guests" value={a.min_guests ?? ""} onChange={e => updateAddon(i, { min_guests: e.target.value === "" ? undefined : parseInt(e.target.value) })} />
+                        <Input className="col-span-2 h-8 text-xs" type="number" min={1} placeholder="Max guests" value={a.max_guests ?? ""} onChange={e => updateAddon(i, { max_guests: e.target.value === "" ? undefined : parseInt(e.target.value) })} />
+                        <Input className="col-span-2 h-8 text-xs" type="number" min={1} placeholder="Min nights" value={a.min_nights ?? ""} onChange={e => updateAddon(i, { min_nights: e.target.value === "" ? undefined : parseInt(e.target.value) })} />
+                        <Input className="col-span-2 h-8 text-xs" type="number" min={1} placeholder="Max nights" value={a.max_nights ?? ""} onChange={e => updateAddon(i, { max_nights: e.target.value === "" ? undefined : parseInt(e.target.value) })} />
+                        <Input className="col-span-3 h-8 text-xs" type="date" value={a.available_from || ""} onChange={e => updateAddon(i, { available_from: e.target.value || undefined })} />
+                        <Input className="col-span-3 h-8 text-xs" type="date" value={a.available_until || ""} onChange={e => updateAddon(i, { available_until: e.target.value || undefined })} />
+                        <Input className="col-span-4 h-8 text-xs" placeholder="Host note" value={a.host_note || ""} onChange={e => updateAddon(i, { host_note: e.target.value })} />
+                        <label className="col-span-2 flex items-center gap-2 text-xs text-muted-foreground"><Switch checked={a.active !== false && !a.disabled} onCheckedChange={v => updateAddon(i, { active: v, disabled: !v })} /> Active</label>
+                        <div className="col-span-12 flex flex-wrap gap-1">
+                          {ADDON_STATUS_OPTIONS.map(s => {
+                            const on = (a.requires_status || []).includes(s);
+                            return <button key={s} type="button" onClick={() => updateAddon(i, { requires_status: on ? (a.requires_status || []).filter(x => x !== s) : [...(a.requires_status || []), s] })} className={`px-2 py-1 rounded-full text-[10px] border ${on ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground"}`}>{s.replace(/_/g, " ")}</button>;
+                          })}
+                        </div>
                       </div>
                     ))}
                   </div>

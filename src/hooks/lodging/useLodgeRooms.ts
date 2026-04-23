@@ -72,11 +72,23 @@ export interface LodgeRoom {
 }
 
 export interface LodgeAddon {
+  id?: string;
   name: string;
   price_cents: number;
   per: "stay" | "night" | "guest" | "person_night";
   category?: string;
   icon?: string;
+  active?: boolean;
+  disabled?: boolean;
+  max_quantity?: number;
+  min_guests?: number;
+  max_guests?: number;
+  min_nights?: number;
+  max_nights?: number;
+  available_from?: string;
+  available_until?: string;
+  requires_status?: string[];
+  host_note?: string;
 }
 
 export function useLodgeRooms(storeId: string) {

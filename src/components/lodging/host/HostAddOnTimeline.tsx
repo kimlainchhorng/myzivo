@@ -1,0 +1,43 @@
+import { CheckCircle2, Clock, ReceiptText, XCircle } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { ReservationChangeRequest } from "@/hooks/lodging/useReservationChangeRequests";
+
+interface Props { requests: ReservationChangeRequest[]; }
+const money = (cents?: number | null) => `$${((Number(cents) || 0) / 100).toFixed(2)}`;
+
+function addonItems(payload: any) {
+  const items = Array.isArray(payload) ? payload : Array.isArray(payload?.selections) ? payload.selections : [];
+  return items.map((item: any) => `${item.name || item.id || "Add-on"}${item.quantity ? ` ×${item.quantity}` : ""}`).join(", ");
+}
+
+export default function HostAddOnTimeline({ requests }: Props) {
+  const addons = requests.filter((r) => r.type === "addon");
+  return (
+    <Card>
+      <CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><ReceiptText className="h-4 w-4" /> Charges & add-ons</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        {!addons.length ? <p className="text-sm text-muted-foreground">No add-on charge attempts yet.</p> : addons.map((r) => {
+          const failed = r.status === "failed";
+          const success = r.status === "auto_approved" || r.status === "approved";
+          const Icon = failed ? XCircle : success ? CheckCircle2 : Clock;
+          return (
+            <div key={r.id} className="flex gap-3 rounded-lg border bg-muted/30 p-3">
+              <Icon className={failed ? "h-4 w-4 text-destructive" : success ? "h-4 w-4 text-primary" : "h-4 w-4 text-muted-foreground"} />
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-semibold">{addonItems(r.addon_payload) || "Add-on purchase"}</p>
+                  <Badge variant={failed ? "destructive" : success ? "default" : "secondary"} className="capitalize">{r.status.replace(/_/g, " ")}</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">{format(parseISO(r.created_at), "MMM d, yyyy h:mm a")} · {money(r.price_delta_cents)} · {String(r.payment_status || "pending").replace(/_/g, " ")}</p>
+                {r.stripe_payment_intent_id && <p className="text-xs text-muted-foreground">Stripe ref: …{r.stripe_payment_intent_id.slice(-8)}</p>}
+                {failed ? <p className="text-xs text-destructive">{r.addon_payload?.failure_reason || "Saved payment method was not charged; reservation total was not changed."}</p> : success ? <p className="text-xs text-primary">Reservation total updated after successful charge.</p> : null}
+              </div>
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+}
