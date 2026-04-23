@@ -7,6 +7,8 @@ import {
   Loader2, ChevronLeft, ChevronRight, CheckCircle2, Minus, Plus, AlertTriangle,
   Wallet, CreditCard, Building2, Copy, CalendarPlus, MessageCircle, ShieldCheck,
   ArrowDown, Share2, BookOpen, FileText,
+  BedDouble, Sun, BadgePercent, UserPlus, Baby, Sparkles, Building,
+  Receipt, ConciergeBell, Landmark, Coins,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
