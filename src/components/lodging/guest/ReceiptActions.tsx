@@ -14,29 +14,14 @@ interface Props {
   propertyName: string;
   checkIn: string;
   checkOut: string;
-}
-
-function escapeIcs(s: string) {
-  return s.replace(/\\/g, "\\\\").replace(/,/g, "\\,").replace(/;/g, "\\;").replace(/\n/g, "\\n");
-}
-
-function buildIcs({ reservationNumber, propertyName, checkIn, checkOut }: Omit<Props, "reservationId">) {
-  const dt = (s: string) => format(parseISO(s), "yyyyMMdd");
-  return [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//ZIVO//Lodging//EN",
-    "BEGIN:VEVENT",
-    `UID:${reservationNumber}@hizivo.com`,
-    `DTSTAMP:${format(new Date(), "yyyyMMdd'T'HHmmss'Z'")}`,
-    `DTSTART;VALUE=DATE:${dt(checkIn)}`,
-    `DTEND;VALUE=DATE:${dt(checkOut)}`,
-    `SUMMARY:${escapeIcs(`Stay at ${propertyName}`)}`,
-    `LOCATION:${escapeIcs(propertyName)}`,
-    `DESCRIPTION:${escapeIcs(`ZIVO lodging reservation ${reservationNumber}`)}`,
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ].join("\r\n");
+  roomName?: string | null;
+  guestName?: string | null;
+  guestEmail?: string | null;
+  checkInTime?: string | null;
+  checkOutTime?: string | null;
+  totalText?: string | null;
+  cancellationText?: string | null;
+  onReceiptDownloaded?: () => void;
 }
 
 export default function ReceiptActions(props: Props) {
