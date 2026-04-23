@@ -154,11 +154,11 @@ export default function StoreProfilePage() {
     const prev = prevHasBookingRef.current;
     if (prev === false && hasBooking === true) {
       toast.success(
-        `Booking confirmed — chat with ${store.name || "this store"} is now unlocked`,
+        t("store.booking_confirmed_chat").replace("{name}", store.name || "this store"),
         {
           duration: 8000,
           action: {
-            label: "Open chat",
+            label: t("store.open_chat"),
             onClick: () => setChatOpen(true),
           },
         }
@@ -168,18 +168,35 @@ export default function StoreProfilePage() {
   }, [hasBooking, loadingBooking, store?.id, store?.name]);
 
   // Long-press support for the Share tile (copy link fallback).
+  // ignoreNextClickUntilRef suppresses the synthetic `click` that fires after
+  // a long-press touchend on iOS/Android, plus blocks contextmenu→click races on desktop.
   const sharePressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sharePressFiredRef = useRef(false);
+  const ignoreNextClickUntilRef = useRef<number>(0);
   const copyShareLink = async () => {
     try {
       const url = typeof window !== "undefined" ? window.location.href : "";
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(url);
-        toast.success("Link copied to clipboard");
+        toast.success(t("store.link_copied"));
       }
     } catch {
-      toast.error("Could not copy link");
+      toast.error(t("store.link_copy_failed"));
     }
+  };
+
+  // Manual refresh: wipe cache + invalidate query so the booking check
+  // re-runs immediately (covers webhook lag right after a fresh booking).
+  const handleRefreshBooking = async () => {
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth?.user?.id;
+      clearStoreBookingCache(uid, store?.id);
+    } catch {
+      /* ignore */
+    }
+    queryClient.invalidateQueries({ queryKey: ["has-store-booking", store?.id] });
+    toast.success(t("store.booking_status.rechecking"));
   };
 
   const rooms = useMemo(() => (allRooms || []).filter(r => r.is_active), [allRooms]);
@@ -446,25 +463,42 @@ export default function StoreProfilePage() {
             {(() => {
               if (loadingBooking) {
                 return (
-                  <div className="h-7 rounded-full bg-white/[0.05] border border-white/10 animate-pulse" />
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="self-center inline-flex items-center gap-1.5 px-3 h-7 rounded-full bg-white/[0.05] border border-white/10 text-white/70 text-[11.5px] font-semibold"
+                  >
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {t("store.booking_status.checking")}
+                  </div>
                 );
               }
               if (hasBooking) {
                 return (
                   <div className="self-center inline-flex items-center gap-1.5 px-3 h-7 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-[11.5px] font-semibold">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
-                    Chat &amp; Call unlocked · Booking on file
+                    {t("store.booking_status.unlocked")} · {t("store.booking_status.unlocked_sub")}
                   </div>
                 );
               }
               return (
-                <button
-                  onClick={() => navigate("/account/bookings")}
-                  className="self-center inline-flex items-center gap-1.5 px-3 h-7 rounded-full bg-amber-500/12 border border-amber-400/30 text-amber-300 text-[11.5px] font-semibold hover:bg-amber-500/18 transition-colors"
-                >
-                  <Lock className="h-3 w-3" />
-                  Locked — Complete a booking to enable Chat
-                </button>
+                <div className="self-center inline-flex items-stretch gap-1.5">
+                  <button
+                    onClick={() => navigate("/account/bookings")}
+                    className="inline-flex items-center gap-1.5 px-3 h-7 rounded-full bg-amber-500/12 border border-amber-400/30 text-amber-300 text-[11.5px] font-semibold hover:bg-amber-500/18 transition-colors"
+                  >
+                    <Lock className="h-3 w-3" />
+                    {t("store.booking_status.locked")}
+                  </button>
+                  <button
+                    onClick={handleRefreshBooking}
+                    aria-label={t("store.booking_status.refresh")}
+                    title={t("store.booking_status.refresh")}
+                    className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/[0.06] border border-white/15 text-white/80 hover:bg-white/[0.10] transition-colors"
+                  >
+                    <RefreshCcw className="h-3 w-3" />
+                  </button>
+                </div>
               );
             })()}
 
@@ -473,9 +507,7 @@ export default function StoreProfilePage() {
               {/* Call (or SMS fallback when locked but phone exists) */}
               {(() => {
                 const callDisabled = !callable;
-                const tel = store.phone
-                  ? (store.phone.startsWith("+") ? store.phone.replace(/\s+/g, "") : `+855${store.phone.replace(/\s+/g, "")}`)
-                  : "";
+                const tel = normalizedPhone;
                 const showSmsFallback = callDisabled && !!tel;
                 if (showSmsFallback) {
                   const smsBody = encodeURIComponent(
@@ -491,6 +523,7 @@ export default function StoreProfilePage() {
                           channel: "sms",
                           click_nonce: clickNonceRef.current,
                         });
+                        toast.success(t("store.sms_draft_opened"), { duration: 4000 });
                       }}
                       className="h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 border border-white/15 bg-white/[0.04] backdrop-blur-sm text-white hover:bg-white/[0.07] transition-colors"
                     >
@@ -562,6 +595,8 @@ export default function StoreProfilePage() {
                 whileTap={{ scale: 0.96 }}
                 onContextMenu={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
+                  ignoreNextClickUntilRef.current = Date.now() + 350;
                   copyShareLink();
                 }}
                 onTouchStart={() => {
@@ -569,13 +604,19 @@ export default function StoreProfilePage() {
                   if (sharePressTimerRef.current) clearTimeout(sharePressTimerRef.current);
                   sharePressTimerRef.current = setTimeout(() => {
                     sharePressFiredRef.current = true;
+                    ignoreNextClickUntilRef.current = Date.now() + 350;
                     copyShareLink();
                   }, 500);
                 }}
-                onTouchEnd={() => {
+                onTouchEnd={(e) => {
                   if (sharePressTimerRef.current) {
                     clearTimeout(sharePressTimerRef.current);
                     sharePressTimerRef.current = null;
+                  }
+                  // Suppress synthetic click after a fired long-press
+                  if (sharePressFiredRef.current) {
+                    e.preventDefault();
+                    e.stopPropagation();
                   }
                 }}
                 onTouchCancel={() => {
@@ -584,10 +625,12 @@ export default function StoreProfilePage() {
                     sharePressTimerRef.current = null;
                   }
                 }}
-                onClick={async () => {
-                  // Skip if long-press already fired
-                  if (sharePressFiredRef.current) {
+                onClick={async (e) => {
+                  // Skip if long-press / right-click just fired
+                  if (sharePressFiredRef.current || Date.now() < ignoreNextClickUntilRef.current) {
                     sharePressFiredRef.current = false;
+                    e.preventDefault();
+                    e.stopPropagation();
                     return;
                   }
                   const url = typeof window !== "undefined" ? window.location.href : "";
@@ -597,7 +640,7 @@ export default function StoreProfilePage() {
                       await navigator.share({ title, url });
                     } else if (navigator.clipboard) {
                       await navigator.clipboard.writeText(url);
-                      toast.success("Link copied");
+                      toast.success(t("store.link_copied"));
                     }
                     track("store_contact_action", {
                       store_id: store.id,
