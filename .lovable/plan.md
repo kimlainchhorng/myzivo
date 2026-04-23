@@ -1,355 +1,207 @@
 
-## Host lodging reservations workflow upgrade
+## Lodging Trip Page Completion: Receipts, SMS, Disputes, Add-ons, and Help Links
 
-The current Reservations screen works, but it still looks like an early list: guest names repeat, request context is missing, add-ons are not visible enough, and hosts do not get a clear “what do I need to do next?” workflow. I will upgrade this area into a proper hotel-ops dashboard for reservations, pending requests, add-ons, payment/refund status, and guest names.
+I will complete the guest-facing lodging trip workflow on `/my-trips/lodging/:reservationId` so the page gives clear visible feedback after actions, not just background updates.
 
-### 1. Improve guest and reservation naming
+### 1. Receipt download follow-up state
 
-Update the reservation list so the host can identify each booking quickly.
+Update `ReceiptActions.tsx` and `ReceiptHistoryCard.tsx`.
 
-Changes:
-- Show a better primary title:
-  - guest name if available
-  - fallback to `Guest · RES-xxxxx`
-  - avoid rows all looking identical when the same guest has multiple bookings
-- Add secondary identity details:
-  - reservation number
-  - phone
-  - email when available
-  - room name
-  - assigned room number/unit if available
-- Improve search to include:
-  - guest name
-  - phone
-  - email
-  - reservation number
-  - room name
-  - room number
-  - payment status
+After a receipt downloads:
+- Show a success toast: “Receipt downloaded”
+- Show a visible follow-up state on the page:
+  - “Receipt saved to history”
+  - quick buttons for “Share”, “Email”, and “View history”
+- Automatically refresh receipt history immediately after download.
+- Make share/email buttons show clear loading, success, and failure states:
+  - “Preparing PDF…”
+  - “Opening share sheet…”
+  - “Receipt email queued”
+  - “Could not email receipt”
+- If native file share is not supported, fall back to re-download + copy receipt summary.
 
-Files:
+### 2. Dispute/refund status timeline
+
+Replace the current simple refund dispute card with a more useful timeline.
+
+Update `RefundDisputeCard.tsx` or add:
+
 ```text
-src/components/admin/store/lodging/LodgingReservationsSection.tsx
-src/hooks/lodging/useLodgeReservations.ts
+src/components/lodging/guest/RefundDisputeTimeline.tsx
 ```
 
-### 2. Add an operations summary bar above Reservations
-
-Add a compact “Today / Needs attention” section before the list.
-
-Cards/chips:
-- Pending guest requests
-- Arrivals today
-- Departures today
-- Payment issues
-- Refund disputes
-- Add-on failures
-- Cancelled/refund pending
-
-Each chip will help the host understand what needs action immediately.
-
-New file:
-```text
-src/components/lodging/host/HostReservationOpsSummary.tsx
-```
-
-### 3. Make reservation cards more useful
-
-Each reservation row will become a richer operations card.
-
-Add:
-- Room name and room number/unit
-- Check-in/check-out date line
-- Nights and guest count
-- Payment state:
-  - paid
-  - pending
-  - balance due
-  - failed
-  - refund pending
-  - refunded
-- Workflow chips:
-  - pending reschedule
-  - add-on charged
-  - add-on failed
-  - cancellation submitted
-  - refund dispute pending
-- Clear amount display:
-  - total
-  - paid
-  - balance due/refund state
-- Better visual hierarchy with compact ZIVO-style spacing.
-
-Files:
-```text
-src/components/admin/store/lodging/LodgingReservationsSection.tsx
-src/hooks/lodging/useLodgeReservations.ts
-```
-
-### 4. Upgrade “Pending requests” inbox
-
-The pending requests area should explain exactly what the guest is asking for.
-
-Current problem:
-- It only says “No pending requests” or shows minimal request data.
-- The host cannot see enough context to approve confidently.
-
-Add for each pending request:
-- Guest name
-- Reservation number
-- Room name / room number
-- Current dates
-- Requested dates for reschedules
-- Price delta:
-  - extra charge
-  - credit/refund
-  - no price change
-- Add-on purchase details:
-  - add-on names
-  - quantities
-  - charge amount
-  - saved-card status
-- Cancellation request details:
-  - reason
-  - estimated refund
-  - non-refundable amount
-- Host warnings:
-  - “Room availability will be rechecked”
-  - “Saved card will be charged on approval”
-  - “Guest will receive a refund/credit update”
-- “Open reservation” button.
-
-Files:
-```text
-src/components/lodging/host/ChangeRequestsInbox.tsx
-src/hooks/lodging/useReservationChangeRequests.ts
-```
-
-### 5. Improve add-on setup in Rooms & Rates
-
-The add-on editor should support the rules already used by the guest add-on flow.
-
-Add fields per add-on:
-- Internal ID/slug generated from name
-- Display name
-- Category
-- Icon
-- Active/disabled toggle
-- Price
-- Pricing unit:
-  - per stay
-  - per night
-  - per guest
-  - per guest/night
-- Max quantity
-- Eligibility rules:
-  - minimum guests
-  - maximum guests
-  - minimum nights
-  - maximum nights
-  - available from date
-  - available until date
-  - allowed reservation statuses
-- Optional host note:
-  - “Pickup time required”
-  - “Subject to weather”
-  - “Confirm at front desk”
-
-Also add better resort presets for this property type:
-- Breakfast
-- Airport/boat pickup
-- Airport/boat drop-off
-- Round-trip transfer
-- Scooter rental
-- Snorkeling tour
-- Island hopping tour
-- Sunset cruise
-- Early check-in
-- Late check-out
-- Extra bed
-- Baby crib
-- Laundry
-- Beach towel rental
-- Private dinner
-- Birthday cake / celebration setup
-
-Files:
-```text
-src/components/admin/store/lodging/LodgingRoomsSection.tsx
-src/hooks/lodging/useLodgeRooms.ts
-```
-
-### 6. Add host-side add-on purchase timeline
-
-The guest page already has an add-on status timeline. Hosts need the same operational visibility.
-
-Add a “Charges & add-ons” section in the reservation detail page showing:
-- Add-on name
-- Quantity
-- Amount charged
-- Success/failed/pending status
-- Failure reason
-- Stripe payment reference short ID
-- Timestamp
-- Whether reservation total was updated
-
-New file:
-```text
-src/components/lodging/host/HostAddOnTimeline.tsx
-```
-
-Edit:
-```text
-src/pages/admin/lodging/AdminLodgingReservationDetailPage.tsx
-```
-
-### 7. Add refund dispute visibility for host
-
-Guest refund disputes exist, but the host/admin reservation detail needs a visible card.
-
-Add:
-- Refund dispute status
-- Requested amount
-- Reason category
-- Guest explanation
+Timeline will show:
+- Request submitted
+- Under review
+- Approved / declined
+- Paid / closed
 - Admin response
+- Requested amount
 - Resolution amount
-- Submitted/resolved timestamps
+- Last updated timestamp
+- Link buttons to:
+  - reservation details: `#stay-summary`
+  - payment summary: `#payment-summary`
+  - cancellation/request history: `#request-history`
 
-Also show a small dispute chip on the reservation list.
+It will highlight the latest update at the top so guests immediately understand what changed.
 
-New file:
+### 3. SMS notification toggle and delivery status
+
+Add an in-page lodging notification section:
+
 ```text
-src/components/lodging/host/HostRefundDisputeCard.tsx
+src/components/lodging/guest/LodgingTripNotificationSettings.tsx
 ```
 
-Edit:
+It will appear on the lodging trip page as:
+
 ```text
-src/pages/admin/lodging/AdminLodgingReservationDetailPage.tsx
-src/components/admin/store/lodging/LodgingReservationsSection.tsx
+Trip updates
+[ SMS updates toggle ]
+Latest delivery: sent / queued / skipped / failed
 ```
 
-### 8. Strengthen status workflow
+Behavior:
+- Use the existing `notification_preferences` table and `useNotificationPreferences`.
+- Toggle `sms_enabled` on/off for lodging trip updates.
+- Show phone number status:
+  - SMS enabled
+  - SMS disabled
+  - phone missing
+  - phone not verified, if available
+- Query recent `notification_audit` rows for this reservation and channel `sms` to display delivery status:
+  - sent
+  - queued
+  - skipped
+  - failed
+- If needed, add a small migration/RLS policy so authenticated users can read their own notification audit rows for their reservation without exposing other users’ notifications.
 
-The current quick actions are useful, but cancellation and no-show need stronger confirmation.
+Also update the server notification helper:
 
-Update:
-- Require structured reason for:
-  - cancel
-  - no-show
-  - payment issue
-  - room unavailable
-- Add confirmation panel before destructive changes.
-- Add better note templates:
-  - Guest requested cancellation
-  - Payment could not be captured
-  - Room unavailable / maintenance
-  - Late arrival beyond cut-off
-  - Refund handled outside Stripe
-  - Guest moved to another room
-- Keep writing audit records to `lodge_reservation_audit`.
-
-File:
 ```text
-src/pages/admin/lodging/AdminLodgingReservationDetailPage.tsx
+supabase/functions/_shared/lodging-notifications.ts
 ```
 
-### 9. Add realtime host console updates
+So SMS sends only when:
+- `notification_preferences.sms_enabled = true`
+- operational notifications are enabled
+- the guest has a phone number
+- SMS provider secrets are configured
 
-Add a host-side realtime hook so the screen updates without refreshing.
+Skipped SMS attempts will still be logged with a clear `skip_reason`.
 
-Subscribe to:
-- `lodge_reservations`
-- `lodge_reservation_change_requests`
-- `lodge_refund_disputes`
+### 4. Immediate add-on success/failure timeline refresh
 
-Toasts:
-- New pending request
-- Reschedule approved/declined/applied
-- Add-on charge succeeded
-- Add-on charge failed
-- New refund dispute
-- Refund status changed
-- Payment failed
-- Reservation cancelled
+Update `AddOnsSheet.tsx`, `AddOnStatusTimeline.tsx`, and `MyLodgingTripPage.tsx`.
 
-New file:
+After the add-ons sheet finishes:
+- Close the sheet.
+- Scroll to `#addon-status`.
+- Refresh:
+  - reservation details
+  - change request history
+  - add-on status timeline
+- Show immediate toast:
+  - success: “Add-on charge successful”
+  - failure: “Add-on charge failed”
+- If the edge function returns a failed charge row, display it in the timeline immediately.
+- Improve the timeline empty state:
+  - when no purchases: explain that successful and failed add-on attempts will appear there.
+- Improve timeline rows with:
+  - item names
+  - quantity
+  - amount
+  - payment status
+  - failure reason
+  - saved-card note
+  - latest badge for the newest attempt
+
+### 5. Contextual help drawer sections and deep links
+
+Upgrade `LodgingTripHelpDrawer.tsx`.
+
+Add clearer sections:
+- Reservation details
+- Cancellation and refunds
+- Reschedules
+- Add-ons and saved-card charges
+- Receipt downloads, sharing, and email
+- SMS/email trip updates
+- Refund/dispute requests
+- Message property
+
+Add/standardize deep links on the page:
+
 ```text
-src/hooks/lodging/useHostLodgingOpsToasts.ts
+#stay-summary
+#manage-stay
+#reschedules
+#cancellation-policy
+#addon-status
+#receipt-history
+#trip-notifications
+#refund-disputes
+#payment-summary
+#request-history
+#message-property
 ```
 
-Edit:
+When a help item is tapped:
+- Close the drawer.
+- Smooth-scroll to the exact section.
+- Briefly highlight the target section if practical.
+
+### 6. Realtime toast and query refresh improvements
+
+Update `useLodgingTripToasts.ts`.
+
+Add stronger realtime behavior for:
+- receipt ready
+- receipt shared/email queued
+- add-on charge success/failure
+- cancellation/refund updates
+- reschedule approved/declined
+- dispute updates
+- SMS delivery status changes, if audit rows are available through RLS
+
+Each realtime event will invalidate the matching query so the visible cards update without a manual refresh.
+
+### Files to edit
+
 ```text
-src/components/admin/store/lodging/LodgingReservationsSection.tsx
+src/pages/MyLodgingTripPage.tsx
+src/components/lodging/guest/ReceiptActions.tsx
+src/components/lodging/guest/ReceiptHistoryCard.tsx
+src/components/lodging/guest/RefundDisputeCard.tsx
+src/components/lodging/guest/AddOnStatusTimeline.tsx
+src/components/lodging/guest/AddOnsSheet.tsx
+src/components/lodging/guest/LodgingTripHelpDrawer.tsx
+src/hooks/lodging/useLodgingTripToasts.ts
+src/hooks/useNotificationPreferences.ts
+supabase/functions/_shared/lodging-notifications.ts
 ```
 
-### 10. Backend/data support
-
-Most changes can use existing tables. I will only add a small migration if needed to support stronger add-on metadata consistently.
-
-Potential migration:
-- Normalize existing `lodge_rooms.addons` JSON to include:
-  - `id`
-  - `name`
-  - `category`
-  - `disabled`
-  - `max_quantity`
-  - `min_guests`
-  - `max_guests`
-  - `min_nights`
-  - `max_nights`
-  - `available_from`
-  - `available_until`
-  - `requires_status`
-
-No roles will be stored on profiles/users. Existing secure role patterns remain unchanged.
-
-### 11. Final workflow after update
-
-The host flow will become:
+### Files to add
 
 ```text
-Reservations page
-  → See pending requests / today’s actions / payment issues
-  → Search guest, phone, room, reservation number
-  → Open reservation
-      → Review stay + guest + payment
-      → See add-on charges/failures
-      → See refund disputes
-      → Update status with reason + audit note
-      → Review full audit history
+src/components/lodging/guest/LodgingTripNotificationSettings.tsx
+src/hooks/lodging/useLodgingNotificationAudit.ts
 ```
 
-Add-on flow:
+Optional, if needed for audit visibility:
 
 ```text
-Rooms & Rates
-  → Configure add-ons
-  → Set prices, categories, limits, eligibility rules
-  → Guest purchases add-on
-  → Host sees success/failure in timeline
-  → Reservation totals update only on successful charge
-```
-
-Request flow:
-
-```text
-Guest requests date change / cancellation / add-on
-  → Host sees full request context
-  → Host approves/declines
-  → System rechecks availability/payment
-  → Guest gets live update
-  → Host list refreshes automatically
+supabase/migrations/<timestamp>_lodging_notification_audit_visibility.sql
 ```
 
 ### Verification
 
 After implementation:
-1. Reservations list shows better names, room details, payment state, and workflow chips.
-2. Search works by guest, phone, email, room, reservation number, and payment state.
-3. Pending requests show full context for reschedule, cancellation, and add-ons.
-4. Add-ons can be configured with names, categories, quantity limits, and eligibility rules.
-5. Reservation detail shows add-on success/failure timeline.
-6. Refund disputes appear in list and detail.
-7. Cancel/no-show requires structured reason and audit note.
-8. Realtime host toasts appear for new requests, add-on failures, payment/refund changes, and disputes.
+1. Download a receipt and confirm the page shows share/email follow-up actions plus success toast.
+2. Email a receipt and confirm the queued/success/error state appears clearly.
+3. Submit or update a refund dispute and confirm the dispute timeline highlights the latest status.
+4. Toggle SMS updates on/off and confirm the page shows the current preference and latest delivery status.
+5. Purchase add-ons and confirm the add-on timeline updates immediately after the sheet closes.
+6. Force an add-on failure and confirm the timeline and toast show the failure reason.
+7. Open the help drawer and confirm each deep link scrolls to the correct lodging trip section.
