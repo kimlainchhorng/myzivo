@@ -5,6 +5,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Users, Trophy, Star, Share2, MapPin, Clock, Heart, MessageCircle, ThumbsUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StarRating } from "@/components/shared/StarRating";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -148,11 +149,7 @@ export default function RideSocialFeatures() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-foreground">{review.author}</span>
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: review.rating }).map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-primary text-primary" />
-                        ))}
-                      </div>
+                      <StarRating value={review.rating} size="xs" />
                     </div>
                     <span className="text-[10px] text-muted-foreground">{review.time}</span>
                   </div>

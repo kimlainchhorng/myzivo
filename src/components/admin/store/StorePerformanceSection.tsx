@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { StarRating } from "@/components/shared/StarRating";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -77,12 +78,7 @@ export default function StorePerformanceSection({ storeId }: Props) {
   };
 
   const renderStars = (rating: number) => (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map(i => (
-        <Star key={i} className={cn("w-3.5 h-3.5", i <= Math.round(rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-200")} />
-      ))}
-      <span className="text-xs font-medium ml-1">{rating.toFixed(1)}</span>
-    </div>
+    <StarRating value={rating} size="sm" showValue />
   );
 
   const handleCreateReview = () => {

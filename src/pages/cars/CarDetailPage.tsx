@@ -11,6 +11,7 @@ import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StarRating } from "@/components/shared/StarRating";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -295,19 +296,7 @@ export default function CarDetailPage() {
                       <Card key={review.id}>
                         <CardContent className="p-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <div className="flex">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={cn(
-                                    "w-4 h-4",
-                                    i < (review.rating || 0)
-                                      ? "fill-amber-400 text-amber-400"
-                                      : "text-muted"
-                                  )}
-                                />
-                              ))}
-                            </div>
+                            <StarRating value={review.rating || 0} size="md" />
                             <span className="text-sm text-muted-foreground">
                               {format(new Date(review.created_at), "MMM d, yyyy")}
                             </span>

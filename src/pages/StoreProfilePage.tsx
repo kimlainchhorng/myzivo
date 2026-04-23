@@ -6,6 +6,7 @@ import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck, BedDouble, Lock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StarRating } from "@/components/shared/StarRating";
 import { track } from "@/lib/analytics";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -323,17 +324,11 @@ export default function StoreProfilePage() {
               <h1 className="text-lg font-bold text-foreground truncate">{store.name}</h1>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-0.5">
-                    {(() => {
-                      const filled = Math.max(0, Math.min(5, Math.round(Number(store.rating) || 4.5)));
-                      return Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-3 w-3 ${i < filled ? "fill-amber-400 text-amber-400" : "fill-muted text-muted-foreground/30"}`}
-                        />
-                      ));
-                    })()}
-                  </span>
+                  <StarRating
+                    value={Number(store.rating) || 4.5}
+                    size="xs"
+                    reviewCount={(store as any).review_count}
+                  />
                   <span className="font-semibold text-foreground">{store.rating || "4.5"}</span>
                 </span>
                 {store.hours && (() => {
