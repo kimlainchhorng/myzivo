@@ -124,7 +124,10 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   const navItems = [
     { id: "profile", label: "Profile", icon: Store },
     { id: "orders", label: `Orders${orderCount ? ` (${orderCount})` : ""}`, icon: ClipboardList },
-    { id: "products", label: `${productsLabel}${productCount != null ? ` (${productCount})` : ""}`, icon: isLodging ? BedDouble : Package },
+    // Lodging uses the dedicated "Rooms & Rates" entry under HOTEL OPS instead.
+    ...(!isLodging ? [
+      { id: "products", label: `${productsLabel}${productCount != null ? ` (${productCount})` : ""}`, icon: isAutoRepair ? Package : Package },
+    ] : []),
     { id: "payment", label: paymentLabel, icon: isAutoRepair ? Calendar : isLodging ? CalendarRange : CreditCard },
     ...(isAutoRepair ? [
       { id: "ar-invoices", label: "Invoices", icon: FileText },
