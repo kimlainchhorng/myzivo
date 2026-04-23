@@ -151,7 +151,37 @@ Deno.serve(async (req) => {
     const lockExpires = r.payment_lock_expires_at ? new Date(r.payment_lock_expires_at).getTime() : 0;
     const now = Date.now();
     if (r.payment_lock_token && lockExpires > now) {
-      return await buildLockedResponse(r.payment_lock_expires_at, Math.ceil((lockExpires - now) / 1000));
+      // Allow force_new to break a stale lock owned by the same client (e.g. expired
+      // embedded client_secret retry). Verify ownership by matching the most recent
+      // in-progress attempt's client_attempt_id.
+      let canBreakLock = false;
+      if (forceNew) {
+        const { data: lastAttempt } = await admin
+          .from("lodging_deposit_retry_attempts")
+          .select("client_attempt_id, admin_id")
+          .eq("reservation_id", body.reservation_id)
+          .is("completed_at", null)
+          .order("started_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const sameClient = (lastAttempt as any)?.client_attempt_id === clientAttemptId;
+        const sameUser = user?.id && (lastAttempt as any)?.admin_id === user.id;
+        canBreakLock = sameClient || sameUser || !lastAttempt;
+      }
+      if (!canBreakLock) {
+        return await buildLockedResponse(r.payment_lock_expires_at, Math.ceil((lockExpires - now) / 1000));
+      }
+      // Mark the prior in-progress attempt as superseded so it doesn't re-appear in attribution.
+      await admin
+        .from("lodging_deposit_retry_attempts")
+        .update({ completed_at: new Date().toISOString(), result: "superseded" })
+        .eq("reservation_id", body.reservation_id)
+        .is("completed_at", null);
+      // Clear the stale lock so the optimistic acquire below succeeds.
+      await admin
+        .from("lodge_reservations")
+        .update({ payment_lock_token: null, payment_lock_expires_at: null })
+        .eq("id", body.reservation_id);
     }
 
     // Acquire the row lock (best-effort optimistic — only set if still unlocked)
