@@ -4,7 +4,7 @@
  */
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck, BedDouble, Lock } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Star, Clock, MapPin, Phone, Store, Package, Loader2, Plus, Minus, Sparkles, Heart, Eye, MessageCircle, Facebook, Instagram, Send, CalendarCheck, BedDouble, Lock, Share2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StarRating } from "@/components/shared/StarRating";
 import { track } from "@/lib/analytics";
@@ -367,12 +367,12 @@ export default function StoreProfilePage() {
             </div>
           </div>
 
-          {/* Contact row — immersive 4D cards */}
-          <div className="lg:hidden grid grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-white/[0.06]" style={{ perspective: "800px" }}>
+          {/* Mobile/Tablet contact actions — clean Booking.com-style layout */}
+          <div className="lg:hidden mt-3 pt-3 border-t border-white/[0.06] flex flex-col gap-2.5">
+            {/* Primary: Ride There — full width green */}
             {store.address && (
               <motion.button
-                whileTap={{ scale: 0.94, rotateX: 2 }}
-                whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => {
                   const params = new URLSearchParams({ destination: store.address! });
                   const s = store as any;
@@ -382,320 +382,161 @@ export default function StoreProfilePage() {
                   }
                   navigate(`/rides/hub?${params.toString()}`);
                 }}
-                className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
+                className="w-full h-12 rounded-full flex items-center justify-center gap-2 font-bold text-[15px] text-white shadow-lg"
                 style={{
-                  transformStyle: "preserve-3d",
-                  boxShadow: "0 6px 24px -6px hsl(var(--primary) / 0.2), 0 2px 6px -2px hsl(0 0% 0% / 0.12), inset 0 1px 0 0 hsl(0 0% 100% / 0.12)",
+                  background: "linear-gradient(180deg, hsl(152 70% 48%), hsl(152 72% 42%))",
+                  boxShadow: "0 6px 18px -4px hsl(152 70% 45% / 0.5)",
                 }}
               >
-                {/* Background image with parallax movement */}
-                <motion.div
-                  className="absolute inset-0 z-0"
-                  animate={{ scale: [1, 1.08, 1], x: [0, 3, -2, 0], y: [0, -2, 1, 0] }}
-                  transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <img src={storeRideBg} alt="" className="w-full h-full object-cover" loading="lazy" />
-                </motion.div>
-                <div className="absolute inset-0 z-[1] bg-gradient-to-r from-black/60 via-black/40 to-black/50" />
-                <motion.div
-                  className="absolute inset-0 z-[2] pointer-events-none"
-                  animate={{ opacity: [0, 0.3, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  style={{ background: "linear-gradient(135deg, transparent 30%, hsl(0 0% 100% / 0.12) 50%, transparent 70%)" }}
-                />
-                {/* Content */}
-                <div className="relative z-[3] h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border border-white/20"
-                  style={{
-                    background: "linear-gradient(135deg, hsl(var(--primary) / 0.85), hsl(var(--primary) / 0.6))",
-                    boxShadow: "0 3px 10px -2px hsl(var(--primary) / 0.5)",
-                    transform: "translateZ(16px)",
-                  }}
-                >
-                  <MapPin className="h-4 w-4 text-primary-foreground drop-shadow-md" />
-                </div>
-                <div className="relative z-[3] flex flex-col items-start min-w-0">
-                  <p className="text-[11px] font-bold text-white drop-shadow-md">{t("store.ride_there") || "Ride There"}</p>
-                  <p className="text-[8px] text-white/65 leading-tight truncate w-full drop-shadow-sm">{store.address}</p>
-                </div>
+                <MapPin className="h-4.5 w-4.5" strokeWidth={2.5} />
+                {t("store.ride_there") || "Ride There"}
               </motion.button>
             )}
-            {loadingBooking && (
-              <>
-                <Skeleton className="h-14 rounded-xl" />
-                <Skeleton className="h-14 rounded-xl" />
-              </>
-            )}
-            {!loadingBooking && callable && (
-              <motion.a
-                whileTap={{ scale: 0.94, rotateX: 2 }}
-                whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
-                href={`tel:${store.phone.startsWith("+") ? store.phone.replace(/\s+/g, "") : `+855${store.phone.replace(/\s+/g, "")}`}`}
-                onClick={() => track("store_contact_action", {
-                  store_id: store.id,
-                  channel: "call",
-                  click_nonce: clickNonceRef.current,
-                })}
-                className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
-                style={{
-                  transformStyle: "preserve-3d",
-                  boxShadow: "0 6px 24px -6px hsl(152 70% 50% / 0.2), 0 2px 6px -2px hsl(0 0% 0% / 0.12), inset 0 1px 0 0 hsl(0 0% 100% / 0.12)",
-                }}
-              >
-                <motion.div
-                  className="absolute inset-0 z-0"
-                  animate={{ scale: [1, 1.06, 1], x: [0, -2, 3, 0], y: [0, 2, -1, 0] }}
-                  transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <img src={storeCallBg} alt="" className="w-full h-full object-cover" loading="lazy" />
-                </motion.div>
-                <div className="absolute inset-0 z-[1] bg-gradient-to-r from-black/60 via-black/40 to-black/50" />
-                <motion.div
-                  className="absolute inset-0 z-[2] pointer-events-none"
-                  animate={{ opacity: [0, 0.25, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                  style={{ background: "linear-gradient(225deg, transparent 30%, hsl(0 0% 100% / 0.12) 50%, transparent 70%)" }}
-                />
-                <div className="relative z-[3] h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border border-white/20"
-                  style={{
-                    background: "linear-gradient(135deg, hsl(152 70% 45% / 0.9), hsl(152 70% 35% / 0.7))",
-                    boxShadow: "0 3px 10px -2px hsl(152 70% 50% / 0.5)",
-                    transform: "translateZ(16px)",
-                  }}
-                >
-                  <Phone className="h-4 w-4 text-white drop-shadow-md" />
-                </div>
-                <div className="relative z-[3] flex flex-col items-start min-w-0">
-                  <p className="text-[11px] font-bold text-white drop-shadow-md">{t("store.call_store") || "Call Store"}</p>
-                  <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">{store.phone.startsWith("+") ? store.phone : `+855 ${store.phone}`}</p>
-                </div>
-              </motion.a>
-            )}
 
-            {/* Live Chat button — customers with a booking only */}
-            {!loadingBooking && chattable && (
-            <motion.button
-              whileTap={{ scale: 0.94, rotateX: 2 }}
-              whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
-              onClick={() => {
-                track("store_contact_action", {
-                  store_id: store.id,
-                  channel: "chat",
-                  click_nonce: clickNonceRef.current,
-                });
-                setChatOpen(true);
-              }}
-              className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
-              style={{
-                transformStyle: "preserve-3d",
-                boxShadow: "0 6px 24px -6px hsl(217 90% 55% / 0.2), 0 2px 6px -2px hsl(0 0% 0% / 0.12), inset 0 1px 0 0 hsl(0 0% 100% / 0.12)",
-              }}
-            >
-              <div className="absolute inset-0 z-0 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600" />
-              <div className="absolute inset-0 z-[1] bg-black/20" />
-              <motion.div
-                className="absolute inset-0 z-[2] pointer-events-none"
-                animate={{ opacity: [0, 0.3, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                style={{ background: "linear-gradient(135deg, transparent 30%, hsl(0 0% 100% / 0.15) 50%, transparent 70%)" }}
-              />
-              <div className="relative z-[3] h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border border-white/20"
-                style={{
-                  background: "linear-gradient(135deg, hsl(217 90% 55% / 0.9), hsl(217 90% 45% / 0.7))",
-                  boxShadow: "0 3px 10px -2px hsl(217 90% 55% / 0.5)",
-                  transform: "translateZ(16px)",
-                }}
-              >
-                <MessageCircle className="h-4 w-4 text-white drop-shadow-md" />
-              </div>
-              <div className="relative z-[3] flex flex-col items-start min-w-0">
-                <p className="text-[11px] font-bold text-white drop-shadow-md">Live Chat</p>
-                <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">Chat with store</p>
-              </div>
-            </motion.button>
-            )}
+            {/* Secondary row: Call · Chat · Share */}
+            <div className="grid grid-cols-3 gap-2">
+              {/* Call */}
+              {(() => {
+                const callDisabled = !callable;
+                const tel = store.phone
+                  ? (store.phone.startsWith("+") ? store.phone.replace(/\s+/g, "") : `+855${store.phone.replace(/\s+/g, "")}`)
+                  : "";
+                return (
+                  <motion.a
+                    whileTap={{ scale: callDisabled ? 1 : 0.96 }}
+                    href={callDisabled ? undefined : `tel:${tel}`}
+                    onClick={(e) => {
+                      if (callDisabled) {
+                        e.preventDefault();
+                        return;
+                      }
+                      track("store_contact_action", {
+                        store_id: store.id,
+                        channel: "call",
+                        click_nonce: clickNonceRef.current,
+                      });
+                    }}
+                    aria-disabled={callDisabled}
+                    className={cn(
+                      "h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 border bg-white/[0.04] backdrop-blur-sm transition-colors",
+                      callDisabled
+                        ? "border-white/10 text-white/35 cursor-not-allowed"
+                        : "border-white/15 text-white hover:bg-white/[0.07]"
+                    )}
+                  >
+                    <Phone className="h-4 w-4" strokeWidth={2.2} />
+                    <span className="text-[12px] font-semibold">{t("store.call") || "Call"}</span>
+                  </motion.a>
+                );
+              })()}
 
-            {/* Facebook button */}
-            {(store as any).facebook_url && isAllowedSocialUrl((store as any).facebook_url) && (
+              {/* Chat */}
+              {(() => {
+                const chatDisabled = !chattable;
+                return (
+                  <motion.button
+                    whileTap={{ scale: chatDisabled ? 1 : 0.96 }}
+                    onClick={() => {
+                      if (chatDisabled) return;
+                      track("store_contact_action", {
+                        store_id: store.id,
+                        channel: "chat",
+                        click_nonce: clickNonceRef.current,
+                      });
+                      setChatOpen(true);
+                    }}
+                    disabled={chatDisabled}
+                    className={cn(
+                      "h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 border bg-white/[0.04] backdrop-blur-sm transition-colors",
+                      chatDisabled
+                        ? "border-white/10 text-white/35 cursor-not-allowed"
+                        : "border-white/15 text-white hover:bg-white/[0.07]"
+                    )}
+                  >
+                    <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
+                    <span className="text-[12px] font-semibold">{t("store.chat") || "Chat"}</span>
+                  </motion.button>
+                );
+              })()}
+
+              {/* Share */}
               <motion.button
-                whileTap={{ scale: 0.94, rotateX: 2 }}
-                whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
-                onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl((store as any).facebook_url))}
-                className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
-                style={{
-                  transformStyle: "preserve-3d",
-                  boxShadow: "0 6px 24px -6px hsl(221 44% 41% / 0.2), 0 2px 6px -2px hsl(0 0% 0% / 0.12), inset 0 1px 0 0 hsl(0 0% 100% / 0.12)",
+                whileTap={{ scale: 0.96 }}
+                onClick={async () => {
+                  const url = typeof window !== "undefined" ? window.location.href : "";
+                  const title = store.name || "Store";
+                  try {
+                    if (navigator.share) {
+                      await navigator.share({ title, url });
+                    } else if (navigator.clipboard) {
+                      await navigator.clipboard.writeText(url);
+                      toast.success("Link copied");
+                    }
+                    track("store_contact_action", {
+                      store_id: store.id,
+                      channel: "share",
+                      click_nonce: clickNonceRef.current,
+                    });
+                  } catch {
+                    /* user cancelled */
+                  }
                 }}
+                className="h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 border border-white/15 bg-white/[0.04] backdrop-blur-sm text-white hover:bg-white/[0.07] transition-colors"
               >
-                <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#1877F2] via-[#166FE5] to-[#0C5DC7]" />
-                <div className="absolute inset-0 z-[1] bg-black/15" />
-                <motion.div
-                  className="absolute inset-0 z-[2] pointer-events-none"
-                  animate={{ opacity: [0, 0.25, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-                  style={{ background: "linear-gradient(225deg, transparent 30%, hsl(0 0% 100% / 0.12) 50%, transparent 70%)" }}
-                />
-                <div className="relative z-[3] h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border border-white/20"
-                  style={{
-                    background: "linear-gradient(135deg, #1877F2, #0C5DC7)",
-                    boxShadow: "0 3px 10px -2px hsl(221 44% 41% / 0.5)",
-                    transform: "translateZ(16px)",
-                  }}
-                >
-                  <Facebook className="h-4 w-4 text-white drop-shadow-md" />
-                </div>
-                <div className="relative z-[3] flex flex-col items-start min-w-0">
-                  <p className="text-[11px] font-bold text-white drop-shadow-md">Facebook</p>
-                  <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">Visit page</p>
-                </div>
+                <Share2 className="h-4 w-4" strokeWidth={2.2} />
+                <span className="text-[12px] font-semibold">{t("store.share") || "Share"}</span>
               </motion.button>
-            )}
+            </div>
 
-            {/* Instagram button */}
-            {(store as any).instagram_url && isAllowedSocialUrl((store as any).instagram_url) && (
-              <motion.a
-                whileTap={{ scale: 0.94, rotateX: 2 }}
-                whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
-                href={(store as any).instagram_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
-                style={{
-                  transformStyle: "preserve-3d",
-                  boxShadow: "0 6px 24px -6px hsl(330 80% 50% / 0.2), 0 2px 6px -2px hsl(0 0% 0% / 0.12), inset 0 1px 0 0 hsl(0 0% 100% / 0.12)",
-                }}
-              >
-                <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#833AB4] via-[#E4405F] to-[#FCAF45]" />
-                <div className="absolute inset-0 z-[1] bg-black/20" />
-                <motion.div
-                  className="absolute inset-0 z-[2] pointer-events-none"
-                  animate={{ opacity: [0, 0.25, 0] }}
-                  transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
-                  style={{ background: "linear-gradient(135deg, transparent 30%, hsl(0 0% 100% / 0.15) 50%, transparent 70%)" }}
-                />
-                <div className="relative z-[3] h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border border-white/20"
-                  style={{
-                    background: "linear-gradient(135deg, #E4405F, #833AB4)",
-                    boxShadow: "0 3px 10px -2px hsl(330 80% 50% / 0.5)",
-                    transform: "translateZ(16px)",
-                  }}
-                >
-                  <Instagram className="h-4 w-4 text-white drop-shadow-md" />
+            {/* Social links — small icon row */}
+            {(() => {
+              const s = store as any;
+              const socials = [
+                s.facebook_url && isAllowedSocialUrl(s.facebook_url) && { icon: Facebook, url: s.facebook_url, label: "Facebook", color: "#1877F2" },
+                s.instagram_url && isAllowedSocialUrl(s.instagram_url) && { icon: Instagram, url: s.instagram_url, label: "Instagram", color: "#E4405F" },
+                s.telegram_url && isAllowedSocialUrl(s.telegram_url) && { icon: Send, url: s.telegram_url, label: "Telegram", color: "#0088cc" },
+              ].filter(Boolean) as Array<{ icon: any; url: string; label: string; color: string }>;
+              if (socials.length === 0) return null;
+              return (
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  {socials.map((s) => {
+                    const Icon = s.icon;
+                    return (
+                      <a
+                        key={s.label}
+                        href={s.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={s.label}
+                        className="h-9 w-9 rounded-full flex items-center justify-center border border-white/15 bg-white/[0.04] text-white hover:bg-white/[0.08] transition-colors"
+                      >
+                        <Icon className="h-4 w-4" style={{ color: s.color }} />
+                      </a>
+                    );
+                  })}
                 </div>
-                <div className="relative z-[3] flex flex-col items-start min-w-0">
-                  <p className="text-[11px] font-bold text-white drop-shadow-md">Instagram</p>
-                  <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">Follow us</p>
-                </div>
-              </motion.a>
-            )}
+              );
+            })()}
 
-            {/* Telegram button */}
-            {(store as any).telegram_url && isAllowedSocialUrl((store as any).telegram_url) && (
-              <motion.a
-                whileTap={{ scale: 0.94, rotateX: 2 }}
-                whileHover={{ scale: 1.03, rotateY: 3, rotateX: 2 }}
-                href={(store as any).telegram_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
-                style={{
-                  transformStyle: "preserve-3d",
-                  boxShadow: "0 6px 24px -6px hsl(200 80% 50% / 0.2), 0 2px 6px -2px hsl(0 0% 0% / 0.12), inset 0 1px 0 0 hsl(0 0% 100% / 0.12)",
-                }}
-              >
-                <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#0088cc] via-[#0099dd] to-[#00aaee]" />
-                <div className="absolute inset-0 z-[1] bg-black/15" />
-                <motion.div
-                  className="absolute inset-0 z-[2] pointer-events-none"
-                  animate={{ opacity: [0, 0.3, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
-                  style={{ background: "linear-gradient(225deg, transparent 30%, hsl(0 0% 100% / 0.12) 50%, transparent 70%)" }}
-                />
-                <div className="relative z-[3] h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border border-white/20"
-                  style={{
-                    background: "linear-gradient(135deg, #0088cc, #006699)",
-                    boxShadow: "0 3px 10px -2px hsl(200 80% 50% / 0.5)",
-                    transform: "translateZ(16px)",
-                  }}
+            {/* Booking lock notice */}
+            {!loadingBooking && !hasBooking && (
+              <div className="flex flex-col gap-1.5">
+                <button
+                  onClick={() => navigate("/account/bookings")}
+                  className="w-full h-11 rounded-full flex items-center justify-center gap-2 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 text-[12.5px] font-semibold transition-colors"
                 >
-                  <Send className="h-4 w-4 text-white drop-shadow-md" />
-                </div>
-                <div className="relative z-[3] flex flex-col items-start min-w-0">
-                  <p className="text-[11px] font-bold text-white drop-shadow-md">Telegram</p>
-                  <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">Message us</p>
-                </div>
-              </motion.a>
-            )}
-
-            {/* TikTok button */}
-            {(store as any).tiktok_url && isAllowedSocialUrl((store as any).tiktok_url) && (
-              <motion.a
-                whileTap={{ scale: 0.94, rotateX: 2 }}
-                whileHover={{ scale: 1.03, rotateY: -3, rotateX: 2 }}
-                href={(store as any).tiktok_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative flex items-center gap-2.5 rounded-xl border border-white/20 overflow-hidden h-14 px-3 group"
-                style={{
-                  transformStyle: "preserve-3d",
-                  boxShadow: "0 6px 24px -6px hsl(0 0% 0% / 0.3), 0 2px 6px -2px hsl(0 0% 0% / 0.12), inset 0 1px 0 0 hsl(0 0% 100% / 0.12)",
-                }}
-              >
-                <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#010101] via-[#1a1a2e] to-[#010101]" />
-                <div className="absolute inset-0 z-[1] bg-black/10" />
-                <motion.div
-                  className="absolute inset-0 z-[2] pointer-events-none"
-                  animate={{ opacity: [0, 0.3, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-                  style={{ background: "linear-gradient(135deg, transparent 20%, hsl(180 100% 50% / 0.1) 40%, hsl(340 100% 50% / 0.1) 60%, transparent 80%)" }}
-                />
-                <div className="relative z-[3] h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border border-white/20"
-                  style={{
-                    background: "linear-gradient(135deg, #010101, #333)",
-                    boxShadow: "0 3px 10px -2px hsl(180 100% 50% / 0.3), 0 3px 10px -2px hsl(340 100% 50% / 0.3)",
-                    transform: "translateZ(16px)",
-                  }}
-                >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4 text-white drop-shadow-md" fill="currentColor">
-                    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V9.16a8.18 8.18 0 004.76 1.52v-3.4a4.85 4.85 0 01-1-.59z" />
-                  </svg>
-                </div>
-                <div className="relative z-[3] flex flex-col items-start min-w-0">
-                  <p className="text-[11px] font-bold text-white drop-shadow-md">TikTok</p>
-                  <p className="text-[10px] text-white/75 font-semibold drop-shadow-sm">Watch videos</p>
-                </div>
-              </motion.a>
+                  <Lock className="h-3.5 w-3.5" />
+                  Complete a booking to unlock chat
+                </button>
+                <p className="text-[10px] leading-snug text-white/55 px-1 text-center">
+                  Already booked? Make sure you used the same account email.{" "}
+                  <Link to="/account/bookings" className="underline text-emerald-300 hover:text-emerald-200">
+                    View my bookings
+                  </Link>
+                </p>
+              </div>
             )}
           </div>
-
-          {!loadingBooking && !hasBooking && (
-            <div className="lg:hidden mt-2.5 flex flex-col gap-1.5">
-              <TooltipProvider delayDuration={150}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      onClick={() => navigate("/account/bookings")}
-                      className="w-full h-10 rounded-xl gap-2 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 text-[12px] font-semibold"
-                    >
-                      <Lock className="h-3.5 w-3.5" />
-                      Complete a booking to unlock chat
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-[260px] text-[11px] leading-snug">
-                    {isLodging
-                      ? "Confirmed reservation required at this property to unlock Live Chat & Call Store (lodge_reservation)."
-                      : "Completed order required at this store to unlock Live Chat & Call Store (food_order)."}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <p className="text-[10px] leading-snug text-white/55 px-1">
-                Already booked? Make sure you used the same account email.{" "}
-                <Link to="/account/bookings" className="underline text-emerald-300 hover:text-emerald-200">
-                  View my bookings
-                </Link>
-              </p>
-            </div>
-          )}
 
           {!loadingBooking && hasBooking && !phoneNumber && (
             <p className="mt-2 text-[10px] text-white/55 px-1">
