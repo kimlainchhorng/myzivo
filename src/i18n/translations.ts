@@ -635,7 +635,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "store.booking_status.checking": "Checking your bookings…",
     "store.booking_status.unlocked": "Chat & Call unlocked",
     "store.booking_status.unlocked_sub": "Booking on file",
-    "store.booking_status.locked": "Locked — book to unlock Chat & Call",
+    "store.booking_status.locked": "Book to unlock Chat",
     "store.booking_status.refresh": "Refresh",
     "store.booking_status.rechecking": "Re-checking…",
     "store.booking_status.view_bookings": "View bookings",
