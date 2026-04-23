@@ -26,6 +26,8 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "dest
   hold: "outline", confirmed: "secondary", checked_in: "default", checked_out: "outline", cancelled: "destructive", no_show: "destructive",
 };
 
+const money = (cents?: number | null) => `$${((Number(cents) || 0) / 100).toFixed(2)}`;
+
 export default function LodgingReservationsSection({ storeId }: { storeId: string }) {
   const navigate = useNavigate();
   const [status, setStatus] = useState<ReservationStatus | "all">("all");
