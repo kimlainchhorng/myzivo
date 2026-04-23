@@ -22,24 +22,66 @@ const VIEW_OPTIONS = ["", "Sea view", "Garden view", "Pool view", "Mountain view
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const ROOM_TYPES = ["Standard", "Deluxe", "Suite", "Villa", "Family", "Bungalow", "Cottage", "Dormitory", "Apartment", "Studio", "Penthouse"];
-const AMENITY_OPTIONS = [
-  // Comfort
-  "AC", "Heating", "Wi-Fi", "TV", "Smart TV", "Netflix",
-  // Bath
-  "Bathtub", "Hot shower", "Hairdryer", "Toiletries", "Bathrobe", "Slippers",
-  // Kitchen / dining
-  "Mini-bar", "Mini-fridge", "Coffee maker", "Kettle", "Kitchenette", "Microwave",
-  // Workspace / family
-  "Workspace", "Iron", "Crib available", "Family-friendly",
-  // Outdoor / view
-  "Balcony", "Terrace", "Garden view", "Pool view", "Sea view", "Mountain view", "City view",
-  // Premium
-  "Safe", "Jacuzzi", "Private pool", "Beach access", "Fireplace",
-  // Services
-  "Daily housekeeping", "Room service", "24h reception",
-  // Accessibility & policy
-  "Wheelchair accessible", "Pet-friendly", "Smoking allowed", "Non-smoking", "EV charger", "Free parking"
+// Booking.com-style grouped amenities — shown as collapsible sections in the editor
+const AMENITY_GROUPS: { label: string; items: string[] }[] = [
+  {
+    label: "Private bathroom",
+    items: [
+      "Free toiletries", "Shower", "Bathtub", "Bathrobe", "Slippers",
+      "Hairdryer", "Bidet", "Toilet", "Toilet paper", "Towels",
+      "Towels/Sheets (extra fee)", "Hot shower",
+    ],
+  },
+  {
+    label: "Bedroom",
+    items: ["Linens", "Wardrobe or closet", "Extra long beds (> 2m)", "Alarm clock"],
+  },
+  {
+    label: "View",
+    items: ["Garden view", "Pool view", "Sea view", "Mountain view", "City view", "River view", "Courtyard view", "Landmark view"],
+  },
+  {
+    label: "Outdoors",
+    items: ["Balcony", "Terrace", "Patio", "Outdoor furniture", "Beach access", "Beachfront"],
+  },
+  {
+    label: "Facilities",
+    items: [
+      "Carpeted", "Electric kettle", "Wardrobe or closet", "Socket near the bed",
+      "Dining area", "Desk", "Clothes rack", "Sitting area", "Drying rack for clothing",
+      "Minibar", "Tile/Marble floor", "Wooden/Parquet floor", "Soundproofing",
+      "Heating", "Air conditioning", "Fan", "Iron", "Ironing facilities",
+      "Safety deposit box", "Fireplace", "Private entrance",
+    ],
+  },
+  {
+    label: "Food & drink",
+    items: ["Mini-bar", "Mini-fridge", "Refrigerator", "Coffee machine", "Tea/Coffee maker", "Kitchenette", "Microwave", "Dishwasher", "Stovetop", "Oven", "Toaster", "Dining table"],
+  },
+  {
+    label: "Media & technology",
+    items: ["Wi-Fi", "Free Wi-Fi", "TV", "Flat-screen TV", "Smart TV", "Cable channels", "Satellite channels", "Streaming service (Netflix)", "Telephone", "Laptop safe"],
+  },
+  {
+    label: "Family",
+    items: ["Crib available", "Baby cot on request", "Family-friendly", "Children's cribs/cots"],
+  },
+  {
+    label: "Wellness",
+    items: ["Jacuzzi", "Hot tub", "Private pool", "Sauna", "Spa tub"],
+  },
+  {
+    label: "Services",
+    items: ["Daily housekeeping", "Room service", "24h reception", "Wake-up service", "Laundry service"],
+  },
+  {
+    label: "Accessibility & policy",
+    items: ["Wheelchair accessible", "Upper floors accessible by elevator", "Pet-friendly", "Smoking allowed", "Non-smoking", "EV charger", "Free parking", "Private parking"],
+  },
 ];
+
+// Flat list (legacy) — used for backward compatibility / quick lookup
+const AMENITY_OPTIONS = AMENITY_GROUPS.flatMap(g => g.items);
 
 // Curated quick-add presets — one tap to add common hotel/resort extras
 const ADDON_PRESETS: { name: string; price_cents: number; per: "stay" | "night" | "guest" | "person_night"; category: string; icon: string }[] = [
@@ -401,15 +443,23 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                 <Label>Breakfast included</Label>
               </div>
               <div>
-                <Label>Amenities</Label>
-                <div className="flex flex-wrap gap-1.5 mt-1.5">
-                  {AMENITY_OPTIONS.map(a => {
-                    const on = (editing.amenities || []).includes(a);
-                    return (
-                      <button key={a} type="button" onClick={() => toggleAmenity(a)}
-                        className={`px-2.5 py-1 rounded-full text-xs border transition ${on ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:border-primary/40"}`}>{a}</button>
-                    );
-                  })}
+                <Label>Amenities & Facilities</Label>
+                <p className="text-[11px] text-muted-foreground mb-2">Tap to toggle. Grouped like Booking.com to make listing details look professional.</p>
+                <div className="space-y-3">
+                  {AMENITY_GROUPS.map(group => (
+                    <div key={group.label} className="rounded-lg border border-border/60 p-2.5 bg-muted/10">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">{group.label}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {group.items.map(a => {
+                          const on = (editing.amenities || []).includes(a);
+                          return (
+                            <button key={a} type="button" onClick={() => toggleAmenity(a)}
+                              className={`px-2.5 py-1 rounded-full text-xs border transition ${on ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:border-primary/40"}`}>{a}</button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
