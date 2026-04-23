@@ -12,7 +12,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BedDouble, Plus, Trash2, Pencil, Image as ImageIcon } from "lucide-react";
+import {
+  BedDouble, Plus, Trash2, Pencil, Image as ImageIcon,
+  Landmark, Building, Sparkles, ConciergeBell, Receipt,
+  Baby, UserPlus, Users, Coins, BadgePercent, Sun,
+  Maximize2, Hash, CalendarDays, CalendarRange, Clock, ShieldCheck,
+  DollarSign, type LucideIcon,
+} from "lucide-react";
 import { AddonIcon } from "@/components/lodging/addonIcons";
 import { getAmenityIcon } from "@/components/lodging/amenityIcons";
 import { toast } from "sonner";
