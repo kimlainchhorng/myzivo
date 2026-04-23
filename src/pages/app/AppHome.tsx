@@ -92,6 +92,10 @@ import { getRestaurantPhoto } from "@/config/restaurantPhotos";
 import { formatDistanceToNow, format } from "date-fns";
 import useEmblaCarousel from "embla-carousel-react";
 import { useDeviceIntegrityCheck } from "@/hooks/useDeviceIntegrityCheck";
+import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
+import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
+import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
+import { getLodgingSetupItems, setupProgress } from "@/components/admin/store/lodging/LodgingSetupChecklist";
 
 import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
 import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
@@ -267,6 +271,17 @@ const AppHome = () => {
   }
   const { recommended, favorites, orderAgain } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
+  const { data: ownerStore } = useOwnerStoreProfile();
+  const lodgingRooms = useLodgeRooms(ownerStore?.isLodging ? ownerStore.id : "");
+  const lodgingProfile = useLodgePropertyProfile(ownerStore?.isLodging ? ownerStore.id : "");
+  const lodgingProgress = ownerStore?.isLodging ? setupProgress(getLodgingSetupItems({
+    rooms: lodgingRooms.data || [],
+    profile: lodgingProfile.data,
+    addons: (lodgingRooms.data || []).flatMap((room: any) => room.addons || []),
+    housekeepingCount: 0,
+    maintenanceReady: true,
+    reportsReady: Boolean((lodgingRooms.data || []).length),
+  })) : null;
   const { data: deals = [] } = useRecommendedDeals("all", 6);
   const { items: recentItems } = useRecentlyViewed();
   const { data: savedLocations } = useSavedLocations(user?.id);
@@ -519,6 +534,37 @@ const AppHome = () => {
 
         {/* ─── MAIN CONTENT ─── */}
         <div className="px-5 space-y-8">
+
+          {ownerStore?.isLodging && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-primary/20 bg-primary/8 p-4 shadow-sm"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+                  <Hotel className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-bold text-foreground">Hotel / Resort Admin</p>
+                    <Badge variant="secondary" className="shrink-0 text-[9px]">Active</Badge>
+                  </div>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{ownerStore.name}</p>
+                  <div className="mt-3">
+                    <div className="mb-1 flex items-center justify-between text-[10px] font-semibold text-primary">
+                      <span>Setup progress</span>
+                      <span>{lodgingProgress ? `${lodgingProgress.complete}/${lodgingProgress.total} ready` : "Loading"}</span>
+                    </div>
+                    <Progress value={lodgingProgress?.percent || 0} className="h-1.5 bg-primary/15" />
+                  </div>
+                  <Button size="sm" className="mt-3 h-9 w-full" onClick={() => navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`)}>
+                    Open Hotel Operations <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* ─── LIVE TRIP TRACKER ─── */}
           <Suspense fallback={null}><LiveTripTracker /></Suspense>

@@ -2,7 +2,7 @@ import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Store, Plus, Edit, Trash2, Eye, Upload, Loader2, X, ChevronDown, ChevronUp, Mail, UserPlus, Link2, Copy, Check } from "lucide-react";
+import { Store, Plus, Edit, Trash2, Eye, Upload, Loader2, X, ChevronDown, ChevronUp, Mail, UserPlus, Link2, Copy, Check, Hotel } from "lucide-react";
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
+import { isLodgingStoreCategory } from "@/hooks/useOwnerStoreProfile";
 
 const DAYS_OF_WEEK = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 const DAY_LABELS: Record<string, string> = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
@@ -343,7 +344,9 @@ export default function AdminStoresPage() {
               <p className="text-muted-foreground text-center py-8">No stores found in this category.</p>
             ) : (
               <div className="divide-y divide-border">
-                {filteredStores.map((store: any) => (
+                {filteredStores.map((store: any) => {
+                  const isLodging = isLodgingStoreCategory(store.category);
+                  return (
                   <div key={store.id} className="flex items-center justify-between py-4">
                     <div className="flex items-center gap-4">
                       {store.logo_url ? (
@@ -362,6 +365,7 @@ export default function AdminStoresPage() {
                         ) : (
                           <p className="text-xs text-destructive/70 mt-0.5">No owner assigned</p>
                         )}
+                        {isLodging && <Badge variant="secondary" className="mt-2 gap-1 text-[10px]"><Hotel className="h-3 w-3" /> Hotel Admin Ready</Badge>}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-end">
@@ -377,6 +381,11 @@ export default function AdminStoresPage() {
                       <Button size="sm" variant="outline" onClick={() => navigate(`/admin/stores/${store.id}`)}>
                         <Edit className="h-4 w-4" />
                       </Button>
+                      {isLodging && (
+                        <Button size="sm" onClick={() => navigate(`/admin/stores/${store.id}?tab=lodge-overview`)} className="gap-1.5">
+                          <Hotel className="h-4 w-4" /> Open Hotel Operations
+                        </Button>
+                      )}
                       <Button size="sm" variant="outline" onClick={() => navigate(`/grocery/shop/${store.slug}`)}>
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -385,7 +394,7 @@ export default function AdminStoresPage() {
                       </Button>
                     </div>
                   </div>
-                ))}
+                );})}
               </div>
             )}
           </CardContent>

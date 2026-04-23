@@ -32,9 +32,10 @@ interface StoreOwnerLayoutProps {
   onTabChange?: (tab: string) => void;
   productCount?: number;
   orderCount?: number;
+  lodgingSetupProgress?: { complete: number; total: number; percent: number };
 }
 
-export default function StoreOwnerLayout({ children, title, storeId, storeName, storeLogoUrl, storeCategory, activeTab, onTabChange, productCount, orderCount }: StoreOwnerLayoutProps) {
+export default function StoreOwnerLayout({ children, title, storeId, storeName, storeLogoUrl, storeCategory, activeTab, onTabChange, productCount, orderCount, lodgingSetupProgress }: StoreOwnerLayoutProps) {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -307,7 +308,8 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           {isLodging && (
             <div className="mb-2 rounded-lg border border-primary/20 bg-primary/8 px-3 py-2 text-primary">
               <div className="flex items-center gap-2 text-xs font-semibold"><Hotel className="h-3.5 w-3.5" /> Hotel / Resort Admin</div>
-              <p className="mt-0.5 text-[10px] text-primary/80">Setup progress: 9-step checklist in Hotel Overview.</p>
+              <p className="mt-0.5 text-[10px] text-primary/80">Setup progress: {lodgingSetupProgress ? `${lodgingSetupProgress.complete}/${lodgingSetupProgress.total} ready` : "open Hotel Overview"}.</p>
+              {lodgingSetupProgress && <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-primary/15"><div className="h-full rounded-full bg-primary" style={{ width: `${lodgingSetupProgress.percent}%` }} /></div>}
               <div className="mt-1.5 flex items-center gap-1 text-[10px] font-medium text-primary/90"><ListChecks className="h-3 w-3" /> Rate plans and guest requests enabled</div>
             </div>
           )}
