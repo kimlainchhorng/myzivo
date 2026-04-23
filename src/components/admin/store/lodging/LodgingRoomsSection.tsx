@@ -161,6 +161,65 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
   const openNew = () => { setEditing(blank()); setOpen(true); };
   const openEdit = (r: LodgeRoom) => { setEditing({ ...r, addons: r.addons || [], photos: r.photos || [] }); setOpen(true); };
 
+  /**
+   * Apply the "Deluxe Double Sea View" sample preset — one tap fills every field
+   * (description, view, beds, size, bathroom + facility amenities, taxes, breakfast addon).
+   */
+  const applyDeluxeSeaViewPreset = () => {
+    if (!editing) return;
+    const sqm = Math.round(323 / 10.764 * 10) / 10; // 323 ft² → ~30 m²
+    const bathroomAmenities = [
+      "Bathtub", "Free toiletries", "Shower", "Bathrobe", "Bidet",
+      "Toilet", "Towels", "Slippers", "Hairdryer",
+      "Towels/Sheets (extra fee)", "Toilet paper",
+    ];
+    const facilityAmenities = [
+      "Balcony", "Terrace", "Air conditioning", "Sitting area",
+      "Socket near the bed", "Desk", "Minibar", "Carpeted",
+      "Electric kettle", "Wardrobe or closet", "Dining area",
+      "Clothes rack", "Drying rack for clothing", "Non-smoking",
+    ];
+    const viewAmenities = ["Sea view"];
+    const merged = Array.from(new Set([
+      ...(editing.amenities || []),
+      ...bathroomAmenities, ...facilityAmenities, ...viewAmenities,
+    ]));
+    const existingAddons = editing.addons || [];
+    const ensureAddon = (name: string, price_cents: number, per: LodgeAddon["per"], category: string, icon: string) =>
+      existingAddons.some(a => a.name === name) ? null : { name, price_cents, per, category, icon };
+    const newAddons: LodgeAddon[] = [
+      ensureAddon("Exceptional breakfast", 0, "person_night", "Food & drink", "breakfast"),
+      ensureAddon("15% off food & drink", 0, "stay", "Stay", "earlycheckin"),
+      ensureAddon("Late check-in", 0, "stay", "Stay", "latecheckout"),
+      ensureAddon("High-speed internet", 0, "stay", "Services", "housekeeping"),
+    ].filter(Boolean) as LodgeAddon[];
+
+    setEditing({
+      ...editing,
+      name: editing.name || "Deluxe Double Sea View",
+      room_type: "Deluxe",
+      description:
+        "A spacious 323 ft² room with a private balcony and terrace overlooking the sea. Comfortably sleeps 2 in a king bed, with air conditioning, minibar, sitting area, and a private bathroom featuring a bathtub and shower. Exceptional breakfast included.",
+      view: "Sea view",
+      beds: "1 King",
+      bed_config: [{ type: "King", qty: 1 }],
+      max_guests: 2,
+      size_sqm: sqm,
+      base_rate_cents: 14600,
+      weekend_rate_cents: editing.weekend_rate_cents || 16000,
+      breakfast_included: true,
+      amenities: merged,
+      fees: {
+        ...(editing.fees || {}),
+        vat_pct: 10,
+        city_tax_cents: 200, // $2/guest/night placeholder for "2% city tax"
+      },
+      cancellation_policy: "flexible",
+      addons: [...existingAddons, ...newAddons],
+    });
+    toast.success("Filled with Deluxe Double Sea View preset");
+  };
+
   const duplicate = async (r: LodgeRoom) => {
     try {
       const { id, created_at, updated_at, ...rest } = r as any;
