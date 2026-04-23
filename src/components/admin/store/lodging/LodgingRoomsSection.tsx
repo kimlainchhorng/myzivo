@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BedDouble, Plus, Trash2, Pencil, Image as ImageIcon } from "lucide-react";
 import { AddonIcon } from "@/components/lodging/addonIcons";
+import { getAmenityIcon } from "@/components/lodging/amenityIcons";
 import { toast } from "sonner";
 import { useLodgeRooms, type LodgeRoom, type LodgeAddon, type RoomFees, type ChildPolicy } from "@/hooks/lodging/useLodgeRooms";
 import { LodgingRoomPhotoUploader } from "@/components/lodging/LodgingRoomPhotoUploader";
@@ -455,9 +456,13 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                       <div className="flex flex-wrap gap-1.5">
                         {group.items.map(a => {
                           const on = (editing.amenities || []).includes(a);
+                          const Icon = getAmenityIcon(a);
                           return (
                             <button key={a} type="button" onClick={() => toggleAmenity(a)}
-                              className={`px-2.5 py-1 rounded-full text-xs border transition ${on ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:border-primary/40"}`}>{a}</button>
+                              className={`px-2.5 py-1 rounded-full text-xs border transition inline-flex items-center gap-1.5 ${on ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:border-primary/40"}`}>
+                              <Icon className="h-3 w-3" />
+                              {a}
+                            </button>
                           );
                         })}
                       </div>
