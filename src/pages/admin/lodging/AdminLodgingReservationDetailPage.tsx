@@ -10,6 +10,7 @@ import {
   ArrowLeft, BedDouble, CalendarRange, User, Phone, Mail, Globe,
   CheckCircle2, LogIn, LogOut, XCircle, AlertCircle, History, Loader2, Download, RefreshCw,
   ClipboardCheck, CreditCard, PackageCheck,
+  Clock,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,11 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "dest
 interface AddonLine { name: string; price_cents: number; per: string; qty: number; subtotal_cents: number }
 
 const fmt = (c: number) => `$${((c || 0) / 100).toFixed(2)}`;
+const timeLabel = (value?: string | null, fallback?: string | null) => {
+  if (value && value.includes("T")) return format(new Date(value), "h:mm a");
+  if (fallback) return fallback.slice(0, 5);
+  return "Time not set";
+};
 
 export default function AdminLodgingReservationDetailPage() {
   const { storeId, reservationId } = useParams<{ storeId: string; reservationId: string }>();
@@ -118,7 +124,7 @@ export default function AdminLodgingReservationDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lodge_rooms" as any)
-        .select("name, photos, cover_photo_index, base_rate_cents")
+        .select("name, photos, cover_photo_index, base_rate_cents, check_in_time, check_out_time")
         .eq("id", reservation!.room_id)
         .maybeSingle();
       if (error) throw error;
@@ -288,7 +294,7 @@ export default function AdminLodgingReservationDetailPage() {
               <OpsMetric icon={ClipboardCheck} label="Status" value={STATUS_LABEL[reservation.status] || reservation.status} />
               <OpsMetric icon={CreditCard} label="Payment" value={String(reservation.payment_status || "pending").replace(/_/g, " ")} />
               <OpsMetric icon={AlertCircle} label="Balance" value={fmt(balanceDue)} danger={balanceDue > 0} />
-              <OpsMetric icon={PackageCheck} label="Add-ons" value={`${addonRequests.length} attempt${addonRequests.length === 1 ? "" : "s"}`} />
+              <OpsMetric icon={Clock} label="Stay time" value={`In ${timeLabel(reservation.check_in, room?.check_in_time)}`} />
             </div>
             {isClosed && (
               <div className="rounded-xl border border-border bg-background/70 p-3 text-xs text-muted-foreground">
@@ -319,6 +325,9 @@ export default function AdminLodgingReservationDetailPage() {
                 <p className="font-semibold text-sm">{room?.name || "Room"}</p>
                 <p className="text-xs text-muted-foreground">
                   {format(new Date(reservation.check_in), "EEE, MMM d")} → {format(new Date(reservation.check_out), "EEE, MMM d")}
+                </p>
+                <p className="text-xs font-medium text-foreground">
+                  Check-in {timeLabel(reservation.check_in, room?.check_in_time)} · Check-out {timeLabel(reservation.check_out, room?.check_out_time)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {reservation.nights} night{reservation.nights !== 1 ? "s" : ""} · {reservation.adults} adult{reservation.adults !== 1 ? "s" : ""}{reservation.children ? ` · ${reservation.children} child${reservation.children > 1 ? "ren" : ""}` : ""}
