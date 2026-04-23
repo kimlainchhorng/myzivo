@@ -299,6 +299,7 @@ export default function AdminLodgingReservationDetailPage() {
             <div className="pt-2">
               <LodgingPaymentBadge
                 status={reservation.payment_status}
+                reservationStatus={reservation.status}
                 amountCents={reservation.deposit_cents || reservation.total_cents}
                 onRetry={async () => {
                   if (retrying) return;
@@ -351,6 +352,14 @@ export default function AdminLodgingReservationDetailPage() {
                   {STATUS_LABEL[reservation.status]} → {STATUS_LABEL[pendingStatus]}
                 </p>
 
+                {destructiveWorkflow && (
+                  <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-xs text-muted-foreground space-y-1.5">
+                    <p className="font-semibold text-foreground">Confirm before saving</p>
+                    <p>This reservation will leave the Active queue after it is marked {STATUS_LABEL[pendingStatus].toLowerCase()}.</p>
+                    <p>Next steps: save a clear audit note, review payment/refund follow-up, then return to Active reservations.</p>
+                  </div>
+                )}
+
                 {reasonRequired && (
                   <div>
                     <Label className="text-xs">Reason (required)</Label>
@@ -396,7 +405,7 @@ export default function AdminLodgingReservationDetailPage() {
                   />
                 </div>
                 <div className="flex gap-2 justify-end">
-                  <Button variant="outline" size="sm" onClick={() => { setPendingStatus(null); setNote(""); setReason(""); }} disabled={saving}>Cancel</Button>
+                  <Button variant="outline" size="sm" onClick={() => { setPendingStatus(null); setNote(""); setReason(""); setSearchParams({}); }} disabled={saving}>Cancel</Button>
                   <Button
                     size="sm"
                     onClick={submitTransition}
