@@ -15,7 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-const norm = (s: string) => s.toLowerCase().replace(/[\s_\-/]+/g, "");
+const norm = (s: string) => s.toLowerCase().replace(/\([^)]*\)/g, "").replace(/['']/g, "").replace(/[\s_\-/>,.]+/g, "");
 
 const RAW_MAP: Record<string, LucideIcon> = {
   // Connectivity
