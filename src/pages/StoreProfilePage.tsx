@@ -133,6 +133,41 @@ export default function StoreProfilePage() {
     });
   }, [store?.id, hasBooking, bookingSource]);
 
+  // Detect booking flip: false → true while page is open. Prompt user to open chat.
+  const prevHasBookingRef = useRef<boolean | undefined>(undefined);
+  useEffect(() => {
+    if (loadingBooking || !store?.id) return;
+    const prev = prevHasBookingRef.current;
+    if (prev === false && hasBooking === true) {
+      toast.success(
+        `Booking confirmed — chat with ${store.name || "this store"} is now unlocked`,
+        {
+          duration: 8000,
+          action: {
+            label: "Open chat",
+            onClick: () => setChatOpen(true),
+          },
+        }
+      );
+    }
+    prevHasBookingRef.current = hasBooking;
+  }, [hasBooking, loadingBooking, store?.id, store?.name]);
+
+  // Long-press support for the Share tile (copy link fallback).
+  const sharePressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sharePressFiredRef = useRef(false);
+  const copyShareLink = async () => {
+    try {
+      const url = typeof window !== "undefined" ? window.location.href : "";
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied to clipboard");
+      }
+    } catch {
+      toast.error("Could not copy link");
+    }
+  };
+
   const rooms = useMemo(() => (allRooms || []).filter(r => r.is_active), [allRooms]);
 
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
@@ -393,14 +428,63 @@ export default function StoreProfilePage() {
               </motion.button>
             )}
 
-            {/* Secondary row: Call · Chat · Share */}
+            {/* Inline booking status chip — under Ride There, above tile row */}
+            {(() => {
+              if (loadingBooking) {
+                return (
+                  <div className="h-7 rounded-full bg-white/[0.05] border border-white/10 animate-pulse" />
+                );
+              }
+              if (hasBooking) {
+                return (
+                  <div className="self-center inline-flex items-center gap-1.5 px-3 h-7 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-[11.5px] font-semibold">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
+                    Chat &amp; Call unlocked · Booking on file
+                  </div>
+                );
+              }
+              return (
+                <button
+                  onClick={() => navigate("/account/bookings")}
+                  className="self-center inline-flex items-center gap-1.5 px-3 h-7 rounded-full bg-amber-500/12 border border-amber-400/30 text-amber-300 text-[11.5px] font-semibold hover:bg-amber-500/18 transition-colors"
+                >
+                  <Lock className="h-3 w-3" />
+                  Locked — Complete a booking to enable Chat
+                </button>
+              );
+            })()}
+
+            {/* Secondary row: Call/SMS · Chat · Share */}
             <div className="grid grid-cols-3 gap-2">
-              {/* Call */}
+              {/* Call (or SMS fallback when locked but phone exists) */}
               {(() => {
                 const callDisabled = !callable;
                 const tel = store.phone
                   ? (store.phone.startsWith("+") ? store.phone.replace(/\s+/g, "") : `+855${store.phone.replace(/\s+/g, "")}`)
                   : "";
+                const showSmsFallback = callDisabled && !!tel;
+                if (showSmsFallback) {
+                  const smsBody = encodeURIComponent(
+                    `Hi, I'm interested in ${store.name || "your store"}.`
+                  );
+                  return (
+                    <motion.a
+                      whileTap={{ scale: 0.96 }}
+                      href={`sms:${tel}?body=${smsBody}`}
+                      onClick={() => {
+                        track("store_contact_action", {
+                          store_id: store.id,
+                          channel: "sms",
+                          click_nonce: clickNonceRef.current,
+                        });
+                      }}
+                      className="h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 border border-white/15 bg-white/[0.04] backdrop-blur-sm text-white hover:bg-white/[0.07] transition-colors"
+                    >
+                      <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
+                      <span className="text-[12px] font-semibold">{t("store.sms") || "SMS"}</span>
+                    </motion.a>
+                  );
+                }
                 return (
                   <motion.a
                     whileTap={{ scale: callDisabled ? 1 : 0.96 }}
@@ -459,10 +543,39 @@ export default function StoreProfilePage() {
                 );
               })()}
 
-              {/* Share */}
+              {/* Share — tap = native share, long-press / right-click = copy link */}
               <motion.button
                 whileTap={{ scale: 0.96 }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  copyShareLink();
+                }}
+                onTouchStart={() => {
+                  sharePressFiredRef.current = false;
+                  if (sharePressTimerRef.current) clearTimeout(sharePressTimerRef.current);
+                  sharePressTimerRef.current = setTimeout(() => {
+                    sharePressFiredRef.current = true;
+                    copyShareLink();
+                  }, 500);
+                }}
+                onTouchEnd={() => {
+                  if (sharePressTimerRef.current) {
+                    clearTimeout(sharePressTimerRef.current);
+                    sharePressTimerRef.current = null;
+                  }
+                }}
+                onTouchCancel={() => {
+                  if (sharePressTimerRef.current) {
+                    clearTimeout(sharePressTimerRef.current);
+                    sharePressTimerRef.current = null;
+                  }
+                }}
                 onClick={async () => {
+                  // Skip if long-press already fired
+                  if (sharePressFiredRef.current) {
+                    sharePressFiredRef.current = false;
+                    return;
+                  }
                   const url = typeof window !== "undefined" ? window.location.href : "";
                   const title = store.name || "Store";
                   try {
@@ -517,29 +630,10 @@ export default function StoreProfilePage() {
                 </div>
               );
             })()}
-
-            {/* Booking lock notice */}
-            {!loadingBooking && !hasBooking && (
-              <div className="flex flex-col gap-1.5">
-                <button
-                  onClick={() => navigate("/account/bookings")}
-                  className="w-full h-11 rounded-full flex items-center justify-center gap-2 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200 text-[12.5px] font-semibold transition-colors"
-                >
-                  <Lock className="h-3.5 w-3.5" />
-                  Complete a booking to unlock chat
-                </button>
-                <p className="text-[10px] leading-snug text-white/55 px-1 text-center">
-                  Already booked? Make sure you used the same account email.{" "}
-                  <Link to="/account/bookings" className="underline text-emerald-300 hover:text-emerald-200">
-                    View my bookings
-                  </Link>
-                </p>
-              </div>
-            )}
           </div>
 
           {!loadingBooking && hasBooking && !phoneNumber && (
-            <p className="mt-2 text-[10px] text-white/55 px-1">
+            <p className="mt-2 text-[10px] text-white/55 px-1 lg:hidden">
               This store hasn't shared a phone number — chat is the fastest way to reach them.
             </p>
           )}
