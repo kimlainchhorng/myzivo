@@ -730,7 +730,7 @@ export default function StoreProfilePage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 25 }}
-            className="rounded-2xl overflow-hidden border border-white/[0.08] shadow-lg shadow-black/5 relative h-48"
+            className="relative rounded-3xl overflow-hidden border border-white/[0.08] shadow-2xl shadow-black/20 ring-1 ring-white/5 h-56 sm:h-64 md:h-72 bg-muted"
           >
             <StoreHeroCarousel
               images={store.gallery_images!}
