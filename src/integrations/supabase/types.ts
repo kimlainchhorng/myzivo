@@ -27019,6 +27019,75 @@ export type Database = {
         }
         Relationships: []
       }
+      lodge_refund_disputes: {
+        Row: {
+          admin_response: string | null
+          change_request_id: string | null
+          created_at: string
+          description: string
+          guest_id: string
+          id: string
+          reason_category: string
+          requested_amount_cents: number
+          reservation_id: string
+          resolution_amount_cents: number | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          admin_response?: string | null
+          change_request_id?: string | null
+          created_at?: string
+          description: string
+          guest_id: string
+          id?: string
+          reason_category?: string
+          requested_amount_cents?: number
+          reservation_id: string
+          resolution_amount_cents?: number | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          admin_response?: string | null
+          change_request_id?: string | null
+          created_at?: string
+          description?: string
+          guest_id?: string
+          id?: string
+          reason_category?: string
+          requested_amount_cents?: number
+          reservation_id?: string
+          resolution_amount_cents?: number | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_refund_disputes_change_request_id_fkey"
+            columns: ["change_request_id"]
+            isOneToOne: false
+            referencedRelation: "lodge_reservation_change_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lodge_refund_disputes_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "lodge_reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lodge_reservation_audit: {
         Row: {
           actor_id: string | null
