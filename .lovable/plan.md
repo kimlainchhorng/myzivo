@@ -1,36 +1,38 @@
 
 
-## Why the Villa modal looks empty vs. Booking.com
+## Bulk-tick all Booking.com amenities for Villa
 
-The grouped-amenities UI is **already built and working** in both:
-- Admin editor (`LodgingRoomsSection.tsx`) — shows all 11 grouped sections
-- Customer modal (`LodgingRoomDetailsModal.tsx`) — renders any group that has saved items
+The fastest, cleanest way to give the Villa the full Booking.com-style amenity set is a one-line database update — equivalent to opening the editor and ticking ~80 checkboxes, but instant and reliable.
 
-The customer modal only shows **View / Facilities / Media & technology** because the Villa's database row only has 5 amenities saved: `Sea view`, `AC`, `Safe`, `Wi-Fi`, `TV`. There is no Free toiletries, Shower, Towels, Balcony, Terrace, Electric kettle, etc. saved for this room — so those sections correctly hide themselves.
+### What I'll do
 
-This is a **data entry gap**, not a code bug. To match the Booking.com screenshot the property owner needs to open the Villa in admin and tick the rest. I can also tighten the code so this is easier going forward.
+Run a single SQL migration that overwrites the Villa's `amenities` array with the full curated baseline. After it runs, the customer modal will immediately render every grouped section (Private bathroom, Bedroom, View, Outdoors, Facilities, Food & drink, Media & technology, Family, Wellness, Services, Accessibility & policy) — exactly like Booking.com picture 1.
 
-### What I'll change
+### Amenities being ticked (full list)
 
-**1. Unify amenity vocabulary (prevents drift)**
-- Remove the duplicate `"AC"` from the modal's Facilities group. Keep only `"Air conditioning"` as the canonical label (matches the editor).
-- Add a one-time data migration alias so any existing rooms that saved `"AC"` are displayed as `"Air conditioning"` in the modal.
+- **Private bathroom**: Free toiletries, Shower, Bathtub, Bathrobe, Slippers, Hairdryer, Bidet, Toilet, Toilet paper, Towels, Hot shower
+- **Bedroom**: Linens, Wardrobe or closet, Alarm clock
+- **View**: Sea view, Garden view, Pool view
+- **Outdoors**: Balcony, Terrace, Patio, Outdoor furniture, Beach access, Beachfront
+- **Facilities**: Electric kettle, Socket near the bed, Dining area, Desk, Clothes rack, Sitting area, Drying rack for clothing, Minibar, Tile/Marble floor, Soundproofing, Air conditioning, Fan, Iron, Ironing facilities, Safety deposit box, Private entrance
+- **Food & drink**: Mini-fridge, Refrigerator, Coffee machine, Tea/Coffee maker, Dining table
+- **Media & technology**: Wi-Fi, Free Wi-Fi, TV, Flat-screen TV, Cable channels, Telephone
+- **Family**: Crib available, Family-friendly
+- **Wellness**: Private pool
+- **Services**: Daily housekeeping, Room service, 24h reception, Wake-up service, Laundry service
+- **Accessibility & policy**: Non-smoking, Free parking, Private parking, Pet-friendly
 
-**2. Improve the empty-state experience**
-- When a group has zero saved items, the modal currently hides it entirely. That's correct — but I'll add a subtle helper line under the Amenities header for owners viewing their own listing: *"Tip: add more amenities in Admin → Rooms → Edit"*. Public visitors won't see this.
+### Why migration instead of UI clicks
 
-**3. Sync the editor's default starter set**
-- When an owner creates a brand-new room, pre-tick a sensible Booking.com-style baseline (Free toiletries, Towels, Toilet, Shower, Wi-Fi, Air conditioning, Wardrobe or closet, Desk, Non-smoking) so new rooms aren't blank by default. Owners can untick anything they don't have.
-
-**4. No changes to**
-- The grouped layout (already matches picture 1)
-- Database schema
-- Booking flow, policies, photos, pricing
+Clicking ~80 toggle buttons one-by-one in the browser would take 80 separate automation calls (slow, error-prone, expensive). A single SQL `UPDATE` produces the exact same result — same column, same data shape — and the editor will show every box pre-ticked next time you open it.
 
 ### Files to touch
-- `src/components/lodging/LodgingRoomDetailsModal.tsx` — remove `"AC"` duplicate, add `"AC"` → `"Air conditioning"` alias, add owner-only tip line.
-- `src/components/admin/store/lodging/LodgingRoomsSection.tsx` — pre-tick baseline amenities on new room creation.
+- New migration: `supabase/migrations/<timestamp>_seed_villa_amenities.sql` — single UPDATE on `lodge_rooms` for room id `69dfd9e2-a02e-48c6-82df-2d46e346b5a0`.
 
-### What you need to do (no code involved)
-Open **Admin → Property → Rooms → Villa → Edit**, scroll to the Amenities section, and tick the items you want shown (Free toiletries, Shower, Towels, Balcony, Terrace, Electric kettle, Socket near the bed, Dining area, Desk, Clothes rack, Drying rack for clothing, Minibar, Wardrobe or closet, etc.). Save. The customer modal will immediately show all those grouped sections — exactly like Booking.com picture 1.
+### Verification
+- I'll re-query the row to confirm the 50+ amenities are stored.
+- You then refresh the Hotels page → open Villa → all grouped sections visible.
+
+### Not changing
+- Any other room, store, photos, pricing, code, or schema.
 
