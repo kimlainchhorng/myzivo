@@ -42,7 +42,7 @@ export default function RideTrackingPage() {
 
     const event = statusToEvent[tripData.status];
     if (event) {
-      notify(event as any);
+      notify(event as any, { jobId: tripId });
     }
   }, [tripData?.status, notify]);
 
