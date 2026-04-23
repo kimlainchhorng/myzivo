@@ -1,60 +1,36 @@
 
 
-## Inline Payment Card Upgrade — Lodging Booking
+## Edge Function Bundling Hardening
 
-Make the embedded Stripe card a self-contained, multi-state payment hub inside the booking sheet. No redirects, no confusion about what to do next.
+Make Supabase edge function deployments deterministic and avoid the `esm.sh` 10s fetch timeout that broke `create-lodging-deposit`.
 
-### What you'll get
+### What changes
 
-1. **One-click retry on expired sessions** — If Stripe's client secret expires (or the session errors out), the card shows a "Session expired — Refresh card form" button that re-creates the Checkout Session in place.
-2. **Polished loading + error states** — Skeleton shimmer while the secret loads, clear error banner with retry, and proper `aria-live`/focus management so screen readers announce state changes and the retry button gets focus on error.
-3. **Inline receipt after authorization** — When Stripe fires `onComplete` (and the realtime payment row flips to `authorized`/`captured`/`succeeded`), the card swaps to a green "Payment confirmed" panel showing amount, last 4 digits (from PI), auth code, and reservation ID — all without leaving the sheet.
-4. **Payment-method toggle inside the card** — Segmented control at the top of the payment card: **Card** · **Apple/Google Pay** · **Cash on arrival**. Card and wallets stay inline (Stripe Embedded Checkout already surfaces wallet buttons when the device supports them); Cash collapses the embed and shows a "Pay at check-in" confirmation panel instead.
-5. **Clear success/failure step with next actions** — Three explicit terminal states inside the same card:
-   - ✅ **Authorized** — "Your card is held. We'll capture on check-in." + View receipt button.
-   - ❌ **Failed** — Reason from Stripe + "Try a different card" (refreshes secret) and "Switch to cash" (toggles method).
-   - ⏳ **Processing** — Spinner with "Confirming with your bank…" and a 30s safety timeout that surfaces the retry path.
+1. **Pin a single Supabase SDK version via `npm:` in `_shared/deps.ts`** — the canonical import for every function. No `esm.sh`, no floating versions. Pin `@supabase/supabase-js@2.49.1` (already in use; keep the exact pin).
 
-### How it works
+2. **Audit and rewrite stray non-`npm:` Supabase imports** — sweep `supabase/functions/**/index.ts` for any `https://esm.sh/@supabase/...` or bare `npm:@supabase/supabase-js@2` (unpinned) imports and route them through `_shared/deps.ts` so there's one source of truth. Known offender: `check-device-integrity/index.ts` uses `npm:@supabase/supabase-js@2` (unpinned). Will replace with `import { createClient } from "../_shared/deps.ts"`.
 
-```text
-LodgingEmbeddedCheckout (refactored)
-├── Header: method toggle (Card | Wallet | Cash)
-├── Body (state machine)
-│   ├── loading      → skeleton + aria-live="polite"
-│   ├── ready        → <EmbeddedCheckout/> (Stripe handles card+wallets)
-│   ├── expired      → "Refresh card form" CTA → re-invoke create-lodging-deposit
-│   ├── error        → banner + retry (auto-focus button)
-│   ├── processing   → spinner + 30s watchdog
-│   ├── succeeded    → inline receipt panel (amount, •••• 4242, ref ID)
-│   └── failed       → reason + "Try another card" / "Switch to cash"
-└── Realtime sub on lodging_payments row → drives succeeded/failed
-```
+3. **Add `_ping` smoke-test edge function** — a tiny function that imports only `createClient` from `_shared/deps.ts` and returns `{ ok: true, sdk: "2.49.1" }`. Deploying this confirms the shared deps module bundles cleanly before we touch larger functions. Acts as a permanent canary.
 
-### Files to change
+4. **Document the bundling rules in `_shared/deps.ts` header** — short comment block stating: always import Supabase from this file, always use `npm:` specifiers, never `esm.sh` for npm packages, pin exact versions. Future edits will see it immediately.
 
-- `src/components/lodging/LodgingEmbeddedCheckout.tsx` — refactor into state machine, add method toggle, expired/succeeded/failed panels, a11y (aria-live regions, focus management, ESC handling stays with parent sheet).
-- `src/components/lodging/LodgingBookingDrawer.tsx` — lift method toggle state up so Cash collapses the embed; pass current `payment_status` from realtime down so the card can render the receipt panel; remove the now-redundant external "Card on file" badge actions.
-- `src/components/lodging/LodgingPaymentBadge.tsx` — keep as a compact summary above the card; defer all action buttons to the new inline card to avoid duplicate CTAs.
-- `supabase/functions/create-lodging-deposit/index.ts` — add a `force_new: true` flag so the retry path mints a fresh session instead of reusing the expired one (idempotency key gets a new suffix).
+5. **Bundling timeout** — Supabase's 10s deploy-time fetch timeout is platform-fixed and not configurable from the project. The real fix is removing slow CDN fetches (steps 1–2), which we're doing. No code change needed; will note this in the deps header.
 
-### Detection of expired secret
+6. **Local build verification** — add `supabase/functions/_shared/README.md` with a one-command Deno check users can run locally (`deno check supabase/functions/**/*.ts`) to catch import resolution issues before deploy. No CI wiring (project has none); just a documented manual gate.
 
-Stripe Embedded Checkout doesn't emit an explicit "expired" event, so we'll:
-- Track session creation time; after 23h (Stripe sessions live 24h) preemptively show the refresh state.
-- Listen for the `EmbeddedCheckoutProvider` error callback and any `expired_session` style messages → flip to `expired` state.
-- Always offer a manual "Refresh card form" link in the card footer as an escape hatch.
+### Files
 
-### Accessibility
+- `supabase/functions/_shared/deps.ts` — keep `npm:@supabase/supabase-js@2.49.1`, add header comment with rules.
+- `supabase/functions/check-device-integrity/index.ts` — switch import to `_shared/deps.ts`.
+- `supabase/functions/_ping/index.ts` — **new**, minimal canary function.
+- `supabase/functions/_shared/README.md` — **new**, bundling + local check guidance.
 
-- Card root: `role="region"` + `aria-label="Payment"`.
-- State container: `aria-live="polite"` for loading/processing, `aria-live="assertive"` for errors and success.
-- Method toggle: real `<button role="tab">` group with arrow-key navigation.
-- On error/expired, focus moves to the primary retry button.
-- All icons get `aria-hidden`; status text is the source of truth for screen readers.
+### Out of scope
 
-### Out of scope (ask if you want them)
+- Auditing every single function's third-party imports (Stripe, etc.) — only Supabase SDK imports are in scope for this fix. Stripe already lives behind `_shared/stripe.ts`.
+- Changing Supabase's platform bundler timeout — not user-configurable.
 
-- Saving the card for future stays (requires SetupIntent + customer flow).
-- Splitting deposit vs. full charge selection inside the card (currently driven by parent).
+### Verification after deploy
+
+Deploy `_ping` and `check-device-integrity` first (small graphs). If both succeed, redeploy `create-lodging-deposit` to confirm the original failure is gone.
 
