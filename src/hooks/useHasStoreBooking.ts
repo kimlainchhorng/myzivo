@@ -36,6 +36,20 @@ const ok = (r: PromiseSettledResult<any>) =>
 const cacheKey = (userId: string, storeId: string) =>
   `zivo:store-unlock:${userId}:${storeId}`;
 
+/**
+ * Wipe the cached unlock state for a (user, store) pair so the next query
+ * goes back to the network. Useful when the user just completed a booking
+ * and wants to force-refresh without waiting for the natural staleTime.
+ */
+export function clearStoreBookingCache(userId: string | undefined, storeId: string | undefined) {
+  if (!userId || !storeId || typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(cacheKey(userId, storeId));
+  } catch {
+    /* ignore */
+  }
+}
+
 function readCache(userId: string | undefined, storeId: string | undefined): HasStoreBookingResult | undefined {
   if (!userId || !storeId || typeof window === "undefined") return undefined;
   try {
