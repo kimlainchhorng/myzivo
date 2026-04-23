@@ -1,35 +1,42 @@
 
 
-## Finish populating Villa: pre-tick amenities in editor + add bed config
+## Replace Villa amenities with the exact Booking.com room spec you pasted
 
-The DB update ran, but two things are still missing from your screenshot:
-1. **Bed configuration is empty** ("No beds configured") — needed to power the "Sleeps X" badge.
-2. You want to **see the amenities pre-ticked in the editor UI** (not just in the customer modal).
+Right now the Villa has the broad 60+ "kitchen sink" amenity set. You want it to match this specific room spec exactly:
 
-Both are quick database updates on the same Villa row.
+> 323 ft² · Balcony · Garden view · Air conditioning · Private bathroom · Terrace · Minibar
+> 1 queen bed
+> In your private bathroom: Free toiletries, Shower, Bathrobe, Bidet, Toilet, Towels, Slippers, Hairdryer, Towels/Sheets (extra fee), Toilet paper
+> View: Garden view
+> Facilities: Balcony, Terrace, Air conditioning, Socket near the bed, Desk, Sitting area, Minibar, Carpeted, Electric kettle, Wardrobe or closet, Dining area, Clothes rack, Drying rack for clothing
+> Smoking: No smoking
 
-### What I'll do
+### What I'll do (single migration)
 
-**1. Add bed configuration to Villa**
-Insert a sensible default into the room's `beds` field so the "Sleeps X" badge works:
-- 1× King bed
-- 1× Sofa bed
-(Total sleeps ~3, matches a typical villa. Adjustable later in the editor.)
+Update the Villa room (`69dfd9e2-…`) and store amenity catalog (`7322b460-…`) with exactly these values:
 
-**2. Re-confirm amenities are saved**
-Re-query `lodge_rooms` for the Villa to verify all 60+ amenities from the previous migration are present. If the editor still shows them un-ticked, it means the editor reads from a different field (e.g., `lodge_amenities` table per-store, not `lodge_rooms.amenities` per-room) — in which case I'll also upsert into `lodge_amenities` so the ticks appear in the UI you're looking at.
+**1. Room fields**
+- `size_sqm` = **30** (323 ft² ≈ 30 m²)
+- `bed_config` = `[{ type: "Queen", qty: 1 }]` (replaces King + Sofa bed)
+- `max_guests` = 2 (queen sleeps 2)
+- `amenities` = the exact 24-item list from your spec
 
-**3. Verify in the editor**
-After the update, refresh `/admin/stores/7322b460-2c23-4d3d-bdc5-55a31cc65fab` → Villa → Edit. You should see:
-- Bed configuration filled in (King + Sofa bed chips)
-- All amenity buttons in the grouped list highlighted/ticked
+**2. Store amenity catalog (`lodge_amenities.categories`)** — overwritten to only these groups so the editor + customer modal show only what you pasted:
+- **Private bathroom**: Free toiletries, Shower, Bathrobe, Bidet, Toilet, Towels, Slippers, Hairdryer, Toilet paper
+- **View**: Garden view
+- **Facilities**: Balcony, Terrace, Air conditioning, Socket near the bed, Desk, Sitting area, Minibar, Carpeted, Electric kettle, Wardrobe or closet, Dining area, Clothes rack, Drying rack for clothing
+- **Accessibility & policy**: No smoking
+
+**3. Extra-charge keys** — add `"Towels/Sheets"` to `extra_charge_keys` so it renders with the "(extra fee)" badge like Booking.com.
 
 ### Files to touch
-- New migration: `supabase/migrations/<timestamp>_villa_beds_and_amenities_sync.sql`
-  - `UPDATE lodge_rooms SET beds = '[{"type":"king","count":1},{"type":"sofa","count":1}]'::jsonb WHERE id = '69dfd9e2-...'`
-  - If needed: `INSERT INTO lodge_amenities (store_id, amenities, ...) ON CONFLICT (store_id) DO UPDATE ...` to mirror the same amenity set at the store level.
+- New migration: `supabase/migrations/<ts>_villa_exact_booking_spec.sql` — single transaction with the UPDATE on `lodge_rooms` and UPSERT on `lodge_amenities`.
 
 ### Not changing
-- Pricing (143 base / 172 weekend stays as-is)
-- Photos, taxes & fees, other rooms, code
+- Pricing, photos, room name, taxes & fees
+- Other rooms in this store
+- Any code
+
+### Verification
+After it runs I'll re-query the row to confirm the 24 amenities, the queen bed, 30 m², and the extra-charge key are stored correctly. You then refresh the property page → open Villa → it will match the Booking.com spec word-for-word.
 
