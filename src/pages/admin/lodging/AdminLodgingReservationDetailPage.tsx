@@ -32,6 +32,7 @@ import HostRefundDisputeCard from "@/components/lodging/host/HostRefundDisputeCa
 import { useReservationChangeRequests } from "@/hooks/lodging/useReservationChangeRequests";
 import { useLodgingRefundDisputes } from "@/hooks/lodging/useLodgingRefundDisputes";
 import { reservationDateLabel, reservationTimeLabel, reservationTimeRangeLabel } from "@/lib/lodging/reservationTime";
+import { useLodgeReservationCharges } from "@/hooks/lodging/useLodgeReservationCharges";
 
 const STATUS_LABEL: Record<string, string> = {
   hold: "Hold", confirmed: "Confirmed", checked_in: "Checked-In",
@@ -62,6 +63,7 @@ export default function AdminLodgingReservationDetailPage() {
   useReservationLive(reservationId);
   const { data: changeRequests = [], isLoading: changeRequestsLoading } = useReservationChangeRequests(reservationId);
   const { data: refundDisputes = [] } = useLodgingRefundDisputes(reservationId);
+  const { data: charges = [], isLoading: chargesLoading } = useLodgeReservationCharges(reservationId);
 
   const NOTE_TEMPLATES: Record<string, string[]> = {
     confirmed: ["Confirmed by admin", "Payment received", "Phone-verified"],
@@ -135,6 +137,7 @@ export default function AdminLodgingReservationDetailPage() {
   );
 
   const balanceDue = (reservation?.total_cents || 0) - (reservation?.paid_cents || 0);
+  const postedChargesTotal = charges.reduce((sum, charge) => sum + (charge.amount_cents || 0) * (charge.quantity || 1), 0);
   const isClosed = ["cancelled", "checked_out", "no_show"].includes(String(reservation?.status || ""));
   const pendingRequests = changeRequests.filter((r) => r.status === "pending");
   const addonRequests = changeRequests.filter((r) => r.type === "addon");
@@ -400,6 +403,21 @@ export default function AdminLodgingReservationDetailPage() {
                   }
                 }}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><CreditCard className="h-4 w-4" /> Folio & Charges</CardTitle></CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <Row label="Room rate" value={fmt((reservation.rate_cents || 0) * reservation.nights)} muted />
+            <Row label="Extras / add-ons" value={fmt(reservation.extras_cents || addons.reduce((sum, addon) => sum + (addon.subtotal_cents || 0), 0))} muted />
+            <Row label="Tax" value={fmt(reservation.tax_cents || 0)} muted />
+            <Row label="Paid amount" value={fmt(reservation.paid_cents || 0)} muted />
+            <Row label="Balance due" value={fmt(balanceDue)} bold className={balanceDue > 0 ? "text-destructive" : "text-primary"} />
+            <div className="mt-3 rounded-lg border border-border bg-muted/20 p-3">
+              <div className="mb-2 flex items-center justify-between gap-2"><p className="text-xs font-semibold text-foreground">Additional charges</p><Badge variant="outline">{fmt(postedChargesTotal)}</Badge></div>
+              {chargesLoading ? <p className="text-xs text-muted-foreground">Loading charges…</p> : charges.length === 0 ? <p className="text-xs text-muted-foreground">No additional folio charges have been added yet.</p> : charges.map((charge) => <div key={charge.id} className="flex justify-between border-t border-border py-2 text-xs"><span className="truncate pr-2">{charge.label || charge.description || charge.charge_type || "Charge"}</span><span className="font-semibold">{fmt((charge.amount_cents || 0) * (charge.quantity || 1))}</span></div>)}
             </div>
           </CardContent>
         </Card>

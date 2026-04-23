@@ -84,6 +84,8 @@ import LodgingTransportSection from "@/components/admin/store/lodging/LodgingTra
 import LodgingWellnessSection from "@/components/admin/store/lodging/LodgingWellnessSection";
 import LodgingPoliciesSection from "@/components/admin/store/lodging/LodgingPoliciesSection";
 import LodgingReviewsSection from "@/components/admin/store/lodging/LodgingReviewsSection";
+import LodgingRatePlansSection from "@/components/admin/store/lodging/LodgingRatePlansSection";
+import LodgingGuestRequestsSection from "@/components/admin/store/lodging/LodgingGuestRequestsSection";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
@@ -1957,6 +1959,7 @@ export default function AdminStoreEditPage() {
   const lodgingTitles: Record<string, string> = {
     "lodge-overview": "Hotel Overview",
     "lodge-rooms": "Rooms & Rates",
+    "lodge-rate-plans": "Rate Plans & Availability",
     "lodge-reservations": "Reservations",
     "lodge-calendar": "Calendar & Availability",
     "lodge-guests": "Guests",
@@ -1964,6 +1967,7 @@ export default function AdminStoreEditPage() {
     "lodge-housekeeping": "Housekeeping",
     "lodge-maintenance": "Maintenance & Work Orders",
     "lodge-addons": "Add-ons & Packages",
+    "lodge-guest-requests": "Guest Requests",
     "lodge-dining": "Dining & Meal Plans",
     "lodge-experiences": "Experiences & Tours",
     "lodge-transport": "Transport & Transfers",
@@ -3668,6 +3672,7 @@ export default function AdminStoreEditPage() {
             <>
               <TabsContent value="lodge-overview"><LodgingOverviewSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-rooms"><LodgingRoomsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-rate-plans"><LodgingRatePlansSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-reservations"><LodgingReservationsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-calendar"><LodgingCalendarSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-guests"><LodgingGuestsSection storeId={storeId!} /></TabsContent>
@@ -3675,6 +3680,7 @@ export default function AdminStoreEditPage() {
               <TabsContent value="lodge-housekeeping"><LodgingHousekeepingSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-maintenance"><LodgingMaintenanceSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-addons"><LodgingAddOnsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-guest-requests"><LodgingGuestRequestsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-dining"><LodgingDiningSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-experiences"><LodgingExperiencesSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-transport"><LodgingTransportSection storeId={storeId!} /></TabsContent>
