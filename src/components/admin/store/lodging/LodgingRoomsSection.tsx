@@ -28,6 +28,8 @@ import { BedConfigBuilder, bedConfigSummary, bedConfigSleeps } from "@/component
 
 const VIEW_OPTIONS = ["", "Sea view", "Garden view", "Pool view", "Mountain view", "City view", "Courtyard view", "River view"];
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const ADDON_STATUS_OPTIONS = ["confirmed", "checked_in", "checked_out"];
+const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 const ROOM_TYPES = ["Standard", "Deluxe", "Suite", "Villa", "Family", "Bungalow", "Cottage", "Dormitory", "Apartment", "Studio", "Penthouse"];
 // Booking.com-style grouped amenities — shown as collapsible sections in the editor
@@ -326,10 +328,11 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
 
   const updateAddon = (idx: number, patch: Partial<LodgeAddon>) => {
     const next = [...(editing?.addons || [])];
-    next[idx] = { ...next[idx], ...patch };
+    const merged = { ...next[idx], ...patch };
+    next[idx] = patch.name && !patch.id ? { ...merged, id: slugify(patch.name) } : merged;
     setEditing({ ...editing, addons: next });
   };
-  const addAddon = () => setEditing({ ...editing, addons: [...(editing?.addons || []), { name: "", price_cents: 500, per: "stay" }] });
+  const addAddon = () => setEditing({ ...editing, addons: [...(editing?.addons || []), { id: "", name: "", price_cents: 500, per: "stay", category: "Services", active: true, max_quantity: 1, requires_status: ["confirmed", "checked_in"] }] });
   const removeAddon = (idx: number) => setEditing({ ...editing, addons: (editing?.addons || []).filter((_, i) => i !== idx) });
 
   return (
