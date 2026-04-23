@@ -76,6 +76,14 @@ import LodgingHousekeepingSection from "@/components/admin/store/lodging/Lodging
 import LodgingMaintenanceSection from "@/components/admin/store/lodging/LodgingMaintenanceSection";
 import LodgingAmenitiesSection from "@/components/admin/store/lodging/LodgingAmenitiesSection";
 import LodgingReportsSection from "@/components/admin/store/lodging/LodgingReportsSection";
+import LodgingOverviewSection from "@/components/admin/store/lodging/LodgingOverviewSection";
+import LodgingAddOnsSection from "@/components/admin/store/lodging/LodgingAddOnsSection";
+import LodgingDiningSection from "@/components/admin/store/lodging/LodgingDiningSection";
+import LodgingExperiencesSection from "@/components/admin/store/lodging/LodgingExperiencesSection";
+import LodgingTransportSection from "@/components/admin/store/lodging/LodgingTransportSection";
+import LodgingWellnessSection from "@/components/admin/store/lodging/LodgingWellnessSection";
+import LodgingPoliciesSection from "@/components/admin/store/lodging/LodgingPoliciesSection";
+import LodgingReviewsSection from "@/components/admin/store/lodging/LodgingReviewsSection";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
