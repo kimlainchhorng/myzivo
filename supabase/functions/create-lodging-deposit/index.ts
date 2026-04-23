@@ -195,8 +195,9 @@ Deno.serve(async (req) => {
     }
 
     // ---- Dedup-key check (cross-tab + redelivery) ----
-    // Include uiMode so embedded and hosted attempts don't collide.
-    const dedupKey = `${body.reservation_id}|${r.stripe_payment_intent_id || "none"}|${clientAttemptId}|${depositCents}|${mode}|${uiMode}`;
+    // Include uiMode + (when forced) a fresh suffix so a retried embedded session doesn't collide.
+    const forceSuffix = forceNew ? `|force_${Date.now()}` : "";
+    const dedupKey = `${body.reservation_id}|${r.stripe_payment_intent_id || "none"}|${clientAttemptId}|${depositCents}|${mode}|${uiMode}${forceSuffix}`;
     const { data: dedupRow } = await admin
       .from("lodging_deposit_retry_attempts")
       .insert({
@@ -249,8 +250,8 @@ Deno.serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Reuse open Checkout Session.
-    const existingSessionId = r.stripe_session_id as string | null;
+    // Reuse open Checkout Session — unless caller explicitly asked for a fresh one.
+    const existingSessionId = forceNew ? null : (r.stripe_session_id as string | null);
     if (existingSessionId) {
       try {
         const existing = await stripe.checkout.sessions.retrieve(existingSessionId);
@@ -314,7 +315,7 @@ Deno.serve(async (req) => {
 
     // Stable Stripe Idempotency-Key — same inputs (incl. client_attempt_id + uiMode) → same Session.
     const attemptHash = await sha256Hex(
-      `${body.reservation_id}|${depositCents}|${mode}|${currentStatus ?? "null"}|${clientAttemptId}|${uiMode}`,
+      `${body.reservation_id}|${depositCents}|${mode}|${currentStatus ?? "null"}|${clientAttemptId}|${uiMode}${forceSuffix}`,
     );
     const idempotencyKey = `lodge_dep_${body.reservation_id}_${attemptHash.slice(0, 16)}`;
 
