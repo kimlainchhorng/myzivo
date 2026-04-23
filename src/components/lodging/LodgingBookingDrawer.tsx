@@ -20,6 +20,7 @@ import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { LodgingStaySelector } from "@/components/lodging/LodgingStaySelector";
 import { ReservationStatusTimeline } from "@/components/lodging/ReservationStatusTimeline";
 import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
+import { LodgingEmbeddedCheckout } from "@/components/lodging/LodgingEmbeddedCheckout";
 import { AddonIcon } from "@/components/lodging/addonIcons";
 import { IcsPreviewPanel } from "@/components/lodging/IcsPreviewPanel";
 import { PolicySourceSheet } from "@/components/lodging/PolicySourceSheet";
@@ -250,6 +251,9 @@ export function LodgingBookingDrawer({
   };
 
   const triggerStripeDeposit = async (resId: string) => {
+    // Hosted Stripe Checkout (new tab) — used as a fallback for the "Retry" button on the
+    // payment badge. The primary card-on-arrival flow uses the inline Embedded Checkout
+    // rendered in the success step (LodgingEmbeddedCheckout) so the user stays in the booking sheet.
     try {
       const depositCents = securityDeposit > 0 ? securityDeposit : breakdown.total;
       const { data: sessionData, error: fnErr } = await supabase.functions.invoke("create-lodging-deposit", {
@@ -258,6 +262,7 @@ export function LodgingBookingDrawer({
           store_id: storeId,
           deposit_cents: depositCents,
           mode: securityDeposit > 0 ? "deposit" : "full",
+          ui_mode: "hosted",
         },
       });
       if (fnErr) throw fnErr;
@@ -330,10 +335,10 @@ export function LodgingBookingDrawer({
       setStep("success");
       onBooked?.();
 
-      // Trigger Stripe deposit/hold for "card on arrival"
-      if (payMethod === "card_on_arrival" && (inserted as any)?.id) {
-        await triggerStripeDeposit((inserted as any).id);
-      }
+      // For "card_on_arrival" we no longer auto-open Stripe in a new tab —
+      // the inline LodgingEmbeddedCheckout shown on the success step now
+      // handles authorising the card without leaving the booking sheet.
+      // (Use the "Retry" button on the payment badge to fall back to hosted Stripe.)
     } catch (e: any) {
       toast.error(e.message || "Failed to submit booking");
     } finally {
@@ -842,6 +847,24 @@ export function LodgingBookingDrawer({
                 <span className="font-extrabold text-base text-emerald-600 dark:text-emerald-400">{fmtMoney(breakdown.total)}</span>
               </div>
             </div>
+
+            {/* Inline Stripe Embedded Checkout — keeps the user inside the ZIVO booking sheet
+                when they chose "Card on file (charged on arrival)". Hidden once the realtime
+                payment status moves out of the initial "authorized" placeholder. */}
+            {payMethod === "card_on_arrival" && reservationId && (
+              !liveReservation?.payment_status ||
+              liveReservation.payment_status === "authorized" ||
+              liveReservation.payment_status === "pending" ||
+              liveReservation.payment_status === "failed"
+            ) && (
+              <LodgingEmbeddedCheckout
+                reservationId={reservationId}
+                storeId={storeId}
+                amountCents={securityDeposit > 0 ? securityDeposit : breakdown.total}
+                mode={securityDeposit > 0 ? "deposit" : "full"}
+                onComplete={() => toast.success("Card authorised — your booking is locked in.")}
+              />
+            )}
 
             {/* Payment badge (live via realtime) — supports retry on failed */}
             {liveReservation?.payment_status && liveReservation.payment_status !== "unpaid" && (

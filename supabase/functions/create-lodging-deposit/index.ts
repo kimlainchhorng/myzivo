@@ -20,6 +20,8 @@ interface Body {
   deposit_cents: number;
   mode?: "deposit" | "full";
   client_attempt_id?: string;
+  /** When 'embedded', returns client_secret for inline Stripe Embedded Checkout instead of a redirect URL. */
+  ui_mode?: "hosted" | "embedded";
 }
 
 const TERMINAL_PAYMENT_STATES = new Set([
@@ -73,6 +75,7 @@ Deno.serve(async (req) => {
     const depositCents = Math.max(50, Math.round(Number(body.deposit_cents) || 0));
     const mode: "deposit" | "full" = body.mode === "full" ? "full" : "deposit";
     const clientAttemptId = (body.client_attempt_id || "default").slice(0, 64);
+    const uiMode: "hosted" | "embedded" = body.ui_mode === "embedded" ? "embedded" : "hosted";
 
     const admin = createClient(supabaseUrl, serviceKey);
     const myLockToken = randomToken();
@@ -189,7 +192,8 @@ Deno.serve(async (req) => {
     }
 
     // ---- Dedup-key check (cross-tab + redelivery) ----
-    const dedupKey = `${body.reservation_id}|${r.stripe_payment_intent_id || "none"}|${clientAttemptId}|${depositCents}|${mode}`;
+    // Include uiMode so embedded and hosted attempts don't collide.
+    const dedupKey = `${body.reservation_id}|${r.stripe_payment_intent_id || "none"}|${clientAttemptId}|${depositCents}|${mode}|${uiMode}`;
     const { data: dedupRow } = await admin
       .from("lodging_deposit_retry_attempts")
       .insert({
@@ -203,17 +207,35 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!dedupRow) {
-      // Conflict — fetch the prior attempt's cached URL
+      // Conflict — fetch the prior attempt's cached URL / client_secret
       const { data: prior } = await admin
         .from("lodging_deposit_retry_attempts")
         .select("checkout_url, stripe_session_id")
         .eq("dedup_key", dedupKey)
         .maybeSingle();
-      if ((prior as any)?.checkout_url) {
+      if ((prior as any)?.stripe_session_id && uiMode === "embedded") {
+        // Re-retrieve session to get fresh client_secret (it expires).
+        try {
+          const stripeTmp = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+          const existing = await stripeTmp.checkout.sessions.retrieve((prior as any).stripe_session_id);
+          if (existing.status === "open" && (existing as any).client_secret) {
+            return new Response(
+              JSON.stringify({
+                client_secret: (existing as any).client_secret,
+                session_id: existing.id,
+                ui_mode: "embedded",
+                reused: true,
+              }),
+              { headers: { ...cors, "Content-Type": "application/json" } },
+            );
+          }
+        } catch (_) { /* fall through to mint a new one */ }
+      } else if ((prior as any)?.checkout_url) {
         return new Response(
           JSON.stringify({
             url: (prior as any).checkout_url,
             session_id: (prior as any).stripe_session_id,
+            ui_mode: "hosted",
             reused: true,
           }),
           { headers: { ...cors, "Content-Type": "application/json" } },
@@ -229,22 +251,47 @@ Deno.serve(async (req) => {
     if (existingSessionId) {
       try {
         const existing = await stripe.checkout.sessions.retrieve(existingSessionId);
-        if (existing.status === "open" && existing.url) {
-          if (dedupRowId) {
-            await admin
-              .from("lodging_deposit_retry_attempts")
-              .update({
-                completed_at: new Date().toISOString(),
-                result: "reused_session",
-                checkout_url: existing.url,
-                stripe_session_id: existing.id,
-              })
-              .eq("id", dedupRowId);
+        if (existing.status === "open") {
+          // Embedded sessions don't have .url — they expose .client_secret instead.
+          const existingUiMode = (existing as any).ui_mode as "hosted" | "embedded" | undefined;
+          if (uiMode === "embedded" && existingUiMode === "embedded" && (existing as any).client_secret) {
+            if (dedupRowId) {
+              await admin
+                .from("lodging_deposit_retry_attempts")
+                .update({
+                  completed_at: new Date().toISOString(),
+                  result: "reused_session",
+                  stripe_session_id: existing.id,
+                })
+                .eq("id", dedupRowId);
+            }
+            return new Response(
+              JSON.stringify({
+                client_secret: (existing as any).client_secret,
+                session_id: existing.id,
+                ui_mode: "embedded",
+                reused: true,
+              }),
+              { headers: { ...cors, "Content-Type": "application/json" } },
+            );
           }
-          return new Response(
-            JSON.stringify({ url: existing.url, session_id: existing.id, reused: true }),
-            { headers: { ...cors, "Content-Type": "application/json" } },
-          );
+          if (uiMode === "hosted" && existing.url) {
+            if (dedupRowId) {
+              await admin
+                .from("lodging_deposit_retry_attempts")
+                .update({
+                  completed_at: new Date().toISOString(),
+                  result: "reused_session",
+                  checkout_url: existing.url,
+                  stripe_session_id: existing.id,
+                })
+                .eq("id", dedupRowId);
+            }
+            return new Response(
+              JSON.stringify({ url: existing.url, session_id: existing.id, ui_mode: "hosted", reused: true }),
+              { headers: { ...cors, "Content-Type": "application/json" } },
+            );
+          }
         }
       } catch (_) { /* fall through */ }
     }
@@ -262,51 +309,57 @@ Deno.serve(async (req) => {
         ? `Refundable hold – Reservation ${r.number}`
         : `Reservation ${r.number}`;
 
-    // Stable Stripe Idempotency-Key — same inputs (incl. client_attempt_id) → same Session.
+    // Stable Stripe Idempotency-Key — same inputs (incl. client_attempt_id + uiMode) → same Session.
     const attemptHash = await sha256Hex(
-      `${body.reservation_id}|${depositCents}|${mode}|${currentStatus ?? "null"}|${clientAttemptId}`,
+      `${body.reservation_id}|${depositCents}|${mode}|${currentStatus ?? "null"}|${clientAttemptId}|${uiMode}`,
     );
     const idempotencyKey = `lodge_dep_${body.reservation_id}_${attemptHash.slice(0, 16)}`;
 
-    const session = await stripe.checkout.sessions.create(
-      {
-        customer: customerId,
-        customer_email: customerId ? undefined : email,
-        line_items: [
-          {
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: productName,
-                description:
-                  mode === "deposit"
-                    ? "Authorised hold on your card. Captured only if damage or no-show occurs."
-                    : "Full payment for your stay.",
-              },
-              unit_amount: depositCents,
+    const sessionParams: any = {
+      customer: customerId,
+      customer_email: customerId ? undefined : email,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: productName,
+              description:
+                mode === "deposit"
+                  ? "Authorised hold on your card. Captured only if damage or no-show occurs."
+                  : "Full payment for your stay.",
             },
-            quantity: 1,
+            unit_amount: depositCents,
           },
-        ],
-        mode: "payment",
-        payment_intent_data: {
-          capture_method: mode === "deposit" ? "manual" : "automatic",
-          metadata: {
-            reservation_id: body.reservation_id,
-            store_id: body.store_id,
-            mode,
-          },
+          quantity: 1,
         },
-        success_url: `${origin}/grocery/shop?lodging_paid=1&ref=${r.number}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/grocery/shop?lodging_paid=0&ref=${r.number}`,
+      ],
+      mode: "payment",
+      payment_intent_data: {
+        capture_method: mode === "deposit" ? "manual" : "automatic",
         metadata: {
           reservation_id: body.reservation_id,
           store_id: body.store_id,
           mode,
         },
       },
-      { idempotencyKey },
-    );
+      metadata: {
+        reservation_id: body.reservation_id,
+        store_id: body.store_id,
+        mode,
+      },
+    };
+
+    if (uiMode === "embedded") {
+      sessionParams.ui_mode = "embedded";
+      // Stripe redirects to this URL after the embedded form succeeds (we keep the user inside the booking sheet otherwise).
+      sessionParams.return_url = `${origin}/grocery/shop?lodging_paid=1&ref=${r.number}&session_id={CHECKOUT_SESSION_ID}`;
+    } else {
+      sessionParams.success_url = `${origin}/grocery/shop?lodging_paid=1&ref=${r.number}&session_id={CHECKOUT_SESSION_ID}`;
+      sessionParams.cancel_url = `${origin}/grocery/shop?lodging_paid=0&ref=${r.number}`;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams, { idempotencyKey });
 
     await admin
       .from("lodge_reservations")
@@ -328,13 +381,24 @@ Deno.serve(async (req) => {
         .update({
           completed_at: new Date().toISOString(),
           result: "created_session",
-          checkout_url: session.url,
+          checkout_url: session.url ?? null,
           stripe_session_id: session.id,
         })
         .eq("id", dedupRowId);
     }
 
-    return new Response(JSON.stringify({ url: session.url, session_id: session.id }), {
+    if (uiMode === "embedded") {
+      return new Response(
+        JSON.stringify({
+          client_secret: (session as any).client_secret,
+          session_id: session.id,
+          ui_mode: "embedded",
+        }),
+        { headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
+
+    return new Response(JSON.stringify({ url: session.url, session_id: session.id, ui_mode: "hosted" }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
