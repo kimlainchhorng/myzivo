@@ -101,17 +101,28 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug }: S
       });
       mapRef.current = map;
 
+      // Lucide-style MapPin teardrop SVG, emerald-filled with white stroke
+      const pinSvg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="48" viewBox="0 0 40 48">
+          <defs>
+            <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.35"/>
+            </filter>
+          </defs>
+          <g filter="url(#shadow)">
+            <path d="M20 2 C11.16 2 4 9.16 4 18 c0 12 16 28 16 28 s16-16 16-28 C36 9.16 28.84 2 20 2 z"
+                  fill="#10b981" stroke="#ffffff" stroke-width="2.5"/>
+            <circle cx="20" cy="18" r="6" fill="#ffffff"/>
+          </g>
+        </svg>`;
       const marker = new google.maps.Marker({
         position: center,
         map,
         title: storeName,
         icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: "#10b981",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 3,
+          url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(pinSvg),
+          scaledSize: new google.maps.Size(40, 48),
+          anchor: new google.maps.Point(20, 46),
         },
       });
 
