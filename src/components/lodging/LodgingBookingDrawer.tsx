@@ -956,7 +956,10 @@ function PriceSummary({ breakdown, fmt }: { breakdown: Breakdown; fmt: (c: numbe
       )}
       {breakdown.addonsSnapshot.map((a, i) => (
         <div key={i} className="flex justify-between">
-          <span className="text-muted-foreground truncate pr-2">{a.icon ? `${a.icon} ` : ""}{a.name} ({a.per === "stay" ? "stay" : `${a.qty}× ${a.per === "person_night" ? "guest/night" : a.per}`})</span>
+          <span className="text-muted-foreground truncate pr-2 inline-flex items-center gap-1.5">
+            {a.icon && <AddonIcon slug={a.icon} className="h-3 w-3 shrink-0" />}
+            <span className="truncate">{a.name} ({a.per === "stay" ? "stay" : `${a.qty}× ${a.per === "person_night" ? "guest/night" : a.per}`})</span>
+          </span>
           <span className="tabular-nums shrink-0">{fmt(a.subtotal_cents)}</span>
         </div>
       ))}
