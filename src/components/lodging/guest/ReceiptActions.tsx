@@ -3,7 +3,7 @@
  */
 import { Button } from "@/components/ui/button";
 import { FileText, CalendarPlus, Loader2, Mail, Share2, History } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildBookingIcs, downloadIcsFile } from "@/lib/lodging/ics";
@@ -22,7 +22,8 @@ interface Props {
   totalText?: string | null;
   cancellationText?: string | null;
   latestReceiptId?: string | null;
-  onReceiptDownloaded?: () => void;
+  receiptHistoryLoading?: boolean;
+  onReceiptDownloaded?: () => Promise<unknown> | void;
 }
 
 export default function ReceiptActions(props: Props) {
@@ -30,6 +31,19 @@ export default function ReceiptActions(props: Props) {
   const [followUpVisible, setFollowUpVisible] = useState(false);
   const [lastReceiptBlob, setLastReceiptBlob] = useState<Blob | null>(null);
   const [actionState, setActionState] = useState<"share" | "email" | null>(null);
+  const [savingReceipt, setSavingReceipt] = useState(false);
+
+  useEffect(() => {
+    if (!followUpVisible || props.latestReceiptId || props.receiptHistoryLoading) return;
+    let cancelled = false;
+    setSavingReceipt(true);
+    Promise.resolve(props.onReceiptDownloaded?.()).finally(() => {
+      if (!cancelled) setSavingReceipt(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [followUpVisible, props.latestReceiptId, props.receiptHistoryLoading, props.onReceiptDownloaded]);
   const downloadIcs = () => {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Phnom_Penh";
     const ics = buildBookingIcs({
@@ -69,7 +83,9 @@ export default function ReceiptActions(props: Props) {
     URL.revokeObjectURL(url);
     setFollowUpVisible(true);
     toast.success("Receipt downloaded", { description: "Receipt saved to history." });
-    props.onReceiptDownloaded?.();
+    setSavingReceipt(true);
+    await props.onReceiptDownloaded?.();
+    setSavingReceipt(false);
   };
 
   const shareReceipt = async () => {
@@ -94,9 +110,11 @@ export default function ReceiptActions(props: Props) {
   };
 
   const emailReceipt = async () => {
-    if (!props.latestReceiptId) {
-      toast.error("Receipt history is still updating", { description: "Try Email again in a moment." });
-      props.onReceiptDownloaded?.();
+    if (!props.latestReceiptId || props.receiptHistoryLoading || savingReceipt) {
+      toast("Receipt history is updating");
+      setSavingReceipt(true);
+      await props.onReceiptDownloaded?.();
+      setSavingReceipt(false);
       return;
     }
     setActionState("email");
@@ -107,6 +125,7 @@ export default function ReceiptActions(props: Props) {
   };
 
   const viewHistory = () => document.querySelector("#receipt-history")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const emailDisabled = Boolean(actionState) || props.receiptHistoryLoading || savingReceipt || !props.latestReceiptId;
 
   return (
     <div className="space-y-2">
@@ -125,8 +144,8 @@ export default function ReceiptActions(props: Props) {
             <Button variant="outline" size="sm" className="gap-2" onClick={shareReceipt} disabled={!!actionState}>
               {actionState === "share" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5" />} Share
             </Button>
-            <Button variant="outline" size="sm" className="gap-2" onClick={emailReceipt} disabled={!!actionState}>
-              {actionState === "email" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />} Email
+            <Button variant="outline" size="sm" className="gap-2" onClick={emailReceipt} disabled={emailDisabled}>
+              {actionState === "email" || props.receiptHistoryLoading || savingReceipt ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />} {actionState === "email" ? "Preparing email…" : props.receiptHistoryLoading || savingReceipt || !props.latestReceiptId ? "Saving receipt…" : "Email"}
             </Button>
             <Button variant="ghost" size="sm" className="gap-2" onClick={viewHistory}>
               <History className="w-3.5 h-3.5" /> View history

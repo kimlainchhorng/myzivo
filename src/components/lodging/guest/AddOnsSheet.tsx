@@ -53,6 +53,14 @@ function lineTotal(addon: LodgingAddon, qty: number, nights: number, guests: num
   return price * qty;
 }
 
+const highlightTarget = (selector: string) => {
+  const target = document.querySelector(selector) as HTMLElement | null;
+  if (!target) return;
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
+  target.classList.add("transition-shadow", "ring-2", "ring-primary", "ring-offset-2", "ring-offset-background");
+  window.setTimeout(() => target.classList.remove("transition-shadow", "ring-2", "ring-primary", "ring-offset-2", "ring-offset-background"), 1600);
+};
+
 export default function AddOnsSheet({ open, onOpenChange, reservationId, addons, nights, guests, onPurchased }: Props) {
   const [qty, setQty] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
@@ -97,13 +105,15 @@ export default function AddOnsSheet({ open, onOpenChange, reservationId, addons,
     if (error || data?.error) {
       toast.error(data?.reason || data?.message || (data?.error === "no_saved_payment_method" ? "No saved payment method found. Add a card in Wallet first." : data?.error || error?.message || "Could not charge add-ons"));
       onPurchased?.("failed");
+      onOpenChange(false);
+      window.setTimeout(() => highlightTarget("#addon-status"), 180);
       return;
     }
     toast.success("Add-on charge successful", { description: `Charged $${((data?.charged_cents || total) / 100).toFixed(2)} to your saved card.` });
     setQty({});
     onPurchased?.("success");
     onOpenChange(false);
-    window.setTimeout(() => document.querySelector("#addon-status")?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+    window.setTimeout(() => highlightTarget("#addon-status"), 180);
   };
 
   return (

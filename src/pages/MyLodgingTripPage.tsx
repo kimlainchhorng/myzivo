@@ -2,7 +2,7 @@
  * MyLodgingTripPage — guest-facing trip detail page for a lodge reservation.
  * Route: /my-trips/lodging/:reservationId
  */
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, CalendarRange, XCircle, CreditCard, Clock, ShoppingBag, ShieldCheck } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -72,6 +72,7 @@ export default function MyLodgingTripPage() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [addonsOpen, setAddonsOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [addonStatusRefreshing, setAddonStatusRefreshing] = useState(false);
 
   const { data: reservation, isLoading } = useQuery({
     queryKey: ["lodge-reservation-full", reservationId],
@@ -104,7 +105,7 @@ export default function MyLodgingTripPage() {
     enabled: !!reservation?.store_id,
   });
 
-  const { data: requests = [] } = useReservationChangeRequests(reservationId);
+  const { data: requests = [], isLoading: requestsLoading, isFetching: requestsFetching } = useReservationChangeRequests(reservationId);
   const { data: disputes = [] } = useLodgingRefundDisputes(reservationId);
   const { data: room } = useQuery({
     queryKey: ["lodge-trip-room", reservation?.room_id],
@@ -131,7 +132,7 @@ export default function MyLodgingTripPage() {
     enabled: !!reservation?.room_id,
   });
 
-  const { data: receipts = [] } = useQuery({
+  const { data: receipts = [], isLoading: receiptsLoading, isFetching: receiptsFetching, refetch: refetchReceipts } = useQuery({
     queryKey: ["lodge-receipt-history", reservationId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -144,6 +145,17 @@ export default function MyLodgingTripPage() {
     },
     enabled: !!reservationId,
   });
+
+  const refreshReceiptHistory = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["lodge-receipt-history", reservationId] });
+    return refetchReceipts();
+  }, [queryClient, refetchReceipts, reservationId]);
+  const highlightAddonStatus = useCallback(() => {
+    const target = document.querySelector("#addon-status") as HTMLElement | null;
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    target?.classList.add("transition-shadow", "ring-2", "ring-primary", "ring-offset-2", "ring-offset-background");
+    window.setTimeout(() => target?.classList.remove("transition-shadow", "ring-2", "ring-primary", "ring-offset-2", "ring-offset-background"), 1600);
+  }, []);
 
 
   if (isLoading) {
@@ -292,7 +304,7 @@ export default function MyLodgingTripPage() {
         </Card>
       )}
 
-      <AddOnStatusTimeline requests={requests} />
+      <AddOnStatusTimeline requests={requests} isUpdating={addonStatusRefreshing || requestsLoading || requestsFetching} />
 
       <Card id="cancellation-policy" className="scroll-mt-24">
         <CardHeader className="pb-3">
@@ -321,7 +333,8 @@ export default function MyLodgingTripPage() {
         totalText={`$${(reservation.total_cents / 100).toFixed(2)} · ${reservation.payment_status.replace(/_/g, " ")}`}
         cancellationText={room?.cancellation_policy}
         latestReceiptId={receipts[0]?.id}
-        onReceiptDownloaded={() => queryClient.invalidateQueries({ queryKey: ["lodge-receipt-history", reservationId] })}
+        receiptHistoryLoading={receiptsLoading || receiptsFetching}
+        onReceiptDownloaded={refreshReceiptHistory}
       />
 
       <div id="receipt-history" className="scroll-mt-24"><ReceiptHistoryCard reservationId={reservation.id} receipts={receipts} /></div>
@@ -348,10 +361,15 @@ export default function MyLodgingTripPage() {
         nights={reservation.nights}
         guests={guests}
         onPurchased={(result) => {
-          queryClient.invalidateQueries({ queryKey: ["lodge-reservation-full", reservationId] });
-          queryClient.invalidateQueries({ queryKey: ["lodge-change-requests", reservationId] });
+          setAddonStatusRefreshing(true);
+          Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["lodge-reservation-full", reservationId] }),
+            queryClient.invalidateQueries({ queryKey: ["lodge-change-requests", reservationId] }),
+            queryClient.invalidateQueries({ queryKey: ["lodging-notification-audit", reservationId] }),
+            queryClient.invalidateQueries({ queryKey: ["lodging-notification-audit", reservationId, "sms"] }),
+          ]).finally(() => setAddonStatusRefreshing(false));
           if (result === "failed") toast.error("Add-on charge failed");
-          window.setTimeout(() => document.querySelector("#addon-status")?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+          window.setTimeout(highlightAddonStatus, 180);
         }}
       />
       <CancelReservationSheet
