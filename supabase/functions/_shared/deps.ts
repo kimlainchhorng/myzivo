@@ -6,4 +6,4 @@
  */
 
 export { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-export { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+export { createClient } from "npm:@supabase/supabase-js@2.49.1";
