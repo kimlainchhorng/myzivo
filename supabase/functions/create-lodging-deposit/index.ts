@@ -22,6 +22,8 @@ interface Body {
   client_attempt_id?: string;
   /** When 'embedded', returns client_secret for inline Stripe Embedded Checkout instead of a redirect URL. */
   ui_mode?: "hosted" | "embedded";
+  /** When true, force-mints a new Checkout Session (used when an embedded client_secret expires). */
+  force_new?: boolean;
 }
 
 const TERMINAL_PAYMENT_STATES = new Set([
