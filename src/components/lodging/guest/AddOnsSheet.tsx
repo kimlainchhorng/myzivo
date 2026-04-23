@@ -28,7 +28,7 @@ interface Props {
   addons: LodgingAddon[];
   nights: number;
   guests: number;
-  onPurchased?: () => void;
+  onPurchased?: (result?: "success" | "failed") => void;
 }
 
 const unitLabel: Record<string, string> = {
