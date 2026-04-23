@@ -24,6 +24,13 @@ const TYPE_LABEL = {
   addon: "Add-on",
 };
 
+const money = (cents?: number | null) => `$${((Number(cents) || 0) / 100).toFixed(2)}`;
+
+function addonSummary(payload: any) {
+  const items = Array.isArray(payload) ? payload : Array.isArray(payload?.selections) ? payload.selections : [];
+  return items.map((item: any) => `${item.name || item.id || "Add-on"}${item.quantity ? ` ×${item.quantity}` : ""}`).join(", ");
+}
+
 export default function ChangeRequestsInbox({ storeId }: { storeId: string }) {
   const navigate = useNavigate();
   const { data: requests = [], isLoading, decide } = useStoreChangeRequestInbox(storeId);
