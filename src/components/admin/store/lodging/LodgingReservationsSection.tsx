@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle, ChevronRight, ShieldCheck, BedDouble, Mail, Phone } from "lucide-react";
+import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle, ChevronRight, ShieldCheck, BedDouble, Mail, Phone, ExternalLink, ClipboardCheck } from "lucide-react";
 import { useLodgeReservations, type ReservationStatus } from "@/hooks/lodging/useLodgeReservations";
 import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
 import { toast } from "sonner";
@@ -17,9 +17,11 @@ import HostReservationOpsSummary from "@/components/lodging/host/HostReservation
 import { useStoreChangeRequestInbox } from "@/hooks/lodging/useReservationChangeRequests";
 import { useHostLodgingOpsToasts } from "@/hooks/lodging/useHostLodgingOpsToasts";
 
-const STATUSES: (ReservationStatus | "all")[] = ["all", "hold", "confirmed", "checked_in", "checked_out", "cancelled", "no_show"];
+type ReservationFilter = ReservationStatus | "active" | "all";
+const CLOSED_STATUSES = new Set<ReservationStatus>(["cancelled", "checked_out", "no_show"]);
+const STATUSES: ReservationFilter[] = ["active", "all", "hold", "confirmed", "checked_in", "checked_out", "cancelled", "no_show"];
 const STATUS_LABEL: Record<string, string> = {
-  all: "All", hold: "Hold", confirmed: "Confirmed", checked_in: "Checked-In",
+  active: "Active", all: "All", hold: "Hold", confirmed: "Confirmed", checked_in: "Checked-In",
   checked_out: "Checked-Out", cancelled: "Cancelled", no_show: "No-Show",
 };
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
@@ -30,23 +32,29 @@ const money = (cents?: number | null) => `$${((Number(cents) || 0) / 100).toFixe
 
 export default function LodgingReservationsSection({ storeId }: { storeId: string }) {
   const navigate = useNavigate();
-  const [status, setStatus] = useState<ReservationStatus | "all">("all");
+  const [status, setStatus] = useState<ReservationFilter>("active");
   const [q, setQ] = useState("");
-  const { data: reservations = [], isLoading, setStatus: setResStatus } = useLodgeReservations(storeId, status);
+  const queryStatus = status === "active" ? "all" : status;
+  const { data: reservations = [], isLoading, setStatus: setResStatus } = useLodgeReservations(storeId, queryStatus);
   const { data: pendingRequests = [] } = useStoreChangeRequestInbox(storeId);
   useHostLodgingOpsToasts(storeId);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    if (!term) return reservations;
-    return reservations.filter(r =>
+    const scoped = status === "active" ? reservations.filter(r => !CLOSED_STATUSES.has(r.status)) : reservations;
+    if (!term) return scoped;
+    return scoped.filter(r =>
       [r.guest_name, r.guest_phone, r.guest_email, r.number, r.room_number, r.payment_status, r.status].some(v => String(v || "").toLowerCase().includes(term))
     );
-  }, [reservations, q]);
+  }, [reservations, q, status]);
 
   const act = async (id: string, s: ReservationStatus, msg: string) => {
     try { await setResStatus.mutateAsync({ id, status: s }); toast.success(msg); }
     catch (e: any) { toast.error(e.message || "Failed"); }
+  };
+
+  const openReservation = (id: string, workflow?: "cancel") => {
+    navigate(`/admin/stores/${storeId}/lodging/reservations/${id}${workflow ? `?workflow=${workflow}` : ""}`);
   };
 
   return (
