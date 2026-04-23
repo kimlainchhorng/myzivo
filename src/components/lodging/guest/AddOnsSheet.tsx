@@ -53,6 +53,14 @@ function lineTotal(addon: LodgingAddon, qty: number, nights: number, guests: num
   return price * qty;
 }
 
+const highlightTarget = (selector: string) => {
+  const target = document.querySelector(selector) as HTMLElement | null;
+  if (!target) return;
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
+  target.classList.add("transition-shadow", "ring-2", "ring-primary", "ring-offset-2", "ring-offset-background");
+  window.setTimeout(() => target.classList.remove("transition-shadow", "ring-2", "ring-primary", "ring-offset-2", "ring-offset-background"), 1600);
+};
+
 export default function AddOnsSheet({ open, onOpenChange, reservationId, addons, nights, guests, onPurchased }: Props) {
   const [qty, setQty] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
@@ -103,7 +111,7 @@ export default function AddOnsSheet({ open, onOpenChange, reservationId, addons,
     setQty({});
     onPurchased?.("success");
     onOpenChange(false);
-    window.setTimeout(() => document.querySelector("#addon-status")?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+    window.setTimeout(() => highlightTarget("#addon-status"), 180);
   };
 
   return (
