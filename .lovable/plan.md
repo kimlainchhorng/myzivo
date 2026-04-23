@@ -1,38 +1,35 @@
 
 
-## Bulk-tick all Booking.com amenities for Villa
+## Finish populating Villa: pre-tick amenities in editor + add bed config
 
-The fastest, cleanest way to give the Villa the full Booking.com-style amenity set is a one-line database update — equivalent to opening the editor and ticking ~80 checkboxes, but instant and reliable.
+The DB update ran, but two things are still missing from your screenshot:
+1. **Bed configuration is empty** ("No beds configured") — needed to power the "Sleeps X" badge.
+2. You want to **see the amenities pre-ticked in the editor UI** (not just in the customer modal).
+
+Both are quick database updates on the same Villa row.
 
 ### What I'll do
 
-Run a single SQL migration that overwrites the Villa's `amenities` array with the full curated baseline. After it runs, the customer modal will immediately render every grouped section (Private bathroom, Bedroom, View, Outdoors, Facilities, Food & drink, Media & technology, Family, Wellness, Services, Accessibility & policy) — exactly like Booking.com picture 1.
+**1. Add bed configuration to Villa**
+Insert a sensible default into the room's `beds` field so the "Sleeps X" badge works:
+- 1× King bed
+- 1× Sofa bed
+(Total sleeps ~3, matches a typical villa. Adjustable later in the editor.)
 
-### Amenities being ticked (full list)
+**2. Re-confirm amenities are saved**
+Re-query `lodge_rooms` for the Villa to verify all 60+ amenities from the previous migration are present. If the editor still shows them un-ticked, it means the editor reads from a different field (e.g., `lodge_amenities` table per-store, not `lodge_rooms.amenities` per-room) — in which case I'll also upsert into `lodge_amenities` so the ticks appear in the UI you're looking at.
 
-- **Private bathroom**: Free toiletries, Shower, Bathtub, Bathrobe, Slippers, Hairdryer, Bidet, Toilet, Toilet paper, Towels, Hot shower
-- **Bedroom**: Linens, Wardrobe or closet, Alarm clock
-- **View**: Sea view, Garden view, Pool view
-- **Outdoors**: Balcony, Terrace, Patio, Outdoor furniture, Beach access, Beachfront
-- **Facilities**: Electric kettle, Socket near the bed, Dining area, Desk, Clothes rack, Sitting area, Drying rack for clothing, Minibar, Tile/Marble floor, Soundproofing, Air conditioning, Fan, Iron, Ironing facilities, Safety deposit box, Private entrance
-- **Food & drink**: Mini-fridge, Refrigerator, Coffee machine, Tea/Coffee maker, Dining table
-- **Media & technology**: Wi-Fi, Free Wi-Fi, TV, Flat-screen TV, Cable channels, Telephone
-- **Family**: Crib available, Family-friendly
-- **Wellness**: Private pool
-- **Services**: Daily housekeeping, Room service, 24h reception, Wake-up service, Laundry service
-- **Accessibility & policy**: Non-smoking, Free parking, Private parking, Pet-friendly
-
-### Why migration instead of UI clicks
-
-Clicking ~80 toggle buttons one-by-one in the browser would take 80 separate automation calls (slow, error-prone, expensive). A single SQL `UPDATE` produces the exact same result — same column, same data shape — and the editor will show every box pre-ticked next time you open it.
+**3. Verify in the editor**
+After the update, refresh `/admin/stores/7322b460-2c23-4d3d-bdc5-55a31cc65fab` → Villa → Edit. You should see:
+- Bed configuration filled in (King + Sofa bed chips)
+- All amenity buttons in the grouped list highlighted/ticked
 
 ### Files to touch
-- New migration: `supabase/migrations/<timestamp>_seed_villa_amenities.sql` — single UPDATE on `lodge_rooms` for room id `69dfd9e2-a02e-48c6-82df-2d46e346b5a0`.
-
-### Verification
-- I'll re-query the row to confirm the 50+ amenities are stored.
-- You then refresh the Hotels page → open Villa → all grouped sections visible.
+- New migration: `supabase/migrations/<timestamp>_villa_beds_and_amenities_sync.sql`
+  - `UPDATE lodge_rooms SET beds = '[{"type":"king","count":1},{"type":"sofa","count":1}]'::jsonb WHERE id = '69dfd9e2-...'`
+  - If needed: `INSERT INTO lodge_amenities (store_id, amenities, ...) ON CONFLICT (store_id) DO UPDATE ...` to mirror the same amenity set at the store level.
 
 ### Not changing
-- Any other room, store, photos, pricing, code, or schema.
+- Pricing (143 base / 172 weekend stays as-is)
+- Photos, taxes & fees, other rooms, code
 
