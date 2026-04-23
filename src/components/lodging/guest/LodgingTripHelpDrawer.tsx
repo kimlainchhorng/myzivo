@@ -28,15 +28,24 @@ const sections = [
   ]},
 ];
 
+function highlightSection(href: string) {
+  window.requestAnimationFrame(() => {
+    const target = document.querySelector(href) as HTMLElement | null;
+    if (!target) return;
+    target.setAttribute("tabindex", "-1");
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    target.focus({ preventScroll: true });
+    target.classList.add("transition-shadow", "ring-2", "ring-primary", "ring-offset-2", "ring-offset-background");
+    window.setTimeout(() => target.classList.remove("transition-shadow", "ring-2", "ring-primary", "ring-offset-2", "ring-offset-background"), 1600);
+  });
+}
+
 export default function LodgingTripHelpDrawer({ reservationNumber, propertyName, dates, paymentStatus }: Props) {
   const [open, setOpen] = useState(false);
   const go = (href: string) => {
     setOpen(false);
     window.setTimeout(() => {
-      const target = document.querySelector(href) as HTMLElement | null;
-      target?.scrollIntoView({ behavior: "smooth", block: "start" });
-      target?.classList.add("ring-2", "ring-primary", "ring-offset-2", "ring-offset-background");
-      window.setTimeout(() => target?.classList.remove("ring-2", "ring-primary", "ring-offset-2", "ring-offset-background"), 1400);
+      highlightSection(href);
     }, 120);
   };
 
