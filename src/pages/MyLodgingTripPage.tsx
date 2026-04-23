@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, CalendarRange, XCircle, CreditCard, Clock, ShoppingBag } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useReservationLive } from "@/hooks/lodging/useReservationLive";
 import { useReservationChangeRequests } from "@/hooks/lodging/useReservationChangeRequests";
@@ -21,7 +21,9 @@ import CheckInQrCard from "@/components/lodging/guest/CheckInQrCard";
 import ReceiptActions from "@/components/lodging/guest/ReceiptActions";
 import AddOnsSheet, { type LodgingAddon } from "@/components/lodging/guest/AddOnsSheet";
 import MessagePropertyButton from "@/components/lodging/guest/MessagePropertyButton";
+import ReceiptHistoryCard, { type ReceiptHistoryItem } from "@/components/lodging/guest/ReceiptHistoryCard";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
+import { useLodgingTripToasts } from "@/hooks/lodging/useLodgingTripToasts";
 
 interface FullReservation {
   id: string;
@@ -59,6 +61,7 @@ const REQ_STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "
 
 export default function MyLodgingTripPage() {
   const { reservationId = "" } = useParams();
+  const queryClient = useQueryClient();
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [addonsOpen, setAddonsOpen] = useState(false);
@@ -80,6 +83,7 @@ export default function MyLodgingTripPage() {
 
   // Realtime status updates
   useReservationLive(reservationId);
+  useLodgingTripToasts(reservationId);
 
   const { data: store } = useQuery({
     queryKey: ["lodge-store-name", reservation?.store_id],
@@ -100,10 +104,10 @@ export default function MyLodgingTripPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("lodge_rooms" as any)
-        .select("name, room_type, base_rate_cents, cancellation_policy, addons")
+        .select("name, room_type, base_rate_cents, cancellation_policy, addons, check_in_time, check_out_time")
         .eq("id", reservation!.room_id)
         .maybeSingle();
-      return data as unknown as { name?: string; room_type?: string; base_rate_cents?: number; cancellation_policy?: string | null; addons?: LodgingAddon[] } | null;
+      return data as unknown as { name?: string; room_type?: string; base_rate_cents?: number; cancellation_policy?: string | null; addons?: LodgingAddon[]; check_in_time?: string | null; check_out_time?: string | null } | null;
     },
     enabled: !!reservation?.room_id,
   });
@@ -118,6 +122,20 @@ export default function MyLodgingTripPage() {
       return (data || []).map((r: any) => String(r.block_date));
     },
     enabled: !!reservation?.room_id,
+  });
+
+  const { data: receipts = [] } = useQuery({
+    queryKey: ["lodge-receipt-history", reservationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("lodge_reservation_receipts" as any)
+        .select("id, filename, created_at, reservation_number")
+        .eq("reservation_id", reservationId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as unknown as ReceiptHistoryItem[];
+    },
+    enabled: !!reservationId,
   });
 
 
@@ -271,7 +289,17 @@ export default function MyLodgingTripPage() {
         propertyName={store?.name || "Your stay"}
         checkIn={reservation.check_in}
         checkOut={reservation.check_out}
+        roomName={roomLabel}
+        guestName={reservation.guest_name}
+        guestEmail={reservation.guest_email}
+        checkInTime={room?.check_in_time}
+        checkOutTime={room?.check_out_time}
+        totalText={`$${(reservation.total_cents / 100).toFixed(2)} · ${reservation.payment_status.replace(/_/g, " ")}`}
+        cancellationText={room?.cancellation_policy}
+        onReceiptDownloaded={() => queryClient.invalidateQueries({ queryKey: ["lodge-receipt-history", reservationId] })}
       />
+
+      <ReceiptHistoryCard reservationId={reservation.id} receipts={receipts} />
 
       <RescheduleSheet
         open={rescheduleOpen}
@@ -290,6 +318,10 @@ export default function MyLodgingTripPage() {
         addons={addons}
         nights={reservation.nights}
         guests={guests}
+        onPurchased={() => {
+          queryClient.invalidateQueries({ queryKey: ["lodge-reservation-full", reservationId] });
+          queryClient.invalidateQueries({ queryKey: ["lodge-change-requests", reservationId] });
+        }}
       />
       <CancelReservationSheet
         open={cancelOpen}
