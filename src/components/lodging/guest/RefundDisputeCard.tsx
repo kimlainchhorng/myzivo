@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
-import { AlertTriangle, FileText } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Circle, Clock, FileText, Link as LinkIcon, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,15 @@ export default function RefundDisputeCard({ reservationId, disputes, canRequest,
   const [open, setOpen] = useState(false);
   const hasOpen = disputes.some((d) => openStatuses.has(d.status));
   if (!canRequest && !disputes.length) return null;
+  const latest = disputes[0];
+  const go = (href: string) => document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  const steps = latest ? [
+    { key: "pending", label: "Request submitted", done: true },
+    { key: "under_review", label: "Under review", done: ["under_review", "approved", "declined", "paid", "closed"].includes(latest.status) },
+    { key: "approved", label: latest.status === "declined" ? "Declined" : "Resolution", done: ["approved", "declined", "paid", "closed"].includes(latest.status) },
+    { key: "paid", label: latest.status === "closed" ? "Closed" : "Paid / closed", done: ["paid", "closed"].includes(latest.status) },
+  ] : [];
 
   return (
     <Card id="refund-disputes" className="scroll-mt-24">
@@ -28,6 +37,34 @@ export default function RefundDisputeCard({ reservationId, disputes, canRequest,
         <CardTitle className="flex items-center gap-2 text-base"><FileText className="h-4 w-4" /> Refund / dispute request</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        {latest && (
+          <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs text-muted-foreground">Latest update</p>
+                <p className="text-sm font-semibold capitalize">{latest.status.replace(/_/g, " ")}</p>
+              </div>
+              <span className="text-xs text-muted-foreground">Updated {format(parseISO(latest.updated_at), "MMM d, yyyy h:mm a")}</span>
+            </div>
+            <div className="grid gap-2">
+              {steps.map((step) => {
+                const current = step.key === latest.status || (latest.status === "declined" && step.key === "approved");
+                const Icon = latest.status === "declined" && current ? XCircle : step.done ? CheckCircle2 : current ? Clock : Circle;
+                return (
+                  <div key={step.key} className="flex items-center gap-2 text-sm">
+                    <Icon className={step.done || current ? "h-4 w-4 text-primary" : "h-4 w-4 text-muted-foreground"} />
+                    <span className={current ? "font-semibold" : "text-muted-foreground"}>{step.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => go("#stay-summary")}><LinkIcon className="h-3.5 w-3.5" /> Reservation details</Button>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => go("#payment-summary")}><LinkIcon className="h-3.5 w-3.5" /> Payment summary</Button>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => go("#request-history")}><LinkIcon className="h-3.5 w-3.5" /> Request history</Button>
+            </div>
+          </div>
+        )}
         {!disputes.length ? (
           <div className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">If your cancellation refund needs review, submit one request tied to this reservation.</div>
         ) : disputes.map((d) => (
