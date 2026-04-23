@@ -367,9 +367,11 @@ export function LodgingRoomDetailsModal({
             {currentCaption}
           </div>
         )}
+        </div>
 
+        <div className="space-y-4 sm:space-y-5">
         {/* Premium stat tiles */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3">
           {beds && (
             <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl bg-gradient-to-br from-sky-50 to-sky-100/50 border border-sky-200/60 dark:from-sky-950/40 dark:to-sky-900/20 dark:border-sky-800/40">
               <BedDouble className="h-4 w-4 text-sky-600 dark:text-sky-400" />
