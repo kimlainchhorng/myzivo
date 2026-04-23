@@ -117,8 +117,9 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     scrollMemoryRef.current[tabKey] = e.currentTarget.scrollTop;
   };
 
-  const isAutoRepair = storeCategory === "auto-repair";
-  const isLodging = ["hotel", "resort", "guesthouse"].includes(storeCategory || "");
+  const normalizedStoreCategory = (storeCategory || "").toLowerCase().trim();
+  const isAutoRepair = normalizedStoreCategory === "auto-repair";
+  const isLodging = ["hotel", "resort", "guesthouse", "guesthouse / b&b", "b&b"].includes(normalizedStoreCategory);
   const productsLabel = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
   const paymentLabel = isAutoRepair ? "Bookings" : "Payment & Payouts";
 
@@ -147,8 +148,8 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       { id: "ar-reports", label: "Reports", icon: BarChart3 },
     ] : []),
     ...(isLodging ? [
-      { id: "lodge-overview", label: "Overview", icon: Hotel },
-      { id: "_lodging_ops_label", label: "HOTEL OPS", icon: BedDouble, divider: true },
+      { id: "lodge-overview", label: "Hotel Operations", icon: Hotel },
+      { id: "_lodging_ops_label", label: "HOTEL OPERATIONS", icon: BedDouble, divider: true },
       { id: "lodge-rooms", label: "Rooms & Rates", icon: BedDouble },
       { id: "lodge-reservations", label: "Reservations", icon: CalendarRange },
       { id: "lodge-calendar", label: "Calendar & Availability", icon: CalendarDays },
