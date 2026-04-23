@@ -591,10 +591,13 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
   );
 }
 
-function FeeInput({ label, value, onChange }: { label: string; value: number | undefined; onChange: (v: number | undefined) => void }) {
+function FeeInput({ label, value, onChange, icon: Icon }: { label: string; value: number | undefined; onChange: (v: number | undefined) => void; icon?: LucideIcon }) {
   return (
     <div>
-      <Label className="text-xs">{label}</Label>
+      <Label className="text-xs inline-flex items-center gap-1.5">
+        {Icon && <Icon className="h-3 w-3 text-muted-foreground" />}
+        {label}
+      </Label>
       <Input
         type="number" step="0.01" inputMode="decimal"
         value={value == null ? "" : (value / 100).toString()}
@@ -604,10 +607,13 @@ function FeeInput({ label, value, onChange }: { label: string; value: number | u
   );
 }
 
-function PctInput({ label, value, onChange }: { label: string; value: number | undefined; onChange: (v: number | undefined) => void }) {
+function PctInput({ label, value, onChange, icon: Icon }: { label: string; value: number | undefined; onChange: (v: number | undefined) => void; icon?: LucideIcon }) {
   return (
     <div>
-      <Label className="text-xs">{label}</Label>
+      <Label className="text-xs inline-flex items-center gap-1.5">
+        {Icon && <Icon className="h-3 w-3 text-muted-foreground" />}
+        {label}
+      </Label>
       <Input
         type="number" step="0.1" inputMode="decimal"
         value={value ?? ""}
