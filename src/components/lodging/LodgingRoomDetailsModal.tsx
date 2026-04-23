@@ -55,6 +55,34 @@ const PER_LABEL: Record<LodgeAddon["per"], string> = {
   person_night: "per guest / night",
 };
 
+// Booking.com-style amenity groupings (must mirror the admin editor)
+const AMENITY_GROUPS: { label: string; items: string[] }[] = [
+  { label: "Private bathroom", items: ["Free toiletries", "Shower", "Bathtub", "Bathrobe", "Slippers", "Hairdryer", "Bidet", "Toilet", "Toilet paper", "Towels", "Towels/Sheets (extra fee)", "Hot shower"] },
+  { label: "Bedroom", items: ["Linens", "Wardrobe or closet", "Extra long beds (> 2m)", "Alarm clock"] },
+  { label: "View", items: ["Garden view", "Pool view", "Sea view", "Mountain view", "City view", "River view", "Courtyard view", "Landmark view"] },
+  { label: "Outdoors", items: ["Balcony", "Terrace", "Patio", "Outdoor furniture", "Beach access", "Beachfront"] },
+  { label: "Facilities", items: ["Carpeted", "Electric kettle", "Wardrobe or closet", "Socket near the bed", "Dining area", "Desk", "Clothes rack", "Sitting area", "Drying rack for clothing", "Minibar", "Tile/Marble floor", "Wooden/Parquet floor", "Soundproofing", "Heating", "Air conditioning", "AC", "Fan", "Iron", "Ironing facilities", "Safety deposit box", "Safe", "Fireplace", "Private entrance"] },
+  { label: "Food & drink", items: ["Mini-bar", "Mini-fridge", "Refrigerator", "Coffee machine", "Tea/Coffee maker", "Coffee maker", "Kettle", "Kitchenette", "Microwave", "Dishwasher", "Stovetop", "Oven", "Toaster", "Dining table"] },
+  { label: "Media & technology", items: ["Wi-Fi", "Free Wi-Fi", "TV", "Flat-screen TV", "Smart TV", "Cable channels", "Satellite channels", "Streaming service (Netflix)", "Netflix", "Telephone", "Laptop safe"] },
+  { label: "Family", items: ["Crib available", "Baby cot on request", "Family-friendly", "Children's cribs/cots"] },
+  { label: "Wellness", items: ["Jacuzzi", "Hot tub", "Private pool", "Sauna", "Spa tub"] },
+  { label: "Services", items: ["Daily housekeeping", "Room service", "24h reception", "Wake-up service", "Laundry service"] },
+  { label: "Accessibility & policy", items: ["Wheelchair accessible", "Upper floors accessible by elevator", "Pet-friendly", "Smoking allowed", "Non-smoking", "EV charger", "Free parking", "Private parking"] },
+];
+
+function groupAmenities(amenities: string[]): { label: string; items: string[] }[] {
+  const set = new Set(amenities);
+  const used = new Set<string>();
+  const groups = AMENITY_GROUPS.map(g => {
+    const items = g.items.filter(i => set.has(i));
+    items.forEach(i => used.add(i));
+    return { label: g.label, items };
+  }).filter(g => g.items.length > 0);
+  const other = amenities.filter(a => !used.has(a));
+  if (other.length) groups.push({ label: "Other", items: other });
+  return groups;
+}
+
 const HINTS_KEY = "lodging.gallery.hintsSeen";
 
 export function LodgingRoomDetailsModal({
