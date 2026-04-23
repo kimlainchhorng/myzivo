@@ -1,10 +1,10 @@
-import { AlertCircle, CheckCircle2, Clock, CreditCard, ReceiptText, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, CreditCard, Loader2, ReceiptText, XCircle } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ReservationChangeRequest } from "@/hooks/lodging/useReservationChangeRequests";
 
-interface Props { requests: ReservationChangeRequest[]; }
+interface Props { requests: ReservationChangeRequest[]; isLoading?: boolean; }
 const money = (cents?: number | null) => `$${((Number(cents) || 0) / 100).toFixed(2)}`;
 
 function addonItems(payload: any) {
@@ -22,13 +22,13 @@ function nextStep(r: ReservationChangeRequest, failed: boolean, success: boolean
   return "Review availability and payment before approving or charging this request.";
 }
 
-export default function HostAddOnTimeline({ requests }: Props) {
+export default function HostAddOnTimeline({ requests, isLoading }: Props) {
   const addons = requests.filter((r) => r.type === "addon");
   return (
     <Card id="host-addons" className="scroll-mt-24 transition-shadow">
       <CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><ReceiptText className="h-4 w-4" /> Charges & add-ons</CardTitle></CardHeader>
       <CardContent className="space-y-3">
-        {!addons.length ? <div className="rounded-xl border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground"><p className="font-medium text-foreground">No add-on workflow yet</p><p className="text-xs mt-1">Guest add-on selections, saved-card charges, failures, and approvals will appear here.</p></div> : addons.map((r) => {
+        {isLoading ? <div className="rounded-xl border border-border bg-muted/20 p-4 text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin text-primary" /> Loading add-on timeline…</div> : !addons.length ? <div className="rounded-xl border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground"><p className="font-medium text-foreground">No add-on workflow yet</p><p className="text-xs mt-1">Guest add-on selections, saved-card charges, failures, and approvals will appear here after checkout.</p></div> : addons.map((r) => {
           const failed = r.status === "failed";
           const success = r.status === "auto_approved" || r.status === "approved";
           const Icon = failed ? XCircle : success ? CheckCircle2 : Clock;
