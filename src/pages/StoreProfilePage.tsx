@@ -466,16 +466,16 @@ export default function StoreProfilePage() {
                   <div
                     role="status"
                     aria-live="polite"
-                    className="self-center inline-flex items-center gap-1.5 px-3 h-7 rounded-full bg-white/[0.05] border border-white/10 text-white/70 text-[11.5px] font-semibold"
+                    className="self-center inline-flex items-center gap-2 px-3.5 h-8 rounded-full bg-white/[0.05] border border-white/10 text-white/70 text-[12.5px] font-semibold"
                   >
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     {t("store.booking_status.checking")}
                   </div>
                 );
               }
               if (hasBooking) {
                 return (
-                  <div className="self-center inline-flex items-center gap-1.5 px-3 h-7 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-[11.5px] font-semibold">
+                  <div className="self-center inline-flex items-center gap-2 px-3.5 h-8 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-[12.5px] font-semibold">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
                     {t("store.booking_status.unlocked")} · {t("store.booking_status.unlocked_sub")}
                   </div>
@@ -484,19 +484,19 @@ export default function StoreProfilePage() {
               return (
                 <div className="self-center inline-flex items-stretch gap-1.5">
                   <button
-                    onClick={() => navigate("/account/bookings")}
-                    className="inline-flex items-center gap-1.5 px-3 h-7 rounded-full bg-amber-500/12 border border-amber-400/30 text-amber-300 text-[11.5px] font-semibold hover:bg-amber-500/18 transition-colors"
+                    onClick={() => navigate("/trips")}
+                    className="inline-flex items-center gap-2 px-3.5 h-8 rounded-full bg-amber-500/12 border border-amber-400/30 text-amber-300 text-[12.5px] font-semibold hover:bg-amber-500/18 transition-colors"
                   >
-                    <Lock className="h-3 w-3" />
+                    <Lock className="h-3.5 w-3.5" />
                     {t("store.booking_status.locked")}
                   </button>
                   <button
                     onClick={handleRefreshBooking}
                     aria-label={t("store.booking_status.refresh")}
                     title={t("store.booking_status.refresh")}
-                    className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/[0.06] border border-white/15 text-white/80 hover:bg-white/[0.10] transition-colors"
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/[0.06] border border-white/15 text-white/80 hover:bg-white/[0.10] transition-colors"
                   >
-                    <RefreshCcw className="h-3 w-3" />
+                    <RefreshCcw className="h-3.5 w-3.5" />
                   </button>
                 </div>
               );
