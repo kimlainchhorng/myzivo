@@ -27019,6 +27019,57 @@ export type Database = {
         }
         Relationships: []
       }
+      lodge_receipt_share_tokens: {
+        Row: {
+          access_count: number
+          created_at: string
+          expires_at: string
+          guest_id: string
+          id: string
+          last_accessed_at: string | null
+          receipt_id: string
+          reservation_id: string
+          token_hash: string
+        }
+        Insert: {
+          access_count?: number
+          created_at?: string
+          expires_at: string
+          guest_id: string
+          id?: string
+          last_accessed_at?: string | null
+          receipt_id: string
+          reservation_id: string
+          token_hash: string
+        }
+        Update: {
+          access_count?: number
+          created_at?: string
+          expires_at?: string
+          guest_id?: string
+          id?: string
+          last_accessed_at?: string | null
+          receipt_id?: string
+          reservation_id?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_receipt_share_tokens_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "lodge_reservation_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lodge_receipt_share_tokens_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "lodge_reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lodge_refund_disputes: {
         Row: {
           admin_response: string | null
