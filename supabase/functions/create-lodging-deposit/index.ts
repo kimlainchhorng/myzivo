@@ -20,6 +20,8 @@ interface Body {
   deposit_cents: number;
   mode?: "deposit" | "full";
   client_attempt_id?: string;
+  /** When 'embedded', returns client_secret for inline Stripe Embedded Checkout instead of a redirect URL. */
+  ui_mode?: "hosted" | "embedded";
 }
 
 const TERMINAL_PAYMENT_STATES = new Set([
