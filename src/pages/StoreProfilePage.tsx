@@ -842,6 +842,12 @@ export default function StoreProfilePage() {
               ))}
             </div>
           )}
+
+          {propertyProfile && <LodgingHighlightsStrip profile={propertyProfile} />}
+
+          {propertyProfile && <LodgingPolicyPanel profile={propertyProfile} />}
+
+          <LodgingAmenitiesPanel storeId={store!.id} />
         </div>
       ) : (
       <>
