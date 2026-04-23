@@ -9,6 +9,7 @@
 import { useMemo, useState } from "react";
 import { differenceInHours, parseISO } from "date-fns";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,6 +53,8 @@ export default function CancelReservationSheet({
 }: Props) {
   const [reason, setReason] = useState(REASONS[0]);
   const [details, setDetails] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
   const refund = useMemo(() => computeRefund(checkIn, paidCents), [checkIn, paidCents]);
   const { requestCancel } = useReservationActions(reservationId);
 
@@ -59,12 +62,12 @@ export default function CancelReservationSheet({
     try {
       const fullReason = details ? `${reason} — ${details}` : reason;
       const res = await requestCancel.mutateAsync({ reason: fullReason });
-      toast.success(
-        res.refund_cents > 0
-          ? `Cancelled. $${(res.refund_cents / 100).toFixed(2)} refunded.`
-          : "Cancelled.",
-      );
-      onOpenChange(false);
+      const msg = res.refund_cents > 0
+        ? `Cancelled. Refund status: ${res.payment_status || "refund pending"}.`
+        : "Cancelled. No refund is due under the policy.";
+      setResult(msg);
+      toast.success(msg);
+      setConfirmOpen(false);
     } catch (e: any) {
       toast.error(e.message || "Could not cancel");
     }
@@ -91,6 +94,10 @@ export default function CancelReservationSheet({
             <div className="flex justify-between">
               <span className="text-muted-foreground">Policy applied</span>
               <span className="text-xs">{refund.policy}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Forfeited</span>
+              <span>${((paidCents - refund.cents) / 100).toFixed(2)}</span>
             </div>
             <div className="flex justify-between border-t pt-2 text-base">
               <span className="font-semibold">{refund.label}</span>
@@ -130,6 +137,8 @@ export default function CancelReservationSheet({
             />
           </div>
 
+          {result && <Alert aria-live="polite"><AlertDescription>{result}</AlertDescription></Alert>}
+
           <div className="flex gap-2">
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Keep reservation
@@ -138,13 +147,27 @@ export default function CancelReservationSheet({
               variant="destructive"
               className="flex-1"
               disabled={requestCancel.isPending}
-              onClick={submit}
+              onClick={() => setConfirmOpen(true)}
             >
               {requestCancel.isPending ? "Cancelling…" : "Confirm cancellation"}
             </Button>
           </div>
         </div>
       </SheetContent>
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm cancellation</DialogTitle>
+            <DialogDescription>This will cancel the reservation and process the refund outcome shown in the policy breakdown.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>Go back</Button>
+            <Button variant="destructive" disabled={requestCancel.isPending || !reason} onClick={submit}>
+              {requestCancel.isPending ? "Cancelling…" : "Cancel reservation"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Sheet>
   );
 }

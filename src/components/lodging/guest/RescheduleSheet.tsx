@@ -24,6 +24,7 @@ interface Props {
   checkIn: string;
   checkOut: string;
   totalCents: number;
+  blockedDates?: string[];
 }
 
 export default function RescheduleSheet({
@@ -34,6 +35,7 @@ export default function RescheduleSheet({
   checkIn,
   checkOut,
   totalCents,
+  blockedDates = [],
 }: Props) {
   const [range, setRange] = useState<DateRange | undefined>();
   const [reason, setReason] = useState("");
@@ -53,6 +55,7 @@ export default function RescheduleSheet({
     newCheckIn || "",
     newCheckOut || "",
     !!newCheckIn && !!newCheckOut,
+    reservationId,
   );
 
   const { requestReschedule } = useReservationActions(reservationId);
@@ -88,7 +91,7 @@ export default function RescheduleSheet({
             <CalendarRange className="w-5 h-5" /> Move your dates
           </SheetTitle>
           <SheetDescription>
-            Pick new check-in and check-out dates. Same room, same rate.
+            Pick new check-in and check-out dates. Availability and pricing are rechecked before changes are applied.
           </SheetDescription>
         </SheetHeader>
 
@@ -99,8 +102,8 @@ export default function RescheduleSheet({
               selected={range}
               onSelect={setRange}
               numberOfMonths={1}
-              disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
-              className="pointer-events-auto"
+              disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0)) || blockedDates.includes(format(d, "yyyy-MM-dd"))}
+              className="p-3 pointer-events-auto"
             />
           </div>
 
@@ -137,12 +140,12 @@ export default function RescheduleSheet({
               {preview.autoApprovable ? (
                 <div className="flex items-start gap-2 text-xs text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg p-2 mt-1">
                   <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span>Within 14 days — instant approval if the room is free.</span>
+                  <span>Instant approval when the room is free and no extra payment is required.</span>
                 </div>
               ) : (
                 <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 dark:bg-amber-950/30 rounded-lg p-2 mt-1">
                   <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span>Shift over 14 days — needs host approval.</span>
+                  <span>Host approval is needed. If the price increases, your saved card may be charged after approval.</span>
                 </div>
               )}
             </div>
