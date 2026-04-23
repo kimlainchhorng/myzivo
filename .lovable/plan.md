@@ -1,43 +1,61 @@
 
 
 ## Goal
-Make the mobile contact section on `/grocery/shop/:slug` smarter and more useful: show booking/lock status inline, persist unlocked state across refreshes, give users an SMS fallback when calling is off, prompt them straight to chat after booking, and add a long-press copy fallback for sharing.
+Make the mobile contact section more robust: cleaner long-press vs tap handling, SMS draft confirmation, i18n status chip, normalized phone number, and a one-tap "Refresh / View bookings" action on the locked chip.
 
 ## What you'll see
 
-**1. Inline booking status under "Ride There" (mobile/tablet)**
-A small status chip directly under the green Ride There button:
-- Loading → `Checking your bookings…` (subtle skeleton)
-- Unlocked → green pill `Chat & Call unlocked · Booking on file`
-- Locked → amber pill `Locked — Complete a booking to enable Chat`
-This replaces the standalone "Complete a booking to unlock chat" panel below and is always visible at a glance.
+**1. Bullet-proof Share long-press (no double-fire)**
+- Long-press on Share → copies link, shows toast.
+- The synthetic `click` that fires after touchend is now suppressed via `e.preventDefault()` + `e.stopPropagation()` on `onTouchEnd` when the long-press fired, plus a 350ms `ignoreNextClick` window. No more "share sheet pops open right after I copied the link".
+- Right-click on desktop also copies and blocks the click.
 
-**2. Persisted unlock state (no flicker on refresh)**
-The result of `useHasStoreBooking(storeId)` is cached per `(userId, storeId)` in `localStorage` (key: `zivo:store-unlock:{userId}:{storeId}`, TTL 24h). On reload, the UI immediately shows the last-known state, then revalidates in the background — no more "everything looks locked for 1 second on every visit".
+**2. SMS confirmation toast**
+- After tapping the SMS tile, a toast appears: `SMS draft opened — type your message and hit send` (auto-dismiss 4s). Confirms the composer was triggered (helps when iOS opens Messages in background).
 
-**3. SMS fallback when Call is disabled**
-When the store has a phone number but calling is locked (no booking yet), the **Call** tile turns into an **SMS** tile that opens `sms:+855...?body=Hi, I'm interested in {storeName}…`. Users can still reach the store on mobile without needing to book first. If there's no phone at all, it stays disabled with the existing locked styling.
+**3. i18n + consistent tone for the status chip**
+New translation keys in `src/i18n/translations.ts` (English + Khmer; English fallback covers the other 23 langs):
+- `store.booking_status.checking` → "Checking your bookings…"
+- `store.booking_status.unlocked` → "Chat & Call unlocked"
+- `store.booking_status.unlocked_sub` → "Booking on file"
+- `store.booking_status.locked` → "Locked — book to unlock Chat & Call"
+- `store.booking_status.refresh` → "Refresh"
+- `store.booking_status.view_bookings` → "View bookings"
+- `store.sms_draft_opened` → "SMS draft opened"
+- `store.link_copied` → "Link copied to clipboard"
 
-**4. "Open chat" toast right after booking**
-After a successful booking on the same store (detected when `hasBooking` flips from `false` → `true` while the page is open), a sonner toast appears:
-`Booking confirmed — chat with {storeName} is now unlocked` with an **Open chat** action button that opens the StoreLiveChat sheet directly. Auto-dismisses after 8s.
+Chip text is rebuilt to use `t(...)` everywhere. Loading state uses a real label + spinner instead of an empty pulse so screen readers announce state.
 
-**5. Long-press / right-click → Copy link fallback**
-On the **Share** tile:
-- Tap → native `navigator.share` (or copy fallback if unavailable)
-- Long-press (500ms) on touch / right-click on desktop → directly copies the page URL to clipboard with a `Link copied to clipboard` toast, bypassing the share sheet entirely
-Useful when iOS Safari's share sheet misbehaves or the user just wants the URL.
+**4. Normalized phone (E.164) once, used everywhere**
+- Compute `const normalizedPhone = useMemo(() => normalizePhoneE164ForStore(store.phone), [store.phone])` once in the component using the existing `src/lib/phone.ts` helpers (`normalizePhoneDigits`, `buildPhoneE164`).
+- Strips spaces, dashes, parentheses, dots; if no leading `+`, prefix with country code (defaults to `+855` for Cambodia stores, configurable via `store.country_code` if present).
+- Both `tel:` and `sms:` links use the same `normalizedPhone` value — no more duplicate inline regex in two places.
+
+**5. Refresh / View bookings on the locked chip**
+The locked chip becomes a two-part pill on mobile:
+```
+[ 🔒  Locked — book to unlock Chat & Call ]   [ ↻ Refresh ]
+                                                ↓ tap
+                                         re-runs useHasStoreBooking
+                                         (queryClient.invalidateQueries)
+```
+- Primary (left, larger): tap → navigates to `/account/bookings`.
+- Secondary (right, icon button): tap → `queryClient.invalidateQueries({ queryKey: ["has-store-booking", storeId] })` + clears the localStorage cache key + shows toast `Re-checking…`. Lets users force a refresh after they just booked (covers webhook lag).
 
 ## Technical Summary
 
 **Files modified**
-- `src/hooks/useHasStoreBooking.ts` — add `localStorage` cache layer (`initialData` from cache + `onSuccess` write-through), 24h TTL, scoped by user+store.
 - `src/pages/StoreProfilePage.tsx`
-  - New inline status chip rendered between Ride There button and the 3-tile grid.
-  - Replace Call tile logic: if `!callable && phone` → render SMS tile (`sms:` href, `MessageSquare` icon, label "SMS").
-  - Add `useEffect` watching `hasBooking` transition `false → true` → fire `toast.success(..., { action: { label: "Open chat", onClick: () => setChatOpen(true) }})`.
-  - Share tile: add `onContextMenu` + `onTouchStart`/`onTouchEnd` long-press handlers (500ms timer) that call `navigator.clipboard.writeText(window.location.href)` and show toast.
-  - Remove the now-redundant standalone "Complete a booking to unlock chat" panel (its info moves into the inline status chip).
+  - Add `normalizedPhone` memo using `buildPhoneE164` from `@/lib/phone`. Replace both inline `tel:`/`sms:` regex builders with this single value.
+  - Refactor Share button: introduce `ignoreNextClickRef` (boolean + timestamp). On long-press fire, set ref + timeout 350ms. `onClick` early-returns if ref is set. `onTouchEnd` calls `preventDefault()` when long-press fired.
+  - Add SMS `toast.success(t("store.sms_draft_opened"))` on the SMS tile's `onClick`.
+  - Replace hardcoded chip strings with `t(...)` calls; add `Loader2` spinner to loading state.
+  - Split locked chip into pill + small `RefreshCcw` icon button. Wire to `queryClient.invalidateQueries` and `localStorage.removeItem(\`zivo:store-unlock:${userId}:${storeId}\`)`.
+  - Import `useQueryClient` from `@tanstack/react-query` and `RefreshCcw` from `lucide-react`.
+- `src/hooks/useHasStoreBooking.ts`
+  - Export a small helper `clearStoreBookingCache(userId, storeId)` so the page can wipe the cache on manual refresh without duplicating the key format.
+- `src/i18n/translations.ts`
+  - Add the 8 new keys above to the `en` block and Khmer (`km`) block. Other languages fall back to `en` automatically.
 
-**No DB changes, no edge functions, no new dependencies** — pure client-side UX improvements.
+**No DB / edge function / dependency changes.** Pure client-side hardening.
 
