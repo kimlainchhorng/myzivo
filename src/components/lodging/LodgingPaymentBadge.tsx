@@ -101,7 +101,7 @@ export function LodgingPaymentBadge({
 
   const rawStatus = String(status);
   const reservationClosed = CLOSED_RESERVATION_STATUSES.has(String(reservationStatus || ""));
-  const effectiveStatus = reservationClosed && TRANSITIONAL.has(rawStatus) ? "payment_review" : rawStatus;
+  const effectiveStatus = reservationClosed && (TRANSITIONAL.has(rawStatus) || rawStatus === "failed") ? "payment_review" : rawStatus;
 
   const eventFresh = lastEventAt
     ? Date.now() - new Date(lastEventAt).getTime() < PROCESSING_WINDOW_MS
@@ -230,7 +230,7 @@ export function LodgingPaymentBadge({
   ) : null;
 
   // Retry-failed clickable variant
-  if (status === "failed" && onRetry) {
+  if (rawStatus === "failed" && !reservationClosed && onRetry) {
     return (
       <span className={wrapperCls}>
         {lockedAlert}

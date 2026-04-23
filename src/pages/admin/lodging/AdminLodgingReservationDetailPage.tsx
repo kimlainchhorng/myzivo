@@ -3,12 +3,13 @@
  * Route: /admin/stores/:storeId/lodging/reservations/:reservationId
  */
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   ArrowLeft, BedDouble, CalendarRange, User, Phone, Mail, Globe,
   CheckCircle2, LogIn, LogOut, XCircle, AlertCircle, History, Loader2, Download, RefreshCw,
+  ClipboardCheck, CreditCard, PackageCheck,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ const fmt = (c: number) => `$${((c || 0) / 100).toFixed(2)}`;
 export default function AdminLodgingReservationDetailPage() {
   const { storeId, reservationId } = useParams<{ storeId: string; reservationId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const qc = useQueryClient();
   const audit = useLodgeReservationAudit(reservationId);
@@ -93,6 +95,9 @@ export default function AdminLodgingReservationDetailPage() {
     setNote((prev) => (prev.trim() ? `${prev}\n${tpl}` : tpl));
   };
 
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
+  const goBack = () => navigate(returnTo || `/admin/stores/${storeId}`, { replace: !returnTo });
+
   const { data: reservation, isLoading } = useQuery({
     queryKey: ["lodge-reservation", reservationId],
     queryFn: async () => {
@@ -127,6 +132,18 @@ export default function AdminLodgingReservationDetailPage() {
   );
 
   const balanceDue = (reservation?.total_cents || 0) - (reservation?.paid_cents || 0);
+  const isClosed = ["cancelled", "checked_out", "no_show"].includes(String(reservation?.status || ""));
+  const pendingRequests = changeRequests.filter((r) => r.status === "pending");
+  const addonRequests = changeRequests.filter((r) => r.type === "addon");
+  const paymentNeedsReview = ["failed", "pending", "processing"].includes(String(reservation?.payment_status || "")) || balanceDue > 0;
+  const recommendedAction = isClosed
+    ? paymentNeedsReview ? "Review payment/refund" : "Audit complete"
+    : pendingRequests.length ? "Review guest request"
+      : paymentNeedsReview ? "Review payment"
+        : reservation?.status === "hold" ? "Confirm stay"
+          : reservation?.status === "confirmed" ? "Prepare check-in"
+            : reservation?.status === "checked_in" ? "Complete check-out"
+              : "Monitor stay";
   const cover = (() => {
     if (!room?.photos) return undefined;
     const photos = room.photos as string[];
@@ -157,6 +174,25 @@ export default function AdminLodgingReservationDetailPage() {
       setPendingStatus("no_show");
     }
   }, [pendingStatus, reservation, searchParams]);
+
+  useEffect(() => {
+    if (!reservation) return;
+    const workflow = searchParams.get("workflow");
+    const targetId = workflow === "addons" || workflow === "review"
+      ? "host-addons"
+      : workflow === "payment"
+        ? "payment-review"
+        : workflow === "audit"
+          ? "audit-log"
+          : null;
+    if (!targetId) return;
+    window.setTimeout(() => {
+      const target = document.getElementById(targetId);
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      target?.classList.add("ring-2", "ring-primary", "ring-offset-2", "ring-offset-background");
+      window.setTimeout(() => target?.classList.remove("ring-2", "ring-primary", "ring-offset-2", "ring-offset-background"), 1600);
+    }, 160);
+  }, [reservation, searchParams]);
 
   const submitTransition = async () => {
     if (!pendingStatus || !reservation) return;
@@ -205,7 +241,7 @@ export default function AdminLodgingReservationDetailPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-6">
         <p className="text-sm text-muted-foreground">Reservation not found.</p>
-        <Button variant="outline" onClick={() => navigate(-1)}>Go back</Button>
+        <Button variant="outline" onClick={goBack}>Go back</Button>
       </div>
     );
   }
@@ -215,7 +251,7 @@ export default function AdminLodgingReservationDetailPage() {
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
+          <Button variant="ghost" size="icon" onClick={goBack} className="shrink-0" aria-label="Back to reservations">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="min-w-0 flex-1">
@@ -230,14 +266,38 @@ export default function AdminLodgingReservationDetailPage() {
 
       <div className="max-w-3xl mx-auto px-4 py-4 space-y-4">
         {/* Status timeline (live) */}
-        <Card>
+        <Card id="payment-review" className="scroll-mt-24 transition-shadow">
           <CardContent className="pt-4">
             <ReservationStatusTimeline status={reservation.status as any} />
           </CardContent>
         </Card>
 
+        <Card className={isClosed ? "border-muted bg-muted/20" : "border-primary/20"}>
+          <CardContent className="pt-4 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Operations next step</p>
+                <p className="text-sm font-bold">{recommendedAction}</p>
+              </div>
+              <Button size="sm" variant="outline" className="h-8 text-xs" onClick={goBack}>Back to reservations</Button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+              <OpsMetric icon={ClipboardCheck} label="Status" value={STATUS_LABEL[reservation.status] || reservation.status} />
+              <OpsMetric icon={CreditCard} label="Payment" value={String(reservation.payment_status || "pending").replace(/_/g, " ")} />
+              <OpsMetric icon={AlertCircle} label="Balance" value={fmt(balanceDue)} danger={balanceDue > 0} />
+              <OpsMetric icon={PackageCheck} label="Add-ons" value={`${addonRequests.length} attempt${addonRequests.length === 1 ? "" : "s"}`} />
+            </div>
+            {isClosed && (
+              <div className="rounded-xl border border-border bg-background/70 p-3 text-xs text-muted-foreground">
+                <p className="font-semibold text-foreground">Closed reservation</p>
+                <p>This booking is out of Active. Finish any payment/refund review, then keep notes in the audit log.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Stay */}
-        <Card>
+        <Card id="payment-review" className="scroll-mt-24 transition-shadow">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Stay</CardTitle>
           </CardHeader>
@@ -420,12 +480,20 @@ export default function AdminLodgingReservationDetailPage() {
                     disabled={saving || !note.trim() || (reasonRequired && !reason)}
                   >
                     {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
-                    Save
+                    {reasonRequired ? `Confirm ${STATUS_LABEL[pendingStatus].toLowerCase()}` : "Save status"}
                   </Button>
                 </div>
               </div>
             ) : transitions.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No further transitions available.</p>
+              <div className="rounded-xl border border-border bg-muted/20 p-3 text-xs text-muted-foreground space-y-2">
+                <p className="font-semibold text-foreground">No status changes left here.</p>
+                <p>{isClosed ? "This reservation is closed. Review payment, add-ons, and audit history before returning to the reservations list." : "This reservation has reached the end of its normal workflow."}</p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => document.getElementById("payment-review")?.scrollIntoView({ behavior: "smooth", block: "start" })}>Payment review</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => document.getElementById("audit-log")?.scrollIntoView({ behavior: "smooth", block: "start" })}>Audit log</Button>
+                  <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={goBack}>Back to list</Button>
+                </div>
+              </div>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {transitions.map((t) => (
@@ -441,7 +509,7 @@ export default function AdminLodgingReservationDetailPage() {
         </Card>
 
         {/* Audit log */}
-        <Card>
+        <Card id="audit-log" className="scroll-mt-24 transition-shadow">
           <CardHeader className="pb-3 flex-row items-center justify-between gap-2">
             <CardTitle className="text-sm flex items-center gap-2"><History className="h-4 w-4" /> Audit log</CardTitle>
             <Button
@@ -468,6 +536,18 @@ function Row({ label, value, muted, bold, className }: { label: string; value: s
     <div className={`flex justify-between ${className || ""}`}>
       <span className={muted ? "text-muted-foreground" : ""}>{label}</span>
       <span className={bold ? "font-bold" : ""}>{value}</span>
+    </div>
+  );
+}
+
+function OpsMetric({ icon: Icon, label, value, danger }: { icon: any; label: string; value: string; danger?: boolean }) {
+  return (
+    <div className="rounded-xl border border-border bg-background/70 p-3 min-w-0">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <Icon className="h-3.5 w-3.5" />
+        <span>{label}</span>
+      </div>
+      <p className={`mt-1 font-semibold capitalize truncate ${danger ? "text-destructive" : "text-foreground"}`}>{value}</p>
     </div>
   );
 }
