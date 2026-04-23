@@ -27066,6 +27066,77 @@ export type Database = {
           },
         ]
       }
+      lodge_reservation_change_requests: {
+        Row: {
+          addon_payload: Json | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          host_response: string | null
+          id: string
+          price_delta_cents: number
+          proposed_check_in: string | null
+          proposed_check_out: string | null
+          proposed_total_cents: number | null
+          reason: string | null
+          refund_cents: number
+          requested_by: string | null
+          reservation_id: string
+          status: Database["public"]["Enums"]["lodge_change_status"]
+          store_id: string
+          type: Database["public"]["Enums"]["lodge_change_type"]
+          updated_at: string
+        }
+        Insert: {
+          addon_payload?: Json | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          host_response?: string | null
+          id?: string
+          price_delta_cents?: number
+          proposed_check_in?: string | null
+          proposed_check_out?: string | null
+          proposed_total_cents?: number | null
+          reason?: string | null
+          refund_cents?: number
+          requested_by?: string | null
+          reservation_id: string
+          status?: Database["public"]["Enums"]["lodge_change_status"]
+          store_id: string
+          type: Database["public"]["Enums"]["lodge_change_type"]
+          updated_at?: string
+        }
+        Update: {
+          addon_payload?: Json | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          host_response?: string | null
+          id?: string
+          price_delta_cents?: number
+          proposed_check_in?: string | null
+          proposed_check_out?: string | null
+          proposed_total_cents?: number | null
+          reason?: string | null
+          refund_cents?: number
+          requested_by?: string | null
+          reservation_id?: string
+          status?: Database["public"]["Enums"]["lodge_change_status"]
+          store_id?: string
+          type?: Database["public"]["Enums"]["lodge_change_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_reservation_change_requests_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "lodge_reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lodge_reservation_charges: {
         Row: {
           amount_cents: number
@@ -27092,6 +27163,38 @@ export type Database = {
           store_id?: string
         }
         Relationships: []
+      }
+      lodge_reservation_messages_link: {
+        Row: {
+          created_at: string
+          id: string
+          reservation_id: string
+          store_id: string
+          thread_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reservation_id: string
+          store_id: string
+          thread_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reservation_id?: string
+          store_id?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_reservation_messages_link_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: true
+            referencedRelation: "lodge_reservations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lodge_reservations: {
         Row: {
@@ -60372,6 +60475,14 @@ export type Database = {
       is_driver: { Args: { p_user_id?: string }; Returns: boolean }
       is_following: { Args: { target_user_id: string }; Returns: boolean }
       is_hotel_owner: { Args: { _hotel_id: string }; Returns: boolean }
+      is_lodge_reservation_guest: {
+        Args: { _reservation_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_lodge_store_manager: {
+        Args: { _store_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_lodge_store_owner: { Args: { _store_id: string }; Returns: boolean }
       is_rental_car_owner: { Args: { _car_id: string }; Returns: boolean }
       is_restaurant_member: {
@@ -60855,6 +60966,13 @@ export type Database = {
         | "soft_launch"
         | "full_launch"
       launch_phase: "pre_launch" | "soft_launch" | "full_launch" | "scaling"
+      lodge_change_status:
+        | "pending"
+        | "auto_approved"
+        | "approved"
+        | "declined"
+        | "cancelled"
+      lodge_change_type: "reschedule" | "cancel" | "addon"
       notification_category:
         | "transactional"
         | "account"
@@ -61233,6 +61351,14 @@ export const Constants = {
         "full_launch",
       ],
       launch_phase: ["pre_launch", "soft_launch", "full_launch", "scaling"],
+      lodge_change_status: [
+        "pending",
+        "auto_approved",
+        "approved",
+        "declined",
+        "cancelled",
+      ],
+      lodge_change_type: ["reschedule", "cancel", "addon"],
       notification_category: [
         "transactional",
         "account",
