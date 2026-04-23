@@ -34,6 +34,7 @@ import { LodgingHighlightsStrip } from "@/components/lodging/LodgingHighlightsSt
 import { LodgingAmenitiesPanel } from "@/components/lodging/LodgingAmenitiesPanel";
 import { LodgingPolicyPanel } from "@/components/lodging/LodgingPolicyPanel";
 import { useHasStoreBooking } from "@/hooks/useHasStoreBooking";
+import StoreSideRail from "@/components/grocery/StoreSideRail";
 
 /**
  * Extract the correct language part from dual-format text like "Khmer/English".
