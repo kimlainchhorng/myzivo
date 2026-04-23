@@ -3655,6 +3655,7 @@ export default function AdminStoreEditPage() {
 
           {["hotel","resort","guesthouse"].includes(form.category) && (
             <>
+              <TabsContent value="lodge-overview"><LodgingOverviewSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-rooms"><LodgingRoomsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-reservations"><LodgingReservationsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-calendar"><LodgingCalendarSection storeId={storeId!} /></TabsContent>
@@ -3662,8 +3663,15 @@ export default function AdminStoreEditPage() {
               <TabsContent value="lodge-frontdesk"><LodgingFrontDeskSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-housekeeping"><LodgingHousekeepingSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-maintenance"><LodgingMaintenanceSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-addons"><LodgingAddOnsSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-dining"><LodgingDiningSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-experiences"><LodgingExperiencesSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-transport"><LodgingTransportSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-wellness"><LodgingWellnessSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-amenities"><LodgingAmenitiesSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-property"><LodgingPropertyProfileSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-policies"><LodgingPoliciesSection storeId={storeId!} /></TabsContent>
+              <TabsContent value="lodge-reviews"><LodgingReviewsSection storeId={storeId!} /></TabsContent>
               <TabsContent value="lodge-reports"><LodgingReportsSection storeId={storeId!} /></TabsContent>
             </>
           )}
