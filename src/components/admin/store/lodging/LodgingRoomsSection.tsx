@@ -295,53 +295,55 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
               const ci = r.cover_photo_index ?? 0;
               const cover = photos[ci] ?? photos[0];
               return (
-                <div key={r.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-                    {cover
-                      ? <img src={cover} alt={r.name} className="h-full w-full object-cover" />
-                      : <BedDouble className="h-6 w-6 text-primary" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-sm">{r.name}</p>
-                      {r.room_type && (
-                        <Badge variant="secondary" className="text-[10px] gap-1">
-                          <BedDouble className="h-2.5 w-2.5" />{r.room_type}
-                        </Badge>
-                      )}
-                      {!r.is_active && <Badge variant="outline" className="text-[10px]">Inactive</Badge>}
-                      {(r.photos?.length || 0) > 0 && (
-                        <Badge variant="outline" className="text-[10px] gap-1"><ImageIcon className="h-2.5 w-2.5" />{r.photos.length}</Badge>
-                      )}
+                <div key={r.id} className="p-3 rounded-lg border bg-card">
+                  <div className="flex items-start gap-3">
+                    <div className="h-14 w-14 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                      {cover
+                        ? <img src={cover} alt={r.name} className="h-full w-full object-cover" />
+                        : <BedDouble className="h-6 w-6 text-primary" />}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 inline-flex items-center gap-1 flex-wrap">
-                      <BedDouble className="h-3 w-3 text-sky-600 dark:text-sky-400 shrink-0" />
-                      <span>{r.beds || "—"}</span>
-                      <span className="text-muted-foreground/50">·</span>
-                      <Users className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <span>Sleeps {r.max_guests}</span>
-                      <span className="text-muted-foreground/50">·</span>
-                      <Hash className="h-3 w-3 text-amber-600 dark:text-amber-400 shrink-0" />
-                      <span>{r.units_total} unit{r.units_total > 1 ? "s" : ""}</span>
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm leading-tight break-words">{r.name}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                        {r.room_type && (
+                          <Badge variant="secondary" className="text-[10px] gap-1">
+                            <BedDouble className="h-2.5 w-2.5" />{r.room_type}
+                          </Badge>
+                        )}
+                        {!r.is_active && <Badge variant="outline" className="text-[10px]">Inactive</Badge>}
+                        {(r.photos?.length || 0) > 0 && (
+                          <Badge variant="outline" className="text-[10px] gap-1"><ImageIcon className="h-2.5 w-2.5" />{r.photos.length}</Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1 flex-wrap">
+                        <BedDouble className="h-3 w-3 text-sky-600 dark:text-sky-400 shrink-0" />
+                        <span>{r.beds || "—"}</span>
+                        <span className="text-muted-foreground/50">·</span>
+                        <Users className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>Sleeps {r.max_guests}</span>
+                        <span className="text-muted-foreground/50">·</span>
+                        <Hash className="h-3 w-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                        <span>{r.units_total} unit{r.units_total > 1 ? "s" : ""}</span>
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-bold text-sm inline-flex items-center gap-1 justify-end">
-                      <DollarSign className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                      {(r.base_rate_cents / 100).toFixed(2)}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground inline-flex items-center gap-1 justify-end">
-                      <Clock className="h-2.5 w-2.5" />per night
-                    </p>
-                  </div>
-                  <div className="flex gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(r)} title="Edit"><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => duplicate(r)} title="Duplicate" disabled={upsert.isPending}>
-                      <Copy className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => { if (confirm("Delete room?")) remove.mutate(r.id); }} title="Delete">
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                  <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-border/40">
+                    <div className="inline-flex items-baseline gap-1">
+                      <DollarSign className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 self-center" />
+                      <span className="font-bold text-sm">{(r.base_rate_cents / 100).toFixed(2)}</span>
+                      <span className="text-[10px] text-muted-foreground inline-flex items-center gap-0.5 ml-0.5">
+                        <Clock className="h-2.5 w-2.5" />per night
+                      </span>
+                    </div>
+                    <div className="flex gap-0.5 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(r)} title="Edit"><Pencil className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => duplicate(r)} title="Duplicate" disabled={upsert.isPending}>
+                        <Copy className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { if (confirm("Delete room?")) remove.mutate(r.id); }} title="Delete">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               );
