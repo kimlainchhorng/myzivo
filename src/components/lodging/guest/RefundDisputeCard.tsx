@@ -16,13 +16,20 @@ interface Props {
 
 const openStatuses = new Set(["pending", "under_review", "approved"]);
 const money = (cents?: number | null) => `$${((Number(cents) || 0) / 100).toFixed(2)}`;
+const highlightTarget = (href: string) => {
+  const target = document.querySelector(href) as HTMLElement | null;
+  if (!target) return;
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
+  target.classList.add("transition-shadow", "ring-2", "ring-primary", "ring-offset-2", "ring-offset-background");
+  window.setTimeout(() => target.classList.remove("transition-shadow", "ring-2", "ring-primary", "ring-offset-2", "ring-offset-background"), 1600);
+};
 
 export default function RefundDisputeCard({ reservationId, disputes, canRequest, maxAmountCents }: Props) {
   const [open, setOpen] = useState(false);
   const hasOpen = disputes.some((d) => openStatuses.has(d.status));
   if (!canRequest && !disputes.length) return null;
   const latest = disputes[0];
-  const go = (href: string) => document.querySelector(href)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const resolvedDelta = latest?.resolution_amount_cents == null ? null : latest.resolution_amount_cents - latest.requested_amount_cents;
 
   const steps = latest ? [
     { key: "pending", label: "Request submitted", done: true },
@@ -38,7 +45,7 @@ export default function RefundDisputeCard({ reservationId, disputes, canRequest,
       </CardHeader>
       <CardContent className="space-y-3">
         {latest && (
-          <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+          <div className={`rounded-lg border p-3 space-y-3 ${latest.status === "declined" ? "bg-destructive/10" : "bg-muted/30"}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-xs text-muted-foreground">Latest update</p>
@@ -46,22 +53,29 @@ export default function RefundDisputeCard({ reservationId, disputes, canRequest,
               </div>
               <span className="text-xs text-muted-foreground">Updated {format(parseISO(latest.updated_at), "MMM d, yyyy h:mm a")}</span>
             </div>
+            <div className="grid grid-cols-2 gap-2 rounded-md border bg-background/70 p-2 text-xs">
+              <div><span className="text-muted-foreground">Requested</span><p className="font-semibold">{money(latest.requested_amount_cents)}</p></div>
+              <div><span className="text-muted-foreground">Resolution</span><p className="font-semibold">{latest.resolution_amount_cents == null ? "Pending" : money(latest.resolution_amount_cents)}</p></div>
+              <div><span className="text-muted-foreground">Difference</span><p className="font-semibold">{resolvedDelta == null ? "Pending" : `${resolvedDelta >= 0 ? "+" : ""}${money(resolvedDelta)}`}</p></div>
+              <div><span className="text-muted-foreground">Reason</span><p className="font-semibold capitalize">{latest.reason_category.replace(/_/g, " ")}</p></div>
+            </div>
+            {latest.admin_response && <p className="rounded-md bg-background p-2 text-xs">{latest.admin_response}</p>}
             <div className="grid gap-2">
               {steps.map((step) => {
                 const current = step.key === latest.status || (latest.status === "declined" && step.key === "approved");
                 const Icon = latest.status === "declined" && current ? XCircle : step.done ? CheckCircle2 : current ? Clock : Circle;
                 return (
                   <div key={step.key} className="flex items-center gap-2 text-sm">
-                    <Icon className={step.done || current ? "h-4 w-4 text-primary" : "h-4 w-4 text-muted-foreground"} />
+                    <Icon className={latest.status === "declined" && current ? "h-4 w-4 text-destructive" : step.done || current ? "h-4 w-4 text-primary" : "h-4 w-4 text-muted-foreground"} />
                     <span className={current ? "font-semibold" : "text-muted-foreground"}>{step.label}</span>
                   </div>
                 );
               })}
             </div>
             <div className="flex flex-wrap gap-2 pt-1">
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => go("#stay-summary")}><LinkIcon className="h-3.5 w-3.5" /> Reservation details</Button>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => go("#payment-summary")}><LinkIcon className="h-3.5 w-3.5" /> Payment summary</Button>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => go("#request-history")}><LinkIcon className="h-3.5 w-3.5" /> Request history</Button>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => highlightTarget("#stay-summary")}><LinkIcon className="h-3.5 w-3.5" /> Reservation details</Button>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => highlightTarget("#payment-summary")}><LinkIcon className="h-3.5 w-3.5" /> Payment summary</Button>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => highlightTarget("#request-history")}><LinkIcon className="h-3.5 w-3.5" /> Request history</Button>
             </div>
           </div>
         )}
