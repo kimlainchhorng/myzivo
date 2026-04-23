@@ -1,7 +1,7 @@
 /**
  * AdminStoreEditPage - Full store management: edit profile, cover, logo, products
  */
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import serviceBrakePads from "@/assets/service-brake-pads.jpg";
 import serviceOilChange from "@/assets/service-oil-change.jpg";
 import { getServiceImage } from "@/config/autoRepairServiceImages";
@@ -86,6 +86,10 @@ import LodgingPoliciesSection from "@/components/admin/store/lodging/LodgingPoli
 import LodgingReviewsSection from "@/components/admin/store/lodging/LodgingReviewsSection";
 import LodgingRatePlansSection from "@/components/admin/store/lodging/LodgingRatePlansSection";
 import LodgingGuestRequestsSection from "@/components/admin/store/lodging/LodgingGuestRequestsSection";
+import { getLodgingSetupItems, setupProgress } from "@/components/admin/store/lodging/LodgingSetupChecklist";
+import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
+import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
+import { isLodgingStoreCategory } from "@/hooks/useOwnerStoreProfile";
 import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
@@ -412,6 +416,7 @@ const emptyProduct = {
 export default function AdminStoreEditPage() {
   const { storeId } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const { currentLanguage, changeLanguage, t } = useI18n();
@@ -428,18 +433,32 @@ export default function AdminStoreEditPage() {
   const [addingBydModel, setAddingBydModel] = useState(false);
   const [newBydModelName, setNewBydModelName] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "profile");
   const appliedLodgingDefaultTabRef = useRef(false);
+
+  const handleTabChange = useCallback((tab: string) => {
+    setActiveTab(tab);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("tab", tab);
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   // Allow nested sections (e.g., housekeeping -> maintenance) to request a tab change
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail as { tab?: string } | undefined;
-      if (detail?.tab) setActiveTab(detail.tab);
+      if (detail?.tab) handleTabChange(detail.tab);
     };
     window.addEventListener("lodge-set-tab", handler as EventListener);
     return () => window.removeEventListener("lodge-set-tab", handler as EventListener);
-  }, []);
+  }, [handleTabChange]);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && tab !== activeTab) setActiveTab(tab);
+  }, [searchParams, activeTab]);
 
   const { data: store, isLoading } = useQuery({
     queryKey: ["admin-store", storeId],
