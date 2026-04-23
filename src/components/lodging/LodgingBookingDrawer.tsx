@@ -251,6 +251,9 @@ export function LodgingBookingDrawer({
   };
 
   const triggerStripeDeposit = async (resId: string) => {
+    // Hosted Stripe Checkout (new tab) — used as a fallback for the "Retry" button on the
+    // payment badge. The primary card-on-arrival flow uses the inline Embedded Checkout
+    // rendered in the success step (LodgingEmbeddedCheckout) so the user stays in the booking sheet.
     try {
       const depositCents = securityDeposit > 0 ? securityDeposit : breakdown.total;
       const { data: sessionData, error: fnErr } = await supabase.functions.invoke("create-lodging-deposit", {
@@ -259,6 +262,7 @@ export function LodgingBookingDrawer({
           store_id: storeId,
           deposit_cents: depositCents,
           mode: securityDeposit > 0 ? "deposit" : "full",
+          ui_mode: "hosted",
         },
       });
       if (fnErr) throw fnErr;
