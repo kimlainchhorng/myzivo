@@ -4,6 +4,7 @@
  * Works on iOS, Android (Capacitor) and Web (PWA)
  */
 import { useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,34 +32,96 @@ const eventMessages: Record<RideEvent, { title: string; body: string }> = {
   promo_available: { title: "New Promo!", body: "A new promo code is available for your next ride." },
 };
 
+const eventActionLabels: Partial<Record<RideEvent, string>> = {
+  driver_assigned: "Track",
+  driver_en_route: "Track",
+  driver_arrived: "Track",
+  trip_started: "Track",
+  trip_completed: "Rate",
+  trip_cancelled: "View",
+  surge_alert: "View",
+  promo_available: "View",
+};
+
+function defaultDeepLink(event: RideEvent, jobId?: string): string {
+  switch (event) {
+    case "driver_assigned":
+    case "driver_en_route":
+    case "driver_arrived":
+    case "trip_started":
+      return jobId ? `/ride/track/${jobId}` : "/rides";
+    case "trip_completed":
+      return jobId ? `/ride/summary/${jobId}` : "/rides/history";
+    case "trip_cancelled":
+      return "/rides";
+    case "surge_alert":
+      return "/rides";
+    case "promo_available":
+      return "/wallet/promos";
+    default:
+      return "/rides";
+  }
+}
+
+// Deterministic 31-bit hash for a string (LocalNotifications id must be int32)
+function hashId(input: string): number {
+  let h = 0;
+  for (let i = 0; i < input.length; i++) {
+    h = (h * 31 + input.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h) % 2147483647;
+}
+
+type NotifyExtra = {
+  body?: string;
+  userId?: string;
+  jobId?: string;
+  onAction?: () => void;
+};
+
 export function useRideNotifications() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const notify = useCallback(async (event: RideEvent, extra?: { body?: string; userId?: string }) => {
+  const notify = useCallback(async (event: RideEvent, extra?: NotifyExtra) => {
     const msg = eventMessages[event];
     const body = extra?.body || msg.body;
     const targetUserId = extra?.userId || user?.id;
+    const jobId = extra?.jobId;
+
+    const deepLink = defaultDeepLink(event, jobId);
+    const handleAction = extra?.onAction ?? (() => navigate(deepLink));
+    const actionLabel = eventActionLabels[event];
 
     // Always show branded in-app toast (foreground)
-    showNotification.ride(event, { title: msg.title, body });
+    showNotification.ride(event, {
+      title: msg.title,
+      body,
+      actionLabel,
+      onAction: handleAction,
+      onBodyClick: handleAction,
+      // Stable id so the same event for the same job replaces an existing toast
+      id: jobId ? `ride-${jobId}-${event}` : undefined,
+    });
 
-    // Try native local notification on Capacitor (immediate, works offline)
+    // Native local notification on Capacitor (immediate, works offline)
     if (Capacitor.isNativePlatform()) {
       try {
         const perm = await LocalNotifications.checkPermissions();
         if (perm.display !== "granted") {
           await LocalNotifications.requestPermissions();
         }
+        const dedupKey = `${jobId ?? "global"}-${event}`;
         await LocalNotifications.schedule({
           notifications: [
             {
-              id: Date.now(),
+              id: hashId(dedupKey),
               title: msg.title,
               body,
               schedule: { at: new Date(Date.now() + 100) },
               sound: undefined,
               actionTypeId: "",
-              extra: { type: event },
+              extra: { type: event, jobId, deepLink },
             },
           ],
         });
@@ -67,7 +130,7 @@ export function useRideNotifications() {
       }
     }
 
-    // Also send server-side push (reaches background/closed app on all platforms)
+    // Server-side push (reaches background/closed app on all platforms)
     if (targetUserId) {
       try {
         await supabase.functions.invoke("send-push-notification", {
@@ -76,14 +139,14 @@ export function useRideNotifications() {
             notification_type: event,
             title: msg.title,
             body,
-            data: { type: event },
+            data: { type: event, jobId, deepLink },
           },
         });
       } catch (err) {
         console.warn("[RideNotifications] Server push failed:", err);
       }
     }
-  }, [user?.id]);
+  }, [user?.id, navigate]);
 
   return { notify };
 }

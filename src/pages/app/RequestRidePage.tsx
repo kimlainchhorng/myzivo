@@ -1926,7 +1926,7 @@ export default function RequestRidePage() {
                     className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border border-border/40 bg-card text-xs font-bold text-foreground hover:bg-muted/50 touch-manipulation active:scale-95">
                     <Share2 className="w-4 h-4 text-primary" /> Share Trip
                   </button>
-                  <button onClick={() => { notifyRide("trip_cancelled"); toast.info("Ride cancelled. Refund will be processed."); navigate("/"); }}
+                  <button onClick={() => { notifyRide("trip_cancelled", { jobId: draftJobId ?? undefined }); toast.info("Ride cancelled. Refund will be processed."); navigate("/"); }}
                     className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border border-destructive/30 bg-destructive/5 text-xs font-bold text-destructive hover:bg-destructive/10 touch-manipulation active:scale-95">
                     Cancel
                   </button>

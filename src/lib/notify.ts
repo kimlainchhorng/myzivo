@@ -20,6 +20,28 @@ import NotificationToastCard, {
   type NotificationVariant,
 } from "@/components/notifications/NotificationToastCard";
 
+// Lazy-load Capacitor Haptics (mirrors useHaptics.ts)
+let HapticsMod: any = null;
+let ImpactStyleMod: any = null;
+(async () => {
+  try {
+    const mod = await import("@capacitor/haptics");
+    HapticsMod = mod.Haptics;
+    ImpactStyleMod = mod.ImpactStyle;
+  } catch {
+    /* web/PWA — no-op */
+  }
+})();
+
+async function lightHaptic() {
+  if (!HapticsMod) return;
+  try {
+    await HapticsMod.impact({ style: ImpactStyleMod?.Light });
+  } catch {
+    /* ignore */
+  }
+}
+
 type BaseOpts = {
   title: string;
   body?: string;
@@ -28,21 +50,49 @@ type BaseOpts = {
   actionLabel?: string;
   onAction?: () => void;
   onBodyClick?: () => void;
+  href?: string;
   duration?: number;
   avatarUrl?: string | null;
   avatarFallback?: string;
+  id?: string | number;
 };
 
+function withHaptic(cb?: () => void): (() => void) | undefined {
+  if (!cb) return undefined;
+  return () => {
+    void lightHaptic();
+    cb();
+  };
+}
+
 function show(variant: NotificationVariant, opts: BaseOpts) {
-  const { duration = 5000, ...rest } = opts;
+  const { duration = 5000, href, onAction, onBodyClick, id, ...rest } = opts;
+
+  // Default href -> navigation handler if no explicit onAction supplied
+  const resolvedAction =
+    onAction ??
+    (href
+      ? () => {
+          try {
+            window.location.assign(href);
+          } catch {
+            /* ignore */
+          }
+        }
+      : undefined);
+
+  const resolvedBodyClick = onBodyClick ?? (href ? resolvedAction : undefined);
+
   return toast.custom(
     (t) =>
       createElement(NotificationToastCard, {
         variant,
         ...rest,
+        onAction: withHaptic(resolvedAction),
+        onBodyClick: withHaptic(resolvedBodyClick),
         onDismiss: () => toast.dismiss(t),
       }),
-    { duration }
+    { duration, id }
   );
 }
 
