@@ -1,5 +1,6 @@
 import { Star, ThumbsUp, MessageSquare, ChevronRight, Verified, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { StarRating } from "@/components/shared/StarRating";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useReviews } from "@/hooks/useReviews";
