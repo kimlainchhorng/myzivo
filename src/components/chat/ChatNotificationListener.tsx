@@ -61,9 +61,13 @@ export default function ChatNotificationListener() {
         const notif = new Notification(`${senderName}`, {
           body: messageText || "Sent you a message",
           icon: "/icons/icon-192x192.png",
-          tag: `chat-${Date.now()}`,
+          badge: "/icons/icon-72x72.png",
+          // Dedup per sender so multiple messages collapse instead of stacking
+          tag: `chat-${senderId}`,
+          renotify: true,
           silent: false,
-        });
+          vibrate: [80, 40, 80],
+        } as NotificationOptions);
         notif.onclick = () => {
           window.focus();
           notif.close();
