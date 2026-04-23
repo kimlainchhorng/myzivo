@@ -56,7 +56,7 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
     catch (e: any) { toast.error(e.message || "Failed"); }
   };
 
-  const openReservation = (id: string, workflow?: "cancel" | "review" | "addons" | "payment" | "audit") => {
+  const openReservation = (id: string, workflow?: "cancel" | "review" | "addons" | "payment" | "audit" | "workflow") => {
     const returnTo = `${location.pathname}?tab=${encodeURIComponent(status)}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ""}`;
     navigate(`/admin/stores/${storeId}/lodging/reservations/${id}${workflow ? `?workflow=${workflow}` : ""}`, {
       state: { returnTo, workflow },
@@ -104,11 +104,12 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
             {filtered.map(r => {
               const displayName = r.guest_name?.trim() || `Guest · ${r.number || r.id.slice(0, 8)}`;
               const balance = (r.total_cents || 0) - (r.paid_cents || 0);
-              const hasPendingRequest = pendingRequests.some(req => req.reservation_id === r.id);
+              const pendingRequest = pendingRequests.find(req => req.reservation_id === r.id);
+              const hasPendingRequest = !!pendingRequest;
               const paymentNeedsReview = ["failed", "pending", "processing"].includes(String(r.payment_status || ""));
               const isClosed = CLOSED_STATUSES.has(r.status);
               const needsReview = hasPendingRequest || balance > 0 || paymentNeedsReview || isClosed;
-              const reviewWorkflow = hasPendingRequest ? "addons" : paymentNeedsReview || balance > 0 ? "payment" : isClosed ? "audit" : "review";
+              const reviewWorkflow = pendingRequest?.type === "addon" ? "addons" : hasPendingRequest ? "workflow" : paymentNeedsReview || balance > 0 ? "payment" : isClosed ? "audit" : "review";
               return (
               <div key={r.id} className="p-3 rounded-lg border bg-card transition hover:border-primary/40 focus-within:border-primary/40">
                 <button
