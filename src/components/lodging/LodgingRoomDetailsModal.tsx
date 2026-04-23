@@ -419,7 +419,7 @@ export function LodgingRoomDetailsModal({
               {groupAmenities(amenities).map((group) => (
                 <div key={group.label}>
                   <p className="text-xs font-semibold text-foreground mb-1.5">{group.label}</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-2">
                     {group.items.map((a) => {
                       const Icon = getAmenityIcon(a);
                       return (
