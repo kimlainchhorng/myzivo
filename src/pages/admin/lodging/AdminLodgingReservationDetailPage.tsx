@@ -2,8 +2,8 @@
  * AdminLodgingReservationDetailPage — full reservation detail + status workflow + audit log.
  * Route: /admin/stores/:storeId/lodging/reservations/:reservationId
  */
-import { useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
@@ -46,6 +46,7 @@ const fmt = (c: number) => `$${((c || 0) / 100).toFixed(2)}`;
 export default function AdminLodgingReservationDetailPage() {
   const { storeId, reservationId } = useParams<{ storeId: string; reservationId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const qc = useQueryClient();
   const audit = useLodgeReservationAudit(reservationId);
 
@@ -84,6 +85,7 @@ export default function AdminLodgingReservationDetailPage() {
     ],
   };
   const reasonRequired = pendingStatus === "cancelled" || pendingStatus === "no_show";
+  const destructiveWorkflow = pendingStatus === "cancelled" || pendingStatus === "no_show";
   const reasonLabel = (val: string) =>
     REASON_OPTIONS[pendingStatus || ""]?.find((o) => o.value === val)?.label || val;
 
@@ -146,6 +148,16 @@ export default function AdminLodgingReservationDetailPage() {
     return all;
   }, [reservation?.status]);
 
+  useEffect(() => {
+    if (!reservation || pendingStatus) return;
+    const workflow = searchParams.get("workflow");
+    if (workflow === "cancel" && !["cancelled", "checked_out", "no_show"].includes(reservation.status)) {
+      setPendingStatus("cancelled");
+    } else if (workflow === "no_show" && !["cancelled", "checked_out", "no_show"].includes(reservation.status)) {
+      setPendingStatus("no_show");
+    }
+  }, [pendingStatus, reservation, searchParams]);
+
   const submitTransition = async () => {
     if (!pendingStatus || !reservation) return;
     if (!note.trim()) { toast.error("Audit note required"); return; }
@@ -169,14 +181,16 @@ export default function AdminLodgingReservationDetailPage() {
       });
       toast.success(
         reasonRequired
-          ? `${STATUS_LABEL[pendingStatus]} — reason: ${reasonLabel(reason)}`
-          : `Status updated to ${STATUS_LABEL[pendingStatus]}`
+          ? `${STATUS_LABEL[pendingStatus]} saved`
+          : `Status updated to ${STATUS_LABEL[pendingStatus]}`,
+        reasonRequired ? { description: "Removed from Active. Review refund/payment follow-up if needed." } : undefined
       );
       qc.invalidateQueries({ queryKey: ["lodge-reservation", reservationId] });
       qc.invalidateQueries({ queryKey: ["lodge-reservations", reservation.store_id] });
       setPendingStatus(null);
       setNote("");
       setReason("");
+      setSearchParams({});
     } catch (e: any) {
       toast.error(e.message || "Update failed");
     } finally {
