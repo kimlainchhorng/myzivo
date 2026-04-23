@@ -74,7 +74,7 @@ export default function MyLodgingTripPage() {
         .select("name")
         .eq("id", reservation!.store_id)
         .maybeSingle();
-      return data as { name: string } | null;
+      return (data as unknown) as { name: string } | null;
     },
     enabled: !!reservation?.store_id,
   });
