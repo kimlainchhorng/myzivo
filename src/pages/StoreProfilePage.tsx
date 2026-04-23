@@ -296,8 +296,12 @@ export default function StoreProfilePage() {
         );
       })()}
 
+      {/* ── Desktop split layout: left content + sticky right rail ── */}
+      <div className="max-w-7xl mx-auto lg:px-4 lg:grid lg:grid-cols-12 lg:gap-6 lg:pt-4">
+      <div className="lg:col-span-7 min-w-0">
+
       {/* ── Store Info Card - 3D glassmorphic ── */}
-      <div className="relative px-4 -mt-16 z-10" style={{ perspective: "1000px" }}>
+      <div className="relative px-4 -mt-16 lg:mt-0 z-10" style={{ perspective: "1000px" }}>
         <motion.div
           initial={{ y: 50, opacity: 0, rotateX: 10 }}
           animate={{ y: 0, opacity: 1, rotateX: 0 }}
