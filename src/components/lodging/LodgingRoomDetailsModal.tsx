@@ -211,7 +211,7 @@ export function LodgingRoomDetailsModal({
       onOpenChange={onOpenChange}
       title={name}
       description={type || undefined}
-      className="sm:max-w-2xl lg:max-w-4xl xl:max-w-5xl"
+      className="sm:max-w-2xl lg:max-w-5xl xl:max-w-6xl"
       footer={
         <div className="flex items-end justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
@@ -234,7 +234,8 @@ export function LodgingRoomDetailsModal({
         </div>
       }
     >
-      <div className="space-y-5 sm:space-y-6">
+      <div className="lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-6 lg:items-start space-y-4 sm:space-y-5 lg:space-y-0">
+        <div className="lg:sticky lg:top-0 lg:self-start space-y-4 sm:space-y-5">
         {/* Photo carousel */}
         <div
           className="relative -mx-1 focus-visible:outline-none"
@@ -251,7 +252,7 @@ export function LodgingRoomDetailsModal({
                   const isErrored = !!errored[i];
                   return (
                     <CarouselItem key={`${src}-${i}`}>
-                      <div className="aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] max-h-[55vh] sm:max-h-[60vh] lg:max-h-[65vh] rounded-2xl overflow-hidden bg-muted/60 relative ring-1 ring-black/5 shadow-sm">
+                      <div className="aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3] max-h-[42vh] sm:max-h-[55vh] lg:max-h-[58vh] rounded-2xl overflow-hidden bg-muted/60 relative ring-1 ring-black/5 shadow-sm">
                         {/* LQIP / skeleton layer */}
                         {!isLoaded && !isErrored && (
                           lqip ? (
@@ -305,7 +306,7 @@ export function LodgingRoomDetailsModal({
               </CarouselContent>
             </Carousel>
           ) : (
-            <div className="aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] max-h-[55vh] sm:max-h-[60vh] lg:max-h-[65vh] rounded-2xl overflow-hidden bg-muted/60 flex flex-col items-center justify-center gap-2">
+            <div className="aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3] max-h-[42vh] sm:max-h-[55vh] lg:max-h-[58vh] rounded-2xl overflow-hidden bg-muted/60 flex flex-col items-center justify-center gap-2">
               <BedDouble className="h-10 w-10 text-muted-foreground/40" />
               <span className="text-xs text-muted-foreground">Photo coming soon</span>
             </div>
@@ -366,9 +367,11 @@ export function LodgingRoomDetailsModal({
             {currentCaption}
           </div>
         )}
+        </div>
 
+        <div className="space-y-4 sm:space-y-5">
         {/* Premium stat tiles */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3">
           {beds && (
             <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl bg-gradient-to-br from-sky-50 to-sky-100/50 border border-sky-200/60 dark:from-sky-950/40 dark:to-sky-900/20 dark:border-sky-800/40">
               <BedDouble className="h-4 w-4 text-sky-600 dark:text-sky-400" />
@@ -494,6 +497,7 @@ export function LodgingRoomDetailsModal({
               </p>
             )}
           </div>
+        </div>
         </div>
       </div>
 
