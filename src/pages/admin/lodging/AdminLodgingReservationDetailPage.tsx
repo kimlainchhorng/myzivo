@@ -48,7 +48,7 @@ export default function AdminLodgingReservationDetailPage() {
   const { storeId, reservationId } = useParams<{ storeId: string; reservationId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const qc = useQueryClient();
   const audit = useLodgeReservationAudit(reservationId);
 
