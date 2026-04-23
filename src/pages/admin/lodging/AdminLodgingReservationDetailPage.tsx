@@ -266,7 +266,7 @@ export default function AdminLodgingReservationDetailPage() {
 
       <div className="max-w-3xl mx-auto px-4 py-4 space-y-4">
         {/* Status timeline (live) */}
-        <Card>
+        <Card id="payment-review" className="scroll-mt-24 transition-shadow">
           <CardContent className="pt-4">
             <ReservationStatusTimeline status={reservation.status as any} />
           </CardContent>
@@ -480,12 +480,20 @@ export default function AdminLodgingReservationDetailPage() {
                     disabled={saving || !note.trim() || (reasonRequired && !reason)}
                   >
                     {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
-                    Save
+                    {reasonRequired ? `Confirm ${STATUS_LABEL[pendingStatus].toLowerCase()}` : "Save status"}
                   </Button>
                 </div>
               </div>
             ) : transitions.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No further transitions available.</p>
+              <div className="rounded-xl border border-border bg-muted/20 p-3 text-xs text-muted-foreground space-y-2">
+                <p className="font-semibold text-foreground">No status changes left here.</p>
+                <p>{isClosed ? "This reservation is closed. Review payment, add-ons, and audit history before returning to the reservations list." : "This reservation has reached the end of its normal workflow."}</p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => document.getElementById("payment-review")?.scrollIntoView({ behavior: "smooth", block: "start" })}>Payment review</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => document.getElementById("audit-log")?.scrollIntoView({ behavior: "smooth", block: "start" })}>Audit log</Button>
+                  <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={goBack}>Back to list</Button>
+                </div>
+              </div>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {transitions.map((t) => (
@@ -501,7 +509,7 @@ export default function AdminLodgingReservationDetailPage() {
         </Card>
 
         {/* Audit log */}
-        <Card>
+        <Card id="audit-log" className="scroll-mt-24 transition-shadow">
           <CardHeader className="pb-3 flex-row items-center justify-between gap-2">
             <CardTitle className="text-sm flex items-center gap-2"><History className="h-4 w-4" /> Audit log</CardTitle>
             <Button
