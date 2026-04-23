@@ -1,67 +1,84 @@
 
 
-## Notification Polish: Deep Links, Haptics, Dedup & Contrast
+## Desktop Split Layout for Store Profile — Map & Actions Side Rail
 
-Tighten the notification system so every ride alert, chat ping, and tap behaves consistently and looks crisp on both mobile platforms.
+On large screens (lg ≥ 1024px), turn the store profile page into a two-column layout: store content on the left, a sticky right rail with a live map and quick-action panel. Mobile stays exactly as it is today.
 
-### What you'll see
+### What you'll see (desktop only)
 
-- **Tap "Track" on a ride alert** → opens the live ride screen for that exact job.
-- **Tap "Reply" on a chat toast** → opens that conversation directly.
-- **Tap "View" on a promo** → opens the promo/wallet page.
-- **Subtle haptic tick** when you tap any action button on a toast (light impact on iOS/Android, no-op on web).
-- **No more duplicate chat alerts** — multiple messages from the same person collapse into one notification on iOS/Android (web push), and ride events from the same job replace prior ones instead of stacking.
-- **Cleaner colors in dark mode**: rings and icon pills use stronger contrast (15% → 25% opacity rings, foreground-aware icon backgrounds), text stays legible on Safari's translucent dark backdrop.
+**Left column (≈ 62% width, max-w-3xl)**
+- Store header card, Rooms & Rates / Products, reviews, policy footer — the existing flow, just constrained to the left.
+
+**Right column (≈ 38% width, sticky, top-aligned under the banner)**
+- **Mini map card** (rounded-3xl, glass, h-72): Google/Mapbox tile centered on the store's coordinates with an emerald ZIVO pin. "Open full map" link → `/store-map?focus={slug}`.
+- **Address block**: store address with a copy-to-clipboard icon, distance from user (if GPS allowed).
+- **Ride There** button (full-width, emerald) → existing ride deep link.
+- **Quick actions row** (3 pill buttons): Call Store, Live Chat, Share — same gating logic as the current header (locked until booking confirmed, with the existing tooltip).
+- **Stay summary card** (lodging only): the existing `LodgingStaySelector` moves into the rail so check-in/out/guests stay visible while scrolling rooms.
+- **Hours & status chip**: today's open/close times + "Open 24 hours" / "Closes at …" line.
+- **Social links row** (FB / IG / Telegram icons) when present.
+
+The rail uses `lg:sticky lg:top-20 lg:self-start` and scrolls internally if the viewport is short.
+
+### Layout structure
+
+```text
+┌─ Banner (full width, h-60) ──────────────────────────────┐
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+┌─ max-w-7xl mx-auto px-4 ──────────────────────────────────┐
+│ ┌─ left (lg:col-span-7) ──┐  ┌─ right rail (lg:col-span-5)│
+│ │ Store header card        │  │ ┌─ Mini map (h-72) ─────┐ │
+│ │ Stay selector* (mobile)  │  │ │  [pin]                │ │
+│ │ Rooms & Rates / Products │  │ └───────────────────────┘ │
+│ │ Reviews                  │  │ Address + distance        │
+│ │ Policy footer            │  │ Ride There (CTA)          │
+│ │                          │  │ Call · Chat · Share       │
+│ │                          │  │ Stay selector* (lg)       │
+│ │                          │  │ Hours · Socials           │
+│ └──────────────────────────┘  └───────────────────────────┘
+└────────────────────────────────────────────────────────────┘
+```
+*Stay selector renders inline on mobile, in rail on lg+.
 
 ### Technical Plan
 
-**1. `src/hooks/useRideNotifications.ts`** — accept job/ride context + deep link
-- Extend `notify()` signature: `notify(event, { body?, userId?, jobId?, onAction? })`.
-- Build default deep links per event:
-  - `driver_assigned`/`driver_en_route`/`driver_arrived`/`trip_started` → `/ride/track/{jobId}`
-  - `trip_completed` → `/ride/summary/{jobId}` (fallback `/rides/history`)
-  - `trip_cancelled` → `/rides`
-  - `surge_alert` → `/rides`
-  - `promo_available` → `/wallet/promos`
-- Pass `actionLabel` ("Track", "Rate", "View") + `onAction` (navigate via a stored `navigate` ref from `useNavigate()`).
-- Remove the existing `showNotification.ride(...)` call duplication and route everything through `notify.ride(event, { ..., actionLabel, onAction, onBodyClick })`. No raw `toast.*` calls left.
-- Add `tag`-style dedup for native `LocalNotifications`: use deterministic `id` derived from `hash(jobId + event)` so the same event for the same job replaces instead of stacking.
+**1. `src/pages/StoreProfilePage.tsx`**
+- Wrap the post-banner content in `<div className="max-w-7xl mx-auto px-4 lg:grid lg:grid-cols-12 lg:gap-6">`.
+- Left column: `<div className="lg:col-span-7 min-w-0">` containing the existing header card, products/rooms, reviews, footer.
+- Right column: `<aside className="hidden lg:block lg:col-span-5 lg:sticky lg:top-20 lg:self-start space-y-3">` — a new local component `<StoreSideRail store={store} ... />`.
+- Move the existing **Ride There** button and **Lock/Live-Chat** unlock row into the rail on lg, keep them inline on mobile via duplicated render gated by `hidden lg:hidden` / `hidden lg:block` (or extract to a `StoreActionPanel` that both surfaces use).
+- Move `LodgingStaySelector` into the rail on lg using the same dual-render pattern.
 
-**2. `src/lib/notify.ts`** — wire haptics into action taps
-- Import `Haptics` lazily (mirror `useHaptics.ts` lazy-loader pattern; cannot use the hook here since this is a plain module).
-- In `NotificationToastCard`, when `onAction` fires, call `Haptics.impact({ style: Light })` before invoking the callback. Same lighter tick for `onBodyClick`. Web stays silent (try/catch).
-- Add an optional `href?: string` shortcut: if no `onAction` is given but `href` is, `notify` builds a default handler that navigates via `window.location.assign` (used by callers outside React, e.g., service-worker fallbacks).
+**2. New file `src/components/grocery/StoreSideRail.tsx`**
+- Props: `store`, `hasBooking`, `bookingSource`, `chattable`, `callable`, `phoneNumber`, `onOpenChat`, `onOpenCall`, `isLodging`, `stay`, `onStayChange`, `roomsMinPrice`.
+- Sections: MiniMap → Address → CTA stack → Stay (lodging) → Hours → Socials.
+- Uses `.zivo-card-organic` glass styling consistent with the rest of the page.
 
-**3. `src/components/notifications/NotificationToastCard.tsx`** — contrast pass
-- Bump variant `ring` opacity from `/15` → `/25` and add `dark:ring-{color}/35` so rings remain visible on dark glass.
-- Replace `bg-background/95` with `bg-background/92 dark:bg-background/85` for better blur read on Safari.
-- Icon pill: add `dark:bg-{color}/20` for stronger fill in dark mode.
-- Action button: add `dark:shadow-{color}/40` and `ring-1 ring-white/10` so the pill pops on dark backgrounds.
-- Title: ensure `text-foreground` (already correct); body bumps from `text-muted-foreground` to `text-foreground/75` for legibility on translucent surfaces.
-- Add `will-change-transform` to the slide-in for smoother iOS Safari animation.
+**3. New file `src/components/grocery/StoreMiniMap.tsx`**
+- Lightweight Google Maps embed (re-uses the existing Maps loader from `RideMap` if available; otherwise a thumbnail via Maps Static API as a fast first paint, with click → full `/store-map?focus={slug}` route).
+- Reads `store.latitude` / `store.longitude` (already present per `useStoreProfile`).
+- Emerald pin marker matching brand tokens.
 
-**4. `src/components/chat/ChatNotificationListener.tsx`** — better web-push dedup
-- Switch `tag` from `chat-${senderId}` to `chat-${senderId}` (already correct) but set `renotify: false` when the same sender pings within 8s (track `lastNotifBySender` ref) to avoid re-buzzing for rapid follow-ups. After 8s, allow renotify so genuinely new conversations buzz.
-- Add `data: { senderId, type: "chat" }` to the Notification options so service-worker click handlers (future) can route correctly.
-- For the in-app `toast.custom` chat card: pass haptic tick via the existing `onAction` path (handled by step 2 — automatic).
+**4. Sticky behavior + safe area**
+- Rail uses `lg:top-20` to clear the desktop NavBar (header height ≈ 64–72px per `style/desktop-header-consistency`).
+- `max-h-[calc(100vh-6rem)] overflow-y-auto` so long content scrolls inside the rail.
 
-**5. Ride deep-link wiring at call sites**
-- Audit `src/hooks/useRideNotifications.ts` consumers (`useRealtimeRideUpdates`, `useDriverArrivalDetection`, etc.) to pass `jobId` so the deep link works. Where `jobId` is available in the calling scope, forward it; otherwise the toast falls back to `/rides`.
-
-**6. Visual QA (in default mode)**
-- Use the browser tool at viewport 390x844 (iPhone) and 360x800 (Android) in both themes to confirm rings, action buttons, and body text contrast meet WCAG AA on the glass background. Tweak opacity values if any variant fails.
+**5. No mobile regression**
+- All `lg:` prefixes ensure mobile uses the current single-column flow. Mobile bottom nav (`ZivoMobileNav`) untouched.
+- Existing booking-gated tooltips, analytics events, and chat/call gating logic are passed through to the rail unchanged.
 
 ### Out of scope
-- Service-worker click routing (no SW currently handles notification clicks — would need a new `sw.js` handler; flagged for future).
-- Native iOS/Android system notification appearance (controlled by OS once delivered via FCM/APNs).
-- Server payload changes to `send-push-notification`.
+- Map clustering or showing nearby stores (that's `/store-map`).
+- Reordering the mobile flow.
+- Adding a desktop NavBar to the page if not already wrapped (the current page omits it; rail `top-20` is safe either way and can be tuned).
 
 ### Files
 
+**Created**
+- `src/components/grocery/StoreSideRail.tsx`
+- `src/components/grocery/StoreMiniMap.tsx`
+
 **Edited**
-- `src/hooks/useRideNotifications.ts`
-- `src/lib/notify.ts`
-- `src/components/notifications/NotificationToastCard.tsx`
-- `src/components/chat/ChatNotificationListener.tsx`
-- Ride hook consumers that should pass `jobId` (e.g. `src/hooks/useRealtimeRideUpdates.ts` — confirmed during implementation)
+- `src/pages/StoreProfilePage.tsx`
 
