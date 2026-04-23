@@ -217,10 +217,8 @@ const RAW_MAP: Record<string, LucideIcon> = {
   streamingservice: Monitor,
   netflix: Monitor,
 
-  // Smoking / parking variants
-  nonsmoking: CigaretteOff,
+  // Parking variants
   privateparking: ParkingCircle,
-  freeparking: ParkingCircle,
 
   // Misc
   books: BookOpen,
