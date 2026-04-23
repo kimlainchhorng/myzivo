@@ -295,7 +295,7 @@ export function LodgingRoomDetailsModal({
                         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
                         {/* Counter chip */}
                         {total > 1 && (
-                          <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-sm text-white text-[10px] font-semibold tabular-nums z-10">
+                          <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-sm text-white text-[11px] font-semibold tabular-nums z-20 shadow-md">
                             {idx + 1} / {total}
                           </div>
                         )}
