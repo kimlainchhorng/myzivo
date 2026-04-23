@@ -211,20 +211,21 @@ export function LodgingRoomDetailsModal({
       onOpenChange={onOpenChange}
       title={name}
       description={type || undefined}
+      className="sm:max-w-2xl lg:max-w-4xl xl:max-w-5xl"
       footer={
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">From</p>
-            <p className="text-2xl font-extrabold text-foreground leading-none mt-0.5">
+        <div className="flex items-end justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-semibold">From</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-foreground leading-none mt-0.5">
               {format(baseRateCents / 100, "USD")}
-              <span className="text-xs font-medium text-muted-foreground"> /night</span>
+              <span className="text-xs sm:text-sm font-medium text-muted-foreground"> /night</span>
             </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Taxes calculated at booking</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Taxes calculated at booking</p>
           </div>
           <Button
             onClick={handleReserve}
             size="lg"
-            className="font-bold rounded-full px-6 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25"
+            className="font-bold rounded-full px-6 sm:px-8 h-12 sm:h-12 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25 shrink-0"
             aria-label={`Reserve ${name}`}
             data-testid="reserve-from-details"
           >
@@ -233,7 +234,7 @@ export function LodgingRoomDetailsModal({
         </div>
       }
     >
-      <div className="space-y-5">
+      <div className="space-y-5 sm:space-y-6">
         {/* Photo carousel */}
         <div
           className="relative -mx-1 focus-visible:outline-none"
@@ -250,7 +251,7 @@ export function LodgingRoomDetailsModal({
                   const isErrored = !!errored[i];
                   return (
                     <CarouselItem key={`${src}-${i}`}>
-                      <div className="aspect-[4/5] sm:aspect-[3/4] max-h-[70vh] rounded-2xl overflow-hidden bg-muted/60 relative ring-1 ring-black/5 shadow-sm">
+                      <div className="aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] max-h-[55vh] sm:max-h-[60vh] lg:max-h-[65vh] rounded-2xl overflow-hidden bg-muted/60 relative ring-1 ring-black/5 shadow-sm">
                         {/* LQIP / skeleton layer */}
                         {!isLoaded && !isErrored && (
                           lqip ? (
@@ -304,7 +305,7 @@ export function LodgingRoomDetailsModal({
               </CarouselContent>
             </Carousel>
           ) : (
-            <div className="aspect-[4/5] sm:aspect-[3/4] max-h-[70vh] rounded-2xl overflow-hidden bg-muted/60 flex flex-col items-center justify-center gap-2">
+            <div className="aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] max-h-[55vh] sm:max-h-[60vh] lg:max-h-[65vh] rounded-2xl overflow-hidden bg-muted/60 flex flex-col items-center justify-center gap-2">
               <BedDouble className="h-10 w-10 text-muted-foreground/40" />
               <span className="text-xs text-muted-foreground">Photo coming soon</span>
             </div>
@@ -367,7 +368,7 @@ export function LodgingRoomDetailsModal({
         )}
 
         {/* Premium stat tiles */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           {beds && (
             <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl bg-gradient-to-br from-sky-50 to-sky-100/50 border border-sky-200/60 dark:from-sky-950/40 dark:to-sky-900/20 dark:border-sky-800/40">
               <BedDouble className="h-4 w-4 text-sky-600 dark:text-sky-400" />
@@ -418,7 +419,7 @@ export function LodgingRoomDetailsModal({
               {groupAmenities(amenities).map((group) => (
                 <div key={group.label}>
                   <p className="text-xs font-semibold text-foreground mb-1.5">{group.label}</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-2">
                     {group.items.map((a) => {
                       const Icon = getAmenityIcon(a);
                       return (
