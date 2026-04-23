@@ -34,6 +34,7 @@ import { LodgingHighlightsStrip } from "@/components/lodging/LodgingHighlightsSt
 import { LodgingAmenitiesPanel } from "@/components/lodging/LodgingAmenitiesPanel";
 import { LodgingPolicyPanel } from "@/components/lodging/LodgingPolicyPanel";
 import { useHasStoreBooking } from "@/hooks/useHasStoreBooking";
+import StoreSideRail from "@/components/grocery/StoreSideRail";
 
 /**
  * Extract the correct language part from dual-format text like "Khmer/English".
@@ -295,8 +296,12 @@ export default function StoreProfilePage() {
         );
       })()}
 
+      {/* ── Desktop split layout: left content + sticky right rail ── */}
+      <div className="max-w-7xl mx-auto lg:px-4 lg:grid lg:grid-cols-12 lg:gap-6 lg:pt-4">
+      <div className="lg:col-span-7 min-w-0">
+
       {/* ── Store Info Card - 3D glassmorphic ── */}
-      <div className="relative px-4 -mt-16 z-10" style={{ perspective: "1000px" }}>
+      <div className="relative px-4 -mt-16 lg:mt-0 z-10" style={{ perspective: "1000px" }}>
         <motion.div
           initial={{ y: 50, opacity: 0, rotateX: 10 }}
           animate={{ y: 0, opacity: 1, rotateX: 0 }}
@@ -698,9 +703,9 @@ export default function StoreProfilePage() {
             </p>
           )}
 
-          {/* Stay selector — embedded in profile card for lodging stores */}
+          {/* Stay selector — embedded in profile card on mobile only (rail hosts it on lg+) */}
           {isLodging && (
-            <div className="mt-3 pt-3 border-t border-white/[0.06]">
+            <div className="mt-3 pt-3 border-t border-white/[0.06] lg:hidden">
               <LodgingStaySelector
                 checkIn={stay.checkIn}
                 checkOut={stay.checkOut}
@@ -1228,6 +1233,30 @@ export default function StoreProfilePage() {
       )}
       </>
       )}
+
+      </div>{/* /lg:col-span-7 left column */}
+
+      {/* ── Desktop sticky right rail ── */}
+      <aside className="hidden lg:block lg:col-span-5 lg:sticky lg:top-20 lg:self-start">
+        <StoreSideRail
+          store={store}
+          hasBooking={hasBooking}
+          loadingBooking={loadingBooking}
+          bookingSource={bookingSource}
+          callable={callable}
+          chattable={chattable}
+          phoneNumber={phoneNumber}
+          onOpenChat={() => setChatOpen(true)}
+          isLodging={isLodging}
+          stay={isLodging ? stay : undefined}
+          onStayChange={isLodging ? updateStay : undefined}
+          roomsMinPriceCents={isLodging && rooms.length > 0 ? Math.min(...rooms.map(r => r.base_rate_cents).filter(n => n > 0)) : undefined}
+          showBookService={store.category === "auto-repair"}
+          onBookService={() => navigate(`/book/${slug}`)}
+        />
+      </aside>
+
+      </div>{/* /desktop split grid */}
 
       {/* ── Floating Cart Bar - Premium 3D ── */}
       <AnimatePresence>
