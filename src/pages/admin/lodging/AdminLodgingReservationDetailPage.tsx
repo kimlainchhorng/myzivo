@@ -3,12 +3,13 @@
  * Route: /admin/stores/:storeId/lodging/reservations/:reservationId
  */
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   ArrowLeft, BedDouble, CalendarRange, User, Phone, Mail, Globe,
   CheckCircle2, LogIn, LogOut, XCircle, AlertCircle, History, Loader2, Download, RefreshCw,
+  ClipboardCheck, CreditCard, PackageCheck,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ const fmt = (c: number) => `$${((c || 0) / 100).toFixed(2)}`;
 export default function AdminLodgingReservationDetailPage() {
   const { storeId, reservationId } = useParams<{ storeId: string; reservationId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const qc = useQueryClient();
   const audit = useLodgeReservationAudit(reservationId);
@@ -92,6 +94,9 @@ export default function AdminLodgingReservationDetailPage() {
   const appendTemplate = (tpl: string) => {
     setNote((prev) => (prev.trim() ? `${prev}\n${tpl}` : tpl));
   };
+
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
+  const goBack = () => navigate(returnTo || `/admin/stores/${storeId}`, { replace: !returnTo });
 
   const { data: reservation, isLoading } = useQuery({
     queryKey: ["lodge-reservation", reservationId],
