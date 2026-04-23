@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export type ChangeType = "reschedule" | "cancel" | "addon";
-export type ChangeStatus = "pending" | "auto_approved" | "approved" | "declined" | "cancelled";
+export type ChangeStatus = "pending" | "auto_approved" | "approved" | "declined" | "cancelled" | "failed";
 
 export interface ReservationChangeRequest {
   id: string;
