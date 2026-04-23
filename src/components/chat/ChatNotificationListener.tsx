@@ -20,6 +20,7 @@ export default function ChatNotificationListener() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastSoundRef = useRef(0);
   const activeChatRef = useRef<string | null>(null);
+  const lastNotifBySender = useRef<Record<string, number>>({});
 
   // Preload audio
   useEffect(() => {
@@ -58,15 +59,22 @@ export default function ChatNotificationListener() {
   const showBrowserNotification = useCallback((senderName: string, messageText: string, senderId: string) => {
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
       try {
+        const now = Date.now();
+        const lastAt = lastNotifBySender.current[senderId] || 0;
+        // Suppress repeat buzz/sound for rapid follow-ups (<8s); still update content via tag
+        const shouldRenotify = now - lastAt > 8000;
+        lastNotifBySender.current[senderId] = now;
+
         const notif = new Notification(`${senderName}`, {
           body: messageText || "Sent you a message",
           icon: "/icons/icon-192x192.png",
           badge: "/icons/icon-72x72.png",
           // Dedup per sender so multiple messages collapse instead of stacking
           tag: `chat-${senderId}`,
-          renotify: true,
-          silent: false,
-          vibrate: [80, 40, 80],
+          renotify: shouldRenotify,
+          silent: !shouldRenotify,
+          vibrate: shouldRenotify ? [80, 40, 80] : [],
+          data: { senderId, type: "chat" },
         } as NotificationOptions);
         notif.onclick = () => {
           window.focus();
