@@ -27069,11 +27069,13 @@ export type Database = {
       lodge_reservation_change_requests: {
         Row: {
           addon_payload: Json | null
+          applied_at: string | null
           created_at: string
           decided_at: string | null
           decided_by: string | null
           host_response: string | null
           id: string
+          payment_status: string | null
           price_delta_cents: number
           proposed_check_in: string | null
           proposed_check_out: string | null
@@ -27084,16 +27086,19 @@ export type Database = {
           reservation_id: string
           status: Database["public"]["Enums"]["lodge_change_status"]
           store_id: string
+          stripe_payment_intent_id: string | null
           type: Database["public"]["Enums"]["lodge_change_type"]
           updated_at: string
         }
         Insert: {
           addon_payload?: Json | null
+          applied_at?: string | null
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
           host_response?: string | null
           id?: string
+          payment_status?: string | null
           price_delta_cents?: number
           proposed_check_in?: string | null
           proposed_check_out?: string | null
@@ -27104,16 +27109,19 @@ export type Database = {
           reservation_id: string
           status?: Database["public"]["Enums"]["lodge_change_status"]
           store_id: string
+          stripe_payment_intent_id?: string | null
           type: Database["public"]["Enums"]["lodge_change_type"]
           updated_at?: string
         }
         Update: {
           addon_payload?: Json | null
+          applied_at?: string | null
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
           host_response?: string | null
           id?: string
+          payment_status?: string | null
           price_delta_cents?: number
           proposed_check_in?: string | null
           proposed_check_out?: string | null
@@ -27124,6 +27132,7 @@ export type Database = {
           reservation_id?: string
           status?: Database["public"]["Enums"]["lodge_change_status"]
           store_id?: string
+          stripe_payment_intent_id?: string | null
           type?: Database["public"]["Enums"]["lodge_change_type"]
           updated_at?: string
         }
@@ -27168,6 +27177,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          pinned_message_id: string | null
           reservation_id: string
           store_id: string
           thread_id: string
@@ -27175,6 +27185,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          pinned_message_id?: string | null
           reservation_id: string
           store_id: string
           thread_id: string
@@ -27182,6 +27193,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          pinned_message_id?: string | null
           reservation_id?: string
           store_id?: string
           thread_id?: string

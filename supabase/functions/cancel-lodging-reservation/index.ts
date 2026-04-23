@@ -1,16 +1,8 @@
 /**
- * cancel-lodging-reservation — guest cancels their own reservation.
- *
- * Refund policy:
- *  - 7+ days before check-in:  100% of paid_cents
- *  - 2-6 days:                  50%
- *  - <48h or after check-in:    0%
- *
- * Records a change_request audit row and flips reservation.status -> 'cancelled'.
- * Stripe refund is recorded as a request; actual capture is handled by an
- * existing process-refund worker (out of scope here).
+ * cancel-lodging-reservation — guest cancels their own reservation with Stripe refund/cancel handling.
  */
 import { createClient } from "../_shared/deps.ts";
+import Stripe from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,9 +15,9 @@ function hoursUntil(iso: string) {
 
 function refundFor(checkIn: string, paidCents: number) {
   const h = hoursUntil(checkIn);
-  if (h >= 24 * 7) return paidCents;
-  if (h >= 48) return Math.round(paidCents * 0.5);
-  return 0;
+  if (h >= 24 * 7) return { refundCents: paidCents, percent: 100, label: "Full refund" };
+  if (h >= 48) return { refundCents: Math.round(paidCents * 0.5), percent: 50, label: "50% refund" };
+  return { refundCents: 0, percent: 0, label: "No refund" };
 }
 
 Deno.serve(async (req) => {
@@ -33,64 +25,63 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization") || "";
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } },
-    );
-    const admin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    );
+    const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "", { global: { headers: { Authorization: authHeader } } });
+    const admin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return new Response(JSON.stringify({ error: "unauthenticated" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const { reservation_id, reason } = await req.json();
-    if (!reservation_id) {
-      return new Response(JSON.stringify({ error: "missing_reservation_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
+    if (!reservation_id) return new Response(JSON.stringify({ error: "missing_reservation_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const { data: r } = await supabase
       .from("lodge_reservations")
-      .select("id, store_id, check_in, status, paid_cents, guest_id")
+      .select("id, store_id, check_in, status, paid_cents, guest_id, stripe_payment_intent_id, payment_status")
       .eq("id", reservation_id)
       .maybeSingle();
     if (!r) return new Response(JSON.stringify({ error: "not_found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     if (r.guest_id && r.guest_id !== user.id) return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    if (["cancelled", "checked_out", "no_show"].includes(r.status)) {
-      return new Response(JSON.stringify({ error: "already_inactive" }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (["cancelled", "checked_out", "no_show"].includes(r.status)) return new Response(JSON.stringify({ error: "already_inactive" }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    const policy = refundFor(r.check_in, r.paid_cents || 0);
+    let paymentStatus = policy.refundCents > 0 ? "refund_pending" : "cancelled_no_refund";
+    let stripeRefundId: string | null = null;
+
+    if (r.stripe_payment_intent_id) {
+      const pi = await stripe.paymentIntents.retrieve(r.stripe_payment_intent_id);
+      if (["requires_capture", "requires_payment_method", "requires_confirmation", "requires_action", "processing"].includes(pi.status)) {
+        if (pi.status === "requires_capture") await stripe.paymentIntents.cancel(pi.id);
+        paymentStatus = policy.refundCents > 0 ? "refunded" : "unpaid";
+      } else if (policy.refundCents > 0 && pi.status === "succeeded") {
+        const refund = await stripe.refunds.create({ payment_intent: pi.id, amount: policy.refundCents, metadata: { reservation_id: r.id, type: "lodging_cancel" } });
+        stripeRefundId = refund.id;
+        paymentStatus = refund.status === "succeeded" ? "refunded" : "refund_pending";
+      }
     }
 
-    const refundCents = refundFor(r.check_in, r.paid_cents || 0);
-
-    // Audit row
+    const now = new Date().toISOString();
     await admin.from("lodge_reservation_change_requests").insert({
       reservation_id,
       store_id: r.store_id,
       type: "cancel",
       status: "auto_approved",
-      refund_cents: refundCents,
+      refund_cents: policy.refundCents,
+      price_delta_cents: -policy.refundCents,
       reason: reason || null,
       requested_by: user.id,
       decided_by: user.id,
-      decided_at: new Date().toISOString(),
+      decided_at: now,
+      applied_at: now,
+      payment_status: paymentStatus,
+      addon_payload: { policy_percent: policy.percent, policy_label: policy.label, stripe_refund_id: stripeRefundId },
     });
 
-    // Apply cancellation
-    await admin
-      .from("lodge_reservations")
-      .update({ status: "cancelled" })
-      .eq("id", reservation_id);
+    await admin.from("lodge_reservations").update({ status: "cancelled", payment_status: paymentStatus, last_payment_error: null }).eq("id", reservation_id);
+    await admin.from("lodge_reservation_audit").insert({ reservation_id, store_id: r.store_id, action: "cancelled", actor_id: user.id, notes: reason || null, metadata: { refund_cents: policy.refundCents, payment_status: paymentStatus } }).then(() => null);
 
-    return new Response(
-      JSON.stringify({ ok: true, status: "cancelled", refund_cents: refundCents }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ ok: true, status: "cancelled", refund_cents: policy.refundCents, refund_percent: policy.percent, refund_label: policy.label, payment_status: paymentStatus }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
-    return new Response(JSON.stringify({ error: String((err as Error).message || err) }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ error: String((err as Error).message || err) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

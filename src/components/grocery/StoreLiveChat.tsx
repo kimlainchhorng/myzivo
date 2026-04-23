@@ -18,6 +18,7 @@ interface StoreLiveChatProps {
   open: boolean;
   onClose: () => void;
   isAdmin?: boolean;
+  reservationContext?: { reservationNumber: string; dates: string; roomLabel: string; status: string; href: string };
 }
 
 interface ChatMessage {
@@ -354,7 +355,7 @@ function AdminChatList({
 }
 
 /* ─── Main component ─── */
-export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onClose, isAdmin }: StoreLiveChatProps) {
+export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onClose, isAdmin, reservationContext }: StoreLiveChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
@@ -606,6 +607,14 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+                  {reservationContext && (
+                    <div className="rounded-xl border bg-muted/40 p-3 text-xs space-y-1">
+                      <div className="font-semibold">Reservation {reservationContext.reservationNumber}</div>
+                      <div className="text-muted-foreground">{reservationContext.dates} · {reservationContext.roomLabel}</div>
+                      <div className="capitalize text-muted-foreground">Status: {reservationContext.status.replace(/_/g, " ")}</div>
+                      <a href={reservationContext.href} className="text-primary font-medium">View reservation</a>
+                    </div>
+                  )}
                   {loading ? (
                     <div className="flex items-center justify-center h-32">
                       <Loader2 className="h-5 w-5 animate-spin text-primary" />
