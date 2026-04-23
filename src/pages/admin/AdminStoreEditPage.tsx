@@ -1745,8 +1745,8 @@ export default function AdminStoreEditPage() {
   const [uploadingCover, setUploadingCover] = useState(false);
 
   const uploadGalleryImage = async (file: File) => {
-    if (galleryImages.length >= 10) {
-      toast.error("Maximum 10 gallery images allowed");
+    if (galleryImages.length >= 20) {
+      toast.error("Maximum 20 gallery images allowed");
       return;
     }
     const prev = galleryImages;
@@ -2110,7 +2110,7 @@ export default function AdminStoreEditPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Image className="h-4 w-4" /> Gallery Images
-              <Badge variant="secondary" className="text-[10px]">{galleryImages.length}/10</Badge>
+              <Badge variant="secondary" className="text-[10px]">{galleryImages.length}/20</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -2412,7 +2412,7 @@ export default function AdminStoreEditPage() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Image className="h-4 w-4" /> Gallery Images
-                  <Badge variant="secondary" className="text-[10px]">{galleryImages.length}/10</Badge>
+                  <Badge variant="secondary" className="text-[10px]">{galleryImages.length}/20</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
