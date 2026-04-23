@@ -434,6 +434,24 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                 <span className="text-[11px] text-primary font-medium">Apply</span>
               </button>
 
+              {/* Quick-fill preset — Villa A */}
+              <button
+                type="button"
+                onClick={applyVillaAPreset}
+                className="w-full flex items-center justify-between gap-2 rounded-lg border border-dashed border-emerald-500/40 bg-emerald-500/5 px-3 py-2.5 text-left hover:bg-emerald-500/10 transition"
+              >
+                <span className="flex items-center gap-2 text-sm">
+                  <Wand2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>
+                    <span className="font-semibold">Quick-fill: Villa A</span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      323 ft² · 1 Queen · Garden view · Balcony · Terrace · $89/night
+                    </span>
+                  </span>
+                </span>
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">Apply</span>
+              </button>
+
               {/* Cover hero — primary upload entry point */}
               <div>
                 <LodgingRoomPhotoUploader
