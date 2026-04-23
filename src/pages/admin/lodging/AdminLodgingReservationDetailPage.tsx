@@ -48,7 +48,7 @@ export default function AdminLodgingReservationDetailPage() {
   const { storeId, reservationId } = useParams<{ storeId: string; reservationId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const qc = useQueryClient();
   const audit = useLodgeReservationAudit(reservationId);
 
@@ -58,7 +58,7 @@ export default function AdminLodgingReservationDetailPage() {
   const [saving, setSaving] = useState(false);
   const [retrying, setRetrying] = useState(false);
   useReservationLive(reservationId);
-  const { data: changeRequests = [] } = useReservationChangeRequests(reservationId);
+  const { data: changeRequests = [], isLoading: changeRequestsLoading } = useReservationChangeRequests(reservationId);
   const { data: refundDisputes = [] } = useLodgingRefundDisputes(reservationId);
 
   const NOTE_TEMPLATES: Record<string, string[]> = {
@@ -95,8 +95,9 @@ export default function AdminLodgingReservationDetailPage() {
     setNote((prev) => (prev.trim() ? `${prev}\n${tpl}` : tpl));
   };
 
-  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
+  const returnTo = (location.state as { returnTo?: string; workflow?: string } | null)?.returnTo;
   const goBack = () => navigate(returnTo || `/admin/stores/${storeId}`, { replace: !returnTo });
+  const clearWorkflow = () => navigate(location.pathname, { replace: true, state: location.state });
 
   const { data: reservation, isLoading } = useQuery({
     queryKey: ["lodge-reservation", reservationId],
@@ -178,8 +179,10 @@ export default function AdminLodgingReservationDetailPage() {
   useEffect(() => {
     if (!reservation) return;
     const workflow = searchParams.get("workflow");
-    const targetId = workflow === "addons" || workflow === "review"
+    const targetId = workflow === "addons"
       ? "host-addons"
+      : workflow === "workflow" || workflow === "review"
+        ? "status-workflow"
       : workflow === "payment"
         ? "payment-review"
         : workflow === "audit"
@@ -226,7 +229,7 @@ export default function AdminLodgingReservationDetailPage() {
       setPendingStatus(null);
       setNote("");
       setReason("");
-      setSearchParams({});
+      clearWorkflow();
     } catch (e: any) {
       toast.error(e.message || "Update failed");
     } finally {
@@ -266,13 +269,13 @@ export default function AdminLodgingReservationDetailPage() {
 
       <div className="max-w-3xl mx-auto px-4 py-4 space-y-4">
         {/* Status timeline (live) */}
-        <Card id="payment-review" className="scroll-mt-24 transition-shadow">
+        <Card>
           <CardContent className="pt-4">
             <ReservationStatusTimeline status={reservation.status as any} />
           </CardContent>
         </Card>
 
-        <Card className={isClosed ? "border-muted bg-muted/20" : "border-primary/20"}>
+        <Card className={isClosed ? "border-muted bg-muted/20 shadow-sm" : "border-primary/20 shadow-sm"}>
           <CardContent className="pt-4 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -290,14 +293,19 @@ export default function AdminLodgingReservationDetailPage() {
             {isClosed && (
               <div className="rounded-xl border border-border bg-background/70 p-3 text-xs text-muted-foreground">
                 <p className="font-semibold text-foreground">Closed reservation</p>
-                <p>This booking is out of Active. Finish any payment/refund review, then keep notes in the audit log.</p>
+                <p>This booking is out of Active. Finish payment/refund review, check add-on outcomes, and keep the final decision in the audit log.</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => document.getElementById("payment-review")?.scrollIntoView({ behavior: "smooth", block: "start" })}>Payment</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => document.getElementById("host-addons")?.scrollIntoView({ behavior: "smooth", block: "start" })}>Add-ons</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => document.getElementById("audit-log")?.scrollIntoView({ behavior: "smooth", block: "start" })}>Audit</Button>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Stay */}
-        <Card id="payment-review" className="scroll-mt-24 transition-shadow">
+        <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Stay</CardTitle>
           </CardHeader>
@@ -327,7 +335,7 @@ export default function AdminLodgingReservationDetailPage() {
         </Card>
 
         {/* Guest */}
-        <Card>
+        <Card id="payment-review" className="scroll-mt-24 transition-shadow">
           <CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><User className="h-4 w-4" /> Guest</CardTitle></CardHeader>
           <CardContent className="space-y-1.5 text-sm">
             <p className="font-semibold">{reservation.guest_name || "—"}</p>
@@ -391,7 +399,7 @@ export default function AdminLodgingReservationDetailPage() {
           </CardContent>
         </Card>
 
-        <HostAddOnTimeline requests={changeRequests} />
+        <HostAddOnTimeline requests={changeRequests} isLoading={changeRequestsLoading} />
         <HostRefundDisputeCard disputes={refundDisputes} />
 
         {/* Policy acknowledgement */}
@@ -403,7 +411,7 @@ export default function AdminLodgingReservationDetailPage() {
         )}
 
         {/* Status workflow */}
-        <Card>
+        <Card id="status-workflow" className="scroll-mt-24 transition-shadow">
           <CardHeader className="pb-3"><CardTitle className="text-sm">Update status</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {pendingStatus ? (
@@ -473,7 +481,7 @@ export default function AdminLodgingReservationDetailPage() {
                   />
                 </div>
                 <div className="flex gap-2 justify-end">
-                  <Button variant="outline" size="sm" onClick={() => { setPendingStatus(null); setNote(""); setReason(""); setSearchParams({}); }} disabled={saving}>Cancel</Button>
+                  <Button variant="outline" size="sm" onClick={() => { setPendingStatus(null); setNote(""); setReason(""); clearWorkflow(); }} disabled={saving}>Cancel</Button>
                   <Button
                     size="sm"
                     onClick={submitTransition}

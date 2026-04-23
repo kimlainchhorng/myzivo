@@ -3,7 +3,7 @@
  * Tapping a row opens the full reservation details page.
  */
 import { useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,8 +33,10 @@ const money = (cents?: number | null) => `$${((Number(cents) || 0) / 100).toFixe
 export default function LodgingReservationsSection({ storeId }: { storeId: string }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [status, setStatus] = useState<ReservationFilter>("active");
-  const [q, setQ] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialStatus = (searchParams.get("tab") || "active") as ReservationFilter;
+  const [status, setStatus] = useState<ReservationFilter>(STATUSES.includes(initialStatus) ? initialStatus : "active");
+  const [q, setQ] = useState(searchParams.get("q") || "");
   const queryStatus = status === "active" ? "all" : status;
   const { data: reservations = [], isLoading, setStatus: setResStatus } = useLodgeReservations(storeId, queryStatus);
   const { data: pendingRequests = [] } = useStoreChangeRequestInbox(storeId);
@@ -54,10 +56,19 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
     catch (e: any) { toast.error(e.message || "Failed"); }
   };
 
-  const openReservation = (id: string, workflow?: "cancel" | "review" | "addons" | "payment" | "audit") => {
+  const openReservation = (id: string, workflow?: "cancel" | "review" | "addons" | "payment" | "audit" | "workflow") => {
+    const returnTo = `${location.pathname}?tab=${encodeURIComponent(status)}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ""}`;
     navigate(`/admin/stores/${storeId}/lodging/reservations/${id}${workflow ? `?workflow=${workflow}` : ""}`, {
-      state: { returnTo: `${location.pathname}${location.search}` },
+      state: { returnTo, workflow },
     });
+  };
+
+  const updateFilter = (nextStatus: ReservationFilter, nextQ = q) => {
+    setStatus(nextStatus);
+    const next = new URLSearchParams();
+    if (nextStatus !== "active") next.set("tab", nextStatus);
+    if (nextQ.trim()) next.set("q", nextQ.trim());
+    setSearchParams(next, { replace: true });
   };
 
   return (
@@ -71,7 +82,7 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
       <CardContent className="space-y-3">
         <div className="flex flex-wrap gap-2 items-center">
           {STATUSES.map(s => (
-            <button key={s} onClick={() => setStatus(s)}
+            <button key={s} onClick={() => updateFilter(s)}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${status === s ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground"}`}>
               {STATUS_LABEL[s]}
             </button>
@@ -79,7 +90,7 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input value={q} onChange={e => setQ(e.target.value)} placeholder="Search guest, phone, email, room, ref, payment…" className="pl-9" />
+          <Input value={q} onChange={e => { setQ(e.target.value); updateFilter(status, e.target.value); }} placeholder="Search guest, phone, email, room, ref, payment…" className="pl-9" />
         </div>
 
         {isLoading ? (
@@ -93,11 +104,12 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
             {filtered.map(r => {
               const displayName = r.guest_name?.trim() || `Guest · ${r.number || r.id.slice(0, 8)}`;
               const balance = (r.total_cents || 0) - (r.paid_cents || 0);
-              const hasPendingRequest = pendingRequests.some(req => req.reservation_id === r.id);
+              const pendingRequest = pendingRequests.find(req => req.reservation_id === r.id);
+              const hasPendingRequest = !!pendingRequest;
               const paymentNeedsReview = ["failed", "pending", "processing"].includes(String(r.payment_status || ""));
               const isClosed = CLOSED_STATUSES.has(r.status);
               const needsReview = hasPendingRequest || balance > 0 || paymentNeedsReview || isClosed;
-              const reviewWorkflow = hasPendingRequest ? "addons" : paymentNeedsReview || balance > 0 ? "payment" : isClosed ? "audit" : "review";
+              const reviewWorkflow = pendingRequest?.type === "addon" ? "addons" : hasPendingRequest ? "workflow" : paymentNeedsReview || balance > 0 ? "payment" : isClosed ? "audit" : "review";
               return (
               <div key={r.id} className="p-3 rounded-lg border bg-card transition hover:border-primary/40 focus-within:border-primary/40">
                 <button
