@@ -2206,7 +2206,24 @@ export default function AdminStoreEditPage() {
                 return (
                 <div
                   key={i}
-                  className={cn("relative group aspect-video rounded-xl overflow-hidden border border-border bg-muted", isRepos && "cursor-grab active:cursor-grabbing ring-2 ring-primary")}
+                  draggable={!isRepos}
+                  onDragStart={(e) => { setDragGalleryIdx(i); e.dataTransfer.effectAllowed = "move"; }}
+                  onDragOver={(e) => { e.preventDefault(); if (dragGalleryIdx !== null && dragGalleryIdx !== i) setDragOverGalleryIdx(i); }}
+                  onDragLeave={() => setDragOverGalleryIdx((prev) => (prev === i ? null : prev))}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (dragGalleryIdx !== null && dragGalleryIdx !== i) reorderGalleryImages(dragGalleryIdx, i);
+                    setDragGalleryIdx(null);
+                    setDragOverGalleryIdx(null);
+                  }}
+                  onDragEnd={() => { setDragGalleryIdx(null); setDragOverGalleryIdx(null); }}
+                  className={cn(
+                    "relative group aspect-video rounded-xl overflow-hidden border border-border bg-muted transition-all",
+                    isRepos && "cursor-grab active:cursor-grabbing ring-2 ring-primary",
+                    !isRepos && "cursor-move",
+                    dragGalleryIdx === i && "opacity-40",
+                    dragOverGalleryIdx === i && "ring-2 ring-primary scale-[1.02]"
+                  )}
                   onMouseDown={isRepos ? (e) => { e.preventDefault(); setGalleryDragStartY(e.clientY); setGalleryDragStartPos(pos); } : undefined}
                   onMouseMove={isRepos && galleryDragStartY !== null ? (e) => {
                     const deltaY = e.clientY - galleryDragStartY;
@@ -2224,7 +2241,10 @@ export default function AdminStoreEditPage() {
                   } : undefined}
                   onTouchEnd={isRepos ? () => setGalleryDragStartY(null) : undefined}
                 >
-                  <img src={url} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover select-none" draggable={false} style={{ objectPosition: `center ${pos}%` }} />
+                  <img src={url} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover select-none pointer-events-none" draggable={false} style={{ objectPosition: `center ${pos}%` }} />
+                  <div className="absolute top-1.5 left-1.5 h-6 px-1.5 rounded-full bg-background/90 backdrop-blur-sm text-foreground flex items-center gap-1 shadow border border-border text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                    <GripVertical className="h-3 w-3" />{i + 1}
+                  </div>
                   {isRepos && (
                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center pointer-events-none">
                       <div className="bg-background/90 backdrop-blur-sm rounded-md px-2 py-1 text-[10px] font-medium text-foreground shadow flex items-center gap-1">
@@ -2274,7 +2294,7 @@ export default function AdminStoreEditPage() {
                 </div>
                 );
               })}
-              {galleryImages.length < 10 && (
+              {galleryImages.length < 20 && (
                 <button
                   onClick={() => galleryInputRef.current?.click()}
                   disabled={uploadingGallery}
