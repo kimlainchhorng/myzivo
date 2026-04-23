@@ -56,7 +56,7 @@ const AMENITY_GROUPS: { label: string; items: string[] }[] = [
     label: "Facilities",
     items: [
       "Carpeted", "Electric kettle", "Wardrobe or closet", "Socket near the bed",
-      "Dining area", "Desk", "Clothes rack", "Sitting area", "Drying rack for clothing",
+      "Dining area", "Desk", "Clothes rack", "Sitting area", "Sofa", "Drying rack for clothing",
       "Minibar", "Tile/Marble floor", "Wooden/Parquet floor", "Soundproofing",
       "Heating", "Air conditioning", "Fan", "Iron", "Ironing facilities",
       "Safety deposit box", "Fireplace", "Private entrance",
