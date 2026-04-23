@@ -18,6 +18,7 @@ import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { LodgingStaySelector } from "@/components/lodging/LodgingStaySelector";
 import { ReservationStatusTimeline } from "@/components/lodging/ReservationStatusTimeline";
 import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
+import { AddonIcon } from "@/components/lodging/addonIcons";
 import { IcsPreviewPanel } from "@/components/lodging/IcsPreviewPanel";
 import { PolicySourceSheet } from "@/components/lodging/PolicySourceSheet";
 import { ConflictReasonPanel } from "@/components/lodging/ConflictReasonPanel";
@@ -525,7 +526,7 @@ export function LodgingBookingDrawer({
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold flex items-center gap-1.5">
-                          {a.icon && <span>{a.icon}</span>}
+                          {a.icon && <AddonIcon slug={a.icon} className="h-3.5 w-3.5 text-primary" />}
                           {a.name || "Untitled add-on"}
                         </p>
                         <p className="text-xs text-muted-foreground">
