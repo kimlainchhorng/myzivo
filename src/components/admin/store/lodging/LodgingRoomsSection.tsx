@@ -550,7 +550,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                                     : "bg-background border-border hover:border-primary/40 hover:bg-primary/5"
                                 }`}
                               >
-                                <span>{preset.icon}</span>
+                                <AddonIcon slug={preset.icon} />
                                 <span>{preset.name}</span>
                                 {preset.price_cents > 0 && (
                                   <span className="text-muted-foreground">
