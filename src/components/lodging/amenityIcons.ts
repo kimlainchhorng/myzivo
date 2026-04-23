@@ -193,8 +193,34 @@ const RAW_MAP: Record<string, LucideIcon> = {
   // Accessibility & family
   accessible: Accessibility,
   wheelchairaccessible: Accessibility,
+  upperfloorsaccessiblebyelevator: ArrowUpToLine,
+  evcharger: Zap,
   babycot: Baby,
   crib: Baby,
+  cribavailable: Baby,
+  babycotonrequest: Baby,
+  childrenscribscots: Baby,
+  familyfriendly: Users,
+
+  // Bedroom
+  linens: Bed,
+  extralongbeds: Ruler,
+  alarmclock: AlarmClock,
+
+  // Services & timing
+  hotshower: ShowerHead,
+  privatepool: Waves,
+  spatub: Bath,
+  "24hreception": Bell,
+  wakeupservice: AlarmClock,
+  laundryservice: WashingMachine,
+  streamingservice: Monitor,
+  netflix: Monitor,
+
+  // Smoking / parking variants
+  nonsmoking: CigaretteOff,
+  privateparking: ParkingCircle,
+  freeparking: ParkingCircle,
 
   // Misc
   books: BookOpen,
