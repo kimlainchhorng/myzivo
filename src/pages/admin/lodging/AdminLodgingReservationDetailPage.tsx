@@ -2,8 +2,8 @@
  * AdminLodgingReservationDetailPage — full reservation detail + status workflow + audit log.
  * Route: /admin/stores/:storeId/lodging/reservations/:reservationId
  */
-import { useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
@@ -46,6 +46,7 @@ const fmt = (c: number) => `$${((c || 0) / 100).toFixed(2)}`;
 export default function AdminLodgingReservationDetailPage() {
   const { storeId, reservationId } = useParams<{ storeId: string; reservationId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const qc = useQueryClient();
   const audit = useLodgeReservationAudit(reservationId);
 
@@ -84,6 +85,7 @@ export default function AdminLodgingReservationDetailPage() {
     ],
   };
   const reasonRequired = pendingStatus === "cancelled" || pendingStatus === "no_show";
+  const destructiveWorkflow = pendingStatus === "cancelled" || pendingStatus === "no_show";
   const reasonLabel = (val: string) =>
     REASON_OPTIONS[pendingStatus || ""]?.find((o) => o.value === val)?.label || val;
 
@@ -146,6 +148,16 @@ export default function AdminLodgingReservationDetailPage() {
     return all;
   }, [reservation?.status]);
 
+  useEffect(() => {
+    if (!reservation || pendingStatus) return;
+    const workflow = searchParams.get("workflow");
+    if (workflow === "cancel" && !["cancelled", "checked_out", "no_show"].includes(reservation.status)) {
+      setPendingStatus("cancelled");
+    } else if (workflow === "no_show" && !["cancelled", "checked_out", "no_show"].includes(reservation.status)) {
+      setPendingStatus("no_show");
+    }
+  }, [pendingStatus, reservation, searchParams]);
+
   const submitTransition = async () => {
     if (!pendingStatus || !reservation) return;
     if (!note.trim()) { toast.error("Audit note required"); return; }
@@ -169,14 +181,16 @@ export default function AdminLodgingReservationDetailPage() {
       });
       toast.success(
         reasonRequired
-          ? `${STATUS_LABEL[pendingStatus]} — reason: ${reasonLabel(reason)}`
-          : `Status updated to ${STATUS_LABEL[pendingStatus]}`
+          ? `${STATUS_LABEL[pendingStatus]} saved`
+          : `Status updated to ${STATUS_LABEL[pendingStatus]}`,
+        reasonRequired ? { description: "Removed from Active. Review refund/payment follow-up if needed." } : undefined
       );
       qc.invalidateQueries({ queryKey: ["lodge-reservation", reservationId] });
       qc.invalidateQueries({ queryKey: ["lodge-reservations", reservation.store_id] });
       setPendingStatus(null);
       setNote("");
       setReason("");
+      setSearchParams({});
     } catch (e: any) {
       toast.error(e.message || "Update failed");
     } finally {
@@ -285,6 +299,7 @@ export default function AdminLodgingReservationDetailPage() {
             <div className="pt-2">
               <LodgingPaymentBadge
                 status={reservation.payment_status}
+                reservationStatus={reservation.status}
                 amountCents={reservation.deposit_cents || reservation.total_cents}
                 onRetry={async () => {
                   if (retrying) return;
@@ -337,6 +352,22 @@ export default function AdminLodgingReservationDetailPage() {
                   {STATUS_LABEL[reservation.status]} → {STATUS_LABEL[pendingStatus]}
                 </p>
 
+                {destructiveWorkflow && (
+                  <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-xs text-muted-foreground space-y-1.5">
+                    <p className="font-semibold text-foreground">Confirm before saving</p>
+                    <p>This reservation will leave the Active queue after it is marked {STATUS_LABEL[pendingStatus].toLowerCase()}.</p>
+                    <p>Next steps: save a clear audit note, review payment/refund follow-up, then return to Active reservations.</p>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      <Button type="button" size="sm" variant={pendingStatus === "cancelled" ? "destructive" : "outline"} className="h-7 text-xs" onClick={() => { setPendingStatus("cancelled"); setReason(""); }}>
+                        Cancel reservation
+                      </Button>
+                      <Button type="button" size="sm" variant={pendingStatus === "no_show" ? "destructive" : "outline"} className="h-7 text-xs" onClick={() => { setPendingStatus("no_show"); setReason(""); }}>
+                        Mark no-show
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {reasonRequired && (
                   <div>
                     <Label className="text-xs">Reason (required)</Label>
@@ -382,7 +413,7 @@ export default function AdminLodgingReservationDetailPage() {
                   />
                 </div>
                 <div className="flex gap-2 justify-end">
-                  <Button variant="outline" size="sm" onClick={() => { setPendingStatus(null); setNote(""); setReason(""); }} disabled={saving}>Cancel</Button>
+                  <Button variant="outline" size="sm" onClick={() => { setPendingStatus(null); setNote(""); setReason(""); setSearchParams({}); }} disabled={saving}>Cancel</Button>
                   <Button
                     size="sm"
                     onClick={submitTransition}

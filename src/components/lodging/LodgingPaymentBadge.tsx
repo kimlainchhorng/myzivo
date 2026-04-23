@@ -36,6 +36,7 @@ interface RetryResult {
 
 interface Props {
   status: PaymentStatus;
+  reservationStatus?: string | null;
   amountCents?: number | null;
   className?: string;
   /**
@@ -65,9 +66,11 @@ const timeAgo = (iso: string): string => {
 
 const PROCESSING_WINDOW_MS = 8_000;
 const TRANSITIONAL = new Set(["pending", "processing"]);
+const CLOSED_RESERVATION_STATUSES = new Set(["cancelled", "checked_out", "no_show"]);
 
 export function LodgingPaymentBadge({
   status,
+  reservationStatus,
   amountCents,
   className,
   onRetry,
@@ -96,10 +99,14 @@ export function LodgingPaymentBadge({
 
   if (!status || status === "unpaid") return null;
 
+  const rawStatus = String(status);
+  const reservationClosed = CLOSED_RESERVATION_STATUSES.has(String(reservationStatus || ""));
+  const effectiveStatus = reservationClosed && TRANSITIONAL.has(rawStatus) ? "payment_review" : rawStatus;
+
   const eventFresh = lastEventAt
     ? Date.now() - new Date(lastEventAt).getTime() < PROCESSING_WINDOW_MS
     : false;
-  const isProcessing = TRANSITIONAL.has(String(status)) || eventFresh;
+  const isProcessing = !reservationClosed && (TRANSITIONAL.has(rawStatus) || eventFresh);
   const lockSecondsLeft = lockedUntil ? Math.max(0, Math.ceil((lockedUntil - Date.now()) / 1000)) : 0;
 
   const config: Record<string, { tone: string; icon: typeof Clock; label: string }> = {
@@ -143,12 +150,17 @@ export function LodgingPaymentBadge({
       icon: XCircle,
       label: "Payment failed — retry",
     },
+    payment_review: {
+      tone: "bg-muted text-muted-foreground border-border",
+      icon: Clock,
+      label: "Payment review",
+    },
   };
 
-  const cfg = config[status] || {
+  const cfg = config[effectiveStatus] || {
     tone: "bg-muted text-muted-foreground border-border",
     icon: Clock,
-    label: status,
+    label: rawStatus,
   };
   const Icon = cfg.icon;
   const baseCls = cn(
@@ -179,7 +191,7 @@ export function LodgingPaymentBadge({
     }
   };
 
-  const renderProcessingPill = isProcessing && status !== "failed";
+  const renderProcessingPill = isProcessing && rawStatus !== "failed";
   const wrapperCls = "inline-flex flex-col items-start gap-0.5";
 
   // Locked alert (shown above the badge when a parallel retry is in progress)

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle, ChevronRight, ShieldCheck, BedDouble, Mail, Phone } from "lucide-react";
+import { CalendarRange, Search, CheckCircle2, LogIn, LogOut, XCircle, ChevronRight, ShieldCheck, BedDouble, Mail, Phone, ExternalLink, ClipboardCheck } from "lucide-react";
 import { useLodgeReservations, type ReservationStatus } from "@/hooks/lodging/useLodgeReservations";
 import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
 import { toast } from "sonner";
@@ -17,9 +17,11 @@ import HostReservationOpsSummary from "@/components/lodging/host/HostReservation
 import { useStoreChangeRequestInbox } from "@/hooks/lodging/useReservationChangeRequests";
 import { useHostLodgingOpsToasts } from "@/hooks/lodging/useHostLodgingOpsToasts";
 
-const STATUSES: (ReservationStatus | "all")[] = ["all", "hold", "confirmed", "checked_in", "checked_out", "cancelled", "no_show"];
+type ReservationFilter = ReservationStatus | "active" | "all";
+const CLOSED_STATUSES = new Set<ReservationStatus>(["cancelled", "checked_out", "no_show"]);
+const STATUSES: ReservationFilter[] = ["active", "all", "hold", "confirmed", "checked_in", "checked_out", "cancelled", "no_show"];
 const STATUS_LABEL: Record<string, string> = {
-  all: "All", hold: "Hold", confirmed: "Confirmed", checked_in: "Checked-In",
+  active: "Active", all: "All", hold: "Hold", confirmed: "Confirmed", checked_in: "Checked-In",
   checked_out: "Checked-Out", cancelled: "Cancelled", no_show: "No-Show",
 };
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
@@ -30,23 +32,29 @@ const money = (cents?: number | null) => `$${((Number(cents) || 0) / 100).toFixe
 
 export default function LodgingReservationsSection({ storeId }: { storeId: string }) {
   const navigate = useNavigate();
-  const [status, setStatus] = useState<ReservationStatus | "all">("all");
+  const [status, setStatus] = useState<ReservationFilter>("active");
   const [q, setQ] = useState("");
-  const { data: reservations = [], isLoading, setStatus: setResStatus } = useLodgeReservations(storeId, status);
+  const queryStatus = status === "active" ? "all" : status;
+  const { data: reservations = [], isLoading, setStatus: setResStatus } = useLodgeReservations(storeId, queryStatus);
   const { data: pendingRequests = [] } = useStoreChangeRequestInbox(storeId);
   useHostLodgingOpsToasts(storeId);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    if (!term) return reservations;
-    return reservations.filter(r =>
+    const scoped = status === "active" ? reservations.filter(r => !CLOSED_STATUSES.has(r.status)) : reservations;
+    if (!term) return scoped;
+    return scoped.filter(r =>
       [r.guest_name, r.guest_phone, r.guest_email, r.number, r.room_number, r.payment_status, r.status].some(v => String(v || "").toLowerCase().includes(term))
     );
-  }, [reservations, q]);
+  }, [reservations, q, status]);
 
   const act = async (id: string, s: ReservationStatus, msg: string) => {
     try { await setResStatus.mutateAsync({ id, status: s }); toast.success(msg); }
     catch (e: any) { toast.error(e.message || "Failed"); }
+  };
+
+  const openReservation = (id: string, workflow?: "cancel") => {
+    navigate(`/admin/stores/${storeId}/lodging/reservations/${id}${workflow ? `?workflow=${workflow}` : ""}`);
   };
 
   return (
@@ -74,19 +82,24 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
         {isLoading ? (
           <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p>
         ) : filtered.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-8 text-center">No reservations</p>
+          <p className="text-sm text-muted-foreground py-8 text-center">
+            {q.trim() ? "No reservations match your search" : status === "active" ? "No active reservations" : `No ${STATUS_LABEL[status].toLowerCase()} reservations`}
+          </p>
         ) : (
           <div className="space-y-2">
             {filtered.map(r => {
               const displayName = r.guest_name?.trim() || `Guest · ${r.number || r.id.slice(0, 8)}`;
               const balance = (r.total_cents || 0) - (r.paid_cents || 0);
               const hasPendingRequest = pendingRequests.some(req => req.reservation_id === r.id);
+              const paymentNeedsReview = ["failed", "pending", "processing"].includes(String(r.payment_status || ""));
+              const isClosed = CLOSED_STATUSES.has(r.status);
+              const needsReview = hasPendingRequest || balance > 0 || paymentNeedsReview || isClosed;
               return (
-              <div key={r.id} className="p-3 rounded-lg border bg-card">
+              <div key={r.id} className="p-3 rounded-lg border bg-card transition hover:border-primary/40 focus-within:border-primary/40">
                 <button
                   type="button"
-                  onClick={() => navigate(`/admin/stores/${storeId}/lodging/reservations/${r.id}`)}
-                  className="w-full text-left"
+                  onClick={() => openReservation(r.id)}
+                  className="w-full text-left rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -104,7 +117,7 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
                         {r.guest_email && <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" />{r.guest_email}</span>}
                       </p>
                       <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        <LodgingPaymentBadge status={(r as any).payment_status} amountCents={(r as any).deposit_cents || r.total_cents} />
+                        <LodgingPaymentBadge status={(r as any).payment_status} reservationStatus={r.status} amountCents={(r as any).deposit_cents || r.total_cents} />
                         {balance > 0 && <Badge variant="destructive" className="text-[10px]">Balance {money(balance)}</Badge>}
                         {hasPendingRequest && <Badge variant="secondary" className="text-[10px]">Pending guest request</Badge>}
                         {r.status === "cancelled" && String(r.payment_status).includes("refund") && <Badge variant="secondary" className="text-[10px]">Refund workflow</Badge>}
@@ -125,10 +138,12 @@ export default function LodgingReservationsSection({ storeId }: { storeId: strin
                   </div>
                 </button>
                 <div className="flex flex-wrap gap-1 mt-2">
+                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => openReservation(r.id)}><ExternalLink className="h-3 w-3" /> Open</Button>
+                  {needsReview && <Button size="sm" variant="secondary" className="h-7 text-xs gap-1" onClick={() => openReservation(r.id)}><ClipboardCheck className="h-3 w-3" /> Review</Button>}
                   {r.status === "hold" && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "confirmed", "Confirmed")}><CheckCircle2 className="h-3 w-3" /> Confirm</Button>}
                   {(r.status === "confirmed" || r.status === "hold") && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "checked_in", "Checked in")}><LogIn className="h-3 w-3" /> Check-In</Button>}
                   {r.status === "checked_in" && <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => act(r.id, "checked_out", "Checked out")}><LogOut className="h-3 w-3" /> Check-Out</Button>}
-                  {!["cancelled", "checked_out"].includes(r.status) && <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-destructive" onClick={() => act(r.id, "cancelled", "Cancelled")}><XCircle className="h-3 w-3" /> Cancel</Button>}
+                  {!CLOSED_STATUSES.has(r.status) && <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-destructive" onClick={() => openReservation(r.id, "cancel")}><XCircle className="h-3 w-3" /> Cancel / No-show</Button>}
                 </div>
               </div>
             );})}
