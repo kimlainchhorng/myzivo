@@ -368,7 +368,7 @@ export default function StoreProfilePage() {
           </div>
 
           {/* Contact row — immersive 4D cards */}
-          <div className="grid grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-white/[0.06]" style={{ perspective: "800px" }}>
+          <div className="lg:hidden grid grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-white/[0.06]" style={{ perspective: "800px" }}>
             {store.address && (
               <motion.button
                 whileTap={{ scale: 0.94, rotateX: 2 }}
@@ -668,7 +668,7 @@ export default function StoreProfilePage() {
           </div>
 
           {!loadingBooking && !hasBooking && (
-            <div className="mt-2.5 flex flex-col gap-1.5">
+            <div className="lg:hidden mt-2.5 flex flex-col gap-1.5">
               <TooltipProvider delayDuration={150}>
                 <Tooltip>
                   <TooltipTrigger asChild>
