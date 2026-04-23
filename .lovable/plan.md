@@ -1,208 +1,182 @@
 
-## Finish lodging trip UI reliability fixes
+Plan to upgrade the Hotel/Resort sidebar and add missing working sections
 
-I will update the existing guest lodging trip page pieces that are already partially implemented so they behave reliably after checkout/download actions and show clearer status details.
+1. Reorganize the sidebar for hotel/resort businesses
+   - Keep existing working entries:
+     - Profile
+     - Orders
+     - Payment & Payouts
+     - Rooms & Rates
+     - Reservations
+     - Calendar & Availability
+     - Guests
+     - Front Desk
+     - Housekeeping
+     - Maintenance
+     - Amenities & Policies
+     - Property Profile
+     - Reports
+   - Add clearer hotel/resort-specific entries:
+     - Overview
+     - Add-ons & Packages
+     - Dining & Meal Plans
+     - Experiences & Tours
+     - Transport & Transfers
+     - Spa & Wellness
+     - Policies & Rules
+     - Reviews & Guest Feedback
+   - Use correct hospitality names so the sidebar feels like a real hotel/resort operating system, not a generic store menu.
 
-### 1. Add-on status timeline reliability
+2. Make every new sidebar item open a real working page section
+   - Add matching `TabsContent` entries in `AdminStoreEditPage`.
+   - Create lightweight but functional sections instead of empty/dead pages.
+   - Each section will have:
+     - A clean header
+     - Helpful summary cards
+     - Search/filter controls where useful
+     - Empty states with clear next actions
+     - Buttons that jump to the correct existing workflow when full editing already exists elsewhere.
 
-Update:
+3. Add a dedicated “Add-ons & Packages” workflow
+   - Create a hotel/resort add-ons manager that reads room add-ons from existing `lodge_rooms.addons`.
+   - Show add-ons grouped by category:
+     - Food & drink
+     - Stay flexibility
+     - Transport
+     - Wellness
+     - Experiences
+     - Celebration
+     - Services
+   - Show useful counts:
+     - Total active add-ons
+     - Rooms using add-ons
+     - Free vs paid add-ons
+     - Guest-visible active add-ons
+   - Add quick actions:
+     - Manage room add-ons
+     - Open Rooms & Rates
+     - Open Reservations add-on workflow
+   - Avoid adding fake buttons that do nothing.
 
-```text
-src/components/lodging/guest/AddOnStatusTimeline.tsx
-src/components/lodging/guest/AddOnsSheet.tsx
-src/pages/MyLodgingTripPage.tsx
-```
+4. Expand the room add-on preset catalog
+   - Add more hotel/resort add-on presets with correct names and categories, such as:
+     - Breakfast buffet
+     - Lunch set menu
+     - Dinner set menu
+     - Kids meal
+     - Floating breakfast
+     - Romantic dinner
+     - Airport pickup
+     - Airport drop-off
+     - Ferry transfer
+     - Private boat transfer
+     - Scooter rental
+     - Car rental
+     - Early check-in
+     - Late check-out
+     - Extra bed
+     - Baby crib
+     - Pet fee
+     - Spa massage
+     - Couples massage
+     - Yoga session
+     - Snorkeling tour
+     - Island hopping tour
+     - Fishing trip
+     - Sunset cruise
+     - Birthday cake
+     - Flower bouquet
+     - Honeymoon setup
+     - Laundry service
+     - Daily housekeeping
+     - Beach towel rental
+     - Parking
+   - Ensure all presets use supported `per` values:
+     - `stay`
+     - `night`
+     - `guest`
+     - `person_night`
+   - Ensure icon slugs match `addonIcons.tsx` or add missing icon mappings.
 
-Changes:
-- Add proper loading/refresh state after add-on checkout so the timeline does not look stale while `lodge-change-requests` is refetching.
-- Pass the change-request query loading/fetching state from `MyLodgingTripPage` into `AddOnStatusTimeline`.
-- Show a compact skeleton/“Updating add-on status…” state after checkout.
-- Normalize add-on payload parsing so both formats work:
-  - `addon_payload.selections`
-  - direct array payload
-  - `addon_payload.items`
-- For each add-on attempt, show:
-  - item name
-  - quantity
-  - line amount when available
-  - total charged/attempted amount
-  - payment status
-  - failure reason
-  - Stripe payment reference suffix
-- Treat these as successful:
-  - `auto_approved`
-  - `approved`
-- Treat these as failed:
-  - `failed`
-  - failed payment status
-  - payload failure reason present
-- After `AddOnsSheet` finishes, invalidate:
-  - `["lodge-change-requests", reservationId]`
-  - `["lodge-reservation-full", reservationId]`
-  - `["lodging-notification-audit", reservationId]`
-- Keep the automatic scroll to `#addon-status`, but also briefly highlight that section.
+5. Improve sidebar usability
+   - Split hotel/resort navigation into clearer groups:
+     - Manage
+     - Hotel Ops
+     - Guest Services
+     - Sales & Growth
+     - Team
+   - Keep the active state visible.
+   - Keep mobile drawer behavior working.
+   - Preserve current sidebar scroll behavior.
+   - Do not break existing tabs or routes.
 
-### 2. Finalize refund/dispute timeline UI
+6. Add resort-specific operating sections
+   - Dining & Meal Plans:
+     - Summarize meal-related add-ons and room meal plans.
+     - Link to Rooms & Rates and Amenities & Policies.
+   - Experiences & Tours:
+     - Summarize tours/activities from add-ons.
+     - Link to add-on setup.
+   - Transport & Transfers:
+     - Summarize transfer/rental add-ons.
+     - Link to add-on setup.
+   - Spa & Wellness:
+     - Summarize wellness add-ons and facilities.
+     - Link to Amenities & Policies.
+   - Policies & Rules:
+     - Show check-in/out, cancellation, deposit, child, pet, and house-rule summary from lodging profile data.
+     - Link to Property Profile / Amenities & Policies for editing.
+   - Reviews & Guest Feedback:
+     - Add a clean placeholder-ready section that can later connect to real review data.
+     - For now, show reservation/guest follow-up guidance and no dead controls.
 
-Update:
+7. Keep existing hotel/resort workflows connected
+   - Sidebar buttons and section CTA buttons will dispatch the existing `lodge-set-tab` event or use `setActiveTab`.
+   - “Manage add-ons” will route users to the Rooms & Rates editor where add-ons are currently saved.
+   - Add-on workflow will continue using the existing reservation detail add-on timeline.
 
-```text
-src/components/lodging/guest/RefundDisputeCard.tsx
-```
+Technical details
 
-Changes:
-- Keep the card ID as:
+Files to update:
+- `src/components/admin/StoreOwnerLayout.tsx`
+  - Add new hotel/resort sidebar items and better grouping.
+  - Use correct hospitality labels and icons.
 
-```text
-#refund-disputes
-```
+- `src/pages/admin/AdminStoreEditPage.tsx`
+  - Add titles for new lodging tabs.
+  - Import new lodging section components.
+  - Add `TabsContent` for every new sidebar item so every item works.
 
-- Improve the latest-update panel to show:
-  - current status
-  - requested amount
-  - resolution amount, when available
-  - difference between requested and resolved amount
-  - reason category
-  - admin response
-  - last updated timestamp
-- Make the timeline stages clearer:
-  - Request submitted
-  - Under review
-  - Resolution
-  - Paid / closed
-- Use declined-specific styling when the dispute is declined.
-- Keep all previous dispute rows below the latest update.
-- Ensure the three jump buttons target the correct existing anchors:
-  - Reservation details → `#stay-summary`
-  - Payment summary → `#payment-summary`
-  - Request history → `#request-history`
-- Add the same highlight behavior after each jump so the target section is obvious.
+- `src/components/admin/store/lodging/LodgingRoomsSection.tsx`
+  - Expand the add-on preset list.
+  - Clean up add-on names/categories.
+  - Make quick-add presets more complete for hotels and resorts.
 
-### 3. Improve help drawer deep-link feedback
+- `src/components/lodging/addonIcons.tsx`
+  - Add missing Lucide icon mappings for new add-on slugs.
 
-Update:
+New components to add:
+- `src/components/admin/store/lodging/LodgingOverviewSection.tsx`
+- `src/components/admin/store/lodging/LodgingAddOnsSection.tsx`
+- `src/components/admin/store/lodging/LodgingDiningSection.tsx`
+- `src/components/admin/store/lodging/LodgingExperiencesSection.tsx`
+- `src/components/admin/store/lodging/LodgingTransportSection.tsx`
+- `src/components/admin/store/lodging/LodgingWellnessSection.tsx`
+- `src/components/admin/store/lodging/LodgingPoliciesSection.tsx`
+- `src/components/admin/store/lodging/LodgingReviewsSection.tsx`
 
-```text
-src/components/lodging/guest/LodgingTripHelpDrawer.tsx
-```
+Data approach:
+- Reuse existing tables and JSON fields first:
+  - `lodge_rooms.addons`
+  - `lodge_rooms.seasonal_rates`
+  - `lodge_rooms.amenities`
+  - `lodge_property_profile`
+  - `lodge_reservations`
+- No database migration is required for this upgrade unless you later want full CRUD tables for reviews, spa appointments, tours, or restaurant menus.
 
-Changes:
-- Centralize the smooth-scroll/highlight behavior in a small helper.
-- After tapping a help item:
-  - close the drawer
-  - smooth-scroll to the target
-  - focus the target when possible
-  - add a temporary ring highlight
-  - remove the highlight after a short delay
-- Make the highlight more reliable by adding transition classes and using `requestAnimationFrame` after the drawer closes.
-- Keep current sections and anchors:
-  - `#stay-summary`
-  - `#manage-stay`
-  - `#cancellation-policy`
-  - `#payment-summary`
-  - `#addon-status`
-  - `#receipt-history`
-  - `#trip-notifications`
-  - `#refund-disputes`
-  - `#message-property`
-
-### 4. Fix notification audit filtering server-side
-
-Update:
-
-```text
-src/hooks/lodging/useLodgingNotificationAudit.ts
-src/hooks/lodging/useLodgingTripToasts.ts
-```
-
-Add migration if needed:
-
-```text
-supabase/migrations/<timestamp>_lodging_notification_audit_reservation_filter.sql
-```
-
-Changes in the hook:
-- Replace client-side filtering:
-
-```text
-.filter(row => row.metadata?.reservation_id === reservationId)
-```
-
-with a server-side JSON filter:
-
-```text
-.eq("channel", channel)
-.filter("metadata->>reservation_id", "eq", reservationId)
-```
-
-- Keep the result limit and descending sort.
-- Handle RLS/permission errors gracefully:
-  - return an empty list
-  - expose a non-fatal state to the UI
-  - avoid breaking the whole lodging trip page
-- Add `retry: false` for permission errors so the page does not repeatedly fail in the background.
-- Keep the query enabled only when `reservationId` exists.
-
-Optional migration:
-- Add an expression index for performance:
-
-```sql
-create index if not exists idx_notification_audit_reservation_channel_created
-on public.notification_audit ((metadata->>'reservation_id'), channel, created_at desc);
-```
-
-- If the table has RLS enabled and guests cannot read their own reservation audit rows, add a secure SELECT policy using existing `public.is_lodge_reservation_guest(...)` without exposing other users’ audit data.
-
-Changes in realtime:
-- Keep realtime validation by checking `metadata.reservation_id`, because realtime payloads are received client-side.
-- Invalidate the same query key including channel when an SMS audit event arrives:
-
-```text
-["lodging-notification-audit", reservationId, "sms"]
-```
-
-### 5. Guard Email receipt button until receipt ID is confirmed
-
-Update:
-
-```text
-src/components/lodging/guest/ReceiptActions.tsx
-src/components/lodging/guest/ReceiptHistoryCard.tsx
-src/pages/MyLodgingTripPage.tsx
-```
-
-Changes:
-- Pass receipt history loading/fetching state into `ReceiptActions`.
-- Add a receipt-history refresh callback that returns a promise, not just a fire-and-forget invalidate.
-- Disable the Email button when:
-  - no `latestReceiptId`
-  - receipt history is loading/fetching
-  - a receipt download just completed and the receipt row is still being created
-  - another receipt action is running
-- Button labels:
-  - `Saving receipt…`
-  - `Email`
-  - `Preparing email…`
-- If the user taps Email before `latestReceiptId` exists:
-  - automatically refetch receipt history
-  - show a toast: “Receipt history is updating”
-  - enable the button once the latest receipt row is available
-- After receipt download:
-  - call `refetch`/invalidate receipt history
-  - keep the follow-up panel visible
-  - only enable Email once `receipts[0]?.id` is confirmed
-- Keep Share available from the local downloaded blob, but keep Email tied to the stored receipt snapshot ID.
-- In `ReceiptHistoryCard`, ensure email/share actions disable only their own active row action and show clear loading icons.
-
-### Verification checklist
-
-After implementation I will verify:
-
-1. Add-on checkout success updates the timeline with quantity, amount, payment status, and latest badge.
-2. Add-on checkout failure updates the timeline with failure reason and does not imply the reservation total changed.
-3. The add-on timeline shows a loading/updating state immediately after checkout.
-4. Refund dispute card shows requested amount, resolution amount, current stage, admin response, and correct jump links.
-5. Help drawer links scroll and briefly highlight the correct section.
-6. Notification audit query filters `reservation_id` server-side and does not crash the page on RLS/permission errors.
-7. Email receipt is disabled until `latestReceiptId` exists and receipt history refresh completes.
-8. Receipt download still shows the follow-up share/email/history state and receipt history updates automatically.
+Validation:
+- Confirm every new sidebar item opens a real section.
+- Confirm existing sidebar items still work.
+- Confirm add-on presets save correctly inside room records.
+- Confirm no new dead buttons are introduced.
+- Run a production build after implementation.
