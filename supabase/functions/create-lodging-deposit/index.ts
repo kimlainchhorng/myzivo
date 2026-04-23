@@ -251,22 +251,47 @@ Deno.serve(async (req) => {
     if (existingSessionId) {
       try {
         const existing = await stripe.checkout.sessions.retrieve(existingSessionId);
-        if (existing.status === "open" && existing.url) {
-          if (dedupRowId) {
-            await admin
-              .from("lodging_deposit_retry_attempts")
-              .update({
-                completed_at: new Date().toISOString(),
-                result: "reused_session",
-                checkout_url: existing.url,
-                stripe_session_id: existing.id,
-              })
-              .eq("id", dedupRowId);
+        if (existing.status === "open") {
+          // Embedded sessions don't have .url — they expose .client_secret instead.
+          const existingUiMode = (existing as any).ui_mode as "hosted" | "embedded" | undefined;
+          if (uiMode === "embedded" && existingUiMode === "embedded" && (existing as any).client_secret) {
+            if (dedupRowId) {
+              await admin
+                .from("lodging_deposit_retry_attempts")
+                .update({
+                  completed_at: new Date().toISOString(),
+                  result: "reused_session",
+                  stripe_session_id: existing.id,
+                })
+                .eq("id", dedupRowId);
+            }
+            return new Response(
+              JSON.stringify({
+                client_secret: (existing as any).client_secret,
+                session_id: existing.id,
+                ui_mode: "embedded",
+                reused: true,
+              }),
+              { headers: { ...cors, "Content-Type": "application/json" } },
+            );
           }
-          return new Response(
-            JSON.stringify({ url: existing.url, session_id: existing.id, reused: true }),
-            { headers: { ...cors, "Content-Type": "application/json" } },
-          );
+          if (uiMode === "hosted" && existing.url) {
+            if (dedupRowId) {
+              await admin
+                .from("lodging_deposit_retry_attempts")
+                .update({
+                  completed_at: new Date().toISOString(),
+                  result: "reused_session",
+                  checkout_url: existing.url,
+                  stripe_session_id: existing.id,
+                })
+                .eq("id", dedupRowId);
+            }
+            return new Response(
+              JSON.stringify({ url: existing.url, session_id: existing.id, ui_mode: "hosted", reused: true }),
+              { headers: { ...cors, "Content-Type": "application/json" } },
+            );
+          }
         }
       } catch (_) { /* fall through */ }
     }
@@ -284,51 +309,57 @@ Deno.serve(async (req) => {
         ? `Refundable hold – Reservation ${r.number}`
         : `Reservation ${r.number}`;
 
-    // Stable Stripe Idempotency-Key — same inputs (incl. client_attempt_id) → same Session.
+    // Stable Stripe Idempotency-Key — same inputs (incl. client_attempt_id + uiMode) → same Session.
     const attemptHash = await sha256Hex(
-      `${body.reservation_id}|${depositCents}|${mode}|${currentStatus ?? "null"}|${clientAttemptId}`,
+      `${body.reservation_id}|${depositCents}|${mode}|${currentStatus ?? "null"}|${clientAttemptId}|${uiMode}`,
     );
     const idempotencyKey = `lodge_dep_${body.reservation_id}_${attemptHash.slice(0, 16)}`;
 
-    const session = await stripe.checkout.sessions.create(
-      {
-        customer: customerId,
-        customer_email: customerId ? undefined : email,
-        line_items: [
-          {
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: productName,
-                description:
-                  mode === "deposit"
-                    ? "Authorised hold on your card. Captured only if damage or no-show occurs."
-                    : "Full payment for your stay.",
-              },
-              unit_amount: depositCents,
+    const sessionParams: any = {
+      customer: customerId,
+      customer_email: customerId ? undefined : email,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: productName,
+              description:
+                mode === "deposit"
+                  ? "Authorised hold on your card. Captured only if damage or no-show occurs."
+                  : "Full payment for your stay.",
             },
-            quantity: 1,
+            unit_amount: depositCents,
           },
-        ],
-        mode: "payment",
-        payment_intent_data: {
-          capture_method: mode === "deposit" ? "manual" : "automatic",
-          metadata: {
-            reservation_id: body.reservation_id,
-            store_id: body.store_id,
-            mode,
-          },
+          quantity: 1,
         },
-        success_url: `${origin}/grocery/shop?lodging_paid=1&ref=${r.number}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/grocery/shop?lodging_paid=0&ref=${r.number}`,
+      ],
+      mode: "payment",
+      payment_intent_data: {
+        capture_method: mode === "deposit" ? "manual" : "automatic",
         metadata: {
           reservation_id: body.reservation_id,
           store_id: body.store_id,
           mode,
         },
       },
-      { idempotencyKey },
-    );
+      metadata: {
+        reservation_id: body.reservation_id,
+        store_id: body.store_id,
+        mode,
+      },
+    };
+
+    if (uiMode === "embedded") {
+      sessionParams.ui_mode = "embedded";
+      // Stripe redirects to this URL after the embedded form succeeds (we keep the user inside the booking sheet otherwise).
+      sessionParams.return_url = `${origin}/grocery/shop?lodging_paid=1&ref=${r.number}&session_id={CHECKOUT_SESSION_ID}`;
+    } else {
+      sessionParams.success_url = `${origin}/grocery/shop?lodging_paid=1&ref=${r.number}&session_id={CHECKOUT_SESSION_ID}`;
+      sessionParams.cancel_url = `${origin}/grocery/shop?lodging_paid=0&ref=${r.number}`;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams, { idempotencyKey });
 
     await admin
       .from("lodge_reservations")
@@ -350,13 +381,24 @@ Deno.serve(async (req) => {
         .update({
           completed_at: new Date().toISOString(),
           result: "created_session",
-          checkout_url: session.url,
+          checkout_url: session.url ?? null,
           stripe_session_id: session.id,
         })
         .eq("id", dedupRowId);
     }
 
-    return new Response(JSON.stringify({ url: session.url, session_id: session.id }), {
+    if (uiMode === "embedded") {
+      return new Response(
+        JSON.stringify({
+          client_secret: (session as any).client_secret,
+          session_id: session.id,
+          ui_mode: "embedded",
+        }),
+        { headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
+
+    return new Response(JSON.stringify({ url: session.url, session_id: session.id, ui_mode: "hosted" }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
