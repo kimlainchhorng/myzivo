@@ -20,6 +20,7 @@ import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { LodgingStaySelector } from "@/components/lodging/LodgingStaySelector";
 import { ReservationStatusTimeline } from "@/components/lodging/ReservationStatusTimeline";
 import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
+import { LodgingEmbeddedCheckout } from "@/components/lodging/LodgingEmbeddedCheckout";
 import { AddonIcon } from "@/components/lodging/addonIcons";
 import { IcsPreviewPanel } from "@/components/lodging/IcsPreviewPanel";
 import { PolicySourceSheet } from "@/components/lodging/PolicySourceSheet";
