@@ -128,47 +128,6 @@ const ADDON_PRESETS: { name: string; price_cents: number; per: "stay" | "night" 
   { name: "Beach towel rental", price_cents: 200, per: "guest", category: "Services", icon: "beachtowel" },
 ];
 
-const ADDON_ICON_MAP: Record<string, LucideIcon> = {
-  breakfast: Croissant,
-  halfboard: Utensils,
-  fullboard: UtensilsCrossed,
-  welcomedrink: Martini,
-  wine: Wine,
-  minibar: GlassWater,
-  airportpickup: Bus,
-  airportdropoff: CarTaxiFront,
-  airporttransfer: Car,
-  scooter: Bike,
-  carrental: Car,
-  bicycle: Bike,
-  earlycheckin: Clock,
-  latecheckout: Clock,
-  extrabed: Bed,
-  babycrib: Baby,
-  extraguest: User,
-  petfee: PawPrint,
-  spa: Sparkles,
-  couplesmassage: HeartHandshake,
-  yoga: Sparkles,
-  snorkeling: Anchor,
-  island: Palmtree,
-  cruise: Ship,
-  chef: ChefHat,
-  honeymoon: Flower2,
-  cake: Cake,
-  flowers: Flower,
-  champagne: Wine,
-  housekeeping: Brush,
-  laundry: Shirt,
-  parking: ParkingCircle,
-  beachtowel: Umbrella,
-};
-
-function AddonIcon({ slug, className = "h-3.5 w-3.5" }: { slug?: string; className?: string }) {
-  const Icon = (slug && ADDON_ICON_MAP[slug]) || Sparkles;
-  return <Icon className={className} aria-hidden="true" />;
-}
-
 const CANCEL_POLICIES: { value: string; label: string }[] = [
   { value: "flexible", label: "Flexible — full refund up to 24h before" },
   { value: "moderate", label: "Moderate — full refund up to 5 days before" },
