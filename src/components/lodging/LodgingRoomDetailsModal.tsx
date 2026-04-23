@@ -234,7 +234,8 @@ export function LodgingRoomDetailsModal({
         </div>
       }
     >
-      <div className="space-y-5 sm:space-y-6">
+      <div className="lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-6 lg:items-start space-y-4 sm:space-y-5 lg:space-y-0">
+        <div className="lg:sticky lg:top-0 lg:self-start space-y-4 sm:space-y-5">
         {/* Photo carousel */}
         <div
           className="relative -mx-1 focus-visible:outline-none"
