@@ -848,6 +848,24 @@ export function LodgingBookingDrawer({
               </div>
             </div>
 
+            {/* Inline Stripe Embedded Checkout — keeps the user inside the ZIVO booking sheet
+                when they chose "Card on file (charged on arrival)". Hidden once the realtime
+                payment status moves out of the initial "authorized" placeholder. */}
+            {payMethod === "card_on_arrival" && reservationId && (
+              !liveReservation?.payment_status ||
+              liveReservation.payment_status === "authorized" ||
+              liveReservation.payment_status === "pending" ||
+              liveReservation.payment_status === "failed"
+            ) && (
+              <LodgingEmbeddedCheckout
+                reservationId={reservationId}
+                storeId={storeId}
+                amountCents={securityDeposit > 0 ? securityDeposit : breakdown.total}
+                mode={securityDeposit > 0 ? "deposit" : "full"}
+                onComplete={() => toast.success("Card authorised — your booking is locked in.")}
+              />
+            )}
+
             {/* Payment badge (live via realtime) — supports retry on failed */}
             {liveReservation?.payment_status && liveReservation.payment_status !== "unpaid" && (
               <div className="flex justify-center">
