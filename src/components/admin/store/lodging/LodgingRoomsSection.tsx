@@ -56,7 +56,7 @@ const AMENITY_GROUPS: { label: string; items: string[] }[] = [
     label: "Facilities",
     items: [
       "Carpeted", "Electric kettle", "Wardrobe or closet", "Socket near the bed",
-      "Dining area", "Desk", "Clothes rack", "Sitting area", "Drying rack for clothing",
+      "Dining area", "Desk", "Clothes rack", "Sitting area", "Sofa", "Drying rack for clothing",
       "Minibar", "Tile/Marble floor", "Wooden/Parquet floor", "Soundproofing",
       "Heating", "Air conditioning", "Fan", "Iron", "Ironing facilities",
       "Safety deposit box", "Fireplace", "Private entrance",
@@ -174,7 +174,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
       "Towels/Sheets (extra fee)", "Toilet paper",
     ];
     const facilityAmenities = [
-      "Balcony", "Terrace", "Air conditioning", "Sitting area",
+      "Balcony", "Terrace", "Air conditioning", "Sofa", "Sitting area",
       "Socket near the bed", "Desk", "Minibar", "Carpeted",
       "Electric kettle", "Wardrobe or closet", "Dining area",
       "Clothes rack", "Drying rack for clothing", "Non-smoking",
