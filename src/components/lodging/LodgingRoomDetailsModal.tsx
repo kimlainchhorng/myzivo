@@ -61,7 +61,7 @@ const AMENITY_GROUPS: { label: string; items: string[] }[] = [
   { label: "Bedroom", items: ["Linens", "Wardrobe or closet", "Extra long beds (> 2m)", "Alarm clock"] },
   { label: "View", items: ["Garden view", "Pool view", "Sea view", "Mountain view", "City view", "River view", "Courtyard view", "Landmark view"] },
   { label: "Outdoors", items: ["Balcony", "Terrace", "Patio", "Outdoor furniture", "Beach access", "Beachfront"] },
-  { label: "Facilities", items: ["Carpeted", "Electric kettle", "Wardrobe or closet", "Socket near the bed", "Dining area", "Desk", "Clothes rack", "Sitting area", "Drying rack for clothing", "Minibar", "Tile/Marble floor", "Wooden/Parquet floor", "Soundproofing", "Heating", "Air conditioning", "AC", "Fan", "Iron", "Ironing facilities", "Safety deposit box", "Safe", "Fireplace", "Private entrance"] },
+  { label: "Facilities", items: ["Carpeted", "Electric kettle", "Wardrobe or closet", "Socket near the bed", "Dining area", "Desk", "Clothes rack", "Sitting area", "Drying rack for clothing", "Minibar", "Tile/Marble floor", "Wooden/Parquet floor", "Soundproofing", "Heating", "Air conditioning", "Fan", "Iron", "Ironing facilities", "Safety deposit box", "Safe", "Fireplace", "Private entrance"] },
   { label: "Food & drink", items: ["Mini-bar", "Mini-fridge", "Refrigerator", "Coffee machine", "Tea/Coffee maker", "Coffee maker", "Kettle", "Kitchenette", "Microwave", "Dishwasher", "Stovetop", "Oven", "Toaster", "Dining table"] },
   { label: "Media & technology", items: ["Wi-Fi", "Free Wi-Fi", "TV", "Flat-screen TV", "Smart TV", "Cable channels", "Satellite channels", "Streaming service (Netflix)", "Netflix", "Telephone", "Laptop safe"] },
   { label: "Family", items: ["Crib available", "Baby cot on request", "Family-friendly", "Children's cribs/cots"] },
@@ -70,7 +70,23 @@ const AMENITY_GROUPS: { label: string; items: string[] }[] = [
   { label: "Accessibility & policy", items: ["Wheelchair accessible", "Upper floors accessible by elevator", "Pet-friendly", "Smoking allowed", "Non-smoking", "EV charger", "Free parking", "Private parking"] },
 ];
 
-function groupAmenities(amenities: string[]): { label: string; items: string[] }[] {
+// Legacy → canonical alias map (keeps older saved values displaying under the right group)
+const AMENITY_ALIASES: Record<string, string> = {
+  "AC": "Air conditioning",
+};
+
+function canonicalize(amenities: string[]): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const a of amenities) {
+    const c = AMENITY_ALIASES[a] ?? a;
+    if (!seen.has(c)) { seen.add(c); out.push(c); }
+  }
+  return out;
+}
+
+function groupAmenities(rawAmenities: string[]): { label: string; items: string[] }[] {
+  const amenities = canonicalize(rawAmenities);
   const set = new Set(amenities);
   const used = new Set<string>();
   const groups = AMENITY_GROUPS.map(g => {
