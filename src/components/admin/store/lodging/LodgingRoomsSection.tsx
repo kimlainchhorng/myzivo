@@ -17,7 +17,7 @@ import {
   Landmark, Building, Sparkles, ConciergeBell, Receipt,
   Baby, UserPlus, Users, Coins, BadgePercent, Sun,
   Maximize2, Hash, CalendarDays, CalendarRange, Clock, ShieldCheck,
-  DollarSign, type LucideIcon,
+  DollarSign, Copy, type LucideIcon,
 } from "lucide-react";
 import { AddonIcon } from "@/components/lodging/addonIcons";
 import { getAmenityIcon } from "@/components/lodging/amenityIcons";
