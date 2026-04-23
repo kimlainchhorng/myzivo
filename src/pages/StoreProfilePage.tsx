@@ -485,9 +485,9 @@ export default function StoreProfilePage() {
                 <div className="self-center inline-flex items-stretch gap-1.5">
                   <button
                     onClick={() => navigate("/trips")}
-                    className="inline-flex items-center gap-2 px-3.5 h-8 rounded-full bg-amber-500/12 border border-amber-400/30 text-amber-300 text-[12.5px] font-semibold hover:bg-amber-500/18 transition-colors"
+                    className="inline-flex items-center gap-2 px-3.5 h-8 rounded-full bg-amber-500/12 border border-amber-400/30 text-amber-300 text-[12.5px] font-semibold hover:bg-amber-500/18 transition-colors whitespace-nowrap"
                   >
-                    <Lock className="h-3.5 w-3.5" />
+                    <Lock className="h-3.5 w-3.5 shrink-0" />
                     {t("store.booking_status.locked")}
                   </button>
                   <button
