@@ -531,3 +531,15 @@ function Row({ label, value, muted, bold, className }: { label: string; value: s
     </div>
   );
 }
+
+function OpsMetric({ icon: Icon, label, value, danger }: { icon: any; label: string; value: string; danger?: boolean }) {
+  return (
+    <div className="rounded-xl border border-border bg-background/70 p-3 min-w-0">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <Icon className="h-3.5 w-3.5" />
+        <span>{label}</span>
+      </div>
+      <p className={`mt-1 font-semibold capitalize truncate ${danger ? "text-destructive" : "text-foreground"}`}>{value}</p>
+    </div>
+  );
+}
