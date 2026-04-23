@@ -489,6 +489,18 @@ export default function AdminStoreEditPage() {
     enabled: !!storeId,
   });
 
+  const lodgingRoomsQuery = useLodgeRooms(storeId || "");
+  const lodgingProfileQuery = useLodgePropertyProfile(storeId || "");
+  const lodgingAddons = (lodgingRoomsQuery.data || []).flatMap((room: any) => room.addons || []);
+  const lodgingSetup = setupProgress(getLodgingSetupItems({
+    rooms: lodgingRoomsQuery.data || [],
+    profile: lodgingProfileQuery.data,
+    addons: lodgingAddons,
+    housekeepingCount: 0,
+    maintenanceReady: true,
+    reportsReady: Boolean((lodgingRoomsQuery.data || []).length),
+  }));
+
   const { data: posts = [], isLoading: loadingPosts } = useQuery({
     queryKey: ["admin-store-posts", storeId],
     queryFn: async () => {
@@ -2015,7 +2027,8 @@ export default function AdminStoreEditPage() {
           storeLogoUrl={store?.logo_url}
           storeCategory={form.category}
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
+          lodgingSetupProgress={isLodging ? lodgingSetup : undefined}
           productCount={products?.length}
         >
           {children}
