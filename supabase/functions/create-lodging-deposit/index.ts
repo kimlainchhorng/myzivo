@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
     const mode: "deposit" | "full" = body.mode === "full" ? "full" : "deposit";
     const clientAttemptId = (body.client_attempt_id || "default").slice(0, 64);
     const uiMode: "hosted" | "embedded" = body.ui_mode === "embedded" ? "embedded" : "hosted";
+    const forceNew = body.force_new === true;
 
     const admin = createClient(supabaseUrl, serviceKey);
     const myLockToken = randomToken();
