@@ -2271,10 +2271,11 @@ export default function AdminStoreEditPage() {
               ref={galleryInputRef}
               type="file"
               accept="image/*"
+              multiple
               className="hidden"
               onChange={e => {
-                const f = e.target.files?.[0];
-                if (f) uploadGalleryImage(f);
+                const files = Array.from(e.target.files || []);
+                if (files.length > 0) uploadGalleryImages(files);
                 e.target.value = "";
               }}
             />
