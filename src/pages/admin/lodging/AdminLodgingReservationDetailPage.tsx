@@ -58,7 +58,7 @@ export default function AdminLodgingReservationDetailPage() {
   const [saving, setSaving] = useState(false);
   const [retrying, setRetrying] = useState(false);
   useReservationLive(reservationId);
-  const { data: changeRequests = [] } = useReservationChangeRequests(reservationId);
+  const { data: changeRequests = [], isLoading: changeRequestsLoading } = useReservationChangeRequests(reservationId);
   const { data: refundDisputes = [] } = useLodgingRefundDisputes(reservationId);
 
   const NOTE_TEMPLATES: Record<string, string[]> = {
@@ -95,7 +95,7 @@ export default function AdminLodgingReservationDetailPage() {
     setNote((prev) => (prev.trim() ? `${prev}\n${tpl}` : tpl));
   };
 
-  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
+  const returnTo = (location.state as { returnTo?: string; workflow?: string } | null)?.returnTo;
   const goBack = () => navigate(returnTo || `/admin/stores/${storeId}`, { replace: !returnTo });
 
   const { data: reservation, isLoading } = useQuery({
@@ -178,8 +178,10 @@ export default function AdminLodgingReservationDetailPage() {
   useEffect(() => {
     if (!reservation) return;
     const workflow = searchParams.get("workflow");
-    const targetId = workflow === "addons" || workflow === "review"
+    const targetId = workflow === "addons"
       ? "host-addons"
+      : workflow === "workflow" || workflow === "review"
+        ? "status-workflow"
       : workflow === "payment"
         ? "payment-review"
         : workflow === "audit"
