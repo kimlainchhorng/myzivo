@@ -235,42 +235,56 @@ export default function MorePage() {
   const avatarUrl = profile?.avatar_url;
   const isVerified = profile?.is_verified;
 
+  const handle = (profile?.full_name?.trim() || user?.email?.split("@")[0] || "user")
+    .toLowerCase()
+    .replace(/\s+/g, "");
+
+  const VerifiedCheck = ({ size = 16 }: { size?: number }) => (
+    <span
+      className="relative inline-flex items-center justify-center shrink-0"
+      style={{ width: size, height: size }}
+      aria-label="Verified"
+      title="Verified"
+    >
+      <svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true">
+        <path
+          d="M12 1.5l2.39 1.74 2.95-.13.78 2.85 2.55 1.5-1.07 2.74 1.07 2.74-2.55 1.5-.78 2.85-2.95-.13L12 22.5l-2.39-1.74-2.95.13-.78-2.85-2.55-1.5 1.07-2.74-1.07-2.74 2.55-1.5.78-2.85 2.95.13L12 1.5z"
+          fill="#1d9bf0"
+        />
+        <path
+          d="M9.5 12.5l1.8 1.8 3.7-4.3"
+          fill="none"
+          stroke="#fff"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  );
+
   /* --- Profile Card --- */
   const renderProfileCard = () => (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="zivo-card-organic p-4 mb-5"
+      className="zivo-card-organic p-4 mb-3"
     >
-      <Link to="/profile" className="flex items-center gap-3.5">
-        <Avatar className="h-14 w-14 ring-2 ring-primary/20">
-          {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
-          <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
-            {displayName.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-3.5">
+        <Link to="/profile" className="shrink-0">
+          <Avatar className="h-14 w-14 ring-2 ring-primary/20">
+            {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
+            <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
+              {displayName.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
+        <Link to="/profile" className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="font-bold text-[15px] truncate">{displayName}</p>
-            {isVerified && (
-              <span className="relative inline-flex h-4 w-4 items-center justify-center shrink-0" aria-label="Verified" title="Verified">
-                <svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true">
-                  <path
-                    d="M12 1.5l2.39 1.74 2.95-.13.78 2.85 2.55 1.5-1.07 2.74 1.07 2.74-2.55 1.5-.78 2.85-2.95-.13L12 22.5l-2.39-1.74-2.95.13-.78-2.85-2.55-1.5 1.07-2.74-1.07-2.74 2.55-1.5.78-2.85 2.95.13L12 1.5z"
-                    fill="#1d9bf0"
-                  />
-                  <path
-                    d="M9.5 12.5l1.8 1.8 3.7-4.3"
-                    fill="none"
-                    stroke="#fff"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-            )}
+            {isVerified && <VerifiedCheck size={16} />}
           </div>
+          <p className="text-[11px] text-muted-foreground truncate mt-0.5">@{handle}</p>
           <div className="flex gap-4 mt-1.5">
             <div className="text-center">
               <p className="text-xs font-bold">{friendCount}</p>
@@ -285,8 +299,56 @@ export default function MorePage() {
               <p className="text-[9px] text-muted-foreground">Following</p>
             </div>
           </div>
+        </Link>
+        <Link
+          to="/account/settings"
+          className="shrink-0 text-[11px] font-semibold px-2.5 py-1.5 rounded-full bg-primary/10 text-primary active:scale-95 transition-transform"
+        >
+          Edit
+        </Link>
+      </div>
+    </motion.div>
+  );
+
+  /* --- Account Status Strip (verified / membership / wallet) --- */
+  const renderAccountStatus = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.04 }}
+      className="grid grid-cols-3 gap-2 mb-5"
+    >
+      <Link
+        to={isVerified ? "/profile" : "/account/verification"}
+        className="zivo-card-organic flex items-center gap-1.5 px-2.5 py-2 active:scale-[0.97] transition-transform"
+      >
+        <VerifiedCheck size={18} />
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold leading-tight truncate">
+            {isVerified ? "Verified" : "Get verified"}
+          </p>
+          <p className="text-[9px] text-muted-foreground truncate">Account</p>
         </div>
-        <ChevronRight className="w-5 h-5 text-muted-foreground/30 shrink-0" />
+      </Link>
+      <Link
+        to="/membership"
+        className="zivo-card-organic flex items-center gap-1.5 px-2.5 py-2 active:scale-[0.97] transition-transform"
+      >
+        <Crown className="w-4 h-4 text-amber-500 shrink-0" />
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold leading-tight truncate">Explorer</p>
+          <p className="text-[9px] text-muted-foreground truncate">Tier</p>
+        </div>
+      </Link>
+      <Link
+        to="/wallet"
+        className="zivo-card-organic flex items-center gap-1.5 px-2.5 py-2 active:scale-[0.97] transition-transform"
+      >
+        <Wallet className="w-4 h-4 text-emerald-500 shrink-0" />
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold leading-tight truncate">Wallet</p>
+          <p className="text-[9px] text-muted-foreground truncate">View balance</p>
+        </div>
       </Link>
     </motion.div>
   );
