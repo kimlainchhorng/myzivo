@@ -491,7 +491,10 @@ const AppHome = () => {
                       <div className="mb-1 flex items-center justify-between text-[10px] font-semibold text-primary"><span>Setup progress</span><span>{lodgingProgress ? `${lodgingProgress.complete}/${lodgingProgress.total} ready` : "Loading"}</span></div>
                       <Progress value={lodgingProgress?.percent || 0} className="h-1.5 bg-primary/15" />
                     </div>
-                    <Button size="sm" className="mt-3 h-9 w-full" onClick={() => navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`)}>Open Hotel Operations <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Button>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <Button size="sm" className="h-9" onClick={() => navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`)}>Open Ops <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Button>
+                      <Button size="sm" variant="outline" className="h-9" onClick={() => navigate("/hotel-admin")}>Launch Page</Button>
+                    </div>
                   </div>
                 </div>
               </motion.div>
