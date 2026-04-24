@@ -672,7 +672,7 @@ export default function ReelsFeedPage() {
         {/* Main Feed Content */}
         <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pb-0 flex-1 lg:max-w-2xl lg:mx-auto">
           {/* Header */}
-          <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center gap-3 lg:pt-3" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 0.625rem)' }}>
+          <div data-testid="feed-sticky-header" className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center gap-3 lg:pt-3" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 2.25rem)' }}>
             <h1 className="text-lg font-bold text-foreground shrink-0 lg:hidden">Feed</h1>
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
