@@ -172,7 +172,7 @@ export default function ProfileFeedCard({
           )}
 
           {/* Embedded original post card */}
-          <div className="mx-3 mb-2 border border-border/50 rounded-2xl overflow-hidden bg-card shadow-sm">
+          <div className="mb-2 border-y border-border/50 overflow-hidden bg-card">
            <div className="flex items-center px-3 py-2.5">
               <button
                 type="button"
@@ -218,7 +218,11 @@ export default function ProfileFeedCard({
 
             {/* Media */}
             {hasMedia && (
-              <div ref={containerRef} onClick={handleDoubleTap} className="relative w-full aspect-square bg-black">
+              <div
+                ref={containerRef}
+                onClick={handleDoubleTap}
+                className={cn("relative w-full overflow-hidden bg-black", isVideo && "aspect-square")}
+              >
                 {isVideo ? (
                   <>
                     <video ref={videoRef} src={item.url!} muted={muted} loop playsInline preload="metadata"
@@ -234,7 +238,7 @@ export default function ProfileFeedCard({
                     </button>
                   </>
                 ) : (
-                  <img src={item.url!} alt="" className="h-full w-full object-cover cursor-pointer"
+                  <img src={item.url!} alt="" className="block w-full h-auto cursor-pointer"
                     style={{ filter: item.filterCss || "none" }} loading="lazy" onClick={() => onSelectPost(item)} />
                 )}
                 {/* Double-tap heart */}
@@ -290,7 +294,11 @@ export default function ProfileFeedCard({
 
           {/* Media */}
           {hasMedia && (
-            <div ref={containerRef} onClick={handleDoubleTap} className="relative w-full aspect-square bg-black">
+            <div
+              ref={containerRef}
+              onClick={handleDoubleTap}
+              className={cn("relative w-full overflow-hidden bg-black", isVideo && "aspect-square")}
+            >
               {isVideo ? (
                 <>
                   <video ref={videoRef} src={item.url!} muted={muted} loop playsInline preload="metadata"
@@ -306,7 +314,7 @@ export default function ProfileFeedCard({
                   </button>
                 </>
               ) : (
-                <img src={item.url!} alt="" className="h-full w-full object-cover cursor-pointer"
+                <img src={item.url!} alt="" className="block w-full h-auto cursor-pointer"
                   style={{ filter: item.filterCss || "none" }} loading="lazy" onClick={() => onSelectPost(item)} />
               )}
               {/* Double-tap heart */}
