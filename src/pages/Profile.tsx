@@ -849,6 +849,48 @@ const Profile = () => {
                 </motion.div>
               </ParallaxSection>
 
+              {/* ── Account Hub: 6 quick-access tiles ── */}
+              <ParallaxSection index={1.8}>
+                <div className="rounded-2xl border border-border/40 bg-card/80 p-3 shadow-sm backdrop-blur-sm">
+                  <div className="mb-2 flex items-center justify-between px-1">
+                    <h2 className="text-xs font-bold text-foreground/80 uppercase tracking-wide">Quick access</h2>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/more")}
+                      className="text-[11px] font-semibold text-primary hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 rounded px-1"
+                    >
+                      See all →
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { icon: Wallet, label: "Wallet", desc: "Balance & pay", href: "/wallet", accent: "text-emerald-500", bg: "bg-emerald-500/10" },
+                      { icon: Heart, label: "Saved", desc: "Posts & places", href: "/saved", accent: "text-rose-500", bg: "bg-rose-500/10" },
+                      { icon: Settings, label: "Settings", desc: "App preferences", href: "/account/settings", accent: "text-foreground/70", bg: "bg-muted" },
+                      { icon: ShoppingBag, label: "Orders", desc: "Order history", href: "/grocery/orders", accent: "text-blue-500", bg: "bg-blue-500/10" },
+                      { icon: Inbox, label: "Notifications", desc: "All alerts", href: "/notifications", accent: "text-amber-500", bg: "bg-amber-500/10" },
+                      { icon: HelpCircle, label: "Help", desc: "FAQ & support", href: "/help", accent: "text-foreground/70", bg: "bg-muted" },
+                    ].map((tile) => (
+                      <button
+                        key={tile.label}
+                        type="button"
+                        onClick={() => navigate(tile.href)}
+                        aria-label={`${tile.label} — ${tile.desc}`}
+                        className="group flex min-h-[76px] flex-col items-start gap-1.5 rounded-xl border border-border/40 bg-background/60 p-2.5 text-left transition-all hover:border-primary/30 hover:bg-background/90 hover:shadow-sm active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                      >
+                        <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", tile.bg)}>
+                          <tile.icon className={cn("h-4 w-4", tile.accent)} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-foreground leading-tight">{tile.label}</p>
+                          <p className="truncate text-[10px] text-muted-foreground">{tile.desc}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </ParallaxSection>
+
               {/* ZIVO+ upgrade moved to /more page */}
 
               {/* ── Phone Required Card ── */}
