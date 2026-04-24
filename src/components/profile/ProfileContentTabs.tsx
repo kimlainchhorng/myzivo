@@ -474,8 +474,6 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
           user_id: user.id,
           item_id: interactionId,
           item_type: "post",
-          title: item.caption || `Post by ${item.user.name}`,
-          collection_name: "Posts",
         });
 
         if (error) throw error;
