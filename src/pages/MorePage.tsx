@@ -161,6 +161,9 @@ const quickLinksAccount: QuickLink[] = [
   { icon: AlertCircle, label: "Report a Problem", href: "/feedback", description: "Bug report", accent: "hsl(0 84% 60%)" },
   { icon: Clock, label: "Activity Log", href: "/activity", description: "History", accent: "hsl(198 93% 59%)" },
   { icon: ShieldCheck, label: "Security Report", href: "/security/report", description: "Status", accent: "hsl(142 71% 45%)" },
+  { icon: Smartphone, label: "Login & Devices", href: "/account/settings", description: "Active sessions", accent: "hsl(221 83% 53%)" },
+  { icon: Lock, label: "Two-Factor Auth", href: "/account/privacy", description: "Extra security", accent: "hsl(142 71% 45%)" },
+  { icon: Users, label: "Blocked Users", href: "/account/privacy", description: "Manage blocks", accent: "hsl(0 84% 60%)" },
 ];
 
 const sections = [
