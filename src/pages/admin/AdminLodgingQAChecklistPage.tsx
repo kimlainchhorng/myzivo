@@ -66,11 +66,11 @@ export default function AdminLodgingQAChecklistPage() {
             <h1 className="text-2xl font-bold">Hotel Admin QA Checklist</h1>
             <p className="mt-1 text-sm text-muted-foreground">One-click proof of updated sections, route safety, build/test coverage, and remaining setup data.</p>
           </div>
-          <div className="flex flex-wrap gap-2"><Button onClick={runQa} disabled={qaRunning || storeLoading || isLoading}><ShieldCheck className="mr-2 h-4 w-4" /> {qaRunning ? "Running…" : "Run QA"}</Button><Button variant="outline" onClick={exportPdf}><Download className="mr-2 h-4 w-4" /> Export PDF</Button><Button variant="outline" onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print Report</Button><Badge variant={report.overallStatus === "passed" ? "secondary" : "outline"} className="w-fit text-sm">{storeLoading || isLoading ? "Checking…" : qaResult ? report.overallStatus : completion.status}</Badge></div>
+          <div className="flex flex-wrap gap-2"><Button onClick={runQa} disabled={qaRunning || storeLoading || isLoading}><ShieldCheck className="mr-2 h-4 w-4" /> {qaRunning ? "Running…" : "Run QA"}</Button><Button variant="outline" onClick={exportPdf}><Download className="mr-2 h-4 w-4" /> Export PDF</Button><Button variant="outline" onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print Report</Button><Badge variant={systemFailures.length ? "destructive" : "secondary"} className="w-fit text-sm">{finalStatus}</Badge></div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <SummaryCard label="QA status" value={qaResult ? `${report.passedCount} pass / ${report.failedCount} fail` : "Ready to run"} />
+          <SummaryCard label="QA status" value={`${report.passedCount} pass / ${systemFailures.length} system fail`} />
           <SummaryCard label="Unit tests" value="Fixtures + deep links" />
           <SummaryCard label="Setup progress" value={`${completion.complete}/${completion.total} complete`} />
         </div>
@@ -78,12 +78,20 @@ export default function AdminLodgingQAChecklistPage() {
         <Card className="print:shadow-none" id="lodging-qa-report">
           <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Run QA results</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {!qaResult && <p className="text-sm text-muted-foreground">Click Run QA to audit routes, sidebar coverage, deep links, setup data, and empty-state fix buttons.</p>}
-            {qaResult && <div className="grid gap-2 sm:grid-cols-4"><SummaryCard label="Passed" value={String(report.passedCount)} /><SummaryCard label="Failed" value={String(report.failedCount)} /><SummaryCard label="Warnings" value={String(report.warningCount)} /><SummaryCard label="Deep links" value={String(report.deepLinks.length)} /></div>}
+            <div className="rounded-lg border border-primary/20 bg-primary/8 p-3"><p className="text-sm font-bold text-foreground">{finalStatus}</p><p className="mt-1 text-xs text-muted-foreground">System checks are separated from hotel setup data, so missing rooms or rates appear as action-needed warnings.</p></div>
+            <div className="grid gap-2 sm:grid-cols-4"><SummaryCard label="Passed" value={String(report.passedCount)} /><SummaryCard label="System fails" value={String(systemFailures.length)} /><SummaryCard label="Setup actions" value={String(setupWarnings.length)} /><SummaryCard label="Deep links" value={String(report.deepLinks.length)} /></div>
             <div className="grid gap-2">
               {report.checks.map((check) => <div key={check.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="flex items-center gap-2 text-sm font-semibold text-foreground">{check.status === "fail" ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle2 className="h-4 w-4 text-primary" />}{check.name}</p><p className="mt-1 text-xs text-muted-foreground">{check.detail}</p>{check.url && <p className="mt-1 truncate text-[10px] text-primary">{check.url}</p>}</div><div className="flex shrink-0 gap-2"><Badge variant={check.status === "pass" ? "secondary" : "outline"}>{check.status}</Badge>{check.fixTab && <Button size="sm" variant="outline" onClick={() => openTab(check.fixTab!)}>Fix</Button>}</div></div>)}
             </div>
             <div className="space-y-2 pt-4"><p className="text-sm font-bold">Deep-link URLs</p>{report.deepLinks.map((url) => <p key={url} className="truncate text-xs text-muted-foreground print:whitespace-normal">{url}</p>)}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Completion proof</CardTitle></CardHeader>
+          <CardContent className="grid gap-2 md:grid-cols-2">
+            {completionProof.map((item) => <div key={item} className="flex items-center gap-2 rounded-lg border border-border bg-card p-2 text-sm"><CheckCircle2 className="h-4 w-4 text-primary" /><span>{item}</span></div>)}
+            {completion.incompleteItems.map((item) => <button key={item.key} onClick={() => openTab(item.tab)} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card p-2 text-left text-sm hover:border-primary/50"><span>{item.label} needs hotel data</span><Badge variant="outline">{item.actionLabel}</Badge></button>)}
           </CardContent>
         </Card>
 
