@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { isLodgingTab, resolveStoreTab } from "./storeTabRouting";
+import { buildStoreTabUrl, getTabFromSearch, isLodgingTab, resolveStoreTab, resolveStoreTabFromSearch } from "./storeTabRouting";
+import { tabQueryFixtures, validBaseTabFixtures, validLodgingTabFixtures } from "@/test/fixtures/lodgingTabFixtures";
 
 describe("store tab routing", () => {
   it("accepts valid lodging deep links for lodging stores", () => {
-    expect(resolveStoreTab("lodge-rate-plans", true)).toBe("lodge-rate-plans");
-    expect(isLodgingTab("lodge-overview")).toBe(true);
+    validLodgingTabFixtures.forEach((tab) => expect(resolveStoreTab(tab, true)).toBe(tab));
+    validLodgingTabFixtures.forEach((tab) => expect(isLodgingTab(tab)).toBe(true));
+  });
+
+  it("accepts valid base store tabs", () => {
+    validBaseTabFixtures.forEach((tab) => expect(resolveStoreTab(tab, true)).toBe(tab));
   });
 
   it("falls invalid lodging-store tabs back to overview", () => {
@@ -18,5 +23,14 @@ describe("store tab routing", () => {
   it("defaults missing tabs safely", () => {
     expect(resolveStoreTab(null, true)).toBe("lodge-overview");
     expect(resolveStoreTab(undefined, false)).toBe("profile");
+  });
+
+  it.each(tabQueryFixtures)("resolves query string $search", ({ search, lodging, expected }) => {
+    expect(resolveStoreTabFromSearch(search, lodging)).toBe(expected);
+  });
+
+  it("parses tab query strings and builds URLs", () => {
+    expect(getTabFromSearch("?tab=lodge-overview&x=1")).toBe("lodge-overview");
+    expect(buildStoreTabUrl("store 1", "lodge-addons")).toBe("/admin/stores/store%201?tab=lodge-addons");
   });
 });

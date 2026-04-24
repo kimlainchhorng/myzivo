@@ -8,9 +8,23 @@ export const isLodgingTab = (tab?: string | null): tab is LodgingTabId => Boolea
 export const isBaseStoreTab = (tab?: string | null): tab is BaseTabId => Boolean(tab && (BASE_TAB_IDS as readonly string[]).includes(tab));
 export const isKnownStoreTab = (tab?: string | null) => isLodgingTab(tab) || isBaseStoreTab(tab);
 
+export function getTabFromSearch(search: string | URLSearchParams | null | undefined) {
+  if (!search) return null;
+  const params = typeof search === "string" ? new URLSearchParams(search.startsWith("?") ? search.slice(1) : search) : search;
+  return params.get("tab");
+}
+
 export function resolveStoreTab(requestedTab: string | null | undefined, isLodgingStore: boolean) {
   if (!requestedTab) return isLodgingStore ? "lodge-overview" : "profile";
   if (isLodgingTab(requestedTab)) return isLodgingStore ? requestedTab : "profile";
   if (isBaseStoreTab(requestedTab)) return requestedTab;
   return isLodgingStore ? "lodge-overview" : "profile";
+}
+
+export function resolveStoreTabFromSearch(search: string | URLSearchParams | null | undefined, isLodgingStore: boolean) {
+  return resolveStoreTab(getTabFromSearch(search), isLodgingStore);
+}
+
+export function buildStoreTabUrl(storeId: string, tab: string) {
+  return `/admin/stores/${encodeURIComponent(storeId)}?tab=${encodeURIComponent(tab)}`;
 }
