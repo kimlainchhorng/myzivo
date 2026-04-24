@@ -525,49 +525,51 @@ const Profile = () => {
 
                       {/* Cover action buttons */}
                       {user && !coverRepositioning && (
-                        <div className="absolute top-5 right-14 flex gap-2 z-20 sm:right-16">
+                        <div className="absolute top-3 right-3 flex gap-1.5 z-20">
                           {profile?.cover_url && (
                             <motion.button
-                              whileTap={{ scale: 0.9 }}
+                              whileTap={{ scale: 0.88 }}
                               onClick={() => { setCoverPosition(profile?.cover_position ?? 50); setCoverRepositioning(true); }}
-                              className="p-2 rounded-full bg-background/70 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-lg border border-border/30"
+                              aria-label="Reposition cover"
+                              className="h-7 w-7 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25"
                             >
-                              <MoveVertical className="h-4 w-4" />
+                              <MoveVertical className="h-3 w-3" />
                             </motion.button>
                           )}
                           <motion.button
-                            whileTap={{ scale: 0.9 }}
+                            whileTap={{ scale: 0.88 }}
                             onClick={() => coverInputRef.current?.click()}
                             disabled={coverUploading}
-                            className="p-2 rounded-full bg-background/70 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-lg border border-border/30 disabled:opacity-50"
+                            aria-label="Change cover"
+                            className="h-7 w-7 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25 disabled:opacity-50"
                           >
-                            {coverUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                            {coverUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
                           </motion.button>
                           <motion.button
-                            whileTap={{ scale: 0.9 }}
+                            whileTap={{ scale: 0.88 }}
                             onClick={() => setShowNotifPanel(prev => !prev)}
                             aria-label="Notifications"
                             className={cn(
-                              "relative p-2 rounded-full backdrop-blur-md shadow-lg border",
+                              "relative h-7 w-7 flex items-center justify-center rounded-full backdrop-blur-md shadow-md border",
                               showNotifPanel
                                 ? "bg-primary text-primary-foreground border-primary/40"
-                                : "bg-background/70 text-foreground/80 hover:bg-background/90 border-border/30"
+                                : "bg-background/65 text-foreground/80 hover:bg-background/90 border-border/25"
                             )}
                           >
-                            <Bell className="h-4 w-4" />
+                            <Bell className="h-3 w-3" />
                             {totalNotifCount > 0 && !showNotifPanel && (
-                              <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-sm">
+                              <span className="absolute -right-1 -top-1 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-destructive px-1 text-[8px] font-bold text-destructive-foreground shadow-sm">
                                 {totalNotifCount > 99 ? '99+' : totalNotifCount}
                               </span>
                             )}
                           </motion.button>
                           <motion.button
-                            whileTap={{ scale: 0.9 }}
+                            whileTap={{ scale: 0.88 }}
                             onClick={() => navigate("/more")}
                             aria-label="More"
-                            className="p-2 rounded-full bg-background/70 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-lg border border-border/30"
+                            className="h-7 w-7 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25"
                           >
-                            <MoreHorizontal className="h-4 w-4" />
+                            <MoreHorizontal className="h-3 w-3" />
                           </motion.button>
                         </div>
                       )}
