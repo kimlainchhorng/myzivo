@@ -1331,6 +1331,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       <button
         onClick={onClose}
         aria-label="Close"
+        data-testid="reel-close-button"
         className="absolute h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
         style={{
           top: 'var(--zivo-safe-top-overlay)',

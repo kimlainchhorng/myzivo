@@ -1253,7 +1253,7 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[70] bg-background flex flex-col"
     >
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border/30" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 0.75rem)' }}>
+      <div data-testid="feed-discover-header" className="flex items-center gap-3 px-4 py-3 border-b border-border/30" style={{ paddingTop: 'var(--zivo-safe-top-sticky)' }}>
         <button onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
@@ -1560,7 +1560,7 @@ export default function FeedPage() {
         <NavBar />
       </div>
       {/* Discover + Search + Live buttons - hide on desktop */}
-      <div className="absolute top-3 right-4 z-50 flex gap-2 lg:hidden" style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)" }}>
+      <div data-testid="feed-floating-actions" className="absolute right-4 z-50 flex gap-2 lg:hidden" style={{ top: 'var(--zivo-safe-top-overlay)' }}>
         <button
           type="button"
           onClick={() => navigate("/live")}

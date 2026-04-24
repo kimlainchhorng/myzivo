@@ -1,0 +1,37 @@
+name: Safe-area QA
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "scripts/qa/**"
+      - "tests/e2e/safe-area.spec.ts"
+      - ".github/workflows/safe-area-qa.yml"
+  push:
+    branches: [main]
+
+jobs:
+  safe-area:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Static safe-area expression check
+        run: npm run qa:safe-area
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Playwright safe-area screenshot QA
+        run: npm run qa:safe-area:e2e
+      - name: Upload safe-area screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: safe-area-screenshots
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore

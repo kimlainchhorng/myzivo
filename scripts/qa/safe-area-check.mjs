@@ -35,6 +35,10 @@ const DEVICES = [
   { name: "Galaxy S24 (cutout)", top: 36, bottom: 18, left: 0, right: 0 },
   { name: "iPad Pro 11\" portrait", top: 24, bottom: 20, left: 0, right: 0 },
   { name: "iPad Pro 11\" landscape", top: 24, bottom: 20, left: 20, right: 20 },
+  // The bug we keep hitting: native WKWebView reports 0 even on Dynamic Island.
+  // Per-element floors enforce that overlay/sheet/sticky tokens still keep
+  // controls below the status bar even when env() returns 0.
+  { name: "iOS Dynamic Island (broken inset=0)", top: 0, bottom: 0, left: 0, right: 0, brokenIsland: true },
 ];
 
 // ── Shared safe-area tokens (mirrored from src/index.css `:root`) ────────
@@ -81,12 +85,44 @@ const TARGETS = [
         property: "paddingTop",
         shipped: "var(--zivo-safe-top-overlay)",
         expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
+        brokenIslandFloor: 60,
       },
       {
         name: "ReelSlide close button (top)",
         property: "top",
         shipped: "var(--zivo-safe-top-overlay)",
         expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
+        brokenIslandFloor: 60,
+      },
+    ],
+  },
+  {
+    file: "src/pages/FeedPage.tsx",
+    elements: [
+      {
+        name: "Discover header paddingTop",
+        property: "paddingTop",
+        shipped: "var(--zivo-safe-top-sticky)",
+        expression: SAFE_TOKENS["--zivo-safe-top-sticky"],
+      },
+      {
+        name: "Floating actions top",
+        property: "top",
+        shipped: "var(--zivo-safe-top-overlay)",
+        expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
+        brokenIslandFloor: 60,
+      },
+    ],
+  },
+  {
+    file: "src/components/profile/ProfileContentTabs.tsx",
+    elements: [
+      {
+        name: "Profile post viewer paddingTop",
+        property: "paddingTop",
+        shipped: 'paddingTop: "var(--zivo-safe-top-overlay)"',
+        expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
+        brokenIslandFloor: 60,
       },
     ],
   },
@@ -98,6 +134,7 @@ const TARGETS = [
         property: "var",
         shipped: SAFE_TOKENS["--zivo-safe-top-overlay"],
         expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
+        brokenIslandFloor: 60,
       },
       {
         name: "--zivo-safe-top-sheet token",
@@ -263,15 +300,20 @@ for (const target of TARGETS) {
         fail++;
         continue;
       }
-      const ok = resolved >= device.top - 0.001; // tolerate float noise
+      // On the broken-island device, require the element's own minimum
+      // floor (set in TARGETS via `brokenIslandFloor`, default 44px so the
+      // close button never sits inside the status-bar zone).
+      const brokenFloor = device.brokenIsland ? (el.brokenIslandFloor ?? 44) : 0;
+      const minRequired = Math.max(device.top, brokenFloor);
+      const ok = resolved >= minRequired - 0.001; // tolerate float noise
       rows.push({
         device: device.name,
         element: el.name,
         property: el.property,
         resolved: Math.round(resolved * 100) / 100,
-        inset: device.top,
+        inset: minRequired,
         ok,
-        note: ok ? "" : "FAILS unsafe-zone clearance",
+        note: ok ? "" : `FAILS — need ≥ ${minRequired}px, got ${resolved}px`,
       });
       ok ? pass++ : fail++;
     }
