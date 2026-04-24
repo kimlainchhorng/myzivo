@@ -37,7 +37,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send, Users, Shield, Bell, Info, Copy, GripVertical, Hotel, BedDouble, CalendarRange, KeyRound, PackagePlus, MessageSquareText, BarChart3 } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send, Users, Shield, Bell, Info, Copy, GripVertical, Hotel, BedDouble, CalendarRange, KeyRound, PackagePlus, MessageSquareText, BarChart3, ListChecks } from "lucide-react";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import StorePaymentSection from "@/components/admin/StorePaymentSection";
 import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
@@ -504,14 +504,14 @@ export default function AdminStoreEditPage() {
   const lodgingRoomsQuery = useLodgeRooms(storeId || "");
   const lodgingProfileQuery = useLodgePropertyProfile(storeId || "");
   const lodgingAddons = (lodgingRoomsQuery.data || []).flatMap((room: any) => room.addons || []);
-  const lodgingSetup = setupProgress(getLodgingSetupItems({
+  const lodgingSetup = getLodgingCompletion({
     rooms: lodgingRoomsQuery.data || [],
     profile: lodgingProfileQuery.data,
     addons: lodgingAddons,
     housekeepingCount: 0,
     maintenanceReady: true,
     reportsReady: Boolean((lodgingRoomsQuery.data || []).length),
-  }));
+  });
 
   const { data: posts = [], isLoading: loadingPosts } = useQuery({
     queryKey: ["admin-store-posts", storeId],
@@ -594,17 +594,14 @@ export default function AdminStoreEditPage() {
   useEffect(() => {
     const isStoreLodging = isLodgingStoreCategory(store?.category);
     const requestedTab = searchParams.get("tab");
-    if (requestedTab?.startsWith("lodge-") && !isStoreLodging) {
-      handleTabChange("profile");
-      return;
-    }
-    if (isStoreLodging && requestedTab && ![...BASE_TAB_IDS, ...LODGING_TAB_IDS].includes(requestedTab)) {
-      handleTabChange("lodge-overview");
+    const resolvedTab = resolveStoreTab(requestedTab, isStoreLodging);
+    if (requestedTab !== resolvedTab && (requestedTab || isStoreLodging)) {
+      handleTabChange(resolvedTab);
       return;
     }
     if (!appliedLodgingDefaultTabRef.current && isStoreLodging && activeTab === "profile" && !requestedTab) {
       appliedLodgingDefaultTabRef.current = true;
-      handleTabChange("lodge-overview");
+      handleTabChange(resolvedTab);
     }
   }, [store?.category, activeTab, searchParams, handleTabChange]);
 
