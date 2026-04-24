@@ -1087,7 +1087,12 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   )}
                 </div>
 
-                <div className="py-2" data-testid="profile-post-menu-sheet">
+                <AccessibleMenuSheet
+                  onClose={() => setShowPostMenu(false)}
+                  labelledById="profile-post-menu-title"
+                  testId="profile-post-menu-sheet"
+                  className="py-2"
+                >
                   {(() => {
                     const alreadyReported = reportedPosts.has(selectedPost.id);
                     return (
