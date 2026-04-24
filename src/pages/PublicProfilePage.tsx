@@ -49,6 +49,7 @@ function PublicPostOverlay({
       exit={{ opacity: 0, y: 60 }}
       transition={{ type: "spring", damping: 30, stiffness: 320 }}
       {...motionProps}
+      data-testid="public-post-overlay-body"
       className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col overflow-y-auto"
       style={{ paddingTop: "var(--zivo-safe-top-overlay)" }}
     >
