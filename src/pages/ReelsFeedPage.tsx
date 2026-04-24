@@ -86,6 +86,35 @@ import { EngagementSkeleton } from "@/components/social/EngagementSkeleton";
 import SwipeableSheet from "@/components/social/SwipeableSheet";
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
+import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
+
+/**
+ * Fullscreen post-detail overlay with swipe-down-to-close.
+ * The render-prop child receives `startDrag` so the consumer can
+ * attach it to a header / grab zone via onPointerDown. Scrollable
+ * content beneath keeps native pan-y because dragListener is false.
+ */
+function PostDetailOverlay({
+  onClose,
+  children,
+}: {
+  onClose: () => void;
+  children: (startDrag: (e: React.PointerEvent) => void) => React.ReactNode;
+}) {
+  const { motionProps, startDrag } = useSwipeDownClose(onClose);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 60 }}
+      transition={{ type: "spring", damping: 30, stiffness: 320 }}
+      {...motionProps}
+      className="fixed inset-0 z-[100] bg-background flex flex-col"
+    >
+      {children(startDrag)}
+    </motion.div>
+  );
+}
 
 interface FeedItem {
   id: string;
@@ -938,82 +967,79 @@ export default function ReelsFeedPage() {
               const post = items[fullscreenIndex];
               if (!post) return null;
               return (
-                <motion.div
-                  initial={{ opacity: 0, y: 40 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 40 }}
-                  drag="y"
-                  dragConstraints={{ top: 0, bottom: 0 }}
-                  dragElastic={{ top: 0, bottom: 0.4 }}
-                  onDragEnd={(_, info) => {
-                    if (info.offset.y > 120 || info.velocity.y > 600) {
-                      setFullscreenIndex(null);
-                    }
-                  }}
-                  className="fixed inset-0 z-[100] bg-background flex flex-col"
-                >
-                  <div
-                    data-testid="post-detail-header"
-                    className="sticky top-0 z-10 flex items-center gap-3 px-3 pb-2.5 bg-background/95 backdrop-blur-xl border-b border-border/30"
-                    style={{ paddingTop: 'var(--zivo-safe-top-overlay)', touchAction: 'none' }}
-                  >
-                    <button
-                      onClick={() => setFullscreenIndex(null)}
-                      aria-label="Close post"
-                      className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50 active:bg-muted transition-colors"
-                    >
-                      <XIcon className="h-5 w-5 text-foreground" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (post.source === "store" && post.store_slug) {
-                          navigate(`/store/${post.store_slug}`);
-                        } else if (post.author_id) {
-                          navigate(`/user/${post.author_id}`);
-                        }
-                      }}
-                      className="flex-1 flex items-center gap-2.5 min-w-0 text-left rounded-lg px-1 py-0.5 hover:bg-muted/40 active:bg-muted/60 transition-colors"
-                      aria-label={`View ${post.author_name}'s profile`}
-                    >
-                      <div className="h-9 w-9 rounded-full overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/40">
-                        {post.author_avatar ? (
-                          <img
-                            src={post.author_avatar}
-                            alt={post.author_name}
-                            className="h-full w-full object-cover"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="h-full w-full flex items-center justify-center text-xs font-semibold text-muted-foreground">
-                            {(post.author_name || "?").slice(0, 1).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0 leading-tight">
-                        <p className="text-sm font-semibold text-foreground truncate">{post.author_name}</p>
-                        <p className="text-[11px] text-muted-foreground truncate">
-                          {(() => {
-                            try {
-                              return formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
-                            } catch {
-                              return "recently";
+                <PostDetailOverlay onClose={() => setFullscreenIndex(null)}>
+                  {(startDrag) => (
+                    <>
+                      <div
+                        data-testid="post-detail-header"
+                        className="sticky top-0 z-10 flex items-center gap-3 px-3 pb-2.5 bg-background/95 backdrop-blur-xl border-b border-border/30 cursor-grab active:cursor-grabbing select-none"
+                        style={{ paddingTop: 'var(--zivo-safe-top-overlay)', touchAction: 'none' }}
+                        onPointerDown={(e) => {
+                          const target = e.target as HTMLElement | null;
+                          // Don't start drag from interactive children (buttons, links)
+                          if (target?.closest('button, a, input, textarea')) return;
+                          startDrag(e);
+                        }}
+                      >
+                        <button
+                          onClick={() => setFullscreenIndex(null)}
+                          aria-label="Close post"
+                          className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50 active:bg-muted transition-colors"
+                        >
+                          <XIcon className="h-5 w-5 text-foreground" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (post.source === "store" && post.store_slug) {
+                              navigate(`/store/${post.store_slug}`);
+                            } else if (post.author_id) {
+                              navigate(`/user/${post.author_id}`);
                             }
-                          })()}
-                        </p>
+                          }}
+                          className="flex-1 flex items-center gap-2.5 min-w-0 text-left rounded-lg px-1 py-0.5 hover:bg-muted/40 active:bg-muted/60 transition-colors"
+                          aria-label={`View ${post.author_name}'s profile`}
+                        >
+                          <div className="h-9 w-9 rounded-full overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/40">
+                            {post.author_avatar ? (
+                              <img
+                                src={post.author_avatar}
+                                alt={post.author_name}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center text-xs font-semibold text-muted-foreground">
+                                {(post.author_name || "?").slice(0, 1).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0 leading-tight">
+                            <p className="text-sm font-semibold text-foreground truncate">{post.author_name}</p>
+                            <p className="text-[11px] text-muted-foreground truncate">
+                              {(() => {
+                                try {
+                                  return formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
+                                } catch {
+                                  return "recently";
+                                }
+                              })()}
+                            </p>
+                          </div>
+                        </button>
+                        <div className="w-9 h-1.5 rounded-full bg-muted-foreground/30 flex-shrink-0" aria-hidden />
                       </div>
-                    </button>
-                    <div className="w-9 h-1.5 rounded-full bg-muted-foreground/30 flex-shrink-0" aria-hidden />
-                  </div>
-                  <div
-                    ref={fullscreenScrollRef}
-                    className="flex-1 overflow-y-auto"
-                    style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 6rem)', touchAction: 'pan-y' }}
-                  >
-                    <FeedCard key={post.id} item={post} currentUserId={userId} detailMode />
-                  </div>
-                   <Suspense fallback={null}><ZivoMobileNav /></Suspense>
-                </motion.div>
+                      <div
+                        ref={fullscreenScrollRef}
+                        className="flex-1 overflow-y-auto"
+                        style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 6rem)', touchAction: 'pan-y' }}
+                      >
+                        <FeedCard key={post.id} item={post} currentUserId={userId} detailMode />
+                      </div>
+                      <Suspense fallback={null}><ZivoMobileNav /></Suspense>
+                    </>
+                  )}
+                </PostDetailOverlay>
               );
             })()}
           </AnimatePresence>
