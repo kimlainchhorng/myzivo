@@ -1129,6 +1129,12 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     );
                   })()}
                   <button
+                    role="menuitem"
+                    aria-label={
+                      notifPosts.has(selectedPost.id)
+                        ? "Turn off notifications for this post"
+                        : "Turn on notifications for this post"
+                    }
                     onClick={() => {
                       const id = selectedPost.id;
                       const isOn = notifPosts.has(id);
@@ -1141,23 +1147,27 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       setShowPostMenu(false);
                     }}
                     data-testid="profile-menu-notifications"
-                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                   >
-                    <Bell className="w-5 h-5" />
+                    <Bell className="w-5 h-5" aria-hidden="true" />
                     {notifPosts.has(selectedPost.id) ? "Turn off notifications" : "Turn on notifications"}
                   </button>
                   <button
+                    role="menuitem"
+                    aria-label="Copy link to this post"
                     onClick={() => {
                       const url = buildPublicPostShareUrl(selectedPost.id);
                       navigator.clipboard.writeText(url).then(() => toast.success("Link copied!")).catch(() => toast.info("Could not copy link"));
                       setShowPostMenu(false);
                     }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                   >
-                    <Link2 className="w-5 h-5" />
+                    <Link2 className="w-5 h-5" aria-hidden="true" />
                     Copy link
                   </button>
                   <button
+                    role="menuitem"
+                    aria-label="Hide this post — not interested"
                     onClick={() => {
                       const id = selectedPost.id;
                       setHiddenPosts((prev) => {
@@ -1170,48 +1180,56 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       toast.success("You won't see this post anymore");
                     }}
                     data-testid="profile-menu-not-interested"
-                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                   >
-                    <EyeOff className="w-5 h-5" />
+                    <EyeOff className="w-5 h-5" aria-hidden="true" />
                     Not interested
                   </button>
                   <button
+                    role="menuitem"
+                    aria-label="Share this post"
                     onClick={() => { setSharePostId(selectedPost.id); setShowPostMenu(false); }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                   >
-                    <Share2 className="w-5 h-5" />
+                    <Share2 className="w-5 h-5" aria-hidden="true" />
                     Share
                   </button>
                   {profileOwnerId === user?.id && (
                     <button
+                      role="menuitem"
+                      aria-label="Comment settings"
                       onClick={() => { setShowPostMenu(false); setShowCommentSettingsSheet(true); }}
                       data-testid="profile-menu-comment-settings"
-                      className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
+                      className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                     >
-                      <Settings2 className="w-5 h-5" />
+                      <Settings2 className="w-5 h-5" aria-hidden="true" />
                       Comment settings
                     </button>
                   )}
                   {profileOwnerId === user?.id && (
                     <>
                       <button
+                        role="menuitem"
+                        aria-label="Edit caption"
                         onClick={() => {
                           setEditCaptionValue(selectedPost.caption);
                           setEditingCaption(true);
                           setShowPostMenu(false);
                         }}
-                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
+                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                       >
-                        <Settings2 className="w-5 h-5" />
+                        <Settings2 className="w-5 h-5" aria-hidden="true" />
                         Edit caption
                       </button>
                       <button
+                        role="menuitem"
+                        aria-label="Delete this post"
                         onClick={() => {
                           if (window.confirm("Delete this post? This can't be undone.")) {
                             handleDeletePost(selectedPost.id);
                           }
                         }}
-                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 transition-colors"
+                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                       >
                         <Trash2 className="w-5 h-5" />
                         Delete post
