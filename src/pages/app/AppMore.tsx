@@ -12,6 +12,7 @@ import {
   Briefcase, Camera, Music, Crown,
 } from "lucide-react";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
+import TranslateButton from "@/components/common/TranslateButton";
 import { toast } from "sonner";
 import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -213,6 +214,10 @@ const AppMore = () => {
             </button>
           </motion.div>
         )}
+
+        <div className="mb-4">
+          <TranslateButton />
+        </div>
 
         {!isPlus && (
           <Link to="/zivo-plus" className="block mb-4">
