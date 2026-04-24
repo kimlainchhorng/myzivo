@@ -58,6 +58,7 @@ function ProfilePostViewerOverlay({
     >
       <SwipeGrabHandle
         onStartDrag={startDrag}
+        onClose={onClose}
         tone="light"
         testId="profile-post-grab-handle"
       />
