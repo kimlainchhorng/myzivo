@@ -953,18 +953,57 @@ export default function ReelsFeedPage() {
                   className="fixed inset-0 z-[100] bg-background flex flex-col"
                 >
                   <div
-                    className="sticky top-0 z-10 flex items-center gap-2 px-3 pb-2 bg-background/95 backdrop-blur-xl border-b border-border/30"
-                    style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 0.75rem)', touchAction: 'none' }}
+                    data-testid="post-detail-header"
+                    className="sticky top-0 z-10 flex items-center gap-3 px-3 pb-2.5 bg-background/95 backdrop-blur-xl border-b border-border/30"
+                    style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 2.75rem)', touchAction: 'none' }}
                   >
                     <button
                       onClick={() => setFullscreenIndex(null)}
                       aria-label="Close post"
-                      className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50 active:bg-muted"
+                      className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50 active:bg-muted transition-colors"
                     >
                       <XIcon className="h-5 w-5 text-foreground" />
                     </button>
-                    <h2 className="text-base font-semibold text-foreground flex-1">Post</h2>
-                    <div className="w-10 h-1.5 rounded-full bg-muted-foreground/30" aria-hidden />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (post.source === "store" && post.store_slug) {
+                          navigate(`/store/${post.store_slug}`);
+                        } else if (post.author_id) {
+                          navigate(`/user/${post.author_id}`);
+                        }
+                      }}
+                      className="flex-1 flex items-center gap-2.5 min-w-0 text-left rounded-lg px-1 py-0.5 hover:bg-muted/40 active:bg-muted/60 transition-colors"
+                      aria-label={`View ${post.author_name}'s profile`}
+                    >
+                      <div className="h-9 w-9 rounded-full overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/40">
+                        {post.author_avatar ? (
+                          <img
+                            src={post.author_avatar}
+                            alt={post.author_name}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center text-xs font-semibold text-muted-foreground">
+                            {(post.author_name || "?").slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 leading-tight">
+                        <p className="text-sm font-semibold text-foreground truncate">{post.author_name}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {(() => {
+                            try {
+                              return formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
+                            } catch {
+                              return "recently";
+                            }
+                          })()}
+                        </p>
+                      </div>
+                    </button>
+                    <div className="w-9 h-1.5 rounded-full bg-muted-foreground/30 flex-shrink-0" aria-hidden />
                   </div>
                   <div
                     ref={fullscreenScrollRef}
