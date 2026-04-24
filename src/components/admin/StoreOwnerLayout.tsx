@@ -413,47 +413,47 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
         </nav>
 
         {/* User card */}
-        <div className="border-t border-border px-3 py-2.5 shrink-0 bg-muted/30">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-              <span className="text-xs font-bold text-primary">
+        <div className="border-t border-border px-2.5 py-1.5 shrink-0 bg-muted/30">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <span className="text-[11px] font-bold text-primary">
                 {(user?.email || "?").charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-semibold text-foreground truncate leading-tight">{user?.email}</p>
-              <p className="text-[10px] text-muted-foreground">Store Owner</p>
+              <p className="text-[11px] font-semibold text-foreground truncate leading-tight">{user?.email}</p>
+              <p className="text-[9px] text-muted-foreground leading-tight">Store Owner</p>
             </div>
           </div>
         </div>
 
         {/* Footer actions */}
         <div
-          className="border-t border-border p-2 space-y-0.5 shrink-0"
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)' }}
+          className="border-t border-border p-1.5 space-y-0.5 shrink-0"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6px)' }}
         >
           <button
             onClick={() => { onTabChange?.("settings"); closeSidebar(); }}
             className={cn(
-              "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] transition-colors",
+              "w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] transition-colors",
               activeTab === "settings" ? "bg-primary/12 text-primary font-semibold" : "text-foreground/75 hover:bg-muted hover:text-foreground"
             )}
           >
-            <Settings className="w-[18px] h-[18px]" />
+            <Settings className="w-4 h-4" />
             Settings
           </button>
           <button
             onClick={() => navigate("/")}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] text-foreground/75 hover:bg-muted hover:text-foreground transition-colors"
+            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] text-foreground/75 hover:bg-muted hover:text-foreground transition-colors"
           >
-            <Home className="w-[18px] h-[18px]" />
+            <Home className="w-4 h-4" />
             Back to App
           </button>
           <button
             onClick={() => signOut()}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] text-destructive hover:bg-destructive/10 transition-colors"
+            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] text-destructive hover:bg-destructive/10 transition-colors"
           >
-            <LogOut className="w-[18px] h-[18px]" />
+            <LogOut className="w-4 h-4" />
             Sign Out
           </button>
         </div>
