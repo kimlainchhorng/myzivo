@@ -1,34 +1,48 @@
-import { useId } from "react";
+import { useId, type ReactElement } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { VERIFIED_LABEL, VERIFIED_TOOLTIP } from "@/lib/verification";
 
 /**
- * VerifiedBadge — Premium blue verified mark used across ZIVO.
+ * VerifiedBadge — premium blue verified mark used across ZIVO.
  *
- * Defaults to 1em sizing so it scales with surrounding text when no
- * explicit `size` / `className` is passed:
- *   <span>Name <VerifiedBadge /></span>
+ * - Defaults to 1em sizing so it scales with surrounding text.
+ * - Accessible: `role="img"` + `aria-label="Verified account"` + tooltip.
+ * - Set `interactive={false}` when the badge sits inside another button
+ *   or focusable surface (no nested interactives, no hover tooltip).
  */
 
 type Props = {
   size?: number;
   className?: string;
-  title?: string;
+  /** Tooltip + aria-label override (e.g. "Verified business"). */
+  tooltipText?: string;
+  /** Render with a hover tooltip + focus target. Default true. */
+  interactive?: boolean;
 };
 
-const VerifiedBadge = ({ size, className = "", title = "Verified" }: Props) => {
+const VerifiedBadge = ({
+  size,
+  className = "",
+  tooltipText = VERIFIED_TOOLTIP,
+  interactive = true,
+}: Props): ReactElement => {
   const reactId = useId().replace(/[:]/g, "");
   const uid = `vb-${reactId}`;
   const sizeStyle = size
     ? { width: size, height: size }
     : { width: "1em", height: "1em" };
 
-  return (
+  const svg = (
     <span
+      role="img"
+      aria-label={VERIFIED_LABEL}
+      title={tooltipText}
+      data-testid="verified-badge"
       className={`relative inline-flex items-center justify-center shrink-0 align-[-0.125em] ${className}`}
       style={sizeStyle}
-      aria-label={title}
-      title={title}
     >
-      <svg viewBox="0 0 24 24" className="h-full w-full block" aria-hidden="true">
+      <svg viewBox="0 0 24 24" className="h-full w-full block" aria-hidden="true" focusable="false">
+        <title>{VERIFIED_LABEL}</title>
         <defs>
           <linearGradient id={`${uid}-grad`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#3BB0FF" />
@@ -56,6 +70,17 @@ const VerifiedBadge = ({ size, className = "", title = "Verified" }: Props) => {
         />
       </svg>
     </span>
+  );
+
+  if (!interactive) return svg;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{svg}</TooltipTrigger>
+      <TooltipContent side="top" sideOffset={4} className="text-xs">
+        {tooltipText}
+      </TooltipContent>
+    </Tooltip>
   );
 };
 
