@@ -533,7 +533,14 @@ export default function MorePage() {
 
           {/* Sign Out */}
           {user && (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-4">
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-4 space-y-2">
+              <button
+                onClick={() => { signOut(); navigate("/auth"); }}
+                className="w-full py-3 rounded-2xl border border-border/50 bg-muted/40 text-foreground font-semibold text-sm touch-manipulation active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                <Lock className="w-4 h-4" />
+                Lock app
+              </button>
               <button
                 onClick={() => signOut()}
                 className="w-full py-3 rounded-2xl border border-border/50 bg-card text-foreground font-semibold text-sm touch-manipulation active:scale-[0.98] transition-all flex items-center justify-center gap-2"
