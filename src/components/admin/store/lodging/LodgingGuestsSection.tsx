@@ -45,7 +45,7 @@ export default function LodgingGuestsSection({ storeId }: { storeId: string }) {
           <Input value={q} onChange={e => setQ(e.target.value)} placeholder="Search…" className="pl-9" />
         </div>
         {isLoading ? <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p>
-          : filtered.length === 0 ? <p className="text-sm text-muted-foreground py-8 text-center">No guests</p>
+          : filtered.length === 0 ? <div className="rounded-lg border border-dashed border-border bg-muted/20 p-6 text-center"><Users className="mx-auto h-7 w-7 text-primary" /><p className="mt-3 text-sm font-semibold text-foreground">Guest CRM is ready</p><p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">No live guest records yet. Add a guest manually or create reservations to build stay history, VIP flags, and notes.</p><div className="mt-4 flex flex-wrap justify-center gap-2"><Button size="sm" onClick={openNew}>Add Guest</Button><Button size="sm" variant="outline" onClick={() => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-reservations" } }))}>Open reservations</Button></div></div>
           : (
             <div className="space-y-2">
               {filtered.map(g => (

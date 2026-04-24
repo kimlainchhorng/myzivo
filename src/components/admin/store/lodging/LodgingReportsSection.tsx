@@ -93,7 +93,7 @@ export default function LodgingReportsSection({ storeId }: { storeId: string }) 
                 <div className="grid grid-cols-3 px-3 py-2 bg-muted/50 text-xs font-semibold">
                   <span>Room</span><span className="text-right">Nights</span><span className="text-right">Revenue</span>
                 </div>
-                {data.perRoomType.length === 0 ? <p className="px-3 py-3 text-xs text-muted-foreground">No data</p>
+                {data.perRoomType.length === 0 ? <p className="px-3 py-3 text-xs text-muted-foreground">No live records yet — reports are ready once rooms and reservations exist.</p>
                   : data.perRoomType.map(r => (
                     <div key={r.name} className="grid grid-cols-3 px-3 py-2 border-t text-xs">
                       <span className="truncate">{r.name}</span><span className="text-right">{r.nights}</span><span className="text-right">{usd(r.revenue)}</span>
@@ -108,7 +108,7 @@ export default function LodgingReportsSection({ storeId }: { storeId: string }) 
                 <div className="grid grid-cols-3 px-3 py-2 bg-muted/50 text-xs font-semibold">
                   <span>Source</span><span className="text-right">Nights</span><span className="text-right">Revenue</span>
                 </div>
-                {data.perSource.length === 0 ? <p className="px-3 py-3 text-xs text-muted-foreground">No data</p>
+                {data.perSource.length === 0 ? <p className="px-3 py-3 text-xs text-muted-foreground">No live records yet — booking sources appear after reservations are added.</p>
                   : data.perSource.map(r => (
                     <div key={r.source} className="grid grid-cols-3 px-3 py-2 border-t text-xs">
                       <span className="capitalize">{r.source}</span><span className="text-right">{r.nights}</span><span className="text-right">{usd(r.revenue)}</span>

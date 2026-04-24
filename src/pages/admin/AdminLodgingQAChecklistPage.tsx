@@ -4,7 +4,7 @@ import { jsPDF } from "jspdf";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, ClipboardCheck, Download, ExternalLink, Hotel, ListChecks, Printer, ShieldCheck, Wrench, XCircle } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, Download, ExternalLink, Hotel, KeyRound, ListChecks, Printer, ShieldCheck, Wrench, XCircle } from "lucide-react";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useLodgingOpsData } from "@/components/admin/store/lodging/LodgingOperationsShared";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
@@ -74,6 +74,15 @@ export default function AdminLodgingQAChecklistPage() {
           <SummaryCard label="Unit tests" value="Fixtures + deep links" />
           <SummaryCard label="Setup progress" value={`${completion.complete}/${completion.total} complete`} />
         </div>
+
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Implementation Complete</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-3"><SummaryCard label="Technical status" value={systemFailures.length ? "Needs fix" : "Installed"} /><SummaryCard label="Setup data" value={setupWarnings.length ? "Needs setup" : "Ready"} /><SummaryCard label="Store" value={ownerStore?.name || "Hotel/Resort"} /></div>
+            <p className="text-sm text-muted-foreground">Missing arrivals/reservations means there is no live hotel data yet, not that the admin is incomplete.</p>
+            <div className="flex flex-wrap gap-2"><Button onClick={() => openTab("lodge-frontdesk")}><KeyRound className="mr-2 h-4 w-4" /> Back to Front Desk</Button><Button variant="outline" onClick={() => openTab(completion.nextBestAction.tab)}>{completion.nextBestAction.actionLabel}</Button></div>
+          </CardContent>
+        </Card>
 
         <Card className="print:shadow-none" id="lodging-qa-report">
           <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Run QA results</CardTitle></CardHeader>
