@@ -303,7 +303,7 @@ export default function MorePage() {
         to={isVerified ? "/profile" : "/account/verification"}
         className="zivo-card-organic flex items-center gap-1.5 px-2.5 py-2 active:scale-[0.97] transition-transform"
       >
-        <VerifiedCheck size={18} />
+        <VerifiedCheck size={20} />
         <div className="min-w-0">
           <p className="text-[11px] font-bold leading-tight truncate">
             {isVerified ? "Verified" : "Get verified"}
