@@ -1015,6 +1015,142 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         </AnimatePresence>,
         document.body
       )}
+
+      {/* Report Sheet */}
+      {createPortal(
+        <AnimatePresence>
+          {showReportSheet && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 z-[9998]"
+                onClick={() => setShowReportSheet(false)}
+              />
+              <motion.div
+                initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                className="fixed bottom-0 left-0 right-0 z-[9999] bg-card rounded-t-2xl shadow-2xl max-h-[80vh] overflow-y-auto safe-area-bottom"
+              >
+                <div className="flex justify-center pt-3 pb-2">
+                  <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+                </div>
+                <h3 className="text-base font-bold text-foreground text-center pb-2">Report</h3>
+                {reportStep === "categories" && (
+                  <div className="px-2 pb-4">
+                    {[
+                      "I just don't like it",
+                      "Bullying or unwanted contact",
+                      "Suicide, self-injury or eating disorders",
+                      "Violence, hate or exploitation",
+                      "Selling or promoting restricted items",
+                      "Nudity or sexual activity",
+                      "Scam, fraud or false information",
+                      "Intellectual property",
+                      "Something else",
+                    ].map((label) => (
+                      <button
+                        key={label}
+                        onClick={() => { setReportCategory(label); setReportStep("sub"); }}
+                        className="w-full flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-muted/50 rounded-xl text-sm text-foreground"
+                      >
+                        <span className="text-left">{label}</span>
+                        <span className="text-muted-foreground">›</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {reportStep === "sub" && (
+                  <div className="px-4 pb-6">
+                    <p className="text-xs text-muted-foreground mb-3">{reportCategory}</p>
+                    <p className="text-sm text-foreground mb-4">
+                      Thanks for letting us know. Your report is anonymous and our team will review this content.
+                    </p>
+                    <button
+                      onClick={async () => {
+                        try {
+                          if (selectedPost) {
+                            await (supabase as any).from("post_reports").insert({
+                              post_id: toUserPostInteractionId(selectedPost.id),
+                              reporter_id: user?.id,
+                              category: reportCategory,
+                            });
+                          }
+                        } catch { /* graceful */ }
+                        setReportStep("submitted");
+                      }}
+                      className="w-full bg-primary text-primary-foreground rounded-xl py-3 text-sm font-semibold"
+                    >
+                      Submit report
+                    </button>
+                  </div>
+                )}
+                {reportStep === "submitted" && (
+                  <div className="px-6 pb-8 text-center">
+                    <div className="text-5xl mb-3">✓</div>
+                    <p className="text-base font-semibold text-foreground mb-2">Thanks for your report</p>
+                    <p className="text-sm text-muted-foreground mb-5">
+                      We use reports like yours to keep ZIVO safe.
+                    </p>
+                    <button
+                      onClick={() => setShowReportSheet(false)}
+                      className="w-full bg-primary text-primary-foreground rounded-xl py-3 text-sm font-semibold"
+                    >
+                      Done
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Comment settings sheet (owner) */}
+      {createPortal(
+        <AnimatePresence>
+          {showCommentSettingsSheet && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 z-[9998]"
+                onClick={() => setShowCommentSettingsSheet(false)}
+              />
+              <motion.div
+                initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                className="fixed bottom-0 left-0 right-0 z-[9999] bg-card rounded-t-2xl shadow-2xl safe-area-bottom"
+              >
+                <div className="flex justify-center pt-3 pb-2">
+                  <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+                </div>
+                <h3 className="text-base font-bold text-foreground text-center pb-3">Who can comment</h3>
+                <div className="px-2 pb-4">
+                  {([
+                    { key: "everyone", label: "Everyone" },
+                    { key: "followers", label: "Followers only" },
+                    { key: "off", label: "Turn off comments" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.key}
+                      onClick={() => {
+                        setCommentControl(opt.key);
+                        toast.success(`Comments: ${opt.label}`);
+                        setShowCommentSettingsSheet(false);
+                      }}
+                      className="w-full flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-muted/50 rounded-xl text-sm text-foreground"
+                    >
+                      <span>{opt.label}</span>
+                      {commentControl === opt.key && <span className="text-primary">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
