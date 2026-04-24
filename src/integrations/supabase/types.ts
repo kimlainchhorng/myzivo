@@ -5969,6 +5969,7 @@ export type Database = {
           reason: string | null
           request_id: string | null
           reviewer_user_id: string
+          target_store_id: string | null
           target_user_id: string
         }
         Insert: {
@@ -5979,6 +5980,7 @@ export type Database = {
           reason?: string | null
           request_id?: string | null
           reviewer_user_id: string
+          target_store_id?: string | null
           target_user_id: string
         }
         Update: {
@@ -5989,6 +5991,7 @@ export type Database = {
           reason?: string | null
           request_id?: string | null
           reviewer_user_id?: string
+          target_store_id?: string | null
           target_user_id?: string
         }
         Relationships: []
@@ -47489,6 +47492,7 @@ export type Database = {
           id: string
           instagram_url: string | null
           is_active: boolean | null
+          is_verified: boolean
           khr_rate: number | null
           latitude: number | null
           logo_url: string | null
@@ -47504,6 +47508,8 @@ export type Database = {
           telegram_url: string | null
           tiktok_url: string | null
           updated_at: string | null
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           address?: string | null
@@ -47520,6 +47526,7 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           is_active?: boolean | null
+          is_verified?: boolean
           khr_rate?: number | null
           latitude?: number | null
           logo_url?: string | null
@@ -47535,6 +47542,8 @@ export type Database = {
           telegram_url?: string | null
           tiktok_url?: string | null
           updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           address?: string | null
@@ -47551,6 +47560,7 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           is_active?: boolean | null
+          is_verified?: boolean
           khr_rate?: number | null
           latitude?: number | null
           logo_url?: string | null
@@ -47566,6 +47576,8 @@ export type Database = {
           telegram_url?: string | null
           tiktok_url?: string | null
           updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }
@@ -60914,6 +60926,10 @@ export type Database = {
       }
       set_profile_blue_verified_manual: {
         Args: { _reason?: string; _target_user_id: string; _verified: boolean }
+        Returns: undefined
+      }
+      set_store_blue_verified_manual: {
+        Args: { _reason?: string; _store_id: string; _verified: boolean }
         Returns: undefined
       }
       set_zone_polygon: {
