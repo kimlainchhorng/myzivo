@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, Fragment } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
@@ -7,7 +7,7 @@ import { useI18n } from "@/hooks/useI18n";
 import SEOHead from "@/components/SEOHead";
 import {
   User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
-  Shield, Star, ChevronRight, UserPlus, UserCheck,
+  Shield, Star, ChevronRight, UserPlus, BadgeCheck,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
   Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
 } from "lucide-react";
@@ -73,6 +73,12 @@ const LANGS = [
 
 const getFlagUrl = (cc: string) => `/flags/${cc}.svg`;
 
+const BlueVerifiedBadge = ({ className = "h-5 w-5" }: { className?: string }) => (
+  <span className={cn("inline-flex items-center justify-center rounded-full bg-[hsl(var(--flights))] text-primary-foreground shadow-sm ring-2 ring-background", className)} aria-label="Blue verified">
+    <Check className="h-[70%] w-[70%] stroke-[3]" />
+  </span>
+);
+
 /* ── 3D tilt hook ── */
 function use3DTilt(ref: React.RefObject<HTMLElement | null>, intensity = 8) {
   const [style, setStyle] = useState({ rotateX: 0, rotateY: 0 });
@@ -137,6 +143,23 @@ const Profile = () => {
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
   const { unreadCount: notifUnreadCount, notifications } = useNotifications(20);
+  const { data: latestVerificationRequest } = useQuery({
+    queryKey: ["verification-request", user?.id, "latest"],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await (supabase as any)
+        .from("verification_requests")
+        .select("id, status, rejection_reason, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { id: string; status: string | null; rejection_reason: string | null; created_at: string } | null;
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+  });
   
   // Count pending friend requests + new followers
   const [socialCount, setSocialCount] = useState(0);
@@ -522,6 +545,9 @@ const Profile = () => {
                               {getInitials()}
                             </AvatarFallback>
                           </Avatar>
+                          {profile?.is_verified && (
+                            <BlueVerifiedBadge className="absolute bottom-1 right-1 h-6 w-6" />
+                          )}
                           <motion.button
                             whileHover={{ scale: 1.15, rotate: 10 }}
                             whileTap={{ scale: 0.85 }}
@@ -541,12 +567,7 @@ const Profile = () => {
                       <CardTitle className="flex items-center justify-start gap-2 text-lg font-bold">
                         <Sparkles className="h-4 w-4 text-primary" />
                         {profile?.full_name || t("profile.set_name")}
-                        {profile?.is_verified && (
-                          <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="10" fill="hsl(var(--primary))" />
-                            <path d="M8 12.5L10.5 15L16 9.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
+                        {profile?.is_verified && <BlueVerifiedBadge />}
                       </CardTitle>
                       {/* Email hidden — only visible to account owner in settings */}
                       <div className="flex flex-wrap items-center justify-start gap-2 mt-3">
@@ -559,6 +580,39 @@ const Profile = () => {
                           </Badge>
                         )}
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() => navigate("/account/verification")}
+                        className={cn(
+                          "mt-3 inline-flex min-h-[34px] items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-bold shadow-sm transition-transform active:scale-95",
+                          profile?.is_verified
+                            ? "border-[hsl(var(--flights)/0.28)] bg-[hsl(var(--flights)/0.10)] text-[hsl(var(--flights))]"
+                            : latestVerificationRequest?.status === "pending"
+                              ? "border-amber-500/25 bg-amber-500/10 text-amber-600"
+                              : latestVerificationRequest?.status === "rejected"
+                                ? "border-destructive/20 bg-destructive/5 text-destructive"
+                                : "border-[hsl(var(--flights)/0.25)] bg-[hsl(var(--flights)/0.08)] text-[hsl(var(--flights))]"
+                        )}
+                      >
+                        {profile?.is_verified ? (
+                          <>
+                            <BlueVerifiedBadge className="h-4 w-4 ring-0" /> Blue verified
+                          </>
+                        ) : latestVerificationRequest?.status === "pending" ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Verification pending
+                          </>
+                        ) : latestVerificationRequest?.status === "rejected" ? (
+                          <>
+                            <AlertCircle className="h-3.5 w-3.5" /> Reapply for blue verified
+                          </>
+                        ) : (
+                          <>
+                            <BadgeCheck className="h-4 w-4" /> Get blue verified
+                          </>
+                        )}
+                      </button>
 
                       {/* Bio */}
                       <div className="mt-2 max-w-sm">

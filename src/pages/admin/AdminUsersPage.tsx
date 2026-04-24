@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Users, Search, Mail, Calendar, Shield, ChevronLeft, ChevronRight,
-  UserCheck, UserX, Eye, BadgeCheck, ShieldCheck
+  UserX, Eye, BadgeCheck
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -52,6 +52,24 @@ export default function AdminUsersPage() {
     onError: (err: any) => toast.error(err.message || "Failed to update verification"),
   });
 
+  const reviewRequestMutation = useMutation({
+    mutationFn: async ({ requestId, approved, reason }: { requestId: string; approved: boolean; reason?: string }) => {
+      const { error } = await (supabase as any).rpc("set_profile_blue_verified_from_request", {
+        _request_id: requestId,
+        _approved: approved,
+        _rejection_reason: reason || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_, { approved }) => {
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      qc.invalidateQueries({ queryKey: ["admin-verification-requests"] });
+      setSelectedUser(null);
+      toast.success(approved ? "Blue verified badge approved" : "Verification request rejected");
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to review request"),
+  });
+
   // Fetch all profiles
   const { data: profiles, isLoading } = useQuery({
     queryKey: ["admin-users", isAdmin],
@@ -74,6 +92,20 @@ export default function AdminUsersPage() {
       const { data, error } = await supabase
         .from("user_roles")
         .select("user_id, role");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: isAdmin && !authLoading,
+  });
+
+  const { data: verificationRequests } = useQuery({
+    queryKey: ["admin-verification-requests", isAdmin],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("verification_requests")
+        .select("id, user_id, full_name, category, additional_info, status, rejection_reason, created_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
       if (error) throw error;
       return data || [];
     },
@@ -119,13 +151,14 @@ export default function AdminUsersPage() {
 
   const totalPages = Math.ceil((filtered?.length || 0) / PAGE_SIZE);
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const pendingVerificationRequests = (verificationRequests || []).filter((request: any) => request.status === "pending");
 
   // Stats
   const stats = useMemo(() => {
     if (!customerProfiles.length) return { total: 0, verified: 0, setupComplete: 0 };
     return {
       total: customerProfiles.length,
-      verified: customerProfiles.filter((p) => p.email_verified).length,
+      verified: customerProfiles.filter((p) => p.is_verified).length,
       setupComplete: customerProfiles.filter((p) => p.setup_complete).length,
     };
   }, [customerProfiles]);
@@ -170,12 +203,12 @@ export default function AdminUsersPage() {
           </Card>
           <Card>
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                <UserCheck className="w-5 h-5 text-emerald-500" />
+              <div className="w-10 h-10 rounded-xl bg-[hsl(var(--flights)/0.10)] flex items-center justify-center">
+                <BadgeCheck className="w-5 h-5 text-[hsl(var(--flights))]" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">{stats.verified}</p>
-                <p className="text-xs text-muted-foreground">Verified</p>
+                <p className="text-xs text-muted-foreground">Blue Verified</p>
               </div>
             </CardContent>
           </Card>
@@ -193,6 +226,35 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Search */}
+        {pendingVerificationRequests.length > 0 && (
+          <Card className="border-[hsl(var(--flights)/0.18)] bg-[hsl(var(--flights)/0.04)]">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <BadgeCheck className="h-4 w-4 text-[hsl(var(--flights))]" /> Blue Verified requests
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {pendingVerificationRequests.slice(0, 5).map((request: any) => (
+                <div key={request.id} className="flex flex-col gap-2 rounded-xl border border-border/50 bg-card/80 p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">{request.full_name}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{request.category || "personal"} request</p>
+                    {request.additional_info && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{request.additional_info}</p>}
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <Button size="sm" className="gap-1.5" disabled={reviewRequestMutation.isPending} onClick={() => reviewRequestMutation.mutate({ requestId: request.id, approved: true })}>
+                      <BadgeCheck className="h-3.5 w-3.5" /> Approve
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={reviewRequestMutation.isPending} onClick={() => reviewRequestMutation.mutate({ requestId: request.id, approved: false, reason: "Request was not approved" })}>
+                      Reject
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -246,9 +308,7 @@ export default function AdminUsersPage() {
                               <div className="min-w-0">
                                 <div className="flex items-center gap-1">
                                   <p className="font-medium text-foreground truncate">{user.full_name || "—"}</p>
-                                  {user.is_verified && (
-                                    <BadgeCheck className="w-4 h-4 text-primary shrink-0" />
-                                  )}
+                                  {user.is_verified && <BadgeCheck className="w-4 h-4 text-[hsl(var(--flights))] shrink-0" />}
                                 </div>
                                 {user.phone && <p className="text-xs text-muted-foreground">{user.phone}</p>}
                               </div>
@@ -317,6 +377,9 @@ export default function AdminUsersPage() {
                           <p className="font-medium text-foreground text-sm truncate">{user.full_name || "No Name"}</p>
                           <p className="text-xs text-muted-foreground truncate">{user.email || "—"}</p>
                           <div className="flex gap-1 mt-1">
+                            {user.is_verified && (
+                              <Badge variant="secondary" className="text-[9px] bg-[hsl(var(--flights)/0.10)] text-[hsl(var(--flights))] border-0 px-1.5 py-0">Blue Verified</Badge>
+                            )}
                             {user.email_verified ? (
                               <Badge variant="secondary" className="text-[9px] bg-emerald-500/10 text-emerald-500 border-0 px-1.5 py-0">Verified</Badge>
                             ) : (
@@ -421,18 +484,18 @@ export default function AdminUsersPage() {
                   >
                     {selectedUser.is_verified ? (
                       <>
-                        <ShieldCheck className="w-4 h-4 text-primary" />
-                        Verified — Remove Badge
+                        <BadgeCheck className="w-4 h-4 text-[hsl(var(--flights))]" />
+                        Blue Verified — Remove Badge
                       </>
                     ) : (
                       <>
                         <BadgeCheck className="w-4 h-4" />
-                        Verify Account
+                        Give Blue Verified
                       </>
                     )}
                   </Button>
                   {selectedUser.is_verified && (
-                    <p className="text-[10px] text-muted-foreground mt-1.5">This account has been verified by an admin.</p>
+                    <p className="text-[10px] text-muted-foreground mt-1.5">This account has an active blue verified badge.</p>
                   )}
                 </div>
               </div>

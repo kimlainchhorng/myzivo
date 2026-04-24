@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ShieldCheck, Upload, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, BadgeCheck, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -36,6 +36,10 @@ export default function VerificationRequestPage() {
   });
 
   const submit = async () => {
+    if (existingRequest?.status === "pending") {
+      toast.info("Your Blue Verified request is already under review");
+      return;
+    }
     if (!user || !fullName.trim()) {
       toast.error("Please enter your full name");
       return;
@@ -51,7 +55,7 @@ export default function VerificationRequestPage() {
     if (error) {
       toast.error("Failed to submit request");
     } else {
-      toast.success("Verification request submitted!");
+      toast.success("Blue Verified request submitted!");
       navigate(-1);
     }
   };
@@ -69,7 +73,7 @@ export default function VerificationRequestPage() {
           <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold">Request Verification</h1>
+          <h1 className="text-lg font-semibold">Blue Verified</h1>
         </div>
       </div>
 
@@ -89,8 +93,8 @@ export default function VerificationRequestPage() {
               <span className="text-sm font-medium capitalize">{existingRequest.status}</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              {existingRequest.status === "pending" && "Your request is being reviewed"}
-              {existingRequest.status === "approved" && "Congratulations! You're verified"}
+              {existingRequest.status === "pending" && "Your Blue Verified request is being reviewed"}
+              {existingRequest.status === "approved" && "Congratulations! Your blue badge is active"}
               {existingRequest.status === "rejected" && (existingRequest.rejection_reason || "Request was not approved")}
             </p>
           </div>
@@ -98,10 +102,10 @@ export default function VerificationRequestPage() {
 
         {/* Badge preview */}
         <div className="text-center py-6">
-          <div className="h-20 w-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-3">
-            <ShieldCheck className="h-10 w-10 text-primary" />
+          <div className="h-20 w-20 mx-auto rounded-full bg-[hsl(var(--flights)/0.10)] flex items-center justify-center mb-3 ring-1 ring-[hsl(var(--flights)/0.18)]">
+            <BadgeCheck className="h-10 w-10 text-[hsl(var(--flights))]" />
           </div>
-          <h2 className="text-lg font-semibold text-foreground">Verified Badge</h2>
+          <h2 className="text-lg font-semibold text-foreground">Blue Verified Badge</h2>
           <p className="text-sm text-muted-foreground mt-1">Verify your identity to get a blue badge on your profile</p>
         </div>
 
