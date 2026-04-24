@@ -1030,7 +1030,10 @@ export default function ReelsFeedPage() {
                               )}
                             </div>
                             <div className="flex-1 min-w-0 leading-tight">
-                              <p className="text-sm font-semibold text-foreground truncate">{post.author_name}</p>
+                              <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1">
+                                <span className="truncate">{post.author_name}</span>
+                                {post.author_is_verified && <VerifiedBadge size={14} />}
+                              </p>
                               <p className="text-[11px] text-muted-foreground truncate">
                                 {(() => {
                                   try {
@@ -1589,7 +1592,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
               {isShared && (
                 <p className="text-white/50 text-[11px] mb-1 drop-shadow flex items-center gap-1">
                   <Share2 className="h-3 w-3" />
-                  Shared by {item.author_name}
+                  Shared by {item.author_name}{item.author_is_verified && <VerifiedBadge size={11} className="ml-0.5" />}
                 </p>
               )}
             </>
@@ -2232,7 +2235,10 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                   )}
                 </div>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
+                  <p className="text-[13px] font-semibold text-foreground truncate flex items-center gap-1">
+                    <span className="truncate">{item.author_name}</span>
+                    {item.author_is_verified && <VerifiedBadge size={13} />}
+                  </p>
                   <div className="flex items-center gap-1">
                     <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
                     <span className="text-[10px] text-muted-foreground">·</span>
@@ -2428,7 +2434,10 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                   )}
                 </div>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
+                  <p className="text-[13px] font-semibold text-foreground truncate flex items-center gap-1">
+                    <span className="truncate">{item.author_name}</span>
+                    {item.author_is_verified && <VerifiedBadge size={13} />}
+                  </p>
                   <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
                 </div>
               </button>
