@@ -2053,7 +2053,7 @@ export default function AdminStoreEditPage() {
         </StoreOwnerLayout>
       );
     },
-    [isAdmin, storeOwnerTitle, storeId, store?.name, store?.logo_url, form.category, activeTab, products?.length],
+    [isAdmin, storeOwnerTitle, storeId, store?.name, store?.logo_url, form.category, activeTab, handleTabChange, lodgingSetup, products?.length],
   );
 
   if (isLoading) {
@@ -2576,12 +2576,12 @@ export default function AdminStoreEditPage() {
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
               <div className="mb-2 flex items-center justify-between gap-3">
                 <div className="min-w-0"><p className="text-sm font-bold text-foreground">Hotel Operations</p><p className="text-xs text-muted-foreground">Quick access is enabled for every major hotel workflow.</p></div>
-                <Button size="sm" variant="outline" className="shrink-0" onClick={() => navigate("/admin/lodging/wiring-check")}>Hotel Admin Check</Button>
+                <Button size="sm" variant="outline" className="shrink-0" onClick={() => navigate("/admin/lodging/qa-checklist")}>QA Checklist</Button>
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {LODGING_QUICK_TABS.map((item) => {
                   const Icon = item.icon;
-                  return <button key={item.id} onClick={() => handleTabChange(item.id)} className={cn("shrink-0 rounded-lg border px-3 py-2 text-xs font-semibold transition", activeTab === item.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:border-primary/50")}><Icon className="mr-1.5 inline h-3.5 w-3.5" />{item.label}</button>;
+                  return <button key={item.id} onClick={() => item.id === "qa-checklist" ? navigate("/admin/lodging/qa-checklist") : handleTabChange(item.id)} className={cn("shrink-0 rounded-lg border px-3 py-2 text-xs font-semibold transition", activeTab === item.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:border-primary/50")}><Icon className="mr-1.5 inline h-3.5 w-3.5" />{item.label}</button>;
                 })}
               </div>
             </div>
