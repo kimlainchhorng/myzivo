@@ -12,6 +12,8 @@ import { usePriceAlerts } from "@/hooks/usePriceAlerts";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import navHomeBg from "@/assets/nav-home-bg.jpg";
 import navSearchBg from "@/assets/nav-search-bg.jpg";
 import navTripsBg from "@/assets/nav-trips-bg.jpg";
@@ -35,6 +37,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
   const { impact } = useHaptics();
   const { t } = useI18n();
   const { user } = useAuth();
+  const { data: profile } = useUserProfile();
 
   const gated = (path: string) =>
     user ? path : `/login?redirect=${encodeURIComponent(path)}`;
@@ -98,15 +101,28 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
               aria-current={isActive ? "page" : undefined}
             >
               <div className="relative flex items-center justify-center">
-                <tab.icon
-                  className={cn(
-                    "relative z-10 transition-all duration-200 w-[22px] h-[22px]",
-                    isActive ? "text-primary" : "text-muted-foreground"
-                  )}
-                  strokeWidth={isActive ? 2.2 : 1.4}
-                  fill={isActive && tab.id === "home" ? "currentColor" : "none"}
-                />
-
+                {tab.id === "account" && user ? (
+                  <Avatar
+                    className={cn(
+                      "h-[22px] w-[22px] transition-all duration-200",
+                      isActive ? "ring-2 ring-primary ring-offset-1 ring-offset-card" : "ring-1 ring-border/40"
+                    )}
+                  >
+                    <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || undefined} alt="Account" />
+                    <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-primary text-[10px] font-bold">
+                      {(profile?.full_name?.[0] || user.email?.[0] || "Z").toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <tab.icon
+                    className={cn(
+                      "relative z-10 transition-all duration-200 w-[22px] h-[22px]",
+                      isActive ? "text-primary" : "text-muted-foreground"
+                    )}
+                    strokeWidth={isActive ? 2.2 : 1.4}
+                    fill={isActive && tab.id === "home" ? "currentColor" : "none"}
+                  />
+                )}
                 {typeof tab.badge === "number" && tab.badge > 0 && (
                   <motion.span
                     initial={{ scale: 0 }}
