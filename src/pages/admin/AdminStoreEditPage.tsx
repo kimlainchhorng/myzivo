@@ -86,7 +86,8 @@ import LodgingPoliciesSection from "@/components/admin/store/lodging/LodgingPoli
 import LodgingReviewsSection from "@/components/admin/store/lodging/LodgingReviewsSection";
 import LodgingRatePlansSection from "@/components/admin/store/lodging/LodgingRatePlansSection";
 import LodgingGuestRequestsSection from "@/components/admin/store/lodging/LodgingGuestRequestsSection";
-import { getLodgingSetupItems, setupProgress } from "@/components/admin/store/lodging/LodgingSetupChecklist";
+import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
+import { LODGING_TAB_IDS, resolveStoreTab } from "@/lib/admin/storeTabRouting";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { isLodgingStoreCategory } from "@/hooks/useOwnerStoreProfile";
@@ -97,8 +98,6 @@ import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 
-const LODGING_TAB_IDS = ["lodge-overview", "lodge-rooms", "lodge-rate-plans", "lodge-reservations", "lodge-calendar", "lodge-guests", "lodge-frontdesk", "lodge-housekeeping", "lodge-maintenance", "lodge-addons", "lodge-guest-requests", "lodge-dining", "lodge-experiences", "lodge-transport", "lodge-wellness", "lodge-amenities", "lodge-property", "lodge-policies", "lodge-reviews", "lodge-reports"];
-const BASE_TAB_IDS = ["profile", "orders", "products", "payment", "settings", "customers", "marketing", "livestream", "employees", "payroll", "employee-schedule", "time-clock", "attendance", "training", "documents", "employee-rules"];
 const LODGING_QUICK_TABS = [
   { id: "lodge-overview", label: "Overview", icon: Hotel },
   { id: "lodge-rooms", label: "Rooms", icon: BedDouble },
@@ -108,6 +107,7 @@ const LODGING_QUICK_TABS = [
   { id: "lodge-addons", label: "Add-ons", icon: PackagePlus },
   { id: "lodge-guest-requests", label: "Requests", icon: MessageSquareText },
   { id: "lodge-reports", label: "Reports", icon: BarChart3 },
+  { id: "qa-checklist", label: "QA Checklist", icon: ListChecks },
 ];
 
 function normalizeLocalizedNumberInput(value: string): string {
