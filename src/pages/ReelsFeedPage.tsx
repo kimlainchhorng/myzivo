@@ -1621,6 +1621,8 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
   const [editCaptionText, setEditCaptionText] = useState(item.caption || "");
   const [editSaving, setEditSaving] = useState(false);
   const [tipTarget, setTipTarget] = useState<{ id: string; name: string } | null>(null);
+  const [showSharerCaption, setShowSharerCaption] = useState(false);
+  const [showOriginalCaption, setShowOriginalCaption] = useState(false);
   const [isFollowingAuthor, setIsFollowingAuthor] = useState(false);
   const [isFollowingSharedAuthor, setIsFollowingSharedAuthor] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
