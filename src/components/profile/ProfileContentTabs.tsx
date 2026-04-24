@@ -159,6 +159,10 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [showCommentSettingsSheet, setShowCommentSettingsSheet] = useState(false);
   const [commentControl, setCommentControl] = useState<"everyone" | "followers" | "off">("everyone");
   const [reportedPosts, setReportedPosts] = useState<Set<string>>(new Set());
+  // 10s undo window for the most-recently submitted report.
+  const [undoSecondsLeft, setUndoSecondsLeft] = useState(0);
+  const undoTargetRef = useRef<{ postId: string; expiresAt: number } | null>(null);
+  const undoTickerRef = useRef<number | null>(null);
 
   // Restore "Reported" status from localStorage (per-user, survives reloads).
   useEffect(() => {
