@@ -231,7 +231,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
               aria-hidden={!sidebarOpen}
               tabIndex={-1}
               className={cn(
-                "fixed inset-y-0 left-0 z-50 w-[78vw] max-w-[280px] bg-card border-r border-border flex flex-col overflow-hidden rounded-r-2xl shadow-2xl overscroll-contain lg:hidden",
+                "fixed inset-y-0 left-0 z-50 w-[72vw] max-w-[250px] bg-card border-r border-border flex flex-col overflow-hidden rounded-r-2xl shadow-2xl overscroll-contain lg:hidden",
                 "transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
                 sidebarOpen ? "translate-x-0" : "-translate-x-full"
               )}
@@ -243,7 +243,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
         )}
 
         {/* Desktop sticky sidebar */}
-        <aside className="hidden lg:flex sticky top-0 left-0 z-30 h-[100dvh] w-56 xl:w-60 bg-card border-r border-border flex-col overflow-hidden">
+        <aside className="hidden lg:flex sticky top-0 left-0 z-30 h-[100dvh] w-48 xl:w-52 bg-card border-r border-border flex-col overflow-hidden">
           {renderSidebarContent({ isMobile: false })}
         </aside>
 
@@ -413,47 +413,47 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
         </nav>
 
         {/* User card */}
-        <div className="border-t border-border px-2.5 py-1.5 shrink-0 bg-muted/30">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-              <span className="text-[11px] font-bold text-primary">
+        <div className="border-t border-border px-2 py-1 shrink-0 bg-muted/30">
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <span className="text-[10px] font-bold text-primary">
                 {(user?.email || "?").charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-semibold text-foreground truncate leading-tight">{user?.email}</p>
-              <p className="text-[9px] text-muted-foreground leading-tight">Store Owner</p>
+              <p className="text-[10px] font-semibold text-foreground truncate leading-none">{user?.email}</p>
+              <p className="text-[8px] text-muted-foreground leading-tight">Store Owner</p>
             </div>
           </div>
         </div>
 
         {/* Footer actions */}
         <div
-          className="border-t border-border p-1.5 space-y-0.5 shrink-0"
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6px)' }}
+          className="border-t border-border p-1 space-y-0.5 shrink-0"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 4px)' }}
         >
           <button
             onClick={() => { onTabChange?.("settings"); closeSidebar(); }}
             className={cn(
-              "w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] transition-colors",
+              "w-full flex items-center gap-2 px-2 py-1 rounded-md text-[12px] transition-colors",
               activeTab === "settings" ? "bg-primary/12 text-primary font-semibold" : "text-foreground/75 hover:bg-muted hover:text-foreground"
             )}
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-3.5 h-3.5" />
             Settings
           </button>
           <button
             onClick={() => navigate("/")}
-            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] text-foreground/75 hover:bg-muted hover:text-foreground transition-colors"
+            className="w-full flex items-center gap-2 px-2 py-1 rounded-md text-[12px] text-foreground/75 hover:bg-muted hover:text-foreground transition-colors"
           >
-            <Home className="w-4 h-4" />
+            <Home className="w-3.5 h-3.5" />
             Back to App
           </button>
           <button
             onClick={() => signOut()}
-            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] text-destructive hover:bg-destructive/10 transition-colors"
+            className="w-full flex items-center gap-2 px-2 py-1 rounded-md text-[12px] text-destructive hover:bg-destructive/10 transition-colors"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-3.5 h-3.5" />
             Sign Out
           </button>
         </div>
