@@ -1098,6 +1098,13 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     return (
                       <button
                         data-testid="profile-menu-report"
+                        role="menuitem"
+                        aria-disabled={alreadyReported}
+                        aria-label={
+                          alreadyReported
+                            ? "Report this post — already reported"
+                            : "Report this post"
+                        }
                         disabled={alreadyReported}
                         onClick={() => {
                           if (alreadyReported) return;
@@ -1106,9 +1113,9 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                           setReportCategory("");
                           setShowReportSheet(true);
                         }}
-                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                       >
-                        <Flag className="w-5 h-5" />
+                        <Flag className="w-5 h-5" aria-hidden="true" />
                         <span className="flex-1 text-left">Report</span>
                         {alreadyReported && (
                           <span
