@@ -236,7 +236,7 @@ export default function ShareSheet({
       onClose={onClose}
       title="Share to"
       ariaLabel="Share options"
-      maxHeightVh={85}
+      maxHeightVh={75}
       zIndex={zIndex}
       positioning={positioning}
     >
