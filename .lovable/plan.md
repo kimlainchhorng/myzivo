@@ -1,66 +1,64 @@
-# Polish: A11y, Loading Skeletons, Responsive, Deep-Linked Comments
+# Bottom-sheet polish: safe-area headers + swipe-down-to-close
 
-Four focused improvements to the social feed (Reels + Profile) without changing the existing visual design.
+The screenshot shows the post Options sheet over a post-detail view. Two issues to fix across every bottom sheet in the social feed:
 
-## 1. Accessibility for engagement actions
+1. The sheet's top controls (X, profile preview, drag handle) collide with the iOS notch / Android status bar — they sit inside the safe zone.
+2. Sheets only close on backdrop tap. Users expect to **drag the sheet down** to dismiss, like Instagram / Facebook.
 
-Add screen-reader text and `aria-label`s to every interactive element in the action row + comments link, so totals are announced (e.g. "Like post, 1.2k likes" instead of just an icon).
+## What changes
 
-Changes in `src/pages/ReelsFeedPage.tsx` (FeedCard action row, ~L2528–2597) and `src/components/profile/ProfileFeedCard.tsx` (~L357–399):
+### A. New shared primitive `SwipeableSheet`
 
-- **Like button** — `aria-label={liked ? "Unlike post" : "Like post"}` + `aria-pressed={liked}`. Append `, {n} likes` when count > 0.
-- **Comment button** — `aria-label="Open comments, {n} comments"` (omit count when 0).
-- **Share button** — `aria-label="Share post, {n} shares"`.
-- **Bookmark button** — `aria-label={saved ? "Remove bookmark" : "Save post"}` + `aria-pressed`.
-- **Reaction emojis** — `aria-label={`React with ${emoji}`}` on each picker button; container gets `role="toolbar" aria-label="Reactions"`.
-- **View all comments link** — promote from `<button>`/`<p>` to a real `<a href="...">` (see §4) with `aria-label={`View all ${n} comments on this post`}`.
-- **Visible counts** — keep visible numerals; wrap aria-only context in `<span className="sr-only">` so the visual stays clean.
+Create `src/components/social/SwipeableSheet.tsx` — a thin wrapper around the existing `motion.div` bottom-sheet pattern that:
 
-Also update `CollapsibleCaption` (`src/components/social/CollapsibleCaption.tsx`) to set `aria-expanded` on the See more / See less buttons and `aria-label="Show full caption" / "Collapse caption"`.
+- Renders the backdrop + animated sheet container exactly like the current sheets (so visuals stay identical).
+- Uses framer-motion `drag="y"` with `dragConstraints={{ top: 0, bottom: 0 }}` and `dragElastic={{ top: 0, bottom: 0.5 }}`. On `onDragEnd`, if `offset.y > 100` OR `velocity.y > 500`, calls `onClose()`.
+- Drag handle (the gray pill) sits in a dedicated `cursor-grab` zone with `touch-action: none` so the drag is reliably captured even when the body scrolls.
+- The whole header strip (drag handle + optional title row) is the drag region; the scrollable content below uses `touch-action: pan-y` so list scrolling still works without hijacking the close gesture.
+- Accepts a `safeAreaTop` boolean (default true) that adds `paddingTop: max(env(safe-area-inset-top), 0.5rem)` so headers never hide behind the notch when the sheet is full-height.
+- Accepts `maxHeightVh` (default 85) to cap height; sheet uses `pb-[env(safe-area-inset-bottom)]` for bottom inset.
 
-## 2. Skeleton placeholders for loading states
+Props: `{ open, onClose, children, title?, ariaLabel, maxHeightVh?, safeAreaTop? }`.
 
-Right now the action row and comments link render with `0`/missing data while the post object resolves, causing a brief empty-flash. Add a tiny skeleton component used while a post is hydrating its engagement counts.
+### B. Adopt `SwipeableSheet` across the social sheets
 
-- New file `src/components/social/EngagementSkeleton.tsx` — three pill-shaped `Skeleton` blocks (heart/comment/share widths) + a thin one-line bar mimicking "View all comments". Reuses `@/components/ui/skeleton` (already shimmer-animated).
-- In `ReelsFeedPage.tsx` FeedCard, render `<EngagementSkeleton />` instead of the action row when the parent feed `isLoading` is true OR when `item` was just inserted optimistically and counts are still `undefined`. Same pattern in `ProfileFeedCard.tsx`.
-- For the comments modal first-open: in `CommentsSheet.tsx`, when `loading` is true and `comments.length === 0`, render 3 skeleton rows (avatar circle + 2 text lines) instead of the current empty state, so the sheet doesn't briefly flash blank.
+Replace the hand-rolled motion-div sheets in these spots — same content, just wrapped:
 
-## 3. Responsive verification (360px and iPad)
+- `src/pages/ReelsFeedPage.tsx`
+  - Post Options menu (`showPostMenu`, ~L2722)
+  - Report Sheet (`showReportSheet`, ~L2834)
+  - Comment Settings (`showCommentSettings`)
+  - Edit Caption (`showEditCaption`)
+  - Reaction picker is inline (not a sheet) — leave alone.
+- `src/components/social/CommentsSheet.tsx` — wrap the existing sheet body. Keep the input bar pinned to the bottom; the drag-region is just the header (handle + title). The comment list keeps `touch-action: pan-y` so vertical scrolling never triggers close.
+- `src/components/shared/ShareSheet.tsx` — wrap so it gets the same drag-down + safe-area treatment.
+- `src/components/profile/ProfileFeedCard.tsx` — its menu also routes through the shared share-sheet, so it inherits automatically.
 
-Audit and fix any overlap of action row, "… See more" mask, and bottom navigation at narrow widths and tablet widths.
+### C. Header / safe-area fix on the Post Detail viewer
 
-- **360px (small Android)**: shrink the action-row horizontal padding from `px-3` to `px-2.5` and reduce the per-button `min-w-[40px]` to `min-w-[36px]` only when viewport < 380px (use a `sm:` reset). Verify the count digits never wrap by adding `whitespace-nowrap` to the count `<span>`s.
-- **CollapsibleCaption mask**: the absolute "… See more" overlay uses `pl-10` of fading gradient; on very narrow screens with short last lines the mask can cover the whole word. Reduce to `pl-8` and add `max-w-[60%]` so it never overlaps the start of the line.
-- **iPad / md breakpoints (768–1180)**: ensure the action row stays left-aligned with `max-w-[600px] mx-auto` already provided by the feed container; verify the bookmark stays right-aligned via `ml-auto` (already in place). No layout change expected — only verification.
-- **Bottom nav spacing**: confirm `pb-[env(safe-area-inset-bottom)] + nav-height` padding on the feed scroll container so the last card's "View all comments" link is never hidden under `ZivoMobileNav`. If missing, add `pb-24 md:pb-8` on the feed list wrapper.
+The screenshot's top strip ("X · avatar · name · ⋮") is the **fullscreen Post Detail** viewer (`fullscreenIndex`, ReelsFeedPage L946). It already has `paddingTop: max(env(safe-area-inset-top) + 0.5rem, 0.5rem)` but the close icon is `ChevronLeft` and small. Update to:
 
-After edits, switch to default mode and use `browser--set_viewport_size` at 360×800, 390×844, and 820×1180 to visually confirm.
+- Replace `ChevronLeft` with `X` (matches screenshot expectation).
+- Wrap header in a row with `min-h-[56px]` and ensure the X button is `h-10 w-10 rounded-full bg-background/60 backdrop-blur` so it's visible over media.
+- Add a thin downward drag handle below the header that mirrors the sheet pattern: dragging the entire viewer down >120px closes it (`setFullscreenIndex(null)`). Same framer-motion drag logic as `SwipeableSheet`.
 
-## 4. Deep-link "View all comments"
+### D. Reels fullscreen viewer (`ReelSlide`) — top-left close button
 
-There is no dedicated `/post/:id` page; comments live in a modal sheet. Make the link deep-linkable using URL state so it survives reload and external sharing.
-
-- **URL contract**: `/feed?post=<postId>&src=<user|store>&comments=1`. Same pattern works on `/profile` and `/user/:id`.
-- **Open from link**: render the comments link as `<Link to={`?post=${id}&src=${source}&comments=1`} replace>` so tapping it pushes history (back button closes the sheet). Use `useSearchParams` in `ReelsFeedPage` and the profile pages to detect the params on mount and call `setShowComments(true)` for the matching feed item, scrolling it into view.
-- **Close cleanly**: `CommentsSheet.onClose` clears the three params via `setSearchParams` so the URL returns to `/feed`.
-- **Shareable**: the existing share sheet already uses `getPostShareUrl`; add a "Copy link to comments" action that copies the deep-link variant.
-
-Files touched: `src/pages/ReelsFeedPage.tsx`, `src/components/profile/ProfileFeedCard.tsx`, `src/pages/profile/*` consumers, `src/components/social/CommentsSheet.tsx`.
+The vertical reels viewer's close button (`L1278`) uses `marginTop: max(env(safe-area-inset-top) + 0.75rem, 1rem)` but its `top-0 left-4` parent doesn't account for safe area on Android with display cutouts. Switch to `style={{ top: 'max(env(safe-area-inset-top, 0px) + 12px, 16px)' }}` and remove `top-0` to make it more reliable.
 
 ## Technical notes
 
-- No new dependencies. Reuses existing `Skeleton`, `react-router-dom` `useSearchParams`, and current `formatCount` / `commentsLinkLabel` helpers.
-- All `aria-label` strings derived from `formatCount(n)` so screen-reader text matches displayed shorthand ("1.2k").
-- Deep-link params are additive — pages that don't read them keep working unchanged.
-- No DB / RLS / edge-function changes.
+- No new dependencies — `framer-motion` already provides `drag`, `dragConstraints`, `onDragEnd` with `info.offset.y` and `info.velocity.y`.
+- Keep the existing `AnimatePresence` + `initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}` so opening animations are unchanged.
+- `touch-action` is the key to stopping iOS Safari from scrolling the page while dragging the sheet handle.
+- All sheets keep their current backdrop `onClick={onClose}` so tap-outside still works.
+- `CommentsSheet` already has an `<input>` inside it — keep `dragListener={false}` on the framer drag and only enable drag on the header strip via a manual `dragControls.start(e)` so typing never triggers a drag.
 
-## Files to create / edit
+## Files changed
 
 ```text
-NEW  src/components/social/EngagementSkeleton.tsx
-EDIT src/components/social/CollapsibleCaption.tsx     (aria + mask width)
-EDIT src/components/social/CommentsSheet.tsx          (loading skeletons, close clears params)
-EDIT src/pages/ReelsFeedPage.tsx                      (a11y, skeleton, deep-link, narrow-px)
-EDIT src/components/profile/ProfileFeedCard.tsx       (a11y, skeleton, deep-link)
+NEW   src/components/social/SwipeableSheet.tsx
+EDIT  src/pages/ReelsFeedPage.tsx               (4 sheets + post detail header + ReelSlide close)
+EDIT  src/components/social/CommentsSheet.tsx   (wrap with SwipeableSheet)
+EDIT  src/components/shared/ShareSheet.tsx      (wrap with SwipeableSheet)
 ```
