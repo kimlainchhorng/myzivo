@@ -86,6 +86,35 @@ import { EngagementSkeleton } from "@/components/social/EngagementSkeleton";
 import SwipeableSheet from "@/components/social/SwipeableSheet";
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
+import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
+
+/**
+ * Fullscreen post-detail overlay with swipe-down-to-close.
+ * The render-prop child receives `startDrag` so the consumer can
+ * attach it to a header / grab zone via onPointerDown. Scrollable
+ * content beneath keeps native pan-y because dragListener is false.
+ */
+function PostDetailOverlay({
+  onClose,
+  children,
+}: {
+  onClose: () => void;
+  children: (startDrag: (e: React.PointerEvent) => void) => React.ReactNode;
+}) {
+  const { motionProps, startDrag } = useSwipeDownClose(onClose);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 60 }}
+      transition={{ type: "spring", damping: 30, stiffness: 320 }}
+      {...motionProps}
+      className="fixed inset-0 z-[100] bg-background flex flex-col"
+    >
+      {children(startDrag)}
+    </motion.div>
+  );
+}
 
 interface FeedItem {
   id: string;
