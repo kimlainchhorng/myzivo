@@ -9,6 +9,7 @@
  */
 import { useDragControls, type PanInfo } from "framer-motion";
 import { useCallback, useMemo } from "react";
+import { logGestureEvent } from "@/lib/security/errorReporting";
 
 export type SwipePlatform = "ios" | "android" | "default";
 
