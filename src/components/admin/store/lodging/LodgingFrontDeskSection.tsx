@@ -5,12 +5,14 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarRange, KeyRound, LogIn, LogOut } from "lucide-react";
+import { BedDouble, CalendarRange, ClipboardCheck, DollarSign, KeyRound, ListChecks, LogIn, LogOut } from "lucide-react";
 import { useLodgeReservations, type ReservationStatus, type LodgeReservation } from "@/hooks/lodging/useLodgeReservations";
 import { toast } from "sonner";
+import LodgingSectionStatusBanner from "./LodgingSectionStatusBanner";
 
 function ymd(d: Date) { return d.toISOString().slice(0, 10); }
 const timeRange = (r: LodgeReservation) => r.room?.check_in_time || r.room?.check_out_time ? `${r.room?.check_in_time || "15:00"} → ${r.room?.check_out_time || "11:00"}` : "Standard hotel times";
+const goTab = (tab: string) => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab } }));
 
 export default function LodgingFrontDeskSection({ storeId }: { storeId: string }) {
   const { data: reservations = [], setStatus } = useLodgeReservations(storeId, "all");
@@ -27,6 +29,13 @@ export default function LodgingFrontDeskSection({ storeId }: { storeId: string }
     try { await setStatus.mutateAsync({ id, status: s }); toast.success(msg); }
     catch (e: any) { toast.error(e.message || "Failed"); }
   };
+  const activeReservations = reservations.filter(r => !["cancelled", "checked_out", "no_show"].includes(r.status)).length;
+  const stats = [
+    { label: "Today’s arrivals", value: arrivals.length, icon: LogIn },
+    { label: "In-house guests", value: inHouse.length, icon: KeyRound },
+    { label: "Today’s departures", value: departures.length, icon: LogOut },
+    { label: "Active reservations", value: activeReservations, icon: ClipboardCheck },
+  ];
 
   const Column = ({ title, empty, items, action, color }: { title: string; empty: string; items: LodgeReservation[]; action?: { label: string; icon: any; status: ReservationStatus; msg: string }; color: string }) => (
     <div className="flex-1 min-w-0">
@@ -35,7 +44,14 @@ export default function LodgingFrontDeskSection({ storeId }: { storeId: string }
         <Badge variant="outline" className={`text-[10px] ${color}`}>{items.length}</Badge>
       </div>
       <div className="space-y-2">
-        {items.length === 0 ? <p className="text-xs text-muted-foreground py-4 text-center border border-dashed rounded-lg bg-muted/20">{empty}</p>
+        {items.length === 0 ? <div className="rounded-lg border border-dashed border-border bg-muted/20 p-3 text-center">
+            <p className="text-sm font-semibold text-foreground">{empty}</p>
+            <p className="mt-1 text-xs text-muted-foreground">No live records yet. The Front Desk workflow is installed and ready for hotel data.</p>
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => goTab("lodge-reservations")}>Create / review reservations</Button>
+              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => goTab("lodge-rooms")}>Open rooms</Button>
+            </div>
+          </div>
           : items.map(r => (
             <div key={r.id} className="p-2.5 rounded-lg border bg-card">
               <p className="text-sm font-semibold truncate">{r.guest_name || "Guest"}</p>
