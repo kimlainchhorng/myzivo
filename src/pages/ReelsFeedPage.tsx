@@ -4,6 +4,7 @@
  * Everyone can post photos/videos that show up here
  */
 import { lazy, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 const UnifiedShareSheet = lazy(() => import("@/components/shared/ShareSheet"));
 import { supabase } from "@/integrations/supabase/client";
