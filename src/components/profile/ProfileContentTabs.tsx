@@ -1211,7 +1211,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       </button>
                     </>
                   )}
-                </div>
+                </AccessibleMenuSheet>
               </motion.div>
             </>
           )}
