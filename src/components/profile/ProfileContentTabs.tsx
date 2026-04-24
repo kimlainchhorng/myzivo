@@ -141,7 +141,10 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [editingCaption, setEditingCaption] = useState(false);
   const [editCaptionValue, setEditCaptionValue] = useState("");
   const [showLive, setShowLive] = useState(false);
-  const [feed, setFeed] = useState<FeedItem[]>(demoFeed);
+  const [feed, setFeed] = useState<FeedItem[]>(() => {
+    const seeded = getE2ESeedPosts();
+    return seeded && seeded.length > 0 ? (seeded as FeedItem[]) : demoFeed;
+  });
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [sharePostId, setSharePostId] = useState<string | null>(null);
   const [commentPost, setCommentPost] = useState<FeedItem | null>(null);
