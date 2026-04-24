@@ -506,6 +506,9 @@ export default function MorePage() {
           {/* Profile Card */}
           {user && renderProfileCard()}
 
+          {/* Account Status Strip (verified / tier / wallet) */}
+          {user && renderAccountStatus()}
+
           {/* Quick Actions */}
           {user && renderQuickActions()}
 
