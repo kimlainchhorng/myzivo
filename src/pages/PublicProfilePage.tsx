@@ -32,6 +32,30 @@ import { toUserPostInteractionId } from "@/lib/social/postInteraction";
 import CreatorTiersSubscribe from "@/components/creator/CreatorTiersSubscribe";
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 
+/** Fullscreen post overlay with swipe-down-to-close from header. */
+function PublicPostOverlay({
+  onClose,
+  children,
+}: {
+  onClose: () => void;
+  children: (startDrag: (e: React.PointerEvent) => void) => React.ReactNode;
+}) {
+  const { motionProps, startDrag } = useSwipeDownClose(onClose);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 60 }}
+      transition={{ type: "spring", damping: 30, stiffness: 320 }}
+      {...motionProps}
+      className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col overflow-y-auto"
+      style={{ paddingTop: "var(--zivo-safe-top-overlay)" }}
+    >
+      {children(startDrag)}
+    </motion.div>
+  );
+}
+
 type PostTab = "all" | "photos" | "videos";
 
 type FullProfileCandidate = {
