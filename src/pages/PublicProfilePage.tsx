@@ -1159,30 +1159,34 @@ export default function PublicProfilePage() {
               {/* Post detail overlay — Instagram-style */}
               <AnimatePresence>
                 {selectedPost && selectedPost.media_type !== "video" && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col overflow-y-auto"
-                    style={{ paddingTop: 'var(--zivo-safe-top-overlay)' }}
-                  >
-                    {/* Header bar */}
-                    <div className="sticky top-0 z-10 flex items-center gap-3 px-4 py-2 bg-background/80 backdrop-blur-lg border-b border-border">
-                      <button onClick={() => setSelectedPost(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2">
-                        <ArrowLeft className="h-5 w-5 text-foreground" />
-                      </button>
-                      <Avatar className="h-9 w-9 ring-2 ring-primary/20">
-                        <AvatarImage src={resolvedProfile.avatar_url || undefined} />
-                        <AvatarFallback className="text-xs bg-muted">{initials}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-foreground truncate">{resolvedProfile.full_name}</p>
-                        <p className="text-[11px] text-muted-foreground">{formatTime(selectedPost.created_at)}</p>
-                      </div>
-                      <button onClick={(e) => { e.stopPropagation(); void handleSharePost(selectedPost); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-                        <Share2 className="h-5 w-5 text-foreground" />
-                      </button>
-                    </div>
+                  <PublicPostOverlay onClose={() => setSelectedPost(null)}>
+                    {(startDrag) => (
+                      <>
+                        {/* Header bar */}
+                        <div
+                          className="sticky top-0 z-10 flex items-center gap-3 px-4 py-2 bg-background/80 backdrop-blur-lg border-b border-border cursor-grab active:cursor-grabbing select-none"
+                          style={{ touchAction: "none" }}
+                          onPointerDown={(e) => {
+                            const target = e.target as HTMLElement | null;
+                            if (target?.closest("button, a, input, textarea")) return;
+                            startDrag(e);
+                          }}
+                        >
+                          <button onClick={() => setSelectedPost(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2">
+                            <ArrowLeft className="h-5 w-5 text-foreground" />
+                          </button>
+                          <Avatar className="h-9 w-9 ring-2 ring-primary/20">
+                            <AvatarImage src={resolvedProfile.avatar_url || undefined} />
+                            <AvatarFallback className="text-xs bg-muted">{initials}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-foreground truncate">{resolvedProfile.full_name}</p>
+                            <p className="text-[11px] text-muted-foreground">{formatTime(selectedPost.created_at)}</p>
+                          </div>
+                          <button onClick={(e) => { e.stopPropagation(); void handleSharePost(selectedPost); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                            <Share2 className="h-5 w-5 text-foreground" />
+                          </button>
+                        </div>
 
                     {/* Media — constrained on larger screens */}
                     <div className="w-full max-w-3xl mx-auto bg-black">
