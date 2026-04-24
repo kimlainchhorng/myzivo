@@ -472,6 +472,7 @@ export default function ReelsFeedPage() {
               author_name: profileDisplay?.full_name?.trim() || "User",
               author_avatar: optimizeAvatar(profileDisplay?.avatar_url, 96) || profileDisplay?.avatar_url || null,
               author_id: post.user_id,
+              author_is_verified: !!profileSettings?.is_verified,
               created_at: post.created_at,
               shared_from_post_id: post.shared_from_post_id || null,
               shared_from_user_id: sharedFromUserId,
