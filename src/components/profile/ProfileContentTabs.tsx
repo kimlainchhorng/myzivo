@@ -1231,6 +1231,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                             persistReported(next);
                             return next;
                           });
+                          startUndoWindow(targetId);
                         }
                         setReportStep("submitted");
                       }}
@@ -1251,6 +1252,19 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     <p className="text-sm text-muted-foreground mb-5">
                       Thanks for helping keep ZIVO safe. Our team will review this post. You can see its status as <span className="font-medium text-foreground">Reported</span> in the post menu.
                     </p>
+                    {undoSecondsLeft > 0 && undoTargetRef.current && (
+                      <button
+                        data-testid="profile-report-undo"
+                        onClick={() => {
+                          const t = undoTargetRef.current;
+                          if (t) void performUndo(t.postId);
+                          setShowReportSheet(false);
+                        }}
+                        className="w-full mb-2 border border-border bg-background text-foreground rounded-xl py-3 min-h-[44px] text-sm font-semibold hover:bg-muted/40 transition-colors"
+                      >
+                        Undo report ({undoSecondsLeft}s)
+                      </button>
+                    )}
                     <button
                       onClick={() => setShowReportSheet(false)}
                       className="w-full bg-primary text-primary-foreground rounded-xl py-3 min-h-[44px] text-sm font-semibold"
