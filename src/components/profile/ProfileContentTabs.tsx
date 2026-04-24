@@ -880,25 +880,35 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   )}
                 </div>
 
-                {/* Drag handle */}
-                <div className="flex justify-center pb-1">
-                  <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
-                </div>
-
                 <div className="py-2">
                   <button
-                    onClick={() => { toast.info("Post reported"); setShowPostMenu(false); }}
+                    onClick={() => {
+                      setShowPostMenu(false);
+                      setReportStep("categories");
+                      setReportCategory("");
+                      setShowReportSheet(true);
+                    }}
                     className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-destructive hover:bg-muted/50 transition-colors"
                   >
                     <Flag className="w-5 h-5" />
                     Report
                   </button>
                   <button
-                    onClick={() => { toast.success("Notifications turned on"); setShowPostMenu(false); }}
+                    onClick={() => {
+                      const id = selectedPost.id;
+                      const isOn = notifPosts.has(id);
+                      setNotifPosts((prev) => {
+                        const next = new Set(prev);
+                        if (isOn) next.delete(id); else next.add(id);
+                        return next;
+                      });
+                      toast.success(isOn ? "Notifications turned off" : "Notifications turned on for this post");
+                      setShowPostMenu(false);
+                    }}
                     className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <Bell className="w-5 h-5" />
-                    Turn on notifications
+                    {notifPosts.has(selectedPost.id) ? "Turn off notifications" : "Turn on notifications"}
                   </button>
                   <button
                     onClick={() => {
@@ -912,7 +922,17 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     Copy link
                   </button>
                   <button
-                    onClick={() => { toast.info("You won't see posts like this anymore"); setShowPostMenu(false); }}
+                    onClick={() => {
+                      const id = selectedPost.id;
+                      setHiddenPosts((prev) => {
+                        const next = new Set(prev);
+                        next.add(id);
+                        return next;
+                      });
+                      setShowPostMenu(false);
+                      setSelectedPost(null);
+                      toast.success("You won't see this post anymore");
+                    }}
                     className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <EyeOff className="w-5 h-5" />
@@ -925,13 +945,15 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     <Share2 className="w-5 h-5" />
                     Share
                   </button>
-                  <button
-                    onClick={() => { toast.info("Comment settings coming soon"); setShowPostMenu(false); }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
-                  >
-                    <Settings2 className="w-5 h-5" />
-                    Comment settings
-                  </button>
+                  {profileOwnerId === user?.id && (
+                    <button
+                      onClick={() => { setShowPostMenu(false); setShowCommentSettingsSheet(true); }}
+                      className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    >
+                      <Settings2 className="w-5 h-5" />
+                      Comment settings
+                    </button>
+                  )}
                   {profileOwnerId === user?.id && (
                     <>
                       <button
