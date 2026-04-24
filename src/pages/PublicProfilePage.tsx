@@ -43,7 +43,8 @@ function PublicPostOverlay({
   children: (startDrag: (e: React.PointerEvent) => void) => React.ReactNode;
 }) {
   const { motionProps, startDrag } = useSwipeDownClose(onClose);
-  return (
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -60,7 +61,8 @@ function PublicPostOverlay({
         testId="public-post-grab-handle"
       />
       {children(startDrag)}
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }
 
