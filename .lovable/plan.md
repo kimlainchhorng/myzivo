@@ -1,129 +1,71 @@
 
-Plan to complete the Hotel/Resort admin update with QA page, tests, real progress, wizard, and fully loaded sections
+Plan to complete the Hotel/Resort QA system with Run QA, exportable report, E2E checks, deterministic fixtures, and empty-state audits
 
-1. Add a one-click Hotel/Resort QA checklist page
-   - Create a new admin page:
-     - `/admin/lodging/qa-checklist`
-   - Show a clear completion dashboard with:
-     - Updated features list
-     - Build/test status placeholders populated from in-app checks
-     - Route/deep-link checks
-     - Sidebar section coverage
+1. Add a one-click “Run QA” button on the QA checklist page
+   - Update `src/pages/admin/AdminLodgingQAChecklistPage.tsx`.
+   - Add local QA state:
+     - Not run
+     - Running
+     - Passed
+     - Failed
+   - When clicked, compute checks immediately in the browser using current store/lodging data:
+     - Route checks
+     - Sidebar tab registration checks
+     - Deep-link URL checks
      - Data readiness checks
-     - Remaining issues / incomplete setup items
-   - Add one-click buttons:
-     - Open Hotel Overview
-     - Open Rooms
-     - Open Rate Plans
-     - Open Add-ons
-     - Open Guest Requests
-     - Open Wiring Check
-   - Add a compact status summary:
-     - “Complete”
-     - “Needs setup data”
-     - “Needs attention”
-   - Link this QA page from:
-     - Hotel Overview
-     - Store owner sidebar completion center
-     - Hotel Operations quick menu
+     - Empty-state/fix-button checks
+   - Display each result as pass/fail with:
+     - Check name
+     - Status badge
+     - Detail text
+     - Direct fix/open button when applicable
+   - Keep the current summary cards, but make them reflect the latest QA run instead of static text only.
 
-2. Create reusable lodging completion logic from real fields
-   - Move the current progress rules into a dedicated utility so every screen uses the same source of truth.
-   - Compute progress from:
-     - Rooms exist
-     - Active room inventory exists
-     - Base rates exist
-     - Availability/stay rules exist
-     - Check-in/check-out times exist
-     - Property profile exists
-     - Policies/rules exist
-     - Add-ons/packages exist
-     - Housekeeping readiness
-     - Reservation/report readiness
-   - Return:
-     - Complete count
-     - Total count
-     - Percent
-     - Ready items
-     - Incomplete items
-     - Next best action
-     - Direct fix tab for each incomplete item
+2. Create a reusable QA engine
+   - Add a shared helper:
+     - `src/lib/lodging/lodgingQa.ts`
+   - It will return structured QA results:
+     - `overallStatus`
+     - `passedCount`
+     - `failedCount`
+     - `warningCount`
+     - `checks[]`
+     - `failingChecks[]`
+     - `deepLinks[]`
+     - `emptyStateAudit[]`
+   - Inputs will include:
+     - Store id
+     - Store category
+     - Completion data
+     - Lodging tab registry
+     - Existing rooms/profile/addons/reservations
+   - The QA page, tests, and report export will all use this same helper so results stay consistent.
 
-3. Upgrade the sidebar completion center
-   - Replace the simple progress text with a real “Completion Center”.
-   - Show:
-     - Progress bar
-     - `X/Y complete`
-     - Top 2–3 incomplete setup items
-     - Direct fix buttons, for example:
-       - Add rooms
-       - Add base rates
-       - Complete property profile
-       - Add add-ons
-   - Keep it compact and scroll-friendly for the current 428px mobile preview.
-   - All buttons will use the existing `lodge-set-tab` / `onTabChange` flow and update the `?tab=` URL.
+3. Add exportable QA report from the QA checklist page
+   - Add buttons:
+     - “Export PDF”
+     - “Print Report”
+   - Use existing frontend dependencies (`jspdf`, optionally `html2canvas`) to generate a client-side report.
+   - Report will include:
+     - Store name/id
+     - Completion percentage
+     - Passed/failed QA totals
+     - Failing checks
+     - Remaining setup items
+     - Deep-link URLs:
+       - `/hotel-admin`
+       - `/admin/stores/{storeId}?tab=lodge-overview`
+       - `/admin/stores/{storeId}?tab=lodge-rate-plans`
+       - `/admin/stores/{storeId}?tab=lodge-addons`
+       - `/admin/stores/{storeId}?tab=lodge-guest-requests`
+       - `/admin/lodging/qa-checklist`
+   - Add a print-only report section with clean spacing and no navigation clutter.
 
-4. Implement a stronger Setup Wizard
-   - Update `LodgingSetupChecklist.tsx` into a real wizard-style component.
+4. Add deterministic fixtures for categories and tab query strings
    - Add:
-     - Current step / next best action
-     - Ready vs needs setup states
-     - Direct fix button per step
-     - “Review” button for completed steps
-   - Next best action rules:
-     - No rooms → Add rooms
-     - Rooms but no inventory/rates → Rate Plans & Availability
-     - Rates but weak property profile → Property Profile
-     - No add-ons → Add-ons & Packages
-     - No guest requests/reservations → Guest Requests / Reservations
-     - Everything ready → Front Desk
-   - Use the same shared completion utility so Overview, Sidebar, QA page, and Wizard never disagree.
-
-5. Add missing or incomplete Hotel/Resort admin sections
-   - Confirm every sidebar tab has a real `TabsContent` and loads live data:
-     - Hotel Operations
-     - Rooms & Rates
-     - Rate Plans & Availability
-     - Reservations
-     - Calendar & Availability
-     - Guests
-     - Front Desk
-     - Housekeeping
-     - Maintenance
-     - Add-ons & Packages
-     - Guest Requests
-     - Dining & Meal Plans
-     - Experiences & Tours
-     - Transport & Transfers
-     - Spa & Wellness
-     - Amenities & Policies
-     - Property Profile
-     - Policies & Rules
-     - Reviews & Guest Feedback
-     - Reports
-   - For any section that is too thin, add:
-     - Live stats from existing hooks/data
-     - Clear empty state
-     - Direct fix buttons
-     - No placeholder wording
-   - Ensure every sidebar item fully renders without blank content.
-
-6. Strengthen URL tab deep-linking and tab safety
-   - Extract the tab-routing logic from `AdminStoreEditPage.tsx` into a testable helper:
-     - Valid lodging tabs
-     - Valid base tabs
-     - Default tab for lodging stores
-     - Safe fallback for invalid tabs
-     - Prevent lodging tabs on non-lodging stores
-   - Keep behavior:
-     - `/admin/stores/:storeId?tab=lodge-overview` opens Overview
-     - `/admin/stores/:storeId?tab=lodge-rate-plans` opens Rate Plans
-     - Invalid lodging tab redirects to Overview
-     - Lodging tab on non-lodging store redirects to Profile
-     - No tab on lodging store defaults to Overview
-
-7. Add unit tests to prevent regressions
-   - Add tests for lodging store category detection:
+     - `src/test/fixtures/lodgingCategoryFixtures.ts`
+     - `src/test/fixtures/lodgingTabFixtures.ts`
+   - Category fixtures will include valid lodging variants:
      - Hotel
      - Hotels
      - Resort
@@ -133,92 +75,137 @@ Plan to complete the Hotel/Resort admin update with QA page, tests, real progres
      - Guesthouse / B&B
      - Bed and Breakfast
      - B&B
-     - Mixed case / extra spaces / symbols
-     - Non-lodging categories return false
-   - Add tests for URL tab deep-linking helper:
-     - Valid lodging tab is accepted
-     - Invalid lodging tab falls back to `lodge-overview`
-     - Lodging tab on non-lodging store falls back to `profile`
-     - Missing tab on lodging store defaults to `lodge-overview`
-     - Missing tab on non-lodging store defaults to `profile`
-   - Use existing Vitest setup already present in the project.
+     - Mixed case, extra spaces, symbols
+   - Non-lodging fixtures will include:
+     - Restaurant
+     - Grocery
+     - Auto repair
+     - Spa
+     - Empty/null/undefined
+   - Tab fixtures will include:
+     - Valid lodging tabs
+     - Valid base tabs
+     - Invalid tabs
+     - Missing tab
+     - Full query-string examples like `?tab=lodge-overview`.
 
-8. Add QA links and visible completion proof
-   - Add “QA Checklist” button to:
-     - Hotel Overview top status panel
-     - Hotel Operations quick menu
-     - Sidebar completion center
-   - The QA page will show:
-     - “All sidebar tabs registered”
-     - “Deep links enabled”
-     - “Setup wizard enabled”
-     - “Real progress enabled”
-     - “Unit tests added”
-     - “Remaining setup data needed” based on actual store data
+5. Upgrade existing unit tests to use fixtures
+   - Update:
+     - `src/hooks/useOwnerStoreProfile.test.ts`
+     - `src/lib/admin/storeTabRouting.test.ts`
+   - Add tests for:
+     - Category normalization
+     - Lodging detection
+     - Non-lodging rejection
+     - Query-string parsing
+     - Missing tab fallback
+     - Invalid tab fallback
+     - Lodging tab blocked for non-lodging stores
+   - Add test coverage for helper functions used by the QA page.
 
-Files to add
+6. Strengthen tab routing helper for full query strings
+   - Update `src/lib/admin/storeTabRouting.ts`.
+   - Add helpers:
+     - `getTabFromSearch(search: string)`
+     - `resolveStoreTabFromSearch(search: string, isLodgingStore: boolean)`
+     - `buildStoreTabUrl(storeId: string, tab: string)`
+   - Keep current behavior:
+     - Lodging store with no tab defaults to `lodge-overview`.
+     - Non-lodging store with no tab defaults to `profile`.
+     - Invalid lodging tab falls back safely.
+     - Lodging tabs never render for non-lodging stores.
 
-- `src/pages/admin/AdminLodgingQAChecklistPage.tsx`
-  - One-click Hotel/Resort QA checklist and completion status page.
+7. Add automated end-to-end deep-link checks
+   - Add Playwright configuration if missing:
+     - `playwright.config.ts`
+   - Add E2E spec:
+     - `tests/e2e/lodging-deeplinks.spec.ts`
+   - Tests will verify that refresh/deep-link routes render without blank content:
+     - `/admin/stores/{storeId}?tab=lodge-overview`
+     - `/admin/stores/{storeId}?tab=lodge-rate-plans`
+     - `/admin/stores/{storeId}?tab=lodge-addons`
+     - `/admin/stores/{storeId}?tab=lodge-guest-requests`
+   - Add stable test selectors to admin content where needed:
+     - `data-testid="lodging-tab-lodge-overview"`
+     - `data-testid="lodging-tab-lodge-rate-plans"`
+     - `data-testid="lodging-tab-lodge-addons"`
+     - `data-testid="lodging-tab-lodge-guest-requests"`
+   - If authenticated data is unavailable in local E2E, include a documented mocked/storage-state path and keep unit-level routing tests deterministic.
 
-- `src/lib/lodging/lodgingCompletion.ts`
-  - Shared real-field completion rules, incomplete items, progress, and next best action.
+8. Audit every lodging sidebar tab for meaningful empty states
+   - Add a registry:
+     - `src/lib/lodging/lodgingSidebarAudit.ts`
+   - For every lodging tab, define:
+     - Tab id
+     - Human label
+     - Expected empty-state title/body
+     - Required fix button label
+     - Required fix tab
+   - Include all lodging sections:
+     - Overview
+     - Rooms
+     - Rate Plans
+     - Reservations
+     - Calendar
+     - Guests
+     - Front Desk
+     - Housekeeping
+     - Maintenance
+     - Add-ons
+     - Guest Requests
+     - Dining
+     - Experiences
+     - Transport
+     - Wellness
+     - Amenities
+     - Property
+     - Policies
+     - Reviews
+     - Reports
+   - The QA page’s “Run QA” button will check this registry and show pass/fail results.
 
-- `src/lib/admin/storeTabRouting.ts`
-  - Testable URL tab/deep-link validation helper.
+9. Update lodging section empty states and fix buttons
+   - Review and update lodging components so every thin/empty section has:
+     - Clear empty title
+     - Short explanation
+     - Direct fix button
+     - Correct target tab
+   - Target files include:
+     - `LodgingRoomsSection.tsx`
+     - `LodgingRatePlansSection.tsx`
+     - `LodgingAddOnsSection.tsx`
+     - `LodgingGuestRequestsSection.tsx`
+     - `LodgingDiningSection.tsx`
+     - `LodgingExperiencesSection.tsx`
+     - `LodgingTransportSection.tsx`
+     - `LodgingWellnessSection.tsx`
+     - `LodgingAmenitiesSection.tsx`
+     - `LodgingPoliciesSection.tsx`
+     - `LodgingReviewsSection.tsx`
+     - `LodgingReportsSection.tsx`
+   - Add `data-testid` attributes where the QA/E2E checks need stable section detection.
 
-- `src/hooks/useOwnerStoreProfile.test.ts`
-  - Unit tests for lodging category detection.
+10. Add visible QA results to the completion center
+   - Keep the sidebar compact.
+   - Add a small “Run QA”/“QA Checklist” entry that opens `/admin/lodging/qa-checklist`.
+   - Show the latest QA summary when available:
+     - Passed count
+     - Failed count
+     - “Fix required” if any critical checks fail.
 
-- `src/lib/admin/storeTabRouting.test.ts`
-  - Unit tests for URL tab deep-linking behavior.
-
-Files to update
-
-- `src/App.tsx`
-  - Add `/admin/lodging/qa-checklist` route.
-
-- `src/pages/admin/AdminStoreEditPage.tsx`
-  - Use shared tab-routing helper.
-  - Use shared completion helper.
-  - Add QA Checklist quick-menu button.
-  - Ensure every lodging tab remains wired to a real section.
-
-- `src/components/admin/StoreOwnerLayout.tsx`
-  - Upgrade Hotel/Resort completion center with real incomplete items and fix buttons.
-  - Add QA Checklist button.
-
-- `src/components/admin/store/lodging/LodgingOverviewSection.tsx`
-  - Use shared completion helper.
-  - Add stronger Setup Wizard and QA Checklist entry.
-  - Show next best action from real data.
-
-- `src/components/admin/store/lodging/LodgingSetupChecklist.tsx`
-  - Convert checklist into a richer wizard-ready component.
-  - Show incomplete items and direct fix buttons.
-
-- `src/components/admin/store/lodging/LodgingRatePlansSection.tsx`
-  - Improve readiness indicators and direct fix actions.
-
-- `src/components/admin/store/lodging/LodgingGuestRequestsSection.tsx`
-  - Improve live request/readiness state and empty-state actions.
-
-- `src/components/admin/store/lodging/LodgingDiningSection.tsx`
-- `src/components/admin/store/lodging/LodgingExperiencesSection.tsx`
-- `src/components/admin/store/lodging/LodgingTransportSection.tsx`
-- `src/components/admin/store/lodging/LodgingWellnessSection.tsx`
-- `src/components/admin/store/lodging/LodgingAmenitiesSection.tsx`
-- `src/components/admin/store/lodging/LodgingPoliciesSection.tsx`
-- `src/components/admin/store/lodging/LodgingReviewsSection.tsx`
-  - Ensure each section has live data, meaningful empty states, and direct fix/navigation buttons.
-
-Validation after implementation
-
-- Run unit tests for category detection and tab routing.
-- Run production build.
-- Confirm `/admin/lodging/qa-checklist` loads.
-- Confirm every Hotel/Resort sidebar item opens real content.
-- Confirm completion center shows real incomplete items.
-- Confirm Setup Wizard opens the correct next tab.
-- Confirm deep links and refresh behavior work for lodging tabs.
-- Confirm invalid tabs never show blank content.
+11. Validation after implementation
+   - Run unit tests:
+     - Category fixture tests
+     - Tab-routing fixture tests
+     - QA helper tests
+     - Empty-state audit tests
+   - Run E2E checks for lodging deep links if the environment can provide a lodging store/auth state.
+   - Run production build.
+   - Confirm:
+     - `/admin/lodging/qa-checklist` loads.
+     - “Run QA” updates pass/fail results immediately.
+     - Export PDF downloads a readable QA report.
+     - Print view contains completion percentage, failing checks, and deep-link URLs.
+     - Every lodging sidebar tab has real content or a meaningful empty state.
+     - Every empty state has a direct fix button to the correct tab.
+     - Refreshing `?tab=...` does not show blank content.
