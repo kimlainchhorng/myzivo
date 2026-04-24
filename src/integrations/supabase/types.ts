@@ -5960,6 +5960,39 @@ export type Database = {
         }
         Relationships: []
       }
+      blue_verified_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          metadata: Json
+          reason: string | null
+          request_id: string | null
+          reviewer_user_id: string
+          target_user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          request_id?: string | null
+          reviewer_user_id: string
+          target_user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          request_id?: string | null
+          reviewer_user_id?: string
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       bonus_zones: {
         Row: {
           bonus_type: string | null
@@ -60877,6 +60910,10 @@ export type Database = {
           _rejection_reason?: string
           _request_id: string
         }
+        Returns: undefined
+      }
+      set_profile_blue_verified_manual: {
+        Args: { _reason?: string; _target_user_id: string; _verified: boolean }
         Returns: undefined
       }
       set_zone_polygon: {
