@@ -1,100 +1,137 @@
-# SwipeableSheet — A11y, Snap-Points, Hint, Rubber-Band & Notch QA
+# E2E test — close button stays outside safe-area on notched profiles
 
-Polish the shared bottom-sheet primitive with proper accessibility, consistent sizing on small screens, a discoverable drag affordance, a more natural dismiss feel, and an automated checklist that proves headers never enter the unsafe zone on notched / cutout / tablet devices.
+Add a Vitest + Testing-Library suite that mounts the real `CommentsSheet` and `ShareSheet`, drives them open like a user would, and proves the close button's inline `style.top` / `paddingTop` expression resolves above the device's top safe-area inset on every notched profile.
 
-## 1. Accessibility (focus trap, ARIA, Escape)
+## Why Vitest (not Playwright)
 
-Edit `src/components/social/SwipeableSheet.tsx`:
-
-- Add `useEffect` while `open` that:
-  - Stores `document.activeElement` in a ref and restores it on close.
-  - Focuses the first focusable element inside the panel (defer ~80ms for the slide-in animation). Falls back to the panel itself (`tabIndex={-1}`).
-  - Listens (capture phase) for `keydown`:
-    - `Escape` → `onClose()`
-    - `Tab` / `Shift+Tab` → cycle focus between the first and last visible focusable element inside the panel (focus trap).
-- Add `role="dialog"` (already present), `aria-modal="true"` (present), and:
-  - When `title` is a string, generate an `id` via `useId()` and set `aria-labelledby` on the dialog + `id` on the `<h3>`.
-  - Otherwise keep `aria-label={ariaLabel}`.
-- Strengthen the close-button label:
-  - `aria-label={isStringTitle ? \`Close ${title}\` : "Close dialog"}`
-  - Add `<span className="sr-only">Close</span>` and `aria-hidden` on the icon.
-  - Add `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary` ring.
-- Make the panel itself focusable via `tabIndex={-1}` so the trap has a fallback.
-
-No changes needed in `CommentsSheet` or `ShareSheet` — they inherit all of this through the primitive. The CommentsSheet "Cancel reply" X already has its own `aria-label`.
-
-## 2. Consistent max-height + snap points
-
-In `SwipeableSheet`, replace the static `maxHeight: \`${maxHeightVh}vh\`` with a viewport-safe snap formula:
-
-```
-maxHeight: `min(${maxHeightVh}dvh, calc(100dvh - env(safe-area-inset-top, 0px) - 24px))`
-```
-
-- `dvh` shrinks with the mobile URL bar (won't render too tall on small screens).
-- The `min(...)` cap guarantees a 24 px buffer below the notch/status bar, so the header strip is always visible.
-- Apply standard snap heights at the call sites for visual consistency:
-  - `CommentsSheet`: keep `maxHeightVh={70}` (already set).
-  - `ShareSheet`: lower from 85 → `maxHeightVh={75}` so the "More options" row stays comfortable on 360×640 screens.
-  - Other existing wrappers in `ReelsFeedPage` (Post Options, Report, Comment Settings, Edit Caption) keep their current values; the new viewport cap protects them automatically.
-
-## 3. Drag-hint grabber pill
-
-Replace the static `<div className="w-10 h-1.5 ...">` grabber with a Framer-Motion element that gently pulses once on mount:
-
-- Width animates `28 → 44 → 40` and opacity `0.5 → 0.9 → 0.6` over ~1.4s, ease-out.
-- `role="presentation"` + `aria-hidden="true"` (decorative).
-- Adds a `title="Drag down to close"` tooltip so desktop users get a hint on hover.
-
-## 4. Rubber-band + haptic on dismiss
-
-- Replace the symmetric `dragElastic={{ top: 0, bottom: 0.6 }}` with tuned values:
-  - `dragElastic={{ top: 0, bottom: 0.45 }}` — a touch firmer (less mushy).
-  - Add a `dragTransition={{ bounceStiffness: 380, bounceDamping: 28, power: 0.18, timeConstant: 220 }}` so the spring back feels snappy when the user lets go above the threshold.
-- In `handleDragEnd`, when the close threshold is met, fire a light haptic via the existing `useHaptics` hook (`impact("light")`) before calling `onClose()`. Native iOS/Android only — no-op on web/PWA.
-
-## 5. Automated safe-area QA checklist
-
-Create `scripts/qa/safe-area-check.mjs` (Node + Puppeteer/Playwright is heavy — use a lightweight CSS-math approach instead):
-
-- Define a fixture array of device profiles with their safe-area insets:
-  - iPhone 15 Pro (notch+Dynamic Island): top 59, bottom 34
-  - iPhone SE (no notch): top 20, bottom 0
-  - Pixel 8 (cutout): top 32, bottom 24
-  - Galaxy S24 (cutout): top 36, bottom 18
-  - iPad Pro 11" portrait: top 24, bottom 20
-  - iPad Pro 11" landscape: top 24, bottom 20, left 20, right 20
-- The script statically parses (with regex) every `style={{ ... }}` block in:
-  - `src/components/social/SwipeableSheet.tsx`
-  - `src/pages/ReelsFeedPage.tsx` (post-detail headers + ReelSlide close button)
-- For each `top`, `paddingTop`, `marginTop` value containing `env(safe-area-inset-top...)`, it evaluates the resulting CSS pixel value at each device profile (substituting the inset) and asserts it is ≥ the device's top inset (i.e. the element clears the unsafe zone).
-- Outputs a table:
-
-  ```text
-  Device              Element                            Top px   Inset   Pass
-  iPhone 15 Pro       SwipeableSheet header              59       59      ✓
-  iPhone 15 Pro       Reel close button                  59       59      ✓
-  iPhone 15 Pro       Post-detail header                 71       59      ✓
-  ...
-  ```
-
-- Exits non-zero on any failure so it can run in CI.
-- Add an npm script: `"qa:safe-area": "node scripts/qa/safe-area-check.mjs"`.
-- Document the script briefly at the top: which files it scans, how to add new device profiles, and how to add new selectors.
-
-## 6. Type-check
-
-Run `bunx tsc --noEmit` to verify no TS regressions from the primitive's new props/effects.
+- jsdom doesn't compute real layout, but every safe-area concern in these sheets is encoded in **inline `style={{ ... }}`** strings that reference `env(safe-area-inset-top)`. We can read those strings off the rendered DOM and evaluate them deterministically against each device profile. No real browser needed, no dev-server, no auth, no post fixtures.
+- This is the same evaluator we already ship in `scripts/qa/safe-area-check.mjs` — extracting it to a shared helper lets the unit test use the exact production CSS, not a copy.
+- Playwright is overkill here: it would require seeded posts, a logged-in session, and a notched device emulation profile — all flaky to maintain.
 
 ## Files
 
-- `src/components/social/SwipeableSheet.tsx` — accessibility, snap formula, animated grabber, rubber-band + haptic.
-- `src/components/shared/ShareSheet.tsx` — set `maxHeightVh={75}`.
-- `scripts/qa/safe-area-check.mjs` — new automated checklist.
-- `package.json` — add `qa:safe-area` script.
+### 1. `src/lib/social/safeAreaEval.ts` (new)
+
+Extract the CSS-expression evaluator from `scripts/qa/safe-area-check.mjs` into a typed module:
+
+```ts
+export interface DeviceProfile {
+  name: string;
+  top: number; bottom: number; left: number; right: number;
+}
+
+export const NOTCHED_DEVICES: DeviceProfile[] = [
+  { name: "iPhone 15 Pro", top: 59, bottom: 34, left: 0, right: 0 },
+  { name: "iPhone 14 Pro Max", top: 59, bottom: 34, left: 0, right: 0 },
+  { name: "Pixel 8 Pro", top: 32, bottom: 24, left: 0, right: 0 },
+  { name: "Galaxy S24 Ultra", top: 36, bottom: 18, left: 0, right: 0 },
+  { name: "iPad Pro 11 landscape", top: 24, bottom: 20, left: 20, right: 20 },
+];
+
+export function evaluateCssExpression(expr: string, device: DeviceProfile): number;
+```
+
+Implementation is the same recursive-descent evaluator (max/min/calc, px/rem) already in the QA script. Rewrite `scripts/qa/safe-area-check.mjs` to import from this module so behavior stays in lock-step.
+
+### 2. `src/components/social/__tests__/SwipeableSheet.safeArea.test.tsx` (new)
+
+The actual E2E-ish suite. Pseudocode:
+
+```tsx
+import { render, screen, fireEvent } from "@testing-library/react";
+import CommentsSheet from "@/components/social/CommentsSheet";
+import ShareSheet from "@/components/shared/ShareSheet";
+import { NOTCHED_DEVICES, evaluateCssExpression } from "@/lib/social/safeAreaEval";
+
+// mock supabase (same shape as critical-flows.test.tsx)
+// mock usePostComments → returns { comments: [], loading: false, ... }
+// mock useHaptics → no-op
+// mock framer-motion to render motion.div as plain div (skip animation)
+
+describe.each(NOTCHED_DEVICES)("$name", (device) => {
+  it("CommentsSheet close button clears safe-area", () => {
+    const onClose = vi.fn();
+    render(
+      <CommentsSheet
+        open
+        onClose={onClose}
+        postId="p1" postSource="user"
+        currentUserId="u1" commentsCount={0}
+      />
+    );
+
+    // 1) Sheet panel paddingTop expression clears the inset
+    const dialog = screen.getByRole("dialog", { name: /comments/i });
+    const panel = dialog.querySelector('[style*="paddingTop"]') as HTMLElement;
+    const padTop = panel.style.paddingTop;
+    expect(evaluateCssExpression(padTop, device)).toBeGreaterThanOrEqual(device.top);
+
+    // 2) Close button is keyboard-reachable + has aria-label "Close Comments"
+    const closeBtn = screen.getByRole("button", { name: /close comments/i });
+    expect(closeBtn).toBeInTheDocument();
+
+    // 3) The close button sits inside the safe-area-padded region (its
+    //    nearest ancestor with paddingTop is the panel above), so
+    //    button.offsetTop relative to the viewport >= device.top.
+    //    Since jsdom has no layout, we instead assert the panel's
+    //    paddingTop expression is the only top spacing and it clears
+    //    the inset (covered above), AND the button is rendered AFTER
+    //    the grabber (DOM order proves it isn't behind it).
+    expect(panel.contains(closeBtn)).toBe(true);
+
+    // 4) Escape closes the sheet
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("ShareSheet close button clears safe-area", () => {
+    const onClose = vi.fn();
+    render(
+      <ShareSheet
+        shareUrl="https://hizivo.com/r/abc"
+        shareText="Check this out"
+        onClose={onClose}
+      />
+    );
+
+    const dialog = screen.getByRole("dialog", { name: /share to/i });
+    const panel = dialog.querySelector('[style*="paddingTop"]') as HTMLElement;
+    expect(evaluateCssExpression(panel.style.paddingTop, device))
+      .toBeGreaterThanOrEqual(device.top);
+
+    const closeBtn = screen.getByRole("button", { name: /close share to/i });
+    expect(closeBtn).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).toHaveBeenCalled();
+  });
+});
+```
+
+### 3. Mocks
+
+Inside the test file:
+- Mock `framer-motion`'s `motion.*` to render a regular `div` and `AnimatePresence` to render `children`. This keeps the inline `style` props intact (we read them) while skipping animation timing in jsdom.
+- Mock `@/integrations/supabase/client` with the minimal shape used by `usePostComments` (or just mock the hook directly).
+- Mock `@/hooks/useHaptics` → returns no-op `impact`.
+- Mock `@/hooks/usePostComments` to return `{ comments: [], loading: false, submitting: false, addComment, deleteComment, toggleReaction }`.
+
+### 4. Update QA script to share the evaluator
+
+Refactor `scripts/qa/safe-area-check.mjs`:
+- Remove the inline evaluator and `DEVICES` array.
+- `import { NOTCHED_DEVICES, evaluateCssExpression } from "../../src/lib/social/safeAreaEval.ts"` — but since the script is `.mjs` Node, instead duplicate is fine OR make the helper a `.js`/`.mjs` module re-exported by the `.ts` file. Simpler: keep the script self-contained but import the device list + evaluator from a tiny `scripts/qa/safe-area-eval.mjs` file, and have `src/lib/social/safeAreaEval.ts` re-export from it via a thin TS wrapper. Single source of truth without TS-in-Node complexity.
+
+## What this proves
+
+For each of 5 notched device profiles, on each of 2 sheets:
+- The dialog opens with the expected accessible name.
+- The panel's `paddingTop` resolves to ≥ the device's top safe-area inset, so the grabber + header (which contains the X button) cannot render under the notch.
+- The close button has the strengthened `Close <Title>` aria-label and is inside the padded region.
+- Escape closes the sheet (verifies the focus-trap + key handler are wired).
 
 ## Out of scope
 
-- No changes to share / comment business logic.
-- No new visual styling beyond the grabber animation.
-- No browser-automation tests (the static checklist is faster and covers the failure mode requested).
+- Real-browser layout assertions — covered by the existing manual responsive QA and the static checklist script.
+- Drag-to-close gesture testing — Framer-Motion drag is not testable in jsdom.
+- Login/auth flow.
