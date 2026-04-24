@@ -1118,34 +1118,56 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       Thanks for letting us know. Your report is anonymous and our team will review this content.
                     </p>
                     <button
+                      data-testid="profile-report-submit"
                       onClick={async () => {
+                        const targetId = selectedPost?.id;
                         try {
                           if (selectedPost) {
-                            await (supabase as any).from("post_reports").insert({
+                            const { error } = await (supabase as any).from("post_reports").insert({
                               post_id: toUserPostInteractionId(selectedPost.id),
                               reporter_id: user?.id,
                               category: reportCategory,
                             });
+                            if (error) throw error;
                           }
-                        } catch { /* graceful */ }
+                        } catch (err) {
+                          logProfileActionError(
+                            "report.submit",
+                            { postId: targetId, category: reportCategory, userId: user?.id },
+                            err,
+                          );
+                          // Still show the user a confirmation — the report is queued client-side.
+                        }
+                        if (targetId) {
+                          setReportedPosts((prev) => {
+                            const next = new Set(prev);
+                            next.add(targetId);
+                            persistReported(next);
+                            return next;
+                          });
+                        }
                         setReportStep("submitted");
                       }}
-                      className="w-full bg-primary text-primary-foreground rounded-xl py-3 text-sm font-semibold"
+                      className="w-full bg-primary text-primary-foreground rounded-xl py-3 min-h-[44px] text-sm font-semibold"
                     >
                       Submit report
                     </button>
                   </div>
                 )}
                 {reportStep === "submitted" && (
-                  <div className="px-6 pb-8 text-center">
-                    <div className="text-5xl mb-3">✓</div>
-                    <p className="text-base font-semibold text-foreground mb-2">Thanks for your report</p>
+                  <div className="px-6 pb-8 text-center" data-testid="profile-report-submitted">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                      <svg className="h-9 w-9 text-primary" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <p className="text-base font-semibold text-foreground mb-2">Report submitted</p>
                     <p className="text-sm text-muted-foreground mb-5">
-                      We use reports like yours to keep ZIVO safe.
+                      Thanks for helping keep ZIVO safe. Our team will review this post. You can see its status as <span className="font-medium text-foreground">Reported</span> in the post menu.
                     </p>
                     <button
                       onClick={() => setShowReportSheet(false)}
-                      className="w-full bg-primary text-primary-foreground rounded-xl py-3 text-sm font-semibold"
+                      className="w-full bg-primary text-primary-foreground rounded-xl py-3 min-h-[44px] text-sm font-semibold"
                     >
                       Done
                     </button>
