@@ -1,17 +1,17 @@
-name: Safe-area QA
+name: Mobile UX QA
 
 on:
   pull_request:
     paths:
       - "src/**"
       - "scripts/qa/**"
-      - "tests/e2e/safe-area.spec.ts"
+      - "tests/e2e/**"
       - ".github/workflows/safe-area-qa.yml"
   push:
     branches: [main]
 
 jobs:
-  safe-area:
+  mobile-ux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,12 +26,15 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Playwright safe-area screenshot QA
         run: npm run qa:safe-area:e2e
-      - name: Upload safe-area screenshots
+      - name: Playwright swipe-close gesture QA
+        run: npx playwright test tests/e2e/swipe-close.spec.ts
+      - name: Upload Playwright artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: safe-area-screenshots
+          name: mobile-ux-artifacts
           path: |
             test-results/
             playwright-report/
           if-no-files-found: ignore
+

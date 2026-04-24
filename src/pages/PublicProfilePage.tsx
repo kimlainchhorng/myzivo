@@ -31,6 +31,7 @@ import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolv
 import { toUserPostInteractionId } from "@/lib/social/postInteraction";
 import CreatorTiersSubscribe from "@/components/creator/CreatorTiersSubscribe";
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
+import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
 
 /** Fullscreen post overlay with swipe-down-to-close from header. */
 function PublicPostOverlay({
@@ -51,6 +52,11 @@ function PublicPostOverlay({
       className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col overflow-y-auto"
       style={{ paddingTop: "var(--zivo-safe-top-overlay)" }}
     >
+      <SwipeGrabHandle
+        onStartDrag={startDrag}
+        tone="dark"
+        testId="public-post-grab-handle"
+      />
       {children(startDrag)}
     </motion.div>
   );

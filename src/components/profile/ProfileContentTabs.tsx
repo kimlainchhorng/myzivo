@@ -23,6 +23,7 @@ import { formatDistanceToNow } from "date-fns";
 import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolveSharedOrigins";
 import { isLocalDraftPostId, toUserPostInteractionId } from "@/lib/social/postInteraction";
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
+import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
 
 /**
  * Fullscreen post viewer wrapper with drag-down-to-close.
@@ -47,13 +48,18 @@ function ProfilePostViewerOverlay({
       {...motionProps}
       onPointerDown={(e) => {
         const target = e.target as HTMLElement | null;
-        if (target?.closest("[data-profile-post-drag-handle]")) {
+        if (target?.closest("[data-swipe-grab], [data-profile-post-drag-handle]")) {
           startDrag(e);
         }
       }}
       className="fixed inset-0 z-[9999] bg-black flex flex-col"
       style={{ paddingTop: "var(--zivo-safe-top-overlay)" }}
     >
+      <SwipeGrabHandle
+        onStartDrag={startDrag}
+        tone="light"
+        testId="profile-post-grab-handle"
+      />
       {children}
     </motion.div>
   );

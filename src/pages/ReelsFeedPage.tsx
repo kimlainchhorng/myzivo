@@ -87,6 +87,7 @@ import SwipeableSheet from "@/components/social/SwipeableSheet";
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
+import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
 
 /**
  * Fullscreen post-detail overlay with swipe-down-to-close.
@@ -111,6 +112,16 @@ function PostDetailOverlay({
       {...motionProps}
       className="fixed inset-0 z-[100] bg-background flex flex-col"
     >
+      <div
+        className="shrink-0 bg-background/95 backdrop-blur-xl"
+        style={{ paddingTop: "var(--zivo-safe-top-overlay)" }}
+      >
+        <SwipeGrabHandle
+          onStartDrag={startDrag}
+          tone="dark"
+          testId="post-detail-grab-handle"
+        />
+      </div>
       {children(startDrag)}
     </motion.div>
   );
@@ -972,8 +983,8 @@ export default function ReelsFeedPage() {
                     <>
                       <div
                         data-testid="post-detail-header"
-                        className="sticky top-0 z-10 flex items-center gap-3 px-3 pb-2.5 bg-background/95 backdrop-blur-xl border-b border-border/30 cursor-grab active:cursor-grabbing select-none"
-                        style={{ paddingTop: 'var(--zivo-safe-top-overlay)', touchAction: 'none' }}
+                        className="sticky top-0 z-10 flex items-center gap-3 px-3 pt-1 pb-2.5 bg-background/95 backdrop-blur-xl border-b border-border/30 cursor-grab active:cursor-grabbing select-none"
+                        style={{ touchAction: 'none' }}
                         onPointerDown={(e) => {
                           const target = e.target as HTMLElement | null;
                           // Don't start drag from interactive children (buttons, links)
