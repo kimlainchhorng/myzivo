@@ -493,7 +493,9 @@ const AppHome = () => {
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <Button size="sm" className="h-9" onClick={() => navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`)}>Open Ops <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Button>
-                      <Button size="sm" variant="outline" className="h-9" onClick={() => navigate("/hotel-admin")}>Launch Page</Button>
+                      <Button size="sm" variant="outline" className="h-9" onClick={() => navigate("/admin/lodging/qa-checklist")}>Run QA</Button>
+                      <Button size="sm" variant="outline" className="h-9" onClick={() => navigate("/hotel-admin")}>Operations Hub</Button>
+                      <Button size="sm" variant="outline" className="h-9" onClick={() => navigate("/admin/lodging/qa-checklist")}>View QA Report</Button>
                     </div>
                   </div>
                 </div>
