@@ -2112,12 +2112,21 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
 
           {/* Sharer's own caption (not the original post's caption) */}
           {item.caption && item.caption !== item.shared_from_caption && (
-            <div className="px-3 pb-2">
-              <div className="text-[13px] text-foreground">
+            <div className="px-3 pb-2" onClick={() => setShowSharerCaption((v) => !v)}>
+              <div className={cn("text-[13px] text-foreground leading-snug", !showSharerCaption && "line-clamp-3")}>
                 <Suspense fallback={<span>{item.caption}</span>}>
                   <SafeCaption text={item.caption} />
                 </Suspense>
               </div>
+              {item.caption.length > 140 && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setShowSharerCaption((v) => !v); }}
+                  className="text-[12px] text-muted-foreground mt-0.5 font-medium"
+                >
+                  {showSharerCaption ? "See less" : "See more"}
+                </button>
+              )}
             </div>
           )}
 
