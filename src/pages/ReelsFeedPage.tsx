@@ -83,6 +83,7 @@ const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
 import CollapsibleCaption from "@/components/social/CollapsibleCaption";
 import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
 import { EngagementSkeleton } from "@/components/social/EngagementSkeleton";
+import SwipeableSheet from "@/components/social/SwipeableSheet";
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 
@@ -938,24 +939,37 @@ export default function ReelsFeedPage() {
               if (!post) return null;
               return (
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 40 }}
+                  drag="y"
+                  dragConstraints={{ top: 0, bottom: 0 }}
+                  dragElastic={{ top: 0, bottom: 0.4 }}
+                  onDragEnd={(_, info) => {
+                    if (info.offset.y > 120 || info.velocity.y > 600) {
+                      setFullscreenIndex(null);
+                    }
+                  }}
                   className="fixed inset-0 z-[100] bg-background flex flex-col"
                 >
-                  <div className="sticky top-0 z-10 flex items-center gap-3 px-3 py-2 bg-background/95 backdrop-blur-xl border-b border-border/30" style={{ paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 0.5rem)' }}>
+                  <div
+                    className="sticky top-0 z-10 flex items-center gap-2 px-3 pb-2 bg-background/95 backdrop-blur-xl border-b border-border/30"
+                    style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 0.75rem)', touchAction: 'none' }}
+                  >
                     <button
                       onClick={() => setFullscreenIndex(null)}
-                      className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      aria-label="Close post"
+                      className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50 active:bg-muted"
                     >
-                      <ChevronLeft className="h-5 w-5 text-foreground" />
+                      <XIcon className="h-5 w-5 text-foreground" />
                     </button>
-                    <h2 className="text-base font-semibold text-foreground">Post</h2>
+                    <h2 className="text-base font-semibold text-foreground flex-1">Post</h2>
+                    <div className="w-10 h-1.5 rounded-full bg-muted-foreground/30" aria-hidden />
                   </div>
                   <div
                     ref={fullscreenScrollRef}
                     className="flex-1 overflow-y-auto"
-                    style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 6rem)' }}
+                    style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 6rem)', touchAction: 'pan-y' }}
                   >
                     <FeedCard key={post.id} item={post} currentUserId={userId} detailMode />
                   </div>
@@ -2718,338 +2732,287 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       </AnimatePresence>
 
       {/* Post Options Menu */}
-      <AnimatePresence>
-        {showPostMenu && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-end justify-center bg-black/40"
-            onClick={() => setShowPostMenu(false)}
+      <SwipeableSheet
+        open={showPostMenu}
+        onClose={() => setShowPostMenu(false)}
+        ariaLabel="Post options"
+        zIndex={200}
+        hideCloseButton
+      >
+        <div className="px-2 pb-4">
+          <button
+            onClick={() => { setShowPostMenu(false); setShowReportSheet(true); setReportStep("categories"); setReportCategory(""); }}
+            className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
           >
-            <motion.div
-              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-background rounded-t-2xl pb-8 overflow-hidden"
+            <Flag className="h-5 w-5 text-destructive" />
+            <span className="text-sm font-medium text-destructive">Report</span>
+          </button>
+          <button
+            onClick={() => { setNotificationsOn(!notificationsOn); setShowPostMenu(false); toast.success(notificationsOn ? "Notifications turned off" : "Notifications turned on for this post"); }}
+            className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+          >
+            {notificationsOn ? <BellOff className="h-5 w-5 text-foreground" /> : <Bell className="h-5 w-5 text-foreground" />}
+            <span className="text-sm font-medium text-foreground">{notificationsOn ? "Turn off notifications" : "Turn on notifications"}</span>
+          </button>
+          <button
+            onClick={() => { setShowPostMenu(false); handleCopyLink(); }}
+            className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+          >
+            <Link2 className="h-5 w-5 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Copy link</span>
+          </button>
+          <button
+            onClick={() => { setShowPostMenu(false); toast.success("You won't see posts like this anymore"); }}
+            className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+          >
+            <EyeOff className="h-5 w-5 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Not interested</span>
+          </button>
+          <button
+            onClick={() => { setShowPostMenu(false); setShowShareSheet(true); }}
+            className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+          >
+            <Share2 className="h-5 w-5 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Share</span>
+          </button>
+
+          {/* Tip creator */}
+          {!isOwner && item.author_id && (
+            <button
+              onClick={() => { setShowPostMenu(false); setTipTarget({ id: item.author_id!, name: item.author_name }); }}
+              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
             >
-              <div className="flex justify-center py-3">
-                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
-              </div>
-              <div className="px-2">
-                <button
-                  onClick={() => { setShowPostMenu(false); setShowReportSheet(true); setReportStep("categories"); setReportCategory(""); }}
-                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                >
-                  <Flag className="h-5 w-5 text-destructive" />
-                  <span className="text-sm font-medium text-destructive">Report</span>
-                </button>
-                <button
-                  onClick={() => { setNotificationsOn(!notificationsOn); setShowPostMenu(false); toast.success(notificationsOn ? "Notifications turned off" : "Notifications turned on for this post"); }}
-                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                >
-                  {notificationsOn ? <BellOff className="h-5 w-5 text-foreground" /> : <Bell className="h-5 w-5 text-foreground" />}
-                  <span className="text-sm font-medium text-foreground">{notificationsOn ? "Turn off notifications" : "Turn on notifications"}</span>
-                </button>
-                <button
-                  onClick={() => { setShowPostMenu(false); handleCopyLink(); }}
-                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                >
-                  <Link2 className="h-5 w-5 text-foreground" />
-                  <span className="text-sm font-medium text-foreground">Copy link</span>
-                </button>
-                <button
-                  onClick={() => { setShowPostMenu(false); toast.success("You won't see posts like this anymore"); }}
-                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                >
-                  <EyeOff className="h-5 w-5 text-foreground" />
-                  <span className="text-sm font-medium text-foreground">Not interested</span>
-                </button>
-                <button
-                  onClick={() => { setShowPostMenu(false); setShowShareSheet(true); }}
-                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                >
-                  <Share2 className="h-5 w-5 text-foreground" />
-                  <span className="text-sm font-medium text-foreground">Share</span>
-                </button>
+              <Heart className="h-5 w-5 text-amber-500" />
+              <span className="text-sm font-medium text-foreground">Send Tip</span>
+            </button>
+          )}
 
-                {/* Tip creator */}
-                {!isOwner && item.author_id && (
-                  <button
-                    onClick={() => { setShowPostMenu(false); setTipTarget({ id: item.author_id!, name: item.author_name }); }}
-                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                  >
-                    <Heart className="h-5 w-5 text-amber-500" />
-                    <span className="text-sm font-medium text-foreground">Send Tip</span>
-                  </button>
-                )}
+          {isOwner && (
+            <button
+              onClick={() => { setShowPostMenu(false); setShowCommentSettings(true); }}
+              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+            >
+              <Settings2 className="h-5 w-5 text-foreground" />
+              <span className="text-sm font-medium text-foreground">Comment settings</span>
+            </button>
+          )}
 
-                {isOwner && (
-                  <button
-                    onClick={() => { setShowPostMenu(false); setShowCommentSettings(true); }}
-                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                  >
-                    <Settings2 className="h-5 w-5 text-foreground" />
-                    <span className="text-sm font-medium text-foreground">Comment settings</span>
-                  </button>
-                )}
+          {/* Owner-only: Edit caption */}
+          {isOwner && (
+            <button
+              onClick={() => { setShowPostMenu(false); setEditCaptionText(item.caption || ""); setShowEditCaption(true); }}
+              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+            >
+              <Settings2 className="h-5 w-5 text-foreground" />
+              <span className="text-sm font-medium text-foreground">Edit caption</span>
+            </button>
+          )}
 
-                {/* Owner-only: Delete post */}
-                {isOwner && (
-                  <button
-                    onClick={() => { setShowPostMenu(false); setEditCaptionText(item.caption || ""); setShowEditCaption(true); }}
-                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                  >
-                    <Settings2 className="h-5 w-5 text-foreground" />
-                    <span className="text-sm font-medium text-foreground">Edit caption</span>
-                  </button>
-                )}
-
-                {/* Owner-only: Delete post */}
-                {isOwner && (
-                  <button
-                    onClick={async () => {
-                      setShowPostMenu(false);
-                      const realId = item.id.replace(/^u-/, "");
-                      const { error } = await supabase.from("user_posts").delete().eq("id", realId).eq("user_id", currentUserId);
-                      if (error) {
-                        toast.error("Failed to delete post");
-                      } else {
-                        toast.success("Post deleted");
-                        queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
-                      }
-                    }}
-                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                  >
-                    <Trash2 className="h-5 w-5 text-destructive" />
-                    <span className="text-sm font-medium text-destructive">Delete post</span>
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {/* Owner-only: Delete post */}
+          {isOwner && (
+            <button
+              onClick={async () => {
+                setShowPostMenu(false);
+                const realId = item.id.replace(/^u-/, "");
+                const { error } = await supabase.from("user_posts").delete().eq("id", realId).eq("user_id", currentUserId);
+                if (error) {
+                  toast.error("Failed to delete post");
+                } else {
+                  toast.success("Post deleted");
+                  queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+                }
+              }}
+              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+            >
+              <Trash2 className="h-5 w-5 text-destructive" />
+              <span className="text-sm font-medium text-destructive">Delete post</span>
+            </button>
+          )}
+        </div>
+      </SwipeableSheet>
 
       {/* Report Sheet */}
-      <AnimatePresence>
-        {showReportSheet && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[210] flex items-end justify-center bg-black/40"
-            onClick={() => setShowReportSheet(false)}
-          >
-            <motion.div
-              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-background rounded-t-2xl pb-8 overflow-hidden max-h-[80vh] flex flex-col"
+      <SwipeableSheet
+        open={showReportSheet}
+        onClose={() => setShowReportSheet(false)}
+        ariaLabel="Report post"
+        zIndex={210}
+        hideCloseButton
+        title={
+          reportStep === "categories" ? (
+            <h3 className="text-base font-bold text-foreground text-center">Report</h3>
+          ) : reportStep === "sub" ? (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setReportStep("categories")}
+                aria-label="Back"
+                className="min-h-[40px] min-w-[40px] flex items-center justify-center -ml-2"
+              >
+                <ChevronLeft className="h-5 w-5 text-foreground" />
+              </button>
+              <h3 className="text-base font-bold text-foreground truncate">{reportCategory}</h3>
+            </div>
+          ) : null
+        }
+      >
+        {reportStep === "categories" ? (
+          <>
+            <p className="px-6 pb-4 text-xs text-muted-foreground">Why are you reporting this post? Your report is anonymous.</p>
+            <div className="px-2 pb-6">
+              {[
+                { icon: AlertTriangle, label: "Spam" , desc: "Misleading or repetitive content" },
+                { icon: ShieldAlert, label: "Scam or fraud", desc: "Trying to steal money or personal info" },
+                { icon: UserX, label: "Fake account", desc: "Pretending to be someone else" },
+                { icon: Ban, label: "Harassment or bullying", desc: "Targeting or intimidating someone" },
+                { icon: Skull, label: "Violence or dangerous acts", desc: "Threatening or promoting violence" },
+                { icon: EyeOff, label: "Nudity or sexual content", desc: "Inappropriate images or language" },
+                { icon: Flag, label: "Hate speech", desc: "Attacking a group or individual" },
+                { icon: ShieldAlert, label: "Intellectual property", desc: "Using content without permission" },
+                { icon: HelpCircle, label: "Something else", desc: "Other issue not listed above" },
+              ].map((r) => (
+                <button
+                  key={r.label}
+                  onClick={() => { setReportCategory(r.label); setReportStep("sub"); }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px] text-left"
+                >
+                  <r.icon className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{r.label}</p>
+                    <p className="text-[11px] text-muted-foreground">{r.desc}</p>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
+                </button>
+              ))}
+            </div>
+          </>
+        ) : reportStep === "sub" ? (
+          <>
+            <p className="px-6 pb-4 text-xs text-muted-foreground">Select the option that best describes the issue.</p>
+            <div className="px-2 pb-6">
+              {((): { label: string }[] => {
+                const subMap: Record<string, string[]> = {
+                  "Spam": ["Promotional content", "Repetitive posts", "Bot activity", "Clickbait", "Misleading information"],
+                  "Scam or fraud": ["Phishing attempt", "Financial scam", "Fake giveaway", "Identity theft", "Cryptocurrency scam", "Impersonating a business"],
+                  "Fake account": ["Impersonating me", "Impersonating someone I know", "Impersonating a celebrity", "Impersonating a business or brand", "Bot or fake engagement"],
+                  "Harassment or bullying": ["Threatening language", "Unwanted contact", "Intimidation", "Stalking behavior", "Revealing private info (doxxing)", "Encouraging self-harm"],
+                  "Violence or dangerous acts": ["Graphic violence", "Threatening harm", "Glorifying violence", "Dangerous challenges", "Animal cruelty", "Terrorist content"],
+                  "Nudity or sexual content": ["Nudity", "Sexual activity", "Sexual exploitation", "Non-consensual imagery", "Content involving minors"],
+                  "Hate speech": ["Racism", "Religious discrimination", "Sexism or misogyny", "Homophobia or transphobia", "Disability discrimination", "Xenophobia"],
+                  "Intellectual property": ["Copyright infringement", "Trademark violation", "Stolen content", "Unauthorized use of my work"],
+                  "Something else": ["Misinformation", "Self-injury or suicide", "Drug sales", "Unauthorized sales", "Privacy violation", "Other"],
+                };
+                return (subMap[reportCategory] || ["Other"]).map((s) => ({ label: s }));
+              })().map((sub) => (
+                <button
+                  key={sub.label}
+                  onClick={() => setReportStep("submitted")}
+                  className="flex items-center justify-between w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px] text-left"
+                >
+                  <span className="text-sm font-medium text-foreground">{sub.label}</span>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 px-6 gap-4">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Flag className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground">Thanks for reporting</h3>
+            <p className="text-sm text-muted-foreground text-center max-w-[260px]">
+              We'll review this post and take action if it violates our community guidelines.
+            </p>
+            <button
+              onClick={() => setShowReportSheet(false)}
+              className="mt-4 px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm min-h-[48px]"
             >
-              <div className="flex justify-center py-3">
-                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
-              </div>
-
-              {reportStep === "categories" ? (
-                <>
-                  <div className="flex items-center px-4 pb-3">
-                    <button onClick={() => setShowReportSheet(false)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-                      <ChevronLeft className="h-5 w-5 text-foreground" />
-                    </button>
-                    <h3 className="flex-1 text-center text-base font-bold text-foreground pr-11">Report</h3>
-                  </div>
-                  <p className="px-6 pb-4 text-xs text-muted-foreground">Why are you reporting this post? Your report is anonymous.</p>
-                  <div className="overflow-y-auto px-2 flex-1">
-                    {[
-                      { icon: AlertTriangle, label: "Spam" , desc: "Misleading or repetitive content" },
-                      { icon: ShieldAlert, label: "Scam or fraud", desc: "Trying to steal money or personal info" },
-                      { icon: UserX, label: "Fake account", desc: "Pretending to be someone else" },
-                      { icon: Ban, label: "Harassment or bullying", desc: "Targeting or intimidating someone" },
-                      { icon: Skull, label: "Violence or dangerous acts", desc: "Threatening or promoting violence" },
-                      { icon: EyeOff, label: "Nudity or sexual content", desc: "Inappropriate images or language" },
-                      { icon: Flag, label: "Hate speech", desc: "Attacking a group or individual" },
-                      { icon: ShieldAlert, label: "Intellectual property", desc: "Using content without permission" },
-                      { icon: HelpCircle, label: "Something else", desc: "Other issue not listed above" },
-                    ].map((r) => (
-                      <button
-                        key={r.label}
-                        onClick={() => { setReportCategory(r.label); setReportStep("sub"); }}
-                        className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px] text-left"
-                      >
-                        <r.icon className="h-5 w-5 text-muted-foreground shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground">{r.label}</p>
-                          <p className="text-[11px] text-muted-foreground">{r.desc}</p>
-                        </div>
-                        <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
-                      </button>
-                    ))}
-                  </div>
-                </>
-              ) : reportStep === "sub" ? (
-                <>
-                  <div className="flex items-center px-4 pb-3">
-                    <button onClick={() => setReportStep("categories")} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-                      <ChevronLeft className="h-5 w-5 text-foreground" />
-                    </button>
-                    <h3 className="flex-1 text-center text-base font-bold text-foreground pr-11">{reportCategory}</h3>
-                  </div>
-                  <p className="px-6 pb-4 text-xs text-muted-foreground">Select the option that best describes the issue.</p>
-                  <div className="overflow-y-auto px-2 flex-1">
-                    {((): { label: string }[] => {
-                      const subMap: Record<string, string[]> = {
-                        "Spam": ["Promotional content", "Repetitive posts", "Bot activity", "Clickbait", "Misleading information"],
-                        "Scam or fraud": ["Phishing attempt", "Financial scam", "Fake giveaway", "Identity theft", "Cryptocurrency scam", "Impersonating a business"],
-                        "Fake account": ["Impersonating me", "Impersonating someone I know", "Impersonating a celebrity", "Impersonating a business or brand", "Bot or fake engagement"],
-                        "Harassment or bullying": ["Threatening language", "Unwanted contact", "Intimidation", "Stalking behavior", "Revealing private info (doxxing)", "Encouraging self-harm"],
-                        "Violence or dangerous acts": ["Graphic violence", "Threatening harm", "Glorifying violence", "Dangerous challenges", "Animal cruelty", "Terrorist content"],
-                        "Nudity or sexual content": ["Nudity", "Sexual activity", "Sexual exploitation", "Non-consensual imagery", "Content involving minors"],
-                        "Hate speech": ["Racism", "Religious discrimination", "Sexism or misogyny", "Homophobia or transphobia", "Disability discrimination", "Xenophobia"],
-                        "Intellectual property": ["Copyright infringement", "Trademark violation", "Stolen content", "Unauthorized use of my work"],
-                        "Something else": ["Misinformation", "Self-injury or suicide", "Drug sales", "Unauthorized sales", "Privacy violation", "Other"],
-                      };
-                      return (subMap[reportCategory] || ["Other"]).map((s) => ({ label: s }));
-                    })().map((sub) => (
-                      <button
-                        key={sub.label}
-                        onClick={() => setReportStep("submitted")}
-                        className="flex items-center justify-between w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px] text-left"
-                      >
-                        <span className="text-sm font-medium text-foreground">{sub.label}</span>
-                        <ChevronDown className="h-4 w-4 text-muted-foreground -rotate-90 shrink-0" />
-                      </button>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 px-6 gap-4">
-                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Flag className="h-8 w-8 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-bold text-foreground">Thanks for reporting</h3>
-                  <p className="text-sm text-muted-foreground text-center max-w-[260px]">
-                    We'll review this post and take action if it violates our community guidelines.
-                  </p>
-                  <button
-                    onClick={() => setShowReportSheet(false)}
-                    className="mt-4 px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm min-h-[48px]"
-                  >
-                    Done
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
+              Done
+            </button>
+          </div>
         )}
-      </AnimatePresence>
+      </SwipeableSheet>
 
       {/* Comment Settings Sheet (Owner only) */}
-      <AnimatePresence>
-        {showCommentSettings && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[220] flex items-end justify-center bg-black/40"
-            onClick={() => setShowCommentSettings(false)}
-          >
-            <motion.div
-              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-background rounded-t-2xl pb-8 overflow-hidden"
+      <SwipeableSheet
+        open={showCommentSettings}
+        onClose={() => setShowCommentSettings(false)}
+        ariaLabel="Comment settings"
+        zIndex={220}
+        title="Comment Settings"
+      >
+        <p className="px-6 pb-4 text-xs text-muted-foreground">Choose who can comment on this post.</p>
+        <div className="px-2 pb-6 space-y-1">
+          {([
+            { value: "everyone" as const, icon: Globe, label: "Everyone", desc: "Anyone can comment on this post" },
+            { value: "friends" as const, icon: UserCheck, label: "Friends only", desc: "Only your friends can comment" },
+            { value: "off" as const, icon: MessageSquareOff, label: "Turn off comments", desc: "No one can comment on this post" },
+          ] as const).map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => {
+                setCommentSetting(opt.value);
+                setShowCommentSettings(false);
+                if (opt.value === "off") setShowComments(false);
+                toast.success(
+                  opt.value === "everyone" ? "Comments open for everyone" :
+                  opt.value === "friends" ? "Only friends can comment now" :
+                  "Comments turned off"
+                );
+              }}
+              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
             >
-              <div className="flex justify-center py-3">
-                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+              <opt.icon className={cn("h-5 w-5", commentSetting === opt.value ? "text-primary" : "text-foreground")} />
+              <div className="flex-1 text-left">
+                <span className={cn("text-sm font-medium", commentSetting === opt.value ? "text-primary" : "text-foreground")}>{opt.label}</span>
+                <p className="text-[11px] text-muted-foreground">{opt.desc}</p>
               </div>
-              <div className="flex items-center px-4 pb-3">
-                <button onClick={() => setShowCommentSettings(false)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-                  <ChevronLeft className="h-5 w-5 text-foreground" />
-                </button>
-                <h3 className="flex-1 text-center text-base font-bold text-foreground pr-11">Comment Settings</h3>
-              </div>
-              <p className="px-6 pb-4 text-xs text-muted-foreground">Choose who can comment on this post.</p>
-              <div className="px-2 space-y-1">
-                {([
-                  { value: "everyone" as const, icon: Globe, label: "Everyone", desc: "Anyone can comment on this post" },
-                  { value: "friends" as const, icon: UserCheck, label: "Friends only", desc: "Only your friends can comment" },
-                  { value: "off" as const, icon: MessageSquareOff, label: "Turn off comments", desc: "No one can comment on this post" },
-                ] as const).map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => {
-                      setCommentSetting(opt.value);
-                      setShowCommentSettings(false);
-                      if (opt.value === "off") setShowComments(false);
-                      toast.success(
-                        opt.value === "everyone" ? "Comments open for everyone" :
-                        opt.value === "friends" ? "Only friends can comment now" :
-                        "Comments turned off"
-                      );
-                    }}
-                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-                  >
-                    <opt.icon className={cn("h-5 w-5", commentSetting === opt.value ? "text-primary" : "text-foreground")} />
-                    <div className="flex-1 text-left">
-                      <span className={cn("text-sm font-medium", commentSetting === opt.value ? "text-primary" : "text-foreground")}>{opt.label}</span>
-                      <p className="text-[11px] text-muted-foreground">{opt.desc}</p>
-                    </div>
-                    {commentSetting === opt.value && (
-                      <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-                        <svg className="h-3 w-3 text-primary-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              {commentSetting === opt.value && (
+                <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                  <svg className="h-3 w-3 text-primary-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      </SwipeableSheet>
 
       {/* Edit Caption Sheet */}
-      <AnimatePresence>
-        {showEditCaption && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[230] flex items-end justify-center bg-black/40"
-            onClick={() => setShowEditCaption(false)}
-          >
-            <motion.div
-              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-background rounded-t-2xl pb-8 overflow-hidden"
+      <SwipeableSheet
+        open={showEditCaption}
+        onClose={() => setShowEditCaption(false)}
+        ariaLabel="Edit caption"
+        zIndex={230}
+        title="Edit Caption"
+      >
+        <div className="px-4 pb-6">
+          <textarea
+            value={editCaptionText}
+            onChange={(e) => setEditCaptionText(e.target.value)}
+            rows={4}
+            maxLength={2200}
+            className="w-full p-3 rounded-xl bg-muted/50 border border-border/40 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+            placeholder="Write a caption..."
+          />
+          <p className="text-[10px] text-muted-foreground mt-1 mb-3">{editCaptionText.length}/2,200</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowEditCaption(false)}
+              className="flex-1 py-2.5 rounded-xl bg-muted text-foreground text-sm font-medium"
             >
-              <div className="flex justify-center py-3">
-                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
-              </div>
-              <div className="px-4">
-                <h3 className="text-base font-bold text-foreground mb-3">Edit Caption</h3>
-                <textarea
-                  value={editCaptionText}
-                  onChange={(e) => setEditCaptionText(e.target.value)}
-                  rows={4}
-                  maxLength={2200}
-                  className="w-full p-3 rounded-xl bg-muted/50 border border-border/40 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="Write a caption..."
-                />
-                <p className="text-[10px] text-muted-foreground mt-1 mb-3">{editCaptionText.length}/2,200</p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowEditCaption(false)}
-                    className="flex-1 py-2.5 rounded-xl bg-muted text-foreground text-sm font-medium"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleEditPost}
-                    disabled={editSaving}
-                    className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
-                  >
-                    {editSaving ? "Saving..." : "Save"}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              Cancel
+            </button>
+            <button
+              onClick={handleEditPost}
+              disabled={editSaving}
+              className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
+            >
+              {editSaving ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </div>
+      </SwipeableSheet>
       {/* Tip Sheet — only mount when needed to avoid loading Stripe.js */}
       {tipTarget && (
         <Suspense fallback={null}>
