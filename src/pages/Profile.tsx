@@ -620,7 +620,8 @@ const Profile = () => {
                             whileTap={{ scale: 0.85 }}
                             onClick={() => avatarInputRef.current?.click()}
                             disabled={uploadAvatar.isPending}
-                            className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/40 ring-2 ring-card disabled:opacity-50"
+                            aria-label="Change profile photo"
+                            className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/40 ring-2 ring-card disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                           >
                             {uploadAvatar.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
                           </motion.button>
