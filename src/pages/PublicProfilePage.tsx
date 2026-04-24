@@ -4,6 +4,7 @@
  * Respects profile_visibility privacy settings
  */
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,7 +43,8 @@ function PublicPostOverlay({
   children: (startDrag: (e: React.PointerEvent) => void) => React.ReactNode;
 }) {
   const { motionProps, startDrag } = useSwipeDownClose(onClose);
-  return (
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -50,7 +52,7 @@ function PublicPostOverlay({
       transition={{ type: "spring", damping: 30, stiffness: 320 }}
       {...motionProps}
       data-testid="public-post-overlay-body"
-      className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col overflow-y-auto"
+      className="fixed inset-0 z-[9999] bg-background/95 backdrop-blur-sm flex flex-col overflow-y-auto"
       style={{ paddingTop: "var(--zivo-safe-top-overlay)" }}
     >
       <SwipeGrabHandle
@@ -59,7 +61,8 @@ function PublicPostOverlay({
         testId="public-post-grab-handle"
       />
       {children(startDrag)}
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }
 

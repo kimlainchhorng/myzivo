@@ -4,6 +4,7 @@
  * Everyone can post photos/videos that show up here
  */
 import { lazy, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 const UnifiedShareSheet = lazy(() => import("@/components/shared/ShareSheet"));
 import { supabase } from "@/integrations/supabase/client";
@@ -103,27 +104,19 @@ function PostDetailOverlay({
   children: (startDrag: (e: React.PointerEvent) => void) => React.ReactNode;
 }) {
   const { motionProps, startDrag } = useSwipeDownClose(onClose);
-  return (
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <motion.div
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 60 }}
       transition={{ type: "spring", damping: 30, stiffness: 320 }}
       {...motionProps}
-      className="fixed inset-0 z-[100] bg-background flex flex-col"
+      className="fixed inset-0 z-[9999] bg-background flex flex-col overflow-hidden"
     >
-      <div
-        className="shrink-0 bg-background/95 backdrop-blur-xl"
-        style={{ paddingTop: "var(--zivo-safe-top-overlay)" }}
-      >
-        <SwipeGrabHandle
-          onStartDrag={startDrag}
-          tone="dark"
-          testId="post-detail-grab-handle"
-        />
-      </div>
       {children(startDrag)}
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }
 
@@ -983,8 +976,8 @@ export default function ReelsFeedPage() {
                     <>
                       <div
                         data-testid="post-detail-header"
-                        className="sticky top-0 z-10 flex items-center gap-3 px-3 pt-1 pb-2.5 bg-background/95 backdrop-blur-xl border-b border-border/30 cursor-grab active:cursor-grabbing select-none"
-                        style={{ touchAction: 'none' }}
+                        className="shrink-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 cursor-grab active:cursor-grabbing select-none"
+                        style={{ paddingTop: 'var(--zivo-safe-top-overlay)', touchAction: 'none' }}
                         onPointerDown={(e) => {
                           const target = e.target as HTMLElement | null;
                           // Don't start drag from interactive children (buttons, links)
@@ -992,62 +985,67 @@ export default function ReelsFeedPage() {
                           startDrag(e);
                         }}
                       >
-                        <button
-                          onClick={() => setFullscreenIndex(null)}
-                          aria-label="Close post"
-                          className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50 active:bg-muted transition-colors"
-                        >
-                          <XIcon className="h-5 w-5 text-foreground" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (post.source === "store" && post.store_slug) {
-                              navigate(`/store/${post.store_slug}`);
-                            } else if (post.author_id) {
-                              navigate(`/user/${post.author_id}`);
-                            }
-                          }}
-                          className="flex-1 flex items-center gap-2.5 min-w-0 text-left rounded-lg px-1 py-0.5 hover:bg-muted/40 active:bg-muted/60 transition-colors"
-                          aria-label={`View ${post.author_name}'s profile`}
-                        >
-                          <div className="h-9 w-9 rounded-full overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/40">
-                            {post.author_avatar ? (
-                              <img
-                                src={post.author_avatar}
-                                alt={post.author_name}
-                                className="h-full w-full object-cover"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="h-full w-full flex items-center justify-center text-xs font-semibold text-muted-foreground">
-                                {(post.author_name || "?").slice(0, 1).toUpperCase()}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0 leading-tight">
-                            <p className="text-sm font-semibold text-foreground truncate">{post.author_name}</p>
-                            <p className="text-[11px] text-muted-foreground truncate">
-                              {(() => {
-                                try {
-                                  return formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
-                                } catch {
-                                  return "recently";
-                                }
-                              })()}
-                            </p>
-                          </div>
-                        </button>
-                        <div className="w-9 h-1.5 rounded-full bg-muted-foreground/30 flex-shrink-0" aria-hidden />
+                        <SwipeGrabHandle
+                          onStartDrag={startDrag}
+                          tone="dark"
+                          testId="post-detail-grab-handle"
+                        />
+                        <div className="flex items-center gap-3 px-3 pb-2.5">
+                          <button
+                            onClick={() => setFullscreenIndex(null)}
+                            aria-label="Close post"
+                            className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50 active:bg-muted transition-colors"
+                          >
+                            <XIcon className="h-5 w-5 text-foreground" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (post.source === "store" && post.store_slug) {
+                                navigate(`/store/${post.store_slug}`);
+                              } else if (post.author_id) {
+                                navigate(`/user/${post.author_id}`);
+                              }
+                            }}
+                            className="flex-1 flex items-center gap-2.5 min-w-0 text-left rounded-lg px-1 py-0.5 hover:bg-muted/40 active:bg-muted/60 transition-colors"
+                            aria-label={`View ${post.author_name}'s profile`}
+                          >
+                            <div className="h-9 w-9 rounded-full overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/40">
+                              {post.author_avatar ? (
+                                <img
+                                  src={post.author_avatar}
+                                  alt={post.author_name}
+                                  className="h-full w-full object-cover"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center text-xs font-semibold text-muted-foreground">
+                                  {(post.author_name || "?").slice(0, 1).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0 leading-tight">
+                              <p className="text-sm font-semibold text-foreground truncate">{post.author_name}</p>
+                              <p className="text-[11px] text-muted-foreground truncate">
+                                {(() => {
+                                  try {
+                                    return formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
+                                  } catch {
+                                    return "recently";
+                                  }
+                                })()}
+                              </p>
+                            </div>
+                          </button>
+                        </div>
                       </div>
                       <div
                         ref={fullscreenScrollRef}
-                        className="flex-1 overflow-y-auto"
-                        style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 6rem)', touchAction: 'pan-y' }}
+                        className="flex-1 min-h-0 overflow-y-auto"
+                        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', touchAction: 'pan-y' }}
                       >
                         <FeedCard key={post.id} item={post} currentUserId={userId} detailMode />
                       </div>
-                      <Suspense fallback={null}><ZivoMobileNav /></Suspense>
                     </>
                   )}
                 </PostDetailOverlay>
