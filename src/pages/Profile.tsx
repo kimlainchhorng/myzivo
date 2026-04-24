@@ -675,23 +675,93 @@ const Profile = () => {
 
                       {/* Bio */}
                       <div className="mt-2 max-w-sm">
-                        <textarea
-                          value={bioDraft}
-                          onChange={(e) => setBioDraft(e.target.value)}
-                          placeholder="Add bio..."
-                          maxLength={160}
-                          rows={2}
-                          className="w-full resize-none rounded-2xl border border-border/50 bg-background/80 px-3 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
-                        />
-                        <div className="mt-2 flex justify-start">
+                        {profile?.bio && !bioEditing ? (
+                          <div className="flex items-start gap-2">
+                            <p className="flex-1 text-xs text-foreground/85 whitespace-pre-wrap break-words">{profile.bio}</p>
+                            <button
+                              type="button"
+                              onClick={() => { setBioDraft(profile.bio ?? ""); setBioEditing(true); }}
+                              aria-label="Edit bio"
+                              className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            {!profile?.bio && (
+                              <p className="mb-1 text-[11px] text-muted-foreground">Add a short bio so people know who you are.</p>
+                            )}
+                            <textarea
+                              value={bioDraft}
+                              onChange={(e) => setBioDraft(e.target.value)}
+                              placeholder="Add bio..."
+                              maxLength={160}
+                              rows={2}
+                              aria-label="Bio"
+                              className="w-full resize-none rounded-2xl border border-border/50 bg-background/80 px-3 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+                            />
+                            <div className="mt-2 flex items-center gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => {
+                                  updateProfile.mutate(
+                                    { bio: bioDraft.trim() || null },
+                                    { onSuccess: () => setBioEditing(false) }
+                                  );
+                                }}
+                                disabled={updateProfile.isPending}
+                                className="rounded-full px-4"
+                              >
+                                {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : (bioDraft?.trim() ? "Save bio" : "Add bio")}
+                              </Button>
+                              {bioEditing && (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => { setBioDraft(profile?.bio ?? ""); setBioEditing(false); }}
+                                  className="rounded-full px-3 text-muted-foreground"
+                                >
+                                  Cancel
+                                </Button>
+                              )}
+                            </div>
+                          </>
+                        )}
+
+                        {/* Inline action row: Edit profile · Share · Sign out */}
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
                           <Button
                             type="button"
                             size="sm"
-                            onClick={() => updateProfile.mutate({ bio: bioDraft.trim() || null })}
-                            disabled={updateProfile.isPending}
-                            className="rounded-full px-4"
+                            variant="outline"
+                            onClick={() => navigate("/account/profile-edit")}
+                            className="rounded-full px-3 h-9 min-h-[36px] text-xs font-semibold"
                           >
-                            {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : (bioDraft?.trim() ? "Save bio" : "Add bio")}
+                            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit profile
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate("/qr-profile")}
+                            className="rounded-full px-3 h-9 min-h-[36px] text-xs font-semibold"
+                          >
+                            <Share2 className="h-3.5 w-3.5 mr-1.5" /> Share
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={async () => {
+                              try { await signOut(); navigate("/"); } catch (e) { toast.error("Could not sign out"); }
+                            }}
+                            className="rounded-full px-3 h-9 min-h-[36px] text-xs font-semibold text-muted-foreground hover:text-foreground"
+                            aria-label="Sign out"
+                          >
+                            <LogOut className="h-3.5 w-3.5 mr-1.5" /> Sign out
                           </Button>
                         </div>
                       </div>
