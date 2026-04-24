@@ -264,6 +264,28 @@
   }
 }
 
+@layer base {
+  /* =============================================
+     SHARED SAFE-AREA TOKENS
+     ---------------------------------------------
+     `env(safe-area-inset-top)` can resolve to 0px in some Capacitor / PWA
+     webview contexts even on notched iPhones (Dynamic Island ~ 59px). These
+     variables guarantee a minimum visual clearance for full-screen overlays
+     and sheet headers so the close button / avatar never sit under the
+     status bar. Use the variable, never inline `env()` directly.
+     ============================================= */
+  :root {
+    --zivo-safe-top: env(safe-area-inset-top, 0px);
+    --zivo-safe-bottom: env(safe-area-inset-bottom, 0px);
+    /* Fullscreen overlays (post-detail header, ReelSlide close button) */
+    --zivo-safe-top-overlay: max(env(safe-area-inset-top, 0px), 60px);
+    /* Bottom-sheet headers (Comments, Share, post menu, etc.) */
+    --zivo-safe-top-sheet: max(env(safe-area-inset-top, 0px), 44px);
+    /* Sticky sub-headers (feed, search) */
+    --zivo-safe-top-sticky: max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 48px);
+  }
+}
+
 @layer components {
   /* Safe area support for mobile apps & PWA
      NOTE: Use !important so these classes remain effective even when combined
