@@ -149,17 +149,36 @@ const Profile = () => {
       if (!user?.id) return null;
       const { data, error } = await (supabase as any)
         .from("verification_requests")
-        .select("id, status, rejection_reason, created_at")
+        .select("id, status, rejection_reason, created_at, reviewed_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data as { id: string; status: string | null; rejection_reason: string | null; created_at: string } | null;
+      return data as { id: string; status: string | null; rejection_reason: string | null; created_at: string; reviewed_at?: string | null } | null;
     },
     enabled: !!user?.id,
     staleTime: 30_000,
   });
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const refreshBlueVerified = () => {
+      queryClient.invalidateQueries({ queryKey: ["verification-request", user.id, "latest"] });
+      queryClient.invalidateQueries({ queryKey: ["verification-request", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile", user.id] });
+    };
+
+    const channel = supabase
+      .channel(`blue-verified-status-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "verification_requests", filter: `user_id=eq.${user.id}` }, refreshBlueVerified)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` }, refreshBlueVerified)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, refreshBlueVerified)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient, user?.id]);
   
   // Count pending friend requests + new followers
   const [socialCount, setSocialCount] = useState(0);
