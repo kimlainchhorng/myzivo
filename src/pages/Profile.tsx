@@ -149,7 +149,7 @@ const Profile = () => {
   const location = useLocation();
   const { t, currentLanguage, changeLanguage } = useI18n();
   
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
   const { unreadCount: notifUnreadCount, notifications } = useNotifications(20);
@@ -688,17 +688,24 @@ const Profile = () => {
                               <Pencil className="h-3.5 w-3.5" />
                             </button>
                           </div>
+                        ) : !profile?.bio && !bioEditing ? (
+                          <button
+                            type="button"
+                            onClick={() => { setBioDraft(""); setBioEditing(true); }}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border/60 px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-colors"
+                          >
+                            <Pencil className="h-3 w-3" />
+                            Add bio
+                          </button>
                         ) : (
                           <>
-                            {!profile?.bio && (
-                              <p className="mb-1 text-[11px] text-muted-foreground">Add a short bio so people know who you are.</p>
-                            )}
                             <textarea
                               value={bioDraft}
                               onChange={(e) => setBioDraft(e.target.value)}
-                              placeholder="Add bio..."
+                              placeholder="Add a short bio so people know who you are."
                               maxLength={160}
                               rows={2}
+                              autoFocus
                               aria-label="Bio"
                               className="w-full resize-none rounded-2xl border border-border/50 bg-background/80 px-3 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
                             />
@@ -715,19 +722,17 @@ const Profile = () => {
                                 disabled={updateProfile.isPending}
                                 className="rounded-full px-4"
                               >
-                                {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : (bioDraft?.trim() ? "Save bio" : "Add bio")}
+                                {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save bio"}
                               </Button>
-                              {bioEditing && (
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => { setBioDraft(profile?.bio ?? ""); setBioEditing(false); }}
-                                  className="rounded-full px-3 text-muted-foreground"
-                                >
-                                  Cancel
-                                </Button>
-                              )}
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => { setBioDraft(profile?.bio ?? ""); setBioEditing(false); }}
+                                className="rounded-full px-3 text-muted-foreground"
+                              >
+                                Cancel
+                              </Button>
                             </div>
                           </>
                         )}
