@@ -1298,7 +1298,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           left: 'max(env(safe-area-inset-left, 0px), 16px)',
         }}
       >
-        <X className="h-5 w-5 text-white" />
+        <XIcon className="h-5 w-5 text-white" />
       </button>
 
       {/* Right side action buttons */}
