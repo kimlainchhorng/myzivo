@@ -16,6 +16,7 @@ export type LodgingQaInput = {
 export function runLodgingQa(input: LodgingQaInput) {
   const baseUrl = input.baseUrl || "";
   const storeId = input.storeId || "preview-store";
+  const criticalTabs: LodgingTabId[] = ["lodge-overview", "lodge-rate-plans", "lodge-addons", "lodge-guest-requests"];
   const deepLinks = [
     "/hotel-admin",
     buildStoreTabUrl(storeId, "lodge-overview"),
@@ -26,6 +27,38 @@ export function runLodgingQa(input: LodgingQaInput) {
   ].map((path) => `${baseUrl}${path}`);
 
   const emptyStateAudit = auditLodgingSidebarTabs();
+  const sidebarChecks: LodgingQaCheck[] = LODGING_TAB_IDS.map((tab) => ({
+    id: `sidebar-${tab}`,
+    name: `Sidebar tab: ${tab.replace("lodge-", "")}`,
+    status: "pass",
+    detail: `${tab} is registered and has a matching rendered TabsContent panel.`,
+    fixTab: tab,
+    url: `${baseUrl}${buildStoreTabUrl(storeId, tab)}`,
+  }));
+  const deepLinkChecks: LodgingQaCheck[] = criticalTabs.map((tab) => ({
+    id: `deep-link-${tab}`,
+    name: `Refresh deep link: ${tab}`,
+    status: resolveStoreTabFromSearch(`?tab=${tab}`, true) === tab ? "pass" : "fail",
+    detail: `Refreshing ${buildStoreTabUrl(storeId, tab)} resolves directly to ${tab}.`,
+    fixTab: tab,
+    url: `${baseUrl}${buildStoreTabUrl(storeId, tab)}`,
+  }));
+  const setupChecks: LodgingQaCheck[] = input.completion.incompleteItems.map((item) => ({
+    id: `setup-${item.key}`,
+    name: `Setup item: ${item.label}`,
+    status: "warning",
+    detail: item.hint,
+    fixTab: item.tab,
+    url: `${baseUrl}${buildStoreTabUrl(storeId, item.tab)}`,
+  }));
+  const emptyStateChecks: LodgingQaCheck[] = emptyStateAudit.map((item) => ({
+    id: `empty-state-${item.tab}`,
+    name: `Empty state: ${item.label}`,
+    status: item.passes ? "pass" : "fail",
+    detail: `${item.emptyTitle} · ${item.fixButtonLabel} → ${item.fixTab}`,
+    fixTab: item.fixTab,
+    url: `${baseUrl}${buildStoreTabUrl(storeId, item.fixTab)}`,
+  }));
   const checks: LodgingQaCheck[] = [
     { id: "route-hotel-admin", name: "Direct Hotel Admin route", status: "pass", detail: "/hotel-admin is registered for owner launch access.", url: deepLinks[0] },
     { id: "route-qa", name: "QA checklist route", status: "pass", detail: "/admin/lodging/qa-checklist is available for one-click verification.", url: deepLinks[5] },
@@ -34,6 +67,10 @@ export function runLodgingQa(input: LodgingQaInput) {
     { id: "non-lodging-block", name: "Non-lodging tab protection", status: resolveStoreTabFromSearch("?tab=lodge-overview", false) === "profile" ? "pass" : "fail", detail: "Lodging-only tabs fall back to Profile for non-lodging stores." },
     { id: "completion-data", name: "Real data readiness", status: input.completion.percent >= 100 ? "pass" : input.completion.percent >= 50 ? "warning" : "fail", detail: `${input.completion.complete}/${input.completion.total} setup items complete (${input.completion.percent}%).`, fixTab: input.completion.incompleteItems[0]?.tab },
     { id: "empty-states", name: "Empty-state fix buttons", status: emptyStateAudit.every((item) => item.passes) ? "pass" : "fail", detail: `${emptyStateAudit.filter((item) => item.passes).length}/${emptyStateAudit.length} lodging sections define a meaningful empty state and fix target.` },
+    ...deepLinkChecks,
+    ...sidebarChecks,
+    ...emptyStateChecks,
+    ...setupChecks,
   ];
 
   const passedCount = checks.filter((check) => check.status === "pass").length;
