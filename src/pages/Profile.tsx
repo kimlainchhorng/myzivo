@@ -74,8 +74,27 @@ const LANGS = [
 const getFlagUrl = (cc: string) => `/flags/${cc}.svg`;
 
 const BlueVerifiedBadge = ({ className = "h-5 w-5" }: { className?: string }) => (
-  <span className={cn("inline-flex items-center justify-center rounded-full bg-[hsl(var(--flights))] text-primary-foreground shadow-sm ring-2 ring-background", className)} aria-label="Blue verified">
-    <Check className="h-[70%] w-[70%] stroke-[3]" />
+  <span className={cn("relative inline-flex items-center justify-center", className)} aria-label="Blue verified" title="Blue verified">
+    <svg viewBox="0 0 24 24" className="h-full w-full drop-shadow-[0_2px_6px_hsl(var(--flights)/0.45)]" aria-hidden="true">
+      <defs>
+        <linearGradient id="bv-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="hsl(var(--flights))" />
+          <stop offset="100%" stopColor="hsl(var(--flights) / 0.78)" />
+        </linearGradient>
+      </defs>
+      <path
+        fill="url(#bv-grad)"
+        d="M12 1.6l2.36 1.78 2.94-.32 1.4 2.6 2.6 1.4-.32 2.94L22.4 12l-1.78 2.36.32 2.94-2.6 1.4-1.4 2.6-2.94-.32L12 22.4l-2.36-1.78-2.94.32-1.4-2.6-2.6-1.4.32-2.94L1.6 12l1.78-2.36L3.06 6.7l2.6-1.4 1.4-2.6 2.94.32L12 1.6z"
+      />
+      <path
+        fill="none"
+        stroke="hsl(var(--primary-foreground))"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7.5 12.4l2.9 2.9 6.1-6.6"
+      />
+    </svg>
   </span>
 );
 
