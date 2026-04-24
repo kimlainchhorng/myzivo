@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Users, Search, Mail, Calendar, Shield, ChevronLeft, ChevronRight,
-  UserCheck, UserX, Eye, BadgeCheck, ShieldCheck
+  UserX, Eye, BadgeCheck
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
