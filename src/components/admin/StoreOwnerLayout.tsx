@@ -231,7 +231,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
               aria-hidden={!sidebarOpen}
               tabIndex={-1}
               className={cn(
-                "fixed inset-y-0 left-0 z-50 w-[84vw] max-w-[310px] bg-card border-r border-border flex flex-col overflow-hidden rounded-r-2xl shadow-2xl overscroll-contain lg:hidden",
+                "fixed inset-y-0 left-0 z-50 w-[78vw] max-w-[280px] bg-card border-r border-border flex flex-col overflow-hidden rounded-r-2xl shadow-2xl overscroll-contain lg:hidden",
                 "transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
                 sidebarOpen ? "translate-x-0" : "-translate-x-full"
               )}
@@ -243,7 +243,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
         )}
 
         {/* Desktop sticky sidebar */}
-        <aside className="hidden lg:flex sticky top-0 left-0 z-30 h-[100dvh] w-64 bg-card border-r border-border flex-col overflow-hidden">
+        <aside className="hidden lg:flex sticky top-0 left-0 z-30 h-[100dvh] w-56 xl:w-60 bg-card border-r border-border flex-col overflow-hidden">
           {renderSidebarContent({ isMobile: false })}
         </aside>
 
@@ -278,19 +278,19 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       <>
         {/* Header — gradient brand strip */}
         <div
-          className="relative flex items-center justify-between px-4 border-b border-border shrink-0 bg-gradient-to-br from-primary/8 via-card to-card"
-          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)', paddingBottom: '14px' }}
+          className="relative flex items-center justify-between px-3 border-b border-border shrink-0 bg-gradient-to-br from-primary/8 via-card to-card"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)', paddingBottom: '10px' }}
         >
-          <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             {storeLogoUrl ? (
-              <img src={storeLogoUrl} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 ring-1 ring-border shadow-sm" />
+              <img src={storeLogoUrl} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0 ring-1 ring-border shadow-sm" />
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 ring-1 ring-primary/20">
-                <Store className="w-5 h-5 text-primary" />
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 ring-1 ring-primary/20">
+                <Store className="w-4 h-4 text-primary" />
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <span className="text-[15px] font-bold text-foreground truncate block leading-tight">{storeName || "My Store"}</span>
+              <span className="text-[13px] font-bold text-foreground truncate block leading-tight">{storeName || "My Store"}</span>
               {storeId && (
                 <span className="text-[10px] text-muted-foreground font-mono tracking-wider">CBD{storeId.replace(/-/g, '').slice(0, 8).toUpperCase()}</span>
               )}
