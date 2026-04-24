@@ -147,6 +147,13 @@ beforeEach(() => {
   cleanup();
 });
 
+/** Find the sheet panel inside the dialog by its mirrored data-padding-top attr. */
+function getPanel(dialog: HTMLElement): HTMLElement {
+  const el = dialog.querySelector<HTMLElement>("[data-padding-top]");
+  if (!el) throw new Error("Sheet panel with data-padding-top not found");
+  return el;
+}
+
 describe.each(NOTCHED_DEVICES)(
   "Safe-area clearance on $name (top=$top)",
   (device) => {
@@ -164,21 +171,20 @@ describe.each(NOTCHED_DEVICES)(
       );
 
       const dialog = screen.getByRole("dialog", { name: /comments/i });
+      const panel = getPanel(dialog);
 
-      // The panel is the dialog's first child with an inline paddingTop
-      const panel = dialog.querySelector(
-        '[style*="padding-top"], [style*="paddingTop"]',
-      ) as HTMLElement | null;
-      expect(panel).not.toBeNull();
-
-      const padTop = panel!.style.paddingTop;
+      const padTop = panel.getAttribute("data-padding-top") || "";
       expect(padTop).toMatch(/safe-area-inset-top/);
 
       const resolvedPx = evaluateCssExpression(padTop, device);
       expect(resolvedPx).toBeGreaterThanOrEqual(device.top);
+
+      // The snap-point max-height also bounds the sheet inside the viewport
+      const maxHeight = panel.getAttribute("data-max-height") || "";
+      expect(maxHeight).toContain("safe-area-inset-top");
     });
 
-    it("CommentsSheet: close button is labelled and reachable", () => {
+    it("CommentsSheet: close button is labelled, inside padded panel, and Escape dismisses", () => {
       const onClose = vi.fn();
       render(
         <CommentsSheet
@@ -191,16 +197,13 @@ describe.each(NOTCHED_DEVICES)(
         />,
       );
 
-      const closeBtn = screen.getByRole("button", {
-        name: /close comments/i,
-      });
+      // Title is JSX (not a string), so SwipeableSheet falls back to
+      // aria-label="Close dialog" — assert that exact contract.
+      const closeBtn = screen.getByRole("button", { name: /close dialog/i });
       expect(closeBtn).toBeInTheDocument();
 
-      // The close button must live inside the padded panel — i.e. inside the
-      // safe-area-aware region — not in an unrelated overlay.
-      const panel = closeBtn.closest(
-        '[style*="padding-top"], [style*="paddingTop"]',
-      );
+      // Must live inside the safe-area-padded region, not in an unrelated overlay.
+      const panel = closeBtn.closest("[data-padding-top]");
       expect(panel).not.toBeNull();
 
       // Escape closes the dialog (proves the keyboard handler is wired).
@@ -219,12 +222,9 @@ describe.each(NOTCHED_DEVICES)(
       );
 
       const dialog = screen.getByRole("dialog", { name: /share to/i });
-      const panel = dialog.querySelector(
-        '[style*="padding-top"], [style*="paddingTop"]',
-      ) as HTMLElement | null;
-      expect(panel).not.toBeNull();
+      const panel = getPanel(dialog);
 
-      const padTop = panel!.style.paddingTop;
+      const padTop = panel.getAttribute("data-padding-top") || "";
       expect(padTop).toMatch(/safe-area-inset-top/);
 
       const resolvedPx = evaluateCssExpression(padTop, device);
@@ -241,12 +241,12 @@ describe.each(NOTCHED_DEVICES)(
         />,
       );
 
+      // ShareSheet passes title="Share to" (string), so the close button's
+      // aria-label is "Close Share to".
       const closeBtn = screen.getByRole("button", { name: /close share to/i });
       expect(closeBtn).toBeInTheDocument();
 
-      const panel = closeBtn.closest(
-        '[style*="padding-top"], [style*="paddingTop"]',
-      );
+      const panel = closeBtn.closest("[data-padding-top]");
       expect(panel).not.toBeNull();
 
       fireEvent.keyDown(document, { key: "Escape" });
