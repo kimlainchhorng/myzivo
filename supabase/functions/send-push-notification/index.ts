@@ -433,7 +433,7 @@ async function importP8PrivateKey(pem: string): Promise<CryptoKey> {
   const der = base64ToBytes(clean);
   return crypto.subtle.importKey(
     "pkcs8",
-    der,
+    der.buffer.slice(der.byteOffset, der.byteOffset + der.byteLength) as ArrayBuffer,
     { name: "ECDSA", namedCurve: "P-256" },
     false,
     ["sign"],
