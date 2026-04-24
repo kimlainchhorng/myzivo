@@ -342,8 +342,8 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
             {navItems.map((item: any) => {
               if (item.divider) {
                 return (
-                  <div key={item.id} className="pt-3 pb-1 px-3">
-                    <div className="border-t border-border/60 mb-2" />
+                  <div key={item.id} className="pt-2 pb-0.5 px-2.5">
+                    <div className="border-t border-border/60 mb-1.5" />
                     <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">{item.label}</p>
                   </div>
                 );
@@ -354,7 +354,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
                   key={item.id}
                   onClick={() => { onTabChange?.(item.id); closeSidebar(); }}
                   className={cn(
-                    "relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-colors duration-150 active:scale-[0.99]",
+                    "relative w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors duration-150 active:scale-[0.99]",
                     isActive
                       ? "bg-primary/12 text-primary"
                       : "text-foreground/75 hover:bg-muted hover:text-foreground"
@@ -363,28 +363,28 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
                   {isActive && (
                     <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-primary" />
                   )}
-                  <item.icon className={cn("w-[18px] h-[18px] shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+                  <item.icon className={cn("w-4 h-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
                   <span className="truncate">{item.label}</span>
                 </button>
               );
             })}
           </div>
 
-          <div className="my-3 mx-3 border-t border-border/60" />
+          <div className="my-2 mx-2.5 border-t border-border/60" />
 
           <p id="sidebar-group-team" className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Team</p>
           <div className="space-y-0.5" role="group" aria-labelledby="sidebar-group-team">
             <button
               onClick={() => setEmployeesOpen((v) => !v)}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-colors",
+                "w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors",
                 employeeItems.some((i) => i.id === activeTab)
                   ? "bg-primary/12 text-primary"
                   : "text-foreground/75 hover:bg-muted hover:text-foreground"
               )}
               aria-expanded={employeesOpen}
             >
-              <Users className="w-[18px] h-[18px] shrink-0" />
+              <Users className="w-4 h-4 shrink-0" />
               <span className="flex-1 text-left">Employees</span>
               <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", employeesOpen && "rotate-180")} />
             </button>
