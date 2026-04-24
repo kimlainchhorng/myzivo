@@ -9,8 +9,9 @@ import {
   Sparkles, Car, UtensilsCrossed, Store, Wrench, Building2, Truck, Shield,
   Copy, Share2, QrCode, Check, User, Plane, Hotel, DollarSign,
   Scissors, Hand, Heart, Dumbbell, GraduationCap, Stethoscope, PawPrint,
-  Briefcase, Camera, Music,
+  Briefcase, Camera, Music, Crown,
 } from "lucide-react";
+import { useZivoPlus } from "@/hooks/useZivoPlus";
 import { toast } from "sonner";
 import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
