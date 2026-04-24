@@ -67,10 +67,18 @@ export default function AdminLodgingQAChecklistPage() {
           <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Run QA results</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {!qaResult && <p className="text-sm text-muted-foreground">Click Run QA to audit routes, sidebar coverage, deep links, setup data, and empty-state fix buttons.</p>}
+            {qaResult && <div className="grid gap-2 sm:grid-cols-4"><SummaryCard label="Passed" value={String(report.passedCount)} /><SummaryCard label="Failed" value={String(report.failedCount)} /><SummaryCard label="Warnings" value={String(report.warningCount)} /><SummaryCard label="Deep links" value={String(report.deepLinks.length)} /></div>}
             <div className="grid gap-2">
               {report.checks.map((check) => <div key={check.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="flex items-center gap-2 text-sm font-semibold text-foreground">{check.status === "fail" ? <XCircle className="h-4 w-4 text-destructive" /> : <CheckCircle2 className="h-4 w-4 text-primary" />}{check.name}</p><p className="mt-1 text-xs text-muted-foreground">{check.detail}</p>{check.url && <p className="mt-1 truncate text-[10px] text-primary">{check.url}</p>}</div><div className="flex shrink-0 gap-2"><Badge variant={check.status === "pass" ? "secondary" : "outline"}>{check.status}</Badge>{check.fixTab && <Button size="sm" variant="outline" onClick={() => openTab(check.fixTab!)}>Fix</Button>}</div></div>)}
             </div>
-            <div className="hidden print:block space-y-2 pt-4"><p className="text-sm font-bold">Deep-link URLs</p>{report.deepLinks.map((url) => <p key={url} className="text-xs">{url}</p>)}</div>
+            <div className="space-y-2 pt-4"><p className="text-sm font-bold">Deep-link URLs</p>{report.deepLinks.map((url) => <p key={url} className="truncate text-xs text-muted-foreground print:whitespace-normal">{url}</p>)}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2"><ClipboardCheck className="h-5 w-5 text-primary" /> Empty-state audit</CardTitle></CardHeader>
+          <CardContent className="grid gap-2 md:grid-cols-2">
+            {report.emptyStateAudit.map((item) => <button key={item.tab} onClick={() => openTab(item.fixTab)} className="rounded-lg border border-border bg-card p-3 text-left hover:border-primary/50"><div className="flex items-start justify-between gap-2"><p className="text-sm font-semibold text-foreground">{item.label}</p><Badge variant={item.passes ? "secondary" : "outline"}>{item.passes ? "Pass" : "Fail"}</Badge></div><p className="mt-1 text-xs text-muted-foreground">{item.emptyTitle}</p><p className="mt-1 text-[10px] font-semibold text-primary">{item.fixButtonLabel} → {item.fixTab}</p></button>)}
           </CardContent>
         </Card>
 
