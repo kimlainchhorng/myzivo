@@ -57,6 +57,7 @@ function PublicPostOverlay({
     >
       <SwipeGrabHandle
         onStartDrag={startDrag}
+        onClose={onClose}
         tone="dark"
         testId="public-post-grab-handle"
       />

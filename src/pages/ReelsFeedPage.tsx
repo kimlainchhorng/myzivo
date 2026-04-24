@@ -987,6 +987,7 @@ export default function ReelsFeedPage() {
                       >
                         <SwipeGrabHandle
                           onStartDrag={startDrag}
+                          onClose={() => setFullscreenIndex(null)}
                           tone="dark"
                           testId="post-detail-grab-handle"
                         />

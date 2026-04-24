@@ -25,6 +25,7 @@ import { isLocalDraftPostId, toUserPostInteractionId } from "@/lib/social/postIn
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
 import { logProfileActionError } from "@/lib/security/errorReporting";
+import { getE2ESeedPosts } from "@/lib/testing/e2eSeed";
 
 /**
  * Fullscreen post viewer wrapper with drag-down-to-close.
@@ -58,11 +59,100 @@ function ProfilePostViewerOverlay({
     >
       <SwipeGrabHandle
         onStartDrag={startDrag}
+        onClose={onClose}
         tone="light"
         testId="profile-post-grab-handle"
       />
       {children}
     </motion.div>
+  );
+}
+
+/**
+ * AccessibleMenuSheet — wraps the post-actions bottom sheet so it is
+ * keyboard- and screen-reader-friendly:
+ *   - Acts as a `dialog`/menu region with `aria-modal`.
+ *   - Focuses the first enabled menuitem on open and restores focus on close.
+ *   - Escape closes the sheet.
+ *   - Arrow keys move focus between visible menuitems (roving tabindex).
+ */
+function AccessibleMenuSheet({
+  onClose,
+  labelledById,
+  children,
+  className,
+  testId,
+}: {
+  onClose: () => void;
+  labelledById?: string;
+  children: React.ReactNode;
+  className?: string;
+  testId?: string;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    previouslyFocused.current = (document.activeElement as HTMLElement) || null;
+    const root = ref.current;
+    if (root) {
+      const first = root.querySelector<HTMLElement>(
+        '[role="menuitem"]:not([aria-disabled="true"])',
+      );
+      first?.focus();
+    }
+    return () => {
+      previouslyFocused.current?.focus?.();
+    };
+  }, []);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      onClose();
+      return;
+    }
+    if (
+      e.key !== "ArrowDown" &&
+      e.key !== "ArrowUp" &&
+      e.key !== "Home" &&
+      e.key !== "End"
+    ) {
+      return;
+    }
+    const root = ref.current;
+    if (!root) return;
+    const items = Array.from(
+      root.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+    );
+    const enabled = items.filter(
+      (el) => el.getAttribute("aria-disabled") !== "true",
+    );
+    if (enabled.length === 0) return;
+    const current = document.activeElement as HTMLElement | null;
+    const idx = current ? enabled.indexOf(current) : -1;
+    e.preventDefault();
+    let next = idx;
+    if (e.key === "ArrowDown") next = idx < 0 ? 0 : (idx + 1) % enabled.length;
+    else if (e.key === "ArrowUp")
+      next = idx <= 0 ? enabled.length - 1 : idx - 1;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = enabled.length - 1;
+    enabled[next]?.focus();
+  };
+
+  return (
+    <div
+      ref={ref}
+      role="menu"
+      aria-modal="true"
+      aria-labelledby={labelledById}
+      data-testid={testId}
+      onKeyDown={handleKeyDown}
+      className={className}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -139,7 +229,10 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [editingCaption, setEditingCaption] = useState(false);
   const [editCaptionValue, setEditCaptionValue] = useState("");
   const [showLive, setShowLive] = useState(false);
-  const [feed, setFeed] = useState<FeedItem[]>(demoFeed);
+  const [feed, setFeed] = useState<FeedItem[]>(() => {
+    const seeded = getE2ESeedPosts();
+    return seeded && seeded.length > 0 ? (seeded as FeedItem[]) : demoFeed;
+  });
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [sharePostId, setSharePostId] = useState<string | null>(null);
   const [commentPost, setCommentPost] = useState<FeedItem | null>(null);
@@ -154,6 +247,10 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [showCommentSettingsSheet, setShowCommentSettingsSheet] = useState(false);
   const [commentControl, setCommentControl] = useState<"everyone" | "followers" | "off">("everyone");
   const [reportedPosts, setReportedPosts] = useState<Set<string>>(new Set());
+  // 10s undo window for the most-recently submitted report.
+  const [undoSecondsLeft, setUndoSecondsLeft] = useState(0);
+  const undoTargetRef = useRef<{ postId: string; expiresAt: number } | null>(null);
+  const undoTickerRef = useRef<number | null>(null);
 
   // Restore "Reported" status from localStorage (per-user, survives reloads).
   useEffect(() => {
@@ -181,14 +278,91 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
     [user?.id],
   );
 
+  // --- Report undo (10s window) -------------------------------------------
+  const stopUndoTicker = useCallback(() => {
+    if (undoTickerRef.current !== null) {
+      window.clearInterval(undoTickerRef.current);
+      undoTickerRef.current = null;
+    }
+  }, []);
+
+  const performUndo = useCallback(
+    async (postId: string) => {
+      setReportedPosts((prev) => {
+        const next = new Set(prev);
+        next.delete(postId);
+        persistReported(next);
+        return next;
+      });
+      undoTargetRef.current = null;
+      stopUndoTicker();
+      setUndoSecondsLeft(0);
+      try {
+        if (user?.id) {
+          await (supabase as any)
+            .from("post_reports")
+            .delete()
+            .eq("post_id", toUserPostInteractionId(postId))
+            .eq("reporter_id", user.id);
+        }
+      } catch (err) {
+        logProfileActionError("report.undo", { postId, userId: user?.id }, err);
+      }
+      toast.success("Report undone");
+    },
+    [persistReported, stopUndoTicker, user?.id],
+  );
+
+  const startUndoWindow = useCallback(
+    (postId: string) => {
+      stopUndoTicker();
+      undoTargetRef.current = { postId, expiresAt: Date.now() + 10_000 };
+      setUndoSecondsLeft(10);
+      undoTickerRef.current = window.setInterval(() => {
+        const target = undoTargetRef.current;
+        if (!target) {
+          stopUndoTicker();
+          setUndoSecondsLeft(0);
+          return;
+        }
+        const remaining = Math.max(0, Math.ceil((target.expiresAt - Date.now()) / 1000));
+        setUndoSecondsLeft(remaining);
+        if (remaining <= 0) {
+          undoTargetRef.current = null;
+          stopUndoTicker();
+        }
+      }, 250) as unknown as number;
+
+      // Global toast affordance — survives the user dismissing the sheet.
+      toast.success("Report submitted", {
+        description: "You have 10 seconds to undo.",
+        duration: 10_000,
+        action: {
+          label: "Undo",
+          onClick: () => {
+            const t = undoTargetRef.current;
+            if (t && t.postId === postId && Date.now() <= t.expiresAt) {
+              void performUndo(postId);
+            }
+          },
+        },
+      });
+    },
+    [performUndo, stopUndoTicker],
+  );
+
+  useEffect(() => () => stopUndoTicker(), [stopUndoTicker]);
+
   const visibleFeed = feed.filter((i) => !hiddenPosts.has(i.id));
   const filtered = activeTab === "all" ? visibleFeed : visibleFeed.filter((i) => i.type === activeTab);
 
   useEffect(() => {
     let alive = true;
 
-    // Reset feed when profile owner changes
-    setFeed([]);
+    // Reset feed when profile owner changes — but keep E2E seed posts so
+    // tests don't lose their fixture data after the first effect tick.
+    const seeded = getE2ESeedPosts();
+    setFeed(seeded && seeded.length > 0 ? (seeded as FeedItem[]) : []);
 
     const mergeFeed = (incoming: FeedItem[]) => {
       setFeed((prev) => {
@@ -874,7 +1048,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       <AvatarFallback className="text-xs bg-muted">{selectedPost.user.name?.[0]}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground leading-tight">{selectedPost.user.name}</p>
+                      <p id="profile-post-menu-title" className="text-sm font-semibold text-foreground leading-tight">{selectedPost.user.name}</p>
                       <p className="text-[11px] text-muted-foreground">
                         {selectedPost.createdAt
                           ? formatDistanceToNow(new Date(selectedPost.createdAt), { addSuffix: false }) + " ago"
@@ -913,12 +1087,24 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   )}
                 </div>
 
-                <div className="py-2" data-testid="profile-post-menu-sheet">
+                <AccessibleMenuSheet
+                  onClose={() => setShowPostMenu(false)}
+                  labelledById="profile-post-menu-title"
+                  testId="profile-post-menu-sheet"
+                  className="py-2"
+                >
                   {(() => {
                     const alreadyReported = reportedPosts.has(selectedPost.id);
                     return (
                       <button
                         data-testid="profile-menu-report"
+                        role="menuitem"
+                        aria-disabled={alreadyReported}
+                        aria-label={
+                          alreadyReported
+                            ? "Report this post — already reported"
+                            : "Report this post"
+                        }
                         disabled={alreadyReported}
                         onClick={() => {
                           if (alreadyReported) return;
@@ -927,9 +1113,9 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                           setReportCategory("");
                           setShowReportSheet(true);
                         }}
-                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                       >
-                        <Flag className="w-5 h-5" />
+                        <Flag className="w-5 h-5" aria-hidden="true" />
                         <span className="flex-1 text-left">Report</span>
                         {alreadyReported && (
                           <span
@@ -943,6 +1129,12 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     );
                   })()}
                   <button
+                    role="menuitem"
+                    aria-label={
+                      notifPosts.has(selectedPost.id)
+                        ? "Turn off notifications for this post"
+                        : "Turn on notifications for this post"
+                    }
                     onClick={() => {
                       const id = selectedPost.id;
                       const isOn = notifPosts.has(id);
@@ -955,23 +1147,27 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       setShowPostMenu(false);
                     }}
                     data-testid="profile-menu-notifications"
-                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                   >
-                    <Bell className="w-5 h-5" />
+                    <Bell className="w-5 h-5" aria-hidden="true" />
                     {notifPosts.has(selectedPost.id) ? "Turn off notifications" : "Turn on notifications"}
                   </button>
                   <button
+                    role="menuitem"
+                    aria-label="Copy link to this post"
                     onClick={() => {
                       const url = buildPublicPostShareUrl(selectedPost.id);
                       navigator.clipboard.writeText(url).then(() => toast.success("Link copied!")).catch(() => toast.info("Could not copy link"));
                       setShowPostMenu(false);
                     }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                   >
-                    <Link2 className="w-5 h-5" />
+                    <Link2 className="w-5 h-5" aria-hidden="true" />
                     Copy link
                   </button>
                   <button
+                    role="menuitem"
+                    aria-label="Hide this post — not interested"
                     onClick={() => {
                       const id = selectedPost.id;
                       setHiddenPosts((prev) => {
@@ -984,55 +1180,63 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       toast.success("You won't see this post anymore");
                     }}
                     data-testid="profile-menu-not-interested"
-                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                   >
-                    <EyeOff className="w-5 h-5" />
+                    <EyeOff className="w-5 h-5" aria-hidden="true" />
                     Not interested
                   </button>
                   <button
+                    role="menuitem"
+                    aria-label="Share this post"
                     onClick={() => { setSharePostId(selectedPost.id); setShowPostMenu(false); }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                   >
-                    <Share2 className="w-5 h-5" />
+                    <Share2 className="w-5 h-5" aria-hidden="true" />
                     Share
                   </button>
                   {profileOwnerId === user?.id && (
                     <button
+                      role="menuitem"
+                      aria-label="Comment settings"
                       onClick={() => { setShowPostMenu(false); setShowCommentSettingsSheet(true); }}
                       data-testid="profile-menu-comment-settings"
-                      className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
+                      className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                     >
-                      <Settings2 className="w-5 h-5" />
+                      <Settings2 className="w-5 h-5" aria-hidden="true" />
                       Comment settings
                     </button>
                   )}
                   {profileOwnerId === user?.id && (
                     <>
                       <button
+                        role="menuitem"
+                        aria-label="Edit caption"
                         onClick={() => {
                           setEditCaptionValue(selectedPost.caption);
                           setEditingCaption(true);
                           setShowPostMenu(false);
                         }}
-                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
+                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                       >
-                        <Settings2 className="w-5 h-5" />
+                        <Settings2 className="w-5 h-5" aria-hidden="true" />
                         Edit caption
                       </button>
                       <button
+                        role="menuitem"
+                        aria-label="Delete this post"
                         onClick={() => {
                           if (window.confirm("Delete this post? This can't be undone.")) {
                             handleDeletePost(selectedPost.id);
                           }
                         }}
-                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 transition-colors"
+                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                       >
                         <Trash2 className="w-5 h-5" />
                         Delete post
                       </button>
                     </>
                   )}
-                </div>
+                </AccessibleMenuSheet>
               </motion.div>
             </>
           )}
@@ -1145,6 +1349,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                             persistReported(next);
                             return next;
                           });
+                          startUndoWindow(targetId);
                         }
                         setReportStep("submitted");
                       }}
@@ -1165,6 +1370,19 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     <p className="text-sm text-muted-foreground mb-5">
                       Thanks for helping keep ZIVO safe. Our team will review this post. You can see its status as <span className="font-medium text-foreground">Reported</span> in the post menu.
                     </p>
+                    {undoSecondsLeft > 0 && undoTargetRef.current && (
+                      <button
+                        data-testid="profile-report-undo"
+                        onClick={() => {
+                          const t = undoTargetRef.current;
+                          if (t) void performUndo(t.postId);
+                          setShowReportSheet(false);
+                        }}
+                        className="w-full mb-2 border border-border bg-background text-foreground rounded-xl py-3 min-h-[44px] text-sm font-semibold hover:bg-muted/40 transition-colors"
+                      >
+                        Undo report ({undoSecondsLeft}s)
+                      </button>
+                    )}
                     <button
                       onClick={() => setShowReportSheet(false)}
                       className="w-full bg-primary text-primary-foreground rounded-xl py-3 min-h-[44px] text-sm font-semibold"
