@@ -79,6 +79,12 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
             <button
               key={tab.id}
               onClick={() => {
+                if (tab.id === "account" && activeTab === "account") {
+                  impact("light");
+                  const onMore = location.pathname.startsWith("/more");
+                  navigate(onMore ? gated("/profile") : "/more");
+                  return;
+                }
                 if (activeTab !== tab.id) {
                   impact("light");
                   navigate(tab.path);
