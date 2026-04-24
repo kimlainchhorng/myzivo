@@ -2206,8 +2206,8 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                     </button>
                   </>
                 ) : item.media_urls.length === 1 ? (
-                  <div className="relative w-full bg-black max-h-[70vh] flex items-center justify-center overflow-hidden">
-                    <img src={mediaUrl} alt={item.caption || "Shared post"} className="max-h-[70vh] h-auto w-auto max-w-full object-contain cursor-pointer" loading="lazy" onClick={() => onOpenFullscreen?.()} />
+                  <div className="relative w-full bg-black overflow-hidden">
+                    <img src={mediaUrl} alt={item.caption || "Shared post"} className="block w-full h-auto cursor-pointer" loading="lazy" onClick={() => onOpenFullscreen?.()} />
                   </div>
                 ) : item.media_urls.length === 2 ? (
                   <div className="grid grid-cols-2 gap-0.5 w-full aspect-square md:aspect-[2/1]">
