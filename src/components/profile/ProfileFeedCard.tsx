@@ -169,15 +169,7 @@ export default function ProfileFeedCard({
           {/* Sharer's own caption */}
           {item.caption && item.caption !== item.sharedOrigin.caption && (
             <div className="px-3 pb-2">
-              <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showSharerCaption && "line-clamp-3")}>
-                {item.caption}
-                {!showSharerCaption && item.caption.length > 140 && (
-                  <span onClick={(e) => { e.stopPropagation(); setShowSharerCaption(true); }} className="text-muted-foreground ml-1 cursor-pointer">… See more</span>
-                )}
-              </p>
-              {showSharerCaption && item.caption.length > 140 && (
-                <span onClick={(e) => { e.stopPropagation(); setShowSharerCaption(false); }} className="text-[12px] text-muted-foreground cursor-pointer">See less</span>
-              )}
+              <CollapsibleCaption text={item.caption} lines={3} className="text-[13px]" />
             </div>
           )}
 
