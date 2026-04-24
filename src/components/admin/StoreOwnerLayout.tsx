@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { Helmet } from "react-helmet-async";
 import { useFocusTrap } from "./useFocusTrap";
 import { useFocusReturn } from "./ads/useFocusReturn";
+import { isLodgingStoreCategory } from "@/hooks/useOwnerStoreProfile";
 
 interface StoreOwnerLayoutProps {
   children: ReactNode;
@@ -120,7 +121,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
 
   const normalizedStoreCategory = (storeCategory || "").toLowerCase().trim();
   const isAutoRepair = normalizedStoreCategory === "auto-repair";
-  const isLodging = ["hotel", "resort", "guesthouse", "guesthouse / b&b", "b&b"].includes(normalizedStoreCategory);
+  const isLodging = isLodgingStoreCategory(storeCategory);
   const productsLabel = isAutoRepair ? "Services" : isLodging ? "Rooms" : "Products";
   const paymentLabel = isAutoRepair ? "Bookings" : "Payment & Payouts";
 
@@ -315,6 +316,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
                 <Button size="sm" variant="secondary" className="h-7 px-2 text-[10px]" onClick={() => { onTabChange?.("lodge-overview"); closeSidebar(); }}>Open Overview</Button>
                 <Button size="sm" className="h-7 px-2 text-[10px]" onClick={() => { onTabChange?.("lodge-rooms"); closeSidebar(); }}>Continue Setup</Button>
               </div>
+              <button onClick={() => { navigate("/hotel-admin"); closeSidebar(); }} className="mt-1.5 w-full rounded-md border border-primary/20 bg-background px-2 py-1.5 text-[10px] font-semibold text-primary">Hotel admin launch page</button>
             </div>
           )}
           <div className="space-y-0.5" role="group" aria-labelledby="sidebar-group-manage">
