@@ -732,39 +732,6 @@ const Profile = () => {
                           </>
                         )}
 
-                        {/* Inline action row: Edit profile · Share · Sign out */}
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => navigate("/account/profile-edit")}
-                            className="rounded-full px-3 h-9 min-h-[36px] text-xs font-semibold"
-                          >
-                            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit profile
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => navigate("/qr-profile")}
-                            className="rounded-full px-3 h-9 min-h-[36px] text-xs font-semibold"
-                          >
-                            <Share2 className="h-3.5 w-3.5 mr-1.5" /> Share
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            onClick={async () => {
-                              try { await signOut(); navigate("/"); } catch (e) { toast.error("Could not sign out"); }
-                            }}
-                            className="rounded-full px-3 h-9 min-h-[36px] text-xs font-semibold text-muted-foreground hover:text-foreground"
-                            aria-label="Sign out"
-                          >
-                            <LogOut className="h-3.5 w-3.5 mr-1.5" /> Sign out
-                          </Button>
-                        </div>
                       </div>
 
                       {/* Friend, Follower & Following stats — Facebook/TikTok style */}
