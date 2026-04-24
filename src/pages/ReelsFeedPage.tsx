@@ -110,18 +110,8 @@ function PostDetailOverlay({
       exit={{ opacity: 0, y: 60 }}
       transition={{ type: "spring", damping: 30, stiffness: 320 }}
       {...motionProps}
-      className="fixed inset-0 z-[100] bg-background flex flex-col"
+      className="fixed inset-0 z-[9999] bg-background flex flex-col overflow-hidden"
     >
-      <div
-        className="shrink-0 bg-background/95 backdrop-blur-xl"
-        style={{ paddingTop: "var(--zivo-safe-top-overlay)" }}
-      >
-        <SwipeGrabHandle
-          onStartDrag={startDrag}
-          tone="dark"
-          testId="post-detail-grab-handle"
-        />
-      </div>
       {children(startDrag)}
     </motion.div>
   );
