@@ -186,7 +186,15 @@ const Profile = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, refreshBlueVerified)
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    // Fallback: re-check when tab regains focus or network reconnects
+    window.addEventListener("focus", refreshBlueVerified);
+    window.addEventListener("online", refreshBlueVerified);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener("focus", refreshBlueVerified);
+      window.removeEventListener("online", refreshBlueVerified);
+    };
   }, [queryClient, user?.id]);
   
   // Count pending friend requests + new followers
