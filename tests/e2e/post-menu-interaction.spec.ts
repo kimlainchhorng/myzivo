@@ -94,14 +94,11 @@ async function dragDown(
 }
 
 async function openProfilePostOverlay(page: Page): Promise<boolean> {
+  await seedProfilePosts(page);
   await page.goto("/profile", { waitUntil: "domcontentloaded" });
   const trigger = page.locator('[data-testid^="profile-post-thumb"]').first();
-  try {
-    await trigger.waitFor({ state: "visible", timeout: 8000 });
-  } catch {
-    test.skip(true, "No seeded posts on /profile in this environment");
-    return false;
-  }
+  // Seed guarantees posts exist — fail loudly if the seed bridge regressed.
+  await expect(trigger).toBeVisible({ timeout: 8000 });
   await trigger.click();
   await page.getByTestId("profile-post-grab-handle").waitFor({ state: "visible", timeout: 5000 });
   return true;
