@@ -1487,19 +1487,16 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
         {/* Caption */}
         {item.caption && (
-          <div onClick={() => setShowCaption(!showCaption)}>
-            <div className={cn(
-              "text-white text-[13px] leading-snug drop-shadow-lg",
-              !showCaption && "line-clamp-2"
-            )}>
-              <Suspense fallback={<span>{item.caption}</span>}>
-                <SafeCaption text={item.caption} />
-              </Suspense>
-            </div>
-            {item.caption.length > 80 && !showCaption && (
-              <span className="text-white/60 text-xs">more</span>
-            )}
-          </div>
+          <CollapsibleCaption
+            text={item.caption}
+            lines={2}
+            variant="overlay"
+            className="text-[13px]"
+          >
+            <Suspense fallback={<span>{item.caption}</span>}>
+              <SafeCaption text={item.caption} />
+            </Suspense>
+          </CollapsibleCaption>
         )}
 
         {/* Sound ticker */}
