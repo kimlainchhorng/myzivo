@@ -794,7 +794,7 @@ const Profile = () => {
           {/* ── Account actions moved lower for clearer mobile layout ── */}
           <ParallaxSection index={2.1}>
             <div className="relative mb-2">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <motion.button
                   ref={langTriggerRef}
                   whileTap={{ scale: 0.96 }}
@@ -826,6 +826,16 @@ const Profile = () => {
                     )}
                   </span>
                   <span className="truncate">Notifications</span>
+                </motion.button>
+
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => navigate("/more")}
+                  className="relative z-20 flex min-h-[42px] items-center justify-center gap-1.5 rounded-2xl border border-border/40 bg-card/75 px-2.5 text-[11px] font-bold text-foreground shadow-sm backdrop-blur-xl touch-manipulation transition-all hover:bg-card/90"
+                >
+                  <MoreHorizontal className="h-3.5 w-3.5 shrink-0 text-primary" />
+                  <span className="truncate">More</span>
+                  <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
                 </motion.button>
 
               </div>
