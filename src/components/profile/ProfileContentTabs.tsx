@@ -1048,7 +1048,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       <AvatarFallback className="text-xs bg-muted">{selectedPost.user.name?.[0]}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground leading-tight">{selectedPost.user.name}</p>
+                      <p id="profile-post-menu-title" className="text-sm font-semibold text-foreground leading-tight">{selectedPost.user.name}</p>
                       <p className="text-[11px] text-muted-foreground">
                         {selectedPost.createdAt
                           ? formatDistanceToNow(new Date(selectedPost.createdAt), { addSuffix: false }) + " ago"
