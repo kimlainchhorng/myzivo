@@ -93,6 +93,34 @@ const TARGETS = [
     ],
   },
   {
+    file: "src/pages/FeedPage.tsx",
+    elements: [
+      {
+        name: "Discover header paddingTop",
+        property: "paddingTop",
+        shipped: "var(--zivo-safe-top-sticky)",
+        expression: SAFE_TOKENS["--zivo-safe-top-sticky"],
+      },
+      {
+        name: "Floating actions top",
+        property: "top",
+        shipped: "var(--zivo-safe-top-overlay)",
+        expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
+      },
+    ],
+  },
+  {
+    file: "src/components/profile/ProfileContentTabs.tsx",
+    elements: [
+      {
+        name: "Profile post viewer paddingTop",
+        property: "paddingTop",
+        shipped: 'paddingTop: "var(--zivo-safe-top-overlay)"',
+        expression: SAFE_TOKENS["--zivo-safe-top-overlay"],
+      },
+    ],
+  },
+  {
     file: "src/index.css",
     elements: [
       {
