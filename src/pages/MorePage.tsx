@@ -263,7 +263,7 @@ export default function MorePage() {
         <Link to="/profile" className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="font-bold text-[15px] truncate">{displayName}</p>
-            {isVerified && <VerifiedCheck size={16} />}
+            {isVerified && <VerifiedCheck size={18} />}
           </div>
           <p className="text-[11px] text-muted-foreground truncate mt-0.5">@{handle}</p>
           <div className="flex gap-4 mt-1.5">
