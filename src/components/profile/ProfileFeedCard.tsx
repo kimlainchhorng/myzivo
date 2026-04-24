@@ -78,9 +78,7 @@ export default function ProfileFeedCard({
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
   const [showComments, setShowComments] = useState(false);
-  const [showSharerCaption, setShowSharerCaption] = useState(false);
-  const [showOriginalCaption, setShowOriginalCaption] = useState(false);
-  const [showOwnCaption, setShowOwnCaption] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const lastTapRef = useRef(0);
 
   const isVideo = item.type === "reel";
