@@ -19,7 +19,7 @@ idle(() => {
         const dark = window.matchMedia("(prefers-color-scheme: dark)").matches || document.documentElement.classList.contains("dark");
         return dark ? Style.Light : Style.Dark;
       };
-      void StatusBar.setOverlaysWebView({ overlay: true });
+      void StatusBar.setOverlaysWebView({ overlay: false });
       void StatusBar.setStyle({ style: getStyle() });
       
       const update = () => void StatusBar.setStyle({ style: getStyle() });
