@@ -619,19 +619,19 @@ const Profile = () => {
                         type="button"
                         onClick={() => navigate("/account/verification")}
                         className={cn(
-                          "mt-3 inline-flex min-h-[34px] items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-bold shadow-sm transition-transform active:scale-95",
+                          "group mt-3 inline-flex min-h-[36px] items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-bold shadow-sm transition-all duration-200 active:scale-95 hover:shadow-md hover:-translate-y-0.5",
                           profile?.is_verified
-                            ? "border-[hsl(var(--flights)/0.28)] bg-[hsl(var(--flights)/0.10)] text-[hsl(var(--flights))]"
+                            ? "border-[hsl(var(--flights)/0.35)] bg-gradient-to-r from-[hsl(var(--flights)/0.18)] via-[hsl(var(--flights)/0.10)] to-[hsl(var(--flights)/0.18)] text-[hsl(var(--flights))] shadow-[0_4px_14px_-4px_hsl(var(--flights)/0.45)]"
                             : latestVerificationRequest?.status === "pending"
-                              ? "border-amber-500/25 bg-amber-500/10 text-amber-600"
+                              ? "border-amber-500/30 bg-gradient-to-r from-amber-500/15 to-amber-500/5 text-amber-600"
                               : latestVerificationRequest?.status === "rejected"
-                                ? "border-destructive/20 bg-destructive/5 text-destructive"
-                                : "border-[hsl(var(--flights)/0.25)] bg-[hsl(var(--flights)/0.08)] text-[hsl(var(--flights))]"
+                                ? "border-destructive/25 bg-destructive/5 text-destructive"
+                                : "border-[hsl(var(--flights)/0.35)] bg-gradient-to-r from-[hsl(var(--flights)/0.14)] via-[hsl(var(--flights)/0.06)] to-[hsl(var(--flights)/0.14)] text-[hsl(var(--flights))] shadow-[0_4px_14px_-6px_hsl(var(--flights)/0.5)]"
                         )}
                       >
                         {profile?.is_verified ? (
                           <>
-                            <BlueVerifiedBadge className="h-4 w-4 ring-0" /> Blue verified
+                            <BlueVerifiedBadge className="h-4 w-4" /> Blue verified
                           </>
                         ) : latestVerificationRequest?.status === "pending" ? (
                           <>
@@ -643,7 +643,7 @@ const Profile = () => {
                           </>
                         ) : (
                           <>
-                            <BadgeCheck className="h-4 w-4" /> Get blue verified
+                            <BlueVerifiedBadge className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" /> Get blue verified
                           </>
                         )}
                       </button>
