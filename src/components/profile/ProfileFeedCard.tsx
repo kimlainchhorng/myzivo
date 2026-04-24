@@ -222,12 +222,15 @@ export default function ProfileFeedCard({
             </div>
 
             {item.sharedOrigin.caption && (
-              <div className="px-3 pb-2" onClick={(e) => { e.stopPropagation(); setShowOriginalCaption((v) => !v); }}>
-                <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showOriginalCaption && "line-clamp-3")}>{item.sharedOrigin.caption}</p>
-                {item.sharedOrigin.caption.length > 140 && (
-                  <button type="button" onClick={(e) => { e.stopPropagation(); setShowOriginalCaption((v) => !v); }} className="text-[12px] text-muted-foreground mt-0.5 font-medium">
-                    {showOriginalCaption ? "See less" : "See more"}
-                  </button>
+              <div className="px-3 pb-2">
+                <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showOriginalCaption && "line-clamp-3")}>
+                  {item.sharedOrigin.caption}
+                  {!showOriginalCaption && item.sharedOrigin.caption.length > 140 && (
+                    <span onClick={(e) => { e.stopPropagation(); setShowOriginalCaption(true); }} className="text-muted-foreground ml-1 cursor-pointer">… See more</span>
+                  )}
+                </p>
+                {showOriginalCaption && item.sharedOrigin.caption.length > 140 && (
+                  <span onClick={(e) => { e.stopPropagation(); setShowOriginalCaption(false); }} className="text-[12px] text-muted-foreground cursor-pointer">See less</span>
                 )}
               </div>
             )}
