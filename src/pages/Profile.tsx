@@ -545,6 +545,24 @@ const Profile = () => {
                           </motion.button>
                           <motion.button
                             whileTap={{ scale: 0.9 }}
+                            onClick={() => setShowNotifPanel(prev => !prev)}
+                            aria-label="Notifications"
+                            className={cn(
+                              "relative p-2 rounded-full backdrop-blur-md shadow-lg border",
+                              showNotifPanel
+                                ? "bg-primary text-primary-foreground border-primary/40"
+                                : "bg-background/70 text-foreground/80 hover:bg-background/90 border-border/30"
+                            )}
+                          >
+                            <Bell className="h-4 w-4" />
+                            {totalNotifCount > 0 && !showNotifPanel && (
+                              <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-sm">
+                                {totalNotifCount > 99 ? '99+' : totalNotifCount}
+                              </span>
+                            )}
+                          </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.9 }}
                             onClick={() => navigate("/more")}
                             aria-label="More"
                             className="p-2 rounded-full bg-background/70 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-lg border border-border/30"
