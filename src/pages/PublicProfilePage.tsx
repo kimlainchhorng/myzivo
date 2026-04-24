@@ -1246,8 +1246,10 @@ export default function PublicProfilePage() {
                           {selectedPost.caption}
                         </p>
                       </div>
+                        )}
+                      </>
                     )}
-                  </motion.div>
+                  </PublicPostOverlay>
                 )}
               </AnimatePresence>
 
