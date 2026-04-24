@@ -231,7 +231,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
               aria-hidden={!sidebarOpen}
               tabIndex={-1}
               className={cn(
-                "fixed inset-y-0 left-0 z-50 w-[84vw] max-w-[310px] bg-card border-r border-border flex flex-col overflow-hidden rounded-r-2xl shadow-2xl overscroll-contain lg:hidden",
+                "fixed inset-y-0 left-0 z-50 w-[78vw] max-w-[280px] bg-card border-r border-border flex flex-col overflow-hidden rounded-r-2xl shadow-2xl overscroll-contain lg:hidden",
                 "transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
                 sidebarOpen ? "translate-x-0" : "-translate-x-full"
               )}
@@ -243,7 +243,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
         )}
 
         {/* Desktop sticky sidebar */}
-        <aside className="hidden lg:flex sticky top-0 left-0 z-30 h-[100dvh] w-64 bg-card border-r border-border flex-col overflow-hidden">
+        <aside className="hidden lg:flex sticky top-0 left-0 z-30 h-[100dvh] w-56 xl:w-60 bg-card border-r border-border flex-col overflow-hidden">
           {renderSidebarContent({ isMobile: false })}
         </aside>
 
@@ -278,19 +278,19 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
       <>
         {/* Header — gradient brand strip */}
         <div
-          className="relative flex items-center justify-between px-4 border-b border-border shrink-0 bg-gradient-to-br from-primary/8 via-card to-card"
-          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)', paddingBottom: '14px' }}
+          className="relative flex items-center justify-between px-3 border-b border-border shrink-0 bg-gradient-to-br from-primary/8 via-card to-card"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)', paddingBottom: '10px' }}
         >
-          <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             {storeLogoUrl ? (
-              <img src={storeLogoUrl} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 ring-1 ring-border shadow-sm" />
+              <img src={storeLogoUrl} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0 ring-1 ring-border shadow-sm" />
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 ring-1 ring-primary/20">
-                <Store className="w-5 h-5 text-primary" />
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 ring-1 ring-primary/20">
+                <Store className="w-4 h-4 text-primary" />
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <span className="text-[15px] font-bold text-foreground truncate block leading-tight">{storeName || "My Store"}</span>
+              <span className="text-[13px] font-bold text-foreground truncate block leading-tight">{storeName || "My Store"}</span>
               {storeId && (
                 <span className="text-[10px] text-muted-foreground font-mono tracking-wider">CBD{storeId.replace(/-/g, '').slice(0, 8).toUpperCase()}</span>
               )}
@@ -314,36 +314,36 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           ref={isMobile ? navRef : undefined}
           onScroll={isMobile ? handleNavScroll : undefined}
           aria-label="Store sections"
-          className="flex-1 min-h-0 px-2.5 py-3 overflow-y-scroll scroll-momentum overscroll-contain touch-pan-y"
+          className="flex-1 min-h-0 px-2 py-2 overflow-y-scroll scroll-momentum overscroll-contain touch-pan-y"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           <p id="sidebar-group-manage" className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Manage</p>
           {isLodging && (
-            <div className="mb-2 rounded-lg border border-primary/20 bg-primary/8 px-3 py-2 text-primary">
+            <div className="mb-1.5 rounded-lg border border-primary/20 bg-primary/8 px-2 py-1.5 text-primary">
               <div className="flex items-center gap-2 text-xs font-semibold"><Hotel className="h-3.5 w-3.5" /> Hotel Admin Complete</div>
               <p className="mt-0.5 text-[10px] text-primary/80">Setup progress: {lodgingSetupProgress ? `${lodgingSetupProgress.complete}/${lodgingSetupProgress.total} ready` : "open Hotel Overview"}.</p>
-              {lodgingSetupProgress && <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-primary/15"><div className="h-full rounded-full bg-primary" style={{ width: `${lodgingSetupProgress.percent}%` }} /></div>}
-              <div className="mt-1.5 space-y-1">
+              {lodgingSetupProgress && <div className="mt-1 h-1 overflow-hidden rounded-full bg-primary/15"><div className="h-full rounded-full bg-primary" style={{ width: `${lodgingSetupProgress.percent}%` }} /></div>}
+              <div className="mt-1 space-y-1">
                 {(lodgingSetupProgress?.incompleteItems || []).slice(0, 3).map((item) => <button key={item.key} onClick={() => { onTabChange?.(item.tab); closeSidebar(); }} className="flex w-full items-center justify-between gap-2 rounded-md bg-background px-2 py-1 text-left text-[10px] font-medium text-primary ring-1 ring-primary/15"><span className="truncate">{item.label}</span><span>{item.actionLabel}</span></button>)}
                 {!(lodgingSetupProgress?.incompleteItems || []).length && <div className="flex items-center gap-1 text-[10px] font-medium text-primary/90"><ListChecks className="h-3 w-3" /> All setup items complete</div>}
               </div>
-              <div className="mt-2 grid grid-cols-2 gap-1.5">
+              <div className="mt-1.5 grid grid-cols-2 gap-1">
                 <Button size="sm" variant="secondary" className="h-7 px-2 text-[10px]" onClick={() => { onTabChange?.("lodge-overview"); closeSidebar(); }}>Open Overview</Button>
                 <Button size="sm" className="h-7 px-2 text-[10px]" onClick={() => { onTabChange?.(lodgingSetupProgress?.nextBestAction?.tab || "lodge-rooms"); closeSidebar(); }}>Continue Setup</Button>
               </div>
-              <div className="mt-1.5 rounded-md bg-background px-2 py-1 text-[10px] font-semibold text-primary ring-1 ring-primary/15">
+              <div className="mt-1 rounded-md bg-background px-2 py-1 text-[10px] font-semibold text-primary ring-1 ring-primary/15">
                 <p>QA: {qaSummary ? `${qaSummary.passedCount} pass / ${qaSummary.failedCount} fail / ${qaSummary.warningCount} setup` : "not run yet"}</p>
                 <p className="font-medium text-primary/70">{qaSummary?.checkedAt ? `Last checked ${new Date(qaSummary.checkedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Open QA to auto-check now"}</p>
               </div>
-              <button onClick={() => { navigate("/admin/lodging/qa-checklist"); closeSidebar(); }} className="mt-1.5 w-full rounded-md border border-primary/20 bg-background px-2 py-1.5 text-[10px] font-semibold text-primary">Run QA / View Report</button>
+              <button onClick={() => { navigate("/admin/lodging/qa-checklist"); closeSidebar(); }} className="mt-1 w-full rounded-md border border-primary/20 bg-background px-2 py-1 text-[10px] font-semibold text-primary">Run QA / View Report</button>
             </div>
           )}
           <div className="space-y-0.5" role="group" aria-labelledby="sidebar-group-manage">
             {navItems.map((item: any) => {
               if (item.divider) {
                 return (
-                  <div key={item.id} className="pt-3 pb-1 px-3">
-                    <div className="border-t border-border/60 mb-2" />
+                  <div key={item.id} className="pt-2 pb-0.5 px-2.5">
+                    <div className="border-t border-border/60 mb-1.5" />
                     <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">{item.label}</p>
                   </div>
                 );
@@ -354,7 +354,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
                   key={item.id}
                   onClick={() => { onTabChange?.(item.id); closeSidebar(); }}
                   className={cn(
-                    "relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-colors duration-150 active:scale-[0.99]",
+                    "relative w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors duration-150 active:scale-[0.99]",
                     isActive
                       ? "bg-primary/12 text-primary"
                       : "text-foreground/75 hover:bg-muted hover:text-foreground"
@@ -363,28 +363,28 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
                   {isActive && (
                     <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-primary" />
                   )}
-                  <item.icon className={cn("w-[18px] h-[18px] shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+                  <item.icon className={cn("w-4 h-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
                   <span className="truncate">{item.label}</span>
                 </button>
               );
             })}
           </div>
 
-          <div className="my-3 mx-3 border-t border-border/60" />
+          <div className="my-2 mx-2.5 border-t border-border/60" />
 
           <p id="sidebar-group-team" className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Team</p>
           <div className="space-y-0.5" role="group" aria-labelledby="sidebar-group-team">
             <button
               onClick={() => setEmployeesOpen((v) => !v)}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-colors",
+                "w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors",
                 employeeItems.some((i) => i.id === activeTab)
                   ? "bg-primary/12 text-primary"
                   : "text-foreground/75 hover:bg-muted hover:text-foreground"
               )}
               aria-expanded={employeesOpen}
             >
-              <Users className="w-[18px] h-[18px] shrink-0" />
+              <Users className="w-4 h-4 shrink-0" />
               <span className="flex-1 text-left">Employees</span>
               <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", employeesOpen && "rotate-180")} />
             </button>
@@ -413,47 +413,47 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
         </nav>
 
         {/* User card */}
-        <div className="border-t border-border px-3 py-2.5 shrink-0 bg-muted/30">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-              <span className="text-xs font-bold text-primary">
+        <div className="border-t border-border px-2.5 py-1.5 shrink-0 bg-muted/30">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <span className="text-[11px] font-bold text-primary">
                 {(user?.email || "?").charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-semibold text-foreground truncate leading-tight">{user?.email}</p>
-              <p className="text-[10px] text-muted-foreground">Store Owner</p>
+              <p className="text-[11px] font-semibold text-foreground truncate leading-tight">{user?.email}</p>
+              <p className="text-[9px] text-muted-foreground leading-tight">Store Owner</p>
             </div>
           </div>
         </div>
 
         {/* Footer actions */}
         <div
-          className="border-t border-border p-2 space-y-0.5 shrink-0"
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)' }}
+          className="border-t border-border p-1.5 space-y-0.5 shrink-0"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 6px)' }}
         >
           <button
             onClick={() => { onTabChange?.("settings"); closeSidebar(); }}
             className={cn(
-              "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] transition-colors",
+              "w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] transition-colors",
               activeTab === "settings" ? "bg-primary/12 text-primary font-semibold" : "text-foreground/75 hover:bg-muted hover:text-foreground"
             )}
           >
-            <Settings className="w-[18px] h-[18px]" />
+            <Settings className="w-4 h-4" />
             Settings
           </button>
           <button
             onClick={() => navigate("/")}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] text-foreground/75 hover:bg-muted hover:text-foreground transition-colors"
+            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] text-foreground/75 hover:bg-muted hover:text-foreground transition-colors"
           >
-            <Home className="w-[18px] h-[18px]" />
+            <Home className="w-4 h-4" />
             Back to App
           </button>
           <button
             onClick={() => signOut()}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] text-destructive hover:bg-destructive/10 transition-colors"
+            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] text-destructive hover:bg-destructive/10 transition-colors"
           >
-            <LogOut className="w-[18px] h-[18px]" />
+            <LogOut className="w-4 h-4" />
             Sign Out
           </button>
         </div>
