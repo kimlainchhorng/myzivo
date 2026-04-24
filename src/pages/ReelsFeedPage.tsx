@@ -2209,51 +2209,53 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       {isSharedPost ? (
         /* ── Facebook-style shared post layout ────────────────── */
         <>
-          {/* Sharer header */}
-          <div className="flex items-center">
-            <button
-              type="button"
-              onClick={() => item.author_id && navigate(`/user/${item.author_id}`)}
-              className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0 active:opacity-70"
-            >
-              <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
-                {item.author_avatar ? (
-                  <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-xs font-bold">
-                    {item.author_name[0]}
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
-                <div className="flex items-center gap-1">
-                  <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
-                  <span className="text-[10px] text-muted-foreground">·</span>
-                  <Globe className="h-2.5 w-2.5 text-muted-foreground" />
-                </div>
-              </div>
-            </button>
-            {/* Follow button */}
-            {!isOwner && item.author_id && currentUserId && (
+          {/* Sharer header — hidden in detail overlay (overlay renders its own) */}
+          {!detailMode && (
+            <div className="flex items-center">
               <button
-                onClick={handleFollowToggle}
-                disabled={followLoading}
-                className={cn(
-                  "text-[12px] font-semibold px-3 py-1 rounded-md transition-all active:scale-95",
-                  isFollowingAuthor ? "text-muted-foreground" : "text-primary"
-                )}
+                type="button"
+                onClick={() => item.author_id && navigate(`/user/${item.author_id}`)}
+                className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0 active:opacity-70"
               >
-                {followLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isFollowingAuthor ? "Following" : "Follow"}
+                <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
+                  {item.author_avatar ? (
+                    <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-xs font-bold">
+                      {item.author_name[0]}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
+                    <span className="text-[10px] text-muted-foreground">·</span>
+                    <Globe className="h-2.5 w-2.5 text-muted-foreground" />
+                  </div>
+                </div>
               </button>
-            )}
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
-              className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
-            >
-              <MoreHorizontal className="h-5 w-5" />
-            </button>
-          </div>
+              {/* Follow button */}
+              {!isOwner && item.author_id && currentUserId && (
+                <button
+                  onClick={handleFollowToggle}
+                  disabled={followLoading}
+                  className={cn(
+                    "text-[12px] font-semibold px-3 py-1 rounded-md transition-all active:scale-95",
+                    isFollowingAuthor ? "text-muted-foreground" : "text-primary"
+                  )}
+                >
+                  {followLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isFollowingAuthor ? "Following" : "Follow"}
+                </button>
+              )}
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
+                className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                <MoreHorizontal className="h-5 w-5" />
+              </button>
+            </div>
+          )}
 
           {/* Sharer's own caption (not the original post's caption) */}
           {item.caption && item.caption !== item.shared_from_caption && (
@@ -2397,57 +2399,59 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       ) : (
         /* ── Normal post layout ────────────────────────────────── */
         <>
-          {/* Author header */}
-          <div className="flex items-center">
-            <button
-              type="button"
-              onClick={() => {
-                if (item.source === "store" && item.store_slug) {
-                  navigate(`/grocery/shop/${item.store_slug}`);
-                } else if (item.author_id) {
-                  navigate(`/user/${item.author_id}`);
-                }
-              }}
-              className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0 active:opacity-70"
-            >
-              <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
-                {item.author_avatar ? (
-                  <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-xs font-bold">
-                    {item.author_name[0]}
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
-                <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
-              </div>
-            </button>
-            {/* Follow button */}
-            {!isOwner && item.author_id && currentUserId && (
+          {/* Author header — hidden in detail overlay (overlay renders its own) */}
+          {!detailMode && (
+            <div className="flex items-center">
               <button
-                onClick={handleFollowToggle}
-                disabled={followLoading}
-                className={cn(
-                  "text-[12px] font-semibold px-3 py-1 rounded-md transition-all active:scale-95",
-                  isFollowingAuthor
-                    ? "text-muted-foreground"
-                    : "text-primary"
-                )}
+                type="button"
+                onClick={() => {
+                  if (item.source === "store" && item.store_slug) {
+                    navigate(`/grocery/shop/${item.store_slug}`);
+                  } else if (item.author_id) {
+                    navigate(`/user/${item.author_id}`);
+                  }
+                }}
+                className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0 active:opacity-70"
               >
-                {followLoading ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : isFollowingAuthor ? "Following" : "Follow"}
+                <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
+                  {item.author_avatar ? (
+                    <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-xs font-bold">
+                      {item.author_name[0]}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
+                  <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
+                </div>
               </button>
-            )}
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
-              className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
-            >
-              <MoreHorizontal className="h-5 w-5" />
-            </button>
-          </div>
+              {/* Follow button */}
+              {!isOwner && item.author_id && currentUserId && (
+                <button
+                  onClick={handleFollowToggle}
+                  disabled={followLoading}
+                  className={cn(
+                    "text-[12px] font-semibold px-3 py-1 rounded-md transition-all active:scale-95",
+                    isFollowingAuthor
+                      ? "text-muted-foreground"
+                      : "text-primary"
+                  )}
+                >
+                  {followLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : isFollowingAuthor ? "Following" : "Follow"}
+                </button>
+              )}
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
+                className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                <MoreHorizontal className="h-5 w-5" />
+              </button>
+            </div>
+          )}
 
           {/* Caption before media for normal posts */}
           {item.caption && (

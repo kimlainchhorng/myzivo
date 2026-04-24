@@ -1,49 +1,44 @@
-# Cross-platform swipe-close E2E + /profile walkthrough
+## Issues found while testing the live preview
 
-Three small follow-ups on top of the already-shipped swipe-close work.
+I logged in as klainkonkat@gmail.com and walked the full flow on `/profile`, `/feed`, and `/reels` at 390×844. Three real bugs surfaced:
 
-## 1. Add missing `data-testid` to PublicPostOverlay
+### 1. Duplicate header inside the Feed post-detail viewer (worst offender)
+On `/feed`, tapping a post image opens `PostDetailOverlay` (the swipe-down viewer in `ReelsFeedPage.tsx`). The overlay header (X + grab handle + author row) renders correctly, but the inner `<FeedCard ... detailMode />` ALSO renders its own author row + "More" menu + caption, so the user sees the author/avatar/timestamp twice and the action bar appears clipped. Same component path that the Profile and Public viewers go through is fine because they use a different inner renderer.
 
-`tests/e2e/swipe-close.spec.ts` references `public-post-overlay-body`, but `PublicPostOverlay` in `src/pages/PublicProfilePage.tsx` doesn't expose it — those tests would skip. Add `data-testid="public-post-overlay-body"` to the motion container so all 3 viewers are actually exercised.
+### 2. Reels feed: caption boxes (□□□) and stuck "Loading video…"
+On `/reels`:
+- Caption text for non-Latin scripts (the Khmer post by "Mommy Seafood") renders as missing-glyph boxes. The font stack on the reels caption layer doesn't include a Khmer/Unicode fallback (the rest of the app renders Khmer fine — only the reels caption uses a font-family that drops it).
+- The video shows the spinner + "Loading video…" indefinitely on the first card. Likely because `preload="metadata"` + autoplay-blocked Safari path never triggers a `canplay` state-clear, or the loading flag isn't reset on `onLoadedData`.
 
-## 2. Parametrize swipe-close E2E across iPhone + Android
+### 3. `/feed` layout has a right-edge gutter at 390px
+The page leaves ~12-15px of empty background on the right side of every section (header, story rail, suggested carousel, post). The bottom nav is full-width, so the gutter is in a `max-w-*`/`mx-auto` wrapper inside the feed shell that isn't sized to the mobile viewport. Profile and Reels don't have this issue.
 
-Rewrite `tests/e2e/swipe-close.spec.ts` to loop over Playwright's built-in device descriptors:
+---
 
-- `devices["iPhone 13"]` — Mobile Safari, hasTouch, iOS UA
-- `devices["Pixel 7"]` — Chrome Android, hasTouch, Android UA
+## Fix plan
 
-For each device × each viewer (profile / public profile / reel post-detail), run the four cases:
+**A. Suppress FeedCard's internal chrome in `detailMode`** (`src/pages/ReelsFeedPage.tsx`)
+- Wrap the FeedCard's "Author header" block (lines ~2400-2450, both shared and normal variants) in `{!detailMode && (...)}` so it only renders in the inline feed.
+- Also suppress the duplicate caption block (lines ~2452-2461) when `detailMode` is true — the overlay already shows the caption in the body.
+- Keep the media + actions row (like/comment/share/save) so the viewer is still interactive.
+- Verification: open a feed post → only one author row visible at the top, full-bleed media below, action bar pinned at bottom.
 
-```text
-- short slow drag (60px)         → stays open
-- long drag (220px)              → dismisses
-- fast flick (60px in ~80ms)     → dismisses
-- inner vertical scroll (300px)  → stays open (scroll only, never dismiss)
-```
+**B. Reels caption + video fixes** (`src/pages/ReelsFeedPage.tsx` + relevant Reels view)
+- Add a Unicode-safe fallback to the caption font stack: `font-family: ..., "Noto Sans Khmer", "Noto Sans", system-ui, sans-serif` (or apply `font-family: inherit` on the caption span instead of the custom font that's stripping glyphs). Apply the same fix to comments rendering on reels if affected.
+- Fix the stuck loader: ensure the loading state clears on `onLoadedData` / `onCanPlay` (not just `onPlaying`), and on autoplay-block fall back to showing the poster + Play button instead of the spinner. Also gate the spinner on `!videoEl.readyState >= 2`.
 
-Switch the gesture helper from `page.mouse.*` to dispatched `TouchEvent`s when `hasTouch` is true so framer-motion sees real finger drags and the platform-specific UA-based threshold detection in `useSwipeDownClose.detectPlatform()` actually kicks in. Keep mouse fallback for non-touch contexts.
+**C. /feed right-edge gutter** (`src/pages/ReelsFeedPage.tsx` shell, or feed page wrapper)
+- Find the `max-w-[XYZ] mx-auto` (or a `pr-*` / `container`) wrapper that's clamping width below the viewport on small screens and switch it to full-width below `lg` (e.g. `w-full lg:max-w-[XYZ] lg:mx-auto`).
+- Verification: at 390px the feed cards, header, and "Suggested for you" carousel touch the right edge cleanly; carousel no longer shows a stray horizontal scrollbar.
 
-This gives 2 platforms × 3 viewers × 4 cases = 24 CI assertions, with the inner-scroll case proving scrolling never triggers dismiss on either OS.
+---
 
-## 3. Browser walkthrough on /profile
+## Out of scope (already working)
+- Profile post viewer (single header, fills screen, X close works).
+- Swipe-down-to-close gesture on all three viewers (already tuned + portaled at z-9999).
+- Bottom nav covering — overlays correctly cover the nav now.
 
-After the edits land, use the browser tool to:
-
-1. Navigate to `/profile`
-2. Open a post (click first thumbnail)
-3. Verify grab handle is visible (screenshot)
-4. Perform swipe-down via `browser--act` and confirm the overlay closes
-5. Read console + runtime errors to confirm no `useNavigate`/router issues
-
-Report results inline.
-
-## Files
-
-- Edit: `src/pages/PublicProfilePage.tsx` — add `data-testid="public-post-overlay-body"` to the `PublicPostOverlay` motion container.
-- Rewrite: `tests/e2e/swipe-close.spec.ts` — device loop + touch-event helper.
-- No changes to CI workflow — it already runs `tests/e2e/swipe-close.spec.ts` and will pick up the expanded matrix automatically.
-
-## Out of scope
-
-No changes to `useSwipeDownClose.ts`, `SwipeGrabHandle.tsx`, or the three overlay components beyond the one `data-testid` addition. Per-platform thresholds and the grab handle UX from the previous turn stay as-is.
+## Technical details
+- Files touched: `src/pages/ReelsFeedPage.tsx` (primary), possibly `src/pages/ReelsPage.tsx` or the reels caption component for B, and a small layout class change for C.
+- No schema, RLS, or routing changes.
+- After fixes, I'll re-walk /profile → /feed → /reels with the browser tool to confirm visually.
