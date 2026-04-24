@@ -913,19 +913,35 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   )}
                 </div>
 
-                <div className="py-2">
-                  <button
-                    onClick={() => {
-                      setShowPostMenu(false);
-                      setReportStep("categories");
-                      setReportCategory("");
-                      setShowReportSheet(true);
-                    }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 transition-colors"
-                  >
-                    <Flag className="w-5 h-5" />
-                    Report
-                  </button>
+                <div className="py-2" data-testid="profile-post-menu-sheet">
+                  {(() => {
+                    const alreadyReported = reportedPosts.has(selectedPost.id);
+                    return (
+                      <button
+                        data-testid="profile-menu-report"
+                        disabled={alreadyReported}
+                        onClick={() => {
+                          if (alreadyReported) return;
+                          setShowPostMenu(false);
+                          setReportStep("categories");
+                          setReportCategory("");
+                          setShowReportSheet(true);
+                        }}
+                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                      >
+                        <Flag className="w-5 h-5" />
+                        <span className="flex-1 text-left">Report</span>
+                        {alreadyReported && (
+                          <span
+                            data-testid="profile-menu-report-status"
+                            className="text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full"
+                          >
+                            Reported
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })()}
                   <button
                     onClick={() => {
                       const id = selectedPost.id;
