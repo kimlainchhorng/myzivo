@@ -21,6 +21,7 @@ import { Helmet } from "react-helmet-async";
 import { useFocusTrap } from "./useFocusTrap";
 import { useFocusReturn } from "./ads/useFocusReturn";
 import { isLodgingStoreCategory } from "@/hooks/useOwnerStoreProfile";
+import type { LodgingCompletionItem } from "@/lib/lodging/lodgingCompletion";
 
 interface StoreOwnerLayoutProps {
   children: ReactNode;
@@ -33,7 +34,7 @@ interface StoreOwnerLayoutProps {
   onTabChange?: (tab: string) => void;
   productCount?: number;
   orderCount?: number;
-  lodgingSetupProgress?: { complete: number; total: number; percent: number };
+  lodgingSetupProgress?: { complete: number; total: number; percent: number; incompleteItems?: LodgingCompletionItem[]; nextBestAction?: LodgingCompletionItem };
 }
 
 export default function StoreOwnerLayout({ children, title, storeId, storeName, storeLogoUrl, storeCategory, activeTab, onTabChange, productCount, orderCount, lodgingSetupProgress }: StoreOwnerLayoutProps) {
@@ -308,15 +309,18 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           <p id="sidebar-group-manage" className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Manage</p>
           {isLodging && (
             <div className="mb-2 rounded-lg border border-primary/20 bg-primary/8 px-3 py-2 text-primary">
-              <div className="flex items-center gap-2 text-xs font-semibold"><Hotel className="h-3.5 w-3.5" /> Hotel / Resort Admin</div>
+              <div className="flex items-center gap-2 text-xs font-semibold"><Hotel className="h-3.5 w-3.5" /> Completion Center</div>
               <p className="mt-0.5 text-[10px] text-primary/80">Setup progress: {lodgingSetupProgress ? `${lodgingSetupProgress.complete}/${lodgingSetupProgress.total} ready` : "open Hotel Overview"}.</p>
               {lodgingSetupProgress && <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-primary/15"><div className="h-full rounded-full bg-primary" style={{ width: `${lodgingSetupProgress.percent}%` }} /></div>}
-              <div className="mt-1.5 flex items-center gap-1 text-[10px] font-medium text-primary/90"><ListChecks className="h-3 w-3" /> Rate plans and guest requests enabled</div>
+              <div className="mt-1.5 space-y-1">
+                {(lodgingSetupProgress?.incompleteItems || []).slice(0, 3).map((item) => <button key={item.key} onClick={() => { onTabChange?.(item.tab); closeSidebar(); }} className="flex w-full items-center justify-between gap-2 rounded-md bg-background px-2 py-1 text-left text-[10px] font-medium text-primary ring-1 ring-primary/15"><span className="truncate">{item.label}</span><span>{item.actionLabel}</span></button>)}
+                {!(lodgingSetupProgress?.incompleteItems || []).length && <div className="flex items-center gap-1 text-[10px] font-medium text-primary/90"><ListChecks className="h-3 w-3" /> All setup items complete</div>}
+              </div>
               <div className="mt-2 grid grid-cols-2 gap-1.5">
                 <Button size="sm" variant="secondary" className="h-7 px-2 text-[10px]" onClick={() => { onTabChange?.("lodge-overview"); closeSidebar(); }}>Open Overview</Button>
-                <Button size="sm" className="h-7 px-2 text-[10px]" onClick={() => { onTabChange?.("lodge-rooms"); closeSidebar(); }}>Continue Setup</Button>
+                <Button size="sm" className="h-7 px-2 text-[10px]" onClick={() => { onTabChange?.(lodgingSetupProgress?.nextBestAction?.tab || "lodge-rooms"); closeSidebar(); }}>Continue Setup</Button>
               </div>
-              <button onClick={() => { navigate("/hotel-admin"); closeSidebar(); }} className="mt-1.5 w-full rounded-md border border-primary/20 bg-background px-2 py-1.5 text-[10px] font-semibold text-primary">Hotel admin launch page</button>
+              <button onClick={() => { navigate("/admin/lodging/qa-checklist"); closeSidebar(); }} className="mt-1.5 w-full rounded-md border border-primary/20 bg-background px-2 py-1.5 text-[10px] font-semibold text-primary">QA Checklist</button>
             </div>
           )}
           <div className="space-y-0.5" role="group" aria-labelledby="sidebar-group-manage">

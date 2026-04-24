@@ -182,6 +182,7 @@ const AdminFlightPriceAlerts = lazy(() => import("./pages/admin/AdminFlightPrice
 const AdminStoresPage = lazy(() => import("./pages/admin/AdminStoresPage"));
 const AdminStoreEditPage = lazy(() => import("./pages/admin/AdminStoreEditPage"));
 const HotelAdminLaunchPage = lazy(() => import("./pages/admin/HotelAdminLaunchPage"));
+const AdminLodgingQAChecklistPage = lazy(() => import("./pages/admin/AdminLodgingQAChecklistPage"));
 const AdminLodgingReservationDetailPage = lazy(() => import("./pages/admin/lodging/AdminLodgingReservationDetailPage"));
 const AdminLodgingWiringCheckPage = lazy(() => import("./pages/admin/AdminLodgingWiringCheckPage"));
 const AdminLodgingWebhookEventsPage = lazy(() => import("./pages/admin/AdminLodgingWebhookEventsPage"));
@@ -747,6 +748,7 @@ const App = () => (
                 <Route path="/admin/stores/:storeId" element={<ProtectedRoute><AdminStoreEditPage /></ProtectedRoute>} />
                 <Route path="/admin/stores/:storeId/upload-check" element={<ProtectedRoute><StoreAssetsUploadCheck /></ProtectedRoute>} />
                 <Route path="/admin/stores/:storeId/lodging/reservations/:reservationId" element={<ProtectedRoute><AdminLodgingReservationDetailPage /></ProtectedRoute>} />
+                <Route path="/admin/lodging/qa-checklist" element={<ProtectedRoute><AdminLodgingQAChecklistPage /></ProtectedRoute>} />
                 <Route path="/admin/lodging/wiring-check" element={<ProtectedRoute><AdminLodgingWiringCheckPage /></ProtectedRoute>} />
                 <Route path="/admin/lodging/webhook-events" element={<ProtectedRoute><AdminLodgingWebhookEventsPage /></ProtectedRoute>} />
                 <Route path="/store/setup" element={<ProtectedRoute><StoreSetup /></ProtectedRoute>} />

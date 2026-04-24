@@ -37,7 +37,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send, Users, Shield, Bell, Info, Copy, GripVertical, Hotel, BedDouble, CalendarRange, KeyRound, PackagePlus, MessageSquareText, BarChart3 } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send, Users, Shield, Bell, Info, Copy, GripVertical, Hotel, BedDouble, CalendarRange, KeyRound, PackagePlus, MessageSquareText, BarChart3, ListChecks } from "lucide-react";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import StorePaymentSection from "@/components/admin/StorePaymentSection";
 import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
@@ -86,7 +86,8 @@ import LodgingPoliciesSection from "@/components/admin/store/lodging/LodgingPoli
 import LodgingReviewsSection from "@/components/admin/store/lodging/LodgingReviewsSection";
 import LodgingRatePlansSection from "@/components/admin/store/lodging/LodgingRatePlansSection";
 import LodgingGuestRequestsSection from "@/components/admin/store/lodging/LodgingGuestRequestsSection";
-import { getLodgingSetupItems, setupProgress } from "@/components/admin/store/lodging/LodgingSetupChecklist";
+import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
+import { LODGING_TAB_IDS, resolveStoreTab } from "@/lib/admin/storeTabRouting";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { isLodgingStoreCategory } from "@/hooks/useOwnerStoreProfile";
@@ -97,8 +98,6 @@ import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 
-const LODGING_TAB_IDS = ["lodge-overview", "lodge-rooms", "lodge-rate-plans", "lodge-reservations", "lodge-calendar", "lodge-guests", "lodge-frontdesk", "lodge-housekeeping", "lodge-maintenance", "lodge-addons", "lodge-guest-requests", "lodge-dining", "lodge-experiences", "lodge-transport", "lodge-wellness", "lodge-amenities", "lodge-property", "lodge-policies", "lodge-reviews", "lodge-reports"];
-const BASE_TAB_IDS = ["profile", "orders", "products", "payment", "settings", "customers", "marketing", "livestream", "employees", "payroll", "employee-schedule", "time-clock", "attendance", "training", "documents", "employee-rules"];
 const LODGING_QUICK_TABS = [
   { id: "lodge-overview", label: "Overview", icon: Hotel },
   { id: "lodge-rooms", label: "Rooms", icon: BedDouble },
@@ -108,6 +107,7 @@ const LODGING_QUICK_TABS = [
   { id: "lodge-addons", label: "Add-ons", icon: PackagePlus },
   { id: "lodge-guest-requests", label: "Requests", icon: MessageSquareText },
   { id: "lodge-reports", label: "Reports", icon: BarChart3 },
+  { id: "qa-checklist", label: "QA Checklist", icon: ListChecks },
 ];
 
 function normalizeLocalizedNumberInput(value: string): string {
@@ -504,14 +504,14 @@ export default function AdminStoreEditPage() {
   const lodgingRoomsQuery = useLodgeRooms(storeId || "");
   const lodgingProfileQuery = useLodgePropertyProfile(storeId || "");
   const lodgingAddons = (lodgingRoomsQuery.data || []).flatMap((room: any) => room.addons || []);
-  const lodgingSetup = setupProgress(getLodgingSetupItems({
+  const lodgingSetup = getLodgingCompletion({
     rooms: lodgingRoomsQuery.data || [],
     profile: lodgingProfileQuery.data,
     addons: lodgingAddons,
     housekeepingCount: 0,
     maintenanceReady: true,
     reportsReady: Boolean((lodgingRoomsQuery.data || []).length),
-  }));
+  });
 
   const { data: posts = [], isLoading: loadingPosts } = useQuery({
     queryKey: ["admin-store-posts", storeId],
@@ -594,17 +594,14 @@ export default function AdminStoreEditPage() {
   useEffect(() => {
     const isStoreLodging = isLodgingStoreCategory(store?.category);
     const requestedTab = searchParams.get("tab");
-    if (requestedTab?.startsWith("lodge-") && !isStoreLodging) {
-      handleTabChange("profile");
-      return;
-    }
-    if (isStoreLodging && requestedTab && ![...BASE_TAB_IDS, ...LODGING_TAB_IDS].includes(requestedTab)) {
-      handleTabChange("lodge-overview");
+    const resolvedTab = resolveStoreTab(requestedTab, isStoreLodging);
+    if (requestedTab !== resolvedTab && (requestedTab || isStoreLodging)) {
+      handleTabChange(resolvedTab);
       return;
     }
     if (!appliedLodgingDefaultTabRef.current && isStoreLodging && activeTab === "profile" && !requestedTab) {
       appliedLodgingDefaultTabRef.current = true;
-      handleTabChange("lodge-overview");
+      handleTabChange(resolvedTab);
     }
   }, [store?.category, activeTab, searchParams, handleTabChange]);
 
@@ -2056,7 +2053,7 @@ export default function AdminStoreEditPage() {
         </StoreOwnerLayout>
       );
     },
-    [isAdmin, storeOwnerTitle, storeId, store?.name, store?.logo_url, form.category, activeTab, products?.length],
+    [isAdmin, storeOwnerTitle, storeId, store?.name, store?.logo_url, form.category, activeTab, handleTabChange, lodgingSetup, products?.length],
   );
 
   if (isLoading) {
@@ -2579,12 +2576,12 @@ export default function AdminStoreEditPage() {
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
               <div className="mb-2 flex items-center justify-between gap-3">
                 <div className="min-w-0"><p className="text-sm font-bold text-foreground">Hotel Operations</p><p className="text-xs text-muted-foreground">Quick access is enabled for every major hotel workflow.</p></div>
-                <Button size="sm" variant="outline" className="shrink-0" onClick={() => navigate("/admin/lodging/wiring-check")}>Hotel Admin Check</Button>
+                <Button size="sm" variant="outline" className="shrink-0" onClick={() => navigate("/admin/lodging/qa-checklist")}>QA Checklist</Button>
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {LODGING_QUICK_TABS.map((item) => {
                   const Icon = item.icon;
-                  return <button key={item.id} onClick={() => handleTabChange(item.id)} className={cn("shrink-0 rounded-lg border px-3 py-2 text-xs font-semibold transition", activeTab === item.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:border-primary/50")}><Icon className="mr-1.5 inline h-3.5 w-3.5" />{item.label}</button>;
+                  return <button key={item.id} onClick={() => item.id === "qa-checklist" ? navigate("/admin/lodging/qa-checklist") : handleTabChange(item.id)} className={cn("shrink-0 rounded-lg border px-3 py-2 text-xs font-semibold transition", activeTab === item.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:border-primary/50")}><Icon className="mr-1.5 inline h-3.5 w-3.5" />{item.label}</button>;
                 })}
               </div>
             </div>

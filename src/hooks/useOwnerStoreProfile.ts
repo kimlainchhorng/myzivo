@@ -8,13 +8,14 @@ export const normalizeStoreCategory = (category?: string | null) =>
   (category || "")
     .toLowerCase()
     .replace(/&/g, "and")
+    .replace(/b\s*and\s*b/g, "bed and breakfast")
     .replace(/[\/_-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 
 export const isLodgingStoreCategory = (category?: string | null) => {
   const normalized = normalizeStoreCategory(category);
-  return ["hotel", "hotels", "resort", "resorts", "guesthouse", "guest house", "guesthouse and b and b", "bed and breakfast", "b and b"].includes(normalized);
+  return ["hotel", "hotels", "resort", "resorts", "guesthouse", "guest house", "guesthouse bed and breakfast", "bed and breakfast"].includes(normalized);
 };
 
 export function useOwnerStoreProfile() {

@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { BedDouble, CheckCircle2, Hotel, KeyRound, PackagePlus } from "lucide-react";
+import { BedDouble, CheckCircle2, Hotel, KeyRound, ListChecks, PackagePlus } from "lucide-react";
 import { AddonList, LoadingPanel, NextActions, OpsSnapshot, SectionShell, StatCard, useLodgingOpsData } from "./LodgingOperationsShared";
-import LodgingSetupChecklist, { getLodgingSetupItems } from "./LodgingSetupChecklist";
+import LodgingSetupChecklist from "./LodgingSetupChecklist";
 import { useLodgeHousekeeping } from "@/hooks/lodging/useLodgeHousekeeping";
+import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 
 const goTab = (tab: string) => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab } }));
 
@@ -13,15 +14,10 @@ export default function LodgingOverviewSection({ storeId }: { storeId: string })
   const activeAddons = addons.filter((a) => a.active !== false && !a.disabled).length;
   const policiesReady = Boolean(profile?.check_in_from || profile?.check_out_until || profile?.cancellation_policy || profile?.house_rules);
   const guestServicesReady = activeAddons > 0 || Boolean(profile?.facilities?.length || profile?.meal_plans?.length);
-  const setupItems = getLodgingSetupItems({ rooms, profile, addons, housekeepingCount: housekeeping.length, maintenanceReady: true, reportsReady: reservations.length > 0 || rooms.length > 0 });
+  const completion = getLodgingCompletion({ rooms, profile, addons, housekeepingCount: housekeeping.length, maintenanceReady: true, reservationsCount: reservations.length, reportsReady: reservations.length > 0 || rooms.length > 0 });
+  const setupItems = completion.items;
   const hasRates = rooms.some((r) => (r.base_rate_cents || 0) > 0 && (r.units_total || 0) > 0);
-  const nextAction = rooms.length === 0
-    ? { label: "Add first room", tab: "lodge-rooms", hint: "Create the first sellable room type and unit count." }
-    : !hasRates
-      ? { label: "Add base rates", tab: "lodge-rooms", hint: "Set base pricing and inventory for active room types." }
-      : activeAddons === 0
-        ? { label: "Add guest services", tab: "lodge-addons", hint: "Offer transfers, meals, spa, tours, and packages." }
-        : { label: "Open front desk", tab: "lodge-frontdesk", hint: "Run arrivals, in-house stays, and departures." };
+  const nextAction = completion.nextBestAction;
   const setupMessage = rooms.length === 0
     ? "Hotel admin is installed. Add your first room to start."
     : !hasRates
@@ -31,7 +27,7 @@ export default function LodgingOverviewSection({ storeId }: { storeId: string })
         : "Hotel admin is active and guest-ready workflows are enabled.";
 
   return (
-    <SectionShell title="Hotel Overview" subtitle="A quick operating snapshot for rooms, stays, add-ons, and guest-ready setup." icon={Hotel} actions={<Button size="sm" onClick={() => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-addons" } }))}><PackagePlus className="mr-1.5 h-4 w-4" /> Add-ons</Button>}>
+    <SectionShell title="Hotel Overview" subtitle="A quick operating snapshot for rooms, stays, add-ons, and guest-ready setup." icon={Hotel} actions={<div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => window.location.assign("/admin/lodging/qa-checklist")}><ListChecks className="mr-1.5 h-4 w-4" /> QA Checklist</Button><Button size="sm" onClick={() => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-addons" } }))}><PackagePlus className="mr-1.5 h-4 w-4" /> Add-ons</Button></div>}>
       {isLoading ? <LoadingPanel /> : <>
         <div className="rounded-lg border border-primary/20 bg-primary/8 p-4">
           <div className="flex items-start gap-3">
@@ -45,7 +41,7 @@ export default function LodgingOverviewSection({ storeId }: { storeId: string })
               <div className="mt-3 rounded-lg border border-primary/20 bg-background p-3">
                 <p className="text-xs font-semibold text-foreground">Next best action</p>
                 <p className="mt-1 text-xs text-muted-foreground">{nextAction.hint}</p>
-                <Button size="sm" className="mt-3 h-8" onClick={() => goTab(nextAction.tab)}>{nextAction.label}</Button>
+                <Button size="sm" className="mt-3 h-8" onClick={() => goTab(nextAction.tab)}>{nextAction.actionLabel}</Button>
               </div>
               <div className="mt-3 grid gap-2 sm:grid-cols-4">
                 <Button size="sm" variant="outline" onClick={() => goTab("lodge-overview")}><CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Checklist</Button>
