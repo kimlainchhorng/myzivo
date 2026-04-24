@@ -108,3 +108,58 @@ export function setupGlobalErrorHandlers(): void {
     });
   });
 }
+
+/**
+ * Structured logger for profile / social action failures (bookmark toggle,
+ * post menu actions, caption edits, deletes, report submissions). Captures
+ * the action name and a small JSON-safe context blob so we can trace
+ * future schema-cache or RLS regressions without spamming the user.
+ *
+ * Always silent — never throws. Trimmed to ~1 KB and deduped.
+ */
+export function logProfileActionError(
+  action: string,
+  ctx: Record<string, unknown>,
+  error: unknown,
+): void {
+  try {
+    const message =
+      error instanceof Error ? error.message : typeof error === "string" ? error : "Unknown error";
+    const stack = error instanceof Error ? error.stack : undefined;
+
+    let serializedCtx = "";
+    try {
+      serializedCtx = JSON.stringify(ctx).slice(0, 1024);
+    } catch {
+      serializedCtx = "[unserializable context]";
+    }
+
+    const dedupeKey = `profile_action:${action}:${message}`;
+    if (isDuplicate(dedupeKey)) return;
+
+    console.error(`[ProfileAction:${action}]`, message, ctx);
+
+    // Fire-and-forget Supabase write
+    void (async () => {
+      try {
+        const supabase = await getSupabase();
+        await supabase.from("analytics_events").insert({
+          event_name: "profile_action_error",
+          session_id: getSessionId(),
+          page: typeof window !== "undefined" ? window.location.href : "",
+          meta: {
+            action,
+            message: message.slice(0, 500),
+            stack: stack?.slice(0, 1000),
+            ctx: serializedCtx,
+            user_agent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+          },
+        });
+      } catch {
+        // Silent — never create error loops.
+      }
+    })();
+  } catch {
+    // Truly never throw from logging.
+  }
+}
