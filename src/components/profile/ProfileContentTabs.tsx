@@ -591,15 +591,15 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
       {createPortal(
         <AnimatePresence>
           {selectedPost && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[9999] bg-black flex flex-col"
-              style={{ paddingTop: "var(--zivo-safe-top-overlay)" }}
+            <ProfilePostViewerOverlay
+              onClose={() => { setSelectedPost(null); setShowPostMenu(false); setEditingCaption(false); }}
             >
               {/* Header */}
-              <div className="flex items-center gap-3 px-3 pb-3 shrink-0">
+              <div
+                className="flex items-center gap-3 px-3 pb-3 pt-1 shrink-0 cursor-grab active:cursor-grabbing select-none"
+                style={{ touchAction: "none" }}
+                data-profile-post-drag-handle
+              >
                 <button data-testid="profile-post-close" aria-label="Close post" onClick={() => { setSelectedPost(null); setShowPostMenu(false); setEditingCaption(false); }} className="text-white/80 p-1 min-h-[44px] min-w-[44px] flex items-center justify-center">
                   <X className="w-6 h-6" />
                 </button>
