@@ -293,15 +293,16 @@ for (const target of TARGETS) {
         fail++;
         continue;
       }
-      const ok = resolved >= device.top - 0.001; // tolerate float noise
+      const minRequired = Math.max(device.top, device.expectFloor ?? 0);
+      const ok = resolved >= minRequired - 0.001; // tolerate float noise
       rows.push({
         device: device.name,
         element: el.name,
         property: el.property,
         resolved: Math.round(resolved * 100) / 100,
-        inset: device.top,
+        inset: minRequired,
         ok,
-        note: ok ? "" : "FAILS unsafe-zone clearance",
+        note: ok ? "" : `FAILS — need ≥ ${minRequired}px, got ${resolved}px`,
       });
       ok ? pass++ : fail++;
     }
