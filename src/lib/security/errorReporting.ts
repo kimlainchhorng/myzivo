@@ -163,3 +163,47 @@ export function logProfileActionError(
     // Truly never throw from logging.
   }
 }
+
+/**
+ * Lightweight gesture telemetry for the post-viewer drag-to-dismiss flow.
+ * Captures aborted swipes, failed pointer captures, and a sampled stream of
+ * successful dismissals so future gesture regressions are diagnosable
+ * without console spam. Always silent, ≤512B payload, deduped per session.
+ */
+export function logGestureEvent(
+  kind: string,
+  ctx: Record<string, unknown> = {},
+): void {
+  try {
+    let serializedCtx = "";
+    try {
+      serializedCtx = JSON.stringify(ctx).slice(0, 512);
+    } catch {
+      serializedCtx = "[unserializable context]";
+    }
+
+    // Per-session dedupe — the same kind+ctx digest only logs once.
+    const dedupeKey = `gesture:${kind}:${serializedCtx}`;
+    if (isDuplicate(dedupeKey)) return;
+
+    void (async () => {
+      try {
+        const supabase = await getSupabase();
+        await supabase.from("analytics_events").insert({
+          event_name: "gesture_event",
+          session_id: getSessionId(),
+          page: typeof window !== "undefined" ? window.location.href : "",
+          meta: {
+            kind,
+            ctx: serializedCtx,
+            user_agent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+          },
+        });
+      } catch {
+        // Silent — never create error loops.
+      }
+    })();
+  } catch {
+    // Truly never throw from logging.
+  }
+}
