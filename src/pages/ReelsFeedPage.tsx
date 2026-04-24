@@ -80,6 +80,8 @@ const FeedStoryRing = lazy(() => import("@/components/social/FeedStoryRing"));
 const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
 const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
 const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
+import CollapsibleCaption from "@/components/social/CollapsibleCaption";
+import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 
@@ -1285,7 +1287,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           <Heart className={cn("h-7 w-7 drop-shadow-lg transition-all", liked ? "text-red-500 fill-red-500 scale-110" : "text-white")} />
           {!item.hide_like_counts && (
             <span className="text-white text-[11px] font-semibold drop-shadow">
-              {localLikes > 999 ? `${(localLikes / 1000).toFixed(1)}k` : localLikes}
+              {formatCount(localLikes) ?? "0"}
             </span>
           )}
         </button>
@@ -1485,19 +1487,16 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
         {/* Caption */}
         {item.caption && (
-          <div onClick={() => setShowCaption(!showCaption)}>
-            <div className={cn(
-              "text-white text-[13px] leading-snug drop-shadow-lg",
-              !showCaption && "line-clamp-2"
-            )}>
-              <Suspense fallback={<span>{item.caption}</span>}>
-                <SafeCaption text={item.caption} />
-              </Suspense>
-            </div>
-            {item.caption.length > 80 && !showCaption && (
-              <span className="text-white/60 text-xs">more</span>
-            )}
-          </div>
+          <CollapsibleCaption
+            text={item.caption}
+            lines={2}
+            variant="overlay"
+            className="text-[13px]"
+          >
+            <Suspense fallback={<span>{item.caption}</span>}>
+              <SafeCaption text={item.caption} />
+            </Suspense>
+          </CollapsibleCaption>
         )}
 
         {/* Sound ticker */}
@@ -1621,8 +1620,6 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
   const [editCaptionText, setEditCaptionText] = useState(item.caption || "");
   const [editSaving, setEditSaving] = useState(false);
   const [tipTarget, setTipTarget] = useState<{ id: string; name: string } | null>(null);
-  const [showSharerCaption, setShowSharerCaption] = useState(false);
-  const [showOriginalCaption, setShowOriginalCaption] = useState(false);
   const [isFollowingAuthor, setIsFollowingAuthor] = useState(false);
   const [isFollowingSharedAuthor, setIsFollowingSharedAuthor] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
@@ -2113,17 +2110,11 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           {/* Sharer's own caption (not the original post's caption) */}
           {item.caption && item.caption !== item.shared_from_caption && (
             <div className="px-3 pb-2">
-              <div className={cn("text-[13px] text-foreground leading-snug", !showSharerCaption && "line-clamp-3")}>
+              <CollapsibleCaption text={item.caption} lines={3} className="text-[13px]">
                 <Suspense fallback={<span>{item.caption}</span>}>
                   <SafeCaption text={item.caption} />
                 </Suspense>
-                {!showSharerCaption && item.caption.length > 140 && (
-                  <span onClick={(e) => { e.stopPropagation(); setShowSharerCaption(true); }} className="text-muted-foreground ml-1 cursor-pointer">… See more</span>
-                )}
-              </div>
-              {showSharerCaption && item.caption.length > 140 && (
-                <span onClick={(e) => { e.stopPropagation(); setShowSharerCaption(false); }} className="text-[12px] text-muted-foreground cursor-pointer">See less</span>
-              )}
+              </CollapsibleCaption>
             </div>
           )}
 
@@ -2178,17 +2169,11 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
             {/* Original post caption */}
             {item.shared_from_caption && (
               <div className="px-3 pb-2">
-                <div className={cn("text-[13px] text-foreground leading-snug", !showOriginalCaption && "line-clamp-3")}>
+                <CollapsibleCaption text={item.shared_from_caption} lines={3} className="text-[13px]">
                   <Suspense fallback={<span>{item.shared_from_caption}</span>}>
                     <SafeCaption text={item.shared_from_caption} />
                   </Suspense>
-                  {!showOriginalCaption && item.shared_from_caption.length > 140 && (
-                    <span onClick={(e) => { e.stopPropagation(); setShowOriginalCaption(true); }} className="text-muted-foreground ml-1 cursor-pointer">… See more</span>
-                  )}
-                </div>
-                {showOriginalCaption && item.shared_from_caption.length > 140 && (
-                  <span onClick={(e) => { e.stopPropagation(); setShowOriginalCaption(false); }} className="text-[12px] text-muted-foreground cursor-pointer">See less</span>
-                )}
+                </CollapsibleCaption>
               </div>
             )}
 
@@ -2319,11 +2304,11 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           {/* Caption before media for normal posts */}
           {item.caption && (
             <div className="px-3 pb-2">
-              <div className="text-[13px] text-foreground">
+              <CollapsibleCaption text={item.caption} lines={3} className="text-[13px]">
                 <Suspense fallback={<span>{item.caption}</span>}>
                   <SafeCaption text={item.caption} />
                 </Suspense>
-              </div>
+              </CollapsibleCaption>
             </div>
           )}
 
@@ -2552,18 +2537,18 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
             ) : (
               <Heart className={cn("h-[22px] w-[22px] transition-all", liked ? "text-destructive fill-destructive scale-110" : "text-foreground group-active:scale-125")} />
             )}
-            {!item.hide_like_counts && (
+            {!item.hide_like_counts && formatCount(localLikes) && (
               <span className={cn("text-[12px] font-semibold", liked || selectedReaction ? "text-destructive" : "text-muted-foreground")}>
-                {localLikes > 999 ? `${(localLikes/1000).toFixed(1)}k` : localLikes}
+                {formatCount(localLikes)}
               </span>
             )}
           </button>
           {commentSetting !== "off" && (
             <button onClick={handleComment} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
               <MessageCircle className="h-[22px] w-[22px]" />
-              {localComments > 0 && (
+              {formatCount(localComments) && (
                 <span className="text-[12px] text-muted-foreground font-semibold">
-                  {localComments > 999 ? `${(localComments/1000).toFixed(1)}k` : localComments}
+                  {formatCount(localComments)}
                 </span>
               )}
             </button>
@@ -2571,9 +2556,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           {item.allow_sharing !== false && (
             <button onClick={handleShare} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
               <Share2 className="h-[22px] w-[22px]" />
-              {item.shares_count > 0 && (
+              {formatCount(item.shares_count) && (
                 <span className="text-[12px] text-muted-foreground font-semibold">
-                  {item.shares_count > 999 ? `${(item.shares_count/1000).toFixed(1)}k` : item.shares_count}
+                  {formatCount(item.shares_count)}
                 </span>
               )}
             </button>
@@ -2604,9 +2589,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           <p className="text-[12px] text-muted-foreground/60">Comments are turned off</p>
         </div>
       ) : localComments > 0 ? (
-        <button onClick={handleComment} className="px-3 pb-2">
-          <p className="text-[12px] text-muted-foreground">
-            View all {localComments} comments
+        <button onClick={handleComment} className="px-3 pb-2 text-left active:opacity-70">
+          <p className="text-[13px] text-muted-foreground font-medium hover:text-foreground transition-colors">
+            {commentsLinkLabel(localComments)}
           </p>
         </button>
       ) : null}

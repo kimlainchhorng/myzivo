@@ -15,6 +15,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { toUserPostInteractionId } from "@/lib/social/postInteraction";
 import CommentsSheet from "@/components/social/CommentsSheet";
+import CollapsibleCaption from "@/components/social/CollapsibleCaption";
+import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
 
 const REACTIONS = ["❤️", "😂", "😮", "😢", "😡", "👍"];
 
@@ -76,9 +78,6 @@ export default function ProfileFeedCard({
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
   const [showComments, setShowComments] = useState(false);
-  const [showSharerCaption, setShowSharerCaption] = useState(false);
-  const [showOriginalCaption, setShowOriginalCaption] = useState(false);
-  const [showOwnCaption, setShowOwnCaption] = useState(false);
   const lastTapRef = useRef(0);
 
   const isVideo = item.type === "reel";
@@ -170,15 +169,7 @@ export default function ProfileFeedCard({
           {/* Sharer's own caption */}
           {item.caption && item.caption !== item.sharedOrigin.caption && (
             <div className="px-3 pb-2">
-              <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showSharerCaption && "line-clamp-3")}>
-                {item.caption}
-                {!showSharerCaption && item.caption.length > 140 && (
-                  <span onClick={(e) => { e.stopPropagation(); setShowSharerCaption(true); }} className="text-muted-foreground ml-1 cursor-pointer">… See more</span>
-                )}
-              </p>
-              {showSharerCaption && item.caption.length > 140 && (
-                <span onClick={(e) => { e.stopPropagation(); setShowSharerCaption(false); }} className="text-[12px] text-muted-foreground cursor-pointer">See less</span>
-              )}
+              <CollapsibleCaption text={item.caption} lines={3} className="text-[13px]" />
             </div>
           )}
 
@@ -223,15 +214,7 @@ export default function ProfileFeedCard({
 
             {item.sharedOrigin.caption && (
               <div className="px-3 pb-2">
-                <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showOriginalCaption && "line-clamp-3")}>
-                  {item.sharedOrigin.caption}
-                  {!showOriginalCaption && item.sharedOrigin.caption.length > 140 && (
-                    <span onClick={(e) => { e.stopPropagation(); setShowOriginalCaption(true); }} className="text-muted-foreground ml-1 cursor-pointer">… See more</span>
-                  )}
-                </p>
-                {showOriginalCaption && item.sharedOrigin.caption.length > 140 && (
-                  <span onClick={(e) => { e.stopPropagation(); setShowOriginalCaption(false); }} className="text-[12px] text-muted-foreground cursor-pointer">See less</span>
-                )}
+                <CollapsibleCaption text={item.sharedOrigin.caption} lines={3} className="text-[13px]" />
               </div>
             )}
 
@@ -304,16 +287,12 @@ export default function ProfileFeedCard({
           {/* Caption */}
           {item.caption && (
             <div className="px-3 pb-2">
-              <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showOwnCaption && "line-clamp-3")}>
-                <span className="font-semibold mr-1">{item.user.name}</span>
-                {item.caption}
-                {!showOwnCaption && item.caption.length > 140 && (
-                  <span onClick={(e) => { e.stopPropagation(); setShowOwnCaption(true); }} className="text-muted-foreground ml-1 cursor-pointer">… See more</span>
-                )}
-              </p>
-              {showOwnCaption && item.caption.length > 140 && (
-                <span onClick={(e) => { e.stopPropagation(); setShowOwnCaption(false); }} className="text-[12px] text-muted-foreground cursor-pointer">See less</span>
-              )}
+              <CollapsibleCaption
+                text={item.caption}
+                lines={3}
+                className="text-[13px]"
+                prefix={<span className="font-semibold mr-1">{item.user.name}</span>}
+              />
             </div>
           )}
 
@@ -387,17 +366,17 @@ export default function ProfileFeedCard({
             ) : (
               <Heart className={cn("h-[22px] w-[22px] transition-all", isLiked ? "text-destructive fill-destructive scale-110" : "text-foreground group-active:scale-125")} />
             )}
-            {item.likes > 0 && (
+            {formatCount(item.likes) && (
               <span className={cn("text-[12px] font-semibold", isLiked || selectedReaction ? "text-destructive" : "text-muted-foreground")}>
-                {item.likes > 999 ? `${(item.likes / 1000).toFixed(1)}k` : item.likes}
+                {formatCount(item.likes)}
               </span>
             )}
           </button>
           <button onClick={() => setShowComments(true)} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
             <MessageCircle className="h-[22px] w-[22px]" />
-            {item.comments > 0 && (
+            {formatCount(item.comments) && (
               <span className="text-[12px] text-muted-foreground font-semibold">
-                {item.comments > 999 ? `${(item.comments / 1000).toFixed(1)}k` : item.comments}
+                {formatCount(item.comments)}
               </span>
             )}
           </button>
@@ -412,8 +391,10 @@ export default function ProfileFeedCard({
 
       {/* View all comments */}
       {item.comments > 0 && (
-        <button onClick={() => setShowComments(true)} className="px-3 pb-2">
-          <p className="text-[12px] text-muted-foreground">View all {item.comments} comments</p>
+        <button onClick={() => setShowComments(true)} className="px-3 pb-2 text-left active:opacity-70">
+          <p className="text-[13px] text-muted-foreground font-medium hover:text-foreground transition-colors">
+            {commentsLinkLabel(item.comments)}
+          </p>
         </button>
       )}
 
