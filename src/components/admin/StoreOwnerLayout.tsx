@@ -42,6 +42,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [qaSummary, setQaSummary] = useState<{ passedCount: number; failedCount: number; warningCount: number; overallStatus: string } | null>(null);
   const asideRef = useRef<HTMLElement | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
   const scrollMemoryRef = useRef<Record<string, number>>({});
@@ -111,6 +112,16 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
     if (sidebarOpen) closeSidebar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isLodging) return;
+    try {
+      const saved = localStorage.getItem("lodging-qa-summary");
+      setQaSummary(saved ? JSON.parse(saved) : null);
+    } catch {
+      setQaSummary(null);
+    }
+  }, [isLodging, sidebarOpen]);
 
   // Focus trap + focus return for the mobile drawer
   useFocusTrap(asideRef, sidebarOpen);
@@ -320,7 +331,8 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
                 <Button size="sm" variant="secondary" className="h-7 px-2 text-[10px]" onClick={() => { onTabChange?.("lodge-overview"); closeSidebar(); }}>Open Overview</Button>
                 <Button size="sm" className="h-7 px-2 text-[10px]" onClick={() => { onTabChange?.(lodgingSetupProgress?.nextBestAction?.tab || "lodge-rooms"); closeSidebar(); }}>Continue Setup</Button>
               </div>
-              <button onClick={() => { navigate("/admin/lodging/qa-checklist"); closeSidebar(); }} className="mt-1.5 w-full rounded-md border border-primary/20 bg-background px-2 py-1.5 text-[10px] font-semibold text-primary">QA Checklist</button>
+              {qaSummary && <p className="mt-1.5 rounded-md bg-background px-2 py-1 text-[10px] font-semibold text-primary ring-1 ring-primary/15">QA: {qaSummary.passedCount} pass / {qaSummary.failedCount} fail{qaSummary.failedCount ? " · Fix required" : ""}</p>}
+              <button onClick={() => { navigate("/admin/lodging/qa-checklist"); closeSidebar(); }} className="mt-1.5 w-full rounded-md border border-primary/20 bg-background px-2 py-1.5 text-[10px] font-semibold text-primary">Run QA / Checklist</button>
             </div>
           )}
           <div className="space-y-0.5" role="group" aria-labelledby="sidebar-group-manage">
