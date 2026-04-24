@@ -155,9 +155,9 @@ export default function ProfileFeedCard({
               </Avatar>
               <div className="flex-1 min-w-0 text-left">
                 <p className="text-[13px] font-semibold text-foreground truncate">{item.user.name}</p>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 leading-none mt-0.5">
                   <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
-                  <span className="text-[10px] text-muted-foreground">·</span>
+                  <span className="text-[10px] text-muted-foreground leading-none">·</span>
                   <Globe className="h-2.5 w-2.5 text-muted-foreground" />
                 </div>
               </div>
