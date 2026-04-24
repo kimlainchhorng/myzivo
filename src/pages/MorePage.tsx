@@ -31,6 +31,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 /* ============================================= */
 /*  PARTNER OPTIONS                              */
@@ -239,28 +240,8 @@ export default function MorePage() {
     .toLowerCase()
     .replace(/\s+/g, "");
 
-  const VerifiedCheck = ({ size = 16 }: { size?: number }) => (
-    <span
-      className="relative inline-flex items-center justify-center shrink-0"
-      style={{ width: size, height: size }}
-      aria-label="Verified"
-      title="Verified"
-    >
-      <svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true">
-        <path
-          d="M12 1.5l2.39 1.74 2.95-.13.78 2.85 2.55 1.5-1.07 2.74 1.07 2.74-2.55 1.5-.78 2.85-2.95-.13L12 22.5l-2.39-1.74-2.95.13-.78-2.85-2.55-1.5 1.07-2.74-1.07-2.74 2.55-1.5.78-2.85 2.95.13L12 1.5z"
-          fill="#1d9bf0"
-        />
-        <path
-          d="M9.5 12.5l1.8 1.8 3.7-4.3"
-          fill="none"
-          stroke="#fff"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </span>
+  const VerifiedCheck = ({ size = 18 }: { size?: number }) => (
+    <VerifiedBadge size={size} />
   );
 
   /* --- Profile Card --- */
@@ -282,7 +263,7 @@ export default function MorePage() {
         <Link to="/profile" className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="font-bold text-[15px] truncate">{displayName}</p>
-            {isVerified && <VerifiedCheck size={16} />}
+            {isVerified && <VerifiedCheck size={18} />}
           </div>
           <p className="text-[11px] text-muted-foreground truncate mt-0.5">@{handle}</p>
           <div className="flex gap-4 mt-1.5">
@@ -322,7 +303,7 @@ export default function MorePage() {
         to={isVerified ? "/profile" : "/account/verification"}
         className="zivo-card-organic flex items-center gap-1.5 px-2.5 py-2 active:scale-[0.97] transition-transform"
       >
-        <VerifiedCheck size={18} />
+        <VerifiedCheck size={20} />
         <div className="min-w-0">
           <p className="text-[11px] font-bold leading-tight truncate">
             {isVerified ? "Verified" : "Get verified"}
