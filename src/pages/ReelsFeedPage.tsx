@@ -2589,9 +2589,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           <p className="text-[12px] text-muted-foreground/60">Comments are turned off</p>
         </div>
       ) : localComments > 0 ? (
-        <button onClick={handleComment} className="px-3 pb-2">
-          <p className="text-[12px] text-muted-foreground">
-            View all {localComments} comments
+        <button onClick={handleComment} className="px-3 pb-2 text-left active:opacity-70">
+          <p className="text-[13px] text-muted-foreground font-medium hover:text-foreground transition-colors">
+            {commentsLinkLabel(localComments)}
           </p>
         </button>
       ) : null}
