@@ -727,7 +727,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </ProfilePostViewerOverlay>
           )}
         </AnimatePresence>,
         document.body
