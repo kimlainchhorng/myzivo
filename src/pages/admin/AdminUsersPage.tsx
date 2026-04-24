@@ -12,8 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Users, Search, Mail, Calendar, Shield, ChevronLeft, ChevronRight,
-  UserX, Eye, BadgeCheck
+  Users, Search, Shield, ChevronLeft, ChevronRight,
+  UserX, Eye, BadgeCheck, CheckCircle2, XCircle, Clock, Loader2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -30,16 +30,20 @@ export default function AdminUsersPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
+  const [requestSearchQuery, setRequestSearchQuery] = useState("");
+  const [requestStatusFilter, setRequestStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
+  const [selectedRequestIds, setSelectedRequestIds] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const [selectedUser, setSelectedUser] = useState<any>(null);
 
   // Verify / Unverify mutation
   const verifyMutation = useMutation({
     mutationFn: async ({ userId, verified }: { userId: string; verified: boolean }) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ is_verified: verified })
-        .eq("id", userId);
+      const { error } = await (supabase as any).rpc("set_profile_blue_verified_manual", {
+        _target_user_id: userId,
+        _verified: verified,
+        _reason: verified ? "Manual Blue Verified approval" : "Manual Blue Verified removal",
+      });
       if (error) throw error;
     },
     onSuccess: (_, { verified }) => {
@@ -64,7 +68,9 @@ export default function AdminUsersPage() {
     onSuccess: (_, { approved }) => {
       qc.invalidateQueries({ queryKey: ["admin-users"] });
       qc.invalidateQueries({ queryKey: ["admin-verification-requests"] });
+      qc.invalidateQueries({ queryKey: ["admin-blue-verified-audit"] });
       setSelectedUser(null);
+      setSelectedRequestIds((ids) => ids.filter((id) => !verificationRequests?.some((request: any) => request.id === id)));
       toast.success(approved ? "Blue verified badge approved" : "Verification request rejected");
     },
     onError: (err: any) => toast.error(err.message || "Failed to review request"),
@@ -103,7 +109,7 @@ export default function AdminUsersPage() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("verification_requests")
-        .select("id, user_id, full_name, category, additional_info, status, rejection_reason, created_at")
+        .select("id, user_id, full_name, category, document_url, additional_info, status, rejection_reason, reviewed_at, reviewed_by, created_at")
         .order("created_at", { ascending: false })
         .limit(200);
       if (error) throw error;
@@ -112,8 +118,44 @@ export default function AdminUsersPage() {
     enabled: isAdmin && !authLoading,
   });
 
+  const { data: auditLog } = useQuery({
+    queryKey: ["admin-blue-verified-audit", isAdmin],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("blue_verified_audit_log")
+        .select("id, request_id, target_user_id, reviewer_user_id, action, reason, created_at")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: isAdmin && !authLoading,
+  });
+
   const getProfileUid = (profile: { id?: string | null; user_id?: string | null }) =>
     profile.user_id || profile.id || "";
+
+  const bulkReviewMutation = useMutation({
+    mutationFn: async ({ requestIds, approved }: { requestIds: string[]; approved: boolean }) => {
+      for (const requestId of requestIds) {
+        const { error } = await (supabase as any).rpc("set_profile_blue_verified_from_request", {
+          _request_id: requestId,
+          _approved: approved,
+          _rejection_reason: approved ? null : "Bulk rejected by admin",
+        });
+        if (error) throw error;
+      }
+      return { count: requestIds.length, approved };
+    },
+    onSuccess: ({ count, approved }) => {
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      qc.invalidateQueries({ queryKey: ["admin-verification-requests"] });
+      qc.invalidateQueries({ queryKey: ["admin-blue-verified-audit"] });
+      setSelectedRequestIds([]);
+      toast.success(`${count} request${count === 1 ? "" : "s"} ${approved ? "approved" : "rejected"}`);
+    },
+    onError: (err: any) => toast.error(err.message || "Bulk review failed"),
+  });
 
   const roleMap = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -151,6 +193,33 @@ export default function AdminUsersPage() {
 
   const totalPages = Math.ceil((filtered?.length || 0) / PAGE_SIZE);
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const reviewerMap = useMemo(() => {
+    const map: Record<string, any> = {};
+    profiles?.forEach((profile: any) => {
+      const uid = getProfileUid(profile);
+      if (uid) map[uid] = profile;
+    });
+    return map;
+  }, [profiles]);
+
+  const filteredVerificationRequests = useMemo(() => {
+    const q = requestSearchQuery.trim().toLowerCase();
+    return (verificationRequests || []).filter((request: any) => {
+      const matchesStatus = requestStatusFilter === "all" || request.status === requestStatusFilter;
+      const matchesSearch = !q ||
+        (request.full_name || "").toLowerCase().includes(q) ||
+        (request.category || "").toLowerCase().includes(q) ||
+        (request.additional_info || "").toLowerCase().includes(q) ||
+        (request.user_id || "").toLowerCase().includes(q);
+      return matchesStatus && matchesSearch;
+    });
+  }, [verificationRequests, requestSearchQuery, requestStatusFilter]);
+
+  const visiblePendingRequestIds = filteredVerificationRequests
+    .filter((request: any) => request.status === "pending")
+    .map((request: any) => request.id);
+  const selectedPendingRequestIds = selectedRequestIds.filter((id) => visiblePendingRequestIds.includes(id));
+  const allVisiblePendingSelected = visiblePendingRequestIds.length > 0 && visiblePendingRequestIds.every((id) => selectedRequestIds.includes(id));
   const pendingVerificationRequests = (verificationRequests || []).filter((request: any) => request.status === "pending");
 
   // Stats
@@ -225,35 +294,135 @@ export default function AdminUsersPage() {
           </Card>
         </div>
 
-        {/* Search */}
-        {pendingVerificationRequests.length > 0 && (
-          <Card className="border-[hsl(var(--flights)/0.18)] bg-[hsl(var(--flights)/0.04)]">
-            <CardHeader className="pb-2">
+        {/* Blue Verified review panel */}
+        <Card className="border-[hsl(var(--flights)/0.18)] bg-[hsl(var(--flights)/0.04)]">
+          <CardHeader className="pb-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="flex items-center gap-2 text-base">
                 <BadgeCheck className="h-4 w-4 text-[hsl(var(--flights))]" /> Blue Verified requests
+                {pendingVerificationRequests.length > 0 && <Badge className="bg-amber-500/10 text-amber-600 border-0">{pendingVerificationRequests.length} pending</Badge>}
               </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {pendingVerificationRequests.slice(0, 5).map((request: any) => (
-                <div key={request.id} className="flex flex-col gap-2 rounded-xl border border-border/50 bg-card/80 p-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-foreground">{request.full_name}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{request.category || "personal"} request</p>
-                    {request.additional_info && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{request.additional_info}</p>}
-                  </div>
-                  <div className="flex shrink-0 gap-2">
-                    <Button size="sm" className="gap-1.5" disabled={reviewRequestMutation.isPending} onClick={() => reviewRequestMutation.mutate({ requestId: request.id, approved: true })}>
-                      <BadgeCheck className="h-3.5 w-3.5" /> Approve
-                    </Button>
-                    <Button size="sm" variant="outline" disabled={reviewRequestMutation.isPending} onClick={() => reviewRequestMutation.mutate({ requestId: request.id, approved: false, reason: "Request was not approved" })}>
-                      Reject
-                    </Button>
-                  </div>
+              <div className="flex flex-wrap gap-2">
+                {(["pending", "approved", "rejected", "all"] as const).map((status) => (
+                  <Button
+                    key={status}
+                    size="sm"
+                    variant={requestStatusFilter === status ? "default" : "outline"}
+                    className="h-8 rounded-full capitalize"
+                    onClick={() => { setRequestStatusFilter(status); setSelectedRequestIds([]); }}
+                  >
+                    {status}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search requests by name, category, note, or user ID..."
+                value={requestSearchQuery}
+                onChange={(e) => setRequestSearchQuery(e.target.value)}
+                className="h-10 rounded-xl pl-10"
+              />
+            </div>
+
+            {visiblePendingRequestIds.length > 0 && (
+              <div className="flex flex-col gap-2 rounded-xl border border-border/50 bg-card/70 p-3 sm:flex-row sm:items-center sm:justify-between">
+                <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={allVisiblePendingSelected}
+                    onChange={(e) => setSelectedRequestIds(e.target.checked ? visiblePendingRequestIds : [])}
+                    className="h-4 w-4 rounded border-border accent-primary"
+                  />
+                  Select all visible pending
+                </label>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="gap-1.5 bg-[hsl(var(--flights))] text-primary-foreground hover:bg-[hsl(var(--flights)/0.90)]"
+                    disabled={!selectedPendingRequestIds.length || bulkReviewMutation.isPending}
+                    onClick={() => bulkReviewMutation.mutate({ requestIds: selectedPendingRequestIds, approved: true })}
+                  >
+                    {bulkReviewMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} Bulk approve
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
+                    disabled={!selectedPendingRequestIds.length || bulkReviewMutation.isPending}
+                    onClick={() => bulkReviewMutation.mutate({ requestIds: selectedPendingRequestIds, approved: false })}
+                  >
+                    <XCircle className="h-3.5 w-3.5" /> Bulk reject
+                  </Button>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+              </div>
+            )}
+
+            {filteredVerificationRequests.length === 0 ? (
+              <div className="rounded-xl border border-border/50 bg-card/60 p-6 text-center text-sm text-muted-foreground">No Blue Verified requests match this view.</div>
+            ) : (
+              <div className="space-y-2">
+                {filteredVerificationRequests.map((request: any) => {
+                  const isPending = request.status === "pending";
+                  const reviewer = request.reviewed_by ? reviewerMap[request.reviewed_by] : null;
+                  return (
+                    <div key={request.id} className="rounded-xl border border-border/50 bg-card/80 p-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            {isPending && (
+                              <input
+                                type="checkbox"
+                                checked={selectedRequestIds.includes(request.id)}
+                                onChange={(e) => setSelectedRequestIds((ids) => e.target.checked ? [...ids, request.id] : ids.filter((id) => id !== request.id))}
+                                className="h-4 w-4 rounded border-border accent-primary"
+                              />
+                            )}
+                            <p className="truncate text-sm font-semibold text-foreground">{request.full_name}</p>
+                            <RequestStatusBadge status={request.status} />
+                          </div>
+                          <p className="mt-1 text-xs text-muted-foreground capitalize">{request.category || "personal"} request · {request.created_at ? format(new Date(request.created_at), "MMM d, yyyy h:mm a") : "—"}</p>
+                          {request.additional_info && <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{request.additional_info}</p>}
+                          {request.document_url && <a href={request.document_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-xs font-semibold text-[hsl(var(--flights))] hover:underline">View document</a>}
+                          {request.rejection_reason && <p className="mt-2 text-xs text-destructive">Reason: {request.rejection_reason}</p>}
+                          {request.reviewed_at && <p className="mt-1 text-[11px] text-muted-foreground">Reviewed {format(new Date(request.reviewed_at), "MMM d, yyyy h:mm a")}{reviewer ? ` by ${reviewer.full_name || reviewer.email || "admin"}` : ""}</p>}
+                        </div>
+                        <div className="flex shrink-0 gap-2">
+                          <Button size="sm" className="gap-1.5 bg-[hsl(var(--flights))] text-primary-foreground hover:bg-[hsl(var(--flights)/0.90)]" disabled={!isPending || reviewRequestMutation.isPending} onClick={() => reviewRequestMutation.mutate({ requestId: request.id, approved: true })}>
+                            {reviewRequestMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />} Approve badge
+                          </Button>
+                          <Button size="sm" variant="outline" className="gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10" disabled={!isPending || reviewRequestMutation.isPending} onClick={() => reviewRequestMutation.mutate({ requestId: request.id, approved: false, reason: "Request was not approved" })}>
+                            <XCircle className="h-3.5 w-3.5" /> Reject request
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {!!auditLog?.length && (
+              <div className="rounded-xl border border-border/50 bg-background/60 p-3">
+                <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Recent audit log</p>
+                <div className="space-y-1.5">
+                  {auditLog.slice(0, 5).map((entry: any) => {
+                    const reviewer = reviewerMap[entry.reviewer_user_id];
+                    return (
+                      <div key={entry.id} className="flex items-center justify-between gap-3 text-xs">
+                        <span className="truncate text-foreground">{entry.action.replace("_", " ")} · {entry.reason || "No reason"}</span>
+                        <span className="shrink-0 text-muted-foreground">{reviewer?.full_name || reviewer?.email || "Admin"} · {format(new Date(entry.created_at), "MMM d")}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -505,6 +674,16 @@ export default function AdminUsersPage() {
       </Dialog>
     </AdminLayout>
   );
+}
+
+function RequestStatusBadge({ status }: { status?: string | null }) {
+  if (status === "approved") {
+    return <Badge className="bg-emerald-500/10 text-emerald-600 border-0"><CheckCircle2 className="mr-1 h-3 w-3" />Approved</Badge>;
+  }
+  if (status === "rejected") {
+    return <Badge className="bg-destructive/10 text-destructive border-0"><XCircle className="mr-1 h-3 w-3" />Rejected</Badge>;
+  }
+  return <Badge className="bg-amber-500/10 text-amber-600 border-0"><Clock className="mr-1 h-3 w-3" />Pending</Badge>;
 }
 
 function DetailItem({ label, value, mono }: { label: string; value?: string | null; mono?: boolean }) {
