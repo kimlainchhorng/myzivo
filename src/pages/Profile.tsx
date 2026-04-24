@@ -420,157 +420,7 @@ const Profile = () => {
               </motion.div>
             </div>
           ) : (
-            <div className="space-y-2.5">
-              {/* ── ZIVO+ Upgrade (compact) ── */}
-              {!isPlus && (
-                <ParallaxSection index={1.9}>
-                  <Link to="/zivo-plus">
-                    <motion.div whileTap={{ scale: 0.98 }} className="flex items-center justify-between gap-2 rounded-2xl border border-primary/15 bg-card/75 px-3 py-2 shadow-sm backdrop-blur-xl">
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
-                          <Crown className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-[12px] font-bold">{t("profile.upgrade_plus")}</p>
-                          <p className="truncate text-[10px] text-muted-foreground">{t("profile.upgrade_desc")}</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    </motion.div>
-                  </Link>
-                </ParallaxSection>
-              )}
-
-              {/* ── Phone Required Card ── */}
-              {!profile?.phone?.trim() && (
-                <ParallaxSection index={1.5}>
-                  <div
-                    className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
-                    onClick={() => navigate("/account/profile-edit?focus=phone")}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
-                      <Phone className="w-5 h-5 text-destructive" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm text-foreground">Phone number required</p>
-                      <p className="text-xs text-muted-foreground">Add your phone number to access rides, flights & more</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-destructive/50 shrink-0" />
-                  </div>
-                </ParallaxSection>
-              )}
-
-              {/* ── Stories Row ── */}
-              <ParallaxSection index={2}>
-                <ProfileStories />
-              </ParallaxSection>
-
-          {/* ── Account actions moved lower for clearer mobile layout ── */}
-          <ParallaxSection index={2.1}>
-            <div className="relative mb-2">
-              <div className="grid grid-cols-3 gap-2">
-                <motion.button
-                  ref={langTriggerRef}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => setShowLangPicker(prev => !prev)}
-                  className="relative z-20 flex min-h-[42px] items-center justify-center gap-1.5 rounded-2xl border border-primary/20 bg-primary/10 px-2.5 text-[11px] font-bold text-primary shadow-sm touch-manipulation transition-all"
-                >
-                  <Globe className="h-3.5 w-3.5 shrink-0" />
-                  <img src={getFlagUrl(currentLang.cc)} alt="" className="h-3 w-4 rounded-[2px] object-cover shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                  <span className="truncate">Translate</span>
-                  <ChevronDown className={`h-3 w-3 shrink-0 transition-transform duration-300 ${showLangPicker ? "rotate-180" : ""}`} />
-                </motion.button>
-
-                <motion.button
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => setShowNotifPanel(prev => !prev)}
-                  className={cn(
-                    "relative z-20 flex min-h-[42px] items-center justify-center gap-1.5 rounded-2xl border px-2.5 text-[11px] font-bold shadow-sm touch-manipulation transition-all",
-                    showNotifPanel
-                      ? "border-primary/25 bg-primary text-primary-foreground"
-                      : "border-border/40 bg-card/75 text-foreground backdrop-blur-xl hover:bg-card/90"
-                  )}
-                >
-                  <span className="relative shrink-0">
-                    <Bell className={cn("h-3.5 w-3.5", showNotifPanel ? "text-primary-foreground" : "text-primary")} />
-                    {totalNotifCount > 0 && !showNotifPanel && (
-                      <span className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-sm">
-                        {totalNotifCount > 99 ? '99+' : totalNotifCount}
-                      </span>
-                    )}
-                  </span>
-                  <span className="truncate">Notifications</span>
-                </motion.button>
-
-                <motion.button
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => navigate("/more")}
-                  className="relative z-20 flex min-h-[42px] items-center justify-center gap-1.5 rounded-2xl border border-border/40 bg-card/75 px-2.5 text-[11px] font-bold text-foreground shadow-sm backdrop-blur-xl touch-manipulation transition-all hover:bg-card/90"
-                >
-                  <MoreHorizontal className="h-3.5 w-3.5 shrink-0 text-primary" />
-                  <span className="truncate">More</span>
-                  <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
-                </motion.button>
-              </div>
-
-              <AnimatePresence>
-                {showNotifPanel && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.22, ease: "easeInOut" }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-2 rounded-2xl border border-border/40 bg-card/90 p-2.5 shadow-xl shadow-primary/[0.04] backdrop-blur-xl">
-                      <div className="mb-2 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Bell className="h-3.5 w-3.5 text-primary" />
-                          <span className="text-xs font-bold">Notifications</span>
-                          {totalNotifCount > 0 && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{totalNotifCount} new</Badge>}
-                        </div>
-                        <button onClick={() => setShowNotifPanel(false)} className="rounded-xl p-1.5 transition-colors hover:bg-muted/50" aria-label="Close notifications">
-                          <X className="h-3.5 w-3.5 text-muted-foreground" />
-                        </button>
-                      </div>
-
-                      <div className="mb-2 max-h-[220px] space-y-1.5 overflow-y-auto pr-1">
-                        {totalNotifCount === 0 ? (
-                          <div className="py-3 text-center">
-                            <Bell className="mx-auto mb-1.5 h-6 w-6 text-muted-foreground/30" />
-                            <p className="text-xs text-muted-foreground">No new notifications</p>
-                          </div>
-                        ) : (
-                          <>
-                            {socialCount > 0 && (
-                              <button onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex w-full items-center gap-2.5 rounded-xl border border-primary/15 bg-primary/5 p-2 text-left transition-colors hover:bg-primary/10">
-                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15"><UserPlus className="h-3.5 w-3.5 text-primary" /></div>
-                                <div className="min-w-0 flex-1"><p className="text-xs font-semibold">Friend Requests</p><p className="text-[10px] text-muted-foreground">{socialCount} pending</p></div>
-                                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                              </button>
-                            )}
-                            {notifications.filter(n => !n.is_read).slice(0, 4).map((n) => (
-                              <button key={n.id} onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex w-full items-center gap-2.5 rounded-xl bg-muted/35 p-2 text-left transition-colors hover:bg-muted/55">
-                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10"><Bell className="h-3.5 w-3.5 text-primary" /></div>
-                                <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold">{n.title || 'Notification'}</p><p className="truncate text-[10px] text-muted-foreground">{n.body || n.template || 'New update'}</p></div>
-                                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                              </button>
-                            ))}
-                          </>
-                        )}
-                      </div>
-
-                      <div className="flex gap-2">
-                        <button onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex-1 rounded-xl bg-primary py-2 text-xs font-bold text-primary-foreground transition-transform active:scale-95">View All</button>
-                        <button onClick={() => setShowNotifPanel(false)} className="rounded-xl bg-muted/50 px-4 py-2 text-xs font-bold text-muted-foreground transition-transform active:scale-95 hover:bg-muted/70">Close</button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </ParallaxSection>
-
+            <div className="space-y-2.5 pt-1">
               {/* ── Profile Card with Cover Photo ── */}
               <ParallaxSection index={2}>
                 <motion.div
@@ -814,6 +664,158 @@ const Profile = () => {
                   </GlassCard3D>
                 </motion.div>
               </ParallaxSection>
+
+              {/* ── ZIVO+ Upgrade (compact) ── */}
+              {!isPlus && (
+                <ParallaxSection index={1.9}>
+                  <Link to="/zivo-plus">
+                    <motion.div whileTap={{ scale: 0.98 }} className="flex items-center justify-between gap-2 rounded-2xl border border-primary/15 bg-card/75 px-3 py-2 shadow-sm backdrop-blur-xl">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+                          <Crown className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-[12px] font-bold">{t("profile.upgrade_plus")}</p>
+                          <p className="truncate text-[10px] text-muted-foreground">{t("profile.upgrade_desc")}</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    </motion.div>
+                  </Link>
+                </ParallaxSection>
+              )}
+
+              {/* ── Phone Required Card ── */}
+              {!profile?.phone?.trim() && (
+                <ParallaxSection index={1.5}>
+                  <div
+                    className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+                    onClick={() => navigate("/account/profile-edit?focus=phone")}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                      <Phone className="w-5 h-5 text-destructive" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-foreground">Phone number required</p>
+                      <p className="text-xs text-muted-foreground">Add your phone number to access rides, flights & more</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-destructive/50 shrink-0" />
+                  </div>
+                </ParallaxSection>
+              )}
+
+              {/* ── Stories Row ── */}
+              <ParallaxSection index={2}>
+                <ProfileStories />
+              </ParallaxSection>
+
+          {/* ── Account actions moved lower for clearer mobile layout ── */}
+          <ParallaxSection index={2.1}>
+            <div className="relative mb-2">
+              <div className="grid grid-cols-3 gap-2">
+                <motion.button
+                  ref={langTriggerRef}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setShowLangPicker(prev => !prev)}
+                  className="relative z-20 flex min-h-[42px] items-center justify-center gap-1.5 rounded-2xl border border-primary/20 bg-primary/10 px-2.5 text-[11px] font-bold text-primary shadow-sm touch-manipulation transition-all"
+                >
+                  <Globe className="h-3.5 w-3.5 shrink-0" />
+                  <img src={getFlagUrl(currentLang.cc)} alt="" className="h-3 w-4 rounded-[2px] object-cover shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  <span className="truncate">Translate</span>
+                  <ChevronDown className={`h-3 w-3 shrink-0 transition-transform duration-300 ${showLangPicker ? "rotate-180" : ""}`} />
+                </motion.button>
+
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setShowNotifPanel(prev => !prev)}
+                  className={cn(
+                    "relative z-20 flex min-h-[42px] items-center justify-center gap-1.5 rounded-2xl border px-2.5 text-[11px] font-bold shadow-sm touch-manipulation transition-all",
+                    showNotifPanel
+                      ? "border-primary/25 bg-primary text-primary-foreground"
+                      : "border-border/40 bg-card/75 text-foreground backdrop-blur-xl hover:bg-card/90"
+                  )}
+                >
+                  <span className="relative shrink-0">
+                    <Bell className={cn("h-3.5 w-3.5", showNotifPanel ? "text-primary-foreground" : "text-primary")} />
+                    {totalNotifCount > 0 && !showNotifPanel && (
+                      <span className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-sm">
+                        {totalNotifCount > 99 ? '99+' : totalNotifCount}
+                      </span>
+                    )}
+                  </span>
+                  <span className="truncate">Notifications</span>
+                </motion.button>
+
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => navigate("/more")}
+                  className="relative z-20 flex min-h-[42px] items-center justify-center gap-1.5 rounded-2xl border border-border/40 bg-card/75 px-2.5 text-[11px] font-bold text-foreground shadow-sm backdrop-blur-xl touch-manipulation transition-all hover:bg-card/90"
+                >
+                  <MoreHorizontal className="h-3.5 w-3.5 shrink-0 text-primary" />
+                  <span className="truncate">More</span>
+                  <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
+                </motion.button>
+              </div>
+
+              <AnimatePresence>
+                {showNotifPanel && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.22, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-2 rounded-2xl border border-border/40 bg-card/90 p-2.5 shadow-xl shadow-primary/[0.04] backdrop-blur-xl">
+                      <div className="mb-2 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Bell className="h-3.5 w-3.5 text-primary" />
+                          <span className="text-xs font-bold">Notifications</span>
+                          {totalNotifCount > 0 && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{totalNotifCount} new</Badge>}
+                        </div>
+                        <button onClick={() => setShowNotifPanel(false)} className="rounded-xl p-1.5 transition-colors hover:bg-muted/50" aria-label="Close notifications">
+                          <X className="h-3.5 w-3.5 text-muted-foreground" />
+                        </button>
+                      </div>
+
+                      <div className="mb-2 max-h-[220px] space-y-1.5 overflow-y-auto pr-1">
+                        {totalNotifCount === 0 ? (
+                          <div className="py-3 text-center">
+                            <Bell className="mx-auto mb-1.5 h-6 w-6 text-muted-foreground/30" />
+                            <p className="text-xs text-muted-foreground">No new notifications</p>
+                          </div>
+                        ) : (
+                          <>
+                            {socialCount > 0 && (
+                              <button onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex w-full items-center gap-2.5 rounded-xl border border-primary/15 bg-primary/5 p-2 text-left transition-colors hover:bg-primary/10">
+                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15"><UserPlus className="h-3.5 w-3.5 text-primary" /></div>
+                                <div className="min-w-0 flex-1"><p className="text-xs font-semibold">Friend Requests</p><p className="text-[10px] text-muted-foreground">{socialCount} pending</p></div>
+                                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                              </button>
+                            )}
+                            {notifications.filter(n => !n.is_read).slice(0, 4).map((n) => (
+                              <button key={n.id} onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex w-full items-center gap-2.5 rounded-xl bg-muted/35 p-2 text-left transition-colors hover:bg-muted/55">
+                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10"><Bell className="h-3.5 w-3.5 text-primary" /></div>
+                                <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold">{n.title || 'Notification'}</p><p className="truncate text-[10px] text-muted-foreground">{n.body || n.template || 'New update'}</p></div>
+                                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                              </button>
+                            ))}
+                          </>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button onClick={() => { setShowNotifPanel(false); navigate('/notifications'); }} className="flex-1 rounded-xl bg-primary py-2 text-xs font-bold text-primary-foreground transition-transform active:scale-95">View All</button>
+                        <button onClick={() => setShowNotifPanel(false)} className="rounded-xl bg-muted/50 px-4 py-2 text-xs font-bold text-muted-foreground transition-transform active:scale-95 hover:bg-muted/70">Close</button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </ParallaxSection>
+
+
 
               {/* ── Social Content Tabs (Posts, Videos, Live, Status) ── */}
               <ParallaxSection index={2.5}>
