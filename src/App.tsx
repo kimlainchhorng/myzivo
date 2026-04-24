@@ -592,7 +592,8 @@ const App = () => (
                 <Route path="/wallet/coins/success" element={<ProtectedRoute><CoinPurchaseSuccess /></ProtectedRoute>} />
                 <Route path="/support" element={<ProtectedRoute><SupportCenterPage /></ProtectedRoute>} />
                 <Route path="/travel" element={<ProtectedRoute><AppTravel /></ProtectedRoute>} />
-                <Route path="/more" element={<ProtectedRoute><AppMore /></ProtectedRoute>} />
+                {/* /more is registered below with MorePage (the canonical hub).
+                   Do NOT re-add an /more route here — it would shadow MorePage. */}
                 <Route path="/personal-dashboard" element={<ProtectedRoute><PersonalDashboard /></ProtectedRoute>} />
                 <Route path="/personal/apply-job" element={<ProtectedRoute><ApplyJobHubPage /></ProtectedRoute>} />
                 <Route path="/personal/find-employee" element={<ProtectedRoute><FindEmployeePage /></ProtectedRoute>} />

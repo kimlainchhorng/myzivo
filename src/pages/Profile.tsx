@@ -10,6 +10,7 @@ import {
   Shield, Star, ChevronRight, UserPlus, BadgeCheck,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
   Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
+  Pencil, Heart, Share2, LogOut, HelpCircle, Inbox,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -241,6 +242,7 @@ const Profile = () => {
   const [coverPosition, setCoverPosition] = useState<number>(profile?.cover_position ?? 50);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [bioDraft, setBioDraft] = useState("");
+  const [bioEditing, setBioEditing] = useState(false);
   const [safeLinkPrompt, setSafeLinkPrompt] = useState<string | null>(null);
   const coverDragRef = useRef<{ startY: number; startPos: number } | null>(null);
 
@@ -525,40 +527,41 @@ const Profile = () => {
 
                       {/* Cover action buttons */}
                       {user && !coverRepositioning && (
-                        <div className="absolute top-3 right-3 flex gap-1.5 z-20">
+                        <div className="absolute top-2 right-2 flex gap-1.5 z-20">
                           {profile?.cover_url && (
                             <motion.button
                               whileTap={{ scale: 0.88 }}
                               onClick={() => { setCoverPosition(profile?.cover_position ?? 50); setCoverRepositioning(true); }}
-                              aria-label="Reposition cover"
-                              className="h-7 w-7 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25"
+                              aria-label="Reposition cover photo"
+                              className="h-10 w-10 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                             >
-                              <MoveVertical className="h-3 w-3" />
+                              <MoveVertical className="h-3.5 w-3.5" />
                             </motion.button>
                           )}
                           <motion.button
                             whileTap={{ scale: 0.88 }}
                             onClick={() => coverInputRef.current?.click()}
                             disabled={coverUploading}
-                            aria-label="Change cover"
-                            className="h-7 w-7 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25 disabled:opacity-50"
+                            aria-label="Change cover photo"
+                            className="h-10 w-10 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                           >
-                            {coverUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
+                            {coverUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImagePlus className="h-3.5 w-3.5" />}
                           </motion.button>
                           <motion.button
                             whileTap={{ scale: 0.88 }}
                             onClick={() => setShowNotifPanel(prev => !prev)}
-                            aria-label="Notifications"
+                            aria-label={showNotifPanel ? "Close notifications" : "Open notifications"}
+                            aria-pressed={showNotifPanel}
                             className={cn(
-                              "relative h-7 w-7 flex items-center justify-center rounded-full backdrop-blur-md shadow-md border",
+                              "relative h-10 w-10 flex items-center justify-center rounded-full backdrop-blur-md shadow-md border focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
                               showNotifPanel
                                 ? "bg-primary text-primary-foreground border-primary/40"
                                 : "bg-background/65 text-foreground/80 hover:bg-background/90 border-border/25"
                             )}
                           >
-                            <Bell className="h-3 w-3" />
+                            <Bell className="h-3.5 w-3.5" />
                             {totalNotifCount > 0 && !showNotifPanel && (
-                              <span className="absolute -right-1 -top-1 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-destructive px-1 text-[8px] font-bold text-destructive-foreground shadow-sm">
+                              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-sm">
                                 {totalNotifCount > 99 ? '99+' : totalNotifCount}
                               </span>
                             )}
@@ -566,10 +569,10 @@ const Profile = () => {
                           <motion.button
                             whileTap={{ scale: 0.88 }}
                             onClick={() => navigate("/more")}
-                            aria-label="More"
-                            className="h-7 w-7 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25"
+                            aria-label="More account options"
+                            className="h-10 w-10 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                           >
-                            <MoreHorizontal className="h-3 w-3" />
+                            <MoreHorizontal className="h-3.5 w-3.5" />
                           </motion.button>
                         </div>
                       )}
@@ -617,7 +620,8 @@ const Profile = () => {
                             whileTap={{ scale: 0.85 }}
                             onClick={() => avatarInputRef.current?.click()}
                             disabled={uploadAvatar.isPending}
-                            className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/40 ring-2 ring-card disabled:opacity-50"
+                            aria-label="Change profile photo"
+                            className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/40 ring-2 ring-card disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                           >
                             {uploadAvatar.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
                           </motion.button>
@@ -672,40 +676,110 @@ const Profile = () => {
 
                       {/* Bio */}
                       <div className="mt-2 max-w-sm">
-                        <textarea
-                          value={bioDraft}
-                          onChange={(e) => setBioDraft(e.target.value)}
-                          placeholder="Add bio..."
-                          maxLength={160}
-                          rows={2}
-                          className="w-full resize-none rounded-2xl border border-border/50 bg-background/80 px-3 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
-                        />
-                        <div className="mt-2 flex justify-start">
+                        {profile?.bio && !bioEditing ? (
+                          <div className="flex items-start gap-2">
+                            <p className="flex-1 text-xs text-foreground/85 whitespace-pre-wrap break-words">{profile.bio}</p>
+                            <button
+                              type="button"
+                              onClick={() => { setBioDraft(profile.bio ?? ""); setBioEditing(true); }}
+                              aria-label="Edit bio"
+                              className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            {!profile?.bio && (
+                              <p className="mb-1 text-[11px] text-muted-foreground">Add a short bio so people know who you are.</p>
+                            )}
+                            <textarea
+                              value={bioDraft}
+                              onChange={(e) => setBioDraft(e.target.value)}
+                              placeholder="Add bio..."
+                              maxLength={160}
+                              rows={2}
+                              aria-label="Bio"
+                              className="w-full resize-none rounded-2xl border border-border/50 bg-background/80 px-3 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+                            />
+                            <div className="mt-2 flex items-center gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => {
+                                  updateProfile.mutate(
+                                    { bio: bioDraft.trim() || null },
+                                    { onSuccess: () => setBioEditing(false) }
+                                  );
+                                }}
+                                disabled={updateProfile.isPending}
+                                className="rounded-full px-4"
+                              >
+                                {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : (bioDraft?.trim() ? "Save bio" : "Add bio")}
+                              </Button>
+                              {bioEditing && (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => { setBioDraft(profile?.bio ?? ""); setBioEditing(false); }}
+                                  className="rounded-full px-3 text-muted-foreground"
+                                >
+                                  Cancel
+                                </Button>
+                              )}
+                            </div>
+                          </>
+                        )}
+
+                        {/* Inline action row: Edit profile · Share · Sign out */}
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
                           <Button
                             type="button"
                             size="sm"
-                            onClick={() => updateProfile.mutate({ bio: bioDraft.trim() || null })}
-                            disabled={updateProfile.isPending}
-                            className="rounded-full px-4"
+                            variant="outline"
+                            onClick={() => navigate("/account/profile-edit")}
+                            className="rounded-full px-3 h-9 min-h-[36px] text-xs font-semibold"
                           >
-                            {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : (bioDraft?.trim() ? "Save bio" : "Add bio")}
+                            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit profile
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate("/qr-profile")}
+                            className="rounded-full px-3 h-9 min-h-[36px] text-xs font-semibold"
+                          >
+                            <Share2 className="h-3.5 w-3.5 mr-1.5" /> Share
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={async () => {
+                              try { await signOut(); navigate("/"); } catch (e) { toast.error("Could not sign out"); }
+                            }}
+                            className="rounded-full px-3 h-9 min-h-[36px] text-xs font-semibold text-muted-foreground hover:text-foreground"
+                            aria-label="Sign out"
+                          >
+                            <LogOut className="h-3.5 w-3.5 mr-1.5" /> Sign out
                           </Button>
                         </div>
                       </div>
 
                       {/* Friend, Follower & Following stats — Facebook/TikTok style */}
                       <div className="mb-1 mt-2 flex items-center justify-center gap-0">
-                        <button className="flex-1 text-center py-1 group" onClick={() => setSocialModal({ open: true, tab: "friends" })}>
+                        <button aria-label={`View ${friendCount} friends`} className="flex-1 text-center py-1 group min-h-[44px] focus-visible:ring-2 focus-visible:ring-primary/60 rounded-lg" onClick={() => setSocialModal({ open: true, tab: "friends" })}>
                           <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{friendCount}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">Friends</p>
                         </button>
                         <div className="w-px h-9 bg-border/40" />
-                        <button className="flex-1 text-center py-1 group" onClick={() => setSocialModal({ open: true, tab: "followers" })}>
+                        <button aria-label={`View ${followerCount} followers`} className="flex-1 text-center py-1 group min-h-[44px] focus-visible:ring-2 focus-visible:ring-primary/60 rounded-lg" onClick={() => setSocialModal({ open: true, tab: "followers" })}>
                           <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{followerCount}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">Followers</p>
                         </button>
                         <div className="w-px h-9 bg-border/40" />
-                        <button className="flex-1 text-center py-1 group" onClick={() => setSocialModal({ open: true, tab: "following" })}>
+                        <button aria-label={`View ${followingCount} following`} className="flex-1 text-center py-1 group min-h-[44px] focus-visible:ring-2 focus-visible:ring-primary/60 rounded-lg" onClick={() => setSocialModal({ open: true, tab: "following" })}>
                           <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{followingCount}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">Following</p>
                         </button>
@@ -773,6 +847,48 @@ const Profile = () => {
                     </CardContent>
                   </GlassCard3D>
                 </motion.div>
+              </ParallaxSection>
+
+              {/* ── Account Hub: 6 quick-access tiles ── */}
+              <ParallaxSection index={1.8}>
+                <div className="rounded-2xl border border-border/40 bg-card/80 p-3 shadow-sm backdrop-blur-sm">
+                  <div className="mb-2 flex items-center justify-between px-1">
+                    <h2 className="text-xs font-bold text-foreground/80 uppercase tracking-wide">Quick access</h2>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/more")}
+                      className="text-[11px] font-semibold text-primary hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 rounded px-1"
+                    >
+                      See all →
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { icon: Wallet, label: "Wallet", desc: "Balance & pay", href: "/wallet", accent: "text-emerald-500", bg: "bg-emerald-500/10" },
+                      { icon: Heart, label: "Saved", desc: "Posts & places", href: "/saved", accent: "text-rose-500", bg: "bg-rose-500/10" },
+                      { icon: Settings, label: "Settings", desc: "App preferences", href: "/account/settings", accent: "text-foreground/70", bg: "bg-muted" },
+                      { icon: ShoppingBag, label: "Orders", desc: "Order history", href: "/grocery/orders", accent: "text-blue-500", bg: "bg-blue-500/10" },
+                      { icon: Inbox, label: "Notifications", desc: "All alerts", href: "/notifications", accent: "text-amber-500", bg: "bg-amber-500/10" },
+                      { icon: HelpCircle, label: "Help", desc: "FAQ & support", href: "/help", accent: "text-foreground/70", bg: "bg-muted" },
+                    ].map((tile) => (
+                      <button
+                        key={tile.label}
+                        type="button"
+                        onClick={() => navigate(tile.href)}
+                        aria-label={`${tile.label} — ${tile.desc}`}
+                        className="group flex min-h-[76px] flex-col items-start gap-1.5 rounded-xl border border-border/40 bg-background/60 p-2.5 text-left transition-all hover:border-primary/30 hover:bg-background/90 hover:shadow-sm active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                      >
+                        <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", tile.bg)}>
+                          <tile.icon className={cn("h-4 w-4", tile.accent)} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-foreground leading-tight">{tile.label}</p>
+                          <p className="truncate text-[10px] text-muted-foreground">{tile.desc}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </ParallaxSection>
 
               {/* ZIVO+ upgrade moved to /more page */}

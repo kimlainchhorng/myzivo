@@ -1,83 +1,85 @@
 ## Goal
 
-Add five small reliability/UX improvements on top of the post viewer work that already shipped:
+Tighten the `/profile` (Account tab) experience: fix a duplicate route bug, add a clear quick-actions hub on the profile page itself, polish the bio editor, enlarge cover-photo controls to meet tap-target rules, and surface the most-used account links so users don't have to dig into `/more` for everything.
 
-1. Undo a submitted report within 10 seconds and roll the menu badge back.
-2. Capture failed/aborted swipe-dismiss attempts so future gesture regressions are diagnosable.
-3. Copy the dev regression checklist results to the clipboard for bug reports.
-4. Stop E2E menu tests from soft-skipping by seeding a guaranteed in-memory post.
-5. Make the post menu and grab handle keyboard- and screen-reader-friendly.
+Reference: the screenshot shows the page ending after the friends/followers stats with no obvious "what now?" — we'll add a structured Account hub directly on `/profile`.
 
 ## What changes
 
-### 1. Undo report within 10 seconds (`ProfileContentTabs.tsx`)
-- After `setReportStep("submitted")`, also start a 10s undo window:
-  - Show a secondary "Undo report" button on the confirmation screen with a live countdown ("Undo (10s)").
-  - When clicked within the window: remove the post id from `reportedPosts` (and `persistReported`), best-effort delete the just-inserted `post_reports` row (`.delete().eq("post_id", ...).eq("reporter_id", user.id).order("created_at", { ascending: false }).limit(1)`), `toast.success("Report undone")`, close sheet.
-  - After 10s the button disappears; "Done" remains.
-- Track the undo target in a `useRef<{ postId: string; expiresAt: number } | null>` so navigating away cancels it cleanly. Unmount cleanup clears the timer.
-- The `Reported` badge in the menu reads from `reportedPosts`, so it auto-reverts when undo flips the set.
-- Also surface a global toast with an inline Undo action using `sonner`'s `toast(... , { action: { label: "Undo", onClick } , duration: 10000 })` so users get the affordance even if they dismiss the sheet.
+### 1. Fix duplicate `/more` route (App.tsx)
+- Two routes register `/more`: line 595 (`AppMore`) and line 844 (`MorePage`). The second wins silently.
+- Decision: keep `MorePage` (it's the richer 502-line hub already linked from cover photo "..." and Sign-out flows). Remove the earlier `<Route path="/more" element={...AppMore...}/>`.
+- Add a code comment near the surviving route so the conflict doesn't re-surface.
 
-### 2. Gesture error logging (`useSwipeDownClose.ts` + `errorReporting.ts`)
-- Add a tiny `logGestureEvent(kind, ctx)` helper next to `logProfileActionError` that pipes to `analytics_events` as `event_name: "gesture_event"` (deduped per-session, fire-and-forget). Keep payload ≤512B.
-- In `useSwipeDownClose`:
-  - On `onDragEnd`, if `shouldDismiss` is false **and** `info.offset.y >= thresholds.minDragDistance`, log `gesture.swipe_aborted` with `{ offsetY, velocityY, platform, threshold }` — these are the "tried to swipe but didn't pass threshold" cases the user hit.
-  - Wrap `dragControls.start(e)` in `startDrag` with try/catch and log `gesture.start_failed` on throw (extremely rare, but currently silent).
-  - Log `gesture.dismissed` at info level (sampled 1/10) so we have positive baseline volume.
-- No UI change.
+### 2. New "Account hub" card on `/profile` (Profile.tsx)
+A compact 6-tile grid placed between the profile card and the Phone-required card:
 
-### 3. "Copy results" on the regression page (`PostMenuRegressionPage.tsx`)
-- Add a `Copy results` button next to `Run all checks`. Disabled when no rows have run.
-- Builds a markdown-style block:
-  ```
-  ZIVO post-menu regression — 2026-04-24T…
-  UA: <navigator.userAgent>
-  - [OK]  Bookmark insert — Insert + rollback succeeded
-  - [FAIL] Report submit — new row violates RLS …
-  ```
-- Uses `navigator.clipboard.writeText` with a `document.execCommand("copy")` textarea fallback. Toast on success/failure. Adds a `data-testid="regression-copy-results"` for QA.
+```text
+┌──────────┬──────────┬──────────┐
+│  Wallet  │  Saved   │ Settings │
+├──────────┼──────────┼──────────┤
+│  Orders  │ Notifs   │   Help   │
+└──────────┴──────────┴──────────┘
+                [ See all → /more ]
+```
 
-### 4. Seeded E2E dataset (no more soft-skip)
-- New file `tests/e2e/fixtures/seedProfilePosts.ts` exporting `seedProfilePosts(page)` that:
-  - Calls `page.addInitScript` to set a `window.__ZIVO_E2E_SEED__` flag and a small JSON payload (3 mock posts: image, reel, text) **before** any app script runs.
-- New module `src/lib/testing/e2eSeed.ts` (tree-shaken in prod via `if (import.meta.env.DEV || window.__ZIVO_E2E_SEED__)`):
-  - Reads the seed payload and exposes `getE2ESeedPosts(): FeedItem[] | null`.
-- `ProfileContentTabs.tsx` initial `feed` state: `useState<FeedItem[]>(() => getE2ESeedPosts() ?? demoFeed)`. Production behavior unchanged because the flag is unset.
-- Update both menu specs to call `await seedProfilePosts(page)` before `page.goto("/profile")` and remove the `test.skip(true, …)` branch — replace with a hard `expect(trigger).toBeVisible()`.
-- Net effect: CI always has 3 posts available; no other surface area changes.
+- Each tile: `min-h-[72px]`, accent ring color from semantic tokens, lucide icon, label + tiny description.
+- Targets:
+  - Wallet → `/wallet`
+  - Saved → `/saved`
+  - Settings → `/account/settings`
+  - Orders → `/grocery/orders`
+  - Notifications → `/notifications` (the actual list, not the dropdown)
+  - Help → `/help`
+- "See all" links to `/more`.
+- Tiles are first-class buttons (44px+ tap target, `aria-label`, focus ring).
+- Replaces nothing — this is additive content, not a layout overhaul.
 
-### 5. Accessibility (menu + grab handle)
-- `SwipeGrabHandle.tsx`:
-  - Make it focusable: `tabIndex={0}`, keep `role="button"`, refine `aria-label` to "Close post — drag down or press Escape".
-  - Add `onKeyDown`: `Enter`/`Space` triggers `onClose` (passed in as a new optional prop; ProfileContentTabs/ReelsFeedPage already have a close handler — wire it through).
-  - Visible focus ring: `focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:outline-none rounded-full`.
-- Post menu sheet (`ProfileContentTabs.tsx`):
-  - Wrap menu in `role="menu"` with `aria-label="Post actions"`. Each row: `role="menuitem"`, explicit `aria-label` (e.g. "Report this post — already reported" when disabled), `aria-disabled` for the disabled Report row.
-  - Trap focus while open: focus the first menuitem on mount, restore focus to the trigger on close, handle `Escape` to close, handle `ArrowDown`/`ArrowUp` to move focus between rows (small `useRovingFocus` inline helper, ~25 lines).
-  - Sheet container gets `role="dialog"` + `aria-modal="true"` + `aria-labelledby` pointing at the existing title.
-- New a11y unit test `src/components/social/SwipeGrabHandle.a11y.test.tsx`:
-  - Asserts `aria-label`, `tabIndex=0`, that `Enter` calls `onClose`, and that focus ring class is present.
-- New a11y E2E `tests/e2e/post-menu-a11y.spec.ts`:
-  - With the new seed fixture, opens the menu via keyboard (`Tab` to "..." trigger, `Enter`), then `Tab`s through every row asserting `:focus` lands on each `data-testid` in order, and `Escape` closes the sheet and returns focus to the trigger.
+### 3. Bio editor polish (Profile.tsx)
+- Add `bioEditing` state. When `profile.bio` is set and `!bioEditing`:
+  - Render bio as plain `<p>` with a small `Pencil` button next to it (`aria-label="Edit bio"`).
+- When editing or no bio yet: keep the textarea + Save button (same code path, just gated).
+- Save handler closes editor on success.
+- Empty bio state: subtle "Add a short bio so people know who you are" muted helper line above the input.
+
+### 4. Cover-photo button tap targets (Profile.tsx)
+- Cover top-right circular buttons are `h-7 w-7` (28px). Increase the **hitbox** to `h-10 w-10` while keeping the **icon visual** at the same size — use `flex items-center justify-center` with inner icon sized as today.
+- Apply to: reposition, change cover, notifications, more (4 buttons).
+- Add focus-visible ring class: `focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none`.
+
+### 5. Surface "Edit profile" + "Sign out" inline (Profile.tsx)
+- After the bio block, add a horizontal action row:
+  - `Edit profile` outline button → `/account/profile-edit`.
+  - `Share profile` outline button → `/qr-profile` (already exists in MorePage's quick actions).
+  - Overflow menu (kebab) → "Sign out" (calls `signOut` + redirects to `/`).
+- Keeps the current bell/more pair on the cover, but adds the truly common actions where they belong (under the name/badges).
+
+### 6. Order/group existing CTAs (Profile.tsx)
+Reorder the cards under the profile header so the most actionable items come first:
+1. Profile card (cover, avatar, name, bio, stats, socials, edit/share/signout row)
+2. **Account hub grid** (new, see #2)
+3. **Verification CTA** (already exists — promote out of profile card to its own card so it's not buried under the bio when not verified)
+4. Phone-required card (only when missing — already conditional)
+5. Stories
+6. Notifications dropdown panel (unchanged)
+7. ProfileContentTabs (unchanged)
+
+### 7. Accessibility pass on the profile card
+- Stats buttons get explicit `aria-label="View N friends"` etc.
+- Cover-photo buttons get `aria-pressed` where toggleable (notifications panel button).
+- Avatar upload button: add `aria-label="Change profile photo"`.
+- Verification CTA already has accessible text — leave alone.
 
 ## Files
 
-**New**
-- `src/lib/testing/e2eSeed.ts`
-- `tests/e2e/fixtures/seedProfilePosts.ts`
-- `tests/e2e/post-menu-a11y.spec.ts`
-- `src/components/social/SwipeGrabHandle.a11y.test.tsx`
-
 **Edited**
-- `src/components/profile/ProfileContentTabs.tsx` (undo flow, a11y on menu, e2e seed init)
-- `src/components/social/SwipeGrabHandle.tsx` (keyboard support, focus ring, optional `onClose`)
-- `src/components/social/useSwipeDownClose.ts` (gesture logging hooks)
-- `src/lib/security/errorReporting.ts` (export `logGestureEvent`)
-- `src/pages/dev/PostMenuRegressionPage.tsx` (Copy results button)
-- `tests/e2e/post-menu-interaction.spec.ts` (use seed fixture, drop soft-skip)
+- `src/App.tsx` — remove the duplicate `/more` route.
+- `src/pages/Profile.tsx` — add Account hub grid, bio edit toggle, edit/share/signout row, enlarge cover buttons, accessibility labels, reorder verification card out of the profile header.
+
+**No new pages, no schema changes, no new dependencies.** All link targets already exist in `App.tsx` (verified: `/wallet`, `/saved`, `/account/settings`, `/grocery/orders`, `/notifications`, `/help`, `/qr-profile`, `/more`, `/account/profile-edit`).
 
 ## Out of scope
-- No DB schema changes (post_reports already supports delete via RLS the user has).
-- No changes to the Reels viewer's own swipe — the hook change benefits it automatically.
-- No new analytics dashboards; events land in the existing `analytics_events` table.
+- Restyling the cover photo / avatar treatment.
+- Touching `MorePage` content (already comprehensive).
+- Adding new account features (everything links to existing pages).
+- Server/RLS changes.
