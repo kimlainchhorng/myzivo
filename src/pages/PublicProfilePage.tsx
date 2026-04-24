@@ -841,7 +841,7 @@ export default function PublicProfilePage() {
                   <AvatarImage src={resolvedProfile.avatar_url || undefined} />
                   <AvatarFallback className="text-3xl sm:text-4xl font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
                 </Avatar>
-                {resolvedProfile.is_verified && (
+                {isBlueVerified(resolvedProfile.is_verified) && (
                   <div className="absolute bottom-1 right-1 rounded-full bg-background p-0.5 shadow-md">
                     <VerifiedBadge size={20} />
                   </div>
