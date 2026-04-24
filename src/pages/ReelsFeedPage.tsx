@@ -314,7 +314,7 @@ export default function ReelsFeedPage() {
         const storeIds = [...new Set(storePosts.map((p: any) => p.store_id))];
         const { data: stores } = await supabase
           .from("store_profiles")
-          .select("id, name, logo_url, slug")
+          .select("id, name, logo_url, slug, is_verified")
           .in("id", storeIds);
         const storeMap = new Map((stores || []).map((s: any) => [s.id, s]));
 
@@ -336,7 +336,7 @@ export default function ReelsFeedPage() {
             author_name: store?.name || "Store",
             author_avatar: store?.logo_url || null,
             author_id: store?.id || post.store_id,
-            author_is_verified: true,
+            author_is_verified: store?.is_verified === true,
             store_slug: store?.slug || null,
             created_at: post.created_at,
           });
@@ -392,14 +392,14 @@ export default function ReelsFeedPage() {
               : Promise.resolve({ data: [] as any[] }),
           ]);
 
-          let sharedStores: Array<{ id: string; name: string; logo_url: string | null; slug: string }> = [];
+          let sharedStores: Array<{ id: string; name: string; logo_url: string | null; slug: string; is_verified?: boolean | null }> = [];
           const sharedStoreIds = [...new Set(originalStorePosts.map((p) => p.store_id))] as string[];
           if (sharedStoreIds.length) {
             const { data } = await supabase
               .from("store_profiles")
-              .select("id, name, logo_url, slug")
+              .select("id, name, logo_url, slug, is_verified")
               .in("id", sharedStoreIds);
-            sharedStores = (data ?? []) as Array<{ id: string; name: string; logo_url: string | null; slug: string }>;
+            sharedStores = (data ?? []) as Array<{ id: string; name: string; logo_url: string | null; slug: string; is_verified?: boolean | null }>;
           }
 
           const publicProfileMap = new Map<string, any>();
