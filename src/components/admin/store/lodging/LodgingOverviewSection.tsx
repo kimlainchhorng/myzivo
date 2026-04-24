@@ -38,10 +38,17 @@ export default function LodgingOverviewSection({ storeId }: { storeId: string })
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {["Admin sections enabled", "Deep links enabled", "Setup checklist enabled", "Rate plans enabled", "Guest requests enabled", "Folio & charges enabled"].map((label) => <span key={label} className="rounded-full bg-background px-2.5 py-1 text-[10px] font-medium text-primary ring-1 ring-primary/15">{label}</span>)}
               </div>
-              <div className="mt-3 rounded-lg border border-primary/20 bg-background p-3">
-                <p className="text-xs font-semibold text-foreground">Next best action</p>
-                <p className="mt-1 text-xs text-muted-foreground">{nextAction.hint}</p>
-                <Button size="sm" className="mt-3 h-8" onClick={() => goTab(nextAction.tab)}>{nextAction.actionLabel}</Button>
+              <div className="mt-3 rounded-lg border border-primary/25 bg-background p-4 shadow-sm">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-foreground">Next best action: {nextAction.label}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{nextAction.hint}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" className="h-8" onClick={() => goTab(nextAction.tab)}>{nextAction.actionLabel}</Button>
+                    <Button size="sm" variant="outline" className="h-8" onClick={() => window.location.assign("/admin/lodging/qa-checklist")}>Review QA</Button>
+                  </div>
+                </div>
               </div>
               <div className="mt-3 grid gap-2 sm:grid-cols-4">
                 <Button size="sm" variant="outline" onClick={() => goTab("lodge-overview")}><CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Checklist</Button>

@@ -14,4 +14,16 @@ test.describe("lodging admin deep-link logic", () => {
       expect(qaSource).toContain("?tab=${tab}");
     });
   }
+
+  test("authenticated preview renders critical deep links when E2E_STORE_ID is provided", async ({ page }) => {
+    const storeId = process.env.E2E_LODGING_STORE_ID;
+    test.skip(!storeId, "Set E2E_LODGING_STORE_ID with an authenticated storage state to run live route-render checks.");
+    for (const tab of tabs) {
+      await page.goto(`/admin/stores/${storeId}?tab=${tab}`);
+      await page.reload({ waitUntil: "networkidle" });
+      await expect(page.getByTestId(`lodging-tab-${tab}`)).toBeVisible();
+      await expect(page.getByTestId(`lodging-tab-${tab}`)).not.toBeEmpty();
+      await expect(page).toHaveURL(new RegExp(`tab=${tab}`));
+    }
+  });
 });
