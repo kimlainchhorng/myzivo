@@ -169,8 +169,13 @@ export default function ProfileFeedCard({
 
           {/* Sharer's own caption */}
           {item.caption && item.caption !== item.sharedOrigin.caption && (
-            <div className="px-3 pb-2">
-              <p className="text-[13px] text-foreground">{item.caption}</p>
+            <div className="px-3 pb-2" onClick={(e) => { e.stopPropagation(); setShowSharerCaption((v) => !v); }}>
+              <p className={cn("text-[13px] text-foreground leading-snug whitespace-pre-wrap", !showSharerCaption && "line-clamp-3")}>{item.caption}</p>
+              {item.caption.length > 140 && (
+                <button type="button" onClick={(e) => { e.stopPropagation(); setShowSharerCaption((v) => !v); }} className="text-[12px] text-muted-foreground mt-0.5 font-medium">
+                  {showSharerCaption ? "See less" : "See more"}
+                </button>
+              )}
             </div>
           )}
 
