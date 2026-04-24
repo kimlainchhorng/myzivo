@@ -466,7 +466,7 @@ const Profile = () => {
 
                       {/* Cover action buttons */}
                       {user && !coverRepositioning && (
-                        <div className="absolute top-4 right-8 flex gap-2 z-20 sm:right-10">
+                        <div className="absolute top-5 right-16 flex gap-2 z-20 sm:right-20">
                           {profile?.cover_url && (
                             <motion.button
                               whileTap={{ scale: 0.9 }}
