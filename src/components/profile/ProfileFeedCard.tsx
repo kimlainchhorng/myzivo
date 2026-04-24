@@ -391,8 +391,10 @@ export default function ProfileFeedCard({
 
       {/* View all comments */}
       {item.comments > 0 && (
-        <button onClick={() => setShowComments(true)} className="px-3 pb-2">
-          <p className="text-[12px] text-muted-foreground">View all {item.comments} comments</p>
+        <button onClick={() => setShowComments(true)} className="px-3 pb-2 text-left active:opacity-70">
+          <p className="text-[13px] text-muted-foreground font-medium hover:text-foreground transition-colors">
+            {commentsLinkLabel(item.comments)}
+          </p>
         </button>
       )}
 
