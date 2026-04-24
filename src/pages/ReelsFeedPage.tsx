@@ -65,7 +65,7 @@ const AlertDialogFooter = lazy(() => import("@/components/ui/alert-dialog").then
 const AlertDialogHeader = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogHeader })));
 const AlertDialogTitle = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogTitle })));
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
 const trackInitiateCheckout = (input: Record<string, unknown>) =>
@@ -2037,6 +2037,42 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
     setEditSaving(false);
   };
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Open comments deep link: /feed?post=<id>&src=<src>&comments=1
+  useEffect(() => {
+    const wantComments = searchParams.get("comments") === "1";
+    const targetId = searchParams.get("post");
+    const targetSrc = searchParams.get("src");
+    if (
+      wantComments &&
+      targetId === interactionPostId &&
+      (!targetSrc || targetSrc === item.source)
+    ) {
+      setShowComments(true);
+    }
+    // Only react to URL changes, not local interactionPostId churn
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams.toString()]);
+
+  const openCommentsDeepLink = () => {
+    const next = new URLSearchParams(searchParams);
+    next.set("post", interactionPostId);
+    next.set("src", item.source);
+    next.set("comments", "1");
+    setSearchParams(next, { replace: false });
+  };
+
+  const closeCommentsDeepLink = () => {
+    const next = new URLSearchParams(searchParams);
+    if (next.get("post") === interactionPostId) {
+      next.delete("post");
+      next.delete("src");
+      next.delete("comments");
+      setSearchParams(next, { replace: true });
+    }
+  };
+
   const handleComment = () => {
     if (commentSetting === "off") {
       toast.error("Comments are turned off for this post");
@@ -2046,7 +2082,13 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       toast.error("Please sign in to comment");
       return;
     }
-    setShowComments(!showComments);
+    if (showComments) {
+      setShowComments(false);
+      closeCommentsDeepLink();
+    } else {
+      setShowComments(true);
+      openCommentsDeepLink();
+    }
   };
 
   // Comments are now handled by CommentsSheet
