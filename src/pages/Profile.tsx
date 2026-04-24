@@ -143,6 +143,23 @@ const Profile = () => {
   const { data: profile, isLoading: profileLoading } = useUserProfile();
   const { data: merchantData } = useMerchantRole();
   const { unreadCount: notifUnreadCount, notifications } = useNotifications(20);
+  const { data: latestVerificationRequest } = useQuery({
+    queryKey: ["verification-request", user?.id, "latest"],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await (supabase as any)
+        .from("verification_requests")
+        .select("id, status, rejection_reason, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { id: string; status: string | null; rejection_reason: string | null; created_at: string } | null;
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+  });
   
   // Count pending friend requests + new followers
   const [socialCount, setSocialCount] = useState(0);
@@ -528,6 +545,9 @@ const Profile = () => {
                               {getInitials()}
                             </AvatarFallback>
                           </Avatar>
+                          {profile?.is_verified && (
+                            <BlueVerifiedBadge className="absolute bottom-1 right-1 h-6 w-6" />
+                          )}
                           <motion.button
                             whileHover={{ scale: 1.15, rotate: 10 }}
                             whileTap={{ scale: 0.85 }}
@@ -547,12 +567,7 @@ const Profile = () => {
                       <CardTitle className="flex items-center justify-start gap-2 text-lg font-bold">
                         <Sparkles className="h-4 w-4 text-primary" />
                         {profile?.full_name || t("profile.set_name")}
-                        {profile?.is_verified && (
-                          <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="10" fill="hsl(var(--primary))" />
-                            <path d="M8 12.5L10.5 15L16 9.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
+                        {profile?.is_verified && <BlueVerifiedBadge />}
                       </CardTitle>
                       {/* Email hidden — only visible to account owner in settings */}
                       <div className="flex flex-wrap items-center justify-start gap-2 mt-3">
