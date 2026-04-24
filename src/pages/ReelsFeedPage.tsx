@@ -2180,12 +2180,21 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
 
             {/* Original post caption */}
             {item.shared_from_caption && (
-              <div className="px-3 pb-2">
-                <div className="text-[13px] text-foreground">
+              <div className="px-3 pb-2" onClick={() => setShowOriginalCaption((v) => !v)}>
+                <div className={cn("text-[13px] text-foreground leading-snug", !showOriginalCaption && "line-clamp-3")}>
                   <Suspense fallback={<span>{item.shared_from_caption}</span>}>
                     <SafeCaption text={item.shared_from_caption} />
                   </Suspense>
                 </div>
+                {item.shared_from_caption.length > 140 && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setShowOriginalCaption((v) => !v); }}
+                    className="text-[12px] text-muted-foreground mt-0.5 font-medium"
+                  >
+                    {showOriginalCaption ? "See less" : "See more"}
+                  </button>
+                )}
               </div>
             )}
 
