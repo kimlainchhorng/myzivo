@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:rls": "vitest run src/test/rls",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "qa:safe-area": "node scripts/qa/safe-area-check.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
