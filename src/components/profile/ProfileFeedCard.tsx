@@ -366,17 +366,17 @@ export default function ProfileFeedCard({
             ) : (
               <Heart className={cn("h-[22px] w-[22px] transition-all", isLiked ? "text-destructive fill-destructive scale-110" : "text-foreground group-active:scale-125")} />
             )}
-            {item.likes > 0 && (
+            {formatCount(item.likes) && (
               <span className={cn("text-[12px] font-semibold", isLiked || selectedReaction ? "text-destructive" : "text-muted-foreground")}>
-                {item.likes > 999 ? `${(item.likes / 1000).toFixed(1)}k` : item.likes}
+                {formatCount(item.likes)}
               </span>
             )}
           </button>
           <button onClick={() => setShowComments(true)} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
             <MessageCircle className="h-[22px] w-[22px]" />
-            {item.comments > 0 && (
+            {formatCount(item.comments) && (
               <span className="text-[12px] text-muted-foreground font-semibold">
-                {item.comments > 999 ? `${(item.comments / 1000).toFixed(1)}k` : item.comments}
+                {formatCount(item.comments)}
               </span>
             )}
           </button>
