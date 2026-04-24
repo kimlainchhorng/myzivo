@@ -2400,12 +2400,12 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                   )}
                 </div>
               ) : item.media_urls.length === 1 ? (
-                /* Single image */
-                <div className="relative w-full bg-black max-h-[70vh] flex items-center justify-center overflow-hidden">
+                /* Single image — full width, natural height */
+                <div className="relative w-full bg-black overflow-hidden">
                   <img
                     src={mediaUrl}
                     alt={item.caption || "Post"}
-                    className="max-h-[70vh] h-auto w-auto max-w-full object-contain cursor-pointer"
+                    className="block w-full h-auto cursor-pointer"
                     loading="lazy"
                     onClick={() => onOpenFullscreen?.()}
                   />
