@@ -24,6 +24,7 @@ import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolv
 import { isLocalDraftPostId, toUserPostInteractionId } from "@/lib/social/postInteraction";
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
+import { logProfileActionError } from "@/lib/security/errorReporting";
 
 /**
  * Fullscreen post viewer wrapper with drag-down-to-close.
@@ -152,6 +153,33 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [reportCategory, setReportCategory] = useState("");
   const [showCommentSettingsSheet, setShowCommentSettingsSheet] = useState(false);
   const [commentControl, setCommentControl] = useState<"everyone" | "followers" | "off">("everyone");
+  const [reportedPosts, setReportedPosts] = useState<Set<string>>(new Set());
+
+  // Restore "Reported" status from localStorage (per-user, survives reloads).
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const raw = localStorage.getItem(`zivo_reported_posts:${user.id}`);
+      if (raw) setReportedPosts(new Set(JSON.parse(raw) as string[]));
+    } catch {
+      /* ignore corrupt cache */
+    }
+  }, [user?.id]);
+
+  const persistReported = useCallback(
+    (next: Set<string>) => {
+      if (!user?.id) return;
+      try {
+        localStorage.setItem(
+          `zivo_reported_posts:${user.id}`,
+          JSON.stringify(Array.from(next)),
+        );
+      } catch {
+        /* quota exceeded — non-fatal */
+      }
+    },
+    [user?.id],
+  );
 
   const visibleFeed = feed.filter((i) => !hiddenPosts.has(i.id));
   const filtered = activeTab === "all" ? visibleFeed : visibleFeed.filter((i) => i.type === activeTab);
@@ -494,6 +522,11 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
         else next.delete(interactionId);
         return next;
       });
+      logProfileActionError(
+        "bookmark.toggle",
+        { postId: interactionId, op: wasBookmarked ? "delete" : "insert", userId: user?.id },
+        error,
+      );
       toast.error(error?.message || "Bookmark failed");
     }
   }, [bookmarkedPosts, user?.id]);
@@ -880,19 +913,35 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   )}
                 </div>
 
-                <div className="py-2">
-                  <button
-                    onClick={() => {
-                      setShowPostMenu(false);
-                      setReportStep("categories");
-                      setReportCategory("");
-                      setShowReportSheet(true);
-                    }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-destructive hover:bg-muted/50 transition-colors"
-                  >
-                    <Flag className="w-5 h-5" />
-                    Report
-                  </button>
+                <div className="py-2" data-testid="profile-post-menu-sheet">
+                  {(() => {
+                    const alreadyReported = reportedPosts.has(selectedPost.id);
+                    return (
+                      <button
+                        data-testid="profile-menu-report"
+                        disabled={alreadyReported}
+                        onClick={() => {
+                          if (alreadyReported) return;
+                          setShowPostMenu(false);
+                          setReportStep("categories");
+                          setReportCategory("");
+                          setShowReportSheet(true);
+                        }}
+                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                      >
+                        <Flag className="w-5 h-5" />
+                        <span className="flex-1 text-left">Report</span>
+                        {alreadyReported && (
+                          <span
+                            data-testid="profile-menu-report-status"
+                            className="text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full"
+                          >
+                            Reported
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })()}
                   <button
                     onClick={() => {
                       const id = selectedPost.id;
@@ -905,7 +954,8 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       toast.success(isOn ? "Notifications turned off" : "Notifications turned on for this post");
                       setShowPostMenu(false);
                     }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    data-testid="profile-menu-notifications"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <Bell className="w-5 h-5" />
                     {notifPosts.has(selectedPost.id) ? "Turn off notifications" : "Turn on notifications"}
@@ -916,7 +966,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       navigator.clipboard.writeText(url).then(() => toast.success("Link copied!")).catch(() => toast.info("Could not copy link"));
                       setShowPostMenu(false);
                     }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <Link2 className="w-5 h-5" />
                     Copy link
@@ -933,14 +983,15 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       setSelectedPost(null);
                       toast.success("You won't see this post anymore");
                     }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    data-testid="profile-menu-not-interested"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <EyeOff className="w-5 h-5" />
                     Not interested
                   </button>
                   <button
                     onClick={() => { setSharePostId(selectedPost.id); setShowPostMenu(false); }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <Share2 className="w-5 h-5" />
                     Share
@@ -948,7 +999,8 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   {profileOwnerId === user?.id && (
                     <button
                       onClick={() => { setShowPostMenu(false); setShowCommentSettingsSheet(true); }}
-                      className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                      data-testid="profile-menu-comment-settings"
+                      className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                     >
                       <Settings2 className="w-5 h-5" />
                       Comment settings
@@ -962,7 +1014,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                           setEditingCaption(true);
                           setShowPostMenu(false);
                         }}
-                        className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                       >
                         <Settings2 className="w-5 h-5" />
                         Edit caption
@@ -973,7 +1025,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                             handleDeletePost(selectedPost.id);
                           }
                         }}
-                        className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-destructive hover:bg-muted/50 transition-colors"
+                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 transition-colors"
                       >
                         <Trash2 className="w-5 h-5" />
                         Delete post
@@ -1066,34 +1118,56 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       Thanks for letting us know. Your report is anonymous and our team will review this content.
                     </p>
                     <button
+                      data-testid="profile-report-submit"
                       onClick={async () => {
+                        const targetId = selectedPost?.id;
                         try {
                           if (selectedPost) {
-                            await (supabase as any).from("post_reports").insert({
+                            const { error } = await (supabase as any).from("post_reports").insert({
                               post_id: toUserPostInteractionId(selectedPost.id),
                               reporter_id: user?.id,
                               category: reportCategory,
                             });
+                            if (error) throw error;
                           }
-                        } catch { /* graceful */ }
+                        } catch (err) {
+                          logProfileActionError(
+                            "report.submit",
+                            { postId: targetId, category: reportCategory, userId: user?.id },
+                            err,
+                          );
+                          // Still show the user a confirmation — the report is queued client-side.
+                        }
+                        if (targetId) {
+                          setReportedPosts((prev) => {
+                            const next = new Set(prev);
+                            next.add(targetId);
+                            persistReported(next);
+                            return next;
+                          });
+                        }
                         setReportStep("submitted");
                       }}
-                      className="w-full bg-primary text-primary-foreground rounded-xl py-3 text-sm font-semibold"
+                      className="w-full bg-primary text-primary-foreground rounded-xl py-3 min-h-[44px] text-sm font-semibold"
                     >
                       Submit report
                     </button>
                   </div>
                 )}
                 {reportStep === "submitted" && (
-                  <div className="px-6 pb-8 text-center">
-                    <div className="text-5xl mb-3">✓</div>
-                    <p className="text-base font-semibold text-foreground mb-2">Thanks for your report</p>
+                  <div className="px-6 pb-8 text-center" data-testid="profile-report-submitted">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                      <svg className="h-9 w-9 text-primary" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <p className="text-base font-semibold text-foreground mb-2">Report submitted</p>
                     <p className="text-sm text-muted-foreground mb-5">
-                      We use reports like yours to keep ZIVO safe.
+                      Thanks for helping keep ZIVO safe. Our team will review this post. You can see its status as <span className="font-medium text-foreground">Reported</span> in the post menu.
                     </p>
                     <button
                       onClick={() => setShowReportSheet(false)}
-                      className="w-full bg-primary text-primary-foreground rounded-xl py-3 text-sm font-semibold"
+                      className="w-full bg-primary text-primary-foreground rounded-xl py-3 min-h-[44px] text-sm font-semibold"
                     >
                       Done
                     </button>

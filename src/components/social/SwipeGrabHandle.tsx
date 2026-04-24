@@ -44,9 +44,9 @@ export function SwipeGrabHandle({
         setPulsing(false);
         onStartDrag(e);
       }}
-      style={{ touchAction: "none" }}
+      style={{ touchAction: "none", minHeight: 44 }}
       className={cn(
-        "mx-auto flex h-8 w-full max-w-[160px] cursor-grab items-center justify-center active:cursor-grabbing select-none",
+        "mx-auto flex h-11 w-full max-w-[160px] cursor-grab items-center justify-center active:cursor-grabbing select-none",
         className,
       )}
     >

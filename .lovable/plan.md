@@ -1,46 +1,71 @@
-# Fix profile post viewer parity, bookmarks error, and swipe handle polish
+# Harden the post viewer: tests, logging, tap targets, report status
 
-## Problems found while testing
+A focused pass that adds verifiable safeguards around the swipe-down post viewer and its menu. Five small, independent pieces.
 
-1. **Bookmarks save fails** — `ProfileContentTabs` inserts a `title` column that doesn't exist in the `bookmarks` table, producing the red error banner shown in the feed: *"Could not find the 'title' column of 'bookmarks' in the schema cache."*
-2. **Profile 3-dot menu buttons don't really work** — On the profile page (`/profile`), the post overlay's "..." menu uses placeholder `toast.info`/`toast.success` calls for Report, Turn on notifications, Not interested, and Comment settings. They show a toast but do nothing. The Reels feed already has real implementations (Report sheet, persistent notifications toggle, real "Hide" action, Comment settings sheet). The two viewers don't match.
-3. **Duplicate grab pill in the bottom sheet** — Inside the profile post-options bottom sheet there is both the sheet's own drag affordance (top) AND a second `w-10 h-1` divider mid-sheet (line 879). That's the second bar visible in screenshot 330.
-4. **Swipe handle visual** — the current 4px-tall, 36px-wide pill is hard to spot on photo posts; users don't realize they can drag.
+## 1. End-to-end tests for swipe + menu re-clickability
 
-## What I'll change
+Add `tests/e2e/post-menu-interaction.spec.ts` (Playwright, mirrors the existing `swipe-close.spec.ts` pattern):
 
-### 1. Bookmarks insert (fix red banner)
-`src/components/profile/ProfileContentTabs.tsx`
-- Remove `title:` and `collection_name:` from the insert payload (table only has `user_id`, `item_id`, `item_type`, `created_at`). Same fix mirrors the working `useBookmark` hook.
+- **Swipe round-trip**: open the profile post viewer → swipe handle past the threshold → assert overlay unmounts (`profile-post-close` gone). Re-open → assert overlay remounts.
+- **Repeated swipes don't trap clicks**: open / close the overlay 3× in a row, then on the 4th open click the "..." button and assert the menu sheet appears (`data-testid="profile-post-menu-sheet"`). Catches stale drag-listener / pointer-capture regressions.
+- **Menu actions are clickable**: with the menu open, click each of Report / Notifications / Not interested / Comment settings and assert the correct success state appears (toast or follow-up sheet via new `data-testid` hooks).
+- Runs on iPhone 13 + Pixel 7 device descriptors so iOS/Android swipe thresholds are both exercised.
 
-### 2. Profile post menu — wire real handlers (parity with Reels)
-`src/components/profile/ProfileContentTabs.tsx` (overlay menu, lines ~882–955)
-- **Report** → open the same `ReportSheet` flow used in Reels (categories → sub-reason → submitted), persisting to `post_reports` if available, otherwise a graceful confirmation.
-- **Turn on/off notifications** → toggle local `post_followed` state stored per post in `post_subscriptions` (insert/delete row), label flips to "Turn off notifications".
-- **Not interested** → insert `post_hidden` row and immediately remove the post from the visible list (optimistic).
-- **Comment settings** (owner only) → open the same `CommentSettingsSheet` already implemented in Reels. Extract it into `src/components/social/PostCommentSettingsSheet.tsx` so both viewers reuse it.
-- Keep existing working actions: Copy link, Share, Edit caption, Delete post.
+## 2. In-app regression checklist (dev-only)
 
-### 3. Remove duplicate handle in bottom sheet
-- Delete the standalone `<div className="w-10 h-1 ...">` on line 879 — `SwipeableSheet` already renders its own grab indicator.
+New page `src/pages/dev/PostMenuRegressionPage.tsx` mounted at `/dev/post-menu-check` (gated to `import.meta.env.DEV` — 404s in production).
 
-### 4. Swipe handle — better affordance
-`src/components/social/SwipeGrabHandle.tsx`
-- Increase tap zone height from `h-5` → `h-8`, pill from `h-1 w-9` → `h-1.5 w-12`, and add a soft glow on dark tone (`shadow-[0_0_12px_rgba(255,255,255,0.25)]`) so it stays visible over photos.
-- Add a one-time subtle pulse animation when the overlay first opens (`animate-pulse` for ~1.2s via a `useEffect` timeout) to teach the gesture.
-- Move the handle from inside the header row to a dedicated full-width row above it so the header buttons (X, author, more) stop competing with the drag target.
+A simple checklist UI that:
+- Lists the 4 menu actions (Report, Notifications, Not interested, Comment settings) plus Bookmark and Copy link.
+- Each row has a "Run" button that calls the same handler the real menu uses against a mock post id.
+- A green check + "OK" badge appears when the action's success state fires; a red X + the captured error message appears on failure.
+- Useful for QA before each release without having to seed real posts.
 
-### 5. Quick verification I'll run after the fixes
-- Open a post from `/profile` → tap "..." → confirm Report opens the categories sheet, Notifications toggles label + persists, Not interested removes the post, Comment settings opens (owner).
-- Tap the bookmark icon → confirm green "Saved" toast and no red error.
-- Drag the new bigger pill down → overlay dismisses; pulse plays once on open.
-- Re-check the Reels overlay to confirm the shared CommentSettings sheet still works.
+## 3. Report confirmation + persistent status badge
 
-## Files to edit
-- `src/components/profile/ProfileContentTabs.tsx` (bookmark insert, menu handlers, remove duplicate handle)
-- `src/components/social/SwipeGrabHandle.tsx` (size, glow, pulse, position)
-- `src/pages/ReelsFeedPage.tsx` (use shared CommentSettings sheet)
-- New: `src/components/social/PostCommentSettingsSheet.tsx` (extracted shared sheet)
-- New: `src/components/social/PostReportSheet.tsx` (extracted shared sheet, optional if simpler to import inline)
+`src/components/profile/ProfileContentTabs.tsx`:
+- After Submit on the Report sheet, replace the current text-only "submitted" step with a clear confirmation screen: large check icon, "Report submitted", explanation paragraph, and Done button (already partially there — polish copy + visuals).
+- Track reported posts in a `reportedPosts: Set<string>` state (and persist to `localStorage` keyed by user id so it survives reloads).
+- In the post "..." menu, when the current post is in `reportedPosts`, show the Report row with a small muted "Reported" badge and disable re-submission. Same treatment in the Reels menu (`src/pages/ReelsFeedPage.tsx`).
 
-No database migrations required — all writes target existing tables (`bookmarks`, `post_reports`, `post_hidden`, `post_subscriptions` already exist or fall back to local state if missing).
+## 4. Tap-target audit on the overlay
+
+Mobile tap-size guideline is 44×44 (Apple HIG) / 48×48 (Material).
+
+- `SwipeGrabHandle`: already at `h-8` tap zone — bump to `h-11` (44px) so the gesture target meets HIG even though the visible pill stays small.
+- Menu rows in profile + reels: confirm `min-h-[48px]` and `py-3.5` everywhere (Reels rows already have it; profile rows currently `py-3.5` only — add `min-h-[48px]`).
+- Header close button on the overlay: confirm `min-h-[44px] min-w-[44px]` (already present per grep, but add to public-profile overlay if missing).
+- Add a Vitest unit test `src/components/social/SwipeGrabHandle.test.tsx` that renders the handle and asserts `getBoundingClientRect().height >= 44`.
+
+## 5. Client-side error logging for profile actions
+
+Extend `src/lib/security/errorReporting.ts` with a small named export:
+
+```ts
+export function logProfileActionError(action: string, ctx: Record<string, unknown>, error: unknown): void
+```
+
+It dedupes (same dedupe set), serializes the payload context (post id, user id, action name), trims to 1KB, and inserts to `analytics_events` with `event_name: "profile_action_error"`. Failures stay silent — never throw.
+
+Wire it into the existing `try/catch` blocks in `ProfileContentTabs.tsx`:
+- Bookmark toggle (already wraps insert/delete in try/catch — replace bare `toast.error` with `logProfileActionError("bookmark.toggle", { postId, op }, error)` before the toast).
+- Report submit (the new try/catch added last turn).
+- Delete post handler.
+- Edit caption save handler.
+
+No new database tables — reuses the existing `analytics_events` table and the existing dedupe pipeline.
+
+## Files
+
+- New: `tests/e2e/post-menu-interaction.spec.ts`
+- New: `src/pages/dev/PostMenuRegressionPage.tsx` (+ route entry in `src/App.tsx`)
+- New: `src/components/social/SwipeGrabHandle.test.tsx`
+- Edit: `src/components/social/SwipeGrabHandle.tsx` (h-11 tap zone)
+- Edit: `src/components/profile/ProfileContentTabs.tsx` (report status badge, persistent state, error logging, tap-target tweaks, test ids on menu sheet + rows)
+- Edit: `src/pages/ReelsFeedPage.tsx` (mirror reported-status badge)
+- Edit: `src/lib/security/errorReporting.ts` (new `logProfileActionError` export)
+
+## Out of scope
+- No DB migrations.
+- No changes to swipe thresholds — those were tuned earlier and tests will guard against regressions.
+- No production dev-page exposure — the regression checklist is DEV-only.

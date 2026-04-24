@@ -31,6 +31,7 @@ const IncomingCallListener = lazy(() => import("@/components/chat/IncomingCallLi
 const ChatNotificationListener = lazy(() => import("@/components/chat/ChatNotificationListener"));
 const RuntimeSecurityGuard = lazy(() => import("@/components/security/RuntimeSecurityGuard"));
 const SpatialCursor = lazy(() => import("./components/ui/SpatialCursor").then(m => ({ default: m.SpatialCursor })));
+const PostMenuRegressionPage = lazy(() => import("./pages/dev/PostMenuRegressionPage"));
 
 import { SkipToContent } from "./components/shared/SkipToContent";
 const RoutePrefetcher = lazy(() => import("./components/shared/RoutePrefetcher"));
@@ -1018,6 +1019,9 @@ const App = () => (
                 {/* Country Hub */}
                 <Route path="/:countrySlug" element={<CountryHubPage />} />
                 <Route path="/:countrySlug/flights/:routeSlug" element={<LocalizedFlightRoutePage />} />
+
+                {/* Dev-only QA — page itself 404s in production */}
+                <Route path="/dev/post-menu-check" element={<PostMenuRegressionPage />} />
 
                 {/* Catch-all */}
                 <Route path="*" element={<NotFound />} />
