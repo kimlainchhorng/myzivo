@@ -60871,6 +60871,14 @@ export type Database = {
         }[]
       }
       set_order_sla_targets: { Args: { p_order_id: string }; Returns: Json }
+      set_profile_blue_verified_from_request: {
+        Args: {
+          _approved: boolean
+          _rejection_reason?: string
+          _request_id: string
+        }
+        Returns: undefined
+      }
       set_zone_polygon: {
         Args: { p_geojson: Json; p_zone_id: string }
         Returns: Json
