@@ -58,23 +58,23 @@ const TARGETS = [
         name: "Feed sticky header",
         property: "paddingTop",
         expression:
-          "max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 2.25rem)",
+          "max(calc(env(safe-area-inset-top, 0px) + 0.625rem), 3rem)",
       },
       {
         name: "Search overlay header",
         property: "paddingTop",
         expression:
-          "max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 2.25rem)",
+          "max(calc(env(safe-area-inset-top, 0px) + 0.5rem), 3rem)",
       },
       {
         name: "Post-detail viewer header",
         property: "paddingTop",
-        expression: "max(env(safe-area-inset-top, 0px), 2.75rem)",
+        expression: "max(env(safe-area-inset-top, 0px), 3.75rem)",
       },
       {
         name: "ReelSlide close button (top)",
         property: "top",
-        expression: "max(env(safe-area-inset-top, 0px), 2.75rem)",
+        expression: "max(env(safe-area-inset-top, 0px), 3.75rem)",
       },
     ],
   },
