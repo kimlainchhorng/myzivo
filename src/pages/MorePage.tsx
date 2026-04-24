@@ -53,7 +53,7 @@ const quickActions = [
   { icon: Heart, label: "Saved", href: "/saved", accent: "hsl(340 75% 55%)" },
   { icon: Ticket, label: "Support", href: "/support/tickets", accent: "hsl(38 92% 50%)" },
   { icon: QrCode, label: "QR Code", href: "/qr-profile", accent: "hsl(263 70% 58%)" },
-  { icon: Search, label: "Search", href: "/smart-search", accent: "hsl(199 89% 48%)" },
+  { icon: Gift, label: "Invite", href: "/referrals", accent: "hsl(199 89% 48%)" },
 ];
 
 /* ============================================= */
@@ -79,6 +79,10 @@ type QuickLink = {
 };
 
 const quickLinksMain: QuickLink[] = [
+  { icon: User, label: "My Profile", href: "/profile", description: "View & edit", accent: "hsl(199 89% 48%)" },
+  { icon: Gift, label: "Refer a Friend", href: "/referrals", description: "Earn rewards", accent: "hsl(142 71% 45%)", badge: "Earn" },
+  { icon: Clock, label: "Activity Log", href: "/activity", description: "Recent actions", accent: "hsl(198 93% 59%)" },
+  { icon: Users, label: "Switch Account", href: "/auth", description: "Add or change", accent: "hsl(263 70% 58%)" },
   { icon: Settings, label: "Settings", href: "/account/settings", description: "App preferences", accent: "hsl(var(--muted-foreground))" },
   { icon: ShoppingBag, label: "My Orders", href: "/grocery/orders", description: "Order history", accent: "hsl(221 83% 53%)" },
   { icon: Wallet, label: "Wallet", href: "/wallet", description: "Balance & pay", accent: "hsl(142 71% 45%)" },
@@ -157,6 +161,9 @@ const quickLinksAccount: QuickLink[] = [
   { icon: AlertCircle, label: "Report a Problem", href: "/feedback", description: "Bug report", accent: "hsl(0 84% 60%)" },
   { icon: Clock, label: "Activity Log", href: "/activity", description: "History", accent: "hsl(198 93% 59%)" },
   { icon: ShieldCheck, label: "Security Report", href: "/security/report", description: "Status", accent: "hsl(142 71% 45%)" },
+  { icon: Smartphone, label: "Login & Devices", href: "/account/settings", description: "Active sessions", accent: "hsl(221 83% 53%)" },
+  { icon: Lock, label: "Two-Factor Auth", href: "/account/privacy", description: "Extra security", accent: "hsl(142 71% 45%)" },
+  { icon: Users, label: "Blocked Users", href: "/account/privacy", description: "Manage blocks", accent: "hsl(0 84% 60%)" },
 ];
 
 const sections = [
@@ -228,42 +235,56 @@ export default function MorePage() {
   const avatarUrl = profile?.avatar_url;
   const isVerified = profile?.is_verified;
 
+  const handle = (profile?.full_name?.trim() || user?.email?.split("@")[0] || "user")
+    .toLowerCase()
+    .replace(/\s+/g, "");
+
+  const VerifiedCheck = ({ size = 16 }: { size?: number }) => (
+    <span
+      className="relative inline-flex items-center justify-center shrink-0"
+      style={{ width: size, height: size }}
+      aria-label="Verified"
+      title="Verified"
+    >
+      <svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true">
+        <path
+          d="M12 1.5l2.39 1.74 2.95-.13.78 2.85 2.55 1.5-1.07 2.74 1.07 2.74-2.55 1.5-.78 2.85-2.95-.13L12 22.5l-2.39-1.74-2.95.13-.78-2.85-2.55-1.5 1.07-2.74-1.07-2.74 2.55-1.5.78-2.85 2.95.13L12 1.5z"
+          fill="#1d9bf0"
+        />
+        <path
+          d="M9.5 12.5l1.8 1.8 3.7-4.3"
+          fill="none"
+          stroke="#fff"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  );
+
   /* --- Profile Card --- */
   const renderProfileCard = () => (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="zivo-card-organic p-4 mb-5"
+      className="zivo-card-organic p-4 mb-3"
     >
-      <Link to="/profile" className="flex items-center gap-3.5">
-        <Avatar className="h-14 w-14 ring-2 ring-primary/20">
-          {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
-          <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
-            {displayName.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-3.5">
+        <Link to="/profile" className="shrink-0">
+          <Avatar className="h-14 w-14 ring-2 ring-primary/20">
+            {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
+            <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
+              {displayName.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
+        <Link to="/profile" className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="font-bold text-[15px] truncate">{displayName}</p>
-            {isVerified && (
-              <span className="relative inline-flex h-4 w-4 items-center justify-center shrink-0" aria-label="Verified" title="Verified">
-                <svg viewBox="0 0 24 24" className="h-full w-full" aria-hidden="true">
-                  <path
-                    d="M12 1.5l2.39 1.74 2.95-.13.78 2.85 2.55 1.5-1.07 2.74 1.07 2.74-2.55 1.5-.78 2.85-2.95-.13L12 22.5l-2.39-1.74-2.95.13-.78-2.85-2.55-1.5 1.07-2.74-1.07-2.74 2.55-1.5.78-2.85 2.95.13L12 1.5z"
-                    fill="#1d9bf0"
-                  />
-                  <path
-                    d="M9.5 12.5l1.8 1.8 3.7-4.3"
-                    fill="none"
-                    stroke="#fff"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-            )}
+            {isVerified && <VerifiedCheck size={16} />}
           </div>
+          <p className="text-[11px] text-muted-foreground truncate mt-0.5">@{handle}</p>
           <div className="flex gap-4 mt-1.5">
             <div className="text-center">
               <p className="text-xs font-bold">{friendCount}</p>
@@ -278,8 +299,56 @@ export default function MorePage() {
               <p className="text-[9px] text-muted-foreground">Following</p>
             </div>
           </div>
+        </Link>
+        <Link
+          to="/account/settings"
+          className="shrink-0 text-[11px] font-semibold px-2.5 py-1.5 rounded-full bg-primary/10 text-primary active:scale-95 transition-transform"
+        >
+          Edit
+        </Link>
+      </div>
+    </motion.div>
+  );
+
+  /* --- Account Status Strip (verified / membership / wallet) --- */
+  const renderAccountStatus = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.04 }}
+      className="grid grid-cols-3 gap-2 mb-5"
+    >
+      <Link
+        to={isVerified ? "/profile" : "/account/verification"}
+        className="zivo-card-organic flex items-center gap-1.5 px-2.5 py-2 active:scale-[0.97] transition-transform"
+      >
+        <VerifiedCheck size={18} />
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold leading-tight truncate">
+            {isVerified ? "Verified" : "Get verified"}
+          </p>
+          <p className="text-[9px] text-muted-foreground truncate">Account</p>
         </div>
-        <ChevronRight className="w-5 h-5 text-muted-foreground/30 shrink-0" />
+      </Link>
+      <Link
+        to="/membership"
+        className="zivo-card-organic flex items-center gap-1.5 px-2.5 py-2 active:scale-[0.97] transition-transform"
+      >
+        <Crown className="w-4 h-4 text-amber-500 shrink-0" />
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold leading-tight truncate">Explorer</p>
+          <p className="text-[9px] text-muted-foreground truncate">Tier</p>
+        </div>
+      </Link>
+      <Link
+        to="/wallet"
+        className="zivo-card-organic flex items-center gap-1.5 px-2.5 py-2 active:scale-[0.97] transition-transform"
+      >
+        <Wallet className="w-4 h-4 text-emerald-500 shrink-0" />
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold leading-tight truncate">Wallet</p>
+          <p className="text-[9px] text-muted-foreground truncate">View balance</p>
+        </div>
       </Link>
     </motion.div>
   );
@@ -437,6 +506,9 @@ export default function MorePage() {
           {/* Profile Card */}
           {user && renderProfileCard()}
 
+          {/* Account Status Strip (verified / tier / wallet) */}
+          {user && renderAccountStatus()}
+
           {/* Quick Actions */}
           {user && renderQuickActions()}
 
@@ -461,7 +533,14 @@ export default function MorePage() {
 
           {/* Sign Out */}
           {user && (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-4">
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-4 space-y-2">
+              <button
+                onClick={() => { signOut(); navigate("/auth"); }}
+                className="w-full py-3 rounded-2xl border border-border/50 bg-muted/40 text-foreground font-semibold text-sm touch-manipulation active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                <Lock className="w-4 h-4" />
+                Lock app
+              </button>
               <button
                 onClick={() => signOut()}
                 className="w-full py-3 rounded-2xl border border-border/50 bg-card text-foreground font-semibold text-sm touch-manipulation active:scale-[0.98] transition-all flex items-center justify-center gap-2"
