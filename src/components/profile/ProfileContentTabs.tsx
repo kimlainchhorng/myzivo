@@ -22,6 +22,42 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolveSharedOrigins";
 import { isLocalDraftPostId, toUserPostInteractionId } from "@/lib/social/postInteraction";
+import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
+
+/**
+ * Fullscreen post viewer wrapper with drag-down-to-close.
+ * Drag is initiated from a child element marked
+ * `data-profile-post-drag-handle`, so scrollable content beneath
+ * keeps native pan-y behavior.
+ */
+function ProfilePostViewerOverlay({
+  onClose,
+  children,
+}: {
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  const { motionProps, startDrag } = useSwipeDownClose(onClose);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 60 }}
+      transition={{ type: "spring", damping: 30, stiffness: 320 }}
+      {...motionProps}
+      onPointerDown={(e) => {
+        const target = e.target as HTMLElement | null;
+        if (target?.closest("[data-profile-post-drag-handle]")) {
+          startDrag(e);
+        }
+      }}
+      className="fixed inset-0 z-[9999] bg-black flex flex-col"
+      style={{ paddingTop: "var(--zivo-safe-top-overlay)" }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 type FeedItem = {
   id: string;
