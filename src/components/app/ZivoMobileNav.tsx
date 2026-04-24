@@ -104,12 +104,12 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
                 {tab.id === "account" && user ? (
                   <Avatar
                     className={cn(
-                      "h-[22px] w-[22px] transition-all duration-200",
-                      isActive ? "ring-2 ring-primary ring-offset-1 ring-offset-card" : "ring-1 ring-border/40"
+                      "h-[26px] w-[26px] transition-all duration-200",
+                      isActive ? "ring-2 ring-primary" : ""
                     )}
                   >
-                    <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || undefined} alt="Account" />
-                    <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-primary text-[10px] font-bold">
+                    <AvatarImage src={profile?.avatar_url || user.user_metadata?.avatar_url || undefined} alt="Account" className="object-cover" />
+                    <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-primary text-[11px] font-bold">
                       {(profile?.full_name?.[0] || user.email?.[0] || "Z").toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
