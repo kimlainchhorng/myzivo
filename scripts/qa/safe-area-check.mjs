@@ -35,8 +35,10 @@ const DEVICES = [
   { name: "Galaxy S24 (cutout)", top: 36, bottom: 18, left: 0, right: 0 },
   { name: "iPad Pro 11\" portrait", top: 24, bottom: 20, left: 0, right: 0 },
   { name: "iPad Pro 11\" landscape", top: 24, bottom: 20, left: 20, right: 20 },
-  // The bug we keep hitting: native WKWebView reports 0 even on Dynamic Island
-  { name: "iOS Dynamic Island (broken inset=0)", top: 0, bottom: 0, left: 0, right: 0, expectFloor: 60 },
+  // The bug we keep hitting: native WKWebView reports 0 even on Dynamic Island.
+  // Per-element floors enforce that overlay/sheet/sticky tokens still keep
+  // controls below the status bar even when env() returns 0.
+  { name: "iOS Dynamic Island (broken inset=0)", top: 0, bottom: 0, left: 0, right: 0, brokenIsland: true },
 ];
 
 // ── Shared safe-area tokens (mirrored from src/index.css `:root`) ────────
@@ -293,7 +295,11 @@ for (const target of TARGETS) {
         fail++;
         continue;
       }
-      const minRequired = Math.max(device.top, device.expectFloor ?? 0);
+      // On the broken-island device, require the element's own minimum
+      // floor (set in TARGETS via `brokenIslandFloor`, default 44px so the
+      // close button never sits inside the status-bar zone).
+      const brokenFloor = device.brokenIsland ? (el.brokenIslandFloor ?? 44) : 0;
+      const minRequired = Math.max(device.top, brokenFloor);
       const ok = resolved >= minRequired - 0.001; // tolerate float noise
       rows.push({
         device: device.name,
