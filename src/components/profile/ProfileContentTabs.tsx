@@ -68,7 +68,95 @@ function ProfilePostViewerOverlay({
   );
 }
 
-type FeedItem = {
+/**
+ * AccessibleMenuSheet — wraps the post-actions bottom sheet so it is
+ * keyboard- and screen-reader-friendly:
+ *   - Acts as a `dialog`/menu region with `aria-modal`.
+ *   - Focuses the first enabled menuitem on open and restores focus on close.
+ *   - Escape closes the sheet.
+ *   - Arrow keys move focus between visible menuitems (roving tabindex).
+ */
+function AccessibleMenuSheet({
+  onClose,
+  labelledById,
+  children,
+  className,
+  testId,
+}: {
+  onClose: () => void;
+  labelledById?: string;
+  children: React.ReactNode;
+  className?: string;
+  testId?: string;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    previouslyFocused.current = (document.activeElement as HTMLElement) || null;
+    const root = ref.current;
+    if (root) {
+      const first = root.querySelector<HTMLElement>(
+        '[role="menuitem"]:not([aria-disabled="true"])',
+      );
+      first?.focus();
+    }
+    return () => {
+      previouslyFocused.current?.focus?.();
+    };
+  }, []);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      onClose();
+      return;
+    }
+    if (
+      e.key !== "ArrowDown" &&
+      e.key !== "ArrowUp" &&
+      e.key !== "Home" &&
+      e.key !== "End"
+    ) {
+      return;
+    }
+    const root = ref.current;
+    if (!root) return;
+    const items = Array.from(
+      root.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+    );
+    const enabled = items.filter(
+      (el) => el.getAttribute("aria-disabled") !== "true",
+    );
+    if (enabled.length === 0) return;
+    const current = document.activeElement as HTMLElement | null;
+    const idx = current ? enabled.indexOf(current) : -1;
+    e.preventDefault();
+    let next = idx;
+    if (e.key === "ArrowDown") next = idx < 0 ? 0 : (idx + 1) % enabled.length;
+    else if (e.key === "ArrowUp")
+      next = idx <= 0 ? enabled.length - 1 : idx - 1;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = enabled.length - 1;
+    enabled[next]?.focus();
+  };
+
+  return (
+    <div
+      ref={ref}
+      role="menu"
+      aria-modal="true"
+      aria-labelledby={labelledById}
+      data-testid={testId}
+      onKeyDown={handleKeyDown}
+      className={className}
+    >
+      {children}
+    </div>
+  );
+}
+
+
   id: string;
   type: "photo" | "reel";
   likes: number;
