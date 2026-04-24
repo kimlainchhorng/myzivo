@@ -152,6 +152,33 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [reportCategory, setReportCategory] = useState("");
   const [showCommentSettingsSheet, setShowCommentSettingsSheet] = useState(false);
   const [commentControl, setCommentControl] = useState<"everyone" | "followers" | "off">("everyone");
+  const [reportedPosts, setReportedPosts] = useState<Set<string>>(new Set());
+
+  // Restore "Reported" status from localStorage (per-user, survives reloads).
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const raw = localStorage.getItem(`zivo_reported_posts:${user.id}`);
+      if (raw) setReportedPosts(new Set(JSON.parse(raw) as string[]));
+    } catch {
+      /* ignore corrupt cache */
+    }
+  }, [user?.id]);
+
+  const persistReported = useCallback(
+    (next: Set<string>) => {
+      if (!user?.id) return;
+      try {
+        localStorage.setItem(
+          `zivo_reported_posts:${user.id}`,
+          JSON.stringify(Array.from(next)),
+        );
+      } catch {
+        /* quota exceeded — non-fatal */
+      }
+    },
+    [user?.id],
+  );
 
   const visibleFeed = feed.filter((i) => !hiddenPosts.has(i.id));
   const filtered = activeTab === "all" ? visibleFeed : visibleFeed.filter((i) => i.type === activeTab);
