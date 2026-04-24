@@ -13,6 +13,7 @@ import { useI18n } from "@/hooks/useI18n";
 const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 const NavBar = lazy(() => import("@/components/home/NavBar"));
 import SEOHead from "@/components/SEOHead";
+import VerifiedBadge from "@/components/VerifiedBadge";
 const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
@@ -71,6 +72,8 @@ interface FeedPost {
   author_id?: string;
   author_name?: string;
   author_avatar?: string | null;
+  author_is_verified?: boolean;
+  store_is_verified?: boolean;
 }
 
 /* ── Scrolling music ticker ───────────────────────────────────── */
@@ -547,8 +550,11 @@ function ReelCard({
                 </div>
               )}
             </div>
-            <span className="text-white font-bold text-sm drop-shadow-lg">
+            <span className="text-white font-bold text-sm drop-shadow-lg inline-flex items-center gap-1">
               {post.source === "user" ? post.author_name : post.store_name}
+              {((post.source === "user" && post.author_is_verified) || (post.source === "store" && post.store_is_verified)) && (
+                <VerifiedBadge size={14} />
+              )}
             </span>
           </button>
 
@@ -1381,7 +1387,7 @@ export default function FeedPage() {
           ? supabase.from("store_profiles").select("id, name, logo_url, slug").in("id", storeIds)
           : Promise.resolve({ data: [] as any[] }),
         userIds.length
-          ? supabase.from("profiles").select("id, user_id, full_name, avatar_url").in("id", userIds as string[])
+          ? supabase.from("profiles").select("id, user_id, full_name, avatar_url, is_verified").in("id", userIds as string[])
           : Promise.resolve({ data: [] as any[] }),
       ]);
 
@@ -1401,6 +1407,7 @@ export default function FeedPage() {
           store_name: store?.name || "Store",
           store_logo: store?.logo_url,
           store_slug: store?.slug,
+          store_is_verified: true,
         });
       }
 
@@ -1427,6 +1434,7 @@ export default function FeedPage() {
           author_id: post.user_id,
           author_name: profile?.full_name || "User",
           author_avatar: profile?.avatar_url || null,
+          author_is_verified: !!profile?.is_verified,
         });
       }
 

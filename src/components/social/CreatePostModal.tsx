@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
 
 interface CreatePostModalProps {
@@ -191,7 +192,7 @@ export default function CreatePostModal({
     tagTimerRef.current = setTimeout(async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url")
+        .select("id, full_name, avatar_url, is_verified")
         .ilike("full_name", `%${q}%`)
         .limit(8);
       setTagResults(data || []);
@@ -608,7 +609,10 @@ export default function CreatePostModal({
                           {u.avatar_url ? <img src={u.avatar_url} className="h-full w-full object-cover" alt="" /> :
                             <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-muted-foreground">{(u.full_name || "?")[0]}</div>}
                         </div>
-                        <span className="text-xs font-medium text-foreground flex-1 text-left truncate">{u.full_name}</span>
+                        <span className="text-xs font-medium text-foreground flex-1 text-left truncate inline-flex items-center gap-1">
+                          <span className="truncate">{u.full_name}</span>
+                          {u.is_verified && <VerifiedBadge size={11} />}
+                        </span>
                         {isTagged && <span className="text-primary text-xs">✓</span>}
                       </button>
                     );
@@ -708,7 +712,10 @@ export default function CreatePostModal({
                       {u.avatar_url ? <img src={u.avatar_url} className="h-full w-full object-cover" alt="" /> :
                         <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-muted-foreground">{(u.full_name || "?")[0]}</div>}
                     </div>
-                    <span className="text-xs font-medium text-foreground">{u.full_name}</span>
+                    <span className="text-xs font-medium text-foreground inline-flex items-center gap-1">
+                      <span>{u.full_name}</span>
+                      {u.is_verified && <VerifiedBadge size={11} />}
+                    </span>
                   </button>
                 ))}
               </motion.div>

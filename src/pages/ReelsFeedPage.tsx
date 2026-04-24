@@ -82,6 +82,7 @@ const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedU
 const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
 const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
 import CollapsibleCaption from "@/components/social/CollapsibleCaption";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
 import { EngagementSkeleton } from "@/components/social/EngagementSkeleton";
 import SwipeableSheet from "@/components/social/SwipeableSheet";
@@ -133,6 +134,7 @@ interface FeedItem {
   author_name: string;
   author_avatar: string | null;
   author_id?: string;
+  author_is_verified?: boolean;
   store_slug?: string;
   created_at: string;
   // Share tracking
@@ -334,6 +336,7 @@ export default function ReelsFeedPage() {
             author_name: store?.name || "Store",
             author_avatar: store?.logo_url || null,
             author_id: store?.id || post.store_id,
+            author_is_verified: true,
             store_slug: store?.slug || null,
             created_at: post.created_at,
           });
@@ -382,10 +385,10 @@ export default function ReelsFeedPage() {
               ? (supabase as any).from("public_profiles").select("id, user_id, full_name, avatar_url").in("user_id", allProfileIds)
               : Promise.resolve({ data: [] as any[] }),
             allProfileIds.length
-              ? (supabase as any).from("profiles").select("id, user_id, comment_control, hide_like_counts, allow_sharing, allow_mentions").in("id", allProfileIds)
+              ? (supabase as any).from("profiles").select("id, user_id, comment_control, hide_like_counts, allow_sharing, allow_mentions, is_verified").in("id", allProfileIds)
               : Promise.resolve({ data: [] as any[] }),
             allProfileIds.length
-              ? (supabase as any).from("profiles").select("id, user_id, comment_control, hide_like_counts, allow_sharing, allow_mentions").in("user_id", allProfileIds)
+              ? (supabase as any).from("profiles").select("id, user_id, comment_control, hide_like_counts, allow_sharing, allow_mentions, is_verified").in("user_id", allProfileIds)
               : Promise.resolve({ data: [] as any[] }),
           ]);
 
@@ -469,6 +472,7 @@ export default function ReelsFeedPage() {
               author_name: profileDisplay?.full_name?.trim() || "User",
               author_avatar: optimizeAvatar(profileDisplay?.avatar_url, 96) || profileDisplay?.avatar_url || null,
               author_id: post.user_id,
+              author_is_verified: !!profileSettings?.is_verified,
               created_at: post.created_at,
               shared_from_post_id: post.shared_from_post_id || null,
               shared_from_user_id: sharedFromUserId,
@@ -1026,7 +1030,10 @@ export default function ReelsFeedPage() {
                               )}
                             </div>
                             <div className="flex-1 min-w-0 leading-tight">
-                              <p className="text-sm font-semibold text-foreground truncate">{post.author_name}</p>
+                              <p className="text-sm font-semibold text-foreground truncate flex items-center gap-1">
+                                <span className="truncate">{post.author_name}</span>
+                                {post.author_is_verified && <VerifiedBadge size={14} />}
+                              </p>
                               <p className="text-[11px] text-muted-foreground truncate">
                                 {(() => {
                                   try {
@@ -1585,7 +1592,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
               {isShared && (
                 <p className="text-white/50 text-[11px] mb-1 drop-shadow flex items-center gap-1">
                   <Share2 className="h-3 w-3" />
-                  Shared by {item.author_name}
+                  Shared by {item.author_name}{item.author_is_verified && <VerifiedBadge size={11} className="ml-0.5" />}
                 </p>
               )}
             </>
@@ -2228,7 +2235,10 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                   )}
                 </div>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
+                  <p className="text-[13px] font-semibold text-foreground truncate flex items-center gap-1">
+                    <span className="truncate">{item.author_name}</span>
+                    {item.author_is_verified && <VerifiedBadge size={13} />}
+                  </p>
                   <div className="flex items-center gap-1">
                     <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
                     <span className="text-[10px] text-muted-foreground">·</span>
@@ -2424,7 +2434,10 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                   )}
                 </div>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-[13px] font-semibold text-foreground truncate">{item.author_name}</p>
+                  <p className="text-[13px] font-semibold text-foreground truncate flex items-center gap-1">
+                    <span className="truncate">{item.author_name}</span>
+                    {item.author_is_verified && <VerifiedBadge size={13} />}
+                  </p>
                   <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
                 </div>
               </button>

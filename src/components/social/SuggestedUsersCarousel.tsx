@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { X, Shield, Users } from "lucide-react";
+import { X, Users } from "lucide-react";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { useState, memo, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -99,7 +100,7 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
                     <p className="text-xs font-semibold text-foreground truncate">
                       {profile.full_name || "User"}
                     </p>
-                    {profile.is_verified && <Shield className="h-3 w-3 text-primary shrink-0" />}
+                    {profile.is_verified && <VerifiedBadge size={12} />}
                   </div>
                 </div>
                 <button
@@ -167,7 +168,7 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
                   <p className="text-[10px] font-semibold text-foreground truncate max-w-[90px]">
                     {profile.full_name || "User"}
                   </p>
-                  {profile.is_verified && <Shield className="h-2.5 w-2.5 text-primary shrink-0" />}
+                  {profile.is_verified && <VerifiedBadge size={11} />}
                 </div>
 
                 {profile.bio && (

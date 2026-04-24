@@ -1,11 +1,11 @@
+import { useId } from "react";
+
 /**
  * VerifiedBadge — Premium blue verified mark used across ZIVO.
  *
- * Design notes:
- *  - 12-point burst geometrically centered in a 24×24 viewBox
- *  - Subtle vertical gradient (lighter top → deeper bottom) for depth
- *  - Soft drop-shadow so the badge "lifts" off the surface
- *  - Inner white check is centered and balanced for the burst
+ * Defaults to 1em sizing so it scales with surrounding text when no
+ * explicit `size` / `className` is passed:
+ *   <span>Name <VerifiedBadge /></span>
  */
 
 type Props = {
@@ -15,13 +15,15 @@ type Props = {
 };
 
 const VerifiedBadge = ({ size, className = "", title = "Verified" }: Props) => {
-  // unique id so multiple instances don't collide on the gradient/filter defs
-  const uid = `vb-${Math.random().toString(36).slice(2, 8)}`;
-  const sizeStyle = size ? { width: size, height: size } : undefined;
+  const reactId = useId().replace(/[:]/g, "");
+  const uid = `vb-${reactId}`;
+  const sizeStyle = size
+    ? { width: size, height: size }
+    : { width: "1em", height: "1em" };
 
   return (
     <span
-      className={`relative inline-flex items-center justify-center shrink-0 align-middle ${className}`}
+      className={`relative inline-flex items-center justify-center shrink-0 align-[-0.125em] ${className}`}
       style={sizeStyle}
       aria-label={title}
       title={title}
@@ -36,7 +38,6 @@ const VerifiedBadge = ({ size, className = "", title = "Verified" }: Props) => {
             <feDropShadow dx="0" dy="0.6" stdDeviation="0.6" floodColor="#1d9bf0" floodOpacity="0.35" />
           </filter>
         </defs>
-        {/* 12-point burst, centered at 12,12 */}
         <path
           filter={`url(#${uid}-shadow)`}
           d="M12 1.5l2.39 1.74 2.95-.13.78 2.85 2.55 1.5-1.07 2.74 1.07 2.74-2.55 1.5-.78 2.85-2.95-.13L12 22.5l-2.39-1.74-2.95.13-.78-2.85-2.55-1.5 1.07-2.74-1.07-2.74 2.55-1.5.78-2.85 2.95-.13L12 1.5z"
@@ -45,7 +46,6 @@ const VerifiedBadge = ({ size, className = "", title = "Verified" }: Props) => {
           strokeWidth="0.4"
           strokeLinejoin="round"
         />
-        {/* Centered checkmark */}
         <path
           d="M8.2 12.3l2.6 2.6 5-5.4"
           fill="none"

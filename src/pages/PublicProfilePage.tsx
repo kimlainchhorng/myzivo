@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import NavBar from "@/components/home/NavBar";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import {
   ArrowLeft, Loader2, User, ImageIcon, Film, Grid3X3, UserPlus, UserCheck, UserX,
   Heart, MessageCircle, Lock, ShieldCheck, Users, Share2, Play, Eye, Bookmark, Globe,
@@ -840,8 +841,8 @@ export default function PublicProfilePage() {
                   <AvatarFallback className="text-3xl sm:text-4xl font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
                 </Avatar>
                 {resolvedProfile.is_verified && (
-                  <div className="absolute bottom-1 right-1 h-6 w-6 rounded-full bg-background flex items-center justify-center">
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="hsl(var(--flights))" /><path d="M8 12.5L10.5 15L16 9.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  <div className="absolute bottom-1 right-1 rounded-full bg-background p-0.5 shadow-md">
+                    <VerifiedBadge size={20} />
                   </div>
                 )}
               </div>
@@ -850,7 +851,10 @@ export default function PublicProfilePage() {
 
           {/* Profile Info */}
           <div className="flex flex-col items-center pt-16 sm:pt-20 pb-4 px-4 max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold text-foreground">{resolvedProfile.full_name}</h2>
+            <h2 className="text-xl font-bold text-foreground inline-flex items-center gap-1.5">
+              {resolvedProfile.full_name}
+              {resolvedProfile.is_verified && <VerifiedBadge size={18} />}
+            </h2>
             {resolvedProfile.bio && (
               <p className="mt-2 max-w-md text-center text-sm text-muted-foreground whitespace-pre-wrap break-words">
                 {resolvedProfile.bio}

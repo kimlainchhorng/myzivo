@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { UserPlus, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -30,7 +31,7 @@ export default function FollowSuggestions() {
 
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url")
+        .select("id, full_name, avatar_url, is_verified")
         .not("id", "in", `(${excludeIds.join(",")})`)
         .limit(10);
       return data || [];
@@ -70,7 +71,10 @@ export default function FollowSuggestions() {
               <AvatarImage src={optimizeAvatar(s.avatar_url, 56)} loading="lazy" />
               <AvatarFallback>{(s.full_name || "U")[0]}</AvatarFallback>
             </Avatar>
-            <p className="text-xs font-medium text-foreground truncate mb-2">{s.full_name || "User"}</p>
+            <p className="text-xs font-medium text-foreground truncate mb-2 inline-flex items-center justify-center gap-1 w-full">
+              <span className="truncate">{s.full_name || "User"}</span>
+              {s.is_verified && <VerifiedBadge size={11} />}
+            </p>
             <button
               onClick={() => followUser(s.id)}
               className="w-full flex items-center justify-center gap-1 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium"

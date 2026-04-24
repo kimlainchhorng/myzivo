@@ -10,6 +10,7 @@ export interface PostComment {
   created_at: string;
   author_name: string;
   author_avatar: string | null;
+  author_is_verified?: boolean;
   replies?: PostComment[];
   reactions?: { emoji: string; count: number; reacted: boolean }[];
 }
@@ -44,7 +45,7 @@ export function usePostComments({ postId, postSource, currentUserId }: UsePostCo
     const userIds = [...new Set(rawComments.map((c: any) => c.user_id))] as string[];
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, full_name, avatar_url")
+      .select("id, full_name, avatar_url, is_verified")
       .in("id", userIds);
 
     const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
@@ -82,6 +83,7 @@ export function usePostComments({ postId, postSource, currentUserId }: UsePostCo
         created_at: c.created_at,
         author_name: (profile as any)?.full_name || "User",
         author_avatar: (profile as any)?.avatar_url || null,
+        author_is_verified: !!(profile as any)?.is_verified,
         replies: [],
         reactions: reactionMap.get(c.id) || [],
       };
