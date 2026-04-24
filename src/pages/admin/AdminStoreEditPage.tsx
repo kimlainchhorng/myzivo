@@ -37,7 +37,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send, Users, Shield, Bell, Info, Copy, GripVertical } from "lucide-react";
+import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send, Users, Shield, Bell, Info, Copy, GripVertical, Hotel, BedDouble, CalendarRange, KeyRound, PackagePlus, MessageSquareText, BarChart3 } from "lucide-react";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import StorePaymentSection from "@/components/admin/StorePaymentSection";
 import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
@@ -97,6 +97,18 @@ import StoreMapPicker from "@/components/admin/StoreMapPicker";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 
+const LODGING_TAB_IDS = ["lodge-overview", "lodge-rooms", "lodge-rate-plans", "lodge-reservations", "lodge-calendar", "lodge-guests", "lodge-frontdesk", "lodge-housekeeping", "lodge-maintenance", "lodge-addons", "lodge-guest-requests", "lodge-dining", "lodge-experiences", "lodge-transport", "lodge-wellness", "lodge-amenities", "lodge-property", "lodge-policies", "lodge-reviews", "lodge-reports"];
+const BASE_TAB_IDS = ["profile", "orders", "products", "payment", "settings", "customers", "marketing", "livestream", "employees", "payroll", "employee-schedule", "time-clock", "attendance", "training", "documents", "employee-rules"];
+const LODGING_QUICK_TABS = [
+  { id: "lodge-overview", label: "Overview", icon: Hotel },
+  { id: "lodge-rooms", label: "Rooms", icon: BedDouble },
+  { id: "lodge-rate-plans", label: "Rates", icon: DollarSign },
+  { id: "lodge-reservations", label: "Reservations", icon: CalendarRange },
+  { id: "lodge-frontdesk", label: "Front Desk", icon: KeyRound },
+  { id: "lodge-addons", label: "Add-ons", icon: PackagePlus },
+  { id: "lodge-guest-requests", label: "Requests", icon: MessageSquareText },
+  { id: "lodge-reports", label: "Reports", icon: BarChart3 },
+];
 
 function normalizeLocalizedNumberInput(value: string): string {
   const khmerToLatin: Record<string, string> = {
