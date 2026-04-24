@@ -242,6 +242,7 @@ const Profile = () => {
   const [coverPosition, setCoverPosition] = useState<number>(profile?.cover_position ?? 50);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [bioDraft, setBioDraft] = useState("");
+  const [bioEditing, setBioEditing] = useState(false);
   const [safeLinkPrompt, setSafeLinkPrompt] = useState<string | null>(null);
   const coverDragRef = useRef<{ startY: number; startPos: number } | null>(null);
 
