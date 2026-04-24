@@ -65,7 +65,7 @@ const AlertDialogFooter = lazy(() => import("@/components/ui/alert-dialog").then
 const AlertDialogHeader = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogHeader })));
 const AlertDialogTitle = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogTitle })));
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
 const trackInitiateCheckout = (input: Record<string, unknown>) =>
@@ -82,6 +82,7 @@ const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal")
 const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
 import CollapsibleCaption from "@/components/social/CollapsibleCaption";
 import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
+import { EngagementSkeleton } from "@/components/social/EngagementSkeleton";
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 
@@ -817,8 +818,20 @@ export default function ReelsFeedPage() {
 
           {/* Posts */}
           {isLoading ? (
-            <div className="flex items-center justify-center h-60">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <div className="space-y-2 pb-4" aria-label="Loading posts" aria-busy="true">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="bg-card">
+                  <div className="flex items-center gap-3 px-3 py-2.5">
+                    <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 w-1/3 bg-muted rounded animate-pulse" />
+                      <div className="h-2.5 w-1/4 bg-muted rounded animate-pulse" />
+                    </div>
+                  </div>
+                  <div className="aspect-square w-full bg-muted animate-pulse" />
+                  <EngagementSkeleton />
+                </div>
+              ))}
             </div>
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-60 text-center px-6">
@@ -2037,6 +2050,42 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
     setEditSaving(false);
   };
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Open comments deep link: /feed?post=<id>&src=<src>&comments=1
+  useEffect(() => {
+    const wantComments = searchParams.get("comments") === "1";
+    const targetId = searchParams.get("post");
+    const targetSrc = searchParams.get("src");
+    if (
+      wantComments &&
+      targetId === interactionPostId &&
+      (!targetSrc || targetSrc === item.source)
+    ) {
+      setShowComments(true);
+    }
+    // Only react to URL changes, not local interactionPostId churn
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams.toString()]);
+
+  const openCommentsDeepLink = () => {
+    const next = new URLSearchParams(searchParams);
+    next.set("post", interactionPostId);
+    next.set("src", item.source);
+    next.set("comments", "1");
+    setSearchParams(next, { replace: false });
+  };
+
+  const closeCommentsDeepLink = () => {
+    const next = new URLSearchParams(searchParams);
+    if (next.get("post") === interactionPostId) {
+      next.delete("post");
+      next.delete("src");
+      next.delete("comments");
+      setSearchParams(next, { replace: true });
+    }
+  };
+
   const handleComment = () => {
     if (commentSetting === "off") {
       toast.error("Comments are turned off for this post");
@@ -2046,7 +2095,13 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       toast.error("Please sign in to comment");
       return;
     }
-    setShowComments(!showComments);
+    if (showComments) {
+      setShowComments(false);
+      closeCommentsDeepLink();
+    } else {
+      setShowComments(true);
+      openCommentsDeepLink();
+    }
   };
 
   // Comments are now handled by CommentsSheet
@@ -2525,47 +2580,62 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       </AnimatePresence>
 
       {/* Action buttons — enhanced with counts */}
-      <div className="flex items-center px-3 py-1.5">
+      <div className="flex items-center px-2.5 sm:px-3 py-1.5">
         <div className="flex items-center gap-1 flex-1">
           <button
             onClick={handleLike}
             onContextMenu={(e) => { e.preventDefault(); setShowReactionPicker(!showReactionPicker); }}
-            className="min-h-[44px] min-w-[40px] flex items-center justify-center gap-1 group"
+            aria-label={liked ? `Unlike post${!item.hide_like_counts && formatCount(localLikes) ? `, ${formatCount(localLikes)} likes` : ""}` : `Like post${!item.hide_like_counts && formatCount(localLikes) ? `, ${formatCount(localLikes)} likes` : ""}`}
+            aria-pressed={liked}
+            className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center gap-1 group"
           >
             {selectedReaction ? (
-              <span className="text-lg">{selectedReaction}</span>
+              <span className="text-lg" aria-hidden>{selectedReaction}</span>
             ) : (
-              <Heart className={cn("h-[22px] w-[22px] transition-all", liked ? "text-destructive fill-destructive scale-110" : "text-foreground group-active:scale-125")} />
+              <Heart aria-hidden className={cn("h-[22px] w-[22px] transition-all", liked ? "text-destructive fill-destructive scale-110" : "text-foreground group-active:scale-125")} />
             )}
             {!item.hide_like_counts && formatCount(localLikes) && (
-              <span className={cn("text-[12px] font-semibold", liked || selectedReaction ? "text-destructive" : "text-muted-foreground")}>
+              <span aria-hidden className={cn("text-[12px] font-semibold whitespace-nowrap", liked || selectedReaction ? "text-destructive" : "text-muted-foreground")}>
                 {formatCount(localLikes)}
               </span>
             )}
           </button>
           {commentSetting !== "off" && (
-            <button onClick={handleComment} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
-              <MessageCircle className="h-[22px] w-[22px]" />
+            <button
+              onClick={handleComment}
+              aria-label={`Open comments${formatCount(localComments) ? `, ${formatCount(localComments)} comments` : ""}`}
+              className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center text-foreground gap-1"
+            >
+              <MessageCircle aria-hidden className="h-[22px] w-[22px]" />
               {formatCount(localComments) && (
-                <span className="text-[12px] text-muted-foreground font-semibold">
+                <span aria-hidden className="text-[12px] text-muted-foreground font-semibold whitespace-nowrap">
                   {formatCount(localComments)}
                 </span>
               )}
             </button>
           )}
           {item.allow_sharing !== false && (
-            <button onClick={handleShare} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
-              <Share2 className="h-[22px] w-[22px]" />
+            <button
+              onClick={handleShare}
+              aria-label={`Share post${formatCount(item.shares_count) ? `, ${formatCount(item.shares_count)} shares` : ""}`}
+              className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center text-foreground gap-1"
+            >
+              <Share2 aria-hidden className="h-[22px] w-[22px]" />
               {formatCount(item.shares_count) && (
-                <span className="text-[12px] text-muted-foreground font-semibold">
+                <span aria-hidden className="text-[12px] text-muted-foreground font-semibold whitespace-nowrap">
                   {formatCount(item.shares_count)}
                 </span>
               )}
             </button>
           )}
         </div>
-        <button onClick={handleSave} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
-          <Bookmark className={cn("h-[22px] w-[22px] transition-all", saved ? "text-primary fill-primary" : "text-foreground")} />
+        <button
+          onClick={handleSave}
+          aria-label={saved ? "Remove bookmark" : "Save post"}
+          aria-pressed={saved}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+        >
+          <Bookmark aria-hidden className={cn("h-[22px] w-[22px] transition-all", saved ? "text-primary fill-primary" : "text-foreground")} />
         </button>
       </div>
 
@@ -2585,15 +2655,20 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       {/* Comments count or off indicator */}
       {commentSetting === "off" ? (
         <div className="px-3 pb-2 flex items-center gap-1.5">
-          <MessageSquareOff className="h-3.5 w-3.5 text-muted-foreground/60" />
+          <MessageSquareOff aria-hidden className="h-3.5 w-3.5 text-muted-foreground/60" />
           <p className="text-[12px] text-muted-foreground/60">Comments are turned off</p>
         </div>
       ) : localComments > 0 ? (
-        <button onClick={handleComment} className="px-3 pb-2 text-left active:opacity-70">
+        <a
+          href={`?post=${encodeURIComponent(interactionPostId)}&src=${item.source}&comments=1`}
+          onClick={(e) => { e.preventDefault(); handleComment(); }}
+          aria-label={`View all ${formatCount(localComments) ?? localComments} comments on this post`}
+          className="block px-3 pb-2 text-left active:opacity-70"
+        >
           <p className="text-[13px] text-muted-foreground font-medium hover:text-foreground transition-colors">
             {commentsLinkLabel(localComments)}
           </p>
-        </button>
+        </a>
       ) : null}
 
       {/* Comments Sheet — only mount when open */}
@@ -2603,6 +2678,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
             open
             onClose={() => {
               setShowComments(false);
+              closeCommentsDeepLink();
               void queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
             }}
             postId={interactionPostId}

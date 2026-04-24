@@ -10,6 +10,7 @@ import { formatDistanceToNow } from "date-fns";
 import { usePostComments, PostComment } from "@/hooks/usePostComments";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { CommentRowsSkeleton } from "@/components/social/EngagementSkeleton";
 
 const REACTION_EMOJIS = ["❤️", "😂", "😮", "😢", "🔥"];
 
@@ -99,9 +100,7 @@ export default function CommentsSheet({
           {/* Comments List */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-4 scrollbar-none">
             {loading ? (
-              <div className="flex justify-center py-8">
-                <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              </div>
+              <CommentRowsSkeleton rows={4} />
             ) : comments.length === 0 ? (
               <div className="text-center py-12">
                 <p className={cn("text-sm", mutedText)}>No comments yet</p>

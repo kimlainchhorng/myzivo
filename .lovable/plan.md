@@ -1,85 +1,66 @@
-# Polish Feed & Profile post cards
+# Polish: A11y, Loading Skeletons, Responsive, Deep-Linked Comments
 
-Make captions, like/comment/share counts, and the "View all comments" link behave and look identical across the Reels feed (`ReelsFeedPage.tsx`) and the Profile "All" tab (`ProfileFeedCard.tsx`), then verify on mobile widths.
+Four focused improvements to the social feed (Reels + Profile) without changing the existing visual design.
 
-## 1. Reliable inline "See more" truncation
+## 1. Accessibility for engagement actions
 
-The current implementation puts "… See more" inside a `line-clamp-3` block, so when the caption fills the clamp it gets clipped along with the rest of the text and never appears.
+Add screen-reader text and `aria-label`s to every interactive element in the action row + comments link, so totals are announced (e.g. "Like post, 1.2k likes" instead of just an icon).
 
-Fix: introduce a small shared component `CollapsibleCaption` used everywhere a caption is rendered.
+Changes in `src/pages/ReelsFeedPage.tsx` (FeedCard action row, ~L2528–2597) and `src/components/profile/ProfileFeedCard.tsx` (~L357–399):
 
-Behavior:
-- Collapsed: render the caption with `line-clamp-3` (or `line-clamp-2` for the dark Reels overlay variant).
-- After mount, measure with a `ResizeObserver` whether the text is actually overflowing (`scrollHeight > clientHeight`). Only then render an inline `… See more` link positioned at the end of the last visible line using a `::after` pseudo-element trick (absolute-positioned span with a gradient mask fading from transparent to `bg-card`, so it overlays the truncated tail cleanly).
-- Expanded: full text + a trailing inline `See less` in muted color.
-- Tap target uses a real `<button>` so it stays accessible; clicking the caption body itself does NOT toggle (prevents accidental expand when scrolling).
+- **Like button** — `aria-label={liked ? "Unlike post" : "Like post"}` + `aria-pressed={liked}`. Append `, {n} likes` when count > 0.
+- **Comment button** — `aria-label="Open comments, {n} comments"` (omit count when 0).
+- **Share button** — `aria-label="Share post, {n} shares"`.
+- **Bookmark button** — `aria-label={saved ? "Remove bookmark" : "Save post"}` + `aria-pressed`.
+- **Reaction emojis** — `aria-label={`React with ${emoji}`}` on each picker button; container gets `role="toolbar" aria-label="Reactions"`.
+- **View all comments link** — promote from `<button>`/`<p>` to a real `<a href="...">` (see §4) with `aria-label={`View all ${n} comments on this post`}`.
+- **Visible counts** — keep visible numerals; wrap aria-only context in `<span className="sr-only">` so the visual stays clean.
 
-Apply to:
-- Sharer caption + embedded original caption in `ReelsFeedPage.tsx` (lines ~2113 and ~2181).
-- Sharer caption, embedded original caption, and own caption in `ProfileFeedCard.tsx` (lines ~170, ~224, ~304).
-- Dark overlay caption inside the fullscreen Reels viewer (line ~1487) — uses the variant with white text + lighter gradient mask.
+Also update `CollapsibleCaption` (`src/components/social/CollapsibleCaption.tsx`) to set `aria-expanded` on the See more / See less buttons and `aria-label="Show full caption" / "Collapse caption"`.
 
-## 2. Engagement counts: consistent formatting + zero-state
+## 2. Skeleton placeholders for loading states
 
-Create a shared helper `formatCount(n)`:
-```
-0           → null (don't render number)
-1–999       → "1", "42", "999"
-1,000–9,999 → "1.2k"
-10k–999k    → "12k"
-≥1M         → "1.2M"
-```
+Right now the action row and comments link render with `0`/missing data while the post object resolves, causing a brief empty-flash. Add a tiny skeleton component used while a post is hydrating its engagement counts.
 
-Apply consistently to like / comment / share buttons in both `ReelsFeedPage.tsx` (lines ~2542–2580) and `ProfileFeedCard.tsx` (lines ~370–404).
+- New file `src/components/social/EngagementSkeleton.tsx` — three pill-shaped `Skeleton` blocks (heart/comment/share widths) + a thin one-line bar mimicking "View all comments". Reuses `@/components/ui/skeleton` (already shimmer-animated).
+- In `ReelsFeedPage.tsx` FeedCard, render `<EngagementSkeleton />` instead of the action row when the parent feed `isLoading` is true OR when `item` was just inserted optimistically and counts are still `undefined`. Same pattern in `ProfileFeedCard.tsx`.
+- For the comments modal first-open: in `CommentsSheet.tsx`, when `loading` is true and `comments.length === 0`, render 3 skeleton rows (avatar circle + 2 text lines) instead of the current empty state, so the sheet doesn't briefly flash blank.
 
-Zero-state rules (matches Instagram/Facebook):
-- Like button: always show icon. Show count only when > 0.
-- Comment button: always show icon. Show count only when > 0 AND comments aren't disabled.
-- Share button: always show icon. Show count only when > 0.
+## 3. Responsive verification (360px and iPad)
 
-This removes the awkward `0` next to icons and keeps the row tight when a post has no engagement yet.
+Audit and fix any overlap of action row, "… See more" mask, and bottom navigation at narrow widths and tablet widths.
 
-## 3. "View all comments" link styling
+- **360px (small Android)**: shrink the action-row horizontal padding from `px-3` to `px-2.5` and reduce the per-button `min-w-[40px]` to `min-w-[36px]` only when viewport < 380px (use a `sm:` reset). Verify the count digits never wrap by adding `whitespace-nowrap` to the count `<span>`s.
+- **CollapsibleCaption mask**: the absolute "… See more" overlay uses `pl-10` of fading gradient; on very narrow screens with short last lines the mask can cover the whole word. Reduce to `pl-8` and add `max-w-[60%]` so it never overlaps the start of the line.
+- **iPad / md breakpoints (768–1180)**: ensure the action row stays left-aligned with `max-w-[600px] mx-auto` already provided by the feed container; verify the bookmark stays right-aligned via `ml-auto` (already in place). No layout change expected — only verification.
+- **Bottom nav spacing**: confirm `pb-[env(safe-area-inset-bottom)] + nav-height` padding on the feed scroll container so the last card's "View all comments" link is never hidden under `ZivoMobileNav`. If missing, add `pb-24 md:pb-8` on the feed list wrapper.
 
-Promote the link from plain muted text to a clearer affordance:
+After edits, switch to default mode and use `browser--set_viewport_size` at 360×800, 390×844, and 820×1180 to visually confirm.
 
-- Show only when `commentsCount > 0` (already correct in feed; profile already gates on `> 0`).
-- Style: `text-[13px] text-muted-foreground font-medium`, with a subtle hover/active state (`active:text-foreground`).
-- Copy:
-  - 1 comment → "View 1 comment"
-  - 2–999 → "View all 12 comments"
-  - ≥1k → "View all 1.2k comments"
-- Position: directly under the action row, before the comments sheet trigger area, with consistent `px-3 pb-2` spacing.
-- Hidden when `commentSetting === "off"` (replaced by the existing "Comments are turned off" pill).
-- Add to the embedded original post inside shared cards too, if the original has comments — currently only the outer share has it.
+## 4. Deep-link "View all comments"
 
-## 4. Responsive verification
+There is no dedicated `/post/:id` page; comments live in a modal sheet. Make the link deep-linkable using URL state so it survives reload and external sharing.
 
-After implementation, take screenshots at 320×568, 375×812, 390×844, and 414×896 of both `/feed` and `/profile` to confirm:
-- Caption "See more" stays inline on the last visible line at every width (no orphan word, no wrap).
-- Engagement row never wraps — icons + counts stay on one line; bookmark stays right-aligned.
-- "View all comments" sits correctly above the bottom nav with the safe-area padding the `AppLayout` already provides.
-- Shared post card edges stay flush (no horizontal margin regression).
+- **URL contract**: `/feed?post=<postId>&src=<user|store>&comments=1`. Same pattern works on `/profile` and `/user/:id`.
+- **Open from link**: render the comments link as `<Link to={`?post=${id}&src=${source}&comments=1`} replace>` so tapping it pushes history (back button closes the sheet). Use `useSearchParams` in `ReelsFeedPage` and the profile pages to detect the params on mount and call `setShowComments(true)` for the matching feed item, scrolling it into view.
+- **Close cleanly**: `CommentsSheet.onClose` clears the three params via `setSearchParams` so the URL returns to `/feed`.
+- **Shareable**: the existing share sheet already uses `getPostShareUrl`; add a "Copy link to comments" action that copies the deep-link variant.
+
+Files touched: `src/pages/ReelsFeedPage.tsx`, `src/components/profile/ProfileFeedCard.tsx`, `src/pages/profile/*` consumers, `src/components/social/CommentsSheet.tsx`.
 
 ## Technical notes
 
-Files touched:
-- New: `src/components/social/CollapsibleCaption.tsx` (shared truncation component with overflow detection).
-- New: `src/lib/social/formatCount.ts` (shared count formatter, exported as `formatCount`).
-- `src/pages/ReelsFeedPage.tsx` — replace 3 inline caption blocks (sharer, original, dark overlay) with `CollapsibleCaption`; swap inline count math for `formatCount`; update "View all comments" copy + style.
-- `src/components/profile/ProfileFeedCard.tsx` — replace 3 inline caption blocks with `CollapsibleCaption`; swap inline count math for `formatCount`; update "View all comments" copy + style; show share count when present.
+- No new dependencies. Reuses existing `Skeleton`, `react-router-dom` `useSearchParams`, and current `formatCount` / `commentsLinkLabel` helpers.
+- All `aria-label` strings derived from `formatCount(n)` so screen-reader text matches displayed shorthand ("1.2k").
+- Deep-link params are additive — pages that don't read them keep working unchanged.
+- No DB / RLS / edge-function changes.
 
-The `CollapsibleCaption` overflow-detection trick:
+## Files to create / edit
+
 ```text
-[caption clamped to 3 lines........................]
-[lorem ipsum dolor sit amet consectetur adipiscing]
-[elit sed do eiusmod tempor incididunt ut labore  ]
-[et dolore magna aliqua ut enim ad mi… See more   ]
-                                       ^^^^^^^^^^
-                              absolutely-positioned span,
-                              right-aligned on last line,
-                              with bg-card gradient mask
-                              fading in from the left
+NEW  src/components/social/EngagementSkeleton.tsx
+EDIT src/components/social/CollapsibleCaption.tsx     (aria + mask width)
+EDIT src/components/social/CommentsSheet.tsx          (loading skeletons, close clears params)
+EDIT src/pages/ReelsFeedPage.tsx                      (a11y, skeleton, deep-link, narrow-px)
+EDIT src/components/profile/ProfileFeedCard.tsx       (a11y, skeleton, deep-link)
 ```
-
-No DB or routing changes. No new dependencies.

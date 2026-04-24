@@ -109,14 +109,15 @@ export function CollapsibleCaption({
         <button
           type="button"
           onClick={handleToggle}
+          aria-expanded={false}
+          aria-label="Show full caption"
           className={cn(
-            "absolute right-0 bottom-0 pl-10 pr-0 text-[13px] font-medium",
+            "absolute right-0 bottom-0 pl-8 pr-0 text-[13px] font-medium max-w-[60%] text-right whitespace-nowrap",
             "bg-gradient-to-r",
             maskFrom,
             linkColor,
             "active:opacity-70",
           )}
-          aria-label="Expand caption"
         >
           … See more
         </button>
@@ -127,6 +128,8 @@ export function CollapsibleCaption({
         <button
           type="button"
           onClick={handleToggle}
+          aria-expanded={true}
+          aria-label="Collapse caption"
           className={cn(
             "mt-0.5 text-[12px] font-medium active:opacity-70",
             linkColor,
