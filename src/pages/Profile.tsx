@@ -77,9 +77,7 @@ const getFlagUrl = (cc: string) => `/flags/${cc}.svg`;
 import VerifiedBadge from "@/components/VerifiedBadge";
 
 const BlueVerifiedBadge = ({ className = "h-5 w-5" }: { className?: string }) => (
-  <span className={cn("inline-flex items-center justify-center align-middle", className)}>
-    <VerifiedBadge size={undefined as unknown as number} className="h-full w-full" />
-  </span>
+  <VerifiedBadge className={className} />
 );
 
 /* ── 3D tilt hook ── */
