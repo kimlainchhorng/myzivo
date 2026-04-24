@@ -888,7 +888,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       setReportCategory("");
                       setShowReportSheet(true);
                     }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-destructive hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 transition-colors"
                   >
                     <Flag className="w-5 h-5" />
                     Report
@@ -905,7 +905,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       toast.success(isOn ? "Notifications turned off" : "Notifications turned on for this post");
                       setShowPostMenu(false);
                     }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <Bell className="w-5 h-5" />
                     {notifPosts.has(selectedPost.id) ? "Turn off notifications" : "Turn on notifications"}
@@ -916,7 +916,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       navigator.clipboard.writeText(url).then(() => toast.success("Link copied!")).catch(() => toast.info("Could not copy link"));
                       setShowPostMenu(false);
                     }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <Link2 className="w-5 h-5" />
                     Copy link
@@ -933,14 +933,14 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       setSelectedPost(null);
                       toast.success("You won't see this post anymore");
                     }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <EyeOff className="w-5 h-5" />
                     Not interested
                   </button>
                   <button
                     onClick={() => { setSharePostId(selectedPost.id); setShowPostMenu(false); }}
-                    className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <Share2 className="w-5 h-5" />
                     Share
@@ -948,7 +948,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   {profileOwnerId === user?.id && (
                     <button
                       onClick={() => { setShowPostMenu(false); setShowCommentSettingsSheet(true); }}
-                      className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                      className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                     >
                       <Settings2 className="w-5 h-5" />
                       Comment settings
@@ -962,7 +962,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                           setEditingCaption(true);
                           setShowPostMenu(false);
                         }}
-                        className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 transition-colors"
                       >
                         <Settings2 className="w-5 h-5" />
                         Edit caption
@@ -973,7 +973,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                             handleDeletePost(selectedPost.id);
                           }
                         }}
-                        className="w-full flex items-center gap-4 px-5 py-3.5 text-sm text-destructive hover:bg-muted/50 transition-colors"
+                        className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 transition-colors"
                       >
                         <Trash2 className="w-5 h-5" />
                         Delete post
