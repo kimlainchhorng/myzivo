@@ -75,11 +75,20 @@ export default function LodgingFrontDeskSection({ storeId }: { storeId: string }
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5" /> Front Desk — {today}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        <LodgingSectionStatusBanner title="Front Desk is ready" icon={KeyRound} countLabel="active reservations" countValue={activeReservations} fixLabel="Review reservations" fixTab="lodge-reservations" />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {stats.map(({ label, value, icon: Icon }) => <div key={label} className="rounded-lg border border-border bg-card p-3"><div className="flex items-center justify-between gap-2"><p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p><Icon className="h-4 w-4 text-primary" /></div><p className="mt-2 text-xl font-bold text-foreground">{value}</p></div>)}
+        </div>
+        <div className="rounded-lg border border-border bg-muted/20 p-3">
+          <p className="text-sm font-semibold text-foreground">What this section does</p>
+          <p className="mt-1 text-xs text-muted-foreground">Tracks same-day arrivals, in-house guests, departures, key handoff, check-in, and check-out. Empty columns mean there is no live reservation data for today.</p>
+          <div className="mt-3 flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => goTab("lodge-rate-plans")}><DollarSign className="mr-2 h-4 w-4" /> Open rate plans</Button><Button size="sm" variant="outline" onClick={() => goTab("lodge-rooms")}><BedDouble className="mr-2 h-4 w-4" /> Open rooms</Button><Button size="sm" variant="outline" onClick={() => window.location.assign("/admin/lodging/qa-checklist")}><ListChecks className="mr-2 h-4 w-4" /> Run QA</Button></div>
+        </div>
         <div className="flex flex-col md:flex-row gap-4">
-          <Column title="Arrivals" empty="No arrivals scheduled for today." items={arrivals} color="text-primary" action={{ label: "Check In", icon: LogIn, status: "checked_in", msg: "Checked in" }} />
-          <Column title="In-House" empty="No in-house guests right now." items={inHouse} color="text-primary" />
-          <Column title="Departures" empty="No departures scheduled for today." items={departures} color="text-primary" action={{ label: "Check Out", icon: LogOut, status: "checked_out", msg: "Checked out" }} />
+          <Column title="Arrivals" empty="No arrivals today" items={arrivals} color="text-primary" action={{ label: "Check In", icon: LogIn, status: "checked_in", msg: "Checked in" }} />
+          <Column title="In-House" empty="No in-house guests" items={inHouse} color="text-primary" />
+          <Column title="Departures" empty="No departures today" items={departures} color="text-primary" action={{ label: "Check Out", icon: LogOut, status: "checked_out", msg: "Checked out" }} />
         </div>
       </CardContent>
     </Card>
