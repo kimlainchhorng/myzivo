@@ -80,6 +80,8 @@ const FeedStoryRing = lazy(() => import("@/components/social/FeedStoryRing"));
 const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
 const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
 const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
+import CollapsibleCaption from "@/components/social/CollapsibleCaption";
+import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 
