@@ -768,17 +768,17 @@ const Profile = () => {
 
                       {/* Friend, Follower & Following stats — Facebook/TikTok style */}
                       <div className="mb-1 mt-2 flex items-center justify-center gap-0">
-                        <button className="flex-1 text-center py-1 group" onClick={() => setSocialModal({ open: true, tab: "friends" })}>
+                        <button aria-label={`View ${friendCount} friends`} className="flex-1 text-center py-1 group min-h-[44px] focus-visible:ring-2 focus-visible:ring-primary/60 rounded-lg" onClick={() => setSocialModal({ open: true, tab: "friends" })}>
                           <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{friendCount}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">Friends</p>
                         </button>
                         <div className="w-px h-9 bg-border/40" />
-                        <button className="flex-1 text-center py-1 group" onClick={() => setSocialModal({ open: true, tab: "followers" })}>
+                        <button aria-label={`View ${followerCount} followers`} className="flex-1 text-center py-1 group min-h-[44px] focus-visible:ring-2 focus-visible:ring-primary/60 rounded-lg" onClick={() => setSocialModal({ open: true, tab: "followers" })}>
                           <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{followerCount}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">Followers</p>
                         </button>
                         <div className="w-px h-9 bg-border/40" />
-                        <button className="flex-1 text-center py-1 group" onClick={() => setSocialModal({ open: true, tab: "following" })}>
+                        <button aria-label={`View ${followingCount} following`} className="flex-1 text-center py-1 group min-h-[44px] focus-visible:ring-2 focus-visible:ring-primary/60 rounded-lg" onClick={() => setSocialModal({ open: true, tab: "following" })}>
                           <p className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{followingCount}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">Following</p>
                         </button>
