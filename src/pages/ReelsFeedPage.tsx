@@ -2537,18 +2537,18 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
             ) : (
               <Heart className={cn("h-[22px] w-[22px] transition-all", liked ? "text-destructive fill-destructive scale-110" : "text-foreground group-active:scale-125")} />
             )}
-            {!item.hide_like_counts && (
+            {!item.hide_like_counts && formatCount(localLikes) && (
               <span className={cn("text-[12px] font-semibold", liked || selectedReaction ? "text-destructive" : "text-muted-foreground")}>
-                {localLikes > 999 ? `${(localLikes/1000).toFixed(1)}k` : localLikes}
+                {formatCount(localLikes)}
               </span>
             )}
           </button>
           {commentSetting !== "off" && (
             <button onClick={handleComment} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
               <MessageCircle className="h-[22px] w-[22px]" />
-              {localComments > 0 && (
+              {formatCount(localComments) && (
                 <span className="text-[12px] text-muted-foreground font-semibold">
-                  {localComments > 999 ? `${(localComments/1000).toFixed(1)}k` : localComments}
+                  {formatCount(localComments)}
                 </span>
               )}
             </button>
@@ -2556,9 +2556,9 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           {item.allow_sharing !== false && (
             <button onClick={handleShare} className="min-h-[44px] min-w-[40px] flex items-center justify-center text-foreground gap-1">
               <Share2 className="h-[22px] w-[22px]" />
-              {item.shares_count > 0 && (
+              {formatCount(item.shares_count) && (
                 <span className="text-[12px] text-muted-foreground font-semibold">
-                  {item.shares_count > 999 ? `${(item.shares_count/1000).toFixed(1)}k` : item.shares_count}
+                  {formatCount(item.shares_count)}
                 </span>
               )}
             </button>
