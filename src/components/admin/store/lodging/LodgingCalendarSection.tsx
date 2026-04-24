@@ -61,7 +61,12 @@ export default function LodgingCalendarSection({ storeId }: { storeId: string })
       </CardHeader>
       <CardContent className="space-y-4">
         {rooms.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-8 text-center">Add a room first to view its calendar</p>
+          <div className="rounded-lg border border-dashed border-border bg-muted/20 p-6 text-center">
+            <CalendarDays className="mx-auto h-7 w-7 text-primary" />
+            <p className="mt-3 text-sm font-semibold text-foreground">Availability calendar is ready</p>
+            <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">Add rooms first, then this calendar will show booked nights, manual blocks, and available dates.</p>
+            <Button size="sm" className="mt-4" onClick={() => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-rooms" } }))}>Open rooms</Button>
+          </div>
         ) : (
           <>
             <div className="flex flex-wrap gap-2">
