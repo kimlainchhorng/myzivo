@@ -12,6 +12,8 @@ import { usePriceAlerts } from "@/hooks/usePriceAlerts";
 import { useHaptics } from "@/hooks/useHaptics";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import navHomeBg from "@/assets/nav-home-bg.jpg";
 import navSearchBg from "@/assets/nav-search-bg.jpg";
 import navTripsBg from "@/assets/nav-trips-bg.jpg";
@@ -35,6 +37,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
   const { impact } = useHaptics();
   const { t } = useI18n();
   const { user } = useAuth();
+  const { data: profile } = useUserProfile();
 
   const gated = (path: string) =>
     user ? path : `/login?redirect=${encodeURIComponent(path)}`;
