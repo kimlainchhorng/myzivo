@@ -1287,7 +1287,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           <Heart className={cn("h-7 w-7 drop-shadow-lg transition-all", liked ? "text-red-500 fill-red-500 scale-110" : "text-white")} />
           {!item.hide_like_counts && (
             <span className="text-white text-[11px] font-semibold drop-shadow">
-              {localLikes > 999 ? `${(localLikes / 1000).toFixed(1)}k` : localLikes}
+              {formatCount(localLikes) ?? "0"}
             </span>
           )}
         </button>
