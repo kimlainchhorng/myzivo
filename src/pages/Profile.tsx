@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, Fragment } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
@@ -7,7 +7,7 @@ import { useI18n } from "@/hooks/useI18n";
 import SEOHead from "@/components/SEOHead";
 import {
   User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
-  Shield, Star, ChevronRight, UserPlus, UserCheck,
+  Shield, Star, ChevronRight, UserPlus, UserCheck, BadgeCheck,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
   Settings, Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
 } from "lucide-react";
@@ -72,6 +72,12 @@ const LANGS = [
 ];
 
 const getFlagUrl = (cc: string) => `/flags/${cc}.svg`;
+
+const BlueVerifiedBadge = ({ className = "h-5 w-5" }: { className?: string }) => (
+  <span className={cn("inline-flex items-center justify-center rounded-full bg-[hsl(var(--flights))] text-primary-foreground shadow-sm ring-2 ring-background", className)} aria-label="Blue verified">
+    <Check className="h-[70%] w-[70%] stroke-[3]" />
+  </span>
+);
 
 /* ── 3D tilt hook ── */
 function use3DTilt(ref: React.RefObject<HTMLElement | null>, intensity = 8) {
