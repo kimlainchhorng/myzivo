@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useI18n } from "@/hooks/useI18n";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { cn } from "@/lib/utils";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import SEOHead from "@/components/SEOHead";
@@ -177,19 +178,8 @@ export default function MorePage() {
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>("Essentials");
 
-  // Real profile data
-  const { data: profile } = useQuery({
-    queryKey: ["more-profile", user?.id],
-    queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("profiles")
-        .select("display_name, avatar_url, username, is_verified, profile_views")
-        .eq("id", user!.id)
-        .single();
-      return data;
-    },
-    enabled: !!user,
-  });
+  // Shared profile data — same source as /profile, so the name/badge stay in sync
+  const { data: profile } = useUserProfile();
 
   // Real friend count (accepted friendships) — matches /profile
   const { data: friendCount = 0 } = useQuery({
