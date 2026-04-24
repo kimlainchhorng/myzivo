@@ -190,6 +190,81 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
     [user?.id],
   );
 
+  // --- Report undo (10s window) -------------------------------------------
+  const stopUndoTicker = useCallback(() => {
+    if (undoTickerRef.current !== null) {
+      window.clearInterval(undoTickerRef.current);
+      undoTickerRef.current = null;
+    }
+  }, []);
+
+  const performUndo = useCallback(
+    async (postId: string) => {
+      setReportedPosts((prev) => {
+        const next = new Set(prev);
+        next.delete(postId);
+        persistReported(next);
+        return next;
+      });
+      undoTargetRef.current = null;
+      stopUndoTicker();
+      setUndoSecondsLeft(0);
+      try {
+        if (user?.id) {
+          await (supabase as any)
+            .from("post_reports")
+            .delete()
+            .eq("post_id", toUserPostInteractionId(postId))
+            .eq("reporter_id", user.id);
+        }
+      } catch (err) {
+        logProfileActionError("report.undo", { postId, userId: user?.id }, err);
+      }
+      toast.success("Report undone");
+    },
+    [persistReported, stopUndoTicker, user?.id],
+  );
+
+  const startUndoWindow = useCallback(
+    (postId: string) => {
+      stopUndoTicker();
+      undoTargetRef.current = { postId, expiresAt: Date.now() + 10_000 };
+      setUndoSecondsLeft(10);
+      undoTickerRef.current = window.setInterval(() => {
+        const target = undoTargetRef.current;
+        if (!target) {
+          stopUndoTicker();
+          setUndoSecondsLeft(0);
+          return;
+        }
+        const remaining = Math.max(0, Math.ceil((target.expiresAt - Date.now()) / 1000));
+        setUndoSecondsLeft(remaining);
+        if (remaining <= 0) {
+          undoTargetRef.current = null;
+          stopUndoTicker();
+        }
+      }, 250) as unknown as number;
+
+      // Global toast affordance — survives the user dismissing the sheet.
+      toast.success("Report submitted", {
+        description: "You have 10 seconds to undo.",
+        duration: 10_000,
+        action: {
+          label: "Undo",
+          onClick: () => {
+            const t = undoTargetRef.current;
+            if (t && t.postId === postId && Date.now() <= t.expiresAt) {
+              void performUndo(postId);
+            }
+          },
+        },
+      });
+    },
+    [performUndo, stopUndoTicker],
+  );
+
+  useEffect(() => () => stopUndoTicker(), [stopUndoTicker]);
+
   const visibleFeed = feed.filter((i) => !hiddenPosts.has(i.id));
   const filtered = activeTab === "all" ? visibleFeed : visibleFeed.filter((i) => i.type === activeTab);
 
