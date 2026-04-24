@@ -203,12 +203,12 @@ export default function AdminUsersPage() {
           </Card>
           <Card>
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                <UserCheck className="w-5 h-5 text-emerald-500" />
+              <div className="w-10 h-10 rounded-xl bg-[hsl(var(--flights)/0.10)] flex items-center justify-center">
+                <BadgeCheck className="w-5 h-5 text-[hsl(var(--flights))]" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">{stats.verified}</p>
-                <p className="text-xs text-muted-foreground">Verified</p>
+                <p className="text-xs text-muted-foreground">Blue Verified</p>
               </div>
             </CardContent>
           </Card>
@@ -226,6 +226,35 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Search */}
+        {pendingVerificationRequests.length > 0 && (
+          <Card className="border-[hsl(var(--flights)/0.18)] bg-[hsl(var(--flights)/0.04)]">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <BadgeCheck className="h-4 w-4 text-[hsl(var(--flights))]" /> Blue Verified requests
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {pendingVerificationRequests.slice(0, 5).map((request: any) => (
+                <div key={request.id} className="flex flex-col gap-2 rounded-xl border border-border/50 bg-card/80 p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">{request.full_name}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{request.category || "personal"} request</p>
+                    {request.additional_info && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{request.additional_info}</p>}
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <Button size="sm" className="gap-1.5" disabled={reviewRequestMutation.isPending} onClick={() => reviewRequestMutation.mutate({ requestId: request.id, approved: true })}>
+                      <BadgeCheck className="h-3.5 w-3.5" /> Approve
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={reviewRequestMutation.isPending} onClick={() => reviewRequestMutation.mutate({ requestId: request.id, approved: false, reason: "Request was not approved" })}>
+                      Reject
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
