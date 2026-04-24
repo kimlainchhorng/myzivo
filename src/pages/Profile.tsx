@@ -799,22 +799,9 @@ const Profile = () => {
                 <ProfileStories />
               </ParallaxSection>
 
-          {/* ── Account actions moved lower for clearer mobile layout ── */}
+          {/* Translate moved to /more page */}
           <ParallaxSection index={2.1}>
             <div className="relative mb-2">
-              <div className="grid grid-cols-1 gap-2">
-                <motion.button
-                  ref={langTriggerRef}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => setShowLangPicker(prev => !prev)}
-                  className="relative z-20 flex min-h-[42px] items-center justify-center gap-1.5 rounded-2xl border border-primary/20 bg-primary/10 px-2.5 text-[11px] font-bold text-primary shadow-sm touch-manipulation transition-all"
-                >
-                  <Globe className="h-3.5 w-3.5 shrink-0" />
-                  <img src={getFlagUrl(currentLang.cc)} alt="" className="h-3 w-4 rounded-[2px] object-cover shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                  <span className="truncate">Translate</span>
-                  <ChevronDown className={`h-3 w-3 shrink-0 transition-transform duration-300 ${showLangPicker ? "rotate-180" : ""}`} />
-                </motion.button>
-              </div>
 
               <AnimatePresence>
                 {showNotifPanel && (
