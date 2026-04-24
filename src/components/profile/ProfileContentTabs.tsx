@@ -145,6 +145,13 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   const [showProfileMoreShare, setShowProfileMoreShare] = useState(false);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
+  const [notifPosts, setNotifPosts] = useState<Set<string>>(new Set());
+  const [hiddenPosts, setHiddenPosts] = useState<Set<string>>(new Set());
+  const [showReportSheet, setShowReportSheet] = useState(false);
+  const [reportStep, setReportStep] = useState<"categories" | "sub" | "submitted">("categories");
+  const [reportCategory, setReportCategory] = useState("");
+  const [showCommentSettingsSheet, setShowCommentSettingsSheet] = useState(false);
+  const [commentControl, setCommentControl] = useState<"everyone" | "followers" | "off">("everyone");
 
   const filtered = activeTab === "all" ? feed : feed.filter((i) => i.type === activeTab);
 
