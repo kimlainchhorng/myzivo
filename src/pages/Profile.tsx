@@ -525,40 +525,41 @@ const Profile = () => {
 
                       {/* Cover action buttons */}
                       {user && !coverRepositioning && (
-                        <div className="absolute top-3 right-3 flex gap-1.5 z-20">
+                        <div className="absolute top-2 right-2 flex gap-1.5 z-20">
                           {profile?.cover_url && (
                             <motion.button
                               whileTap={{ scale: 0.88 }}
                               onClick={() => { setCoverPosition(profile?.cover_position ?? 50); setCoverRepositioning(true); }}
-                              aria-label="Reposition cover"
-                              className="h-7 w-7 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25"
+                              aria-label="Reposition cover photo"
+                              className="h-10 w-10 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                             >
-                              <MoveVertical className="h-3 w-3" />
+                              <MoveVertical className="h-3.5 w-3.5" />
                             </motion.button>
                           )}
                           <motion.button
                             whileTap={{ scale: 0.88 }}
                             onClick={() => coverInputRef.current?.click()}
                             disabled={coverUploading}
-                            aria-label="Change cover"
-                            className="h-7 w-7 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25 disabled:opacity-50"
+                            aria-label="Change cover photo"
+                            className="h-10 w-10 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                           >
-                            {coverUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
+                            {coverUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImagePlus className="h-3.5 w-3.5" />}
                           </motion.button>
                           <motion.button
                             whileTap={{ scale: 0.88 }}
                             onClick={() => setShowNotifPanel(prev => !prev)}
-                            aria-label="Notifications"
+                            aria-label={showNotifPanel ? "Close notifications" : "Open notifications"}
+                            aria-pressed={showNotifPanel}
                             className={cn(
-                              "relative h-7 w-7 flex items-center justify-center rounded-full backdrop-blur-md shadow-md border",
+                              "relative h-10 w-10 flex items-center justify-center rounded-full backdrop-blur-md shadow-md border focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
                               showNotifPanel
                                 ? "bg-primary text-primary-foreground border-primary/40"
                                 : "bg-background/65 text-foreground/80 hover:bg-background/90 border-border/25"
                             )}
                           >
-                            <Bell className="h-3 w-3" />
+                            <Bell className="h-3.5 w-3.5" />
                             {totalNotifCount > 0 && !showNotifPanel && (
-                              <span className="absolute -right-1 -top-1 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-destructive px-1 text-[8px] font-bold text-destructive-foreground shadow-sm">
+                              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-sm">
                                 {totalNotifCount > 99 ? '99+' : totalNotifCount}
                               </span>
                             )}
@@ -566,10 +567,10 @@ const Profile = () => {
                           <motion.button
                             whileTap={{ scale: 0.88 }}
                             onClick={() => navigate("/more")}
-                            aria-label="More"
-                            className="h-7 w-7 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25"
+                            aria-label="More account options"
+                            className="h-10 w-10 flex items-center justify-center rounded-full bg-background/65 backdrop-blur-md text-foreground/80 hover:bg-background/90 shadow-md border border-border/25 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                           >
-                            <MoreHorizontal className="h-3 w-3" />
+                            <MoreHorizontal className="h-3.5 w-3.5" />
                           </motion.button>
                         </div>
                       )}
