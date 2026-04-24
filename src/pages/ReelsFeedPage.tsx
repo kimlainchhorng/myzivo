@@ -2120,7 +2120,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           )}
 
           {/* Embedded original post card */}
-          <div className="mx-3 mb-2 border border-border/50 rounded-2xl overflow-hidden bg-card shadow-sm">
+          <div className="mb-2 border-y border-border/50 overflow-hidden bg-card">
             {/* Original author header */}
             <div className="flex items-center px-3 py-2.5">
               <button
