@@ -74,8 +74,27 @@ const LANGS = [
 const getFlagUrl = (cc: string) => `/flags/${cc}.svg`;
 
 const BlueVerifiedBadge = ({ className = "h-5 w-5" }: { className?: string }) => (
-  <span className={cn("inline-flex items-center justify-center rounded-full bg-[hsl(var(--flights))] text-primary-foreground shadow-sm ring-2 ring-background", className)} aria-label="Blue verified">
-    <Check className="h-[70%] w-[70%] stroke-[3]" />
+  <span className={cn("relative inline-flex items-center justify-center", className)} aria-label="Blue verified" title="Blue verified">
+    <svg viewBox="0 0 24 24" className="h-full w-full drop-shadow-[0_2px_6px_hsl(var(--flights)/0.45)]" aria-hidden="true">
+      <defs>
+        <linearGradient id="bv-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="hsl(var(--flights))" />
+          <stop offset="100%" stopColor="hsl(var(--flights) / 0.78)" />
+        </linearGradient>
+      </defs>
+      <path
+        fill="url(#bv-grad)"
+        d="M12 1.6l2.36 1.78 2.94-.32 1.4 2.6 2.6 1.4-.32 2.94L22.4 12l-1.78 2.36.32 2.94-2.6 1.4-1.4 2.6-2.94-.32L12 22.4l-2.36-1.78-2.94.32-1.4-2.6-2.6-1.4.32-2.94L1.6 12l1.78-2.36L3.06 6.7l2.6-1.4 1.4-2.6 2.94.32L12 1.6z"
+      />
+      <path
+        fill="none"
+        stroke="hsl(var(--primary-foreground))"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7.5 12.4l2.9 2.9 6.1-6.6"
+      />
+    </svg>
   </span>
 );
 
@@ -600,19 +619,19 @@ const Profile = () => {
                         type="button"
                         onClick={() => navigate("/account/verification")}
                         className={cn(
-                          "mt-3 inline-flex min-h-[34px] items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-bold shadow-sm transition-transform active:scale-95",
+                          "group mt-3 inline-flex min-h-[36px] items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-bold shadow-sm transition-all duration-200 active:scale-95 hover:shadow-md hover:-translate-y-0.5",
                           profile?.is_verified
-                            ? "border-[hsl(var(--flights)/0.28)] bg-[hsl(var(--flights)/0.10)] text-[hsl(var(--flights))]"
+                            ? "border-[hsl(var(--flights)/0.35)] bg-gradient-to-r from-[hsl(var(--flights)/0.18)] via-[hsl(var(--flights)/0.10)] to-[hsl(var(--flights)/0.18)] text-[hsl(var(--flights))] shadow-[0_4px_14px_-4px_hsl(var(--flights)/0.45)]"
                             : latestVerificationRequest?.status === "pending"
-                              ? "border-amber-500/25 bg-amber-500/10 text-amber-600"
+                              ? "border-amber-500/30 bg-gradient-to-r from-amber-500/15 to-amber-500/5 text-amber-600"
                               : latestVerificationRequest?.status === "rejected"
-                                ? "border-destructive/20 bg-destructive/5 text-destructive"
-                                : "border-[hsl(var(--flights)/0.25)] bg-[hsl(var(--flights)/0.08)] text-[hsl(var(--flights))]"
+                                ? "border-destructive/25 bg-destructive/5 text-destructive"
+                                : "border-[hsl(var(--flights)/0.35)] bg-gradient-to-r from-[hsl(var(--flights)/0.14)] via-[hsl(var(--flights)/0.06)] to-[hsl(var(--flights)/0.14)] text-[hsl(var(--flights))] shadow-[0_4px_14px_-6px_hsl(var(--flights)/0.5)]"
                         )}
                       >
                         {profile?.is_verified ? (
                           <>
-                            <BlueVerifiedBadge className="h-4 w-4 ring-0" /> Blue verified
+                            <BlueVerifiedBadge className="h-4 w-4" /> Blue verified
                           </>
                         ) : latestVerificationRequest?.status === "pending" ? (
                           <>
@@ -624,7 +643,7 @@ const Profile = () => {
                           </>
                         ) : (
                           <>
-                            <BadgeCheck className="h-4 w-4" /> Get blue verified
+                            <BlueVerifiedBadge className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" /> Get blue verified
                           </>
                         )}
                       </button>
